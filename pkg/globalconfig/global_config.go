@@ -229,7 +229,7 @@ func ReadGlobalConfig() error {
 
 	// Remove dba
 	if nodeps.ArrayContainsString(DdevGlobalConfig.OmitContainersGlobal, "dba") {
-		nodeps.RemoveItemFromSlice(DdevGlobalConfig.OmitContainersGlobal, "dba")
+		DdevGlobalConfig.OmitContainersGlobal = nodeps.RemoveItemFromSlice(DdevGlobalConfig.OmitContainersGlobal, "dba")
 	}
 
 	err = ValidateGlobalConfig()
