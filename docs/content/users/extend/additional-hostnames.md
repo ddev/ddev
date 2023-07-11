@@ -1,8 +1,10 @@
 # Additional Project Hostnames
 
-Add additional hostnames to a project in its `.ddev/config.yaml`:
+You can add hostnames to a project by editing its [config file](../configuration/config.md#additional_hostnames) or using the [`ddev config`](../usage/commands.md#config) command.
 
-```
+Use the `additional_hostnames` array in `.ddev/config.yaml`:
+
+```yaml
 name: mysite
 
 additional_hostnames:
@@ -27,7 +29,7 @@ In addition, the wildcard `*.lotsofnames` will result in anything `*.lotsofnames
 
 **If you use a FQDN which is resolvable on the internet, you must use `use_dns_when_possible: false` or configure that with `ddev config --use-dns-when-possible=false`.**
 
-```
+```yaml
 name: somename
 
 additional_fqdns:
