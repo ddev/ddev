@@ -392,15 +392,21 @@ func (app DdevApp) GetDocroot() string {
 // GetAbsDocroot returns the absolute path to the docroot on the host or if
 // inContainer is set to true in the container.
 func (app DdevApp) GetAbsDocroot(inContainer bool) string {
-	var basePath string
-
 	if inContainer {
-		basePath = "/var/www/html"
-	} else {
-		basePath = app.AppRoot
+		return path.Join(app.GetAbsAppRoot(true), app.GetDocroot())
 	}
 
-	return path.Join(basePath, app.GetDocroot())
+	return filepath.Join(app.GetAbsAppRoot(false), app.GetDocroot())
+}
+
+// GetAbsAppRoot returns the absolute path to the project root on the host or if
+// inContainer is set to true in the container.
+func (app DdevApp) GetAbsAppRoot(inContainer bool) string {
+	if inContainer {
+		return "/var/www/html"
+	}
+
+	return app.AppRoot
 }
 
 // GetComposerRoot will determine the absolute composer root directory where
@@ -410,7 +416,13 @@ func (app DdevApp) GetAbsDocroot(inContainer bool) string {
 // If showWarning set to true, a warning containing the composer root will be
 // shown to the user to avoid confusion.
 func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
-	absComposerRoot := path.Join(app.GetAbsDocroot(inContainer), app.ComposerRoot)
+	var absComposerRoot string
+
+	if inContainer {
+		absComposerRoot = path.Join(app.GetAbsAppRoot(true), app.ComposerRoot)
+	} else {
+		absComposerRoot = filepath.Join(app.GetAbsAppRoot(false), app.ComposerRoot)
+	}
 
 	// If requested, let the user know we are not using the default composer
 	// root directory to avoid confusion.
