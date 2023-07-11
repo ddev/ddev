@@ -73,7 +73,7 @@ var OptionsSeparateRows = table.Options{
 
 // IsValidTableStyle checks to see if the table style is valid
 func IsValidTableStyle(style string) bool {
-	if _, ok := StyleMap[style]; ok || style == "" {
+	if _, ok := StyleMap[style]; ok {
 		return true
 	}
 
