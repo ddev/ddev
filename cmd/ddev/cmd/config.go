@@ -241,9 +241,13 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, "Unsets a web service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
+	ConfigCommand.Flags().Bool("mutagen-enabled", false, "Enable mutagen asynchronous update of project in web container")
+	_ = ConfigCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
 	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, true, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
 
+	ConfigCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting of project in container")
+	_ = ConfigCommand.Flags().MarkDeprecated("nfs-mount-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
@@ -464,6 +468,18 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if hostDBPortArg != "" {
 		app.HostDBPort = hostDBPortArg
+	}
+
+	if cmd.Flag("nfs-mount-enabled").Changed {
+		if v, _ := cmd.Flags().GetBool("nfs-mount-enabled"); v {
+			app.SetPerformanceMode(types.PerformanceModeNFS)
+		}
+	}
+
+	if cmd.Flag("mutagen-enabled").Changed {
+		if v, _ := cmd.Flags().GetBool("mutagen-enabled"); v {
+			app.SetPerformanceMode(types.PerformanceModeMutagen)
+		}
 	}
 
 	if cmd.Flag(types.FlagPerformanceModeName).Changed {

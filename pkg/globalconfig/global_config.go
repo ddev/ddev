@@ -227,6 +227,11 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 	}
 
+	// Remove dba
+	if nodeps.ArrayContainsString(DdevGlobalConfig.OmitContainersGlobal, "dba") {
+		DdevGlobalConfig.OmitContainersGlobal = nodeps.RemoveItemFromSlice(DdevGlobalConfig.OmitContainersGlobal, "dba")
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
