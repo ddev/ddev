@@ -35,6 +35,7 @@ func (app *DdevApp) addUploadDir(uploadDir string) {
 }
 
 // GetUploadDir returns the first upload (public files) directory.
+// This value is relative to the docroot
 func (app *DdevApp) GetUploadDir() string {
 	uploadDirs := app.GetUploadDirs()
 	if len(uploadDirs) > 0 {

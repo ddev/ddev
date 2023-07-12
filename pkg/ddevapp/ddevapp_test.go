@@ -2447,8 +2447,8 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		if site.FilesTarballURL != "" {
 			// First, try import with the project-default upload_dirs
 			// Make sure we don't have files to start
-			targetFilesPath := app.GetUploadDir()
-			err = os.RemoveAll(targetFilesPath)
+			fullTargetFilesPath := app.GetHostUploadDirFullPath()
+			err = os.RemoveAll(fullTargetFilesPath)
 			require.NoError(t, err)
 
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
@@ -2457,15 +2457,15 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			assert.NoError(err)
 
 			// Ensure upload dir isn't empty
-			dirEntrySlice, err := os.ReadDir(targetFilesPath)
+			dirEntrySlice, err := os.ReadDir(fullTargetFilesPath)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
 
 			// Second, try with a single custom upload_dirs
-			targetFilesPath = "single/custom/target/dir"
+			targetFilesPath := "single/custom/target/dir"
 			// This is automatically relative to docroot
 			app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
-			fullTargetFilesPath := app.GetHostUploadDirFullPath()
+			fullTargetFilesPath = app.GetHostUploadDirFullPath()
 			err = os.MkdirAll(fullTargetFilesPath, 0755)
 			require.NoError(t, err)
 			err = fileutil.PurgeDirectory(fullTargetFilesPath)
@@ -2494,6 +2494,26 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			dirEntrySlice, err = os.ReadDir(secondTargetedFulPath)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
+
+			// Try with a relative files dir, like ../private
+			if app.Docroot != "" {
+				targetFilesPath = "../private"
+				// This is automatically relative to docroot
+				app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
+				fullTargetFilesPath = app.GetHostUploadDirFullPath()
+				err = os.MkdirAll(fullTargetFilesPath, 0755)
+				require.NoError(t, err)
+				err = fileutil.PurgeDirectory(fullTargetFilesPath)
+				require.NoError(t, err)
+
+				_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+				require.NoError(t, err)
+				err = app.ImportFiles("", tarballPath, "")
+				assert.NoError(err)
+				dirEntrySlice, err = os.ReadDir(fullTargetFilesPath)
+				assert.NoError(err)
+				assert.NotEmpty(dirEntrySlice)
+			}
 		}
 
 		if site.FilesZipballURL != "" {
