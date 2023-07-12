@@ -388,8 +388,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
             mkdir my-silverstripe-app
             cd my-silverstripe-app
             ddev config --project-type=silverstripe --docroot=public --create-docroot
-            ddev composer create --prefer-dist --no-install --no-scripts silverstripe/installer -y
-            ddev composer install
+            ddev composer create --prefer-dist --no-scripts silverstripe/installer -y
             ddev start
             ```
         === "Git Clone"
