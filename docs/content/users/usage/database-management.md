@@ -13,7 +13,7 @@ Import a database with one command, from one of the following file formats:
 Here’s an example of a database import using DDEV:
 
 ```bash
-ddev import-db --src=dumpfile.sql.gz
+ddev import-db --file=dumpfile.sql.gz
 ```
 
 You can also:

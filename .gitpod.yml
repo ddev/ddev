@@ -24,7 +24,7 @@ tasks:
       ddev stop -a
       ddev start -y
       if [ -d "/tmp/${DDEV_ARTIFACTS##*/}" ]; then
-        ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
+        ddev import-db --file=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
         ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
       fi
       gp ports await 8080 && sleep 1 && gp preview $(gp url 8080)
