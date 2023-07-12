@@ -11,7 +11,7 @@ import (
 
 // isSilverstripeApp returns true if the app is of type Silverstripe
 func isSilverstripeApp(app *DdevApp) bool {
-	return fileutil.FileExists(filepath.Join(app.AppRoot, "vendor/bin/sake"))
+	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "vendor/bin/sake"))
 }
 
 func silverstripePostStartAction(app *DdevApp) error {
@@ -19,13 +19,13 @@ func silverstripePostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	envFilePath := filepath.Join(app.AppRoot, ".env")
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Unable to read .env file: %v", err)
 	}
 	if os.IsNotExist(err) {
-		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
+		err = fileutil.CopyFile(filepath.Join(app.AppRoot, app.ComposerRoot, ".env.example"), envFilePath)
 		if err != nil {
 			util.Debug("Silverstripe: .env.example does not exist yet, not trying to process it")
 			return nil

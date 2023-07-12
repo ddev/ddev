@@ -222,6 +222,19 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php", Expect: "This program makes use of the Zend Scripting Language Engine"},
 		},
+		// 12: Silverstripe
+		{
+			Name:                          "TestPkgSilverstripe",
+			SourceURL:                     "https://github.com/Firesphere/asset-store/releases/download/1.0.0/silverstripe-base.tar.gz",
+			DBTarURL:                      "https://github.com/Firesphere/asset-store/releases/download/1.0.0/db.tar.gz",
+			ArchiveInternalExtractionPath: "",
+			FullSiteTarballURL:            "",
+			FilesTarballURL:               "",
+			Docroot:                       "public",
+			Type:                          nodeps.AppTypeSilverstripe,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to Silverstripe"},
+		},
 		// 12: drupal10
 		{
 			Name:                          "TestPkgDrupal10",
