@@ -2513,6 +2513,13 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 				dirEntrySlice, err = os.ReadDir(fullTargetFilesPath)
 				assert.NoError(err)
 				assert.NotEmpty(dirEntrySlice)
+
+				// Try with upload_dir that is outside project
+				app.UploadDirs = "../../nowhere"
+				_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+				require.NoError(t, err)
+				err = app.ImportFiles("", tarballPath, "")
+				assert.Error(err)
 			}
 		}
 
@@ -2544,7 +2551,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		app.UploadDirs = false
 		err = app.ImportFiles("", "/tmp", "")
 		assert.Error(err)
-		require.Contains(t, err.Error(), "is not set for this project")
+		require.Contains(t, err.Error(), "cannot import files")
 
 		switchDir()
 	}
