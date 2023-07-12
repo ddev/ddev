@@ -2447,46 +2447,51 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		if site.FilesTarballURL != "" {
 			// First, try import with the project-default upload_dirs
 			// Make sure we don't have files to start
-			err = os.RemoveAll(app.GetHostUploadDirFullPath())
+			targetFilesPath := app.GetUploadDir()
+			err = os.RemoveAll(targetFilesPath)
 			require.NoError(t, err)
 
-			err = os.RemoveAll(app.GetUploadDir())
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles("", tarballPath, "")
 			assert.NoError(err)
 
 			// Ensure upload dir isn't empty
-			dirEntrySlice, err := os.ReadDir(absUploadDir)
+			dirEntrySlice, err := os.ReadDir(targetFilesPath)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
 
 			// Second, try with a single custom upload_dirs
-			app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
-			err = os.MkdirAll("my/upload/dir", 0755)
+			targetFilesPath = "single/custom/target/dir"
+			// This is automatically relative to docroot
+			app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
+			fullTargetFilesPath := app.GetHostUploadDirFullPath()
+			err = os.MkdirAll(fullTargetFilesPath, 0755)
 			require.NoError(t, err)
-			err = os.RemoveAll(app.GetHostUploadDirFullPath())
+			err = fileutil.PurgeDirectory(fullTargetFilesPath)
 			require.NoError(t, err)
+
 			_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles("", tarballPath, "")
 			assert.NoError(err)
-			dirEntrySlice, err = os.ReadDir(app.GetHostUploadDirFullPath())
+			dirEntrySlice, err = os.ReadDir(fullTargetFilesPath)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
 
 			// Now try explicit import to targeted import_dir
-			app.UploadDirs = ddevapp.UploadDirs{"sites/default/files", "my/targeted/dir"}
-			targetDir := filepath.Join(app.AppRoot, "my/targeted/dir")
-			err = os.RemoveAll(targetDir)
+			secondTargetDir := "second/targeted/dir"
+			secondTargetedFulPath := filepath.Join(app.AppRoot, app.Docroot, secondTargetDir)
+			app.UploadDirs = ddevapp.UploadDirs{"sites/default/files", secondTargetDir}
+			err = os.MkdirAll(secondTargetedFulPath, 0755)
 			require.NoError(t, err)
-			err = os.MkdirAll("my/targeted/dir", 0755)
+			err = fileutil.PurgeDirectory(secondTargetedFulPath)
 			require.NoError(t, err)
 			_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
-			err = app.ImportFiles("my/targeted/dir", tarballPath, "")
+			err = app.ImportFiles(secondTargetDir, tarballPath, "")
 			assert.NoError(err)
-			dirEntrySlice, err = os.ReadDir(targetDir)
+			dirEntrySlice, err = os.ReadDir(secondTargetedFulPath)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
 		}
