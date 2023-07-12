@@ -2133,7 +2133,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			}
 			err = app.ImportFiles("", tarballPath, "")
 			assert.Error(err)
-			assert.Contains(err.Error(), fmt.Sprintf("upload_dirs is not set for this project (%s)", app.Type))
+			assert.Contains(err.Error(), "upload_dirs is not set", app.Type)
 		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)

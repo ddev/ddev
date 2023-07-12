@@ -863,7 +863,7 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error
 	if uploadDir == "" {
 		uploadDir = app.GetUploadDir()
 		if uploadDir == "" {
-			return fmt.Errorf("upload_dir is not set, cannot import files")
+			return fmt.Errorf("upload_dirs is not set, cannot import files")
 		}
 	}
 
