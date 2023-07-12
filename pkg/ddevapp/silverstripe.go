@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 )
 
+// TODO Check if location is still correct when composer bin folder is changed.
+// see https://github.com/ddev/ddev/pull/5058
 // isSilverstripeApp returns true if the app is of type Silverstripe
 func isSilverstripeApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "vendor/bin/sake"))
