@@ -46,6 +46,8 @@ func (app *DdevApp) GetUploadDir() string {
 }
 
 // GetUploadDirs returns the upload (public files) directories.
+// These are gathered from the per-CMS configurations and the
+// value of upload_dirs. upload_dirs overrides the per-CMS configuration
 func (app *DdevApp) GetUploadDirs() UploadDirs {
 	err := app.validateUploadDirs()
 	if err != nil {
@@ -59,12 +61,31 @@ func (app *DdevApp) GetUploadDirs() UploadDirs {
 		app.addUploadDir(uploadDirDeprecated)
 	}
 
-	if app.UploadDirs == false {
+	switch app.UploadDirs.(type) {
+	case UploadDirs:
+		if len(app.UploadDirs.(UploadDirs)) > 0 {
+			return app.UploadDirs.(UploadDirs)
+		}
+		// Otherwise we go get the CMS-defined values
+	case []any:
+		if len(app.UploadDirs.([]any)) > 0 {
+			// User provided a list of strings, convert it to UploadDirs.
+			uploadDirsRaw := app.UploadDirs.([]any)
+			uploadDirs := make(UploadDirs, 0, len(uploadDirsRaw))
+			for _, v := range uploadDirsRaw {
+				uploadDirs = append(uploadDirs, v.(string))
+			}
+			app.UploadDirs = uploadDirs
+			return uploadDirs
+		}
+		// Otherwise we go get the CMS-defined values
+	case bool:
+		if app.UploadDirs.(bool) == false {
+			return UploadDirs{}
+		}
+	default:
+		util.Warning("app.UploadDirs is of invalid type %T", app.UploadDirs)
 		return UploadDirs{}
-	}
-
-	if dirs, ok := app.UploadDirs.(UploadDirs); ok && len(dirs) > 0 {
-		return dirs
 	}
 
 	appFuncs, ok := appTypeMatrix[app.GetType()]
