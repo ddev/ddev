@@ -2428,20 +2428,29 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 		t.Logf("== BEGIN TestDdevImportFilesCustomUploadDir for %s\n", site.Name)
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		require.NoError(t, err)
 
-		// Set custom upload dir
-		app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
+		// Try custom upload dir
+		//app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
 		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
 		err = os.MkdirAll(absUploadDir, 0755)
 		assert.NoError(err)
 
+		// Reset to use the default upload_dirs for the project
+		err = app.Init(site.Dir)
+		require.NoError(t, err)
+
 		if site.FilesTarballURL != "" {
+			// First, try import with the project-default upload_dirs
+			// Make sure we don't have files to start
+			err = os.RemoveAll(app.GetHostUploadDirFullPath())
+			require.NoError(t, err)
+
+			err = os.RemoveAll(app.GetUploadDir())
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles("", tarballPath, "")
@@ -2449,6 +2458,35 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 			// Ensure upload dir isn't empty
 			dirEntrySlice, err := os.ReadDir(absUploadDir)
+			assert.NoError(err)
+			assert.NotEmpty(dirEntrySlice)
+
+			// Second, try with a single custom upload_dirs
+			app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
+			err = os.MkdirAll("my/upload/dir", 0755)
+			require.NoError(t, err)
+			err = os.RemoveAll(app.GetHostUploadDirFullPath())
+			require.NoError(t, err)
+			_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles("", tarballPath, "")
+			assert.NoError(err)
+			dirEntrySlice, err = os.ReadDir(app.GetHostUploadDirFullPath())
+			assert.NoError(err)
+			assert.NotEmpty(dirEntrySlice)
+
+			// Now try explicit import to targeted import_dir
+			app.UploadDirs = ddevapp.UploadDirs{"sites/default/files", "my/targeted/dir"}
+			targetDir := filepath.Join(app.AppRoot, "my/targeted/dir")
+			err = os.RemoveAll(targetDir)
+			require.NoError(t, err)
+			err = os.MkdirAll("my/targeted/dir", 0755)
+			require.NoError(t, err)
+			_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles("my/targeted/dir", tarballPath, "")
+			assert.NoError(err)
+			dirEntrySlice, err = os.ReadDir(targetDir)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
 		}
@@ -2477,7 +2515,12 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			assert.NotEmpty(dirEntrySlice)
 		}
 
-		runTime()
+		// We should not be able to import with upload_dirs=false
+		app.UploadDirs = false
+		err = app.ImportFiles("", "/tmp", "")
+		assert.Error(err)
+		require.Contains(t, err.Error(), "is not set for this project")
+
 		switchDir()
 	}
 }
