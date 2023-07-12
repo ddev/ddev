@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -10,13 +13,11 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
-	if nodeps.IsMacM1() {
+	if nodeps.IsAppleSilicon() {
 		t.Skip("Skipping TestCmdSSH on Mac M1 because of useless Docker Desktop failures to connect")
 	}
 	assert := asrt.New(t)

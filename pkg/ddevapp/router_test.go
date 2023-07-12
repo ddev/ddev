@@ -218,7 +218,7 @@ func TestRouterConfigOverride(t *testing.T) {
 
 // TestDisableHTTP2 tests we can enable or disable http2
 func TestDisableHTTP2(t *testing.T) {
-	if nodeps.IsMacM1() {
+	if nodeps.IsAppleSilicon() {
 		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
 	}
 	if globalconfig.GetCAROOT() == "" {

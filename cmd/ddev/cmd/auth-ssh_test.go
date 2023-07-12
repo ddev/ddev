@@ -1,16 +1,17 @@
 package cmd_test
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ import (
 
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
 func TestCmdAuthSSH(t *testing.T) {
-	if nodeps.IsMacM1() {
+	if nodeps.IsAppleSilicon() {
 		t.Skip("Skipping TestCmdAuthSSH on Mac M1 because of useless Docker Desktop failures to connect")
 	}
 

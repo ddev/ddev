@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -29,7 +30,7 @@ func TestLogsNoConfig(t *testing.T) {
 
 // TestCmdLogs tests that the ddev logs functionality is working.
 func TestCmdLogs(t *testing.T) {
-	//if nodeps.IsMacM1() {
+	//if nodeps.IsAppleSilicon() {
 	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
 	//}
 	assert := asrt.New(t)

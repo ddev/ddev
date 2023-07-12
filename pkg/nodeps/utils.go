@@ -1,7 +1,6 @@
 package nodeps
 
 import (
-	"golang.org/x/term"
 	"math/rand"
 	"net"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"time"
 	"unicode"
+
+	"golang.org/x/term"
 )
 
 // ArrayContainsString returns true if slice contains element
@@ -62,8 +63,8 @@ func RandomString(length int) string {
 	return string(b)
 }
 
-// IsMacM1 returns true if running on mac M1
-func IsMacM1() bool {
+// IsAppleSilicon returns true if running on mac M1
+func IsAppleSilicon() bool {
 	return runtime.GOOS == "darwin" && runtime.GOARCH == "arm64"
 }
 
