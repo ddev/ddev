@@ -165,8 +165,8 @@ var (
 		// 8: drupal9
 		{
 			Name:                          "TestPkgDrupal9",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.4.2.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-9.4.2/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.5.10.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.5.10/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
 			FilesZipballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
@@ -225,8 +225,8 @@ var (
 		// 12: drupal10
 		{
 			Name:                          "TestPkgDrupal10",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.0.0-alpha6.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-10.0.0-alpha6",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.1.1.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-10.1.1/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",
