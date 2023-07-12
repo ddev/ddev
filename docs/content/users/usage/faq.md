@@ -55,7 +55,7 @@ The username, password, and database are each `db` regardless of how you connect
 Yes, you can create additional databases and manually do whatever you need on them. They’re created automatically if you use `ddev import-db` with the `--target-db` option. In this example, `extradb.sql.gz` is extracted and imported to a newly-created database named `extradb`:
 
 ```
-ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz
+ddev import-db --target-db=extradb --file=.tarballs/extradb.sql.gz
 ```
 
 You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute queries, or use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [Database Management](database-management.md) page.

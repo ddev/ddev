@@ -679,7 +679,7 @@ Successfully imported database for drupal8
 
 #### Non-Interactive Usage
 
-If you want to use the [`import-db`](../users/usage/commands.md#import-db) command without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
+If you want to use the [`import-db`](../users/usage/commands.md#import-db) command without answering prompts, you can use the `--source` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--source` flag. Examples:
 
 ```bash
 ddev import-db --file=/tmp/mydb.sql.gz

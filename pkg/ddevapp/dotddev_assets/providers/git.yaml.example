@@ -37,4 +37,4 @@ files_import_command:
   command: |
     set -eu -o pipefail
     # set -x
-    ddev import-files --src="${checkout_dir}/files"
+    ddev import-files --source="${checkout_dir}/files"

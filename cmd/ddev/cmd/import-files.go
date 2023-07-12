@@ -31,12 +31,12 @@ func NewImportFileCmd() *cobra.Command {
 			type's default upload directory will be used.
 		`),
 		Example: heredoc.DocI2S(`
-			ddev import-files --src=/path/to/files.tar.gz
-			ddev import-files --src=/path/to/dir
-			ddev import-files --src=/path/to/files.tar.xz
-			ddev import-files --src=/path/to/files.tar.bz2
-			ddev import-files --src=.tarballs/files.tar.xz --target=../private
-			ddev import-files --src=.tarballs/files.tar.gz --target=sites/default/files
+			ddev import-files --source=/path/to/files.tar.gz
+			ddev import-files --source=/path/to/dir
+			ddev import-files --source=/path/to/files.tar.xz
+			ddev import-files --source=/path/to/files.tar.bz2
+			ddev import-files --source=.tarballs/files.tar.xz --target=../private
+			ddev import-files --source=.tarballs/files.tar.gz --target=sites/default/files
 		`),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			dockerutil.EnsureDdevNetwork()
@@ -89,7 +89,7 @@ func importFilesRun(app *ddevapp.DdevApp, uploadDir, sourcePath, extractPath str
 	var showExtPathPrompt bool
 	if sourcePath == "" {
 		// Ensure we prompt for extraction path if an archive is provided, while still allowing
-		// non-interactive use of --src flag without providing a --extract-path flag.
+		// non-interactive use of --source flag without providing a --extract-path flag.
 		if extractPath == "" {
 			showExtPathPrompt = true
 		}
@@ -103,7 +103,7 @@ func importFilesRun(app *ddevapp.DdevApp, uploadDir, sourcePath, extractPath str
 	}
 
 	// Ensure we prompt for extraction path if an archive is provided, while still allowing
-	// non-interactive use of --src flag without providing a --extract-path flag.
+	// non-interactive use of --source flag without providing a --extract-path flag.
 	if isArchive && showExtPathPrompt {
 		promptForExtractPath(&extractPath)
 	}
