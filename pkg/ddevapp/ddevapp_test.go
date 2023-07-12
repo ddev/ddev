@@ -2444,7 +2444,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		err = app.Init(site.Dir)
 		require.NoError(t, err)
 
-		if site.FilesTarballURL != "" {
+		if site.FilesTarballURL != "" && site.UploadDirs != nil {
 			// First, try import with the project-default upload_dirs
 			// Make sure we don't have files to start
 			fullTargetFilesPath := app.GetHostUploadDirFullPath()
