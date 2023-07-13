@@ -2434,8 +2434,6 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		err := app.Init(site.Dir)
 		require.NoError(t, err)
 
-		// Try custom upload dir
-		//app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
 		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
 		err = os.MkdirAll(absUploadDir, 0755)
 		assert.NoError(err)
