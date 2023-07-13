@@ -178,12 +178,12 @@ func (app *DdevApp) getUploadDirsRelative() []string {
 	return uploadDirsMap
 }
 
-// createUploadDirsIfNecessary creates the upload dirs if it doesn't exist, so we can properly
+// CreateUploadDirsIfNecessary creates the upload dirs if it doesn't exist, so we can properly
 // set up bind-mounts when doing mutagen.
 // There is no need to do it if mutagen is not enabled, and
 // we'll just respect a symlink if it exists, and the user has to figure out the right
 // thing to do with mutagen.
-func (app *DdevApp) createUploadDirsIfNecessary() {
+func (app *DdevApp) CreateUploadDirsIfNecessary() {
 	for _, target := range app.GetUploadDirs() {
 		if hostDir := app.calculateHostUploadDirFullPath(target); hostDir != "" && app.IsMutagenEnabled() && !fileutil.FileExists(hostDir) {
 			err := os.MkdirAll(hostDir, 0755)

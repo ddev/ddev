@@ -992,7 +992,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	app.createUploadDirsIfNecessary()
+	app.CreateUploadDirsIfNecessary()
 
 	if app.IsMutagenEnabled() {
 		err = app.GenerateMutagenYml()

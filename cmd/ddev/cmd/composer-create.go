@@ -95,6 +95,17 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		// Upload dirs have to be there for bind-mounts to work when mutagen enabled
+		app.CreateUploadDirsIfNecessary()
+		// We may have just removed host-side directories, invalidating
+		// the docker bind-mounts are using, so restart to pick up the new ones.
+		if app.IsMutagenEnabled() {
+			err = app.Restart()
+			if err != nil {
+				util.Failed("Failed to restart project after removal of project files: %v", err)
+			}
+		}
+
 		err = app.MutagenSyncFlush()
 		if err != nil {
 			util.Failed("Failed to sync mutagen contents: %v", err)
