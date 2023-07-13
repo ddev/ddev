@@ -53,7 +53,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         ddev composer install
 
         # Import a database backup and open the site in your browser:
-        ddev import-db --src=/path/to/db.sql.gz
+        ddev import-db --file=/path/to/db.sql.gz
         ddev launch
         ```
 
@@ -308,7 +308,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     * Download Magento [1.9.2.4 Sample Data](https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz).
     * Extract the download:
         `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
-    * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --src=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
+    * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --file=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
 
     OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
 
@@ -639,7 +639,7 @@ An important aspect of local web development is the ability to have a precise lo
 
 ### Importing a Database
 
-The [`ddev import-db`](../users/usage/commands.md#import-db) command imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
+The [`ddev import-db`](../users/usage/commands.md#import-db) command imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --file=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
 
 ```bash
 ddev import-db
@@ -679,10 +679,10 @@ Successfully imported database for drupal8
 
 #### Non-Interactive Usage
 
-If you want to use the [`import-db`](../users/usage/commands.md#import-db) command without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
+If you want to use the [`import-db`](../users/usage/commands.md#import-db) command without answering prompts, you can use the `--source` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--source` flag. Examples:
 
 ```bash
-ddev import-db --src=/tmp/mydb.sql.gz
+ddev import-db --file=/tmp/mydb.sql.gz
 gzip -dc /tmp/mydb.sql.gz | ddev import-db
 ddev import-db <mydb.sql
 ```

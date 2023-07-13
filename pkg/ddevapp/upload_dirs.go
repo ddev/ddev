@@ -35,6 +35,7 @@ func (app *DdevApp) addUploadDir(uploadDir string) {
 }
 
 // GetUploadDir returns the first upload (public files) directory.
+// This value is relative to the docroot
 func (app *DdevApp) GetUploadDir() string {
 	uploadDirs := app.GetUploadDirs()
 	if len(uploadDirs) > 0 {
@@ -45,11 +46,13 @@ func (app *DdevApp) GetUploadDir() string {
 }
 
 // GetUploadDirs returns the upload (public files) directories.
+// These are gathered from the per-CMS configurations and the
+// value of upload_dirs. upload_dirs overrides the per-CMS configuration
 func (app *DdevApp) GetUploadDirs() UploadDirs {
 	err := app.validateUploadDirs()
 	if err != nil {
-		// Should never happen
-		panic(err)
+		util.Warning("Ignoring invalid upload_dirs value: %v", err)
+		return UploadDirs{}
 	}
 
 	if app.UploadDirDeprecated != "" {
@@ -58,12 +61,31 @@ func (app *DdevApp) GetUploadDirs() UploadDirs {
 		app.addUploadDir(uploadDirDeprecated)
 	}
 
-	if app.UploadDirs == false {
+	switch app.UploadDirs.(type) {
+	case UploadDirs:
+		if len(app.UploadDirs.(UploadDirs)) > 0 {
+			return app.UploadDirs.(UploadDirs)
+		}
+		// Otherwise we go get the CMS-defined values
+	case []any:
+		if len(app.UploadDirs.([]any)) > 0 {
+			// User provided a list of strings, convert it to UploadDirs.
+			uploadDirsRaw := app.UploadDirs.([]any)
+			uploadDirs := make(UploadDirs, 0, len(uploadDirsRaw))
+			for _, v := range uploadDirsRaw {
+				uploadDirs = append(uploadDirs, v.(string))
+			}
+			app.UploadDirs = uploadDirs
+			return uploadDirs
+		}
+		// Otherwise we go get the CMS-defined values
+	case bool:
+		if app.UploadDirs.(bool) == false {
+			return UploadDirs{}
+		}
+	default:
+		util.Warning("app.UploadDirs is of invalid type %T", app.UploadDirs)
 		return UploadDirs{}
-	}
-
-	if len(app.UploadDirs.(UploadDirs)) > 0 {
-		return app.UploadDirs.(UploadDirs)
 	}
 
 	appFuncs, ok := appTypeMatrix[app.GetType()]
@@ -194,13 +216,16 @@ func (app *DdevApp) createUploadDirsIfNecessary() {
 	}
 }
 
-// validateUploadDirs validates and converts UploadDirs to a app.UploadDirs
+// validateUploadDirs validates and converts UploadDirs to app.UploadDirs
 // interface or if disabled to bool false and returns nil if succeeded or an
 // error if not.
+// app.UploadDirs must be one of:
+// - slice of string (possibly empty)
+// - boolean false
 func (app *DdevApp) validateUploadDirs() error {
-	if _, ok := app.UploadDirs.(UploadDirs); ok {
-		// Conversion was already done, nothing to do.
-		return nil
+	if raw, ok := app.UploadDirs.(UploadDirs); ok {
+		// User provided a list of strings, convert it to UploadDirs.
+		app.UploadDirs = raw
 	}
 
 	typeOfUploadDirs := reflect.TypeOf(app.UploadDirs)
@@ -214,22 +239,18 @@ func (app *DdevApp) validateUploadDirs() error {
 		// User provided a string, convert it to UploadDirs.
 		app.UploadDirs = UploadDirs{app.UploadDirs.(string)}
 	case typeOfUploadDirs.Kind() == reflect.Slice:
-		// User provided a list of strings, convert it to UploadDirs.
-		uploadDirsRaw := app.UploadDirs.([]any)
-		uploadDirs := make(UploadDirs, 0, len(uploadDirsRaw))
-		for _, v := range uploadDirsRaw {
-			uploadDirs = append(uploadDirs, v.(string))
-		}
-		app.UploadDirs = uploadDirs
+		break
 	default:
 		// Provided value is not valid, user has to fix it.
 		return fmt.Errorf("`upload_dirs` must be a string, a list of strings, or false but `%v` given", app.UploadDirs)
 	}
 
-	// Check upload dirs are in the project root.
-	for _, uploadDir := range app.UploadDirs.(UploadDirs) {
-		if !strings.HasPrefix(app.calculateHostUploadDirFullPath(uploadDir), app.AppRoot) {
-			return fmt.Errorf("invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
+	if dirs, ok := app.UploadDirs.(UploadDirs); ok {
+		// Check upload dirs are in the project root.
+		for _, uploadDir := range dirs {
+			if !strings.HasPrefix(app.calculateHostUploadDirFullPath(uploadDir), app.AppRoot) {
+				return fmt.Errorf("invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
+			}
 		}
 	}
 

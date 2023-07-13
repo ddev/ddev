@@ -705,7 +705,7 @@ ddev import-files --source=/path/to/files.tar.gz
 ddev import-files --source=/path/to/dir
 
 # Import `.tarballs/files.tar.xz` contents to the project’s `../private` upload directory
-ddev import-files --src=.tarballs/files.tar.xz --target=../private
+ddev import-files --source=.tarballs/files.tar.xz --target=../private
 
 # Import `/path/to/dir` contents to the project’s `sites/default/files` upload directory
 ddev import-files -s=.tarballs/files.tar.gz -t=sites/default/files

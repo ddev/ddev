@@ -28,7 +28,7 @@ func TestImportTilde(t *testing.T) {
 	defer rmFile(testFile)
 
 	// this ~ should be expanded by shell
-	args := []string{"import-files", "--src", "~/testfile.tar.gz"}
+	args := []string{"import-files", "--source", "~/testfile.tar.gz"}
 	out, err := exec.RunCommand(DdevBin, args)
 	if err != nil {
 		t.Log("Error Output from ddev import-files:", out, site)
@@ -37,7 +37,7 @@ func TestImportTilde(t *testing.T) {
 	assert.Contains(string(out), "Successfully imported files")
 
 	// this ~ is not expanded by shell, ddev should convert it to a valid path
-	args = []string{"import-files", "--src=~/testfile.tar.gz"}
+	args = []string{"import-files", "--source=~/testfile.tar.gz"}
 	out, err = exec.RunCommand(DdevBin, args)
 	if err != nil {
 		t.Log("Error Output from ddev import-files:", out, site)

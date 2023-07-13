@@ -489,7 +489,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	// then prompt for path to db
 	if dumpFile == "" && isatty.IsTerminal(os.Stdin.Fd()) {
 		// ensure we prompt for extraction path if an archive is provided, while still allowing
-		// non-interactive use of --src flag without providing a --extract-path flag.
+		// non-interactive use of --file flag without providing a --extract-path flag.
 		if extractPath == "" {
 			extPathPrompt = true
 		}
@@ -862,6 +862,9 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error
 
 	if uploadDir == "" {
 		uploadDir = app.GetUploadDir()
+		if uploadDir == "" {
+			return fmt.Errorf("upload_dirs is not set, cannot import files")
+		}
 	}
 
 	if err := app.dispatchImportFilesAction(uploadDir, importPath, extractPath); err != nil {
@@ -2843,4 +2846,49 @@ func FormatSiteStatus(status string) string {
 		formattedStatus = util.ColorizeText(formattedStatus, "green")
 	}
 	return formattedStatus
+}
+
+// genericImportFilesAction defines the workflow for importing project files.
+func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
+
+	// parent of destination dir should exist
+	if !fileutil.FileExists(filepath.Dir(destPath)) {
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+	}
+
+	// parent of destination dir should be writable.
+	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+		return err
+	}
+
+	// If the destination path exists, remove it as was warned
+	if fileutil.FileExists(destPath) {
+		if err := os.RemoveAll(destPath); err != nil {
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+		}
+	}
+
+	if isTar(importPath) {
+		if err := archive.Untar(importPath, destPath, extPath); err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+		return nil
+	}
+
+	if isZip(importPath) {
+		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+		return nil
+	}
+
+	//nolint: revive
+	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+		return err
+	}
+
+	return nil
 }

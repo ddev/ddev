@@ -25,6 +25,6 @@ fi
 ddev stop -a
 ddev start -y
 if [ -d "/tmp/${DDEV_ARTIFACTS##*/}" ]; then
-    ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
-    ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
+    ddev import-db --file=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
+    ddev import-files --source=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
 fi
