@@ -55,7 +55,7 @@ The username, password, and database are each `db` regardless of how you connect
 Yes, you can create additional databases and manually do whatever you need on them. They’re created automatically if you use `ddev import-db` with the `--target-db` option. In this example, `extradb.sql.gz` is extracted and imported to a newly-created database named `extradb`:
 
 ```
-ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz
+ddev import-db --target-db=extradb --file=.tarballs/extradb.sql.gz
 ```
 
 You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute queries, or use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [Database Management](database-management.md) page.
@@ -191,7 +191,7 @@ Delete it and migrate it to a new project with your preferred name:
 2. Delete the project: `ddev delete <project>`. (This takes a snapshot by default for safety.)
 3. Rename the project: `ddev config --project-name=<new_name>`.
 4. Start thew new project with `ddev start`.
-5. Import the database dump from step one: `ddev import-db --src=/path/to/db.sql.gz`.
+5. Import the database dump from step one: `ddev import-db --file=/path/to/db.sql.gz`.
 
 ### How can I move a project to another directory?
 

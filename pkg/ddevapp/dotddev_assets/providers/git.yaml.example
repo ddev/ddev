@@ -30,11 +30,11 @@ db_import_command:
   command: |
     set -eu -o pipefail
     # set -x
-    ddev import-db --src="${checkout_dir}/db.sql.gz"
+    ddev import-db --file="${checkout_dir}/db.sql.gz"
 
 files_import_command:
   service: host
   command: |
     set -eu -o pipefail
     # set -x
-    ddev import-files --src="${checkout_dir}/files"
+    ddev import-files --source="${checkout_dir}/files"

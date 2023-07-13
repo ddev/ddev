@@ -489,7 +489,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	// then prompt for path to db
 	if dumpFile == "" && isatty.IsTerminal(os.Stdin.Fd()) {
 		// ensure we prompt for extraction path if an archive is provided, while still allowing
-		// non-interactive use of --src flag without providing a --extract-path flag.
+		// non-interactive use of --file flag without providing a --extract-path flag.
 		if extractPath == "" {
 			extPathPrompt = true
 		}
