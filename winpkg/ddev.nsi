@@ -507,14 +507,14 @@ SectionGroupEnd
 /**
  * WinNFSd group
  */
-SectionGroup /e "WinNFSd"
+SectionGroup /e "WinNFSd (deprecated)"
   /**
    * WinNFSd application install
    */
-  Section "${WINNFSD_NAME}" SecWinNFSd
+  Section /o "${WINNFSD_NAME}" SecWinNFSd
     SectionIn 1
     SetOutPath "$INSTDIR"
-    SetOverwrite try
+    SetOverwrite off
 
     ; Copy files
     File "licenses\winnfsd_license.txt"
@@ -542,7 +542,7 @@ SectionGroup /e "WinNFSd"
   /**
    * NSSM application install
    */
-  Section "${NSSM_NAME}" SecNSSM
+  Section /o "${NSSM_NAME}" SecNSSM
     ; Install in non choco mode only
     ${IfNot} ${Chocolatey}
       SectionIn 1
