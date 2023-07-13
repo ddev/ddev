@@ -454,7 +454,7 @@ The `php` and `python` types don’t attempt [CMS configuration](../../users/qui
 
 ## `upload_dirs`
 
-Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`. Can be outside the docroot but must be within the project directory e.g. `../private`. Some CMSs and frameworks have default `upload_dirs`, like Drupal's `sites/default/files`; `upload_dirs` will override the defaults, so if you want Drupal to use both `sites/default/files` and `../private` you would list both, `upload_dirs: ["sites/default/files", "../private"]`. `upload_dirs` is used for targeting `ddev import-files` and also, when Mutagen is enabled, to bind-mount those directories so their contents does not need to be synced into Mutagen.
+Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`. Can be outside the docroot but must be within the project directory e.g. `../private`. Some CMSes and frameworks have default `upload_dirs`, like Drupal's `sites/default/files`; `upload_dirs` will override the defaults, so if you want Drupal to use both `sites/default/files` and `../private` you would list both, `upload_dirs: ["sites/default/files", "../private"]`. `upload_dirs` is used for targeting `ddev import-files` and also, when Mutagen is enabled, to bind-mount those directories so their contents does not need to be synced into Mutagen.
 
 | Type | Default | Usage
 | -- | -- | --
