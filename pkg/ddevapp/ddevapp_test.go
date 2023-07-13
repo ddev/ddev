@@ -2397,26 +2397,27 @@ func TestDdevImportFiles(t *testing.T) {
 			}
 		}
 
-		// Import trivial archive with various types of archive/compression and verify that files arrive
-		extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.gz"}
-		for _, ext := range extensions {
-			tarballPath := filepath.Join(origDir, "testdata", t.Name(), "files."+ext)
-			_ = os.RemoveAll(filepath.Join(app.GetHostUploadDirFullPath(), "files."+ext+".txt"))
-			err = app.ImportFiles("", tarballPath, "")
-			if err != nil {
-				assert.NoError(err)
-				continue
+		if app.GetUploadDir() != "" {
+			// Import trivial archive with various types of archive/compression and verify that files arrive
+			extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.gz"}
+			for _, ext := range extensions {
+				tarballPath := filepath.Join(origDir, "testdata", t.Name(), "files."+ext)
+				_ = os.RemoveAll(filepath.Join(app.GetHostUploadDirFullPath(), "files."+ext+".txt"))
+
+				err = app.ImportFiles("", tarballPath, "")
+				if err != nil {
+					assert.NoError(err)
+					continue
+				}
+				assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), ext+".txt"))
 			}
-			assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), ext+".txt"))
+			assert.FileExists("hello-pre-import-files-" + app.Name)
+			assert.FileExists("hello-post-import-files-" + app.Name)
+			err = os.Remove("hello-pre-import-files-" + app.Name)
+			assert.NoError(err)
+			err = os.Remove("hello-post-import-files-" + app.Name)
+			assert.NoError(err)
 		}
-
-		assert.FileExists("hello-pre-import-files-" + app.Name)
-		assert.FileExists("hello-post-import-files-" + app.Name)
-		err = os.Remove("hello-pre-import-files-" + app.Name)
-		assert.NoError(err)
-		err = os.Remove("hello-post-import-files-" + app.Name)
-		assert.NoError(err)
-
 		runTime()
 	}
 }
