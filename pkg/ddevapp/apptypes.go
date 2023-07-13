@@ -98,6 +98,7 @@ func init() {
 			configOverrideAction: django4ConfigOverrideAction,
 			postConfigAction:     django4PostConfigAction,
 			postStartAction:      django4PostStartAction,
+			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeDrupal6: {
@@ -159,6 +160,7 @@ func init() {
 			appTypeDetect:        isLaravelApp,
 			postStartAction:      laravelPostStartAction,
 			configOverrideAction: laravelConfigOverrideAction,
+			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeMagento: {
@@ -181,13 +183,14 @@ func init() {
 
 		nodeps.AppTypePHP: {
 			postStartAction:   phpPostStartAction,
-			importFilesAction: phpImportFilesAction,
+			importFilesAction: genericImportFilesAction,
 		},
 
 		nodeps.AppTypePython: {
 			appTypeDetect:        isPythonApp,
 			configOverrideAction: pythonConfigOverrideAction,
 			postConfigAction:     pythonPostConfigAction,
+			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeShopware6: {

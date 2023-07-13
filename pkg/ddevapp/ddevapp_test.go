@@ -165,8 +165,8 @@ var (
 		// 8: drupal9
 		{
 			Name:                          "TestPkgDrupal9",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.4.2.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-9.4.2/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.5.10.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.5.10/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
 			FilesZipballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
@@ -225,8 +225,8 @@ var (
 		// 12: drupal10
 		{
 			Name:                          "TestPkgDrupal10",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.0.0-alpha6.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-10.0.0-alpha6",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.1.1.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-10.1.1/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",
@@ -2133,7 +2133,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			}
 			err = app.ImportFiles("", tarballPath, "")
 			assert.Error(err)
-			assert.Contains(err.Error(), fmt.Sprintf("upload_dirs is not set for this project (%s)", app.Type))
+			assert.Contains(err.Error(), "upload_dirs is not set", app.Type)
 		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
@@ -2428,29 +2428,97 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 		t.Logf("== BEGIN TestDdevImportFilesCustomUploadDir for %s\n", site.Name)
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		require.NoError(t, err)
 
-		// Set custom upload dir
-		app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
 		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
 		err = os.MkdirAll(absUploadDir, 0755)
 		assert.NoError(err)
 
-		if site.FilesTarballURL != "" {
+		// Reset to use the default upload_dirs for the project
+		err = app.Init(site.Dir)
+		require.NoError(t, err)
+
+		if site.FilesTarballURL != "" && site.UploadDirs != nil {
+			// First, try import with the project-default upload_dirs
+			// Make sure we don't have files to start
+			fullTargetFilesPath := app.GetHostUploadDirFullPath()
+			err = os.RemoveAll(fullTargetFilesPath)
+			require.NoError(t, err)
+
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles("", tarballPath, "")
 			assert.NoError(err)
 
 			// Ensure upload dir isn't empty
-			dirEntrySlice, err := os.ReadDir(absUploadDir)
+			dirEntrySlice, err := os.ReadDir(fullTargetFilesPath)
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
+
+			// Second, try with a single custom upload_dirs
+			targetFilesPath := "single/custom/target/dir"
+			// This is automatically relative to docroot
+			app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
+			fullTargetFilesPath = app.GetHostUploadDirFullPath()
+			err = os.MkdirAll(fullTargetFilesPath, 0755)
+			require.NoError(t, err)
+			err = fileutil.PurgeDirectory(fullTargetFilesPath)
+			require.NoError(t, err)
+
+			_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles("", tarballPath, "")
+			assert.NoError(err)
+			dirEntrySlice, err = os.ReadDir(fullTargetFilesPath)
+			assert.NoError(err)
+			assert.NotEmpty(dirEntrySlice)
+
+			// Now try explicit import to targeted import_dir
+			secondTargetDir := "second/targeted/dir"
+			secondTargetedFulPath := filepath.Join(app.AppRoot, app.Docroot, secondTargetDir)
+			app.UploadDirs = ddevapp.UploadDirs{"sites/default/files", secondTargetDir}
+			err = os.MkdirAll(secondTargetedFulPath, 0755)
+			require.NoError(t, err)
+			err = fileutil.PurgeDirectory(secondTargetedFulPath)
+			require.NoError(t, err)
+			_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles(secondTargetDir, tarballPath, "")
+			assert.NoError(err)
+			dirEntrySlice, err = os.ReadDir(secondTargetedFulPath)
+			assert.NoError(err)
+			assert.NotEmpty(dirEntrySlice)
+
+			// Try with a relative files dir, like ../private
+			if app.Docroot != "" {
+				targetFilesPath = "../private"
+				// This is automatically relative to docroot
+				app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
+				fullTargetFilesPath = app.GetHostUploadDirFullPath()
+				err = os.MkdirAll(fullTargetFilesPath, 0755)
+				require.NoError(t, err)
+				err = fileutil.PurgeDirectory(fullTargetFilesPath)
+				require.NoError(t, err)
+
+				_, tarballPath, err = testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+				require.NoError(t, err)
+				err = app.ImportFiles("", tarballPath, "")
+				assert.NoError(err)
+				dirEntrySlice, err = os.ReadDir(fullTargetFilesPath)
+				assert.NoError(err)
+				assert.NotEmpty(dirEntrySlice)
+
+				// Try with upload_dir that is outside project
+				app.UploadDirs = "../../nowhere"
+				_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+				require.NoError(t, err)
+				err = app.ImportFiles("", tarballPath, "")
+				assert.Error(err)
+			}
 		}
 
 		if site.FilesZipballURL != "" {
@@ -2477,7 +2545,12 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			assert.NotEmpty(dirEntrySlice)
 		}
 
-		runTime()
+		// We should not be able to import with upload_dirs=false
+		app.UploadDirs = false
+		err = app.ImportFiles("", "/tmp", "")
+		assert.Error(err)
+		require.Contains(t, err.Error(), "cannot import files")
+
 		switchDir()
 	}
 }
@@ -3160,7 +3233,7 @@ func TestHttpsRedirection(t *testing.T) {
 	types := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal8}
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal10}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range types {
