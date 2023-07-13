@@ -129,8 +129,8 @@ func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, _
 }
 
 // getBackdropUploadDirs will return the default paths.
-func getBackdropUploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"files"}
+func getBackdropUploadDirs(_ *DdevApp) []string {
+	return []string{"files"}
 }
 
 // getBackdropHooks for appending as byte array.

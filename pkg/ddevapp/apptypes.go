@@ -19,7 +19,7 @@ import (
 type settingsCreator func(*DdevApp) (string, error)
 
 // uploadDirs
-type uploadDirs func(*DdevApp) UploadDirs
+type uploadDirs func(*DdevApp) []string
 
 // hookDefaultComments should probably change its arg from string to app when
 // config refactor is done.

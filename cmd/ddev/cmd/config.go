@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // Define flags for the config command
@@ -641,28 +640,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("upload-dir").Changed {
 		uploadDirRaw, _ := cmd.Flags().GetString("upload-dir")
-		app.UploadDirs = ddevapp.UploadDirs{uploadDirRaw}
+		app.UploadDirs = []string{uploadDirRaw}
 	}
 
 	if cmd.Flag("upload-dirs").Changed {
-		uploadDirsRaw := cmd.Flag("upload-dirs").Value.(pflag.SliceValue).GetSlice()
-
-		var uploadDirs any
-		uploadDirs = uploadDirsRaw
-
-		if len(uploadDirsRaw) == 1 {
-			uploadDirsBool, err := strconv.ParseBool(uploadDirsRaw[0])
-
-			if err == nil {
-				if uploadDirsBool {
-					util.Failed("Incorrect value for --upload-dirs: %v", uploadDirsBool)
-				}
-
-				uploadDirs = uploadDirsBool
-			}
-		}
-
-		app.UploadDirs = uploadDirs
+		app.UploadDirs, _ = cmd.Flags().GetStringSlice("upload-dirs")
 	}
 
 	if webserverTypeArg != "" {

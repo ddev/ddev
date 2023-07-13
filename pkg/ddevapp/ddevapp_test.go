@@ -256,7 +256,7 @@ var (
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
-			UploadDirs:                    ddevapp.UploadDirs{"files"},
+			UploadDirs:                    []string{"files"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
@@ -2029,7 +2029,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// TestPkgPHP uses mostly stuff from Drupal6, but we'll set the type to php
 		if site.Name == "TestPkgPHP" {
 			app.Type = nodeps.AppTypePHP
-			app.UploadDirs = ddevapp.UploadDirs{"files"}
+			app.UploadDirs = []string{"files"}
 			err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
 			assert.NoError(err)
 		}
@@ -2123,7 +2123,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Project type 'php' should fail ImportFiles if no upload_dirs is provided
 		if app.Type == nodeps.AppTypePHP {
-			app.UploadDirs = ddevapp.UploadDirs{}
+			app.UploadDirs = []string{}
 			err = app.WriteConfig()
 			assert.NoError(err)
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
@@ -2462,7 +2462,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			// Second, try with a single custom upload_dirs
 			targetFilesPath := "single/custom/target/dir"
 			// This is automatically relative to docroot
-			app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
+			app.UploadDirs = []string{targetFilesPath}
 			fullTargetFilesPath = app.GetHostUploadDirFullPath()
 			err = os.MkdirAll(fullTargetFilesPath, 0755)
 			require.NoError(t, err)
@@ -2480,7 +2480,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			// Now try explicit import to targeted import_dir
 			secondTargetDir := "second/targeted/dir"
 			secondTargetedFulPath := filepath.Join(app.AppRoot, app.Docroot, secondTargetDir)
-			app.UploadDirs = ddevapp.UploadDirs{"sites/default/files", secondTargetDir}
+			app.UploadDirs = []string{"sites/default/files", secondTargetDir}
 			err = os.MkdirAll(secondTargetedFulPath, 0755)
 			require.NoError(t, err)
 			err = fileutil.PurgeDirectory(secondTargetedFulPath)
@@ -2497,7 +2497,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			if app.Docroot != "" {
 				targetFilesPath = "../private"
 				// This is automatically relative to docroot
-				app.UploadDirs = ddevapp.UploadDirs{targetFilesPath}
+				app.UploadDirs = []string{targetFilesPath}
 				fullTargetFilesPath = app.GetHostUploadDirFullPath()
 				err = os.MkdirAll(fullTargetFilesPath, 0755)
 				require.NoError(t, err)
@@ -2513,7 +2513,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 				assert.NotEmpty(dirEntrySlice)
 
 				// Try with upload_dir that is outside project
-				app.UploadDirs = "../../nowhere"
+				app.UploadDirs = []string{"../../nowhere"}
 				_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 				require.NoError(t, err)
 				err = app.ImportFiles("", tarballPath, "")
@@ -2544,12 +2544,6 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 			assert.NoError(err)
 			assert.NotEmpty(dirEntrySlice)
 		}
-
-		// We should not be able to import with upload_dirs=false
-		app.UploadDirs = false
-		err = app.ImportFiles("", "/tmp", "")
-		assert.Error(err)
-		require.Contains(t, err.Error(), "cannot import files")
 
 		switchDir()
 	}

@@ -80,8 +80,8 @@ func getWordpressHooks() []byte {
 }
 
 // getWordpressUploadDirs will return the default paths.
-func getWordpressUploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"wp-content/uploads"}
+func getWordpressUploadDirs(_ *DdevApp) []string {
+	return []string{"wp-content/uploads"}
 }
 
 const wordpressConfigInstructions = `
