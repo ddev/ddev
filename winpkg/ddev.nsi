@@ -616,11 +616,11 @@ SectionEnd
  */
 LangString DESC_SecDDEV ${LANG_ENGLISH} "Install ${PRODUCT_NAME_FULL} (required)"
 LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo) directory to the global PATH"
-LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/ddev/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
+LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/gerardog/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
-LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL}"
-LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install services, specifically WinNFSd for NFS"
+LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL} (deprecated)"
+LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install services, specifically WinNFSd for NFS (deprecated)"
 
 
 
