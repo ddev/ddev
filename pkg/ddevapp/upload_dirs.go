@@ -43,7 +43,7 @@ func (app *DdevApp) GetUploadDir() string {
 func (app *DdevApp) GetUploadDirs() []string {
 	err := app.validateUploadDirs()
 	if err != nil {
-		util.Failed("Invalid upload_dirs value: %v", err)
+		util.Warning("Ignoring invalid upload_dirs value: %v", err)
 		return []string{}
 	}
 
@@ -53,6 +53,13 @@ func (app *DdevApp) GetUploadDirs() []string {
 		app.addUploadDir(uploadDirDeprecated)
 	}
 
+	// If an UploadDirs has been specified for the app, it overrides
+	// anything that the project type would give us.
+	if len(app.UploadDirs) > 0 {
+		return app.UploadDirs
+	}
+
+	// Otherwise continue to get the UploadDirs from the project type
 	appFuncs, ok := appTypeMatrix[app.GetType()]
 	if ok && appFuncs.uploadDirs != nil {
 		return appFuncs.uploadDirs(app)
