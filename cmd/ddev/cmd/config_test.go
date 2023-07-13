@@ -184,7 +184,7 @@ func TestConfigSetValues(t *testing.T) {
 	dbimageExtraPackagesSlice := []string{"netcat", "ncdu"}
 	dbimageExtraPackages := strings.Join(dbimageExtraPackagesSlice, ",")
 
-	uploadDir := filepath.Join("custom", "config", "path")
+	uploadDirsSlice := []string{"custom", "config", "path"}
 	webserverType := nodeps.WebserverApacheFPM
 	webImage := "custom-web-image"
 	webWorkingDir := "/custom/web/dir"
@@ -211,7 +211,7 @@ func TestConfigSetValues(t *testing.T) {
 		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
 		"--additional-fqdns", additionalFQDNs,
-		fmt.Sprintf("--upload-dirs=\"%s\"", uploadDir),
+		"--upload-dirs=" + strings.Join(uploadDirsSlice, ","),
 		"--webserver-type", webserverType,
 		"--web-image", webImage,
 		"--web-working-dir", webWorkingDir,
@@ -259,7 +259,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(noProjectMount, app.NoProjectMount)
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
-	assert.Equal(uploadDir, app.GetUploadDir())
+	assert.Equal(uploadDirsSlice, app.GetUploadDirs())
 	assert.Equal(webserverType, app.WebserverType)
 	assert.Equal(webImage, app.WebImage)
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
