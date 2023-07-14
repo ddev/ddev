@@ -823,7 +823,6 @@ func (app *DdevApp) checkMutagenUploadDirs() {
 	if app.IsMutagenEnabled() && !app.IsUploadDirsWarningDisabled() && len(app.GetUploadDirs()) == 0 {
 		util.Warning("You have Mutagen enabled and your '%s' project type doesn't have `upload_dirs` set.", app.Type)
 		util.Warning("For faster startup and less disk usage, set upload_dirs to where your user-generated files are stored.")
-		// TODO: Implement --no-upload-dirs-warning in new PR
-		util.Warning("If this is intended you can disable this warning with `ddev config --no-upload-dirs-warning`.")
+		util.Warning("If this is intended you can disable this warning with `ddev config --disable-upload-dirs-warning`.")
 	}
 }

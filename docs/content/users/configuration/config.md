@@ -131,6 +131,16 @@ Whether to disable CMS-specific settings file management.
 
 When `true`, DDEV will not create or update CMS-specific settings files.
 
+## `disable_upload_dirs_warning`
+
+Whether to disable the standard warning issued when a project is using `performance_mode: mutagen` but `upload_dirs` is not configured.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
+
+When `true`, DDEV will not issue the normal warning on `ddev start`, "You have Mutagen enabled and your 'php' project type doesn't have `upload_dirs` set".
+
 ## `docroot`
 
 Relative path to the document root containing `index.php` or `index.html`.

@@ -89,6 +89,10 @@ const ConfigInstructions = `
 # When mutagen is enabled this path is bind-mounted so that all the files
 # in the upload_dirs don't have to be synced into mutagen.
 
+# disable_upload_dirs_warning: false
+# If true, turns off the normal warning that says
+# "You have Mutagen enabled and your 'php' project type doesn't have upload_dirs set"
+
 # working_dir:
 #   web: /var/www/html
 #   db: /home

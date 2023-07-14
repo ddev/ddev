@@ -70,8 +70,7 @@ func (app *DdevApp) GetUploadDirs() []string {
 
 // IsUploadDirsWarningDisabled returns true if UploadDirs is disabled by the user.
 func (app *DdevApp) IsUploadDirsWarningDisabled() bool {
-	// TODO: New PR to allow a command to disable upload_dirs warning
-	return false
+	return app.DisableUploadDirsWarning
 }
 
 // calculateHostUploadDirFullPath returns the full path to the upload directory

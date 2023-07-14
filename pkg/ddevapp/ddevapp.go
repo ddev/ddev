@@ -131,6 +131,7 @@ type DdevApp struct {
 	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
 	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
+	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -1314,7 +1315,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// At this point we should have all files synced inside the container
 	// Verify that we have composer.json inside container if we have it in project root
 	// This is possibly a temporary need for debugging https://github.com/ddev/ddev/issues/5089
-	// TODO: Consider removing this check when #5089 is resolved
+	// TODO: Consider removing this check when #5089 is resolved, or at least by 2024-01-01
 	if !app.NoProjectMount && fileutil.FileExists(filepath.Join(app.GetComposerRoot(false, false), "composer.json")) {
 		util.Debug("Checking for composer.json in container")
 		stdout, stderr, err := app.Exec(&ExecOpts{
