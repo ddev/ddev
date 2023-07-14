@@ -72,7 +72,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	// Check version is v4 or higher or warn user about app type mismatch.
 	if !isCraftCms4orHigher(app) {
 		util.Warning("It looks like the installed Craft CMS is lower than version 4 where it's recommended to use project type `php` or disable settings management with `ddev config --disable-settings-management`")
-		if !util.Confirm("Would you like to continue anyway with the automatic configuration?") {
+		if !util.Confirm("Would you like to stop here, not do the automatic configuration and change project type?") {
 			return nil
 		}
 	}
