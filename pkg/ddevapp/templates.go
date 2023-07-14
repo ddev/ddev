@@ -85,8 +85,6 @@ const ConfigInstructions = `
 #   - custom/upload/dir
 #   - ../private
 #
-# upload_dirs: false
-#
 # would set the destination paths for ddev import-files to <docroot>/custom/upload/dir
 # When mutagen is enabled this path is bind-mounted so that all the files
 # in the upload_dirs don't have to be synced into mutagen.

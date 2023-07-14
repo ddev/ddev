@@ -84,7 +84,7 @@ If you want to use `import-files` without answering prompts, use the `--source` 
 
 `ddev import-files --source=/tmp/files.tgz`
 
-With multiple `upload_dirs` defined if you want to import to another upload dir than the first one, use the `--target` or `-t` flag to provide the path to the desired upload dir.
+When multiple `upload_dirs` are defined and you want to import to another upload dir than the first one, use the `--target` or `-t` flag to provide the path to the desired upload dir:
 
 `ddev import-files --target=../private --source=/tmp/files.tgz`
 

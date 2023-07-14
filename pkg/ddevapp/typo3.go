@@ -108,8 +108,8 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 }
 
 // getTypo3UploadDirs will return the default paths.
-func getTypo3UploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"fileadmin"}
+func getTypo3UploadDirs(_ *DdevApp) []string {
+	return []string{"fileadmin"}
 }
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db

@@ -70,7 +70,7 @@ type TestSite struct {
 	// DynamicURI provides a dynamic (after db load) URI with contents we can expect.
 	DynamicURI URIWithExpect
 	// UploadDirs overrides the dirs used for upload_dirs
-	UploadDirs ddevapp.UploadDirs
+	UploadDirs []string
 	// FilesImageURI is URI to a file loaded by import-files that is a jpg.
 	FilesImageURI string
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when

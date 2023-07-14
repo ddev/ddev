@@ -113,13 +113,13 @@ func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 }
 
 // getMagentoUploadDirs will return the default paths.
-func getMagentoUploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"media"}
+func getMagentoUploadDirs(_ *DdevApp) []string {
+	return []string{"media"}
 }
 
 // getMagento2UploadDirs will return the default paths.
-func getMagento2UploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"pub/media"}
+func getMagento2UploadDirs(_ *DdevApp) []string {
+	return []string{"pub/media"}
 }
 
 // createMagento2SettingsFile manages creation and modification of app/etc/env.php.

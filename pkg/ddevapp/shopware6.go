@@ -69,8 +69,8 @@ func shopware6ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath str
 }
 
 // getShopwareUploadDirs will return the default paths.
-func getShopwareUploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"media"}
+func getShopwareUploadDirs(_ *DdevApp) []string {
+	return []string{"media"}
 }
 
 // shopware6PostStartAction checks to see if the .env file is set up

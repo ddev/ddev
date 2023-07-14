@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // Define flags for the config command
@@ -227,7 +226,6 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, "Sets the project's upload directories, the destination directories of the import-files command.")
-	ConfigCommand.Flags().Lookup("upload-dirs").NoOptDefVal = "false"
 	ConfigCommand.Flags().String("upload-dir", "", "Sets the project's upload directories, the destination directories of the import-files command.")
 	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm/apache-fpm/nginx-gunicorn")
@@ -641,28 +639,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("upload-dir").Changed {
 		uploadDirRaw, _ := cmd.Flags().GetString("upload-dir")
-		app.UploadDirs = ddevapp.UploadDirs{uploadDirRaw}
+		app.UploadDirs = []string{uploadDirRaw}
 	}
 
 	if cmd.Flag("upload-dirs").Changed {
-		uploadDirsRaw := cmd.Flag("upload-dirs").Value.(pflag.SliceValue).GetSlice()
-
-		var uploadDirs any
-		uploadDirs = uploadDirsRaw
-
-		if len(uploadDirsRaw) == 1 {
-			uploadDirsBool, err := strconv.ParseBool(uploadDirsRaw[0])
-
-			if err == nil {
-				if uploadDirsBool {
-					util.Failed("Incorrect value for --upload-dirs: %v", uploadDirsBool)
-				}
-
-				uploadDirs = uploadDirsBool
-			}
-		}
-
-		app.UploadDirs = uploadDirs
+		app.UploadDirs, _ = cmd.Flags().GetStringSlice("upload-dirs")
 	}
 
 	if webserverTypeArg != "" {

@@ -105,7 +105,7 @@ type DdevApp struct {
 	ProviderInstance          *Provider              `yaml:"-"`
 	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
 	UploadDirDeprecated       string                 `yaml:"upload_dir,omitempty"`
-	UploadDirs                interface{}            `yaml:"upload_dirs,omitempty"`
+	UploadDirs                []string               `yaml:"upload_dirs,omitempty"`
 	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
 	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
 	OmitContainersGlobal      []string               `yaml:"-"`

@@ -251,8 +251,8 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 }
 
 // getDrupalUploadDirs will return the default paths.
-func getDrupalUploadDirs(_ *DdevApp) UploadDirs {
-	uploadDirs := UploadDirs{"sites/default/files"}
+func getDrupalUploadDirs(_ *DdevApp) []string {
+	uploadDirs := []string{"sites/default/files"}
 
 	return uploadDirs
 }
