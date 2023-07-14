@@ -21,7 +21,7 @@ var WebTag = "20230707_fix_process_group_kill" // Note that this can be overridd
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.22.0-beta1"
+var BaseDBTag = "v1.22.0-beta4"
 
 const TraditionalRouterImage = "ddev/ddev-router:v1.22.0-beta1"
 const TraefikRouterImage = "traefik:v2.10"
