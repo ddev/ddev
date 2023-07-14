@@ -2389,7 +2389,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	}
 	// Clean up ddev-global-cache
 	if removeData {
-		_, _, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s* /mnt/ddev-global-cache/traefik/*/%s*", app.Name, app.Name)}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
+		_, _, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache: %v", err)
 		}
