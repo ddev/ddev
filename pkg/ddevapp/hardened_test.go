@@ -18,7 +18,7 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if nodeps.IsMacM1() {
+	if nodeps.IsAppleSilicon() {
 		t.Skip("Skipping TestHardenedStart on Mac M1 because of useless Docker Desktop failures to connect")
 	}
 
