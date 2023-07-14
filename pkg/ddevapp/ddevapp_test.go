@@ -328,8 +328,7 @@ var (
 			FilesTarballURL:               "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeSilverstripe,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to Silverstripe"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 5.0\">"},
 		},
 	}
 
