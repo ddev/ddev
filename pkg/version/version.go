@@ -64,14 +64,15 @@ func GetDockerPlatform() (string, error) {
 	platform := info.OperatingSystem
 	switch {
 	case nodeps.IsWSL2() && info.OSType == "linux":
-		platform = "WSL2 docker-ce"
+		platform = "wsl2-docker-ce"
 	case strings.HasPrefix(platform, "Rancher Desktop"):
-		platform = "Rancher Desktop"
+		platform = "rancher-desktop"
 	case strings.HasPrefix(platform, "Docker Desktop"):
-		platform = "Docker Desktop"
+		platform = "docker-desktop"
 	case info.Name == "colima":
-		platform = "Colima"
-		// No need to do "Orbstack" as it comes through fine
+		platform = "colima"
+	case platform == "OrbStack":
+		platform = "orbstack"
 	default:
 		platform = info.OperatingSystem
 	}
