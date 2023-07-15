@@ -1259,7 +1259,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	typePrompt := "Project Type [%s] (%s): "
 
 	defaultAppType := app.Type
-	if app.Type == nodeps.AppTypeNone {
+	if app.Type == nodeps.AppTypeNone || !IsValidAppType(app.Type) {
 		defaultAppType = detectedAppType
 	}
 
@@ -1269,7 +1269,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	for !IsValidAppType(appType) {
 		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
 
-		fmt.Print(typePrompt, validAppTypes, appType)
+		fmt.Printf(typePrompt, validAppTypes, appType)
 		appType = strings.ToLower(util.GetInput(appType))
 	}
 
