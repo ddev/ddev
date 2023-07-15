@@ -226,7 +226,6 @@ github.com/pmezard/go-difflib/difflib
 github.com/rivo/uniseg
 # github.com/rogpeppe/go-internal v1.11.0
 ## explicit; go 1.19
-github.com/rogpeppe/go-internal/semver
 # github.com/segmentio/backo-go v1.0.1
 ## explicit; go 1.13
 github.com/segmentio/backo-go

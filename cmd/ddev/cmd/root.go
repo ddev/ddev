@@ -14,8 +14,8 @@ import (
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/rogpeppe/go-internal/semver"
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
