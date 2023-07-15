@@ -1,35 +1,44 @@
 # Terminal progress bar for Go  
-
-[![Join the chat at https://gitter.im/cheggaaa/pb](https://badges.gitter.im/cheggaaa/pb.svg)](https://gitter.im/cheggaaa/pb?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-Simple progress bar for console programs.    
-   
-Please check the new version https://github.com/cheggaaa/pb/tree/v2 (currently, it's beta)
+[![Coverage Status](https://coveralls.io/repos/github/cheggaaa/pb/badge.svg)](https://coveralls.io/github/cheggaaa/pb)
 
 ## Installation
 
 ```
-go get gopkg.in/cheggaaa/pb.v1
+go get github.com/cheggaaa/pb/v3
 ```   
 
-## Usage   
+Documentation for v1 bar available [here](README_V1.md)
+
+## Quick start   
 
 ```Go
 package main
 
 import (
-	"gopkg.in/cheggaaa/pb.v1"
 	"time"
+	
+	"github.com/cheggaaa/pb/v3"
 )
 
 func main() {
 	count := 100000
+	// create and start new bar
 	bar := pb.StartNew(count)
+	
+	// start bar from 'default' template
+	// bar := pb.Default.Start(count)
+	
+	// start bar from 'simple' template
+	// bar := pb.Simple.Start(count)
+	
+	// start bar from 'full' template
+	// bar := pb.Full.Start(count)
+	
 	for i := 0; i < count; i++ {
 		bar.Increment()
 		time.Sleep(time.Millisecond)
 	}
-	bar.FinishPrint("The End!")
+	bar.Finish()
 }
 
 ```
@@ -41,7 +50,7 @@ Result will be like this:
 37158 / 100000 [================>_______________________________] 37.16% 1m11s
 ```
 
-## Customization
+## Settings
 
 ```Go  
 // create bar
@@ -50,130 +59,71 @@ bar := pb.New(count)
 // refresh info every second (default 200ms)
 bar.SetRefreshRate(time.Second)
 
-// show percents (by default already true)
-bar.ShowPercent = true
+// force set io.Writer, by default it's os.Stderr
+bar.SetWriter(os.Stdout)
 
-// show bar (by default already true)
-bar.ShowBar = true
+// bar will format numbers as bytes (B, KiB, MiB, etc)
+bar.Set(pb.Byte, true)
 
-// no counters
-bar.ShowCounters = false
+// bar use SI bytes prefix names (B, kB) instead of IEC (B, KiB)
+bar.Set(pb.SIBytesPrefix, true)
 
-// show "time left"
-bar.ShowTimeLeft = true
+// set custom bar template
+bar.SetTemplateString(myTemplate)
 
-// show average speed
-bar.ShowSpeed = true
+// check for error after template set
+if err = bar.Err(); err != nil {
+    return
+}
 
-// sets the width of the progress bar
-bar.SetWidth(80)
-
-// sets the width of the progress bar, but if terminal size smaller will be ignored
-bar.SetMaxWidth(80)
-
-// convert output to readable format (like KB, MB)
-bar.SetUnits(pb.U_BYTES)
-
-// and start
+// start bar
 bar.Start()
+
 ``` 
 
 ## Progress bar for IO Operations
-
-```go
-// create and start bar
-bar := pb.New(myDataLen).SetUnits(pb.U_BYTES)
-bar.Start()
-
-// my io.Reader
-r := myReader
-
-// my io.Writer
-w := myWriter
-
-// create proxy reader
-reader := bar.NewProxyReader(r)
-
-// and copy from pb reader
-io.Copy(w, reader)
-
-```
-
-```go
-// create and start bar
-bar := pb.New(myDataLen).SetUnits(pb.U_BYTES)
-bar.Start()
-
-// my io.Reader
-r := myReader
-
-// my io.Writer
-w := myWriter
-
-// create multi writer
-writer := io.MultiWriter(w, bar)
-
-// and copy
-io.Copy(writer, r)
-
-bar.Finish()
-```
-
-## Custom Progress Bar Look-and-feel
-
-```go
-bar.Format("<.- >")
-```
-
-## Multiple Progress Bars (experimental and unstable)
-
-Do not print to terminal while pool is active.
-
 ```go
 package main
 
 import (
-    "math/rand"
-    "sync"
-    "time"
+	"crypto/rand"
+	"io"
+	"io/ioutil"
 
-    "gopkg.in/cheggaaa/pb.v1"
+	"github.com/cheggaaa/pb/v3"
 )
 
 func main() {
-    // create bars
-    first := pb.New(200).Prefix("First ")
-    second := pb.New(200).Prefix("Second ")
-    third := pb.New(200).Prefix("Third ")
-    // start pool
-    pool, err := pb.StartPool(first, second, third)
-    if err != nil {
-        panic(err)
-    }
-    // update bars
-    wg := new(sync.WaitGroup)
-    for _, bar := range []*pb.ProgressBar{first, second, third} {
-        wg.Add(1)
-        go func(cb *pb.ProgressBar) {
-            for n := 0; n < 200; n++ {
-                cb.Increment()
-                time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
-            }
-            cb.Finish()
-            wg.Done()
-        }(bar)
-    }
-    wg.Wait()
-    // close pool
-    pool.Stop()
+
+	var limit int64 = 1024 * 1024 * 500
+	// we will copy 200 Mb from /dev/rand to /dev/null
+	reader := io.LimitReader(rand.Reader, limit)
+	writer := ioutil.Discard
+
+	// start new bar
+	bar := pb.Full.Start64(limit)
+	// create proxy reader
+	barReader := bar.NewProxyReader(reader)
+	// copy from proxy reader
+	io.Copy(writer, barReader)
+	// finish bar
+	bar.Finish()
 }
-```
-
-The result will be as follows:
 
 ```
-$ go run example/multiple.go 
-First  34 / 200 [=========>---------------------------------------------]  17.00% 00m08s
-Second  42 / 200 [===========>------------------------------------------]  21.00% 00m06s
-Third  36 / 200 [=========>---------------------------------------------]  18.00% 00m08s
+
+## Custom Progress Bar templates
+
+Rendering based on builtin text/template package. You can use existing pb's elements or create you own.
+
+All available elements are described in element.go file.  
+
+#### All in one example:
+```go
+tmpl := `{{ red "With funcs:" }} {{ bar . "<" "-" (cycle . "↖" "↗" "↘" "↙" ) "." ">"}} {{speed . | rndcolor }} {{percent .}} {{string . "my_green_string" | green}} {{string . "my_blue_string" | blue}}`
+// start bar based on our template
+bar := pb.ProgressBarTemplate(tmpl).Start64(limit)
+// set values for string elements
+bar.Set("my_green_string", "green").
+	Set("my_blue_string", "blue")
 ```
