@@ -39,7 +39,7 @@ const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
-	util.Debug("chowning mutagen docker volume for user %s", uidStr)
+	util.Verbose("chowning mutagen docker volume for user %s", uidStr)
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir: "/tmp",
@@ -48,7 +48,7 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 	if err != nil {
 		util.Warning("Failed to chown mutagen volume: %v", err)
 	}
-	util.Debug("done chowning mutagen docker volume; result=%v", err)
+	util.Verbose("done chowning mutagen docker volume; result=%v", err)
 
 	return err
 }
@@ -178,7 +178,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		return err
 	}
 	if sessionExists {
-		util.Debug("Resume mutagen sync if session already exists")
+		util.Verbose("Resume mutagen sync if session already exists")
 		err := ResumeMutagenSync(app)
 		if err != nil {
 			return err
@@ -210,7 +210,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		}
 	}
 
-	util.Debug("Flushing mutagen sync session '%s'", syncName)
+	util.Verbose("Flushing mutagen sync session '%s'", syncName)
 	flushErr := make(chan error, 1)
 	stopGoroutine := make(chan bool, 1)
 	firstOutputReceived := make(chan bool, 1)
@@ -220,7 +220,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 
 	go func() {
 		err = app.MutagenSyncFlush()
-		util.Debug("gofunc flushed mutagen sync session '%s' err=%v", syncName, err)
+		util.Verbose("gofunc flushed mutagen sync session '%s' err=%v", syncName, err)
 		flushErr <- err
 		return
 	}()
@@ -291,7 +291,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 
 func ResumeMutagenSync(app *DdevApp) error {
 	args := []string{"sync", "resume", MutagenSyncName(app.Name)}
-	util.Debug("Resuming mutagen sync: mutagen %v", args)
+	util.Verbose("Resuming mutagen sync: mutagen %v", args)
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 	if err != nil {
 		return fmt.Errorf("Failed to mutagen %v (%v), output=%s", args, err, out)
@@ -453,7 +453,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
 	}
 	if status, shortResult, session, err := app.MutagenStatus(); err == nil {
-		util.Debug("mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
+		util.Verbose("mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
 		switch status {
 		case "paused":
 			util.Debug("mutagen sync %s is paused, so not flushing", syncName)
@@ -463,26 +463,26 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		default:
 			// This extra sync resume recommended by @xenoscopic to catch situation where
 			// not paused but also not connected, in which case the flush will fail.
-			util.Debug("default case resuming mutagen sync session '%s'", syncName)
+			util.Verbose("default case resuming mutagen sync session '%s'", syncName)
 			out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "resume", syncName)
 			if err != nil {
 				return fmt.Errorf("mutagen resume flush %s failed, output=%s, err=%v", syncName, out, err)
 			}
-			util.Debug("default case flushing mutagen sync session '%s'", syncName)
+			util.Verbose("default case flushing mutagen sync session '%s'", syncName)
 			out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
 			if err != nil {
 				return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
 			}
-			util.Debug("default case output of mutagen sync='%s'", out)
+			util.Verbose("default case output of mutagen sync='%s'", out)
 		}
 	}
 
 	status, short, _, err := app.MutagenStatus()
-	util.Debug("mutagen sync status %s in MutagenSyncFlush(): status='%s', short='%s', err='%v'", syncName, status, short, err)
+	util.Verbose("mutagen sync status %s in MutagenSyncFlush(): status='%s', short='%s', err='%v'", syncName, status, short, err)
 	if (status != "ok" && status != "problems" && status != "paused" && status != "failing") || err != nil {
 		return err
 	}
-	util.Debug("Flushed mutagen sync session '%s'", syncName)
+	util.Verbose("Flushed mutagen sync session '%s'", syncName)
 	return nil
 }
 
