@@ -73,6 +73,15 @@ func Debug(format string, a ...interface{}) {
 	}
 }
 
+// Output controlled by DDEV_VERBOSE environment variable
+func Verbose(format string, a ...interface{}) {
+	if globalconfig.DdevVerbose {
+		n := time.Now()
+		s := fmt.Sprintf(format, a...)
+		output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.999"), s)
+	}
+}
+
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
 func FormatPlural(count int, single string, plural string) string {
 	if count == 1 {
