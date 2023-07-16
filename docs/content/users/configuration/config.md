@@ -139,7 +139,7 @@ Whether to disable the standard warning issued when a project is using `performa
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
-When `true`, DDEV will not issue the normal warning on `ddev start`, "You have Mutagen enabled and your 'php' project type doesn't have `upload_dirs` set".
+When `true`, DDEV will not issue the normal warning on `ddev start`: "You have Mutagen enabled and your 'php' project type doesn't have `upload_dirs` set".
 
 ## `docroot`
 
