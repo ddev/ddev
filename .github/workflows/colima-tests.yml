@@ -81,65 +81,6 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Get Homebrew Cache Directory
-        id: homebrew-cache
-        run: |
-          echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
-
-      - name: Homebrew cache
-        uses: actions/cache@v3
-        if: github.ref == 'refs/heads/master'
-        with:
-          path: ${{ steps.homebrew-cache.outputs.dir }}
-          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-cache-
-
-      - name: Homebrew cache/restore
-        uses: actions/cache/restore@v3
-        if: github.ref != 'refs/heads/master'
-        with:
-          path: ${{ steps.homebrew-cache.outputs.dir }}
-          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-cache-
-
-      - name: Lima home
-        uses: actions/cache@v3
-        if: github.ref == 'refs/heads/master'
-        with:
-          path: ~/.lima
-          key: ${{ runner.os }}-lima-home-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-lima-home-
-
-      - name: Lima home/restore
-        uses: actions/cache/restore@v3
-        if: github.ref != 'refs/heads/master'
-        with:
-          path: ~/.lima
-          key: ${{ runner.os }}-lima-home-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-lima-home-
-
-      - name: Lima cache
-        uses: actions/cache@v3
-        if: github.ref == 'refs/heads/master'
-        with:
-          path: ~/Library/Caches/lima
-          key: ${{ runner.os }}-lima-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-lima-cache-
-
-      - name: Lima cache/restore
-        uses: actions/cache/restore@v3
-        if: github.ref != 'refs/heads/master'
-        with:
-          path: ~/Library/Caches/lima
-          key: ${{ runner.os }}-lima-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-lima-cache-
-      
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
@@ -193,4 +134,3 @@ jobs:
           brew update
           brew autoremove
           brew cleanup
-  
