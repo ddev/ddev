@@ -820,9 +820,6 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 // TestDdevNoProjectMount tests running without the app file mount.
 func TestDdevNoProjectMount(t *testing.T) {
-	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because this doesn't make sense with mutagen or NoBindMounts")
-	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -840,6 +837,9 @@ func TestDdevNoProjectMount(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	if app.IsMutagenEnabled() || nodeps.NoBindMountsDefault {
+		t.Skip("Skipping because this doesn't make sense with mutagen or NoBindMounts")
+	}
 	app.NoProjectMount = true
 	err = app.WriteConfig()
 	assert.NoError(err)
