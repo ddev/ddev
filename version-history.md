@@ -2,6 +2,19 @@
 
 This version history has been driven by what we hear from our wonderful community of users. Please share your comments or ideas in the [issue queue](https://github.com/ddev/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
+## v1.22 (Released 2023-07)
+
+- [x] `ddev get` improvements, including `ddev get --version <add-on>`, `ddev get --installed` to show existing add-ons, `ddev get --remove` to remove. Removal action support added for add-ons.
+- [x] MySQL upgraded to 8.0.33 and 5.7.42
+- [x] `nodejs_version` now defaults to 18
+- [x] Default PHP version is now 8.1
+- [x] Global configuration for router_http_port and router_https_port
+- [x] Python and Django4 project types and support
+- [x] PhpMyAdmin (dba) has been removed from DDEV core, use `ddev get ddev/ddev-phpmyadmin` instead, or another database browser.
+- [x] multiple `upload_dirs` now supported
+- [x] Tip of the day implemented
+- [x] Telemetry/Instrumentation direct to Amplitude added
+
 ## v1.21 (Released 2022-08 to 2023-03)
 
 - [x] PHP 8.2.0 with all extensions
