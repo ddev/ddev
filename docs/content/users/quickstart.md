@@ -411,6 +411,8 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
         `ddev sake` can be used as a shorthand for the Silverstripe Make command `ddev exec vendor/bin/sake`
 
+        To open the CMS directly from CLI, run `ddev launch /admin`.
+
 === "TYPO3"
 
     ## TYPO3
