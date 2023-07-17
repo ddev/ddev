@@ -9,8 +9,7 @@ import (
 	"path/filepath"
 )
 
-// TODO Check if location is still correct when composer bin folder is changed.
-// see https://github.com/ddev/ddev/pull/5058
+// see https://github.com/ddev/ddev/pull/5058 if the bin folder changes.
 // isSilverstripeApp returns true if the app is of type Silverstripe
 func isSilverstripeApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "vendor/bin/sake"))
@@ -39,6 +38,8 @@ func silverstripePostStartAction(app *DdevApp) error {
 	}
 	port := "3306"
 	dbConnection := "MySQLDatabase"
+	// Although possible, it is extremely uncommon to use Postgres with Silverstripe.
+	// Thus the option is there to override
 	if app.Database.Type == nodeps.Postgres {
 		dbConnection = "PostgreSQLDatabase"
 		port = "5432"
@@ -67,5 +68,7 @@ func silverstripePostStartAction(app *DdevApp) error {
 func silverstripeConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP81
 	app.WebserverType = nodeps.WebserverApacheFPM
+	app.Database.Type = nodeps.MariaDB
+	app.Database.Version = nodeps.MariaDB104
 	return nil
 }

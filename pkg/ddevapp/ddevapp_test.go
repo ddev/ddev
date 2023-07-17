@@ -321,8 +321,8 @@ var (
 		// 17: Silverstripe
 		{
 			Name:                          "TestPkgSilverstripe",
-			SourceURL:                     "https://github.com/Firesphere/asset-store/releases/download/1.0.0/silverstripe-base.tar.gz",
-			DBTarURL:                      "https://github.com/Firesphere/asset-store/releases/download/1.0.0/db.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/silverstripe-base.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/db.tar.gz",
 			ArchiveInternalExtractionPath: "",
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "",
