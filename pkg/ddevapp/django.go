@@ -77,6 +77,7 @@ func django4PostStartAction(app *DdevApp) error {
 	django4SettingsIncludeStanza := fmt.Sprintf(`
 
 # #ddev-generated code to import DDEV settings
+import os
 if os.environ.get('IS_DDEV_PROJECT') == 'true':
     from pathlib import Path
     import importlib.util
