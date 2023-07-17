@@ -287,10 +287,10 @@ func determineRouterPorts() []string {
 				exposePort := ""
 				var ports []string
 
-				// Each port pair should be of the form <number>:<number>
+				// Each port pair should be of the form <number>:<number> or <number>
 				// It's possible to have received a malformed HTTP_EXPOSE or HTTPS_EXPOSE from
-				// some random container.
-				if !regexp.MustCompile(`^[0-9]+:[0-9]+$`).MatchString(exposePortPair) {
+				// some random container, so don't break if that happens.
+				if !regexp.MustCompile(`^[0-9]+(:[0-9]+)?$`).MatchString(exposePortPair) {
 					continue
 				}
 
