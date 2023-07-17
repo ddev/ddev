@@ -180,6 +180,7 @@ Flags:
 * `--dbimage-extra-packages`: A comma-delimited list of Debian packages that should be added to db container when the project is started.
 * `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start. (default `120`)
 * `--disable-settings-management`: Prevent DDEV from creating or updating CMS settings files.
+* `--disable-upload-dirs-warning`: Suppresses warning when a project is using `performance_mode: mutagen` but does not have `upload_dirs` set.
 * `--docroot`: Provide the relative docroot of the project, like `docroot` or `htdocs` or `web`. (defaults to empty, the current directory)
 * `--fail-on-hook-fail`: Decide whether `ddev start` should be interrupted by a failing hook.
 * `--host-db-port`: The db container’s localhost-bound port.

@@ -229,6 +229,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--default-container-timeout", strconv.FormatInt(int64(defaultContainerTimeout), 10),
 		fmt.Sprintf("--use-dns-when-possible=%t", useDNSWhenPossible),
 		"--timezone", timezone,
+		"--disable-upload-dirs-warning",
 	}
 
 	out, err := exec.RunHostCommand(DdevBin, args...)
@@ -274,6 +275,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webEnv, app.WebEnvironment[0])
 	assert.Equal(nodejsVersion, app.NodeJSVersion)
 	assert.Equal(strconv.Itoa(defaultContainerTimeout), app.DefaultContainerTimeout)
+	assert.Equal(true, app.DisableUploadDirsWarning)
 
 	// Test that container images, working dirs and composer root dir can be unset with default flags
 	args = []string{

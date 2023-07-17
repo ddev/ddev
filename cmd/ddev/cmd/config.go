@@ -296,6 +296,7 @@ func init() {
 	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to mariadb:%s`, nodeps.MariaDBDefaultVersion))
 	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that ddev waits for all containers to become ready on start`)
+	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -644,6 +645,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("upload-dirs").Changed {
 		app.UploadDirs, _ = cmd.Flags().GetStringSlice("upload-dirs")
+	}
+
+	if cmd.Flag("disable-upload-dirs-warning").Changed {
+		app.DisableUploadDirsWarning, _ = cmd.Flags().GetBool("disable-upload-dirs-warning")
 	}
 
 	if webserverTypeArg != "" {
