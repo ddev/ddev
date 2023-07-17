@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -262,6 +262,9 @@ func determineRouterPorts() []string {
 	// loop through all containers with site-name label
 	for _, container := range containers {
 		if _, ok := container.Labels["com.ddev.site-name"]; ok {
+			if container.State != "running" {
+				continue
+			}
 			var exposePorts []string
 
 			httpPorts := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
@@ -284,11 +287,13 @@ func determineRouterPorts() []string {
 				exposePort := ""
 				var ports []string
 
-				// Make sure that we are fully numeric in the port pair, and not empty, or ignore
-				_, err = strconv.Atoi(strings.ReplaceAll(exposePortPair, ":", ""))
-				if err != nil {
+				// Each port pair should be of the form <number>:<number> or <number>
+				// It's possible to have received a malformed HTTP_EXPOSE or HTTPS_EXPOSE from
+				// some random container, so don't break if that happens.
+				if !regexp.MustCompile(`^[0-9]+(:[0-9]+)?$`).MatchString(exposePortPair) {
 					continue
 				}
+
 				if strings.Contains(exposePortPair, ":") {
 					ports = strings.Split(exposePortPair, ":")
 				} else {
