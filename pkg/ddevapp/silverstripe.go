@@ -45,13 +45,13 @@ func silverstripePostStartAction(app *DdevApp) error {
 		port = "5432"
 	}
 	envMap := map[string]string{
-		"SS_DATABASE_HOST":          "db",
+		"SS_DATABASE_SERVER":        "db",
 		"SS_DATABASE_PORT":          port,
 		"SS_DATABASE_NAME":          "db",
 		"SS_DATABASE_USERNAME":      "db",
 		"SS_DATABASE_PASSWORD":      "db",
 		"SS_ENVIRONMENT_TYPE":       "dev",
-		"SS_DATABASE_TYPE":          dbConnection,
+		"SS_DATABASE_CLASS":         dbConnection,
 		"MAILER_DSN":                "smtp://localhost:1025",
 		"SS_DEFAULT_ADMIN_USERNAME": "admin",
 		"SS_DEFAULT_ADMIN_PASSWORD": "password",
