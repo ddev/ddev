@@ -3,7 +3,6 @@
 set -eu -o pipefail
 
 sudo chown -R ${USER} /usr/local/*
-brew update >/dev/null
 
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
@@ -11,6 +10,10 @@ brew uninstall go@1.15 || true
 brew unlink go || true
 brew uninstall go@1.17 || true
 brew uninstall postgresql || true
+brew uninstall composer || true
+brew uninstall php || true
+brew untap homebrew/cask || true
+brew untap homebrew/core || true
 echo "====== Running brew install ======"
 brew install -q colima docker docker-compose jq libpq mkcert mysql-client
 echo "====== Running brew link ======"
