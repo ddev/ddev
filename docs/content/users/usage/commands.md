@@ -929,24 +929,6 @@ Example:
 # Output the web container’s PHP version
 ddev php --version
 ```
-
-## `pip`
-
-Run [`pip`](https://pip.pypa.io/en/stable/) (for Python 2) inside the web container (global shell web container command).
-
-Example:
-
-```shell
-# Output the web container’s pip version
-ddev pip --version
-
-# Install Python packages using `pip`
-ddev pip install
-
-# Update Python packages using `pip`
-pip3 pip install --upgrade
-```
-
 ## `pip3`
 
 Run [`pip3`](https://pip.pypa.io/en/stable/) (for Python 3) inside the web container (global shell web container command).

@@ -1,9 +1,0 @@
-#!/bin/bash
-
-#ddev-generated
-## Description: Run pip inside the web container
-## Usage: pip [flags] [args]
-## Example: "ddev pip --version"
-## ExecRaw: true
-
-pip "$@"
