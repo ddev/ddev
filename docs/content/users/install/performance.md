@@ -16,9 +16,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     ## Mutagen
 
-    !!!tip
-        Mutagen is not yet supported on Python and Django 4 project types.
-
     ### What Mutagen Does
 
     The [Mutagen](https://mutagen.io) asynchronous caching feature is the best way to improve DDEV’s web-serving performance on macOS and Windows, and we recommend it for most projects. It can be significantly faster than NFS, massively faster than plain Docker or Colima, and it makes filesystem watchers (`fsnotify`/`inotify`) work correctly.
