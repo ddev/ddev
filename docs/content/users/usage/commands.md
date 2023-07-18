@@ -1075,6 +1075,15 @@ ddev restart my-project my-other-project
 ddev restart --all
 ```
 
+## `sake`
+
+Run the `sake` command, only available for Silverstripe projects and if the Silverstripe `sake` command is
+available in the `vendor/bin` folder.
+
+Common commands:
+- Build database: `ddev sake dev/build`
+- List of available tasks: `ddev sake dev/tasks`
+
 ## `self-upgrade`
 
 Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation. Must be executed from the project context.
