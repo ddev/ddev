@@ -263,6 +263,28 @@ Port for project’s MailHog HTTP URL.
 | -- | -- | --
 | :octicons-file-directory-16: project | `8025` | Can be changed to avoid a port conflict.
 
+## `messages`
+
+Configure messages like the Tip of the Day.
+
+| Type | Default            | Usage
+| -- |--------------------| --
+| :octicons-globe-16: global | `ticker_interval:` | hours between ticker messages.
+
+Example: Disable the "Tip of the Day" ticker in `~/.ddev/global_config.yaml`
+
+```yaml
+messages:
+  ticker_interval: -1
+```
+
+Example: Show the "Tip of the Day" ticket every two hours:
+
+```yaml`
+messages:
+  ticker_interval: 2
+``
+
 ## `name`
 
 The URL-friendly name DDEV should use to reference the project.

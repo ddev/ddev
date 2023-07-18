@@ -406,7 +406,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
 # Controls the display of the ticker messages.
 
-# remote_config:
+# remote_config: # Intended for debugging only, should not be changed.
 #   update_interval: 10 // Interval in hours to download the remote config
 #   remote:
 #     owner: ddev
