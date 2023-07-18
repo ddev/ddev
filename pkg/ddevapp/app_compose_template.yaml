@@ -80,7 +80,7 @@ services:
       interval: 1s
       retries: 120
       start_period: 120s
-      timeout: 120s
+      timeout: "{{ .DefaultContainerTimeout }}s"
   {{ end }} {{/* end if not .OmitDB */}}
 
   web:
@@ -242,7 +242,7 @@ services:
       interval: 1s
       retries: 120
       start_period: 120s
-      timeout: 120s
+      timeout: "{{ .DefaultContainerTimeout }}s"
 
 networks:
   ddev_default:
