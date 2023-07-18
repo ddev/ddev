@@ -929,6 +929,7 @@ Example:
 # Output the web container’s PHP version
 ddev php --version
 ```
+
 ## `pip3`
 
 Run [`pip3`](https://pip.pypa.io/en/stable/) (for Python 3) inside the web container (global shell web container command).
