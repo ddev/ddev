@@ -3,7 +3,7 @@
 #ddev-generated
 ## Description: Run pip3 inside the web container
 ## Usage: pip3 [flags] [args]
-## Example: "ddev pip --version"
+## Example: "ddev pip3 --version"
 ## ExecRaw: true
 
 pip3 "$@"
