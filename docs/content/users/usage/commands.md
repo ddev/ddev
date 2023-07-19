@@ -1081,8 +1081,9 @@ Run the `sake` command, only available for Silverstripe projects and if the Silv
 available in the `vendor/bin` folder.
 
 Common commands:
-- Build database: `ddev sake dev/build`
-- List of available tasks: `ddev sake dev/tasks`
+
+* Build database: `ddev sake dev/build`
+*List of available tasks: `ddev sake dev/tasks`
 
 ## `self-upgrade`
 
