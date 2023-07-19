@@ -379,39 +379,38 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
     ## Silverstripe
 
-    === "Silverstripe"
+    Use a new or existing Composer project, or clone a Git repository.
 
-        Use a new or existing Composer project, or clone a Git repository.
-
-        === "Composer"
-            ```bash
-            mkdir my-silverstripe-app
-            cd my-silverstripe-app
-            ddev config --project-type=silverstripe --docroot=public --create-docroot
-            ddev composer create --prefer-dist --no-scripts silverstripe/installer -y
-            ddev start
-            ddev sake dev/build flush=all
-            ```
-
-            Your Silverstripe project is now ready. 
-            The CMS can be found at /admin, log into the default admin account using `admin` and `password`.
-    
-            Visit the [Silverstripe documentation](https://userhelp.silverstripe.org/en/5/) for more information.
+    === "Composer"
+        ```bash
+        mkdir my-silverstripe-app
+        cd my-silverstripe-app
+        ddev config --project-type=silverstripe --docroot=public --create-docroot
+        ddev composer create --prefer-dist --no-scripts silverstripe/installer -y
+        ddev start
+        ddev sake dev/build flush=all
+        ```
 
 
-        === "Git Clone"
-            ```bash
-            git clone <your-silverstripe-repo>
-            cd <your-silverstripe-project>
-            ddev config --project-type=silverstripe --docroot=public --create-docroot
-            ddev start
-            ddev composer install
-            ddev sake dev/build flush=all
-            ```
 
-            `ddev sake` can be used as a shorthand for the Silverstripe Make command `ddev exec vendor/bin/sake`
-    
-            To open the CMS directly from CLI, run `ddev launch /admin`.
+    === "Git Clone"
+        ```bash
+        git clone <your-silverstripe-repo>
+        cd <your-silverstripe-project>
+        ddev config --project-type=silverstripe --docroot=public --create-docroot
+        ddev start
+        ddev composer install
+        ddev sake dev/build flush=all
+        ```
+
+    Your Silverstripe project is now ready. 
+    The CMS can be found at /admin, log into the default admin account using `admin` and `password`.
+
+    Visit the [Silverstripe documentation](https://userhelp.silverstripe.org/en/5/) for more information.
+
+    `ddev sake` can be used as a shorthand for the Silverstripe Make command `ddev exec vendor/bin/sake`
+
+    To open the CMS directly from CLI, run `ddev launch /admin`.
 
 === "TYPO3"
 
