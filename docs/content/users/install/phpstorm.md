@@ -54,7 +54,7 @@ This assumes you’ll need to use PHPUnit and you already have it installed.
 1. Under “Test Frameworks” click “+” to add PHPUnit.
     - PHPUnit by remote interpreter
     - Interpreter “DDEV”
-    - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. You need PHPUnit properly Composer-installed for your CMS. For example, for Drupal 9, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^9` and `ddev composer require --dev phpspec/prophecy-phpunit:^2`.
+    - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. You need PHPUnit properly Composer-installed for your project. For example, for Drupal 10, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^10` and `ddev composer require --dev phpspec/prophecy-phpunit:^2`.
     - Default configuration file: `/var/www/html/web/core/phpunit.xml` or wherever yours is inside the container.
     ![Example config](../../images/phpstorm-phpunit-setup.png)
 2. Open Run/Debug configurations and use “+” to add a PHPUnit configuration. Give it a name.
