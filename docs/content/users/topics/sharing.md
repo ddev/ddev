@@ -48,10 +48,10 @@ This set of steps assumes an ngrok subdomain `mg2`:
 
 ## Using localhost.run service
 
-* Another solution is to use [`https://localhost.run/`](https://localhost.run/) . It provides a proxy service to point a domain name to your localhost without setting up or installing any packages. 
+* Another solution is to use [`https://localhost.run/`](https://localhost.run/) . It provides a proxy service to point a domain name to your localhost without setting up or installing any packages.
 * All you need to do is identify the **http** port of the ddev server and run
-`ssh -R 80:localhost:PORT localhost.run` you will get the publicly accessible URL.
-* Make sure you have one ssh key in your local (no need to add anywhere separately it will prompt to fingerprint on first run)
+`ssh -R 80:localhost:PORT localhost.run` you will get a publicly accessible URL.
+* Make sure you have one ssh key in your local (no need to add anywhere separately it will prompt to fingerprint on first run).
 * If you wish to use [`Custom Domains`](https://localhost.run/docs/custom-domains) they have a paid plan.
   
 ## Using nip.io or Custom Name Resolution Locally
