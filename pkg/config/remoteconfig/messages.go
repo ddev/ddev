@@ -1,13 +1,13 @@
 package remoteconfig
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
 	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
@@ -166,7 +166,7 @@ func (c *remoteConfig) isNotificationsDisabled() bool {
 //   - remote config
 //   - const notificationsInterval
 func (c *remoteConfig) getNotificationsInterval() time.Duration {
-	if c.remoteConfig.Messages.Notifications.Interval > 0 {
+	if c.remoteConfig.Messages.Notifications.Interval != 0 {
 		return time.Duration(c.remoteConfig.Messages.Notifications.Interval) * time.Hour
 	}
 
@@ -194,11 +194,11 @@ func (c *remoteConfig) isTickerDisabled() bool {
 //   - remote config
 //   - const tickerInterval
 func (c *remoteConfig) getTickerInterval() time.Duration {
-	if c.tickerInterval > 0 {
+	if c.tickerInterval != 0 {
 		return time.Duration(c.tickerInterval) * time.Hour
 	}
 
-	if c.remoteConfig.Messages.Ticker.Interval > 0 {
+	if c.remoteConfig.Messages.Ticker.Interval != 0 {
 		return time.Duration(c.remoteConfig.Messages.Ticker.Interval) * time.Hour
 	}
 
