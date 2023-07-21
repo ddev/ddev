@@ -113,7 +113,7 @@ func (c *remoteConfig) ShowNotifications() {
 func (c *remoteConfig) ShowTicker() {
 	defer util.TimeTrack()()
 
-	if !c.showTickerMessage() {
+	if !c.showTickerMessage() || len(c.remoteConfig.Messages.Ticker.Messages) == 0 {
 		return
 	}
 
