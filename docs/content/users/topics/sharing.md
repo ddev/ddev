@@ -46,13 +46,19 @@ This set of steps assumes an ngrok subdomain `mg2`:
 * Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok.io/`.
 * Run [`ddev share`](../usage/commands.md#share) and you’ll see your project at `mg2.ngrok.io`.
 
-## Using localhost.run service
+## Using localhost.run Service
 
-* Another solution is to use [`https://localhost.run/`](https://localhost.run/) . It provides a proxy service to point a domain name to your localhost without setting up or installing any packages.
-* All you need to do is identify the **http** port of the ddev server, which can be found by executing `ddev describe` and run
-`ssh -R 80:localhost:PORT localhost.run` you will get a publicly accessible URL.
-* Make sure you have one ssh key in your local (no need to add anywhere separately it will prompt to fingerprint on first run).
-* If you wish to use [`Custom Domains`](https://localhost.run/docs/custom-domains) they have a paid plan.
+[https://localhost.run/](https://localhost.run/) is a client-less tool to instantly make a locally running application available on an internet accessible URL.
+
+All major operating systems already have SSH installed, and localhost.run uses SSH as a client, so no download is necessary to use the service and no account setup is needed for free domains.
+
+To connect an internet domain to an application running locally the only thing you’ll need to provide is the **HTTP** port of the DDEV web server.
+
+1. Run `ddev describe` and look for the project’s `http://` URL in the “All URLs” row and identify its port.
+2. Run `ssh -R 80:localhost:PORT localhost.run` to get a publicly-accessible URL.
+3. Make sure you have one SSH key in your workstation’s keyring. (No need to specify it anywhere; localhost.run will prompt to fingerprint when you first run it.)
+
+You can optionally use [custom domains](https://localhost.run/docs/custom-domains) with a paid plan.
   
 ## Using nip.io or Custom Name Resolution Locally
 
