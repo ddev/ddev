@@ -281,9 +281,13 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		}
 		return settingsPath, nil
 	}
-	err = app.MutagenSyncFlush()
-	if err != nil {
-		return "", err
+
+	// If the project is not running, it makes no sense to sync it
+	if s, _ := app.SiteStatus(); s == SiteRunning {
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return "", nil
