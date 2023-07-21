@@ -278,7 +278,7 @@ The pull request title must follow this convention which is based on the [Conven
 
 * `build: bump mutagen to 0.17.2`
 * `ci: enforce commit message convention, fixes #5037`
-* `docs: improve additional-hostnames.md`
+* `docs: change code refs of Mac M1 to Apple Silicon`
 * `feat: allow multiple upload dirs, fixes #4190, fixes #4796`
 * `fix: create upload_dir if it doesn't exist in ddev composer create, fixes #5031`
 * `refactor: add new Amplitude Property DDEV-Environment`
