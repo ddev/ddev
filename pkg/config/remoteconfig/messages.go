@@ -1,6 +1,7 @@
 package remoteconfig
 
 import (
+	"math/rand"
 	"strings"
 	"time"
 
@@ -112,12 +113,20 @@ func (c *remoteConfig) ShowNotifications() {
 func (c *remoteConfig) ShowTicker() {
 	defer util.TimeTrack()()
 
-	if !c.showTickerMessage() {
+	if !c.showTickerMessage() || len(c.remoteConfig.Messages.Ticker.Messages) == 0 {
 		return
 	}
 
 	messageOffset := c.state.LastTickerMessage
 	messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+
+	if messageOffset == 0 {
+		// As long as no message was shown, start with a random message. This
+		// is important for short living instances e.g. Gitpod to not always
+		// show the first message. A number from 0 to number of messages minus
+		// 1 is generated.
+		messageOffset = rand.Intn(messageCount)
+	}
 
 	for i := range c.remoteConfig.Messages.Ticker.Messages {
 		messageOffset++
