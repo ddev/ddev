@@ -18,8 +18,8 @@ import (
 // DeleteImagesCmd implements the ddev delete images command
 var DeleteImagesCmd = &cobra.Command{
 	Use:   "images",
-	Short: "Deletes ddev/ddev-* docker images not in use by current ddev version",
-	Long:  "with --all it deletes all ddev/ddev-* docker images",
+	Short: "Deletes ddev/ddev-* Docker images not in use by current DDEV version",
+	Long:  "with --all it deletes all ddev/ddev-* Docker images",
 	Example: `ddev delete images
 ddev delete images -y
 ddev delete images --all`,
@@ -30,11 +30,11 @@ ddev delete images --all`,
 		// If true, --yes, we don't stop and prompt before deletion
 		deleteImagesNocConfirm, _ := cmd.Flags().GetBool("yes")
 		if !deleteImagesNocConfirm {
-			if !util.Confirm("Deleting unused ddev images. \nThis is a non-destructive operation, \nbut it may require that the images be downloaded again when you need them. \nOK to continue?") {
+			if !util.Confirm("Deleting unused DDEV images. \nThis is a non-destructive operation, \nbut it may require that the images be downloaded again when you need them. \nOK to continue?") {
 				os.Exit(1)
 			}
 		}
-		util.Success("Powering off ddev to avoid conflicts")
+		util.Success("Powering off DDEV to avoid conflicts")
 		ddevapp.PowerOff()
 
 		// The user can select to delete all ddev images.
@@ -44,13 +44,13 @@ ddev delete images --all`,
 		if err != nil {
 			util.Failed("Failed to delete image", err)
 		}
-		util.Success("All ddev images discovered were deleted.")
+		util.Success("All DDEV images discovered were deleted.")
 	},
 }
 
 func init() {
 	DeleteImagesCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
-	DeleteImagesCmd.Flags().BoolP("all", "a", false, "If set, deletes all Docker images created by ddev.")
+	DeleteImagesCmd.Flags().BoolP("all", "a", false, "If set, deletes all Docker images created by DDEV.")
 	DeleteCmd.AddCommand(DeleteImagesCmd)
 }
 
