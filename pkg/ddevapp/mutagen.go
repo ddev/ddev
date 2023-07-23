@@ -95,7 +95,7 @@ func PauseMutagenSync(app *DdevApp) error {
 // SyncAndPauseMutagenSession syncs and pauses a Mutagen sync session
 func SyncAndPauseMutagenSession(app *DdevApp) error {
 	if app.Name == "" {
-		return fmt.Errorf("No app.Name provided to SyncAndPauseMutagenSession")
+		return fmt.Errorf("no app.Name provided to SyncAndPauseMutagenSession")
 	}
 	syncName := MutagenSyncName(app.Name)
 
@@ -107,7 +107,7 @@ func SyncAndPauseMutagenSession(app *DdevApp) error {
 
 	mutagenStatus, shortResult, longResult, err := app.MutagenStatus()
 	if err != nil {
-		return fmt.Errorf("MutagenStatus failed, rv=%v, shortResult=%s, longResult=%s, err=%v", mutagenStatus, shortResult, longResult, err)
+		return fmt.Errorf("mutagenStatus failed, rv=%v, shortResult=%s, longResult=%s, err=%v", mutagenStatus, shortResult, longResult, err)
 	}
 
 	// We don't want to flush if the web container isn't running
@@ -161,7 +161,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		return err
 	}
 	if container == nil {
-		return fmt.Errorf("Web container for %s not found", app.Name)
+		return fmt.Errorf("web container for %s not found", app.Name)
 	}
 	if container.State != "running" {
 		// TODO: Improve or debug this temporary debug usage
@@ -170,7 +170,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if logsErr != nil {
 			util.Warning("Error from getting logs: %v", logsErr)
 		}
-		return fmt.Errorf("Cannot start Mutagen sync because web container is not running: %v", container)
+		return fmt.Errorf("cannot start Mutagen sync because web container is not running: %v", container)
 	}
 
 	sessionExists, err := mutagenSyncSessionExists(app)
@@ -206,7 +206,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		util.Debug("Creating Mutagen sync: mutagen %v", args)
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 		if err != nil {
-			return fmt.Errorf("Failed to mutagen %v (%v), output=%s", args, err, out)
+			return fmt.Errorf("failed to mutagen %v (%v), output=%s", args, err, out)
 		}
 	}
 
@@ -294,7 +294,7 @@ func ResumeMutagenSync(app *DdevApp) error {
 	util.Verbose("Resuming Mutagen sync: mutagen %v", args)
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 	if err != nil {
-		return fmt.Errorf("Failed to mutagen %v (%v), output=%s", args, err, out)
+		return fmt.Errorf("failed to mutagen %v (%v), output=%s", args, err, out)
 	}
 	return nil
 }
@@ -316,7 +316,7 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(res), &session)
 	if err != nil {
-		return false, fmt.Errorf("Failed to unmarshal Mutagen sync list results '%v': %v", res, err)
+		return false, fmt.Errorf("failed to unmarshal Mutagen sync list results '%v': %v", res, err)
 	}
 
 	// Find out if Mutagen session labels has label we found in Docker volume
@@ -359,7 +359,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	}
 	var ok bool
 	if shortResult, ok = session["status"].(string); !ok {
-		return "failing", shortResult, session, fmt.Errorf("Mutagen sessions may be in invalid state, please `ddev mutagen reset`")
+		return "failing", shortResult, session, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
 	}
 	shortResult = session["status"].(string)
 
@@ -425,7 +425,7 @@ func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
 
 	identifier, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", `--template='{{ range . }}{{ .Identifier }}{{ break }}{{ end }}'`, syncName)
 	if err != nil {
-		return "", fmt.Errorf("Failed RunHostCommand, output='%s': %v", identifier, err)
+		return "", fmt.Errorf("failed RunHostCommand, output='%s': %v", identifier, err)
 	}
 
 	return identifier, nil
@@ -439,7 +439,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 
 	container, err := GetContainer(app, "web")
 	if err != nil {
-		return fmt.Errorf("Failed to get web container, err='%v'", err)
+		return fmt.Errorf("failed to get web container, err='%v'", err)
 	}
 
 	// Discussions of container.State in
@@ -471,7 +471,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			util.Verbose("Default case flushing Mutagen sync session '%s'", syncName)
 			out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
 			if err != nil {
-				return fmt.Errorf("Mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
+				return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
 			}
 			util.Verbose("Default case output of Mutagen sync='%s'", out)
 		}
@@ -778,14 +778,14 @@ func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 	status, _, mapResult, err := app.MutagenStatus()
 
 	if strings.HasPrefix(status, "nosession") || err != nil {
-		return "", fmt.Errorf("No session %s found: %v", MutagenSyncName(app.Name), status)
+		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)
 	}
 	if labels, ok := mapResult["labels"].(map[string]interface{}); ok {
 		if label, ok := labels[mutagenSignatureLabelName].(string); ok {
 			return label, nil
 		}
 	}
-	return "", fmt.Errorf("Sync session label not found for sync session %s", MutagenSyncName(app.Name))
+	return "", fmt.Errorf("sync session label not found for sync session %s", MutagenSyncName(app.Name))
 }
 
 // GetMutagenConfigFileHashLabel gets the com.ddev.hash- label from an existing sync session
@@ -793,7 +793,7 @@ func GetMutagenConfigFileHashLabel(app *DdevApp) (string, error) {
 	status, _, mapResult, err := app.MutagenStatus()
 
 	if strings.HasPrefix(status, "nosession") || err != nil {
-		return "", fmt.Errorf("No session %s found: %v", MutagenSyncName(app.Name), status)
+		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)
 	}
 	if labels, ok := mapResult["labels"].(map[string]interface{}); ok {
 		if label, ok := labels[mutagenConfigFileHashLabelName].(string); ok {

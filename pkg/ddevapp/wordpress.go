@@ -266,7 +266,7 @@ func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string
 
 	// Parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
-		return fmt.Errorf("Unable to import to %s: parent directory does not exist", destPath)
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
 	// Parent of destination dir should be writable.
@@ -277,13 +277,13 @@ func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string
 	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
 		if err := os.RemoveAll(destPath); err != nil {
-			return fmt.Errorf("Failed to cleanup %s before import: %v", destPath, err)
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
 
 	if isTar(importPath) {
 		if err := archive.Untar(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("Failed to extract provided archive: %v", err)
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -291,7 +291,7 @@ func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string
 
 	if isZip(importPath) {
 		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("Failed to extract provided archive: %v", err)
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -326,11 +326,11 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	}
 
 	if len(subDirMatches) == 0 {
-		return "", fmt.Errorf("Unable to find %s in subdirectories", needle)
+		return "", fmt.Errorf("unable to find %s in subdirectories", needle)
 	}
 
 	if len(subDirMatches) > 1 {
-		return "", fmt.Errorf("Multiple subdirectories contain %s", needle)
+		return "", fmt.Errorf("multiple subdirectories contain %s", needle)
 	}
 
 	absPath := filepath.Base(filepath.Dir(subDirMatches[0]))

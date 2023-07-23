@@ -103,7 +103,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 		util.Debug("Existing %s file does not include %s, modifying to include DDEV settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
 		if err := appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
-			return fmt.Errorf("Failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
+			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}
 
@@ -504,7 +504,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 	}
 
 	if err := os.MkdirAll(syncDirPath, 0755); err != nil {
-		return fmt.Errorf("Failed to create sync directory (%s): %v", syncDirPath, err)
+		return fmt.Errorf("failed to create sync directory (%s): %v", syncDirPath, err)
 	}
 
 	return nil
@@ -555,7 +555,7 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 
 	// Parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
-		return fmt.Errorf("Unable to import to %s: parent directory does not exist", destPath)
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
 	// Parent of destination dir should be writable.
@@ -566,13 +566,13 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
 		if err := os.RemoveAll(destPath); err != nil {
-			return fmt.Errorf("Failed to cleanup %s before import: %v", destPath, err)
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
 
 	if isTar(importPath) {
 		if err := archive.Untar(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("Failed to extract provided archive: %v", err)
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -580,7 +580,7 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 
 	if isZip(importPath) {
 		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("Failed to extract provided archive: %v", err)
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 		return nil

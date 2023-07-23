@@ -29,12 +29,12 @@ func laravelPostStartAction(app *DdevApp) error {
 	envFilePath := filepath.Join(app.AppRoot, ".env")
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Unable to read .env file: %v", err)
+		return fmt.Errorf("unable to read .env file: %v", err)
 	}
 	if os.IsNotExist(err) {
 		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
 		if err != nil {
-			util.Debug("laravel: .env.example does not exist yet, not trying to process it")
+			util.Debug("Laravel: .env.example does not exist yet, not trying to process it")
 			return nil
 		}
 		_, envText, err = ReadProjectEnvFile(envFilePath)

@@ -53,7 +53,7 @@ func IsWindowsDdevExeAvailable() bool {
 func IsHostnameInHostsFile(hostname string) (bool, error) {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		return false, fmt.Errorf("Could not get Docker IP: %v", err)
+		return false, fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
 	var hosts = &ddevhosts.DdevHosts{}
@@ -63,7 +63,7 @@ func IsHostnameInHostsFile(hostname string) (bool, error) {
 		hosts, err = ddevhosts.New()
 	}
 	if err != nil {
-		return false, fmt.Errorf("Unable to open hosts file: %v", err)
+		return false, fmt.Errorf("unable to open hosts file: %v", err)
 	}
 	return hosts.Has(dockerIP, hostname), nil
 }
@@ -74,7 +74,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	var err error
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		return fmt.Errorf("Could not get Docker IP: %v", err)
+		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
 	if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
@@ -152,7 +152,7 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		return fmt.Errorf("Could not get Docker IP: %v", err)
+		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
 	for _, name := range app.GetHostnames() {
@@ -232,7 +232,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		return "", nil
 	}
 	if err != nil {
-		return "", fmt.Errorf("Could not get home directory for current user. Is it set?")
+		return "", fmt.Errorf("could not get home directory for current user. Is it set?")
 	}
 
 	if (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) && !IsWindowsDdevExeAvailable() {

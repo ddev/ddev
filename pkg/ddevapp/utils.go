@@ -126,7 +126,7 @@ func Cleanup(app *DdevApp) error {
 		}
 		output.UserOut.Printf("Removing container: %s", containerName)
 		if err = client.RemoveContainer(removeOpts); err != nil {
-			return fmt.Errorf("Could not remove container %s: %v", containerName, err)
+			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
 	// Always kill the temporary volumes on ddev remove
@@ -154,7 +154,7 @@ func CheckForConf(confPath string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("No %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
+	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
 }
 
 // ddevContainersRunning determines if any ddev-controlled containers are currently running.
@@ -304,14 +304,14 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, string, error
 			return logs, health, nil
 		}
 	}
-	return "", "", fmt.Errorf("No logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
+	return "", "", fmt.Errorf("no logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
 }
 
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
 	status, _ := project.SiteStatus()
 	if status == SiteConfigMissing || status == SiteDirMissing {
-		return fmt.Errorf("DDEV can no longer find your project files at %s. If you would like to continue using DDEV to manage this project please restore your files to that directory. If you would like to make DDEV forget this project, you may run 'ddev stop --unlist %s'", project.GetAppRoot(), project.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using DDEV to manage this project please restore your files to that directory. If you would like to make DDEV forget this project, you may run 'ddev stop --unlist %s'", project.GetAppRoot(), project.GetName())
 	}
 
 	return nil

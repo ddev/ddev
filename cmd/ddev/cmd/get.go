@@ -498,13 +498,13 @@ func processAction(action string, dict map[string]interface{}, bashPath string, 
 	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("processAction").Funcs(sprig.TxtFuncMap()).Parse(action)
 	if err != nil {
-		return fmt.Errorf("Could not parse action '%s': %v", action, err)
+		return fmt.Errorf("could not parse action '%s': %v", action, err)
 	}
 
 	var doc bytes.Buffer
 	err = t.Execute(&doc, dict)
 	if err != nil {
-		return fmt.Errorf("Could not parse/execute action '%s': %v", action, err)
+		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
 	}
 	action = doc.String()
 
@@ -518,7 +518,7 @@ func processAction(action string, dict map[string]interface{}, bashPath string, 
 	}
 	if err != nil {
 		util.Warning("%c %s", '\U0001F44E', desc)
-		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
+		return fmt.Errorf("unable to run action %v: %v, output=%s", action, err, out)
 	}
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc)
@@ -605,7 +605,7 @@ func listAvailable(officialOnly bool) ([]*github.Repository, error) {
 		out = out + fmt.Sprintf("%s: %s\n", r.GetFullName(), r.GetDescription())
 	}
 	if len(allRepos) == 0 {
-		return nil, fmt.Errorf("No add-ons found")
+		return nil, fmt.Errorf("no add-ons found")
 	}
 	return allRepos, nil
 }
@@ -615,7 +615,7 @@ func listAvailable(officialOnly bool) ([]*github.Repository, error) {
 // the final par of the repository name like ddev-redis
 func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool) error {
 	if addonName == "" {
-		return fmt.Errorf("No add-on name specified for removal")
+		return fmt.Errorf("no add-on name specified for removal")
 	}
 
 	manifests, err := gatherAllManifests(app)
@@ -671,7 +671,7 @@ func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interfa
 
 	err = os.RemoveAll(app.GetConfigPath(filepath.Join(addonMetadataDir, manifestData.Name)))
 	if err != nil {
-		return fmt.Errorf("Error removing addon metadata directory %s: %v", manifestData.Name, err)
+		return fmt.Errorf("error removing addon metadata directory %s: %v", manifestData.Name, err)
 	}
 	util.Success("Removed add-on %s", addonName)
 	return nil
@@ -700,7 +700,7 @@ func gatherAllManifests(app *ddevapp.DdevApp) (map[string]addonManifest, error) 
 		var manifestData = &addonManifest{}
 		err = yaml.Unmarshal([]byte(manifestString), manifestData)
 		if err != nil {
-			return nil, fmt.Errorf("Error unmarshaling manifest data: %v", err)
+			return nil, fmt.Errorf("error unmarshaling manifest data: %v", err)
 		}
 		allManifests[manifestData.Name] = *manifestData
 		allManifests[manifestData.Repository] = *manifestData

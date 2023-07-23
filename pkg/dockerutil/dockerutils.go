@@ -119,13 +119,13 @@ func GetDockerContext() (string, string, error) {
 	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
 	contextInfo, err := ddevexec.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
 	if err != nil {
-		return "", "", fmt.Errorf("Unable to run 'docker context inspect' - please make sure Docker client is in path and up-to-date: %v", err)
+		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure Docker client is in path and up-to-date: %v", err)
 	}
 	contextInfo = strings.Trim(contextInfo, " \r\n")
 	util.Debug("GetDockerContext: contextInfo='%s'", contextInfo)
 	parts := strings.SplitN(contextInfo, " ", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unable to run split Docker context info %s: %v", contextInfo, err)
+		return "", "", fmt.Errorf("unable to run split Docker context info %s: %v", contextInfo, err)
 	}
 	context = parts[0]
 	dockerHost = parts[1]
@@ -292,12 +292,12 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 		select {
 		case <-timeoutChan.C:
 			_ = timeoutChan.Stop()
-			return "", fmt.Errorf("Health check timed out after %v: labels %v timed out without becoming healthy, status=%v", durationWait, labels, status)
+			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v", durationWait, labels, status)
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
 			if err != nil || container == nil {
-				return "", fmt.Errorf("Failed to query container labels=%v: %v", labels, err)
+				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
 			health, logOutput := GetContainerHealth(container)
 
@@ -305,21 +305,21 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			case "healthy":
 				return logOutput, nil
 			case "unhealthy":
-				return logOutput, fmt.Errorf("Container %s unhealthy: %s", container.Names[0], logOutput)
+				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
 			case "exited":
 				service := container.Labels["com.docker.compose.service"]
 				suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
 				if service == "ddev-router" || service == "ddev-ssh-agent" {
 					suggestedCommand = fmt.Sprintf("docker logs %s", service)
 				}
-				return logOutput, fmt.Errorf("Container exited, please use '%s' to find out why it failed", suggestedCommand)
+				return logOutput, fmt.Errorf("container exited, please use '%s' to find out why it failed", suggestedCommand)
 			}
 		}
 	}
 
 	// We should never get here.
 	// nolint: govet
-	return "", fmt.Errorf("Inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
+	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainersWait provides a wait loop to check for multiple containers in "healthy" status.
@@ -347,14 +347,14 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					}
 				}
 			}
-			return fmt.Errorf("Health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
+			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
 
 		case <-tickChan.C:
 			containers, err := FindContainersByLabels(labels)
 			allHealthy := true
 			for _, c := range containers {
 				if err != nil || containers == nil {
-					return fmt.Errorf("Failed to query container labels=%v: %v", labels, err)
+					return fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 				}
 				health, logOutput := GetContainerHealth(&c)
 
@@ -362,14 +362,14 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				case "healthy":
 					continue
 				case "unhealthy":
-					return fmt.Errorf("Container %s is unhealthy: %s", c.Names[0], logOutput)
+					return fmt.Errorf("container %s is unhealthy: %s", c.Names[0], logOutput)
 				case "exited":
 					service := c.Labels["com.docker.compose.service"]
 					suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
 					if service == "ddev-router" || service == "ddev-ssh-agent" {
 						suggestedCommand = fmt.Sprintf("docker logs %s", service)
 					}
-					return fmt.Errorf("Container '%s' exited, please use '%s' to find out why it failed", service, suggestedCommand)
+					return fmt.Errorf("container '%s' exited, please use '%s' to find out why it failed", service, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -382,7 +382,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 
 	// We should never get here.
 	// nolint: govet
-	return fmt.Errorf("Inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
+	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainerWaitLog provides a wait loop to check for container in "healthy" status.
@@ -401,12 +401,12 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	for {
 		select {
 		case <-timeoutChan:
-			return "", fmt.Errorf("Health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
 			if err != nil || container == nil {
-				return "", fmt.Errorf("Failed to query container labels=%v: %v", labels, err)
+				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
 			status, logOutput := GetContainerHealth(container)
 
@@ -414,10 +414,10 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 			case status == "healthy" && expectedLog == logOutput:
 				return logOutput, nil
 			case status == "unhealthy":
-				return logOutput, fmt.Errorf("Container %s unhealthy: %s", container.Names[0], logOutput)
+				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
 			case status == "exited":
 				service := container.Labels["com.docker.compose.service"]
-				return logOutput, fmt.Errorf("Container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
 			}
 		}
 	}
@@ -536,11 +536,11 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to proc.StderrPipe(): %v", err)
+		return "", "", fmt.Errorf("failed to proc.StderrPipe(): %v", err)
 	}
 
 	if err = proc.Start(); err != nil {
-		return "", "", fmt.Errorf("Failed to exec docker-compose: %v", err)
+		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
 	}
 
 	// Read command's stdout line by line
@@ -573,7 +573,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("ComposeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
+		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
 	}
 	return stdout.String(), stderr, nil
 }
@@ -628,10 +628,10 @@ func CheckDockerVersion(versionConstraint string) error {
 		client := GetDockerClient()
 		info, err := client.Info()
 		if err != nil {
-			return fmt.Errorf("Unable to get Docker info: %v", err)
+			return fmt.Errorf("unable to get Docker info: %v", err)
 		}
 		if info.Name == "docker-desktop" {
-			return fmt.Errorf("Docker Desktop on Linux is not yet compatible with DDEV")
+			return fmt.Errorf("docker desktop on Linux is not yet compatible with DDEV")
 		}
 	}
 
@@ -769,23 +769,23 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	imageChunks := strings.Split(image, ":")
 	if len(imageChunks) == 1 {
 		// Image does not specify tag
-		return "", "", fmt.Errorf("Image name must specify tag: %s", image)
+		return "", "", fmt.Errorf("image name must specify tag: %s", image)
 	}
 
 	if tag := imageChunks[len(imageChunks)-1]; len(tag) == 0 {
 		// Image specifies malformed tag (ends with ':')
-		return "", "", fmt.Errorf("Malformed tag provided: %s", image)
+		return "", "", fmt.Errorf("malformed tag provided: %s", image)
 	}
 
 	existsLocally, err := ImageExistsLocally(image)
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to check if image %s is available locally: %v", image, err)
+		return "", "", fmt.Errorf("failed to check if image %s is available locally: %v", image, err)
 	}
 
 	if !existsLocally {
 		pullErr := Pull(image)
 		if pullErr != nil {
-			return "", "", fmt.Errorf("Failed to pull image %s: %v", image, pullErr)
+			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
 		}
 	}
 
@@ -831,7 +831,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	}
 	container, err := client.CreateContainer(options)
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to create/start Docker container (%v):%v", options, err)
+		return "", "", fmt.Errorf("failed to create/start Docker container (%v):%v", options, err)
 	}
 
 	if removeContainerAfterRun {
@@ -840,13 +840,13 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		return container.ID, "", fmt.Errorf("Failed to StartContainer: %v", err)
+		return container.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 	exitCode := 0
 	if !detach {
 		exitCode, err = client.WaitContainer(container.ID)
 		if err != nil {
-			return container.ID, "", fmt.Errorf("Failed to WaitContainer: %v", err)
+			return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
 		}
 	}
 
@@ -1007,9 +1007,9 @@ func RemoveVolume(volumeName string) error {
 						containerNames = append(containerNames, container.Names[0][1:])
 					}
 					var containerNamesString = strings.Join(containerNames, " ")
-					return fmt.Errorf("Docker volume '%s' is in use by one or more containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, containerNamesString)
+					return fmt.Errorf("docker volume '%s' is in use by one or more containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, containerNamesString)
 				}
-				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
+				return fmt.Errorf("docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
 			}
 			return err
 		}
@@ -1383,7 +1383,7 @@ func DownloadDockerCompose() error {
 func dockerComposeDownloadLink() (string, error) {
 	v := globalconfig.GetRequiredDockerComposeVersion()
 	if len(v) < 3 {
-		return "", fmt.Errorf("Required docker-compose version is invalid: %v", v)
+		return "", fmt.Errorf("required docker-compose version is invalid: %v", v)
 	}
 	baseVersion := v[1:2]
 
@@ -1391,7 +1391,7 @@ func dockerComposeDownloadLink() (string, error) {
 	case "2":
 		return dockerComposeDownloadLinkV2()
 	}
-	return "", fmt.Errorf("Invalid docker-compose base version %s", v)
+	return "", fmt.Errorf("invalid docker-compose base version %s", v)
 }
 
 // dockerComposeDownloadLinkV2 downlods compose v1 downloads like
@@ -1408,7 +1408,7 @@ func dockerComposeDownloadLinkV2() (string, error) {
 	case "amd64":
 		arch = "x86_64"
 	default:
-		return "", fmt.Errorf("Only ARM64 and AMD64 architectures are supported for docker-compose v2, not %s", arch)
+		return "", fmt.Errorf("only ARM64 and AMD64 architectures are supported for docker-compose v2, not %s", arch)
 	}
 	flavor := runtime.GOOS + "-" + arch
 	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
@@ -1473,7 +1473,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 	if cid == nil {
-		return fmt.Errorf("CopyIntoContainer unable to find a container named %s", containerName)
+		return fmt.Errorf("copyIntoContainer unable to find a container named %s", containerName)
 	}
 
 	uid, _, _ := util.GetContainerUIDGid()
@@ -1532,7 +1532,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 		return err
 	}
 	if cid == nil {
-		return fmt.Errorf("CopyFromContainer unable to find a container named %s", containerName)
+		return fmt.Errorf("copyFromContainer unable to find a container named %s", containerName)
 	}
 
 	f, err := os.CreateTemp("", filepath.Base(hostPath)+".tar.gz")
@@ -1585,7 +1585,7 @@ func GetDockerVersion() (string, error) {
 	}
 	client := GetDockerClient()
 	if client == nil {
-		return "", fmt.Errorf("Unable to get Docker version: Docker client is nil")
+		return "", fmt.Errorf("unable to get Docker version: Docker client is nil")
 	}
 
 	v, err := client.Version()

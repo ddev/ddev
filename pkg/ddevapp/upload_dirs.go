@@ -199,7 +199,7 @@ func (app *DdevApp) validateUploadDirs() error {
 	// Check that upload dirs aren't outside the project root.
 	for _, uploadDir := range app.UploadDirs {
 		if !strings.HasPrefix(app.calculateHostUploadDirFullPath(uploadDir), app.AppRoot) {
-			return fmt.Errorf("Invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
+			return fmt.Errorf("invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
 		}
 	}
 

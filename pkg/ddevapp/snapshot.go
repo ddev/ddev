@@ -24,7 +24,7 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	var err error
 	err = app.ProcessHooks("pre-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-delete-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
 	snapshotFullName, err := GetSnapshotFileFromName(snapshotName, app)
@@ -36,16 +36,16 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	hostSnapshot := app.GetConfigPath(snapshotFullPath)
 
 	if !fileutil.FileExists(hostSnapshot) {
-		return fmt.Errorf("No snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
+		return fmt.Errorf("no snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
 	}
 	if err = os.RemoveAll(hostSnapshot); err != nil {
-		return fmt.Errorf("Failed to remove snapshot '%s': %v", hostSnapshot, err)
+		return fmt.Errorf("failed to remove snapshot '%s': %v", hostSnapshot, err)
 	}
 
 	util.Success("Deleted database snapshot '%s'", snapshotName)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-delete-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 	}
 
 	if len(snapshots) == 0 {
-		return "", fmt.Errorf("No snapshots found")
+		return "", fmt.Errorf("no snapshots found")
 	}
 
 	return snapshots[0], nil
@@ -117,21 +117,21 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	var err error
 	err = app.ProcessHooks("pre-restore-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
 	currentDBVersion := app.Database.Type + "_" + app.Database.Version
 
 	snapshotFile, err := GetSnapshotFileFromName(snapshotName, app)
 	if err != nil {
-		return fmt.Errorf("No snapshot found for name %s: %v", snapshotName, err)
+		return fmt.Errorf("no snapshot found for name %s: %v", snapshotName, err)
 	}
 	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotFile)
 
 	hostSnapshotFileOrDir := app.GetConfigPath(snapshotFileOrDir)
 
 	if !fileutil.FileExists(hostSnapshotFileOrDir) {
-		return fmt.Errorf("Failed to find a snapshot at %s", hostSnapshotFileOrDir)
+		return fmt.Errorf("failed to find a snapshot at %s", hostSnapshotFileOrDir)
 	}
 
 	snapshotDBVersion := ""
@@ -144,7 +144,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if fileutil.FileExists(versionFile) {
 			snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
 			if err != nil {
-				return fmt.Errorf("Unable to read the version file in the snapshot (%s): %v", versionFile, err)
+				return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 			}
 			snapshotDBVersion = strings.Trim(snapshotDBVersion, "\r\n\t ")
 			snapshotDBVersion = fullDBFromVersion(snapshotDBVersion)
@@ -157,16 +157,16 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if len(matches) > 2 {
 			snapshotDBVersion = matches[1]
 		} else {
-			return fmt.Errorf("Unable to determine database type/version from snapshot %s", snapshotFile)
+			return fmt.Errorf("unable to determine database type/version from snapshot %s", snapshotFile)
 		}
 
 		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_") || strings.HasPrefix(snapshotDBVersion, "postgres_")) {
-			return fmt.Errorf("Unable to determine database type/version from snapshot name %s", snapshotFile)
+			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotFile)
 		}
 	}
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("Snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
 	status, _ := app.SiteStatus()
@@ -182,7 +182,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 		err = dockerutil.RemoveContainer(dbContainer.ID)
 		if err != nil {
-			return fmt.Errorf("Failed to remove db container: %v", err)
+			return fmt.Errorf("failed to remove db container: %v", err)
 		}
 	}
 
@@ -224,7 +224,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
 	err = app.Start()
 	if err != nil {
-		return fmt.Errorf("Failed to start project for RestoreSnapshot: %v", err)
+		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
 	}
 
 	// On mysql/mariadb the snapshot restore doesn't actually complete right away after
@@ -254,7 +254,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.Success("\nDatabase snapshot %s was restored in %vs", snapshotName, int(time.Since(start).Seconds()))
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
 }
@@ -277,5 +277,5 @@ func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
 			return file, nil
 		}
 	}
-	return "", fmt.Errorf("Snapshot %s not found in %s", name, snapshotsDir)
+	return "", fmt.Errorf("snapshot %s not found in %s", name, snapshotsDir)
 }

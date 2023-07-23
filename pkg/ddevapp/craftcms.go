@@ -101,7 +101,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	// Read in the .env file
 	envMap, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Unable to read .env file: %v", err)
+		return fmt.Errorf("unable to read .env file: %v", err)
 	}
 
 	port := "3306"

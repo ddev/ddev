@@ -82,19 +82,19 @@ func StartDdevRouter() error {
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 		err = pushGlobalTraefikConfig()
 		if err != nil {
-			return fmt.Errorf("Failed to push global Traefik config: %v", err)
+			return fmt.Errorf("failed to push global Traefik config: %v", err)
 		}
 	}
 
 	err = CheckRouterPorts()
 	if err != nil {
-		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
+		return fmt.Errorf("unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
 	}
 
 	// Run docker-compose up -d against the ddev-router full compose file
 	_, _, err = dockerutil.ComposeCmd([]string{routerComposeFullPath}, "-p", RouterProjectName, "up", "--build", "-d")
 	if err != nil {
-		return fmt.Errorf("Failed to start ddev-router: %v", err)
+		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
 
 	// Ensure we have a happy router
@@ -194,10 +194,10 @@ func FindDdevRouter() (*docker.APIContainers, error) {
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to execute findContainersByLabels, %v", err)
+		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
 	if container == nil {
-		return nil, fmt.Errorf("No ddev-router was found")
+		return nil, fmt.Errorf("no ddev-router was found")
 	}
 	return container, nil
 }

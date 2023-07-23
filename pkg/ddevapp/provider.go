@@ -65,7 +65,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	var err error
 	err = app.ProcessHooks("pre-pull")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
+		return fmt.Errorf("failed to process pre-pull hooks: %v", err)
 	}
 
 	status, _ := app.SiteStatus()
@@ -143,7 +143,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	}
 	err = app.ProcessHooks("post-pull")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
+		return fmt.Errorf("failed to process post-pull hooks: %v", err)
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 	var err error
 	err = app.ProcessHooks("pre-push")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-push hooks: %v", err)
+		return fmt.Errorf("failed to process pre-push hooks: %v", err)
 	}
 
 	status, _ := app.SiteStatus()
@@ -199,7 +199,7 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 	}
 	err = app.ProcessHooks("post-push")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-push hooks: %v", err)
+		return fmt.Errorf("failed to process post-push hooks: %v", err)
 	}
 
 	return nil
@@ -263,7 +263,7 @@ func (p *Provider) UploadDB() error {
 	}
 	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPushCommand.Command)
 	if err != nil {
-		return fmt.Errorf("Failed to exec %s on %s: %v", p.DBPushCommand.Command, s, err)
+		return fmt.Errorf("failed to exec %s on %s: %v", p.DBPushCommand.Command, s, err)
 	}
 	return nil
 }
@@ -284,7 +284,7 @@ func (p *Provider) UploadFiles() error {
 	}
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPushCommand.Command)
 	if err != nil {
-		return fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPushCommand.Command, s, err)
+		return fmt.Errorf("failed to exec %s on %s: %v", p.FilesPushCommand.Command, s, err)
 	}
 	return nil
 }
@@ -319,7 +319,7 @@ func (p *Provider) doFilesPullCommand() (filename []string, error error) {
 
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPullCommand.Command)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
+		return nil, fmt.Errorf("failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
 	}
 
 	return []string{filepath.Join(p.getDownloadDir(), "files")}, nil
@@ -346,7 +346,7 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	}
 	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
+		return nil, fmt.Errorf("failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
 	err = p.app.MutagenSyncFlush()
 	if err != nil {

@@ -305,7 +305,7 @@ func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 	}
 
 	if errors != "" {
-		return fmt.Errorf("The following problems were found in the flags definition of the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
+		return fmt.Errorf("the following problems were found in the flags definition of the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
 	}
 
 	return nil
@@ -377,7 +377,7 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 	}
 
 	if errors != "" {
-		return fmt.Errorf("The following problems were found while assigning the flags to the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
+		return fmt.Errorf("the following problems were found while assigning the flags to the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
 	}
 
 	return nil

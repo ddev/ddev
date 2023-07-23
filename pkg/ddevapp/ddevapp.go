@@ -167,7 +167,7 @@ func (app *DdevApp) Init(basePath string) error {
 			return err
 		}
 		if !isSameFile {
-			return fmt.Errorf("A project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot).(webContainerExists)
+			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot).(webContainerExists)
 		}
 		return nil
 	}
@@ -192,7 +192,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
+		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)
 	}
 
 	shortRoot := RenderHomeRootedDir(app.GetAppRoot())
@@ -347,7 +347,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 	err = app.ProcessHooks("post-describe")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to process post-describe hooks: %v", err)
+		return nil, fmt.Errorf("failed to process post-describe hooks: %v", err)
 	}
 
 	return appDesc, nil
@@ -367,7 +367,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePort int64) (publicPort int, err error) {
 	container, err := app.FindContainerByType(serviceName)
 	if err != nil || container == nil {
-		return -1, fmt.Errorf("Failed to find container of type %s: %v", serviceName, err)
+		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
@@ -532,7 +532,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 
 				extractPath = util.GetInput("")
 			} else {
-				return fmt.Errorf("Unable to validate import asset %s: %s", dumpFile, err)
+				return fmt.Errorf("unable to validate import asset %s: %s", dumpFile, err)
 			}
 		}
 
@@ -540,25 +540,25 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
 			err = archive.Ungzip(importPath, dbPath)
 			if err != nil {
-				return fmt.Errorf("Failed to extract provided file: %v", err)
+				return fmt.Errorf("failed to extract provided file: %v", err)
 			}
 
 		case strings.HasSuffix(importPath, "sql.bz2") || strings.HasSuffix(importPath, "mysql.bz2"):
 			err = archive.UnBzip2(importPath, dbPath)
 			if err != nil {
-				return fmt.Errorf("Failed to extract file: %v", err)
+				return fmt.Errorf("failed to extract file: %v", err)
 			}
 
 		case strings.HasSuffix(importPath, "sql.xz") || strings.HasSuffix(importPath, "mysql.xz"):
 			err = archive.UnXz(importPath, dbPath)
 			if err != nil {
-				return fmt.Errorf("Failed to extract file: %v", err)
+				return fmt.Errorf("failed to extract file: %v", err)
 			}
 
 		case strings.HasSuffix(importPath, "zip"):
 			err = archive.Unzip(importPath, dbPath, extractPath)
 			if err != nil {
-				return fmt.Errorf("Failed to extract provided archive: %v", err)
+				return fmt.Errorf("failed to extract provided archive: %v", err)
 			}
 
 		case strings.HasSuffix(importPath, "tar"):
@@ -572,7 +572,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		case strings.HasSuffix(importPath, "tgz"):
 			err := archive.Untar(importPath, dbPath, extractPath)
 			if err != nil {
-				return fmt.Errorf("Failed to extract provided archive: %v", err)
+				return fmt.Errorf("failed to extract provided archive: %v", err)
 			}
 
 		default:
@@ -588,7 +588,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		}
 
 		if len(matches) < 1 {
-			return fmt.Errorf("No .sql or .mysql files found to import")
+			return fmt.Errorf("no .sql or .mysql files found to import")
 		}
 	}
 
@@ -676,7 +676,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	})
 
 	if err != nil {
-		return fmt.Errorf("Failed to import database: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
+		return fmt.Errorf("failed to import database: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
 	// Wait for import to really complete
@@ -714,12 +714,12 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 
 	err = app.PostImportDBAction()
 	if err != nil {
-		return fmt.Errorf("Failed to execute PostImportDBAction: %v", err)
+		return fmt.Errorf("failed to execute PostImportDBAction: %v", err)
 	}
 
 	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("Failed to clean up %s after import: %v", dbPath, err)
+		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
 	err = app.ProcessHooks("post-import-db")
@@ -755,7 +755,7 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	if dumpFile != "" {
 		f, err := os.OpenFile(dumpFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			return fmt.Errorf("Failed to open %s: %v", dumpFile, err)
+			return fmt.Errorf("failed to open %s: %v", dumpFile, err)
 		}
 		opts.Stdout = f
 		defer func() {
@@ -765,7 +765,7 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	stdout, stderr, err := app.Exec(opts)
 
 	if err != nil {
-		return fmt.Errorf("Unable to export db: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
+		return fmt.Errorf("unable to export db: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
 	confMsg := "Wrote database dump from project '" + app.Name + "' database '" + targetDB + "'"
@@ -917,12 +917,12 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	}
 	files, err := filepath.Glob("docker-compose.*.y*ml")
 	if err != nil {
-		return []string{}, fmt.Errorf("Unable to glob docker-compose.*.y*ml in %s: err=%v", app.AppConfDir(), err)
+		return []string{}, fmt.Errorf("unable to glob docker-compose.*.y*ml in %s: err=%v", app.AppConfDir(), err)
 	}
 
 	mainFile := app.DockerComposeYAMLPath()
 	if !fileutil.FileExists(mainFile) {
-		return nil, fmt.Errorf("Failed to find %s", mainFile)
+		return nil, fmt.Errorf("failed to find %s", mainFile)
 	}
 
 	overrides, err := filepath.Glob("docker-compose.override.y*ml")
@@ -956,7 +956,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	for _, c := range app.Hooks[hookName] {
 		a := NewTask(app, c)
 		if a == nil {
-			return fmt.Errorf("Unable to create task from %v", c)
+			return fmt.Errorf("unable to create task from %v", c)
 		}
 
 		if hookName == "pre-start" {
@@ -995,7 +995,7 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
-		return fmt.Errorf("Mutagen is not compatible with use-hardened-images")
+		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
 	app.DockerEnv()
@@ -1015,7 +1015,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		// OK to start if dbType is empty (nonexistent) or if it matches
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("Unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev debug migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
+			return fmt.Errorf("unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev debug migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
 		}
 	}
 
@@ -1042,12 +1042,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 				if err == nil && container != nil {
 					err = dockerutil.RemoveContainer(container.ID)
 					if err != nil {
-						return fmt.Errorf(`Unable to remove web container, please 'ddev restart': %v`, err)
+						return fmt.Errorf(`unable to remove web container, please 'ddev restart': %v`, err)
 					}
 				}
 				removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 				if removeVolumeErr != nil {
-					return fmt.Errorf(`Unable to remove mismatched Mutagen Docker volume '%s'. Please use 'ddev restart' or 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+					return fmt.Errorf(`unable to remove mismatched Mutagen Docker volume '%s'. Please use 'ddev restart' or 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
 				}
 			}
 		}
@@ -1056,7 +1056,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
 			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
 			if err != nil {
-				return fmt.Errorf("Unable to create new Mutagen Docker volume %s: %v", GetMutagenVolumeName(app), err)
+				return fmt.Errorf("unable to create new Mutagen Docker volume %s: %v", GetMutagenVolumeName(app), err)
 			}
 		}
 	}
@@ -1065,7 +1065,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil, nil)
 		if err != nil {
-			return fmt.Errorf("Unable to create Docker volume %s: %v", v, err)
+			return fmt.Errorf("unable to create Docker volume %s: %v", v, err)
 		}
 	}
 
@@ -1168,7 +1168,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
 		_, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 		if err != nil {
-			return fmt.Errorf("Failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
+			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
 		}
 		util.Debug("done chowning /var/lib/postgresql/data")
 	}
@@ -1315,13 +1315,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		err = CreateOrResumeMutagenSync(app)
 		if err != nil {
-			return fmt.Errorf("Failed to create Mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
+			return fmt.Errorf("failed to create Mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
 			return err
 		}
-		util.Debug("mutagen status after sync: %s", mStatus)
+		util.Debug("Mutagen status after sync: %s", mStatus)
 
 		dur := util.FormatDuration(mutagenDuration())
 		if mStatus == "ok" {
@@ -2159,7 +2159,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	waitTime := app.FindMaxTimeout()
 	err := dockerutil.ContainersWait(waitTime, labels)
 	if err != nil {
-		return fmt.Errorf("Container(s) failed to become healthy before their configured timeout or in %d seconds. This might be a problem with the healthcheck and not a functional problem. (%v)", waitTime, err)
+		return fmt.Errorf("container(s) failed to become healthy before their configured timeout or in %d seconds. This might be a problem with the healthcheck and not a functional problem. (%v)", waitTime, err)
 	}
 	return nil
 }
@@ -2310,7 +2310,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		}
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
-			return "", fmt.Errorf("Failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
+			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
 		}
 	}
 
@@ -2321,7 +2321,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
-		return snapshotFile, fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+		return snapshotFile, fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
 	return snapshotName, nil
@@ -2372,14 +2372,14 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	var err error
 
 	if app.Name == "" {
-		return fmt.Errorf("Invalid app.Name provided to app.Stop(), app=%v", app)
+		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
 	}
 
 	status, _ := app.SiteStatus()
 	if status != SiteStopped {
 		err = app.ProcessHooks("pre-stop")
 		if err != nil {
-			return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+			return fmt.Errorf("failed to process pre-stop hooks: %v", err)
 		}
 	}
 
@@ -2388,7 +2388,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("Must start non-running project to do database snapshot")
 			err = app.Start()
 			if err != nil {
-				return fmt.Errorf("Failed to start project to perform database snapshot")
+				return fmt.Errorf("failed to start project to perform database snapshot")
 			}
 		}
 		t := time.Now()
@@ -2449,7 +2449,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 
 		if err = app.RemoveHostsEntriesIfNeeded(); err != nil {
-			return fmt.Errorf("Failed to remove hosts entries: %v", err)
+			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 		app.RemoveGlobalProjectInfo()
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
@@ -2482,7 +2482,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	if status != SiteStopped {
 		err = app.ProcessHooks("post-stop")
 		if err != nil {
-			return fmt.Errorf("Failed to process post-stop hooks: %v", err)
+			return fmt.Errorf("failed to process post-stop hooks: %v", err)
 		}
 	}
 
@@ -2635,7 +2635,7 @@ func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
-		return -1, fmt.Errorf("Unable to find web container for app: %s, err %v", app.Name, err)
+		return -1, fmt.Errorf("unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
 	for _, p := range webContainer.Ports {
@@ -2643,7 +2643,7 @@ func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 			return int(p.PublicPort), nil
 		}
 	}
-	return -1, fmt.Errorf("No public port found for private port 80")
+	return -1, fmt.Errorf("no public port found for private port 80")
 }
 
 // GetWebContainerHTTPSPublicPort returns the direct-access public tcp port for https
@@ -2651,7 +2651,7 @@ func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
-		return -1, fmt.Errorf("Unable to find https web container for app: %s, err %v", app.Name, err)
+		return -1, fmt.Errorf("unable to find https web container for app: %s, err %v", app.Name, err)
 	}
 
 	for _, p := range webContainer.Ports {
@@ -2659,7 +2659,7 @@ func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
 			return int(p.PublicPort), nil
 		}
 	}
-	return -1, fmt.Errorf("No public https port found for private port 443")
+	return -1, fmt.Errorf("no public https port found for private port 443")
 }
 
 // HostName returns the hostname of a given application.
@@ -2675,11 +2675,11 @@ func GetActiveAppRoot(siteName string) (string, error) {
 	if siteName == "" {
 		siteDir, err = os.Getwd()
 		if err != nil {
-			return "", fmt.Errorf("Error determining the current directory: %s", err)
+			return "", fmt.Errorf("error determining the current directory: %s", err)
 		}
 		_, err = CheckForConf(siteDir)
 		if err != nil {
-			return "", fmt.Errorf("Could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
+			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
 		}
 		// Handle the case where it's registered globally but stopped
 	} else if p := globalconfig.GetProject(siteName); p != nil {
@@ -2698,12 +2698,12 @@ func GetActiveAppRoot(siteName string) (string, error) {
 			return "", err
 		}
 		if webContainer == nil {
-			return "", fmt.Errorf("Could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
+			return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
 		}
 
 		siteDir, ok = webContainer.Labels["com.ddev.approot"]
 		if !ok {
-			return "", fmt.Errorf("Could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(*webContainer))
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(*webContainer))
 		}
 	}
 	appRoot, err := CheckForConf(siteDir)
@@ -2747,7 +2747,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 // if it cannot restore them.
 func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
-		return fmt.Errorf("Error restoring AppConfig: no project name given")
+		return fmt.Errorf("error restoring AppConfig: no project name given")
 	}
 	app.Name = siteName
 	return nil
@@ -2831,7 +2831,7 @@ func (app *DdevApp) CheckAddonIncompatibilities() error {
 	}
 	// Look for missing "networks" stanza and request it.
 	for s, v := range app.ComposeYaml["services"].(map[string]interface{}) {
-		errMsg := fmt.Errorf("Service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
+		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
 		var nets map[string]interface{}
 		x := v.(map[string]interface{})
 		ok := false
@@ -2868,7 +2868,7 @@ func GetContainer(app *DdevApp, service string) (*docker.APIContainers, error) {
 	name := GetContainerName(app, service)
 	container, err := dockerutil.FindContainerByName(name)
 	if err != nil || container == nil {
-		return nil, fmt.Errorf("Unable to find container %s: %v", name, err)
+		return nil, fmt.Errorf("unable to find container %s: %v", name, err)
 	}
 	return container, nil
 }
@@ -2897,7 +2897,7 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
-		return fmt.Errorf("Unable to import to %s: parent directory does not exist", destPath)
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
 	// parent of destination dir should be writable.
@@ -2908,13 +2908,13 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
 		if err := os.RemoveAll(destPath); err != nil {
-			return fmt.Errorf("Failed to cleanup %s before import: %v", destPath, err)
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
 
 	if isTar(importPath) {
 		if err := archive.Untar(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("Failed to extract provided archive: %v", err)
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -2922,7 +2922,7 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 
 	if isZip(importPath) {
 		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("Failed to extract provided archive: %v", err)
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 		return nil

@@ -90,7 +90,7 @@ func pushGlobalTraefikConfig() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create global .ddev/traefik directory: %v", err)
+		return fmt.Errorf("failed to create global .ddev/traefik directory: %v", err)
 	}
 	sourceCertsPath := filepath.Join(globalTraefikDir, "certs")
 	// SourceConfigDir for dynamic config
@@ -99,11 +99,11 @@ func pushGlobalTraefikConfig() error {
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create global Traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create global Traefik certs dir: %v", err)
 	}
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create global Traefik config dir: %v", err)
+		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
 	}
 
 	// Assume that the #ddev-generated exists in file unless it doesn't
@@ -139,7 +139,7 @@ func pushGlobalTraefikConfig() error {
 
 			contents, err := fileutil.ReadFileIntoString(origFile)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %v: %v", origFile, err)
+				return fmt.Errorf("failed to read file %v: %v", origFile, err)
 			}
 			contents = nodeps.DdevFileSignature + "\n" + contents
 			err = fileutil.TemplateStringToFile(contents, nil, origFile)
@@ -188,12 +188,12 @@ func pushGlobalTraefikConfig() error {
 		}
 		t, err := template.New("traefik_global_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
 		if err != nil {
-			return fmt.Errorf("Could not create template from traefik_global_config_template.yaml: %v", err)
+			return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
 		}
 
 		err = t.Execute(f, templateData)
 		if err != nil {
-			return fmt.Errorf("Could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
+			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
 		}
 	}
 
@@ -220,19 +220,19 @@ func pushGlobalTraefikConfig() error {
 		}
 		t, err := template.New("traefik_static_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 		if err != nil {
-			return fmt.Errorf("Could not create template from traefik_static_config_template.yaml: %v", err)
+			return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
 		}
 
 		err = t.Execute(f, templateData)
 		if err != nil {
-			return fmt.Errorf("Could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
+			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
 		}
 	}
 	uid, _, _ := util.GetContainerUIDGid()
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
-		return fmt.Errorf("Failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
+		return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 	}
 	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
 
@@ -259,7 +259,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	projectTraefikDir := app.GetConfigPath("traefik")
 	err = os.MkdirAll(projectTraefikDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create .ddev/traefik directory: %v", err)
+		return fmt.Errorf("failed to create .ddev/traefik directory: %v", err)
 	}
 	sourceCertsPath := filepath.Join(projectTraefikDir, "certs")
 	sourceConfigDir := filepath.Join(projectTraefikDir, "config")
@@ -268,11 +268,11 @@ func configureTraefikForApp(app *DdevApp) error {
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create Traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create Traefik certs dir: %v", err)
 	}
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create Traefik config dir: %v", err)
+		return fmt.Errorf("failed to create Traefik config dir: %v", err)
 	}
 
 	baseName := filepath.Join(sourceCertsPath, app.Name)
@@ -311,7 +311,7 @@ func configureTraefikForApp(app *DdevApp) error {
 
 			contents, err := fileutil.ReadFileIntoString(origFile)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %v: %v", origFile, err)
+				return fmt.Errorf("failed to read file %v: %v", origFile, err)
 			}
 			contents = nodeps.DdevFileSignature + "\n" + contents
 			err = fileutil.TemplateStringToFile(contents, nil, origFile)
@@ -364,16 +364,16 @@ func configureTraefikForApp(app *DdevApp) error {
 	} else {
 		f, err := os.Create(traefikYamlFile)
 		if err != nil {
-			return fmt.Errorf("Failed to create Traefik config file: %v", err)
+			return fmt.Errorf("failed to create Traefik config file: %v", err)
 		}
 		t, err := template.New("traefik_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
-			return fmt.Errorf("Could not create template from traefik_config_template.yaml: %v", err)
+			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
 		}
 
 		err = t.Execute(f, templateData)
 		if err != nil {
-			return fmt.Errorf("Could not parse traefik_config_template.yaml with templatedate='%v':: %v", templateData, err)
+			return fmt.Errorf("could not parse traefik_config_template.yaml with templatedate='%v':: %v", templateData, err)
 		}
 	}
 

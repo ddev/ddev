@@ -33,12 +33,12 @@ func CopyFile(src string, dst string) error {
 	defer util.CheckClose(in)
 	out, err := os.Create(dst)
 	if err != nil {
-		return fmt.Errorf("Failed to create file %v, err: %v", src, err)
+		return fmt.Errorf("failed to create file %v, err: %v", src, err)
 	}
 	defer util.CheckClose(out)
 	_, err = io.Copy(out, in)
 	if err != nil {
-		return fmt.Errorf("Failed to copy file from %v to %v err: %v", src, dst, err)
+		return fmt.Errorf("failed to copy file from %v to %v err: %v", src, dst, err)
 	}
 
 	err = out.Sync()
@@ -57,7 +57,7 @@ func CopyFile(src string, dst string) error {
 
 		err = os.Chmod(dst, si.Mode())
 		if err != nil {
-			return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
+			return fmt.Errorf("failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
 		}
 	}
 
@@ -76,7 +76,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if !si.IsDir() {
-		return fmt.Errorf("CopyDir: source directory %s is not a directory", src)
+		return fmt.Errorf("copyDir: source directory %s is not a directory", src)
 	}
 
 	_, err = os.Stat(dst)
@@ -84,7 +84,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if err == nil {
-		return fmt.Errorf("CopyDir: destination %s already exists", dst)
+		return fmt.Errorf("copyDir: destination %s already exists", dst)
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
@@ -191,7 +191,7 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 func GrepStringInFile(fullPath string, needle string) (bool, error) {
 	fullFileBytes, err := os.ReadFile(fullPath)
 	if err != nil {
-		return false, fmt.Errorf("Failed to open file %s, err:%v ", fullPath, err)
+		return false, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
 	}
 	fullFileString := string(fullFileBytes)
 	re := regexp.MustCompile(needle)
@@ -314,7 +314,7 @@ func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
 					return nil
 				}
 				if len(lines) < 4 {
-					return fmt.Errorf("Apparent XSym doesn't have enough lines: %s", path)
+					return fmt.Errorf("apparent XSym doesn't have enough lines: %s", path)
 				}
 				// target is 4th line
 				linkTarget := filepath.Clean(lines[3])
@@ -450,7 +450,7 @@ func CheckSignatureOrNoFile(path string, signature string) error {
 		}
 		// We found the file and it has the signature in it.
 		if !found {
-			return fmt.Errorf("Signature was not found in file %s", path)
+			return fmt.Errorf("signature was not found in file %s", path)
 		}
 		return nil
 
@@ -476,7 +476,7 @@ func CheckSignatureOrNoFile(path string, signature string) error {
 			// We have the file and it does not have the signature in it.
 			// that means it's not safe to overwrite it.
 			if !found {
-				return fmt.Errorf("Signature was not found in file %s", path)
+				return fmt.Errorf("signature was not found in file %s", path)
 			}
 			return nil
 		})

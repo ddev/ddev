@@ -157,11 +157,11 @@ func GetTableStyle() string {
 // ValidateGlobalConfig validates global config
 func ValidateGlobalConfig() error {
 	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainersGlobal) {
-		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
+		return fmt.Errorf("invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
-		return fmt.Errorf("Invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
+		return fmt.Errorf("invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
@@ -209,7 +209,7 @@ func ReadGlobalConfig() error {
 
 	source, err := os.ReadFile(globalConfigFile)
 	if err != nil {
-		return fmt.Errorf("Unable to read DDEV global config file %s: %v", source, err)
+		return fmt.Errorf("unable to read DDEV global config file %s: %v", source, err)
 	}
 
 	// ReadConfig config values from file.
@@ -501,7 +501,7 @@ func CheckHostPortsAvailable(projectName string, ports []string) error {
 	for _, port := range ports {
 		allocatedProject := HostPostIsAllocated(port)
 		if allocatedProject != projectName && allocatedProject != "" {
-			return fmt.Errorf("Host port %s has already been allocated to project %s", port, allocatedProject)
+			return fmt.Errorf("host port %s has already been allocated to project %s", port, allocatedProject)
 		}
 	}
 	return nil
@@ -540,7 +540,7 @@ func GetFreePort(localIPAddr string) (string, error) {
 		}
 		return port, nil
 	}
-	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
+	return "-1", fmt.Errorf("getFreePort() failed to find a free port")
 
 }
 
@@ -565,10 +565,10 @@ func SetProjectAppRoot(projectName string, appRoot string) error {
 	}
 	// Can't use fileutil.FileExists because of import cycle.
 	if _, err := os.Stat(appRoot); err != nil {
-		return fmt.Errorf("Project %s project root %s does not exist", projectName, appRoot)
+		return fmt.Errorf("project %s project root %s does not exist", projectName, appRoot)
 	}
 	if DdevGlobalConfig.ProjectList[projectName].AppRoot != "" && DdevGlobalConfig.ProjectList[projectName].AppRoot != appRoot {
-		return fmt.Errorf("Project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot, projectName)
+		return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot, projectName)
 	}
 	DdevGlobalConfig.ProjectList[projectName].AppRoot = appRoot
 	err := WriteGlobalConfig(DdevGlobalConfig)

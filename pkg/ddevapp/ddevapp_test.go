@@ -4223,7 +4223,7 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 		return "", err
 	}
 	if container == nil {
-		return "", fmt.Errorf("No container exists for containerType=%s app=%v", containerType, app)
+		return "", fmt.Errorf("no container exists for containerType=%s app=%v", containerType, app)
 	}
 	name := dockerutil.ContainerName(*container)
 	return name, nil
