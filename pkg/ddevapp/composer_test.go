@@ -12,14 +12,14 @@ import (
 	"testing"
 )
 
-// TestComposer does trivial tests of the ddev composer command
+// TestComposer does trivial tests of the DDEV Composer command
 // More tests are found in the cmd package
 func TestComposer(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 
-	// Use drupal9 only for this test, just need a little composer action
+	// Use drupal9 only for this test, need a little Composer action
 	site := FullTestSites[8]
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
@@ -117,12 +117,12 @@ func TestComposerVersion(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
-	// Make sure base version (default) is composer v2
+	// Make sure base version (default) is Composer v2
 	err = app.Start()
 	require.NoError(t, err)
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "composer version not the expected composer 2: %v", stdout)
+	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "Composer version not the expected Composer 2: %v", stdout)
 
 	// Make sure it does the right thing with 1.x
 	app.ComposerVersion = "1"
@@ -138,7 +138,7 @@ func TestComposerVersion(t *testing.T) {
 	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "composer version doesn't start with the expected value: %v", stdout)
+	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "Composer version doesn't start with the expected value: %v", stdout)
 
 	// With explicit version, we should get that version
 	app.ComposerVersion = "2.0.1"

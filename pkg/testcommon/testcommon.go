@@ -261,7 +261,7 @@ func ClearDockerEnv() {
 
 // ContainerCheck determines if a given container name exists and matches a given state
 func ContainerCheck(checkName string, checkState string) (bool, error) {
-	// ensure we have docker network
+	// Ensure we have Docker network
 	client := dockerutil.GetDockerClient()
 	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
 	if err != nil {
@@ -300,7 +300,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 	_ = os.MkdirAll(filepath.Dir(archiveFullPath), 0777)
 	extractPath := filepath.Join(testCache, uniqueName)
 
-	// Check to see if we have it cached, if so just return it.
+	// Check to see if we have it cached, if so return it.
 	dStat, dErr := os.Stat(extractPath)
 	aStat, aErr := os.Stat(archiveFullPath)
 	if dErr == nil && dStat.IsDir() && aErr == nil && !aStat.IsDir() {
@@ -344,7 +344,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 }
 
 // GetLocalHTTPResponse takes a URL and optional timeout in seconds,
-// hits the local docker for it, returns result
+// hits the local Docker for it, returns result
 // Returns error (with the body) if not 200 status code.
 func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
 	var timeoutSecs = 60
@@ -371,7 +371,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	}
 	localAddress := u.String()
 
-	// use ServerName: fakeHost to verify basic usage of certificate.
+	// Use ServerName: fakeHost to verify basic usage of certificate.
 	// This technique is from https://stackoverflow.com/a/47169975/215713
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{ServerName: fakeHost},
@@ -398,7 +398,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 		return "", resp, err
 	}
 
-	//nolint: errcheck
+	// nolint: errcheck
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -45,7 +45,7 @@ type installDesc struct {
 	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
 }
 
-// format of the add-on manifest file
+// Format of the add-on manifest file
 type addonManifest struct {
 	Name           string   `yaml:"name"`
 	Repository     string   `yaml:"repository"`
@@ -61,7 +61,7 @@ type addonManifest struct {
 var Get = &cobra.Command{
 	Use:   "get <addonOrURL> [project]",
 	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
-	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official ddev add-ons. To list installed add-ons, 'ddev get --installed', to remove an add-on 'ddev get --remove <add-on>'.`,
+	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official DDEV add-ons. To list installed add-ons, 'ddev get --installed', to remove an add-on 'ddev get --remove <add-on>'.`,
 	Example: `ddev get ddev/ddev-redis
 ddev get ddev/ddev-redis --version v1.0.4
 ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
@@ -88,7 +88,7 @@ ddev get --remove ddev-someaddonname
 			verbose = true
 		}
 
-		// handle ddev get --list and ddev get --list --all
+		// Handle ddev get --list and ddev get --list --all
 		// these do not require an app context
 		if cmd.Flags().Changed("list") {
 			if cmd.Flag("all").Changed {
@@ -99,7 +99,7 @@ ddev get --remove ddev-someaddonname
 				util.Failed("Failed to list available add-ons: %v", err)
 			}
 			if len(repos) == 0 {
-				util.Warning("No ddev add-ons found with GitHub topic 'ddev-get'.")
+				util.Warning("No DDEV add-ons found with GitHub topic 'ddev-get'.")
 				return
 			}
 			out := renderRepositoryList(repos)
@@ -107,28 +107,28 @@ ddev get --remove ddev-someaddonname
 			return
 		}
 
-		// handle ddev get --installed
+		// Handle ddev get --installed
 		if cmd.Flags().Changed("installed") {
 			app, err := ddevapp.GetActiveApp("")
 			if err != nil {
-				util.Failed("unable to find active project: %v", err)
+				util.Failed("Unable to find active project: %v", err)
 			}
 
 			listInstalledAddons(app)
 			return
 		}
 
-		// handle ddev get --remove
+		// Handle ddev get --remove
 		if cmd.Flags().Changed("remove") {
 			app, err := ddevapp.GetActiveApp("")
 			if err != nil {
-				util.Failed("unable to find active project: %v", err)
+				util.Failed("Unable to find active project: %v", err)
 			}
 			app.DockerEnv()
 
 			err = removeAddon(app, cmd.Flag("remove").Value.String(), nil, bash, verbose)
 			if err != nil {
-				util.Failed("unable to remove add-on: %v", err)
+				util.Failed("Unable to remove add-on: %v", err)
 			}
 			return
 		}
@@ -166,7 +166,7 @@ ddev get --remove ddev-someaddonname
 			extractedDir = sourceRepoArg
 			argType = "directory"
 
-		// if sourceRepoArg is a tarball on local filesystem, we can use that
+		// If sourceRepoArg is a tarball on local filesystem, we can use that
 		case fileutil.FileExists(sourceRepoArg) && (strings.HasSuffix(filepath.Base(sourceRepoArg), "tar.gz") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tar") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tgz")):
 			// If the provided sourceRepoArg is a file, then we will use that as the source
 			extractedDir, cleanup, err = archive.ExtractTarballWithCleanup(sourceRepoArg, true)
@@ -176,7 +176,7 @@ ddev get --remove ddev-someaddonname
 			argType = "tarball"
 			defer cleanup()
 
-		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
+		// If the provided sourceRepoArg is a GitHub sourceRepoArg, then we will use that as the source
 		case len(parts) == 2: // github.com/owner/repo
 			argType = "github"
 			owner = parts[0]
@@ -229,7 +229,7 @@ ddev get --remove ddev-someaddonname
 
 		// 20220811: Don't auto-start because it auto-creates the wrong database in some situations, leading to a
 		// chicken-egg problem in getting database configured. See https://github.com/ddev/ddev-platformsh/issues/24
-		// Automatically start, as we don't want to be taking actions with mutagen off, for example.
+		// Automatically start, as we don't want to be taking actions with Mutagen off, for example.
 		//if status, _ := app.SiteStatus(); status != ddevapp.SiteRunning {
 		//	err = app.Start()
 		//	if err != nil {
@@ -255,13 +255,13 @@ ddev get --remove ddev-someaddonname
 
 			yamlMap[name], err = util.YamlFileToMap(fullpath)
 			if err != nil {
-				util.Warning("unable to import yaml file %s: %v", fullpath, err)
+				util.Warning("Unable to import yaml file %s: %v", fullpath, err)
 			}
 		}
 		for k, v := range map[string]string{"DdevGlobalConfig": globalconfig.GetGlobalConfigPath(), "DdevProjectConfig": app.GetConfigPath("config.yaml")} {
 			yamlMap[k], err = util.YamlFileToMap(v)
 			if err != nil {
-				util.Warning("unable to read file %s", v)
+				util.Warning("Unable to read file %s", v)
 			}
 		}
 
@@ -291,9 +291,9 @@ ddev get --remove ddev-someaddonname
 				desc := getDdevDescription(action)
 				if err != nil {
 					if !verbose {
-						util.Failed("could not process pre-install action (%d) '%s'. For more detail use ddev get --verbose", i, desc)
+						util.Failed("Could not process pre-install action (%d) '%s'. For more detail use ddev get --verbose", i, desc)
 					} else {
-						util.Failed("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+						util.Failed("Could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
 					}
 				}
 			}
@@ -317,7 +317,7 @@ ddev get --remove ddev-someaddonname
 				}
 				util.Success("%c %s", '\U0001F44D', file)
 			} else {
-				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
+				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use DDEV get again if you want it to be replaced: %v", dest, err)
 			}
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
@@ -341,7 +341,7 @@ ddev get --remove ddev-someaddonname
 				}
 				util.Success("%c %s", '\U0001F44D', file)
 			} else {
-				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
+				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use DDEV get again if you want it to be replaced: %v", dest, err)
 			}
 		}
 		origDir, _ := os.Getwd()
@@ -366,9 +366,9 @@ ddev get --remove ddev-someaddonname
 			desc := getDdevDescription(action)
 			if err != nil {
 				if !verbose {
-					util.Failed("could not process post-install action (%d) '%s'", i, desc)
+					util.Failed("Could not process post-install action (%d) '%s'", i, desc)
 				} else {
-					util.Failed("could not process post-install action (%d) '%s': %v", i, desc, err)
+					util.Failed("Could not process post-install action (%d) '%s': %v", i, desc, err)
 				}
 			}
 		}
@@ -389,7 +389,7 @@ ddev get --remove ddev-someaddonname
 
 		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
-			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
+			util.Success("Please read instructions for this add-on at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
 		output.UserOut.WithField("raw", manifest).Printf("Installed %s:%s from %s", manifest.Name, manifest.Version, manifest.Repository)
 	},
@@ -498,13 +498,13 @@ func processAction(action string, dict map[string]interface{}, bashPath string, 
 	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("processAction").Funcs(sprig.TxtFuncMap()).Parse(action)
 	if err != nil {
-		return fmt.Errorf("could not parse action '%s': %v", action, err)
+		return fmt.Errorf("Could not parse action '%s': %v", action, err)
 	}
 
 	var doc bytes.Buffer
 	err = t.Execute(&doc, dict)
 	if err != nil {
-		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
+		return fmt.Errorf("Could not parse/execute action '%s': %v", action, err)
 	}
 	action = doc.String()
 
@@ -700,7 +700,7 @@ func gatherAllManifests(app *ddevapp.DdevApp) (map[string]addonManifest, error) 
 		var manifestData = &addonManifest{}
 		err = yaml.Unmarshal([]byte(manifestString), manifestData)
 		if err != nil {
-			return nil, fmt.Errorf("Error unmarshalling manifest data: %v", err)
+			return nil, fmt.Errorf("Error unmarshaling manifest data: %v", err)
 		}
 		allManifests[manifestData.Name] = *manifestData
 		allManifests[manifestData.Repository] = *manifestData

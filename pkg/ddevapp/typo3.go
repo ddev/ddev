@@ -28,7 +28,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 		util.Warning("TYPO3 does not seem to have been set up yet, missing %s (%s)", filepath.Base(app.SiteSettingsPath), app.SiteSettingsPath)
 	}
 
-	// TYPO3 ddev settings file will be AdditionalConfiguration.php (app.SiteDdevSettingsFile).
+	// TYPO3 DDEV settings file will be AdditionalConfiguration.php (app.SiteDdevSettingsFile).
 	// Check if the file already exists.
 	if fileutil.FileExists(app.SiteDdevSettingsFile) {
 		// Check if the file is managed by ddev.
@@ -46,7 +46,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteDdevSettingsFile))
 	if err := writeTypo3SettingsFile(app); err != nil {
-		return "", fmt.Errorf("failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
+		return "", fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
 	}
 
 	return app.SiteDdevSettingsFile, nil
@@ -171,7 +171,7 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
-		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+		return fmt.Errorf("Unable to import to %s: parent directory does not exist", destPath)
 	}
 
 	// parent of destination dir should be writable.
@@ -182,13 +182,13 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
 		if err := os.RemoveAll(destPath); err != nil {
-			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+			return fmt.Errorf("Failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
 
 	if isTar(importPath) {
 		if err := archive.Untar(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
+			return fmt.Errorf("Failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -196,7 +196,7 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 
 	if isZip(importPath) {
 		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
+			return fmt.Errorf("Failed to extract provided archive: %v", err)
 		}
 
 		return nil

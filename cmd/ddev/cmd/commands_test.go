@@ -30,13 +30,13 @@ func TestCustomCommands(t *testing.T) {
 	origHome, err := os.UserHomeDir()
 	require.NoError(t, err)
 
-	// Before changing HOME, make sure that mutagen is already running if we're using it,
+	// Before changing HOME, make sure that Mutagen is already running if we are using it,
 	// so we don't accidentally start it in the wrong directory
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
-		require.NoError(t, err, "unable to run mutagen daemon start, out='%s', err=%v", out, err)
+		require.NoError(t, err, "unable to run Mutagen daemon start, out='%s', err=%v", out, err)
 	}
 
 	if runtime.GOOS == "windows" {
@@ -50,7 +50,7 @@ func TestCustomCommands(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	// Must be stopped before changing homedir or mutagen will lose track
+	// Must be stopped before changing homedir or Mutagen will lose track
 	// of sessions which are also tracked in the homedir.
 	err = app.Stop(true, false)
 	require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		// Stop the mutagen daemon running in the bogus homedir
+		// Stop the Mutagen daemon running in the bogus homedir
 		ddevapp.StopMutagenDaemon()
 		runTime()
 		app.Type = origType
@@ -90,7 +90,7 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 
 	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
-	// It's changed via $HOME for the ddev subprocess
+	// It's changed via $HOME for the DDEV subprocess
 	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
 	assert.NoError(err)
 	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
@@ -110,7 +110,7 @@ func TestCustomCommands(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 	require.NoError(t, err, "failed to run ddev debug fix-commands, out='%s', err=%v", out, err)
 	out, err = exec.RunHostCommand(DdevBin)
-	require.NoError(t, err, "failed to run ddev command, output='%s', err=%v", out, err)
+	require.NoError(t, err, "failed to run DDEV command, output='%s', err=%v", out, err)
 	assert.Contains(out, "mysql client in db container")
 
 	// Test the `ddev mysql` command with stdin
@@ -195,7 +195,7 @@ func TestCustomCommands(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	// Make sure that all the official ddev-provided custom commands are usable by just checking help
+	// Make sure that all the official ddev-provided custom commands are usable by checking help
 	for _, c := range []string{"launch", "xdebug"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err, "Failed to run ddev %s -h", c)

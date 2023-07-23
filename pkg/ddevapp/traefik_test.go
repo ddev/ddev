@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-// TestTraefikSimple tests basic traefik router usage
+// TestTraefikSimple tests basic Traefik router usage
 func TestTraefikSimple(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -53,7 +53,7 @@ func TestTraefikSimple(t *testing.T) {
 	require.NoError(t, err)
 
 	err = app.MutagenSyncFlush()
-	require.NoError(t, err, "failed to flush mutagen sync")
+	require.NoError(t, err, "failed to flush Mutagen sync")
 
 	desc, err := app.Describe(false)
 	assert.Equal(desc["router"].(string), types.RouterTypeTraefik)
@@ -62,7 +62,7 @@ func TestTraefikSimple(t *testing.T) {
 	httpURLs, _, allURLs := app.GetAllURLs()
 
 	// If no mkcert trusted https, use only the httpURLs
-	// This is especially the case for colima
+	// This is especially the case for Colima
 	if globalconfig.GetCAROOT() == "" {
 		allURLs = httpURLs
 	}
@@ -75,7 +75,7 @@ func TestTraefikSimple(t *testing.T) {
 	}
 }
 
-// TestTraefikVirtualHost tests traefik with an extra VIRTUAL_HOST
+// TestTraefikVirtualHost tests Traefik with an extra VIRTUAL_HOST
 func TestTraefikVirtualHost(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -121,7 +121,7 @@ func TestTraefikVirtualHost(t *testing.T) {
 	httpURLs, _, allURLs := app.GetAllURLs()
 
 	// If no mkcert trusted https, use only the httpURLs
-	// This is especially the case for colima
+	// This is especially the case for Colima
 	if globalconfig.GetCAROOT() == "" {
 		allURLs = httpURLs
 	}

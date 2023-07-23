@@ -90,7 +90,7 @@ func TestCmdExec(t *testing.T) {
 	_, err = exec.RunHostCommand(DdevBin, "exec", "ls >/dev/null && touch /var/www/html/TestCmdExec-touch-all-in-one.txt")
 	assert.NoError(err)
 
-	// We just created in the container, must flush before looking for it on host
+	// We have created it in the container, must flush before looking for it on host again
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 

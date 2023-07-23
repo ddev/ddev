@@ -23,7 +23,7 @@ func TestComposerCmd(t *testing.T) {
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into composer.
+	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
 	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
 		t.Skip("Composer has strange behavior in NFS context, so skipping")
 	}
@@ -55,7 +55,7 @@ func TestComposerCmd(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(out, "Available commands:")
 
-		// Get an app just so we can do waits
+		// Get an app so we can do waits
 		app, err := ddevapp.NewApp(tmpDir, true)
 		assert.NoError(err)
 
@@ -72,7 +72,7 @@ func TestComposerCmd(t *testing.T) {
 
 		// Test create-project
 		// These two often fail on Windows with NFS, also Colima
-		// It appears to be something about composer itself?
+		// It appears to be something about Composer itself?
 
 		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 		args := []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "--no-install", "psr/log:1.1.0"}

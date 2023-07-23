@@ -34,8 +34,8 @@ const platformPullSiteURL = "https://platform-pull-7tsp6cq-5bviezdszcmrg.ca-1.pl
 const platformSiteExpectation = "Super easy vegetarian pasta"
 
 // Note that these tests won't run with GitHub actions on a forked PR.
-// Thie is a security feature, but means that PRs intended to test this
-// must be done in the ddev repo.
+// This is a security feature, but means that PRs intended to test this
+// must be done in the DDEV repo.
 
 // TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
 func TestPlatformPull(t *testing.T) {

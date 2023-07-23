@@ -15,7 +15,7 @@ import (
 
 var CleanCmd = &cobra.Command{
 	Use:   "clean [projectname ...]",
-	Short: "Removes items ddev has created",
+	Short: "Removes items DDEV has created",
 	Long: `Stops all running projects and then removes downloads and snapshots
 for the selected projects. Then clean will remove "ddev/ddev-*" images.
 
@@ -51,7 +51,7 @@ Additional commands that can help clean up resources:
 				util.Failed("Failed to get project %s snapshots: %v", project.Name, err)
 			}
 			if len(snapshots) > 0 {
-				output.UserOut.Printf("%v Snapshots for project %s will be deleted", len(snapshots), project.Name)
+				output.UserOut.Printf("%v snapshots for project %s will be deleted", len(snapshots), project.Name)
 			} else {
 				output.UserOut.Printf("No snapshots found for project %s", project.Name)
 			}
@@ -68,7 +68,7 @@ Additional commands that can help clean up resources:
 			return
 		}
 
-		util.Success("Powering off ddev to avoid conflicts.")
+		util.Success("Powering off DDEV to avoid conflicts.")
 		ddevapp.PowerOff()
 
 		globalDdevDir := globalconfig.GetGlobalDdevDir()
@@ -90,17 +90,17 @@ Additional commands that can help clean up resources:
 			}
 		}
 
-		output.UserOut.Print("Deleting Docker images that ddev created...")
+		output.UserOut.Print("Deleting Docker images that DDEV created...")
 		err = deleteDdevImages(true)
 		if err != nil {
 			util.Failed("Failed to delete image tag", err)
 		}
-		util.Success("Finished cleaning ddev projects")
+		util.Success("Finished cleaning DDEV projects")
 	},
 }
 
 func init() {
-	CleanCmd.Flags().BoolP("all", "a", false, "Clean all ddev projects")
+	CleanCmd.Flags().BoolP("all", "a", false, "Clean all DDEV projects")
 	CleanCmd.Flags().Bool("dry-run", false, "Run the clean command without deleting")
 	RootCmd.AddCommand(CleanCmd)
 }

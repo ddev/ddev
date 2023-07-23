@@ -122,7 +122,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme for reading"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is test text for TestDdevFullSiteSetup"},
 			FilesImageURI:                 "/fileadmin/user_upload/Logo.png",
 		},
@@ -346,8 +346,8 @@ func init() {
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
-	// Since this may be first time ddev has been used, we need the
-	// ddev network available.
+	// Since this may be the first time DDEV has been used, we need the
+	// DDEV network available.
 	dockerutil.EnsureDdevNetwork()
 
 	// Avoid having sudo try to add to /etc/hosts.
@@ -357,7 +357,7 @@ func TestMain(m *testing.M) {
 	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
-	// in the array. Any value can be used, it will default to just using the
+	// in the array. Any value can be used, it will default to using the
 	// first site in the array.
 	gotestShort := os.Getenv("GOTEST_SHORT")
 	if gotestShort != "" {
@@ -403,7 +403,7 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: ddevapp.PrepDdevDirectory() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		// Use ddev binary here because just app.WriteConfig() doesn't
+		// Use DDEV binary here because app.WriteConfig() doesn't
 		// populate the project .ddev
 		err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 		if err != nil {
@@ -417,7 +417,7 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		// Pre-download any images we may need, just to get them out of the way so they don't clutter tests
+		// Pre-download any images we may need, to get them out of the way so they don't clutter tests
 		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
 		if err != nil {
 			log.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
@@ -468,7 +468,7 @@ func TestDdevStart(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -489,14 +489,14 @@ func TestDdevStart(t *testing.T) {
 		assert.False(dockerutil.NetworkExists("ddev-" + app.Name + "_default"))
 	})
 
-	// Make sure the -built docker image exists before stop
+	// Make sure the -built Docker image exists before stop
 	webBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
 	dbBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)
 
-	// ensure .ddev/.ddev-docker-compose* exists inside .ddev site folder
+	// Ensure .ddev/.ddev-docker-compose* exists inside .ddev site folder
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 	assert.True(composeFile)
 
@@ -511,7 +511,7 @@ func TestDdevStart(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	// Make sure the -built docker images do not exist after stop with removeData
+	// Make sure the -built Docker images do not exist after stop with removeData
 	for _, imageName := range []string{webBuilt, dbBuilt} {
 		exists, err = dockerutil.ImageExistsLocally(imageName)
 		assert.NoError(err)
@@ -541,7 +541,7 @@ func TestDdevStart(t *testing.T) {
 	out := stdoutFunc()
 	assert.Contains(out, "hello\n")
 
-	// try to start a site of same name at different path
+	// Try to start a site of same name at different path
 	another := site
 	tmpDir := testcommon.CreateTmpDir("another")
 	copyDir := filepath.Join(tmpDir, "copy")
@@ -583,7 +583,7 @@ func TestDdevStart(t *testing.T) {
 
 	err = symlinkApp.Init(symlink)
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer symlinkApp.Stop(true, false)
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
@@ -602,7 +602,7 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 	if runtime.GOOS == "windows" &&
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
 			nodeps.PerformanceModeDefault == types.PerformanceModeMutagen) {
-		t.Skip("Skipping on windows/mutagen, it's just too slow to app.Start()")
+		t.Skip("Skipping on Windows/Mutagen, it is too slow to app.Start()")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -664,10 +664,6 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
-	//if nodeps.IsAppleSilicon() {
-	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	//}
-
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -702,7 +698,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			t.Logf("DB Logs after app.Start: \n%s\n== END DB LOGS ==", out)
 		}
 
-		// ensure .ddev/docker-compose*.yaml exists inside .ddev site folder
+		// Ensure .ddev/docker-compose*.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
@@ -742,7 +738,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
 		globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
 		nodeps.NoBindMountsDefault {
-		t.Skip("Skipping with mutagen because conflict on settings files")
+		t.Skip("Skipping with Mutagen because conflict on settings files")
 	}
 
 	assert := asrt.New(t)
@@ -750,7 +746,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
-	// Use Drupal9 as it is a good target for composer failures
+	// Use Drupal9 as it is a good target for Composer failures
 	site := FullTestSites[8]
 	// We will create directory from scratch, as we'll be removing files and changing it.
 
@@ -814,7 +810,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove(filepath.Join(app.SiteDdevSettingsFile))
 	assert.NoError(err)
-	// Flush to prevent conflict with mutagen holding file below
+	// Flush to prevent conflict with Mutagen holding file below
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
@@ -837,7 +833,7 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -850,7 +846,7 @@ func TestDdevNoProjectMount(t *testing.T) {
 	assert.NoError(err)
 
 	if app.IsMutagenEnabled() || nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because this doesn't make sense with mutagen or NoBindMounts")
+		t.Skip("Skipping because this doesn't make sense with Mutagen or NoBindMounts")
 	}
 	app.NoProjectMount = true
 	err = app.WriteConfig()
@@ -891,8 +887,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
-	// On macOS we want to just listen on localhost port, to not trigger
-	// firewall block. On other systems, just listen on all interfaces
+	// On macOS we want to listen on localhost port, to not trigger
+	// a firewall block. On other systems, we listen on all interfaces.
 	listenPort := ":9003"
 	if runtime.GOOS == "darwin" {
 		listenPort = "127.0.0.1:9003"
@@ -905,7 +901,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	// Create the simplest possible php file; just outputs PHP_IDE_CONFIG value
+	// Create the simplest possible PHP file; outputs PHP_IDE_CONFIG value
 	// Which should be empty.
 	err = fileutil.TemplateStringToFile("<?php\nif (getenv('PHP_IDE_CONFIG') === false) { echo 'PHP_IDE_CONFIG is properly unset'; } else { echo 'PHP_IDE_CONFIG is set'; }\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
@@ -966,7 +962,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.Error(err)
 		assert.Contains(stdout, "Extension 'xdebug' not present")
 
-		// Run with xdebug enabled
+		// Run with Xdebug enabled
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Cmd: "enable_xdebug",
 		})
@@ -976,10 +972,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.NoError(err)
 
 		if err != nil {
-			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
+			t.Errorf("Aborting Xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.2 get xdebug 3.0+
+		// PHP 7.2 through 8.2 get Xdebug 3.0+
 		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
@@ -998,7 +994,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		go func() {
 			time.Sleep(time.Second)
-			t.Logf("Connecting to HTTP URL %s with xdebug enabled, PHP version=%s time=%v", app.GetWebContainerDirectHTTPURL(), v, time.Now())
+			t.Logf("Connecting to HTTP URL %s with Xdebug enabled, PHP version=%s time=%v", app.GetWebContainerDirectHTTPURL(), v, time.Now())
 			// Curl to the project's index.php or anything else
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
 			if err != nil {
@@ -1015,7 +1011,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		// goroutine instead.
 
 		go func() {
-			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			t.Logf("Attempting accept of port 9003 with Xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
 			var conn net.Conn
 			var ncOutput string
@@ -1035,7 +1031,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 				assert.NoError(err)
 			}
 			if err == nil {
-				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
+				t.Logf("Completed accept of port 9003 with Xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
 			} else {
 				t.Logf("Failed accept on port 9003, err=%v", err)
 				acceptListenDone <- true
@@ -1139,7 +1135,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			assert.Error(err)
 			assert.Contains(stdout, "Extension 'xhprof' not present")
 
-			// Run with xhprof enabled
+			// Run with Xhprof enabled
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: fmt.Sprintf("enable_xhprof"),
 			})
@@ -1151,7 +1147,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			})
 			assert.NoError(err)
 			if err != nil {
-				t.Errorf("Aborting xhprof check for php%s: %v", v, err)
+				t.Errorf("Aborting Xhprof check for php%s: %v", v, err)
 				continue
 			}
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
@@ -1177,7 +1173,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	runTime()
 }
 
-// TestDdevMysqlWorks tests that mysql client can be run in both containers.
+// TestDdevMysqlWorks tests that MySQL client can be run in both containers.
 func TestDdevMysqlWorks(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -1194,7 +1190,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
-	// Test that mysql + .my.cnf works on web container
+	// Test that MySQL + .my.cnf works on web container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "mysql -e 'SELECT USER();' | grep 'db@'",
@@ -1206,7 +1202,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	})
 	assert.NoError(err)
 
-	// Test that mysql + .my.cnf works on db container
+	// Test that MySQL + .my.cnf works on db container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@localhost'",
@@ -1484,7 +1480,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Len(lines, 1)
 			assert.Contains(out, "users_just_one")
 
-			// This import-on-top-of-existing-file can't work on postgres
+			// This import-on-top-of-existing-file can't work on PostgreSQL
 			if dbType != nodeps.Postgres {
 				// Import 2-user users.sql again, but with nodrop=true
 				// We should end up with 2 tables now
@@ -1619,7 +1615,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-	// Bug: postgres 9 doesn't work with snapshot restore, see https://github.com/ddev/ddev/issues/3583
+	// Bug: PostgreSQL 9 doesn't work with snapshot restore, see https://github.com/ddev/ddev/issues/3583
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
@@ -1663,7 +1659,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	})
 
 	for _, dbTypeVersion := range dbVersions {
-		t.Logf("testing db server functionality of %s", dbTypeVersion)
+		t.Logf("Testing db server functionality of %s", dbTypeVersion)
 		parts := strings.Split(dbTypeVersion, ":")
 		dbType := parts[0]
 		dbVersion := parts[1]
@@ -1689,7 +1685,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(dbTypeVersion, inVolumeDBType)
 
-		// The db_mariadb_version.txt file does not exist on postgres
+		// The db_mariadb_version.txt file does not exist on PostgreSQL
 		if dbType != nodeps.Postgres {
 			// Make sure the version of db running matches expected
 			containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
@@ -1769,8 +1765,8 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 		fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", snapshotPath)))
 		require.NoError(t, err)
-		// make sure there's something in the snapshot
-		assert.Greater(fi.Size(), int64(1000), "snapshot %s for %s may be empty: %v", fi.Name(), dbTypeVersion, fi)
+		// Make sure there's something in the snapshot
+		assert.Greater(fi.Size(), int64(1000), "Snapshot %s for %s may be empty: %v", fi.Name(), dbTypeVersion, fi)
 
 		// Delete the user in the database so we can later verify snapshot restore
 		c := map[string]string{
@@ -1964,7 +1960,7 @@ func TestDdevExportDB(t *testing.T) {
 			assert.True(stringFound, "expected info not found %s (%s)", cType, "tmp/users1.sql")
 		}
 
-		// Flush needs to be complete before purge or may conflict with mutagen on windows
+		// Flush needs to be complete before purge or may conflict with Mutagen on windows
 		err = app.MutagenSyncFlush()
 		assert.NoError(err)
 		err = fileutil.PurgeDirectory("tmp")
@@ -2206,7 +2202,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
-	// Not all the example projects have an upload dir, so create it just in case
+	// Not all the example projects have an upload dir, so create it in case
 	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
 	assert.NoError(err)
 	err = app.Start()
@@ -2255,7 +2251,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	// os.OpenFile() for append here fails if the file does not already exist.
 	f, err = os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
 	assert.NoError(err)
-	_, err = f.WriteString("this addition to the file was added on the host side")
+	_, err = f.WriteString("This addition to the file was added on the host side")
 	assert.NoError(err)
 	_ = f.Close()
 
@@ -2278,14 +2274,14 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	f, err = os.OpenFile(onHostRelativePath, os.O_CREATE|os.O_RDWR, 0660)
 	assert.NoError(err)
-	_, err = f.WriteString("this base content was inserted on the host side\n")
+	_, err = f.WriteString("This base content was inserted on the host side\n")
 	assert.NoError(err)
 	_ = f.Close()
 
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	// if the file exists, add to it. We don't want to add if it's not already there.
+	// If the file exists, add to it. We don't want to add if it's not already there.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi",
@@ -2590,7 +2586,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 	}
 }
 
-// TestDdevExec tests the execution of commands inside a docker container of a site.
+// TestDdevExec tests the execution of commands inside a Docker container of a site.
 func TestDdevExec(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2827,7 +2823,7 @@ func TestDdevPause(t *testing.T) {
 	switchDir()
 }
 
-// TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
+// TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or DDEV configs.
 func TestDdevStopMissingDirectory(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because unreliable on Windows")
@@ -2860,7 +2856,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Rename(siteCopyDest, site.Dir)
 
 	// ddev stop (in cmd) actually does the check for missing project files,
@@ -2868,7 +2864,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = ddevapp.CheckForMissingProjectFiles(app)
 	assert.Error(err)
 	if err != nil {
-		assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
+		assert.Contains(err.Error(), "If you would like to continue using DDEV to manage this project please restore your files to that directory.")
 	}
 }
 
@@ -2930,7 +2926,7 @@ func TestDdevDescribe(t *testing.T) {
 	switchDir()
 }
 
-// TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
+// TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or DDEV configs.
 func TestDdevDescribeMissingDirectory(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because unreliable on Windows")
@@ -3028,7 +3024,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
 	// Occupy ports 80/443 using docker run of ddev-webserver, then see if we can start router.
-	// This is done with docker so that we don't have to use explicit sudo
+	// This is done with Docker so that we don't have to use explicit sudo
 	// The ddev-webserver healthcheck should make sure that we have a legitimate occupation
 	// of the port by the time it comes up.
 	portBinding := map[docker.Port][]docker.PortBinding{
@@ -3041,7 +3037,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	containerID, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
 
 	if err != nil {
-		t.Fatalf("Failed to run docker command to occupy port 80/443, err=%v output=%v", err, out)
+		t.Fatalf("Failed to run Docker command to occupy port 80/443, err=%v output=%v", err, out)
 	}
 	out, err = dockerutil.ContainerWait(60, map[string]string{"ddevtestcontainer": t.Name()})
 	require.NoError(t, err, "Failed to wait for container to start, err=%v output='%v'", err, out)
@@ -3059,9 +3055,9 @@ func TestRouterPortsCheck(t *testing.T) {
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Skip test because we can't rename folders while they're in use if running on Windows or with mutagen.
+	// Skip test because we can't rename folders while they're in use if running on Windows or with Mutagen.
 	if runtime.GOOS == "windows" || nodeps.PerformanceModeDefault == types.PerformanceModeMutagen {
-		t.Skip("Skipping test TestCleanupWithoutCompose; doesn't work on Windows or mutagen because of renaming of whole project directory")
+		t.Skip("Skipping test TestCleanupWithoutCompose; doesn't work on Windows or Mutagen because of renaming of whole project directory")
 	}
 
 	origDir, _ := os.Getwd()
@@ -3296,7 +3292,7 @@ func TestHttpsRedirection(t *testing.T) {
 			// Test for directory redirects under https and http
 			for _, parts := range expectations {
 				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
-				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
+				// t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				// Add extra hit to avoid occasional nil result
 				_, _, _ = testcommon.GetLocalHTTPResponse(t, reqURL, 60)
 				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL, 60)
@@ -3344,7 +3340,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -3356,7 +3352,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	app, err = ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 
 	desc, err := app.Describe(false)
@@ -3727,7 +3723,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	err := app.Stop(true, false)
 	assert.NoError(err)
 	err = app.Start()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
@@ -3808,7 +3804,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
 	if dockerutil.IsColima() {
-		t.Skip("Skipping test on colima because of constant port problems")
+		t.Skip("Skipping test on Colima because of constant port problems")
 	}
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()
@@ -3879,7 +3875,7 @@ func TestHostDBPort(t *testing.T) {
 			if !util.IsCommandAvailable(clientTool) {
 				t.Logf("Skipping %s check because %s tool not available", clientTool, clientTool)
 			} else {
-				// Running mysql or psql against the container ensures that we can get there via the values
+				// Running MySQL or psql against the container ensures that we can get there via the values
 				// in ddev describe
 				c := fmt.Sprintf(
 					"export MYSQL_PWD=db; mysql -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
@@ -3909,7 +3905,7 @@ func TestHostDBPort(t *testing.T) {
 // ports used by another
 func TestPortSpecifications(t *testing.T) {
 	if nodeps.IsWSL2() {
-		t.Skip("Skipping on WSL2 because of inconsistent docker behavior acquiring ports")
+		t.Skip("Skipping on WSL2 because of inconsistent Docker behavior acquiring ports")
 	}
 	assert := asrt.New(t)
 	defer util.TimeTrackC("TestPortSpecifications")()
@@ -3957,7 +3953,7 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = specAPP.Start()
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	err = specAPP.Stop(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
@@ -4047,9 +4043,9 @@ func TestCustomCerts(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	// Generate a certfile/key in .ddev/custom_certs with just one DNS name in it
+	// Generate a certfile/key in .ddev/custom_certs with one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
-	// For traefik generation, it's app.Name,
+	// For Traefik generation, it's app.Name,
 	// mkcert --cert-file d9.crt --key-file d9.key d9.ddev.site
 	baseCertName := app.GetHostname()
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {

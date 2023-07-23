@@ -173,16 +173,16 @@ func (app *DdevApp) getUploadDirsRelative() []string {
 }
 
 // CreateUploadDirsIfNecessary creates the upload dirs if it doesn't exist, so we can properly
-// set up bind-mounts when doing mutagen.
-// There is no need to do it if mutagen is not enabled, and
-// we'll just respect a symlink if it exists, and the user has to figure out the right
-// thing to do with mutagen.
+// set up bind-mounts when doing Mutagen.
+// There is no need to do it if Mutagen is not enabled, and
+// we'll respect a symlink if it exists, and the user has to figure out the right
+// thing to do with Mutagen.
 func (app *DdevApp) CreateUploadDirsIfNecessary() {
 	for _, target := range app.GetUploadDirs() {
 		if hostDir := app.calculateHostUploadDirFullPath(target); hostDir != "" && app.IsMutagenEnabled() && !fileutil.FileExists(hostDir) {
 			err := os.MkdirAll(hostDir, 0755)
 			if err != nil {
-				util.Warning("unable to create upload directory %s: %v", hostDir, err)
+				util.Warning("Unable to create upload directory %s: %v", hostDir, err)
 			}
 		}
 	}
@@ -199,7 +199,7 @@ func (app *DdevApp) validateUploadDirs() error {
 	// Check that upload dirs aren't outside the project root.
 	for _, uploadDir := range app.UploadDirs {
 		if !strings.HasPrefix(app.calculateHostUploadDirFullPath(uploadDir), app.AppRoot) {
-			return fmt.Errorf("invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
+			return fmt.Errorf("Invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
 		}
 	}
 

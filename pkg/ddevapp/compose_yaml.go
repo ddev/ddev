@@ -13,7 +13,7 @@ import (
 // WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
 // It then uses `docker-compose convert` to get a canonical version of the full compose file.
 // It then makes a couple of fixups to the canonical version (networks and approot bind points) by
-// marshalling the canonical version to YAML and then unmarshalling it back into a canonical version.
+// marshaling the canonical version to YAML and then unmarshaling it back into a canonical version.
 func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
 

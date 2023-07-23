@@ -27,7 +27,7 @@ func TestImportTilde(t *testing.T) {
 	cleanup := site.Chdir()
 	defer rmFile(testFile)
 
-	// this ~ should be expanded by shell
+	// This ~ should be expanded by shell
 	args := []string{"import-files", "--source", "~/testfile.tar.gz"}
 	out, err := exec.RunCommand(DdevBin, args)
 	if err != nil {
@@ -36,7 +36,7 @@ func TestImportTilde(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully imported files")
 
-	// this ~ is not expanded by shell, ddev should convert it to a valid path
+	// That ~ is not expanded by shell, DDEV should convert it to a valid path
 	args = []string{"import-files", "--source=~/testfile.tar.gz"}
 	out, err = exec.RunCommand(DdevBin, args)
 	if err != nil {
@@ -50,7 +50,7 @@ func TestImportTilde(t *testing.T) {
 	assert.NoError(nil)
 }
 
-// rmFile simply allows us to defer os.Remove while ignoring the error return.
+// rmFile allows us to defer os.Remove while ignoring the error return.
 func rmFile(fullPath string) {
 	_ = os.Remove(fullPath)
 }

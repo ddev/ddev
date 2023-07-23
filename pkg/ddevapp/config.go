@@ -79,7 +79,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.WebserverType = nodeps.WebserverDefault
 	app.SetPerformanceMode(nodeps.PerformanceModeDefault)
 
-	// Turn off mutagen on python projects until initial setup can be done
+	// Turn off Mutagen on Python projects until initial setup can be done
 	if app.WebserverType == nodeps.WebserverNginxGunicorn {
 		app.SetPerformanceMode(types.PerformanceModeNone)
 	}
@@ -164,7 +164,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
 	}
 
-	// TODO enable once the bootstrap is clean and every project is loaded once only
+	// TODO: Enable once the bootstrap is clean and every project is loaded once only
 	//app.TrackProject()
 
 	return app, nil
@@ -276,7 +276,7 @@ RUN echo "Built on $(date)" > /build-date.txt
 // is tracked in global project list:
 // - approot
 // - configured host ports
-// checks that configured host ports are not already
+// Checks that configured host ports are not already
 // reserved by another project
 func (app *DdevApp) UpdateGlobalProjectList() error {
 	portsToReserve := []string{}
@@ -343,10 +343,10 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	source, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
+		return fmt.Errorf("Could not find an active DDEV configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
 	}
 
-	// validate extend command keys
+	// Validate extend command keys
 	err = validateHookYAML(source)
 	if err != nil {
 		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
@@ -367,12 +367,12 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	return nil
 }
 
-// WarnIfConfigReplace just messages user about whether config is being replaced or created
+// WarnIfConfigReplace messages user about whether config is being replaced or created
 func (app *DdevApp) WarnIfConfigReplace() {
 	if app.ConfigExists() {
 		util.Warning("You are reconfiguring the project at %s.\nThe existing configuration will be updated and replaced.", app.AppRoot)
 	} else {
-		util.Success("Creating a new ddev project config in the current directory (%s)", app.AppRoot)
+		util.Success("Creating a new DDEV project config in the current directory (%s)", app.AppRoot)
 		util.Success("Once completed, your configuration will be written to %s\n", app.ConfigPath)
 	}
 }
@@ -426,12 +426,12 @@ func ValidateProjectName(name string) error {
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
 
-	// validate project name
+	// Validate project name
 	if err := ValidateProjectName(app.Name); err != nil {
 		return err
 	}
 
-	// validate hostnames
+	// Validate hostnames
 	for _, hn := range app.GetHostnames() {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
@@ -443,56 +443,56 @@ func (app *DdevApp) ValidateConfig() error {
 		}
 	}
 
-	// validate apptype
+	// Validate apptype
 	if !IsValidAppType(app.Type) {
 		return fmt.Errorf("invalid app type: %s", app.Type).(invalidAppType)
 	}
 
-	// validate PHP version
+	// Validate PHP version
 	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("unsupported PHP version: %s, ddev only supports the following versions: %v", app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+		return fmt.Errorf("unsupported PHP version: %s, DDEV only supports the following versions: %v", app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
-	// validate webserver type
+	// Validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
-		return fmt.Errorf("unsupported webserver type: %s, ddev (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
+		return fmt.Errorf("unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
 	if !nodeps.IsValidNodeVersion(app.NodeJSVersion) {
-		return fmt.Errorf("unsupported system Node.js version: '%s'; for the system Node.js version ddev only supports %s. However, you can use 'ddev nvm install' at runtime to use any supported version", app.NodeJSVersion, nodeps.GetValidNodeVersions())
+		return fmt.Errorf("unsupported system Node.js version: '%s'; for the system Node.js version DDEV only supports %s. However, you can use 'ddev nvm install' at runtime to use any supported version", app.NodeJSVersion, nodeps.GetValidNodeVersions())
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
+		return fmt.Errorf("unsupported omit_containers: %s, DDEV (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: '%s:%s', ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
+		return fmt.Errorf("unsupported database type/version: '%s:%s', DDEV %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// This check is too intensive for app.Init() and ddevapp.GetActiveApp(), slows things down dramatically
 	// If the database already exists in volume and is not of this type, then throw an error
-	//if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-	//	if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-	//		return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
-	//	}
-	//}
+	// if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	// 	if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
+	// 		return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
+	// 	}
+	// }
 
-	// golang on windows is not able to time.LoadLocation unless
-	// go is installed... so skip validation on Windows
+	// Golang on Windows is not able to time.LoadLocation unless
+	// Go is installed... so skip validation on Windows
 	if runtime.GOOS != "windows" {
 		_, err := time.LoadLocation(app.Timezone)
 		if err != nil {
-			// golang on Windows is often not able to time.LoadLocation.
+			// Golang on Windows is often not able to time.LoadLocation.
 			// It often works if go is installed and $GOROOT is set, but
 			// that's not the norm for our users.
 			return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
 		}
 	}
 
-	//if app.Database.Type == nodeps.Postgres && (nodeps.ArrayContainsString([]string{"wordpress", "magento", "magento2"}, app.Type)) {
-	//	return fmt.Errorf("project type %s does not support postgres database", app.Type)
-	//}
+	// if app.Database.Type == nodeps.Postgres && (nodeps.ArrayContainsString([]string{"wordpress", "magento", "magento2"}, app.Type)) {
+	//	return fmt.Errorf("project type %s does not support PostgreSQL database", app.Type)
+	// }
 
 	return nil
 }
@@ -518,7 +518,7 @@ func (app *DdevApp) GetHostname() string {
 func (app *DdevApp) GetHostnames() []string {
 
 	// Use a map to make sure that we have unique hostnames
-	// The value is useless, so just use the int 1 for assignment.
+	// The value is useless, so use the int 1 for assignment.
 	nameListMap := make(map[string]int)
 	nameListArray := []string{}
 
@@ -587,7 +587,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
-			util.Warning("Using custom mysql configuration: %v", mysqlFiles)
+			util.Warning("Using custom MySQL configuration: %v", mysqlFiles)
 			customConfig = true
 		}
 	}
@@ -818,11 +818,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsCodespaces:          nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
-		// Only use the extra_hosts technique for linux and only if not WSL2 and not Colima
+		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 	}
-	// We don't want to bind-mount git dir if it doesn't exist
+	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
 		templateVars.GitDirMount = true
 	}
@@ -943,14 +943,14 @@ redirect_stderr=true
 		return "", err
 	}
 
-	// Add .pgpass to homedir on postgres
+	// Add .pgpass to homedir on PostgreSQL
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		// Postgres 9/10/11 upstream images are stretch-based, out of support from Debian.
-		// Postgres 9/10 are out of support by Postgres and no new images being pushed, see
+		// PostgreSQL 9/10/11 upstream images are stretch-based, out of support from Debian.
+		// PostgreSQL 9/10 are out of support by PostgreSQL and no new images being pushed, see
 		// https://github.com/docker-library/postgres/issues/1012
-		// However, they do have a postgres:11-bullseye, but we won't start using it yet
-		// because of awkward changes to $DBIMAGE. Postgres 11 will be EOL Nov 2023
+		// However, they do have a Postgres:11-bullseye, but we won't start using it yet
+		// because of awkward changes to $DBIMAGE. PostgreSQL 11 will be EOL Nov 2023
 		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
 			extraDBContent = extraDBContent + `
 RUN rm -f /etc/apt/sources.list.d/pgdg.list
@@ -986,7 +986,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 		return "", err
 	}
 
-	// SSH agent just needs extra to add the official related user, nothing else
+	// SSH agent needs extra to add the official related user, nothing else
 	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
@@ -1020,7 +1020,7 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 		return err
 	}
 
-	// Normal starting content is just the arg and base image
+	// Normal starting content is the arg and base image
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 
@@ -1059,7 +1059,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
-	// For webimage, update to latest composer.
+	// For webimage, update to latest Composer.
 	if strings.Contains(fullpath, "webimageBuild") {
 		// Version to run composer self-update to the version
 		var composerSelfUpdateArg string
@@ -1078,7 +1078,7 @@ RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y 
 			composerSelfUpdateArg = "--" + composerSelfUpdateArg
 		}
 
-		// Try composer self-update twice because of troubles with composer downloads
+		// Try composer self-update twice because of troubles with Composer downloads
 		// breaking testing.
 		// First of all Composer is updated to latest stable release to ensure
 		// new options of the self-update command can be used properly e.g.
@@ -1149,11 +1149,11 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 	return nil
 }
 
-// prompt for a project name.
+// Prompt for a project name.
 func (app *DdevApp) promptForName() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
-		// if working directory name is invalid for hostnames, we shouldn't suggest it
+		// If working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
 			app.Name = filepath.Base(dir)
 		}
@@ -1252,7 +1252,7 @@ func (app *DdevApp) docrootPrompt() error {
 	return nil
 }
 
-// ConfigExists determines if a ddev config file exists for this application.
+// ConfigExists determines if a DDEV config file exists for this application.
 func (app *DdevApp) ConfigExists() bool {
 	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
 		return false
@@ -1265,7 +1265,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 	detectedAppType := app.DetectAppType()
 
-	// If we found an application type just set it and inform the user.
+	// If we found an application type set it and inform the user.
 	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
 
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")

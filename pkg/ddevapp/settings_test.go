@@ -88,7 +88,7 @@ func TestWriteSettings(t *testing.T) {
 	println("") // Just lets Goland find the PASS when done.
 }
 
-// TestWriteDrushConfig test the drush config we write
+// TestWriteDrushConfig test the Drush config we write
 func TestWriteDrushConfig(t *testing.T) {
 	assert := asrt.New(t)
 	app := &DdevApp{}
@@ -118,7 +118,7 @@ func TestWriteDrushConfig(t *testing.T) {
 		assert.NoError(err)
 
 		startErr := app.Start()
-		//nolint: errcheck
+		// nolint: errcheck
 		defer app.Stop(true, false)
 		if startErr != nil {
 			logs, health, _ := GetErrLogsFromApp(app, startErr)

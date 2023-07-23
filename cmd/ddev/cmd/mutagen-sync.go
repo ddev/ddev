@@ -10,7 +10,7 @@ import (
 // MutagenSyncCmd implements the ddev mutagen sync command
 var MutagenSyncCmd = &cobra.Command{
 	Use:     "sync",
-	Short:   "Explicit sync for mutagen",
+	Short:   "Explicit sync for Mutagen",
 	Example: `"ddev mutagen sync", "ddev mutagen sync <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
@@ -37,7 +37,7 @@ var MutagenSyncCmd = &cobra.Command{
 
 		err = app.MutagenSyncFlush()
 		if err != nil {
-			util.Failed("Failed to flush mutagen: %v", err)
+			util.Failed("Failed to flush Mutagen: %v", err)
 		}
 		if !verbose {
 			return
@@ -50,5 +50,5 @@ var MutagenSyncCmd = &cobra.Command{
 
 func init() {
 	MutagenCmd.AddCommand(MutagenSyncCmd)
-	MutagenSyncCmd.Flags().Bool("verbose", false, "Extended/verbose output for mutagen status")
+	MutagenSyncCmd.Flags().Bool("verbose", false, "Extended verbose output for Mutagen status")
 }

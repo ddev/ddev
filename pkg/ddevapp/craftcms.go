@@ -113,7 +113,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 
 	// If they have older version of .env with DB_DRIVER, DB_SERVER etc, use those
 	if _, ok := envMap["DB_SERVER"]; ok {
-		// TODO remove, was never an official standard of Craft CMS.
+		// TODO: Remove, was never an official standard of Craft CMS.
 		envMap = map[string]string{
 			"DB_DRIVER":             driver,
 			"DB_SERVER":             "db",

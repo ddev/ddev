@@ -86,7 +86,7 @@ func getWordpressUploadDirs(_ *DdevApp) []string {
 
 const wordpressConfigInstructions = `
 An existing user-managed wp-config.php file has been detected!
-Project ddev settings have been written to:
+Project DDEV settings have been written to:
 
 %s
 
@@ -118,7 +118,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 
 	config := NewWordpressConfig(app, absPath)
 
-	//  write ddev settings file
+	// Write DDEV settings file
 	if err := writeWordpressDdevSettingsFile(config, app.SiteDdevSettingsFile); err != nil {
 		return "", err
 	}
@@ -138,10 +138,10 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 			}
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
-			// of the generated ddev settings file
+			// of the generated DDEV settings file
 			includeExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "wp-config-ddev.php")
 			if err != nil {
-				util.Warning("Unable to check that the ddev settings file has been included: %v", err)
+				util.Warning("Unable to check that the DDEV settings file has been included: %v", err)
 			}
 
 			if includeExists {
@@ -184,7 +184,7 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 	}
 	defer util.CheckClose(file)
 
-	//nolint: revive
+	// nolint: revive
 	if err = t.Execute(file, wordpressConfig); err != nil {
 		return err
 	}
@@ -264,12 +264,12 @@ func isWordpressApp(app *DdevApp) bool {
 func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(target)
 
-	// parent of destination dir should exist
+	// Parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
-		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+		return fmt.Errorf("Unable to import to %s: parent directory does not exist", destPath)
 	}
 
-	// parent of destination dir should be writable.
+	// Parent of destination dir should be writable.
 	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
@@ -277,13 +277,13 @@ func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string
 	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
 		if err := os.RemoveAll(destPath); err != nil {
-			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+			return fmt.Errorf("Failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
 
 	if isTar(importPath) {
 		if err := archive.Untar(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
+			return fmt.Errorf("Failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -291,7 +291,7 @@ func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string
 
 	if isZip(importPath) {
 		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
+			return fmt.Errorf("Failed to extract provided archive: %v", err)
 		}
 
 		return nil
@@ -326,11 +326,11 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	}
 
 	if len(subDirMatches) == 0 {
-		return "", fmt.Errorf("unable to find %s in subdirectories", needle)
+		return "", fmt.Errorf("Unable to find %s in subdirectories", needle)
 	}
 
 	if len(subDirMatches) > 1 {
-		return "", fmt.Errorf("multiple subdirectories contain %s", needle)
+		return "", fmt.Errorf("Multiple subdirectories contain %s", needle)
 	}
 
 	absPath := filepath.Base(filepath.Dir(subDirMatches[0]))

@@ -14,7 +14,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestGitPull ensures we can pull backups from a git repository
+// TestGitPull ensures we can pull backups from a Git repository
 func TestGitPull(t *testing.T) {
 	assert := asrt.New(t)
 	var err error

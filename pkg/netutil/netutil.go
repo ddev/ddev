@@ -8,11 +8,11 @@ import (
 	"syscall"
 )
 
-// IsPortActive checks to see if the given port on docker IP is answering.
+// IsPortActive checks to see if the given port on Docker IP is answering.
 func IsPortActive(port string) bool {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		util.Warning("Failed to get docker IP address: %v", err)
+		util.Warning("Failed to get Docker IP address: %v", err)
 		return false
 	}
 

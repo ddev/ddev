@@ -9,7 +9,7 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-// Composer runs composer commands in the web container, managing pre- and post- hooks
+// Composer runs Composer commands in the web container, managing pre- and post- hooks
 // returns stdout, stderr, error
 func (app *DdevApp) Composer(args []string) (string, string, error) {
 	err := app.ProcessHooks("pre-composer")

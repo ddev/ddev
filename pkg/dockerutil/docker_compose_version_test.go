@@ -28,7 +28,7 @@ func TestDockerComposeDownload(t *testing.T) {
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	// Unusual case where we need to alter the RequiredDockerComposeVersion
-	// just so we can make sure the one in PATH is different.
+	// so we can make sure the one in PATH is different.
 	origRequiredComposeVersion := globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion
 
 	// Change the homedir temporarily

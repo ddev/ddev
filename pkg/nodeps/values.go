@@ -209,7 +209,7 @@ func GetValidMariaDBVersions() []string {
 	return s
 }
 
-// IsValidPostgresVersion is a helper function to determine if a Postgres version is valid, returning
+// IsValidPostgresVersion is a helper function to determine if a PostgreSQL version is valid, returning
 // true if the supplied version is valid and false otherwise.
 func IsValidPostgresVersion(v string) bool {
 	if _, ok := ValidPostgresVersions[v]; !ok {
@@ -230,7 +230,7 @@ func GetValidMySQLVersions() []string {
 	return s
 }
 
-// GetValidPostgresVersions is a helper function that returns a list of valid Postgres versions.
+// GetValidPostgresVersions is a helper function that returns a list of valid PostgreSQL versions.
 func GetValidPostgresVersions() []string {
 	s := make([]string, 0, len(ValidPostgresVersions))
 

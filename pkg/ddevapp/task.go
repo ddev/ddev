@@ -100,7 +100,7 @@ func (c ExecHostTask) Execute() error {
 	return err
 }
 
-// Execute (ComposerTask) runs a composer command in the web container
+// Execute (ComposerTask) runs a Composer command in the web container
 // and returns stdout, stderr, err
 func (c ComposerTask) Execute() error {
 	_, _, err := c.app.Composer(c.execRaw)
@@ -141,7 +141,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			t := ComposerTask{app: app, execRaw: raw}
 			return t
 		}
-		util.Warning("Invalid composer value, not executing it: %v", e)
+		util.Warning("Invalid Composer value, not executing it: %v", e)
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
 			t := ExecTask{app: app, exec: v}

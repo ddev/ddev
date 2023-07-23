@@ -10,7 +10,7 @@ import (
 
 type RepositoryContentGetOptions = github.RepositoryContentGetOptions
 
-// GetGithubClient creates the required github client
+// GetGithubClient creates the required GitHub client
 func GetGithubClient(ctx context.Context) github.Client {
 	// Use authenticated client for higher rate limit, normally only needed for tests
 	githubToken := os.Getenv("DDEV_GITHUB_TOKEN")

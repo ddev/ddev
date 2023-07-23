@@ -114,7 +114,7 @@ func CopyDir(src string, dst string) error {
 			}
 			err = CopyFile(srcPath, dstPath)
 			if err != nil && deInfo.Mode()&os.ModeSymlink != 0 {
-				output.UserOut.Warnf("failed to copy symlink %s, skipping...\n", srcPath)
+				output.UserOut.Warnf("Failed to copy symlink %s, skipping...\n", srcPath)
 				continue
 			}
 			if err != nil {
@@ -191,7 +191,7 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 func GrepStringInFile(fullPath string, needle string) (bool, error) {
 	fullFileBytes, err := os.ReadFile(fullPath)
 	if err != nil {
-		return false, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
+		return false, fmt.Errorf("Failed to open file %s, err:%v ", fullPath, err)
 	}
 	fullFileString := string(fullFileBytes)
 	re := regexp.MustCompile(needle)
@@ -264,7 +264,7 @@ func IsSameFile(path1 string, path2 string) (bool, error) {
 	return os.SameFile(path1fi, path2fi), nil
 }
 
-// ReadFileIntoString just gets the contents of file into string
+// ReadFileIntoString gets the contents of file into string
 func ReadFileIntoString(path string) (string, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
@@ -302,7 +302,7 @@ func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
 		if err != nil {
 			return err
 		}
-		//TODO: Skip a directory named .git? Skip other arbitrary dirs or files?
+		// TODO: Skip a directory named .git? Skip other arbitrary dirs or files?
 		if !info.IsDir() {
 			if info.Size() == 1067 {
 				contents, err := os.ReadFile(path)
@@ -450,7 +450,7 @@ func CheckSignatureOrNoFile(path string, signature string) error {
 		}
 		// We found the file and it has the signature in it.
 		if !found {
-			return fmt.Errorf("signature was not found in file %s", path)
+			return fmt.Errorf("Signature was not found in file %s", path)
 		}
 		return nil
 
@@ -476,7 +476,7 @@ func CheckSignatureOrNoFile(path string, signature string) error {
 			// We have the file and it does not have the signature in it.
 			// that means it's not safe to overwrite it.
 			if !found {
-				return fmt.Errorf("signature was not found in file %s", path)
+				return fmt.Errorf("Signature was not found in file %s", path)
 			}
 			return nil
 		})

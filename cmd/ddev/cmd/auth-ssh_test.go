@@ -20,7 +20,7 @@ import (
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
 func TestCmdAuthSSH(t *testing.T) {
 	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping TestCmdAuthSSH on Mac M1 because of useless Docker Desktop failures to connect")
+		t.Skip("Skipping TestCmdAuthSSH on Apple Silicon Macs because of useless Docker Desktop failures to connect")
 	}
 
 	assert := asrt.New(t)
@@ -48,7 +48,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	_, err = exec.RunCommand("docker", []string{"exec", "ddev-ssh-agent", "ssh-add", "-D"})
 	assert.NoError(err)
 
-	// Run a simple ssh server to act on and get its internal IP address
+	// Run a simple SSH server to act on and get its internal IP address
 	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "ddev/test-ssh-server:v1.22.0"})
 	assert.NoError(err)
 	internalIPAddr, err := exec.RunCommand("docker", []string{"inspect", "-f", "'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'", "test-cmd-ssh-server"})
@@ -57,7 +57,7 @@ func TestCmdAuthSSH(t *testing.T) {
 
 	app.DockerEnv()
 
-	// Before we add the password with ddev auth ssh, we should not be able to access the ssh server
+	// Before we add the password with ddev auth ssh, we should not be able to access the SSH server
 	// Turn off StrictHostChecking because the server can have been run more than once with different
 	// identity
 	_, _, err = app.Exec(&ddevapp.ExecOpts{

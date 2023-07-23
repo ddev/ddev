@@ -51,7 +51,7 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 
 		util.Warning("You're about to push your local %s to your upstream production\nand replace it with your local project's %s.\nThis is normally a very dangerous operation.", message, message)
 		if !util.Confirm("Would you like to continue (not recommended)?") {
-			util.Failed("push cancelled")
+			util.Failed("Push cancelled")
 		}
 	}
 
@@ -66,7 +66,7 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		for _, v := range envVars {
 			split := strings.Split(v, "=")
 			if len(split) != 2 {
-				util.Failed("unable to parse environment variable setting: %v", v)
+				util.Failed("Unable to parse environment variable setting: %v", v)
 			}
 			provider.EnvironmentVariables[split[0]] = split[1]
 		}
@@ -76,7 +76,7 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		util.Failed("push failed: %v", err)
 	}
 
-	util.Success("push succeeded.")
+	util.Success("Push succeeded.")
 }
 
 func init() {

@@ -44,7 +44,7 @@ func testMain(m *testing.M) int {
 		"com.ddev.site-name": testContainerName,
 	}
 
-	// prep docker container for docker util tests
+	// Prep Docker container for Docker util tests
 	imageExists, err := ImageExistsLocally(dockerImages.GetWebImage())
 	if err != nil {
 		logOutput.Errorf("Failed to check for local image %s: %v", dockerImages.GetWebImage(), err)
@@ -53,7 +53,7 @@ func testMain(m *testing.M) int {
 	if !imageExists {
 		err := Pull(dockerImages.GetWebImage())
 		if err != nil {
-			logOutput.Errorf("failed to pull test image: %v", err)
+			logOutput.Errorf("Failed to pull test image: %v", err)
 			return 7
 		}
 	}
@@ -98,7 +98,7 @@ func testMain(m *testing.M) int {
 	return exitStatus
 }
 
-// start container for tests; returns containerID, error
+// Start container for tests; returns containerID, error
 func startTestContainer() (string, error) {
 	portBinding := map[docker.Port][]docker.PortBinding{
 		"80/tcp": {
@@ -194,7 +194,7 @@ func TestContainerWait(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(err.Error(), "failed to query container")
 
-	// If we just run a quick container and it immediately exits, ContainerWait should find it not there
+	// If we run a quick container and it immediately exits, ContainerWait should find it is not there
 	// and note that it exited.
 	labels = map[string]string{"test": "quickexit"}
 	_ = RemoveContainersByLabels(labels)
@@ -500,16 +500,16 @@ func TestDockerExec(t *testing.T) {
 
 }
 
-// TestCreateVolume does a trivial test of creating a trivial docker volume.
+// TestCreateVolume does a trivial test of creating a trivial Docker volume.
 func TestCreateVolume(t *testing.T) {
 	assert := asrt.New(t)
 	// Make sure there's no existing volume.
-	//nolint: errcheck
+	// nolint: errcheck
 	RemoveVolume("junker99")
 	volume, err := CreateVolume("junker99", "local", map[string]string{}, nil)
 	require.NoError(t, err)
 
-	//nolint: errcheck
+	// nolint: errcheck
 	defer RemoveVolume("junker99")
 	require.NotNil(t, volume)
 	assert.Equal("junker99", volume.Name)
@@ -593,7 +593,7 @@ subdir1
 subdir1.txt
 `, out)
 
-	// Now try just a file
+	// Now try a file
 	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
@@ -655,7 +655,7 @@ subdir1.txt
 hi this is a test file
 `, out)
 
-	// Now try just a file
+	// Now try a file
 	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), testContainerName, "/tmp", "")
 	require.NoError(t, err)
 

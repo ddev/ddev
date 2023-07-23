@@ -11,7 +11,7 @@ import (
 )
 
 // HostCommand wraps RunCommand() to inject environment variables.
-// especially DDEV_EXECUTABLE, the full path to running ddev instance.
+// especially DDEV_EXECUTABLE, the full path to running DDEV instance.
 func HostCommand(name string, args ...string) *exec.Cmd {
 	c := exec.Command(name, args...)
 	ddevExecutable, _ := os.Executable()

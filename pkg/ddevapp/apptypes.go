@@ -271,7 +271,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	}
 
 	// If we have a function to do the settings creation, do it, otherwise
-	// just ignore.
+	// ignore it.
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
 		if err != nil {

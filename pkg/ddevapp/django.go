@@ -34,7 +34,7 @@ func django4ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// django4PostConfigAction just reminds people that they may need DJANGO_SETTINGS_MODULE env var
+// django4PostConfigAction reminds people that they may need DJANGO_SETTINGS_MODULE env var
 func django4PostConfigAction(_ *DdevApp) error {
 	util.Warning("Your project may need a DJANGO_SETTINGS_MODULE environment variable to work correctly")
 	return nil
@@ -107,7 +107,7 @@ if os.environ.get('IS_DDEV_PROJECT') == 'true':
 	if included {
 		output.UserOut.Printf("Existing %s includes %s", app.SiteSettingsPath, app.SiteDdevSettingsFile)
 	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", app.SiteSettingsPath, app.SiteDdevSettingsFile)
+		output.UserOut.Printf("Existing %s file does not include %s, modifying to include DDEV settings", app.SiteSettingsPath, app.SiteDdevSettingsFile)
 
 		// Add the inclusion
 		file, err := os.OpenFile(app.SiteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
@@ -130,13 +130,13 @@ if os.environ.get('IS_DDEV_PROJECT') == 'true':
 	return err
 }
 
-// reloadGunicorn hits gunicorn process with HUP, reloading
+// reloadGunicorn hits Gunicorn process with HUP, reloading
 func reloadGunicorn(app *DdevApp) {
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Cmd: "pkill -HUP gunicorn",
 	})
 	if err != nil {
-		util.Warning("Failed to reload gunicorn configuration: stdout='%s', stderr='%s': %v", stdout, stderr, err)
+		util.Warning("Failed to reload Gunicorn configuration: stdout='%s', stderr='%s': %v", stdout, stderr, err)
 	}
 }
 
