@@ -54,7 +54,7 @@ All major operating systems already have SSH installed, and localhost.run uses S
 
 To connect an internet domain to an application running locally the only thing you’ll need to provide is the **HTTP** port of the DDEV web server.
 
-1. Run `ddev describe` and look for the project’s `http://` URL in the “All URLs” row and identify its port (Refer [`Image`](../../images/ddev-describe.png) for clarity).
+1. Run `ddev describe` and look for the project’s `http://` URL in the “All URLs” row and identify its port ([Example](../../images/ddev-describe.png)).
 2. Run `ssh -R 80:localhost:PORT localhost.run` to get a publicly-accessible URL.
 
    To connect an internet domain to an application running locally on port **8080** open a command terminal and run:
