@@ -56,7 +56,14 @@ To connect an internet domain to an application running locally the only thing y
 
 1. Run `ddev describe` and look for the project’s `http://` URL in the “All URLs” row and identify its port (Refer [`Image`](../../images/ddev-describe.png) for clarity).
 2. Run `ssh -R 80:localhost:PORT localhost.run` to get a publicly-accessible URL.
+
+   To connect an internet domain to an application running locally on port **8080** open a command terminal and run:
+
+    ```bash
+    ssh -R 80:localhost:8080 localhost.run
+    ```
 3. Make sure you have one SSH key in your workstation. (No need to specify it anywhere; localhost.run will prompt to fingerprint when you first run it.)
+   
 
 You can optionally use [custom domains](https://localhost.run/docs/custom-domains) with a paid plan.
   
