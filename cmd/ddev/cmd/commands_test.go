@@ -206,7 +206,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "Failed to run ddev %s --version", c)
 	}
 
-	// See if `ddev python` works for python app types
+	// See if `ddev python` works for Python app types
 	origAppType := app.Type
 	for _, appType := range []string{nodeps.AppTypeDjango4, nodeps.AppTypePython} {
 		app.Type = appType

@@ -31,7 +31,7 @@ func isPythonApp(app *DdevApp) bool {
 }
 
 // pythonConfigOverrideAction sets up webserverType and anything else
-// we might need for generic python.
+// we might need for generic Python.
 func pythonConfigOverrideAction(app *DdevApp) error {
 	if app.WebserverType == nodeps.WebserverDefault {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
