@@ -3268,9 +3268,9 @@ func TestHttpsRedirection(t *testing.T) {
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range types {
-		// TODO: Fix the laravel config so it can do the redir_abs.php successfully on nginx-fpm
+		// TODO: Fix the Laravel config so it can do the redir_abs.php successfully on nginx-fpm
 		if projectType == nodeps.AppTypeLaravel {
-			t.Log("Skipping laravel because it can't pass absolute redirect test, fix config")
+			t.Log("Skipping Laravel because it can't pass absolute redirect test, fix config")
 			continue
 		}
 		for _, webserverType := range webserverTypes {
