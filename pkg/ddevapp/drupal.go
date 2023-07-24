@@ -414,7 +414,7 @@ func drupalPostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	// nolint: revive
+	//nolint: revive
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
@@ -586,7 +586,7 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 		return nil
 	}
 
-	// nolint: revive
+	//nolint: revive
 	if err := fileutil.CopyDir(importPath, destPath); err != nil {
 		return err
 	}

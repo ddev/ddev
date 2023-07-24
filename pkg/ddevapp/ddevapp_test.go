@@ -468,7 +468,7 @@ func TestDdevStart(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -583,7 +583,7 @@ func TestDdevStart(t *testing.T) {
 
 	err = symlinkApp.Init(symlink)
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer symlinkApp.Stop(true, false)
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
@@ -833,7 +833,7 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -2856,7 +2856,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Rename(siteCopyDest, site.Dir)
 
 	// ddev stop (in cmd) actually does the check for missing project files,
@@ -3340,7 +3340,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -3352,7 +3352,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	app, err = ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 
 	desc, err := app.Describe(false)
@@ -3723,7 +3723,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	err := app.Stop(true, false)
 	assert.NoError(err)
 	err = app.Start()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
@@ -3953,7 +3953,7 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = specAPP.Start()
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	err = specAPP.Stop(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly

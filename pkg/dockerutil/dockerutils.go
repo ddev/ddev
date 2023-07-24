@@ -318,7 +318,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	}
 
 	// We should never get here.
-	// nolint: govet
+	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
@@ -381,7 +381,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 	}
 
 	// We should never get here.
-	// nolint: govet
+	//nolint: govet
 	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
@@ -423,7 +423,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	}
 
 	// We should never get here.
-	// nolint: govet
+	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
 }
 
@@ -1539,9 +1539,9 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	if err != nil {
 		return err
 	}
-	// nolint: errcheck
+	//nolint: errcheck
 	defer f.Close()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Remove(f.Name())
 	// nolint: errcheck
 

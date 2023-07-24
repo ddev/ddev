@@ -398,7 +398,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 		return "", resp, err
 	}
 
-	// nolint: errcheck
+	//nolint: errcheck
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {

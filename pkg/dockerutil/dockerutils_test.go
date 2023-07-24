@@ -504,12 +504,12 @@ func TestDockerExec(t *testing.T) {
 func TestCreateVolume(t *testing.T) {
 	assert := asrt.New(t)
 	// Make sure there's no existing volume.
-	// nolint: errcheck
+	//nolint: errcheck
 	RemoveVolume("junker99")
 	volume, err := CreateVolume("junker99", "local", map[string]string{}, nil)
 	require.NoError(t, err)
 
-	// nolint: errcheck
+	//nolint: errcheck
 	defer RemoveVolume("junker99")
 	require.NotNil(t, volume)
 	assert.Equal("junker99", volume.Name)
