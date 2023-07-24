@@ -255,12 +255,12 @@ func init() {
 	ConfigCommand.Flags().StringVar(&mailhogPortArg, "mailhog-port", "", "Router port to be used for mailhog access")
 	ConfigCommand.Flags().StringVar(&mailhogHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for mailhog access (https)")
 
-	// projectname flag exists for backwards compatability.
+	// projectname flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
 	err = ConfigCommand.Flags().MarkDeprecated("projectname", "please use --project-name instead")
 	util.CheckErr(err)
 
-	// apptype flag exists for backwards compatability.
+	// apptype flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "projecttype", "", projectTypeUsage)
 	err = ConfigCommand.Flags().MarkDeprecated("projecttype", "please use --project-type instead")
 	util.CheckErr(err)
