@@ -234,7 +234,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 }
 
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
-// a wordpress site.
+// a WordPress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
 	config := NewWordpressConfig(app, "")
 

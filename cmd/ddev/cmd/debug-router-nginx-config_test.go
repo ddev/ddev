@@ -37,7 +37,7 @@ func TestDebugRouterNginxConfigCmd(t *testing.T) {
 	assert.Contains(
 		out,
 		fmt.Sprintf("# Container=ddev-%s-web", app.Name),
-		"Cannot find generated config of wordpress test site in generated router nginx config",
+		"Cannot find generated config of WordPress test site in generated router nginx config",
 	)
 
 	assert.Contains(
