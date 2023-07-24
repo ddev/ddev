@@ -210,7 +210,7 @@ func backdropImportFilesAction(app *DdevApp, uploadDir, importPath, extPath stri
 	return nil
 }
 
-// backdropPostStartAction handles default post-start actions for backdrop apps, like ensuring
+// backdropPostStartAction handles default post-start actions for Backdrop apps, like ensuring
 // useful permissions settings on sites/default.
 func backdropPostStartAction(app *DdevApp) error {
 	// Drush config has to be written after start because we don't know the ports until it's started

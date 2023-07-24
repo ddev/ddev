@@ -276,7 +276,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
 
-		// Ensure that a .gitignore exists (except for backdrop, which has settings in project root)
+		// Ensure that a .gitignore exists (except for Backdrop, which has settings in project root)
 		if app.Type != nodeps.AppTypeBackdrop {
 			assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
 
