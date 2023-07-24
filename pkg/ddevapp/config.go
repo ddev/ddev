@@ -949,7 +949,7 @@ redirect_stderr=true
 		// PostgreSQL 9/10/11 upstream images are stretch-based, out of support from Debian.
 		// PostgreSQL 9/10 are out of support by PostgreSQL and no new images being pushed, see
 		// https://github.com/docker-library/postgres/issues/1012
-		// However, they do have a Postgres:11-bullseye, but we won't start using it yet
+		// However, they do have a postgres:11-bullseye, but we won't start using it yet
 		// because of awkward changes to $DBIMAGE. PostgreSQL 11 will be EOL Nov 2023
 		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
 			extraDBContent = extraDBContent + `
