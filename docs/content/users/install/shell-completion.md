@@ -16,7 +16,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
     ```
 
     !!!note "Bash profile"
-        You must add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately.
+        You must add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately. You will also need to reload your shell either by reopening your terminal window or executing `$ exec zsh`
 
     * Link completions with `brew completions link`.
 
@@ -37,6 +37,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
         tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
         ```
     2. Run `sudo mkdir -p /usr/share/bash-completion/completions && sudo cp ddev_bash_completion.sh /usr/share/bash-completion/completions/ddev`. This deploys the `ddev_bash_completion.sh` script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
+    3. Remember to reload your shell with `$ exec zsh` or by closing and reopening your terminal.
 
     If you installed DDEV using `apt install` then the `ddev_bash_completion.sh` file is already available in `/usr/bin/ddev_bash_completion.sh`. Starting with DDEV v1.21.2 this will be automatically installed into `/usr/share/bash-completion/completions`.
 
