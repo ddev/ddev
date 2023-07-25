@@ -1,13 +1,14 @@
 package remoteconfig
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
+	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
@@ -112,12 +113,20 @@ func (c *remoteConfig) ShowNotifications() {
 func (c *remoteConfig) ShowTicker() {
 	defer util.TimeTrack()()
 
-	if !c.showTickerMessage() {
+	if !c.showTickerMessage() || len(c.remoteConfig.Messages.Ticker.Messages) == 0 {
 		return
 	}
 
 	messageOffset := c.state.LastTickerMessage
 	messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+
+	if messageOffset == 0 {
+		// As long as no message was shown, start with a random message. This
+		// is important for short living instances e.g. Gitpod to not always
+		// show the first message. A number from 0 to number of messages minus
+		// 1 is generated.
+		messageOffset = rand.Intn(messageCount)
+	}
 
 	for i := range c.remoteConfig.Messages.Ticker.Messages {
 		messageOffset++
@@ -166,7 +175,7 @@ func (c *remoteConfig) isNotificationsDisabled() bool {
 //   - remote config
 //   - const notificationsInterval
 func (c *remoteConfig) getNotificationsInterval() time.Duration {
-	if c.remoteConfig.Messages.Notifications.Interval > 0 {
+	if c.remoteConfig.Messages.Notifications.Interval != 0 {
 		return time.Duration(c.remoteConfig.Messages.Notifications.Interval) * time.Hour
 	}
 
@@ -194,11 +203,11 @@ func (c *remoteConfig) isTickerDisabled() bool {
 //   - remote config
 //   - const tickerInterval
 func (c *remoteConfig) getTickerInterval() time.Duration {
-	if c.tickerInterval > 0 {
+	if c.tickerInterval != 0 {
 		return time.Duration(c.tickerInterval) * time.Hour
 	}
 
-	if c.remoteConfig.Messages.Ticker.Interval > 0 {
+	if c.remoteConfig.Messages.Ticker.Interval != 0 {
 		return time.Duration(c.remoteConfig.Messages.Ticker.Interval) * time.Hour
 	}
 

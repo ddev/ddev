@@ -49,7 +49,12 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			argsCopy = []string{}
 		}
 
-		amplitude.TrackCommand(&cmdCopy, argsCopy)
+		// We don't want to send to amplitude if using --json-output
+		// That captures an enormous number of PhpStorm running the
+		// ddev describe -j over and over again.
+		if !output.JSONOutput {
+			amplitude.TrackCommand(&cmdCopy, argsCopy)
+		}
 
 		// Skip docker and other validation for most commands
 		if command != "start" && command != "restart" {
@@ -104,7 +109,9 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			}
 		}
 
-		if instrumentationApp != nil {
+		// We don't need to track when used with --json-output
+		// picks up enormous number of automated ddev describe
+		if instrumentationApp != nil && !output.JSONOutput {
 			instrumentationApp.TrackProject()
 		}
 

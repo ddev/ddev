@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/version"
 	"sort"
 	"strings"
 
@@ -89,12 +89,13 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 		})
 	}
-	dockerEnv := fmt.Sprintf("docker %s", dockerutil.DockerVersion)
-	if dockerutil.IsColima() {
-		dockerEnv = "Colima"
+	dockerPlatform, err := version.GetDockerPlatform()
+	if err != nil {
+		util.Warning("Unable to determine docker platform: %v", err)
 	}
+
 	router := globalconfig.DdevGlobalConfig.Router
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker provider: %s\nRouter: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerEnv, router))
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
