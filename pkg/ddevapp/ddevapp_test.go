@@ -122,7 +122,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme for reading"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is test text for TestDdevFullSiteSetup"},
 			FilesImageURI:                 "/fileadmin/user_upload/Logo.png",
 		},
