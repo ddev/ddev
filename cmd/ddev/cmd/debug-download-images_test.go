@@ -40,5 +40,5 @@ func TestDebugDownloadImages(t *testing.T) {
 	require.NoError(t, err, "Failed to run ddev debug download-images: %s", out)
 	assert.Contains(out, docker.GetWebImage())
 	assert.Contains(out, docker.GetRouterImage())
-	assert.Contains(out, "Successfully downloaded ddev images")
+	assert.Contains(out, "Successfully downloaded DDEV images")
 }
