@@ -119,7 +119,7 @@ func getMagentoUploadDirs(_ *DdevApp) []string {
 
 // getMagento2UploadDirs will return the default paths.
 func getMagento2UploadDirs(_ *DdevApp) []string {
-	return []string{"pub/media"}
+	return []string{"media"}
 }
 
 // createMagento2SettingsFile manages creation and modification of app/etc/env.php.
