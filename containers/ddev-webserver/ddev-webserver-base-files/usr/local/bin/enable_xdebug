@@ -2,4 +2,4 @@
 export PATH=$PATH:/usr/sbin:/sbin
 phpenmod xdebug
 killall -USR2 php-fpm 2>/dev/null || true
-echo "Enabled Xdebug"
+echo "Enabled xdebug"

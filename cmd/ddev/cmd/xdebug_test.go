@@ -65,7 +65,7 @@ func TestCmdXdebug(t *testing.T) {
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "on")
 		assert.NoError(err)
-		assert.Contains(string(out), "Enabled Xdebug")
+		assert.Contains(string(out), "Enabled xdebug")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
 		assert.NoError(err)
@@ -73,7 +73,7 @@ func TestCmdXdebug(t *testing.T) {
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "off")
 		assert.NoError(err)
-		assert.Contains(string(out), "Disabled Xdebug")
+		assert.Contains(string(out), "Disabled xdebug")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
 		assert.NoError(err)
