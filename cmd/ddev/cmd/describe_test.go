@@ -270,7 +270,7 @@ func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 
 	out, err = exec.RunCommand(DdevBin, []string{"describe", projectName})
 	assert.Error(err, "Expected an error when describing project with no project directory")
-	assert.Contains(out, "DDEV can no longer find your project files")
+	assert.Contains(out, "ddev can no longer find your project files")
 	err = os.Rename(copyDir, tmpDir)
 	assert.NoError(err)
 }
