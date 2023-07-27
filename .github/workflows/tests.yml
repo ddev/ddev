@@ -126,7 +126,7 @@ jobs:
             ${{ runner.os }}-homebrew-cache-
 
       - name: Remove unnecessary items on disk
-        run: sudo rm -rf /usr/local/lib/android && du -sh .
+        run: sudo rm -rf /usr/local/lib/android && df -h .
 
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
