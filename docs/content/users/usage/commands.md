@@ -944,7 +944,7 @@ ddev pip3 --version
 ddev pip3 install
 
 # Update Python packages using `pip`
-pip3 pip3 install --upgrade
+ddev pip3 install --upgrade
 ```
 
 ## `poweroff`
