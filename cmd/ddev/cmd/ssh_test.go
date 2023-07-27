@@ -18,7 +18,7 @@ import (
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
 	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping TestCmdSSH on Apple Silicon Macs because of useless Docker Desktop failures to connect")
+		t.Skip("Skipping TestCmdSSH on Mac M1 because of useless Docker Desktop failures to connect")
 	}
 	assert := asrt.New(t)
 

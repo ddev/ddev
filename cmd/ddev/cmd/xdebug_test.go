@@ -16,10 +16,10 @@ import (
 // TestCmdXdebug tests the `ddev xdebug` command
 func TestCmdXdebug(t *testing.T) {
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
-		// 2022-03-16: On Docker Desktop 4.6.0, Apple Silicon Mac, the `ddev xdebug status` fails to return after
+		// 2022-03-16: On Docker Desktop 4.6.0, Mac M1, the `ddev xdebug status` fails to return after
 		// turning `ddev xdebug on`. Seems to be new problem with Docker Desktop 4.6.0, seems to be only
 		// on mac M1. Unable to recreate locally.
-		t.Skip("Skipping test on Apple Silicon Mac Docker Desktop")
+		t.Skip("Skipping test on Mac M1 Docker Desktop")
 	}
 	assert := asrt.New(t)
 

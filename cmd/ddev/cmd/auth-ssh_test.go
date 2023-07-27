@@ -20,7 +20,7 @@ import (
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
 func TestCmdAuthSSH(t *testing.T) {
 	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping TestCmdAuthSSH on Apple Silicon Macs because of useless Docker Desktop failures to connect")
+		t.Skip("Skipping TestCmdAuthSSH on Mac M1 because of useless Docker Desktop failures to connect")
 	}
 
 	assert := asrt.New(t)
