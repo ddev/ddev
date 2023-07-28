@@ -1,6 +1,6 @@
 # CMS Quickstarts
 
-With the generic `php` and `python` project types DDEV is [ready to go](./project.md) with any PHP and Python based content management system (CMS) or framework. In addition there are  preconfigured project types for many popular platforms and CMSes. To learn more about how to manage projects in DDEV visit the [Managing Projects](../users/usage/managing-projects.md) page.
+With the generic `php` and `python` project types DDEV is [ready to go](./project.md) with any PHP and Python based content management system (CMS) or framework. In addition there are preconfigured project types for many popular platforms and CMSes. To learn more about how to manage projects in DDEV visit the [Managing Projects](../users/usage/managing-projects.md) page.
 
 Before proceeding, make sure your installation of DDEV is up-to-date. In a new and empty project folder, using your favorite shell, run the following commands:
 
@@ -297,9 +297,9 @@ ddev launch
 ```
 
 * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
-* If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settingsare host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.)
+* If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settings are host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.)
 * You can watch `pip install` output in real time on that first slow startup with `ddev logs -f` in another window.
-* If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change yourrequirement to `psycopg2-binary`.
+* If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
 
 ## Shopware
 
