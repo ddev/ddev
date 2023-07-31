@@ -12,7 +12,7 @@ import (
 // DebugTestCleanupCmd implements the ddev debug testcleanup command
 var DebugTestCleanupCmd = &cobra.Command{
 	Use:     "testcleanup",
-	Short:   "Cleanup diagnostic projects named with the tryddevproject prefix",
+	Short:   "Removes diagnostic projects prefixed with 'tryddevproject-'",
 	Example: "ddev debug testcleanup",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
@@ -28,7 +28,7 @@ var DebugTestCleanupCmd = &cobra.Command{
 		}
 		for _, project := range allProjects {
 			name := project.GetName()
-			if !strings.HasPrefix(name, "tryddevproject") {
+			if !strings.HasPrefix(name, "tryddevproject-") {
 				continue
 			}
 			output.UserOut.Printf("Running ddev delete -Oy %v", name)
@@ -42,7 +42,7 @@ var DebugTestCleanupCmd = &cobra.Command{
 			}
 			DeleteCmd.Run(cmd, []string{name})
 		}
-		util.Success("Finished cleaning ddev diagnostics projects")
+		util.Success("Finished cleaning ddev diagnostic projects")
 	},
 }
 
