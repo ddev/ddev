@@ -1,1 +1,0 @@
-LoadModule cache_module /usr/lib/apache2/modules/mod_cache.so

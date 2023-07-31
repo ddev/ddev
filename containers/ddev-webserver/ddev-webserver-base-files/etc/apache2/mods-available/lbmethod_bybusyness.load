@@ -1,2 +1,0 @@
-# Depends: proxy_balancer
-LoadModule lbmethod_bybusyness_module /usr/lib/apache2/modules/mod_lbmethod_bybusyness.so

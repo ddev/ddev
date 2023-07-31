@@ -1,1 +1,0 @@
-LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so

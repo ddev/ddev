@@ -1,2 +1,0 @@
-# Depends: session authn_core
-LoadModule auth_form_module /usr/lib/apache2/modules/mod_auth_form.so

@@ -1,2 +1,0 @@
-# Depends: proxy
-LoadModule proxy_fcgi_module /usr/lib/apache2/modules/mod_proxy_fcgi.so

@@ -1,3 +1,0 @@
-# Conflicts: php5
-# Depends: mpm_prefork
-LoadModule php7_module /usr/lib/apache2/modules/libphp7.0.so

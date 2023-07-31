@@ -1,2 +1,0 @@
-# Depends: env
-LoadModule ratelimit_module /usr/lib/apache2/modules/mod_ratelimit.so
