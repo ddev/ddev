@@ -721,7 +721,7 @@ func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value
 	if DdevGlobalConfig.IsTraefikRouter() {
-		routerURL = "http://localhost:9999"
+		routerURL = "http://localhost:" + TraefikMonitorPort
 	}
 	return routerURL
 }
