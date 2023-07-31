@@ -28,7 +28,7 @@ var DebugTestCleanupCmd = &cobra.Command{
 		}
 		for _, project := range allProjects {
 			name := project.GetName()
-			if !strings.HasPrefix(project.GetName(), "tryddevproject") {
+			if !strings.HasPrefix(name, "tryddevproject") {
 				continue
 			}
 			output.UserOut.Printf("Running ddev delete -Oy %v", name)
