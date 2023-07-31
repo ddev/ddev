@@ -34,14 +34,13 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develo
 RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
 
-# /usr/local/bin may need to be updated by start.sh, etc
-RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
-
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 
+# /usr/local/bin may need to be updated by start.sh, etc
+RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 # END ddev-webserver-base
 
 
