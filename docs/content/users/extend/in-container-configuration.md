@@ -25,7 +25,7 @@ Usage examples:
 * If you use private, password-protected Composer repositories with [Satis](https://composer.github.io/satis/), for example, and use a global `auth.json`, you might want to `mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json`, but be careful that you exclude it from getting checked in by using a `.gitignore` or equivalent.
 * You can add small scripts to the `.bashrc.d` directory and they will be executed on [`ddev ssh`](../usage/commands.md#ssh). For example, add a `~/.ddev/homeadditions/.bashrc.d/whereami` containing `echo "I am in the $(hostname) container"` and (after `ddev restart`) when you `ddev ssh` that will be executed.
 * If you have a favorite `.bashrc`, copy it into either the global or project `homeadditions`.
-* If you like the traditional `ll` bash alias for `ls -l`, add a `.ddev/homeadditions/.bash_aliases` with these contents:
+* If you like the traditional `ll` Bash alias for `ls -l`, add a `.ddev/homeadditions/.bash_aliases` with these contents:
 
     ```
     alias ll="ls -lhA"
