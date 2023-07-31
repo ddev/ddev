@@ -24,7 +24,7 @@ services:
     {{ if eq .Router "traefik" }}
     # Traefik router; configured in static config as entrypoint
     # TODO: Make this configurable? Put it somewhere else?
-    - "{{ if not .router_bind_all_interfaces }}{{ $dockerIP }}:{{ end }}{{.traefik_monitor_port}}:{{.traefik_monitor_port}}"
+    - "{{ if not .router_bind_all_interfaces }}{{ $dockerIP }}:{{ end }}{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
     {{ end }}
     volumes:
       {{ if ne .Router "traefik" }}

@@ -25,7 +25,7 @@ fi
 # If we can now access the traefik ping endpoint, then we're healthy
 # We should be able to use `traefik healthcheck --ping` but it doesn't work if
 # using nonstandard port (always tries port 8080 even if traefik port is something else)
-if curl -s -f http://127.0.0.1:{{.traefik_monitor_port}}/ping ; then
+if curl -s -f http://127.0.0.1:{{.TraefikMonitorPort}}/ping ; then
     printf "healthy"
     touch /tmp/healthy
     exit 0

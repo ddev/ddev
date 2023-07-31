@@ -62,6 +62,7 @@ type GlobalConfig struct {
 	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
 	Router                           string                      `yaml:"router"`
+	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
 	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
@@ -84,6 +85,7 @@ func New() GlobalConfig {
 		Router:                       types.RouterTypeDefault,
 		MkcertCARoot:                 readCAROOT(),
 		ProjectList:                  make(map[string]*ProjectInfo),
+		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 	}
 
 	return cfg
@@ -385,6 +387,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# traefik_monitor_port: 10999
+# Change this only if you're having conflicts with some 
+# service that needs port 10999
 
 # wsl2_no_windows_hosts_mgt: false
 # On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)
@@ -721,7 +727,7 @@ func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value
 	if DdevGlobalConfig.IsTraefikRouter() {
-		routerURL = "http://localhost:" + TraefikMonitorPort
+		routerURL = "http://localhost:" + DdevGlobalConfig.TraefikMonitorPort
 	}
 	return routerURL
 }

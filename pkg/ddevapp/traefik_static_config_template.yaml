@@ -31,7 +31,7 @@ ping:
 
 entryPoints:
   traefik:
-    address: ":{{.traefik_monitor_port}}"
+    address: ":{{.TraefikMonitorPort}}"
   {{ range $port := .RouterPorts}}
   http-{{$port}}:
     address: ":{{$port}}"
