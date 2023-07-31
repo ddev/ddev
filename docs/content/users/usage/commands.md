@@ -425,6 +425,17 @@ Example:
 ddev debug test
 ```
 
+### `debug testcleanup`
+
+Removes all diagnostic projects created with `ddev debug test`.
+
+Example:
+
+```shell
+# Remove all DDEV’s diagnostic projects
+ddev debug testcleanup
+```
+
 ## `delete`
 
 Remove all information, including the database, for an existing project.
