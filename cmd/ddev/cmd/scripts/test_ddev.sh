@@ -12,7 +12,7 @@
 PROJECT_NAME=tryddevproject-${RANDOM}
 
 function cleanup {
-  printf "\nPlease delete this project after debugging with 'ddev delete -Oy ${PROJECT_NAME}'\n"
+  printf "\nPlease run cleanup after debugging with 'ddev debug testcleanup'\n"
 }
 
 function docker_desktop_version {
@@ -135,7 +135,3 @@ echo "Thanks for running the diagnostic. It was successful."
 echo "Please provide the output of this script in a new gist at gist.github.com"
 echo "Running ddev launch in 5 seconds" && sleep 5
 ddev launch
-
-echo "If you're brave and you have jq you can delete all tryddevproject instances with this one-liner:"
-echo '    ddev delete -Oy $(ddev list -j |jq -r .raw[].name | grep tryddevproject)'
-echo "In the future ddev debug test will also provide this option."
