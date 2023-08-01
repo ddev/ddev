@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -22,27 +21,20 @@ var DebugTestCleanupCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("failed getting GetProjects: %v", err)
 		}
-		if len(allProjects) < 1 {
-			output.UserOut.Println("No ddev projects were found.")
-			return
-		}
+		hasDeletedProjects := false
 		for _, project := range allProjects {
-			name := project.GetName()
-			if !strings.HasPrefix(name, "tryddevproject-") {
-				continue
+			if strings.HasPrefix(project.GetName(), "tryddevproject-") {
+				if err := project.Stop(true, false); err != nil {
+					util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
+				}
+				hasDeletedProjects = true
 			}
-			output.UserOut.Printf("Running ddev delete -Oy %v", name)
-			err = DeleteCmd.Flags().Set("omit-snapshot", "true")
-			if err != nil {
-				util.Failed("failed setting a flag --omit-snapshot for ddev delete: %v", err)
-			}
-			err = DeleteCmd.Flags().Set("yes", "true")
-			if err != nil {
-				util.Failed("failed setting a flag --yes for ddev delete: %v", err)
-			}
-			DeleteCmd.Run(cmd, []string{name})
 		}
-		util.Success("Finished cleaning ddev diagnostic projects")
+		if hasDeletedProjects {
+			util.Success("Finished cleaning ddev diagnostic projects")
+		} else {
+			util.Warning("No ddev diagnostic projects were found")
+		}
 	},
 }
 
