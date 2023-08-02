@@ -237,6 +237,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		globalconfig.DdevGlobalConfig.RouterHTTPSPort = val
 		dirty = true
 	}
+	if cmd.Flag("traefik-monitor-port").Changed {
+		val, _ := cmd.Flags().GetString("traefik-monitor-port")
+		globalconfig.DdevGlobalConfig.TraefikMonitorPort = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -272,6 +278,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	output.UserOut.Printf("wsl2-no-windows-hosts-mgt=%v", globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt)
 	output.UserOut.Printf("router-http-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	output.UserOut.Printf("router-https-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
+	output.UserOut.Printf("traefik-monitor-port=%v", globalconfig.DdevGlobalConfig.TraefikMonitorPort)
 }
 
 func init() {
@@ -306,7 +313,8 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkDeprecated("use-traefik", "please use --router instead")
 	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("Valid router types are %s, default is %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", "), globalconfigTypes.RouterTypeDefault))
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
-	configGlobalCommand.Flags().String("router-http-port", "", "The router HTTP port for this project")
-	configGlobalCommand.Flags().String("router-https-port", "", "The router HTTPS port for this project")
+	configGlobalCommand.Flags().String("router-http-port", "", "The default router HTTP port for all projects")
+	configGlobalCommand.Flags().String("router-https-port", "", "The default router HTTPS port for all projects")
+	configGlobalCommand.Flags().String("traefik-monitor-port", "", "The Traefik monitor port; can be changed in case of port conflicts")
 	ConfigCommand.AddCommand(configGlobalCommand)
 }
