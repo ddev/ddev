@@ -229,13 +229,16 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 	}
 
-	// It's possible to have had pre-existing `router_http_port: ""`, if
+	// It's possible to have had pre-existing `router_http_port: ""` or `traefik_monitor_port`, if
 	// so we have to override that.
 	if DdevGlobalConfig.RouterHTTPPort == "" {
 		DdevGlobalConfig.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
 	}
 	if DdevGlobalConfig.RouterHTTPSPort == "" {
 		DdevGlobalConfig.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	}
+	if DdevGlobalConfig.TraefikMonitorPort == "" {
+		DdevGlobalConfig.TraefikMonitorPort = nodeps.TraefikMonitorPortDefault
 	}
 
 	// Remove dba
