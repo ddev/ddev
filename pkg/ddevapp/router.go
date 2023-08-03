@@ -90,10 +90,7 @@ func StartDdevRouter() error {
 		return err
 	}
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/router/traefik", filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build"))
-		if err != nil {
-			return fmt.Errorf("failed to save traefik healthcheck: %v", err)
-		}
+
 		err = pushGlobalTraefikConfig()
 		if err != nil {
 			return fmt.Errorf("failed to push global traefik config: %v", err)
@@ -161,6 +158,7 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
+		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -351,13 +349,26 @@ func CheckRouterPorts() error {
 	return nil
 }
 
+// GenerateRouterDockerfile generates the router Dockerfile and related files
 func GenerateRouterDockerfile() error {
-
-	type routerData struct {
-		Router string
+	templateData := map[string]interface{}{
+		"Router":             globalconfig.DdevGlobalConfig.Router,
+		"TraefikMonitorPort": globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
-	templateData := routerData{
-		Router: globalconfig.DdevGlobalConfig.Router,
+
+	c, err := bundledAssets.ReadFile(path.Join("healthcheck", "router", "traefik", "traefik_healthcheck.sh"))
+	if err != nil {
+		return err
+	}
+
+	healthcheckScript := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build", "traefik_healthcheck.sh")
+	err = fileutil.TemplateStringToFile(string(c), templateData, healthcheckScript)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(healthcheckScript, 0755)
+	if err != nil {
+		return err
 	}
 
 	routerDockerfile := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build", "Dockerfile")

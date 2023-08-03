@@ -150,19 +150,21 @@ func pushGlobalTraefikConfig() error {
 	}
 
 	type traefikData struct {
-		App              *DdevApp
-		Hostnames        []string
-		PrimaryHostname  string
-		TargetCertsPath  string
-		RouterPorts      []string
-		UseLetsEncrypt   bool
-		LetsEncryptEmail string
+		App                *DdevApp
+		Hostnames          []string
+		PrimaryHostname    string
+		TargetCertsPath    string
+		RouterPorts        []string
+		UseLetsEncrypt     bool
+		LetsEncryptEmail   string
+		TraefikMonitorPort string
 	}
 	templateData := traefikData{
-		TargetCertsPath:  targetCertsPath,
-		RouterPorts:      determineRouterPorts(),
-		UseLetsEncrypt:   globalconfig.DdevGlobalConfig.UseLetsEncrypt,
-		LetsEncryptEmail: globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		TargetCertsPath:    targetCertsPath,
+		RouterPorts:        determineRouterPorts(),
+		UseLetsEncrypt:     globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		LetsEncryptEmail:   globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")

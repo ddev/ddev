@@ -112,6 +112,7 @@ const (
 	DdevDefaultTLD                  = "ddev.site"
 	DefaultDefaultContainerTimeout  = "120"
 	InternetDetectionTimeoutDefault = 3000
+	TraefikMonitorPortDefault       = "10999"
 	MinimumDockerSpaceWarning       = 5000000 // 5GB in KB (to compare against df reporting in KB)
 )
 
