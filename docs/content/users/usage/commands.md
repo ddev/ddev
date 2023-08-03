@@ -240,7 +240,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
-* `--traefik-monitor-port`: Can be used to change the traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999`.
+* `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999`.
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration; `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`.
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
