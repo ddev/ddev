@@ -3,6 +3,10 @@ for f in /etc/bashrc/*.bashrc; do
   source $f;
 done
 
+for i in $(\ls $HOME/.bashrc.pre.d/* 2>/dev/null); do
+    source $i;
+done
+
 for i in $(\ls $HOME/.bashrc.d/* 2>/dev/null); do
     source $i;
 done
