@@ -2,6 +2,8 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+for i in $(\ls $HOME/.bashrc.pre.d/* 2>/dev/null); do source $i; done
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
