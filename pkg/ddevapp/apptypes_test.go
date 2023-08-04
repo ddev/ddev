@@ -62,17 +62,18 @@ func TestPostConfigAction(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	appTypes := map[string]string{
-		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
-		nodeps.AppTypeCraftCms:  nodeps.PHPDefault,
-		nodeps.AppTypeDrupal6:   nodeps.PHP56,
-		nodeps.AppTypeDrupal7:   nodeps.PHPDefault,
-		nodeps.AppTypeDrupal8:   nodeps.PHP74,
-		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
-		nodeps.AppTypeDrupal10:  nodeps.PHP81,
-		nodeps.AppTypeLaravel:   nodeps.PHP81,
-		nodeps.AppTypeMagento:   nodeps.PHP74,
-		nodeps.AppTypeMagento2:  nodeps.PHP81,
-		nodeps.AppTypeWordPress: nodeps.PHPDefault,
+		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
+		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
+		nodeps.AppTypeDrupal6:      nodeps.PHP56,
+		nodeps.AppTypeDrupal7:      nodeps.PHPDefault,
+		nodeps.AppTypeDrupal8:      nodeps.PHP74,
+		nodeps.AppTypeDrupal9:      nodeps.PHPDefault,
+		nodeps.AppTypeDrupal10:     nodeps.PHP81,
+		nodeps.AppTypeLaravel:      nodeps.PHP81,
+		nodeps.AppTypeMagento:      nodeps.PHP74,
+		nodeps.AppTypeMagento2:     nodeps.PHP81,
+		nodeps.AppTypeWordPress:    nodeps.PHPDefault,
+		nodeps.AppTypeSilverstripe: nodeps.PHP81,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {

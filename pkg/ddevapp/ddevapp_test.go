@@ -318,6 +318,18 @@ var (
 			Docroot:                       "",
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Hello, and welcome to the"},
 		},
+		// 17: Silverstripe
+		{
+			Name:                          "TestPkgSilverstripe",
+			SourceURL:                     "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/silverstripe-base.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/db.tar.gz",
+			ArchiveInternalExtractionPath: "",
+			FullSiteTarballURL:            "",
+			FilesTarballURL:               "",
+			Docroot:                       "public",
+			Type:                          nodeps.AppTypeSilverstripe,
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 5.0\">"},
+		},
 	}
 
 	FullTestSites = TestSites
