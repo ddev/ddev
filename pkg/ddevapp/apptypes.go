@@ -98,7 +98,6 @@ func init() {
 			configOverrideAction: django4ConfigOverrideAction,
 			postConfigAction:     django4PostConfigAction,
 			postStartAction:      django4PostStartAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeDrupal6: {
@@ -160,14 +159,12 @@ func init() {
 			appTypeDetect:        isLaravelApp,
 			postStartAction:      laravelPostStartAction,
 			configOverrideAction: laravelConfigOverrideAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeSilverstripe: {
 			appTypeDetect:        isSilverstripeApp,
 			postStartAction:      silverstripePostStartAction,
 			configOverrideAction: silverstripeConfigOverrideAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeMagento: {
@@ -190,14 +187,12 @@ func init() {
 
 		nodeps.AppTypePHP: {
 			postStartAction:   phpPostStartAction,
-			importFilesAction: genericImportFilesAction,
 		},
 
 		nodeps.AppTypePython: {
 			appTypeDetect:        isPythonApp,
 			configOverrideAction: pythonConfigOverrideAction,
 			postConfigAction:     pythonPostConfigAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeShopware6: {
@@ -377,7 +372,11 @@ func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extractPath
 		return errors.Errorf("upload_dirs is not set for this project (%s)", app.Type)
 	}
 
-	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.importFilesAction != nil {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok {
+		// if a specific action is not defined, use a generic action
+		if appFuncs.importFilesAction == nil {
+			appFuncs.importFilesAction = genericImportFilesAction
+		}
 		return appFuncs.importFilesAction(app, uploadDir, importPath, extractPath)
 	}
 
