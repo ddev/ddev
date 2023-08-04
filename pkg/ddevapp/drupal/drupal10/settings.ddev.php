@@ -32,7 +32,11 @@ $settings['skip_permissions_hardening'] = TRUE;
 
 // This will ensure the site can only be accessed through the intended host
 // names. Additional host patterns can be added for custom configurations.
-$settings['trusted_host_patterns'] = ['.*'];
+$settings['trusted_host_patterns'] = [
+    '.*',
+    '.*\.ddev\.site',
+    '127.0.0.1.*',
+];
 
 // Don't use Symfony's APCLoader. ddev includes APCu; Composer's APCu loader has
 // better performance.
