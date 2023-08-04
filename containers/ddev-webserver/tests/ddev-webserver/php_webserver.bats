@@ -91,6 +91,10 @@
     ;;
   8.2)
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+    ;;
+  8.3)
+    # TODO: Update when more extensions are available for PHP 8.3
+    extensions="bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline   soap sqlite3 xml zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
