@@ -64,6 +64,13 @@ func silverstripePostStartAction(app *DdevApp) error {
 	return nil
 }
 
+// getSilverstripeUploadDirs will return the default paths.
+func getSilverstripeUploadDirs(_ *DdevApp) []string {
+	uploadDirs := []string{"public/assets"}
+
+	return uploadDirs
+}
+
 // silverstripeConfigOverrideAction overrides php_version for Silverstripe, requires PHP8.1
 func silverstripeConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP81
