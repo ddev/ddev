@@ -98,7 +98,7 @@
     ;;
   8.3)
     # TODO: Update when more extensions are available for PHP 8.3
-    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli opcache pgsql readline soap sqlite3 xml zip"
+    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
     ;;
   esac
 
