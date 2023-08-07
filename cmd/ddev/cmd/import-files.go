@@ -20,7 +20,7 @@ func NewImportFileCmd() *cobra.Command {
 		Long: heredoc.Doc(`
 			Pull the uploaded files directory of an existing project to the default
 			public upload directory of your project. The files can be provided as a
-			directory path or an archive in .tar, .tar.gz, .tar.xz, .tar.bz2, .tgz, or .zip format. For the
+			directory path or an archive in .tar, .tar.gz, .tar.xz, .tar.bz2, .tar.zst, .tgz, or .zip format. For the
 			.zip and tar formats, the path to a directory within the archive can be
 			provided if it is not located at the top-level of the archive. If the
 			destination directory exists, it will be replaced with the assets being
@@ -35,6 +35,7 @@ func NewImportFileCmd() *cobra.Command {
 			ddev import-files --source=/path/to/dir
 			ddev import-files --source=/path/to/files.tar.xz
 			ddev import-files --source=/path/to/files.tar.bz2
+			ddev import-files --source=/path/to/files.tar.zst
 			ddev import-files --source=.tarballs/files.tar.xz --target=../private
 			ddev import-files --source=.tarballs/files.tar.gz --target=sites/default/files
 		`),
@@ -75,7 +76,7 @@ func NewImportFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("target", "t", "", "Target upload dir, defaults to the first upload dir")
-	cmd.Flags().StringP("source", "s", "", "Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format")
+	cmd.Flags().StringP("source", "s", "", "Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.zst`, `.tar.xz`, `.tgz`, or `.zip` format")
 	cmd.Flags().String("extract-path", "", "Path to extract within the archive")
 
 	// Backward compatibility

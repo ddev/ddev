@@ -544,6 +544,12 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 				return fmt.Errorf("failed to extract file: %v", err)
 			}
 
+		case strings.HasSuffix(importPath, "sql.zst") || strings.HasSuffix(importPath, "mysql.zst"):
+			err = archive.UnZstd(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract file: %v", err)
+			}
+
 		case strings.HasSuffix(importPath, "sql.xz") || strings.HasSuffix(importPath, "mysql.xz"):
 			err = archive.UnXz(importPath, dbPath)
 			if err != nil {
@@ -561,6 +567,8 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		case strings.HasSuffix(importPath, "tar.gz"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tar.bz2"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tar.zst"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tar.xz"):
 			fallthrough

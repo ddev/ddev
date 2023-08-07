@@ -20,7 +20,8 @@ func NewImportDBCmd() *cobra.Command {
 			Import a SQL dump file into the project.
 			
 			The database dump file can be provided as a SQL dump in a .sql, .sql.gz,
-			sql.bz2, sql.xz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz format.
+			.sql.bz2, .sql.xz, .sql.zst, .mysql, .mysql.gz, .mysql.zst, .zip,
+			.tar.gz, .tar.bz2, .tar.zst, or tgz format.
 			
 			For the zip and tar formats, the path to a .sql file within the archive
 			can be provided if it is not located at the top level of the archive.
@@ -37,6 +38,7 @@ func NewImportDBCmd() *cobra.Command {
 			$ ddev import-db --database=other_db --file=.tarballs/db.sql.gz
 			$ ddev import-db --file=.tarballs/db.sql.bz2
 			$ ddev import-db --file=.tarballs/db.sql.xz
+			$ ddev import-db --file=.tarballs/db.sql.zst
 			$ ddev import-db < db.sql
 			$ ddev import-db my-project < db.sql
 			$ gzip -dc db.sql.gz | ddev import-db
@@ -104,7 +106,7 @@ func NewImportDBCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("file", "f", "", "Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format")
+	cmd.Flags().StringP("file", "f", "", "Path to a SQL dump in `.sql`, `.sql.gz`, `.sql.bz2`, `.sql.zst`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.zst`, `.tar.xz`, `.tgz`, or `.zip` format")
 	cmd.Flags().String("extract-path", "", "Path to extract within the archive")
 	cmd.Flags().StringP("database", "d", "db", "Target database to import into")
 	cmd.Flags().Bool("no-drop", false, "Do not drop the database before importing")

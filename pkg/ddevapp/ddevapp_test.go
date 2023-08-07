@@ -1910,6 +1910,7 @@ func TestDdevExportDB(t *testing.T) {
 		cTypes := map[string]string{
 			"gzip":  "gz",
 			"bzip2": "bz2",
+			"zstd":  "zst",
 			"xz":    "xz",
 		}
 		for cType, ext := range cTypes {
@@ -1921,6 +1922,9 @@ func TestDdevExportDB(t *testing.T) {
 				assert.NoError(err)
 			case "bzip2":
 				err = archive.UnBzip2("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			case "zstd":
+				err = archive.UnZstd("tmp/users1.sql."+ext, "tmp")
 				assert.NoError(err)
 			case "xz":
 				err = archive.UnXz("tmp/users1.sql."+ext, "tmp")
@@ -2411,7 +2415,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 		if app.GetUploadDir() != "" {
 			// Import trivial archive with various types of archive/compression and verify that files arrive
-			extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.gz"}
+			extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.zst", "tar.gz"}
 			for _, ext := range extensions {
 				tarballPath := filepath.Join(origDir, "testdata", t.Name(), "files."+ext)
 				_ = os.RemoveAll(filepath.Join(app.GetHostUploadDirFullPath(), "files."+ext+".txt"))

@@ -88,6 +88,7 @@ func NewExportDBCmd() *cobra.Command {
 	cmd.Flags().BoolP("gzip", "z", true, "Use gzip compression")
 	cmd.Flags().Bool("xz", false, "Use xz compression")
 	cmd.Flags().Bool("bzip2", false, "Use bzip2 compression")
+	cmd.Flags().Bool("zstd", false, "Use zstd compression")
 
 	// Backward compatibility
 	cmd.Flags().String("target-db", "db", cmd.Flags().Lookup("database").Usage)

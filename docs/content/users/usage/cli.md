@@ -76,7 +76,7 @@ Import path:
 Successfully imported files for drupal8
 ```
 
-`ddev import-files` supports the following file types: `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.
+`ddev import-files` supports the following file types: `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tar.zst`, `.tgz`, or `.zip`.
 
 It can also import a directory containing static assets.
 

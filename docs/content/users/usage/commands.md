@@ -539,6 +539,7 @@ Dump a database to a file or to stdout.
 Flags:
 
 * `--bzip2`: Use bzip2 compression.
+* `--zstd`: Use zstd compression.
 * `--database`, `-d`: Target database to export from (default `"db"`)
 * `--file`, `-f`: Path to a SQL dump file to export to
 * `--gzip`: Use gzip compression (default `true`)
@@ -669,7 +670,7 @@ Flags:
 
 * `--database`, `-d`: Target database to import into (default `"db"`)
 * `--extract-path`: Path to extract within the archive
-* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format
+* `--file`, `-f`: Path to a SQL dump in `.sql`, `.sql.gz`, `.sql.bz2`, `.sql.zst`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.zst`, `.tar.xz`, `.tgz`, or `.zip` format
 * `--no-drop`: Do not drop the database before importing
 * `--no-progress`: Do not output progress
 
@@ -705,7 +706,7 @@ Pull the uploaded files directory of an existing project to the default [public 
 Flags:
 
 * `--extract-path`: Path to extract within the archive.
-* `--source`, `-s`: Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format.
+* `--source`, `-s`: Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.zst`, `.tar.xz`, `.tgz`, or `.zip` format.
 * `--target`, `-t`: Target upload dir, defaults to the first upload dir.
 
 Example:

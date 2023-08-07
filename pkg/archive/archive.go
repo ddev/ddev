@@ -7,7 +7,6 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
-	"github.com/ddev/ddev/pkg/fileutil"
 	"io"
 	"io/fs"
 	"os"
@@ -16,7 +15,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/klauspost/compress/zstd"
 	"github.com/ulikunitz/xz"
 )
 
@@ -110,6 +111,50 @@ func UnBzip2(source string, destDirectory string) error {
 	return nil
 }
 
+// UnZstd accepts a zstandard-compressed file and uncompresses it to the provided destination directory.
+func UnZstd(source string, destDirectory string) error {
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = e
+		}
+	}()
+	br := bufio.NewReader(f)
+
+	gf, err := zstd.NewReader(br)
+	if err != nil {
+		return err
+	}
+
+	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".zst")
+	exFile, err := os.Create(filepath.Join(destDirectory, fname))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := exFile.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	_, err = io.Copy(exFile, gf)
+	if err != nil {
+		return err
+	}
+
+	err = exFile.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // UnXz accepts an xz-compressed file and uncompresses it to the provided destination directory.
 func UnXz(source string, destDirectory string) error {
 	f, err := os.Open(source)
@@ -154,7 +199,7 @@ func UnXz(source string, destDirectory string) error {
 	return nil
 }
 
-// Untar accepts a tar, tar.gz, tar.bz2, tar.xz file and extracts the contents to the provided destination path.
+// Untar accepts a tar, tar.gz, tar.bz2, tar.zst, tar.xz file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
 func Untar(source string, dest string, extractionDir string) error {
@@ -189,6 +234,14 @@ func Untar(source string, dest string, extractionDir string) error {
 	case strings.HasSuffix(source, "bz2"):
 		br := bufio.NewReader(f)
 		gf := bzip2.NewReader(br)
+		if err != nil {
+			return err
+		}
+		tf = tar.NewReader(gf)
+
+	case strings.HasSuffix(source, "zst"):
+		br := bufio.NewReader(f)
+		gf, err := zstd.NewReader(br)
 		if err != nil {
 			return err
 		}
