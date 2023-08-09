@@ -15,6 +15,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
+* You may need to [open port 9003 in your firewall](https://stackoverflow.com/questions/64878376/xdebug-step-debug-could-not-connect-to-debugging-client) to allow Xdebug access. See also "Troubleshooting Xdebug" below.
 * The IDE’s debug server port must be set to Xdebug’s default 9003, which may already be the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
 * In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container`.
 
@@ -57,7 +58,7 @@ When using this zero-configuration option:
 PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require more setup but may be easier and more flexible for some people.
 
 1. Under the *Run* menu select *Edit configurations*.
-2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.  
+2. Click the *+* in the upper left and choose *PHP Web Page* to create a configuration.
 Give it a reasonable name.
 3. Create a “server” for the project. Make sure *Name* is exactly the same as your host (e.g. `my-site.ddev.site`):
     ![PhpStorm server creation](../../images/phpstorm-config-server-config.png)
