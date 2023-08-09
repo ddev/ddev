@@ -1107,6 +1107,10 @@ func GetHostDockerInternalIP() (string, error) {
 		// In docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
 		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
 		break
+
+	default:
+		util.Debug("host.docker.internal='%s' because no other case was discovered", hostDockerInternal)
+		break
 	}
 
 	return hostDockerInternal, nil

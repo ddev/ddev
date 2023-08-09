@@ -227,8 +227,7 @@ services:
 
       {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
-      {{ end }}
-      {{ if .UseHostDockerInternalExtraHosts }}
+      {{ else if .UseHostDockerInternalExtraHosts }}
     extra_hosts:
       - "host.docker.internal:host-gateway"
       {{ end }}

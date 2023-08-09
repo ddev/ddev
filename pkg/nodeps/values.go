@@ -79,23 +79,24 @@ var ValidNodeJSVersions = []string{"14", "16", "18", "20"}
 
 // App types
 const (
-	AppTypeNone      = ""
-	AppTypeBackdrop  = "backdrop"
-	AppTypeCraftCms  = "craftcms"
-	AppTypeDjango4   = "django4"
-	AppTypeDrupal6   = "drupal6"
-	AppTypeDrupal7   = "drupal7"
-	AppTypeDrupal8   = "drupal8"
-	AppTypeDrupal9   = "drupal9"
-	AppTypeDrupal10  = "drupal10"
-	AppTypeLaravel   = "laravel"
-	AppTypeMagento   = "magento"
-	AppTypeMagento2  = "magento2"
-	AppTypePHP       = "php"
-	AppTypePython    = "python"
-	AppTypeShopware6 = "shopware6"
-	AppTypeTYPO3     = "typo3"
-	AppTypeWordPress = "wordpress"
+	AppTypeNone         = ""
+	AppTypeBackdrop     = "backdrop"
+	AppTypeCraftCms     = "craftcms"
+	AppTypeDjango4      = "django4"
+	AppTypeDrupal6      = "drupal6"
+	AppTypeDrupal7      = "drupal7"
+	AppTypeDrupal8      = "drupal8"
+	AppTypeDrupal9      = "drupal9"
+	AppTypeDrupal10     = "drupal10"
+	AppTypeLaravel      = "laravel"
+	AppTypeSilverstripe = "silverstripe"
+	AppTypeMagento      = "magento"
+	AppTypeMagento2     = "magento2"
+	AppTypePHP          = "php"
+	AppTypePython       = "python"
+	AppTypeShopware6    = "shopware6"
+	AppTypeTYPO3        = "typo3"
+	AppTypeWordPress    = "wordpress"
 )
 
 // Ports and other defaults
@@ -112,6 +113,7 @@ const (
 	DdevDefaultTLD                  = "ddev.site"
 	DefaultDefaultContainerTimeout  = "120"
 	InternetDetectionTimeoutDefault = 3000
+	TraefikMonitorPortDefault       = "10999"
 	MinimumDockerSpaceWarning       = 5000000 // 5GB in KB (to compare against df reporting in KB)
 )
 

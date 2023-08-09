@@ -14,6 +14,8 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [ "${PHP_VERSION}" = "8.3" ]; then skip "Skipping for PHP_VERSION=8.3 because no xdebug yet"; fi
+
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
@@ -29,6 +31,8 @@
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [ "${PHP_VERSION}" = "8.3" ]; then skip "Skipping for PHP_VERSION=8.3 because no xhprof yet"; fi
+
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
@@ -91,10 +95,19 @@
     ;;
   8.2)
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+    ;;
+  8.3)
+    # TODO: Update when more extensions are available for PHP 8.3
+    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
+    ;;
   esac
 
-  run docker exec -t $CONTAINER_NAME enable_xdebug
-  run docker exec -t $CONTAINER_NAME enable_xhprof
+  # TODO: Remove the if block when xdebug and xhprof are available for PHP 8.3
+  if [ "${PHP_VERSION}" != "8.3" ]; then
+    run docker exec -t $CONTAINER_NAME enable_xdebug
+    run docker exec -t $CONTAINER_NAME enable_xhprof
+  fi
+
   run docker exec -t $CONTAINER_NAME bash -c "php -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
   loaded="${output}"
   # echo "# loaded=${output}" >&3
@@ -102,8 +115,13 @@
 #    echo "# extension: $item on PHP${PHP_VERSION}" >&3
     grep -q "=> $item " <<< ${loaded} || (echo "# extension ${item} not loaded" >&3 && false)
   done
-  run docker exec -t $CONTAINER_NAME disable_xdebug
-  run docker exec -t $CONTAINER_NAME disable_xhprof
+
+  # TODO: Remove the if block when xdebug and xhprof are available for PHP 8.3
+  if [ "${PHP_VERSION}" != "8.3" ]; then
+    run docker exec -t $CONTAINER_NAME disable_xdebug
+    run docker exec -t $CONTAINER_NAME disable_xhprof
+  fi
+
 }
 
 @test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {

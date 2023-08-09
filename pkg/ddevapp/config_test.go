@@ -869,6 +869,59 @@ func TestPHPOverrides(t *testing.T) {
 
 }
 
+// TestPHPConfig checks some key PHP configuration items
+func TestPHPConfig(t *testing.T) {
+
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+	app := &DdevApp{}
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	testcommon.ClearDockerEnv()
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	// Most of the time there's no reason to do all versions of PHP
+	phpKeys := []string{}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4"}
+	for k := range nodeps.ValidPHPVersions {
+		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
+			phpKeys = append(phpKeys, k)
+		}
+	}
+	sort.Strings(phpKeys)
+
+	for _, v := range phpKeys {
+		app.PHPVersion = v
+		err = app.Start()
+		require.NoError(t, err)
+
+		out, _, err := app.Exec(&ExecOpts{
+			Cmd: "php --version",
+		})
+		require.NoError(t, err)
+		t.Logf("============= PHP version=%s ================", out)
+
+		// Look for problems with serialize_precision,https://github.com/ddev/ddev/issues/5092
+		out, _, err = app.Exec(&ExecOpts{
+			Cmd: `php -r "var_dump(0.6);"`,
+		})
+		require.NoError(t, err)
+		out = strings.Trim(out, "\n")
+		require.Equal(t, `float(0.6)`, out)
+	}
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+}
+
 // TestPostgresConfigOverride makes sure that overriding Postgres config works
 func TestPostgresConfigOverride(t *testing.T) {
 	assert := asrt.New(t)
