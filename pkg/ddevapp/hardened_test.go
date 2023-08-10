@@ -27,7 +27,13 @@ func TestHardenedStart(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
-	site := TestSites[0]
+	testSite := 0
+	// Prefer the drupal7 project, as it does ln -s into /usr/local/bin, possibly
+	// requiring sudo, which isn't installed
+	if len(TestSites) >= 3 {
+		testSite = 2
+	}
+	site := TestSites[testSite]
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	if app.IsMutagenEnabled() {

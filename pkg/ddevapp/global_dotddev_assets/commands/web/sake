@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run Silverstripe sake CLI inside the web container
+## Usage: sake [flags] [args]
+## Example: "ddev sake dev/build" or "ddev sake dev/tasks"
+## ProjectTypes: silverstripe
+## ExecRaw: true
+
+sake "$@"
+

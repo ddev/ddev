@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM ddev/ddev-php-base:v1.22.0 as ddev-webserver-base
+FROM ddev/ddev-php-base:20230803_php8.3 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -34,14 +34,13 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develo
 RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
 
-# /usr/local/bin may need to be updated by start.sh, etc
-RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
-
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 
+# /usr/local/bin may need to be updated by start.sh, etc
+RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 # END ddev-webserver-base
 
 
@@ -50,7 +49,7 @@ ADD ddev-webserver-base-scripts /
 FROM ddev-webserver-base as ddev-webserver-dev-base
 ENV MAILHOG_VERSION="1.0.2"
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="8.0"
+ENV PHP_DEFAULT_VERSION="8.1"
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
@@ -156,7 +155,7 @@ RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 ### But for historical reasons, it's just ddev-webserver
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
 FROM scratch as ddev-webserver
-ENV PHP_DEFAULT_VERSION="8.0"
+ENV PHP_DEFAULT_VERSION="8.1"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
@@ -184,7 +183,7 @@ CMD ["/start.sh"]
 ### This image is aimed at actual hardened production environments
 FROM ddev-webserver-base as ddev-webserver-prod-base
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="8.0"
+ENV PHP_DEFAULT_VERSION="8.1"
 ARG TARGETPLATFORM
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
@@ -262,7 +261,7 @@ RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 FROM scratch as ddev-webserver-prod
-ENV PHP_DEFAULT_VERSION="8.0"
+ENV PHP_DEFAULT_VERSION="8.1"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache

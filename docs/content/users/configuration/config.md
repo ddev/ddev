@@ -381,7 +381,7 @@ The PHP version the project should use.
 
 | Type | Default | Usage
 | -- |---------| --
-| :octicons-file-directory-16: project | `8.1`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, or `8.2`.
+| :octicons-file-directory-16: project | `8.1`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, or `8.3`.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
@@ -474,13 +474,21 @@ Timezone for container and PHP configuration.
 | -- | -- | --
 | :octicons-file-directory-16: project | `UTC` | Can be any [valid timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), like `Europe/Dublin` or `MST7MDT`.
 
+## `traefik_monitor_port`
+
+Specify an alternate port for the Traefik (ddev-router) monitor port. This defaults to 10999 and rarely needs to be changed, but can be changed in cases of port conflicts.
+
+| Type | Default | Usage
+| -- |---------| --
+| :octicons-globe-16: global | `10999` | Can be any unused port below 65535.
+
 ## `type`
 
 The DDEV-specific project type.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `django4`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`,  `laravel`, `magento`, `magento2`, `php`, `python`, `shopware6`, `typo3`, or `wordpress`.
+| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `django4`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`,  `laravel`, `magento`, `magento2`, `php`, `python`, `shopware6`, `silverstripe`, `typo3`, or `wordpress`.
 
 The `php` and `python` types don’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 

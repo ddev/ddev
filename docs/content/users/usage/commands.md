@@ -200,7 +200,7 @@ Flags:
 * `--php-version`: PHP version that will be enabled in the web container.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
-* `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
+* `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
 * `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
@@ -240,6 +240,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
+* `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999`.
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration; `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`.
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
@@ -423,6 +424,17 @@ Example:
 ```shell
 # Run DDEV’s diagnostic suite
 ddev debug test
+```
+
+### `debug testcleanup`
+
+Removes all diagnostic projects created with `ddev debug test`.
+
+Example:
+
+```shell
+# Remove all DDEV’s diagnostic projects
+ddev debug testcleanup
 ```
 
 ## `delete`
@@ -1062,6 +1074,16 @@ ddev restart my-project my-other-project
 # Restart all projects
 ddev restart --all
 ```
+
+## `sake`
+
+Run the `sake` command, only available for Silverstripe projects and if the Silverstripe `sake` command is
+available in the `vendor/bin` folder.
+
+Common commands:
+
+* Build database: `ddev sake dev/build`
+* List of available tasks: `ddev sake dev/tasks`
 
 ## `self-upgrade`
 

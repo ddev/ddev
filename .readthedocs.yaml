@@ -17,4 +17,3 @@ python:
   install:
     - requirements: docs/setuptools.txt
     - requirements: docs/mkdocs-pip-requirements
-  system_packages: true

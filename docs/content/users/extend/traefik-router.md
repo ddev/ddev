@@ -32,5 +32,5 @@ Project configuration is automatically generated in the project’s `.ddev/traef
 
 ## Debugging Traefik Routing
 
-Traefik provides a dynamic description of its configuration you can visit at `http://localhost:9999`.
+Traefik provides a dynamic description of its configuration you can visit at `http://localhost:10999`.
 When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.
