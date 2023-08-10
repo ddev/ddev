@@ -19,12 +19,12 @@ DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/E
 
 ### How can I migrate from one Docker provider to another?
 
-There are many Docker providers on the various platforms supported by DDEV. For example, on macOS people use Docker Desktop and Colima (both officially supported and with automated tests) and they also use [OrbStack](https://orbstack.dev/) and [Rancher Desktop](https://rancherdesktop.io/), which don't yet have official DDEV support or automated tests. On Windows WSL2, people may use Docker Desktop or Docker CE inside WSL2. In all cases, if you want to switch between Docker providers, save your database and make sure the two Docker providers don't interfere with each other, so follow these steps:
+There are many Docker providers on DDEV’s supported platforms. For example, on macOS people use Docker Desktop and Colima (both officially supported) and they also use [OrbStack](https://orbstack.dev/) and [Rancher Desktop](https://rancherdesktop.io/), which don't yet have official DDEV support with automated tests. On Windows WSL2, people may use Docker Desktop or Docker CE inside WSL2. In all cases, if you want to switch between Docker providers, save your database and make sure the Docker providers don't interfere with each other:
 
-1. Save away your projects' databases. An easy way to do this is `ddev snapshot --all`, which will make snapshots of all *registered* projects (projects that show up in `ddev list`). Of course if you have dumps of your databases using other techniques, you don't have to do this.
+1. Save away your projects' databases. You can run `ddev snapshot --all` to make snapshots of all *registered* projects (that show up in `ddev list`). If you prefer a different way of saving database dumps, that works too!
 2. Stop the Docker provider you're moving from. For example, exit Docker Desktop.
 3. Start the Docker provider you're moving to.
-4. Start projects and restore their databases, for example `ddev snapshot restore --latest`.
+4. Start projects and restore their databases. For example, you could run `ddev snapshot restore --latest` to load a snapshot taken in step one.
 
 ### Can I run DDEV on an older Mac?
 
