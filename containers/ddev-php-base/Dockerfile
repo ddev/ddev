@@ -59,8 +59,8 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
     rm /tmp/nginx_signing.key && \
     echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
 
-RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
+RUN curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
 RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 
 RUN apt-get -qq update
