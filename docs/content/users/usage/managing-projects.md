@@ -42,7 +42,6 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 
 **WordPress**: Load a `wp-config-local.php` after `wp-config-ddev.php`, and make changes there. Wrap with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed.
 
-
 ## Listing Project Information
 
 Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` current projects.
