@@ -42,7 +42,7 @@ No. Your code continues to live on your workstation, and your database is safely
 
 ### How can I connect to my database?
 
-The answer depends on where you’re connecting _from_.
+The answer depends on where you’re connecting *from*.
 
 The [`ddev describe`](../usage/commands.md#describe) command includes database connection details in a row like this:
 
@@ -170,7 +170,7 @@ If you’re using Homebrew, first run `brew unlink ddev` to get rid of the versi
 
 ### How can I back up or restore all project databases?
 
-You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This _only_ snapshots projects displayed in `ddev list`; any projects not shown there will need to be started so they’re be registered in `ddev list`.
+You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects displayed in `ddev list`; any projects not shown there will need to be started so they’re be registered in `ddev list`.
 
 ### How can I share my local project with someone?
 
@@ -222,7 +222,7 @@ This is exactly the same as moving a project from one computer to another descri
 
 ### Why does DDEV want to edit `/etc/hosts`?
 
-If you see “The hostname <hostname> is not currently resolvable” and you _can_ `ping <hostname>`, it may be that DNS resolution is slow.
+If you see “The hostname <hostname> is not currently resolvable” and you can successfully `ping <hostname>`, it may be that DNS resolution is slow.
 
 DDEV doesn’t have control over your computer’s name resolution, so it doesn’t have any way to influence how your browser gets an IP address from a hostname. It knows you have to be connected to the internet to do that, and uses a test DNS lookup of `<somethingrandom>.ddev.site` as a way to guess whether you’re connected to the internet. If it’s unable to do a name lookup, or if the hostname associated with your project is not `*.ddev.site`, it will try to create entries in `/etc/hosts`, since it’s assuming you can’t look up your project’s hostname(s) via DNS. If your internet (and name resolution) is actually working, but DNS is slow, run `ddev config global --internet-detection-timeout-ms=3000` to set the timeout to 3 seconds (or higher). See [this GitHub issue](https://github.com/ddev/ddev/issues/2409#issuecomment-662448025) for more. (If DNS rebinding is disallowed on your network/router, this won’t be solvable without network/router changes. Help [here](https://github.com/ddev/ddev/issues/2409#issuecomment-675083658) and [here](https://github.com/ddev/ddev/issues/2409#issuecomment-686718237).) For more detailed troubleshooting information, please see the [troubleshooting section](troubleshooting.md#ddev-starts-fine-but-my-browser-cant-access-the-url-url-server-ip-address-could-not-be-found-or-we-cant-connect-to-the-server-at-url).
 
