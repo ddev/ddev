@@ -199,25 +199,28 @@ Use a new or existing Composer project, or clone a Git repository.
 The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
 === "Composer"
-            ```bash
-            mkdir my-laravel-app
-            cd my-laravel-app
-            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
-            ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel -y
-            ddev composer install
-            ddev exec "php artisan key:generate"
-            ddev launch
-            ```
+
+    ```bash
+    mkdir my-laravel-app
+    cd my-laravel-app
+    ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+    ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel -y
+    ddev composer install
+    ddev exec "php artisan key:generate"
+    ddev launch
+    ```
+
 === "Git Clone"
-            ```bash
-            git clone <your-laravel-repo>
-            cd <your-laravel-project>
-            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
-            ddev start
-            ddev composer install
-            ddev exec "php artisan key:generate"
-            ddev launch
-            ```
+
+    ```bash
+    git clone <your-laravel-repo>
+    cd <your-laravel-project>
+    ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+    ddev start
+    ddev composer install
+    ddev exec "php artisan key:generate"
+    ddev launch
+    ```
 
 ## Magento
 
