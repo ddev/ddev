@@ -68,6 +68,11 @@ func NewExportDBCmd() *cobra.Command {
 				return err
 			}
 
+			compZstd, err := cmd.Flags().GetBool("zstd")
+			if err != nil {
+				return err
+			}
+
 			compressionType := ""
 
 			switch {
@@ -77,6 +82,8 @@ func NewExportDBCmd() *cobra.Command {
 				compressionType = "bzip2"
 			case compGzip:
 				compressionType = "gzip"
+			case compZstd:
+				compressionType = "zstd"
 			}
 
 			return exportDBRun(app, dumpFile, database, compressionType)
