@@ -317,7 +317,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     ## Moodle
 
     ```bash
-    ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
+    ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm --database=mariadb:10.6
     ddev start
     ddev composer create moodle/moodle -y
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
