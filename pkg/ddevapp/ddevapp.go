@@ -2542,7 +2542,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	if nodeps.IsCodespaces() {
 		codespaceName := os.Getenv("CODESPACE_NAME")
 		if codespaceName != "" {
-			url := fmt.Sprintf("https://%s-%s.preview.app.github.dev", codespaceName, app.HostWebserverPort)
+			url := fmt.Sprintf("https://%s-%s.app.github.dev", codespaceName, app.HostWebserverPort)
 			httpsURLs = append(httpsURLs, url)
 		}
 	}
