@@ -15,7 +15,8 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
-* The IDE’s debug server port must be set to Xdebug’s default 9003, which may already be the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
+* You may need to open port 9003 in your firewall to allow Xdebug access. (See [Troubleshooting Xdebug](#troubleshooting-xdebug) below.)
+* The IDE’s debug server port must be set to Xdebug’s default 9003, which is already the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
 * In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container`.
 
 For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/docs/remote). The intention here is that one won’t have to understand Xdebug to do debugging.
@@ -57,7 +58,7 @@ When using this zero-configuration option:
 PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require more setup but may be easier and more flexible for some people.
 
 1. Under the *Run* menu select *Edit configurations*.
-2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.  
+2. Click the *+* in the upper left and choose *PHP Web Page* to create a configuration.
 Give it a reasonable name.
 3. Create a “server” for the project. Make sure *Name* is exactly the same as your host (e.g. `my-site.ddev.site`):
     ![PhpStorm server creation](../../images/phpstorm-config-server-config.png)
@@ -104,10 +105,14 @@ By default, DDEV is set up to contact the default port, port 9003 on your IDE. H
 
 ## Troubleshooting Xdebug
 
-The basic thing to understand about Xdebug is that it’s a network protocol. Your IDE (like PhpStorm) will listen on the Xdebug port (9003 by default in v1.19+, previously 9000). If Xdebug is enabled in the DDEV web container (`ddev xdebug on`), PHP inside that container will try to open a TCP connection to the IDE. Docker’s networking places the host-side listening IDE at `host.docker.internal:9003`, so you have to make sure the network connection is clear and can be made and everything should work.
+The basic thing to understand about Xdebug is that it’s a network protocol. Your IDE (like PhpStorm) will listen on the Xdebug port (port 9003). If Xdebug is enabled in the DDEV web container (`ddev xdebug on`), PHP inside that container will try to open a TCP connection to the IDE. Docker’s networking places the host-side listening IDE at `host.docker.internal:9003`, so you have to make sure the network connection is clear and can be made and everything should work. Firewalls may get in the way.
 
 Here are basic steps to take to sort out any difficulty:
 
+* Make sure your IDE is listening for Xdebug.
+* `ddev logs` may show you something like `Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (fallback through xdebug.client_host/xdebug.client_port) :-(`. If it does, it may mean that your firewall is blocking the connection, or in a small number of cases that `host.docker.internal` is not figured out successfully by DDEV or Docker. If it does:
+    * Temporarily disable your firewall. On Windows/WSL this is typically Windows Defender; on macOS you'll find it in settings; on Debian/Ubuntu it's typically `ufw` so `sudo ufw disable`.
+    * If disabling the firewall fixes the problem, re-enable the firewall and add an exception for port 9003. Your firewall will have a way to do this; on Debian/Ubuntu run `sudo ufw allow 9003`.
 * Delete existing PhpStorm "servers" in settings, or recreate VS Code’s `launch.json` file exactly as shown in the instructions here.
 * Remember the port in play is port 9003.
 * Reboot your computer.
@@ -116,12 +121,8 @@ Here are basic steps to take to sort out any difficulty:
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
 * Set a breakpoint at the first executable line of your `index.php`.
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
-* Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site` or run `ddev exec curl localhost`.
-* If the IDE doesn’t respond, take a look at `ddev logs`. A message like this means Xdebug inside the container can’t make a connection to port 9003:
-
-    > PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)
-
-* `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If not, you might have an over-aggressive firewall. Disable it, or add a rule that would allow the connection to pass through. For example, on Debian/Ubuntu that would be `sudo ufw allow 9003/tcp`.
+* Use `curl` or a browser to create a web request. For example, `curl https://d10.ddev.site` or run `ddev exec curl localhost`.
+* `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If not, follow the instructions above about disabling firewall and adding an exception for port 9003.
 * In PhpStorm, disable the “listen for connections” button so it won’t listen. Or exit PhpStorm. With another IDE like VS Code, stop the debugger from listening.
 * `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If so, you have something else running on port 9003. On the host, use `sudo lsof -i :9003 -sTCP:LISTEN` to find out what’s there and stop it. Don’t continue debugging until your telnet command does not connect. (On Windows WSL2 you may have to look for listeners both inside WSL2 and on the Windows side.)
 * Now click the “listen” button on PhpStorm to start listening for connections.
