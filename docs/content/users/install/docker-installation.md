@@ -39,14 +39,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     #### Migrating Projects from Docker Desktop to Colima
 
-    !!!tip "Docker Desktop may have left a bad `config.json`"
-        Remove the `credsStore` line in `~/.docker/config.json` if you have trouble running `ddev start` with a project you’ve migrated.
+    1. Move your project databases from Docker Desktop to Colima using the technique in [How can I migrate from one Docker provider to another?](../usage/faq.md#how-can-i-migrate-from-one-docker-provider-to-another).
 
-    Move your project databases from Docker Desktop to Colima:
-
-    1. Make sure all your projects are listed in [`ddev list`](../usage/commands.md#list).
-    2. In Docker Desktop, [`ddev snapshot --all`](../usage/commands.md#snapshot).
-    3. After starting Colima, start each project and [`ddev snapshot restore --latest`](../usage/commands.md#snapshot-restore).
+    2. Docker Desktop may have left a bad `~/.docker/config.json`". If you have trouble running `ddev start` with a project you’ve migrated, remove the `credsStore` line in `~/.docker/config.json` 
 
     ### Docker Desktop for Mac
 
