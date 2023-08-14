@@ -30,7 +30,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 source ~/.bashrc
 
 brew tap ddev/ddev >/dev/null
-for item in docker-compose golangci-lint mkcert; do
+for item in golangci-lint mkcert; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 
@@ -55,5 +55,4 @@ sudo tar -C /usr/local/bin --strip-components=1 -xzf /tmp/ghr.tar.gz ghr_${GHR_R
 # Show info to simplify debugging
 docker info
 docker version
-docker-compose version
 lsb_release -a
