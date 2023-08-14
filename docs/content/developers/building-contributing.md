@@ -202,6 +202,18 @@ Information about data debugging can be found at <https://www.docs.developers.am
 
 Don't forget to select the matching environment while debugging.
 
+### Examining data on Amplitude.com
+
+First, local `ddev` binaries have to be built with `AmplitudeAPIKey` set. Visit `https://app.amplitude.com/data/ddev/DDEV/sources/production` and select either "Production" or "Development", then click the "Go SDK" line to get the API key. Then set `export AmplitudeAPIKey=<key>` and build the binaries with `make`.
+
+Then run `ddev` commands as usual, and the data will be sent to Amplitude.
+
+* You can examine data on the local side with `export DDEV_DEBUG=true` but it's awkward. However, the actual data is always marked with `AMPLITUDE:` and the `EventType` will be `Command`, `Project`, or `$identify` (User data).
+* To see the data show up on Amplitude, you'll need to `ddev debug instrumentation flush`.
+* To make it easier to find your data, use the "Development" key and set your `instrumentation_user` to a familiar value in `~/.ddev/global_config.yaml`. For example, `instrumentation_user: rfay` would make it so you can find the user `rfay`.
+* To inspect data, visit "User Lookup", (`https://app.amplitude.com/analytics/ddev/activity`) and choose the correct source in the upper left ("DDEV Production" or "DDEV Development"). Then use "Search users" in the upper right to find the user you are studying. If you've used an `instrumentation_user` it will be searchable as "User".  (Advanced->where: "User" = "rfay". for example). You'll then have a page devoted to the events of that user.
+* Alternately, visit Data→Sources→Ingestion Debugger for interesting data.
+
 ## Building
 
 * You'll want both your fork/branch and the upstream as remotes in Git, so that tags can be determined. For example, the upstream Git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, Git may not know about tags that it needs for tests to work.
