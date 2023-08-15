@@ -4100,6 +4100,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	app.DockerEnv()
 	for k, v := range webContainerExpectations {
 		envVal, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: fmt.Sprintf("echo ${%s}", k),
@@ -4118,14 +4119,19 @@ func TestEnvironmentVariables(t *testing.T) {
 		dbPortStr = app.HostDBPort
 	}
 
+	httpPort, err := app.GetPublishedPort("web")
+	require.NoError(t, err)
+	httpsPort, err := app.GetPublishedPortForPrivatePort("web", 443)
+	require.NoError(t, err)
+
 	// This set of hostExpectations should be maintained in parallel with documentation
 	hostExpectations := map[string]string{
 		"DDEV_APPROOT":             app.AppRoot,
 		"DDEV_DOCROOT":             app.GetDocroot(),
 		"DDEV_HOST_DB_PORT":        dbPortStr,
-		"DDEV_HOST_HTTPS_PORT":     app.HostHTTPSPort,
+		"DDEV_HOST_HTTPS_PORT":     strconv.Itoa(httpsPort),
+		"DDEV_HOST_WEBSERVER_PORT": strconv.Itoa(httpPort),
 		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
-		"DDEV_HOST_WEBSERVER_PORT": app.HostWebserverPort,
 		"DDEV_HOSTNAME":            app.GetHostname(),
 		"DDEV_PHP_VERSION":         app.PHPVersion,
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
