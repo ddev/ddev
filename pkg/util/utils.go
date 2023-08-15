@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"math"
 	"math/rand"
@@ -107,6 +108,14 @@ func RandString(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+// HashSalt returns a hash of the projectName to be used as a salt.
+// This is appropriate onlly for development work, but means
+// that the HashSalt will be predictable for users on a team
+func HashSalt(projectName string) string {
+	hash := sha256.Sum256([]byte(projectName))
+	return fmt.Sprintf("%x", hash)
 }
 
 // AskForConfirmation requests a y/n from user.

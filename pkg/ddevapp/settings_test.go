@@ -2,8 +2,10 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	. "github.com/ddev/ddev/pkg/ddevapp"
@@ -285,6 +287,77 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 			assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
 		}
 	}
+}
+
+// TestDrupalBackdropConsistentHash makes sure that the hash_salt provided in
+// settings.ddev.php is consistent across multiple `ddev start` but
+// different between two project names
+// Requires a drupal/backdrop project
+func TestDrupalBackdropConsistentHash(t *testing.T) {
+	projectTypes := []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10, nodeps.AppTypeBackdrop}
+	for _, projectType := range projectTypes {
+		// Make a spare directory for the first project
+		firstProjectDir := testcommon.CreateTmpDir(t.Name() + "-firstproject")
+		app, err := NewApp(firstProjectDir, true)
+		app.Type = projectType
+		require.NoError(t, err)
+
+		secondProjectDir := testcommon.CreateTmpDir(t.Name() + "-secondproject")
+		secondApp, err := NewApp(secondProjectDir, true)
+		secondApp.Type = projectType
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+			_ = os.RemoveAll(firstProjectDir)
+			err = secondApp.Stop(true, false)
+			require.NoError(t, err)
+			_ = os.RemoveAll(secondProjectDir)
+		})
+		// Start project and extract hash
+		_, err = app.CreateSettingsFile()
+		require.NoError(t, err)
+		// Detect the hashSalt
+		hash1, err := extractSettingsHashSalt(app)
+		require.NoError(t, err)
+		err = os.RemoveAll(app.SiteDdevSettingsFile)
+		require.NoError(t, err)
+
+		// Now restart project and make sure hash is same.
+		_, err = app.CreateSettingsFile()
+		require.NoError(t, err)
+		// Detect the hashSalt
+		hash2, err := extractSettingsHashSalt(app)
+		require.NoError(t, err)
+
+		require.Equal(t, hash1, hash2, "Hash should be the same across restarts")
+
+		_, err = secondApp.CreateSettingsFile()
+		require.NoError(t, err)
+		secondProjectHash, err := extractSettingsHashSalt(secondApp)
+		require.NoError(t, err)
+		require.NotEqual(t, hash1, secondProjectHash, "Hash should be different for different projects")
+	}
+}
+
+func extractSettingsHashSalt(app *DdevApp) (string, error) {
+	// Read the file content
+	content, err := os.ReadFile(app.SiteDdevSettingsFile)
+	if err != nil {
+		return "", err
+	}
+
+	// Use a regular expression to extract hash_salt value
+	regex := regexp.MustCompile(`\$settings\['hash_salt'\] = '([a-fA-F0-9]{64})';`)
+	if app.Type == nodeps.AppTypeDrupal7 {
+		regex = regexp.MustCompile(`\$drupal_hash_salt = '([a-zA-Z0-9]{64})';`)
+	}
+	match := regex.FindStringSubmatch(string(content))
+	if len(match) < 2 {
+		return "", fmt.Errorf("hash_salt not found")
+	}
+	return match[1], nil
 }
 
 // TestDrupalBackdropGitIgnoreAlreadyExists verifies that if a .gitignore already exists in the directory

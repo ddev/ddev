@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -50,7 +49,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     GetExposedPort(app, "db"),
-		HashSalt:         util.RandString(64),
+		HashSalt:         util.HashSalt(app.Name),
 		Signature:        nodeps.DdevFileSignature,
 		SitePath:         path.Join("sites", "default"),
 		SiteSettings:     "settings.php",
