@@ -52,7 +52,7 @@ docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt
 CONTAINER_NAME=ddev-nginx-proxy-router-test
 
 # Run the router alone
-docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 --mount "type=bind,src=/var/run/docker.sock,target=/tmp/docker.sock" -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME}-test -d $DOCKER_IMAGE
+docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 --mount "type=bind,src=/var/run/docker.sock,target=/tmp/docker.sock" -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE
 
 
 if ! containercheck; then
