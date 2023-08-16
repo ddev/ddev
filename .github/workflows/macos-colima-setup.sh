@@ -15,9 +15,9 @@ brew uninstall php || true
 brew untap homebrew/cask || true
 brew untap homebrew/core || true
 echo "====== Running brew install ======"
-brew install -q docker docker-compose jq libpq mkcert mysql-client
+brew install -q docker docker-compose jq mkcert mysql-client
 echo "====== Running brew link ======"
-brew link --force libpq mysql-client
+brew link --force mysql-client
 echo "====== Completed brew link ======"
 
 
