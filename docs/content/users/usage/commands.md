@@ -1404,7 +1404,7 @@ ddev xhprof off
 
 ## `yarn`
 
-Run [`yarn` commands](https://yarnpkg.com/getting-started/migration#cli-commands) inside the web container in the root of the project (global shell host container command).
+Run [`yarn` commands](https://yarnpkg.com/cli) inside the web container in the root of the project (global shell host container command).
 
 !!!tip
     Use `--cwd` for another directory.
