@@ -229,7 +229,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 ```
 
 * `--auto-restart-containers`: If `true`, automatically restart containers after a reboot or Docker restart.
-* `--disable-http2`: Optionally disable http2 in `ddev-router`; `ddev config global --disable-http2` or `ddev config global --disable-http2=false`.
+* `--disable-http2`: Optionally disable http2 in `ddev-router`; `ddev config global --disable-http2` or `ddev config global --disable-http2=false`. This option is not available in the current Traefik-based `ddev-router`, but only in the deprecated `nginx-proxy` router.
 * `--fail-on-hook-fail`: If true, `ddev start` will fail when a hook fails.
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)

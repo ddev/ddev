@@ -44,7 +44,7 @@ else
 fi
 
 if [ ${config} = true -a ${connect} = true -a ${configgenerated} = true ]; then
-  printf "ddev-router is healthy with %d upstreams" $(grep "upstream.*-" /etc/nginx/conf.d/ddev.conf | wc -l)
+  printf "ddev-nginx-proxy-router is healthy with %d upstreams" $(grep "upstream.*-" /etc/nginx/conf.d/ddev.conf | wc -l)
   touch /tmp/healthy
   exit 0
 fi

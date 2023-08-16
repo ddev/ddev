@@ -1,5 +1,5 @@
 # Docker repo for a push
-DOCKER_REPO ?= ddev/ddev-router
+DOCKER_REPO ?= ddev/ddev-nginx-proxy-router
 
 VERSION := $(shell git describe --tags --always --dirty)
 

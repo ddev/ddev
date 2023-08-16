@@ -32,7 +32,7 @@ function containercheck {
       ;;
     esac
   done
-  echo "# --- ddev-router FAIL -----"
+  echo "# --- ddev-traefik-router FAIL -----"
   return 1
 }
 
@@ -52,7 +52,7 @@ docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt
 # Run the router alone
 docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE
 
-CONTAINER_NAME=ddev-router-test
+CONTAINER_NAME=ddev-traefik-router-test
 
 if ! containercheck; then
     printf "=============== FAIL: $CONTAINER_NAME failed to become ready ====================\n"
