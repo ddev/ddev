@@ -75,7 +75,8 @@ rm -f /tmp/raw_mysql_version.txt
 # If we have extra mariadb cnf files, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
   cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
-  chmod -R ugo-w /etc/mysql/conf.d
+  # Ignore errors on files such as .gitmanaged
+  chmod -f -R ugo-w /etc/mysql/conf.d/*
 fi
 
 

@@ -43,7 +43,7 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests: [ test ]
-        os: [ macos-13 ]
+        os: [ macos-latest ]
         no-bind-mounts: ['false']
       fail-fast: true
 
@@ -114,7 +114,7 @@ jobs:
           done >/dev/null
 
       - name: "show versions"
-        run: "set -x && ddev version && docker version && docker-compose version && go version"
+        run: "set -x && ddev version && docker version && go version"
 
       - name: time make "${{ matrix.tests }}"
         run: |

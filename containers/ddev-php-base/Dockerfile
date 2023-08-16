@@ -38,7 +38,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 FROM base AS ddev-php-base
 ARG PHP_DEFAULT_VERSION="8.1"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
-ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2"
+ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2 php8.3"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV YQ_VERSION=v4.30.5
 ENV DRUSH_VERSION=8.4.12
@@ -59,8 +59,8 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
     rm /tmp/nginx_signing.key && \
     echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
 
-RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
+RUN curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
 RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 
 RUN apt-get -qq update
@@ -108,6 +108,9 @@ ENV php81_amd64=$php80_amd64
 ENV php81_arm64=$php81_amd64
 ENV php82_amd64=$php81_amd64
 ENV php82_arm64=$php82_amd64
+# php8.3 is still missing apcu, imagick, memcached, redis, uploadprogress, xdebug, xhprof, xmlrpc
+ENV php83_amd64="bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip"
+ENV php83_arm64=$php83_amd64
 
 RUN for v in $PHP_VERSIONS; do \
     targetarch=${TARGETPLATFORM#linux/}; \
