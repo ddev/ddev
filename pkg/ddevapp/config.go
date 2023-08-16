@@ -657,6 +657,20 @@ func (app *DdevApp) FixObsolete() {
 			}
 		}
 	}
+
+	// Remove old router router-build Dockerfile, etc.
+	for _, f := range []string{"Dockerfile", "traefik_healthcheck.sh"} {
+		routerBuildPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build")
+
+		item := filepath.Join(routerBuildPath, f)
+		signatureFound, err := fileutil.FgrepStringInFile(item, nodeps.DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(item)
+			if err != nil {
+				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", item, err)
+			}
+		}
+	}
 }
 
 type composeYAMLVars struct {
