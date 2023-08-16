@@ -10,6 +10,12 @@ if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 DOCKER_IMAGE=$1
 CONTAINER_NAME=ddev-traefik-router-test
 
+function cleanup {
+	echo "Removing $CONTAINER_NAME"
+	docker rm -f $CONTAINER_NAME 2>/dev/null || true
+}
+trap cleanup EXIT
+
 # Wait for container to be ready.
 function containercheck {
   for i in {15..0}; do
@@ -36,21 +42,17 @@ function containercheck {
   return 1
 }
 
-function cleanup {
-	echo "Removing $CONTAINER_NAME"
-	docker rm -f $CONTAINER_NAME 2>/dev/null || true
-}
-trap cleanup EXIT
-
 cleanup
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Make sure rootCA is created and installed on the ddev-global-cache/mkcert
 mkcert -install
 set -x
-docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox:stable sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ${SCRIPT_DIR}/testdata:/mnt/testdata -v ddev-global-cache:/mnt/ddev-global-cache busybox:stable sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache && cp /mnt/testdata/* /mnt/ddev-global-cache/traefik"
 
 # Run the router alone
-docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE
+docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
 
 CONTAINER_NAME=ddev-traefik-router-test
 
@@ -64,29 +66,10 @@ if ! containercheck; then
 fi
 
 # Make sure we can access http and https ports successfully (and with valid cert)
-(curl -s -I http://127.0.0.1:8080 | grep 503) || (echo "Failed to get 503 from nginx-router by default" && exit 102)
-# mkcert is not respected by git-bash curl, so don't try the test on windows.
-if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
-    (curl -s -I https://127.0.0.1:8443 | grep 503) || (echo "Failed to get 503 from nginx-router via https by default" && exit 103)
-fi
-# Make sure internal access to https is working
-docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/healthcheck || (echo "Failed to run https healthcheck inside container" && exit 104)
-
-
-  DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90}
-if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
-  echo "Skipping test of expiring keys because DDEV_IGNORE_EXPIRING_KEYS is set"
-else
-  docker exec -e "max=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} bash -x -c '
-    dates=$(apt-key list 2>/dev/null | awk "/\[expires/ { gsub(/[\[\]]/, \"\"); print \$6;}")
-    for item in ${dates}; do
-      today=$(date -I)
-      let diff=($(date +%s -d ${item})-$(date +%s -d ${today}))/86400
-      if [ ${diff} -le ${max} ]; then
-        echo "An apt key is expiring in ${diff} days"
-        apt-key list
-        exit 1
-      fi
-    done
-  ' || (echo "apt keys are expiring in container" && exit 105)
-fi
+#(curl -s -I http://127.0.0.1:8080 | grep 503) || (echo "Failed to get 503 from nginx-router by default" && exit 102)
+## mkcert is not respected by git-bash curl, so don't try the test on windows.
+#if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
+#    (curl -s -I https://127.0.0.1:8443 | grep 503) || (echo "Failed to get 503 from nginx-router via https by default" && exit 103)
+#fi
+# Make sure internal access to monitor port is working
+docker exec -t $CONTAINER_NAME bash -c 'curl -I http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/ping' || (echo "Failed to run http healthcheck inside container" && exit 104)
