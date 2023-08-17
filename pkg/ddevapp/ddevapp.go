@@ -357,13 +357,20 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 // GetPublishedPort returns the host-exposed public port of a container.
 func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
+	exposedPort := GetExposedPort(app, serviceName)
+	exposedPortInt, err := strconv.Atoi(exposedPort)
+	if err != nil {
+		return -1, err
+	}
+	return app.GetPublishedPortForPrivatePort(serviceName, int64(exposedPortInt))
+}
+
+// GetPublishedPortForPrivatePort returns the host-exposed public port of a container for a given private port.
+func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePort int64) (publicPort int, err error) {
 	container, err := app.FindContainerByType(serviceName)
 	if err != nil || container == nil {
 		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
-
-	privatePort, _ := strconv.ParseInt(GetExposedPort(app, serviceName), 10, 16)
-
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
 }
@@ -1984,6 +1991,22 @@ func (app *DdevApp) DockerEnv() {
 		dbPortStr = app.HostDBPort
 	}
 
+	// Figure out what the host-webserver port is
+	hostHTTPPort, err := app.GetPublishedPort("web")
+	hostHTTPPortStr := ""
+	if hostHTTPPort > 0 || err == nil {
+		hostHTTPPortStr = strconv.Itoa(hostHTTPPort)
+	}
+
+	// Figure out what the host-webserver https port is
+	// the https port is rarely used because ddev-router does termination
+	// for the vast majority of applications
+	hostHTTPSPort, err := app.GetPublishedPortForPrivatePort("web", 443)
+	hostHTTPSPortStr := ""
+	if hostHTTPSPort > 0 || err == nil {
+		hostHTTPSPortStr = strconv.Itoa(hostHTTPSPort)
+	}
+
 	// DDEV_DATABASE_FAMILY can be use for connection URLs
 	// Eg. mysql://db@db:3033/db
 	dbFamily := "mysql"
@@ -2011,8 +2034,8 @@ func (app *DdevApp) DockerEnv() {
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
-		"DDEV_HOST_WEBSERVER_PORT": app.HostWebserverPort,
-		"DDEV_HOST_HTTPS_PORT":     app.HostHTTPSPort,
+		"DDEV_HOST_HTTPS_PORT":     hostHTTPSPortStr,
+		"DDEV_HOST_WEBSERVER_PORT": hostHTTPPortStr,
 		"DDEV_MAILHOG_PORT":        app.MailhogPort,
 		"DDEV_MAILHOG_HTTPS_PORT":  app.MailhogHTTPSPort,
 		"DDEV_DOCROOT":             app.Docroot,
