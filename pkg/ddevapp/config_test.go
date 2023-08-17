@@ -982,7 +982,7 @@ func TestMysqlConfigOverride(t *testing.T) {
 	app, err := NewApp(tmpDir, false)
 	require.NoError(t, err)
 	app.Name = t.Name()
-	app.Database = DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQLVersion}
+	app.Database = DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL80}
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
