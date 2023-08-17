@@ -1803,7 +1803,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		if dbType == nodeps.MariaDB || dbType == nodeps.MySQL {
 			// Make sure overriding configuration works
-			out, stderr, err := app.Exec(&ExecOpts{
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
 			})
@@ -1816,7 +1816,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			require.NoError(t, err)
 			err = app.Restart()
 			require.NoError(t, err)
-			out, stderr, err = app.Exec(&ExecOpts{
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
 			})
