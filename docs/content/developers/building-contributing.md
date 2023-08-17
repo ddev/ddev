@@ -262,7 +262,7 @@ The Docker images that DDEV uses are included in the `containers/` directory:
 * `containers/ddev-dbserver` provides the `db` container for per-project databases.
 * `containers/ddev-nginx-proxy-router` is the (deprecated) the nginx-proxy router image.
 * `containers/ddev-ssh-agent` provides a single in-Docker-network SSH agent so projects can use your SSH keys.
-* `containers/ddev-traefik-router` is the current traefik-based router image.
+* `containers/ddev-traefik-router` is the current Traefik-based router image.
 
 When changes are made to an image, they have to be temporarily pushed to a tag—ideally with the same as the branch name of the PR—and the tag updated in `pkg/versionconstants/versionconstants.go`. Please ask if you need a container pushed to support a pull request.
 
