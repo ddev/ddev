@@ -30,33 +30,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const addonMetadataDir = "addon-metadata"
-
-// Format of install.yaml
-type installDesc struct {
-	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
-	Name               string            `yaml:"name"`
-	ProjectFiles       []string          `yaml:"project_files"`
-	GlobalFiles        []string          `yaml:"global_files,omitempty"`
-	Dependencies       []string          `yaml:"dependencies,omitempty"`
-	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
-	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
-	RemovalActions     []string          `yaml:"removal_actions,omitempty"`
-	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
-}
-
-// Format of the add-on manifest file
-type addonManifest struct {
-	Name           string   `yaml:"name"`
-	Repository     string   `yaml:"repository"`
-	Version        string   `yaml:"version"`
-	Dependencies   []string `yaml:"dependencies,omitempty"`
-	InstallDate    string   `yaml:"install_date"`
-	ProjectFiles   []string `yaml:"project_files"`
-	GlobalFiles    []string `yaml:"global_files"`
-	RemovalActions []string `yaml:"removal_actions"`
-}
-
 // Get implements the ddev get command
 var Get = &cobra.Command{
 	Use:   "get <addonOrURL> [project]",
@@ -114,7 +87,7 @@ ddev get --remove ddev-someaddonname
 				util.Failed("Unable to find active project: %v", err)
 			}
 
-			listInstalledAddons(app)
+			ListInstalledAddons(app)
 			return
 		}
 
@@ -242,7 +215,7 @@ ddev get --remove ddev-someaddonname
 		if err != nil {
 			util.Failed("Unable to read %v: %v", yamlFile, err)
 		}
-		var s installDesc
+		var s ddevapp.InstallDesc
 		err = yaml.Unmarshal([]byte(yamlContent), &s)
 		if err != nil {
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
@@ -396,9 +369,9 @@ ddev get --remove ddev-someaddonname
 }
 
 // createManifestFile creates a manifest file for the addon
-func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) (addonManifest, error) {
+func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc ddevapp.InstallDesc) (ddevapp.AddonManifest, error) {
 	// Create a manifest file
-	manifest := addonManifest{
+	manifest := ddevapp.AddonManifest{
 		Name:           addonName,
 		Repository:     repository,
 		Version:        downloadedRelease,
@@ -408,7 +381,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		GlobalFiles:    desc.GlobalFiles,
 		RemovalActions: desc.RemovalActions,
 	}
-	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", addonMetadataDir, addonName))
+	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", ddevapp.AddonMetadataDir, addonName))
 	if fileutil.FileExists(manifestFile) {
 		util.Warning("Overwriting existing manifest file %s", manifestFile)
 	}
@@ -426,19 +399,10 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 	return manifest, nil
 }
 
-// listInstalledAddons() show the add-ons that have a manifest file
-func listInstalledAddons(app *ddevapp.DdevApp) {
-	metadataDir := app.GetConfigPath(addonMetadataDir)
-	err := os.MkdirAll(metadataDir, 0755)
-	if err != nil {
-		util.Failed("Error creating metadata directory: %v", err)
-	}
-	// Read the contents of the .ddev/addon-metadata directory (directories)
-	dirs, err := os.ReadDir(metadataDir)
-	if err != nil {
-		util.Failed("Error reading metadata directory: %v", err)
-	}
-	manifests := []addonManifest{}
+// ListInstalledAddons() show the add-ons that have a manifest file
+func ListInstalledAddons(app *ddevapp.DdevApp) {
+
+	manifests := ddevapp.GetInstalledAddons(app)
 
 	var out bytes.Buffer
 	t := table.NewWriter()
@@ -464,26 +428,8 @@ func listInstalledAddons(app *ddevapp.DdevApp) {
 	t.AppendHeader(table.Row{"Add-on", "Version", "Repository", "Date Installed"})
 
 	// Loop through the directories in the .ddev/addon-metadata directory
-	for _, d := range dirs {
-		// Check if the file is a directory
-		if d.IsDir() {
-			// Read the contents of the manifest file
-			manifestFile := filepath.Join(metadataDir, d.Name(), "manifest.yaml")
-			manifestBytes, err := os.ReadFile(manifestFile)
-			if err != nil {
-				util.Warning("No manifest file found at %s: %v", manifestFile, err)
-				continue
-			}
-
-			// Parse the manifest file
-			var manifest addonManifest
-			err = yaml.Unmarshal(manifestBytes, &manifest)
-			if err != nil {
-				util.Failed("Unable to parse manifest file: %v", err)
-			}
-			manifests = append(manifests, manifest)
-			t.AppendRow(table.Row{manifest.Name, manifest.Version, manifest.Repository, manifest.InstallDate})
-		}
+	for _, addon := range manifests {
+		t.AppendRow(table.Row{addon.Name, addon.Version, addon.Repository, addon.InstallDate})
 	}
 	if t.Length() == 0 {
 		output.UserOut.Println("No registered add-ons were found. Add-ons installed before DDEV v1.22.0 will not be listed.\nUpdate them with `ddev get` so they'll be shown.")
@@ -623,7 +569,7 @@ func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interfa
 		util.Failed("Unable to gather all manifests: %v", err)
 	}
 
-	var manifestData addonManifest
+	var manifestData ddevapp.AddonManifest
 	var ok bool
 
 	if manifestData, ok = manifests[addonName]; !ok {
@@ -669,7 +615,7 @@ func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interfa
 		}
 	}
 
-	err = os.RemoveAll(app.GetConfigPath(filepath.Join(addonMetadataDir, manifestData.Name)))
+	err = os.RemoveAll(app.GetConfigPath(filepath.Join(ddevapp.AddonMetadataDir, manifestData.Name)))
 	if err != nil {
 		return fmt.Errorf("error removing addon metadata directory %s: %v", manifestData.Name, err)
 	}
@@ -679,9 +625,9 @@ func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interfa
 
 // gatherAllManifests searches for all addon manifests and presents the result
 // as a map of various names to manifest data
-func gatherAllManifests(app *ddevapp.DdevApp) (map[string]addonManifest, error) {
-	metadataDir := app.GetConfigPath(addonMetadataDir)
-	allManifests := make(map[string]addonManifest)
+func gatherAllManifests(app *ddevapp.DdevApp) (map[string]ddevapp.AddonManifest, error) {
+	metadataDir := app.GetConfigPath(ddevapp.AddonMetadataDir)
+	allManifests := make(map[string]ddevapp.AddonManifest)
 
 	dirs, err := fileutil.ListFilesInDirFullPath(metadataDir)
 	if err != nil {
@@ -697,7 +643,7 @@ func gatherAllManifests(app *ddevapp.DdevApp) (map[string]addonManifest, error) 
 		if err != nil {
 			return nil, err
 		}
-		var manifestData = &addonManifest{}
+		var manifestData = &ddevapp.AddonManifest{}
 		err = yaml.Unmarshal([]byte(manifestString), manifestData)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling manifest data: %v", err)
