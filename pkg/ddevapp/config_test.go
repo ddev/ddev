@@ -1004,7 +1004,8 @@ func TestMysqlConfigOverride(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("1024\n\n", out, "out: %s, stderr: %s", out, stderr)
 
-	err := os.Truncate(app.GetConfigPath("mysql/override_sql_mode.cnf"), 0)
+	err = os.Truncate(app.GetConfigPath("mysql/override_sql_mode.cnf"), 0)
+	require.NoError(t, err)
 	err = fileutil.AppendStringToFile(app.GetConfigPath("mysql/override_sql_mode.cnf"), "[mysqld]\n group_concat_max_len = 4096")
 	require.NoError(t, err)
 	err = app.Restart()
