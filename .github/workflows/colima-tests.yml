@@ -43,7 +43,7 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests: [ test ]
-        os: [ macos-latest ]
+        os: [ macos-13 ]
         no-bind-mounts: ['false']
       fail-fast: true
 
