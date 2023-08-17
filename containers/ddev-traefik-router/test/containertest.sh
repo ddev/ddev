@@ -54,8 +54,6 @@ docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ${SCRIPT_DIR}/testdata
 # Run the router alone
 docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
 
-CONTAINER_NAME=ddev-traefik-router-test
-
 if ! containercheck; then
     printf "=============== FAIL: $CONTAINER_NAME failed to become ready ====================\n"
     printf "=============== FAIL: $CONTAINER_NAME FAIL: information =================\n"
