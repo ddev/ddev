@@ -10,9 +10,9 @@
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/addons/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/addons/latest/getting-started/ddev
 //
 
 package ampli
@@ -309,16 +309,18 @@ func (b *commandBuilder) Build() CommandEvent {
 
 var Project = struct {
 	Builder func() interface {
-		Containers(containers []string) interface {
-			ContainersOmitted(containersOmitted []string) interface {
-				FailOnHookFail(failOnHookFail bool) interface {
-					Id(id string) interface {
-						NodejsVersion(nodejsVersion string) interface {
-							PerformanceMode(performanceMode string) interface {
-								PhpVersion(phpVersion string) interface {
-									ProjectType(projectType string) interface {
-										RouterDisabled(routerDisabled bool) interface {
-											WebserverType(webserverType string) ProjectBuilder
+		AddOns(addOns []string) interface {
+			Containers(containers []string) interface {
+				ContainersOmitted(containersOmitted []string) interface {
+					FailOnHookFail(failOnHookFail bool) interface {
+						Id(id string) interface {
+							NodejsVersion(nodejsVersion string) interface {
+								PerformanceMode(performanceMode string) interface {
+									PhpVersion(phpVersion string) interface {
+										ProjectType(projectType string) interface {
+											RouterDisabled(routerDisabled bool) interface {
+												WebserverType(webserverType string) ProjectBuilder
+											}
 										}
 									}
 								}
@@ -331,16 +333,18 @@ var Project = struct {
 	}
 }{
 	Builder: func() interface {
-		Containers(containers []string) interface {
-			ContainersOmitted(containersOmitted []string) interface {
-				FailOnHookFail(failOnHookFail bool) interface {
-					Id(id string) interface {
-						NodejsVersion(nodejsVersion string) interface {
-							PerformanceMode(performanceMode string) interface {
-								PhpVersion(phpVersion string) interface {
-									ProjectType(projectType string) interface {
-										RouterDisabled(routerDisabled bool) interface {
-											WebserverType(webserverType string) ProjectBuilder
+		AddOns(addOns []string) interface {
+			Containers(containers []string) interface {
+				ContainersOmitted(containersOmitted []string) interface {
+					FailOnHookFail(failOnHookFail bool) interface {
+						Id(id string) interface {
+							NodejsVersion(nodejsVersion string) interface {
+								PerformanceMode(performanceMode string) interface {
+									PhpVersion(phpVersion string) interface {
+										ProjectType(projectType string) interface {
+											RouterDisabled(routerDisabled bool) interface {
+												WebserverType(webserverType string) ProjectBuilder
+											}
 										}
 									}
 								}
@@ -378,6 +382,32 @@ type ProjectBuilder interface {
 
 type projectBuilder struct {
 	properties map[string]interface{}
+}
+
+func (b *projectBuilder) AddOns(addOns []string) interface {
+	Containers(containers []string) interface {
+		ContainersOmitted(containersOmitted []string) interface {
+			FailOnHookFail(failOnHookFail bool) interface {
+				Id(id string) interface {
+					NodejsVersion(nodejsVersion string) interface {
+						PerformanceMode(performanceMode string) interface {
+							PhpVersion(phpVersion string) interface {
+								ProjectType(projectType string) interface {
+									RouterDisabled(routerDisabled bool) interface {
+										WebserverType(webserverType string) ProjectBuilder
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Add-ons`] = addOns
+
+	return b
 }
 
 func (b *projectBuilder) Containers(containers []string) interface {
@@ -589,10 +619,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `main`,
+			Branch:    `addons`,
 			Source:    `ddev`,
 			Version:   `7`,
-			VersionID: `dcb6fff6-e5e7-474c-b68c-f1f1c6384499`,
+			VersionID: `232aa194-2027-4a83-8b6d-a1102d2e3927`,
 		}
 	}
 
