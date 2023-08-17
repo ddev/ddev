@@ -971,53 +971,6 @@ func TestPostgresConfigOverride(t *testing.T) {
 	assert.Equal(" 200\n\n", out, "out: %s, stderr: %s", out, stderr)
 }
 
-// TestMysqlConfigOverride makes sure that overriding MySQL config works
-func TestMysqlConfigOverride(t *testing.T) {
-	assert := asrt.New(t)
-	origDir, _ := os.Getwd()
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	err := os.Chdir(tmpDir)
-	require.NoError(t, err)
-
-	app, err := NewApp(tmpDir, false)
-	require.NoError(t, err)
-	app.Name = t.Name()
-	app.Database = DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL80}
-	err = app.WriteConfig()
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		_ = os.RemoveAll(tmpDir)
-	})
-
-	err = app.Start()
-	require.NoError(t, err)
-
-	out, stderr, err := app.Exec(&ExecOpts{
-		Service: "db",
-		Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
-	})
-	assert.NoError(err)
-	assert.Equal("1024\n", out, "out: %s, stderr: %s", out, stderr)
-
-	err = os.MkdirAll(app.GetConfigPath("mysql"), 0750)
-	require.NoError(t, err)
-	err = os.WriteFile(app.GetConfigPath("mysql/override_sql_mode.cnf"), []byte("[mysqld]\n group_concat_max_len = 4096"), 0666)
-	require.NoError(t, err)
-	err = app.Restart()
-	require.NoError(t, err)
-	out, stderr, err = app.Exec(&ExecOpts{
-		Service: "db",
-		Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
-	})
-	assert.NoError(err)
-	assert.Equal("4096\n", out, "out: %s, stderr: %s", out, stderr)
-}
-
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
 // work (and are overridden by *-build/Dockerfile).
 func TestExtraPackages(t *testing.T) {

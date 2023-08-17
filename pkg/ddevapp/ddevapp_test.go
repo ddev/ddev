@@ -1801,6 +1801,29 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
 		}
 
+		if dbType == nodeps.MariaDB || dbType == nodeps.MySQL {
+			// Make sure overriding configuration works
+			out, stderr, err := app.Exec(&ExecOpts{
+				Service: "db",
+				Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
+			})
+			assert.NoError(err)
+			assert.Equal("1024\n", out, "out: %s, stderr: %s", out, stderr)
+
+			err = os.MkdirAll(app.GetConfigPath("mysql"), 0750)
+			require.NoError(t, err)
+			err = os.WriteFile(app.GetConfigPath("mysql/override_sql_mode.cnf"), []byte("[mysqld]\n group_concat_max_len = 4096"), 0666)
+			require.NoError(t, err)
+			err = app.Restart()
+			require.NoError(t, err)
+			out, stderr, err = app.Exec(&ExecOpts{
+				Service: "db",
+				Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
+			})
+			assert.NoError(err)
+			assert.Equal("4096\n", out, "out: %s, stderr: %s", out, stderr)
+		}
+
 		c = map[string]string{
 			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
 			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
