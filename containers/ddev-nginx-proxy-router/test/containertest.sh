@@ -8,7 +8,7 @@ if [ "${OS:-$(uname)}" = "Windows_NT" ]; then exit; fi
 
 if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 DOCKER_IMAGE=$1
-CONTAINER_NAME=ddev-router-test
+CONTAINER_NAME=ddev-nginx-proxy-router-test
 
 # Wait for container to be ready.
 function containercheck {
@@ -32,7 +32,7 @@ function containercheck {
       ;;
     esac
   done
-  echo "# --- ddev-router FAIL -----"
+  echo "# --- ddev-nginx-proxy-router FAIL -----"
   return 1
 }
 
@@ -50,9 +50,8 @@ set -x
 docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox:stable sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run the router alone
-docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 --mount "type=bind,src=/var/run/docker.sock,target=/tmp/docker.sock" -v ddev-global-cache:/mnt/ddev-global-cache --name ddev-router-test -d $DOCKER_IMAGE
+docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 --mount "type=bind,src=/var/run/docker.sock,target=/tmp/docker.sock" -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE
 
-CONTAINER_NAME=ddev-router-test
 
 if ! containercheck; then
     printf "=============== FAIL: $CONTAINER_NAME failed to become ready ====================\n"
