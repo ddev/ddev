@@ -43,7 +43,7 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		DatabaseHost:     "ddev-" + app.Name + "-db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     GetExposedPort(app, "db"),
-		HashSalt:         util.RandString(64),
+		HashSalt:         util.HashSalt(app.Name),
 		Signature:        nodeps.DdevFileSignature,
 		SiteSettings:     "settings.php",
 		SiteSettingsDdev: "settings.ddev.php",
