@@ -74,7 +74,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     locales-all \
     nano \
     ncurses-bin \
-    netcat \
+    netcat-traditional \
     openssh-client \
     patch \
     python-is-python3 \
@@ -124,7 +124,6 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rwx /usr/local/bin/* && \
-    update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
     ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
 RUN chmod -R 777 /var/log
@@ -154,6 +153,8 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
+
 #END ddev-webserver-dev-base
 
 ### ---------------------------ddev-webserver--------------------------------------
@@ -210,7 +211,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     locales-all \
     nano \
     ncurses-bin \
-    netcat \
+    netcat-traditional\
     openssh-client \
     patch \
     rsync \
@@ -233,7 +234,6 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rx /usr/local/bin/* && \
-    update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
     ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
 RUN chmod -R 777 /var/log
@@ -260,6 +260,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
 #END ddev-webserver-prod-base
 
