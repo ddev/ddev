@@ -1808,7 +1808,7 @@ func TestDdevAllDatabases(t *testing.T) {
 				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
 			})
 			assert.NoError(err)
-			assert.Equal("SYSTEM", out, "out: %s, stderr: %s", out, stderr)
+			assert.Equal("SYSTEM\n", out, "out: %s, stderr: %s", out, stderr)
 
 			err = os.MkdirAll(app.GetConfigPath("mysql"), 0750)
 			require.NoError(t, err)
