@@ -1805,26 +1805,26 @@ func TestDdevAllDatabases(t *testing.T) {
 			// Make sure overriding configuration works
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
+				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
 			})
 			assert.NoError(err)
-			assert.Equal("1024\n", out, "out: %s, stderr: %s", out, stderr)
+			assert.Equal("SYSTEM", out, "out: %s, stderr: %s", out, stderr)
 
 			err = os.MkdirAll(app.GetConfigPath("mysql"), 0750)
 			require.NoError(t, err)
-			err = os.WriteFile(app.GetConfigPath("mysql/override_sql_mode.cnf"), []byte("[mysqld]\n group_concat_max_len = 4096"), 0666)
+			err = os.WriteFile(app.GetConfigPath("mysql/override_param_test.cnf"), []byte("[mysqld]\n default-time-zone = \"+08:00\""), 0666)
 			require.NoError(t, err)
 			err = app.Restart()
 			require.NoError(t, err)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -sN -e "SELECT @@group_concat_max_len"`,
+				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
 			})
 			assert.NoError(err)
-			assert.Equal("4096\n", out, "out: %s, stderr: %s", out, stderr)
+			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr)
 			// Delete override file for next dbType test
-			err = os.Remove(app.GetConfigPath("mysql/override_sql_mode.cnf"))
-            require.NoError(t, err)
+			err = os.Remove(app.GetConfigPath("mysql/override_param_test.cnf"))
+			require.NoError(t, err)
 		}
 
 		c = map[string]string{
