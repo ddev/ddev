@@ -1822,6 +1822,9 @@ func TestDdevAllDatabases(t *testing.T) {
 			})
 			assert.NoError(err)
 			assert.Equal("4096\n", out, "out: %s, stderr: %s", out, stderr)
+			// Delete override file for next dbType test
+			err = os.Remove(app.GetConfigPath("mysql/override_sql_mode.cnf"))
+            require.NoError(t, err)
 		}
 
 		c = map[string]string{
