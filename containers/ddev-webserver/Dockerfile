@@ -2,8 +2,8 @@
 ### ---------------------------ddev-webserver-base--------------------------------------
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
-### and ddev-webserver-* (For DDEV local usage)
-FROM ddev/ddev-php-base:20240205_update_debsuryorg_key as ddev-webserver-base
+### and ddev-webserver-* (For DDEV local Usage)
+FROM ddev/ddev-php-base:20230818_bump_debian_bookworm as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive

@@ -1,6 +1,6 @@
 ### ---------------------------base--------------------------------------
 ### Build the base Debian image that will be used in every other image
-FROM debian:bullseye-slim as base
+FROM debian:bookworm-slim as base
 
 RUN ls -l $(which dpkg-split) && ls -l $(which dpkg-deb)
 RUN for item in dpkg-split dpkg-deb; do \
