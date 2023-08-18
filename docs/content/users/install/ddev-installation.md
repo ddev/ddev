@@ -352,16 +352,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
     ```
-
-    The universal image used above already installs `docker-in-docker`. If you use another image which does not include it, you'll need to add it:
-
-    ```json
-    "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-        "ghcr.io/ddev/ddev/install-ddev:latest": {}
-    },
-    ```
-
+    
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
 
