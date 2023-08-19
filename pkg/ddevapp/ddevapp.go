@@ -82,8 +82,6 @@ type DdevApp struct {
 	PHPVersion                string                 `yaml:"php_version"`
 	WebserverType             string                 `yaml:"webserver_type"`
 	WebImage                  string                 `yaml:"webimage,omitempty"`
-	DBImage                   string                 `yaml:"dbimage,omitempty"`
-	DBAImage                  string                 `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort            string                 `yaml:"router_http_port,omitempty"`
 	RouterHTTPSPort           string                 `yaml:"router_https_port,omitempty"`
 	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
