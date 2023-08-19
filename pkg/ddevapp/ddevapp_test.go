@@ -1801,6 +1801,32 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
 		}
 
+		if dbType == nodeps.MariaDB || dbType == nodeps.MySQL {
+			// Make sure overriding configuration works
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
+			})
+			assert.NoError(err)
+			assert.Equal("SYSTEM\n", out, "out: %s, stderr: %s", out, stderr)
+
+			err = os.MkdirAll(app.GetConfigPath("mysql"), 0750)
+			require.NoError(t, err)
+			err = os.WriteFile(app.GetConfigPath("mysql/override_param_test.cnf"), []byte("[mysqld]\n default-time-zone = \"+08:00\""), 0666)
+			require.NoError(t, err)
+			err = app.Restart()
+			require.NoError(t, err)
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
+			})
+			assert.NoError(err)
+			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr)
+			// Delete override file for next dbType test
+			err = os.Remove(app.GetConfigPath("mysql/override_param_test.cnf"))
+			require.NoError(t, err)
+		}
+
 		c = map[string]string{
 			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
 			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,

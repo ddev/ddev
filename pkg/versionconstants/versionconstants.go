@@ -21,7 +21,7 @@ var WebTag = "20230720_ted933_doc_installation_ubuntu_apt_vulnerability" // Note
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.22.0"
+var BaseDBTag = "20230806_mysql_config_windows"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:20230816_traefik_image"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20230816_traefik_image"
