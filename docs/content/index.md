@@ -85,7 +85,7 @@ These environments can be extended, version controlled, and shared, so you can t
 
     ### Gitpod and GitHub Codespaces
 
-    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything on your local computer; You only need a browser and an internet connection.
+    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything; you only need a browser and an internet connection.
 
     **Next steps:**
 
