@@ -22,6 +22,14 @@ These environments can be extended, version controlled, and shared, so you can t
     * Storage: 256GB
     * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
+    **Next steps:**
+
+    *You’ll need a Docker provider on your system before you can install DDEV.*
+    
+    1. Install Colima (or Docker Desktop) with [recommended settings](users/install/docker-installation.md#macos).
+    1. Install [DDEV for macOS](users/install/ddev-installation.md#macos)
+    1. Launch your [first project](users/project) and start developing 🚀
+
 === "Windows WSL2"
 
     ### Windows WSL2
@@ -30,6 +38,14 @@ These environments can be extended, version controlled, and shared, so you can t
     * Storage: 256GB
     * [Docker Desktop](https://www.docker.com/products/docker-desktop/) on the Windows side or [Docker CE](https://docs.docker.com/engine/install/ubuntu/) inside WSL2
     * Ubuntu or an Ubuntu-derived distro is recommended, though others may work fine
+
+    **Next steps:**
+
+    You’ll need a Docker provider on your system before you can install DDEV.
+    
+    1. Install Docker with [recommended settings](users/install/docker-installation.md#windows).
+    1. Install [DDEV for Windows](users/install/ddev-installation.md#windows)
+    1. Launch your [first project](users/project) and start developing 🚀
 
 === "Traditional Windows"
 
@@ -40,6 +56,14 @@ These environments can be extended, version controlled, and shared, so you can t
     * Storage: 256GB
     * [Docker Desktop](https://www.docker.com/products/docker-desktop/) using the WSL2 backend
 
+    **Next steps:**
+
+    *You’ll need a Docker provider on your system before you can install DDEV.*
+    
+    1. Install Docker with [recommended settings](users/install/docker-installation.md#windows).
+    1. Install [DDEV for Windows](users/install/ddev-installation.md#windows)
+    1. Launch your [first project](users/project) and start developing 🚀
+
 === "Linux"
 
     ### Linux
@@ -49,8 +73,21 @@ These environments can be extended, version controlled, and shared, so you can t
     * RAM: 8GB
     * Storage: 256GB
 
+    **Next steps:**
+
+    *You’ll need a Docker provider on your system before you can install DDEV.*
+    
+    1. Install Docker with [recommended settings](users/install/docker-installation.md#linux).
+    1. Install [DDEV for Linux](users/install/ddev-installation.md#linux)
+    1. Launch your [first project](users/project) and start developing 🚀
+
 === "Gitpod & Codespaces"
 
     ### Gitpod and GitHub Codespaces
 
-    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything; you only need a browser and an internet connection.
+    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything on your local computer; You only need a browser and an internet connection.
+
+    **Next steps:**
+
+    1. Install DDEV within [Gitpod](users/install/ddev-installation.md#gitpod) or [GitHub Codespaces](users/install/ddev-installation.md#github-codespaces).
+    1. Launch your [first project](users/project) and start developing 🚀
