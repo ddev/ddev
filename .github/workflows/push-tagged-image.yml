@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       image:
-        description: 'Image to be pushed)'
+        description: 'Image to push'
         required: true
         default: ddev-webserver
         type: choice
