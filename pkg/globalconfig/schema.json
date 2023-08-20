@@ -1,0 +1,250 @@
+{
+  "$id": "https://json.schemastore.org/base.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DDEV global config",
+  "description": "Schema for DDEV global config for version 1.22",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "DdevTask": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exec": {
+            "type": "string"
+          },
+          "exec-host": {
+            "type": "string"
+          },
+          "composer": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "auto_restart_containers": {
+      "description": "If true, automatically restart containers after a reboot or docker restart",
+      "type": "boolean"
+    },
+    "developer_mode": {
+      "description": "Not currently used.",
+      "type": "boolean"
+    },
+    "disable_http2": {
+      "description": "Whether to disable HTTP/2 listen in ddev-router.",
+      "type": "boolean"
+    },
+    "fail_on_hook_fail": {
+      "description": "Whether ddev start should be interrupted by a failing hook, on a single project or for all projects if used globally.",
+      "type": "boolean"
+    },
+    "hooks": {
+      "description": "Run tasks before or after main DDEV commands are executed",
+      "type": "object",
+      "properties": {
+        "pre-start": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-start": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-import-db": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-import-db": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-import-files": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-import-files": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-composer": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-composer": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-stop": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-config": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-config": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-exec": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-exec": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-pause": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-pause": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-pull": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-pull": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-push": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-push": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-snapshot": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-snapshot": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "pre-restore-snapshot": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-restore-snapshot": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-stop": {
+          "$ref": "#/definitions/DdevTask"
+        }
+      }
+    },
+    "instrumentation_opt_in": {
+      "description": "Whether to allow instrumentation reporting.",
+      "type": "boolean"
+    },
+    "instrumentation_queue_size": {
+      "description": "Maximum number of locally collected events for instrumentation reporting.",
+      "type": "integer"
+    },
+    "instrumentation_reporting_interval": {
+      "description": "Reporting interval in hours for instrumentation reporting.",
+      "type": "integer"
+    },
+    "internet_detection_timeout_ms": {
+      "description": "Internet detection timeout in milliseconds.",
+      "type": "integer"
+    },
+    "letsencrypt_email": {
+      "description": "Email associated with Let’s Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
+      "type": "string"
+    },
+    "messages": {
+      "description": "Configure messages like the Tip of the Day.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticker_interval": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ticker_interval"
+      ]
+    },
+    "no_bind_mounts": {
+      "description": "Whether to not use Docker bind mounts.",
+      "type": "boolean"
+    },
+    "omit_containers": {
+      "description": "A list of container types that should not be started when the project is started",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "performance_mode": {
+      "description": "Defines the performance optimization mode to be used. Currently Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
+      "type": "string",
+      "enum": [
+        "global",
+        "none",
+        "mutagen",
+        "nfs"
+      ]
+    },
+    "project_tld": {
+      "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\")",
+      "type": "string"
+    },
+    "required_docker_compose_version": {
+      "description": "Specific docker-compose version for download.",
+      "type": "string"
+    },
+    "router": {
+      "description": "The PHP version the project should use.",
+      "type": "string",
+      "enum": [
+        "traefik",
+        "nginx-proxy"
+      ]
+    },
+    "router_bind_all_interfaces": {
+      "description": "Whether to bind ddev-router’s ports on all network interfaces.",
+      "type": "boolean"
+    },
+    "router_http_port": {
+      "description": "The router HTTP port for this project",
+      "type": "string"
+    },
+    "router_https_port": {
+      "description": "The router HTTPS port for this project",
+      "type": "string"
+    },
+    "simple_formatting": {
+      "description": "Whether to disable most ddev list and ddev describe table formatting.",
+      "type": "boolean"
+    },
+    "table_style": {
+      "description": "Style for ddev list and ddev describe.",
+      "type": "string",
+      "enum": [
+        "default",
+        "bold",
+        "bright"
+      ]
+    },
+    "traefik_monitor_port": {
+      "description": "Specify an alternate port for the Traefik (ddev-router) monitor port. This defaults to 10999 and rarely needs to be changed, but can be changed in cases of port conflicts.",
+      "type": "string"
+    },
+    "use_docker_compose_from_path": {
+      "description": "Whether to use the system-installed docker-compose. You can otherwise use required_docker_compose_version to specify a version for download.",
+      "type": "boolean"
+    },
+    "use_hardened_images": {
+      "description": "Whether to use hardened images for internet deployment.",
+      "type": "boolean"
+    },
+    "use_letsencrypt": {
+      "description": "hether to enable Let’s Encrypt integration. (Works in conjunction with letsencrypt_email.) (Not currently compatible with Traefik router.)",
+      "type": "boolean"
+    },
+    "web_environment": {
+      "description": "Add environment variables to web container",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "wsl2_no_windows_hosts_mgt": {
+      "description": "(WSL2 only) Whether to disable the management and checking of the Windows hosts file. By default, when using WSL2, DDEV manages the system-wide hosts file on the Windows side (normally C:\\Windows\\system32\\drivers\\etc\\hosts) by using ddev.exe installed on the Windows side. This normally works better for all applications, including browsers and IDEs. However, this behavior can be disabled by setting wsl_no_windows_hosts_mgt: true.",
+      "type": "boolean"
+    },
+    "xdebug_ide_location": {
+      "description": "Adjust Xdebug listen location for WSL2 or in-container.",
+      "type": "string"
+    }
+  }
+}
