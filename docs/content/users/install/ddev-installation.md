@@ -327,13 +327,12 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     * Open your project’s codespace directly, edit the `.devcontainer/devcontainer.json` file, and rebuild the container with VS Code’s “Codespaces: Rebuild Container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
 
-    Your updated `devcontainer.json` file may differ depending on your project, but you should have `docker-in-docker` and `install-ddev` in the `features` section:
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section:
 
     ```json
     {
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
       "portsAttributes": {
@@ -353,7 +352,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
     ```
-
+    
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
 
