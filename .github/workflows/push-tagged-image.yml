@@ -7,11 +7,19 @@ on:
   workflow_dispatch:
     inputs:
       image:
-        description: 'Image to be pushed (ddev-php-base, ddev-webserver, NOT ddev-dbserver)'
+        description: 'Image to push'
         required: true
         default: ddev-webserver
+        type: choice
+        options:
+          - ddev-php-base
+          - ddev-webserver
+          - ddev-ssh-agent
+          - ddev-traefik-router
+          - ddev-nginx-proxy-router
+          - test-ssh-server
       tag:
-        description: Tag for pushed image (v1.19.4 for example)'
+        description: Tag for pushed image (v1.22.2 for example)
         required: true
         default: ""
       debug_enabled:
