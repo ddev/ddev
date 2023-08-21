@@ -194,13 +194,8 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     !!!warning "NFS is deprecated"
 
-        NFS is now deprecated and should no longer be used. This feature may be
-        removed in an upcoming release.
-
-
-    !!!warning "macOS Ventura may not work with NFS"
-
-        A bug in macOS Ventura means that NFS mounting doesn't work for many projects, so Mutagen is recommended instead. Follow [issue](https://github.com/ddev/ddev/issues/4122) for details.
+        NFS is deprecated and no longer recommended. This feature may be
+        removed in a future release.
 
 
     ### Using NFS to Mount the Project into the Web Container
