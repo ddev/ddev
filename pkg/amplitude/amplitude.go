@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Local cache variables to speedup the implementation.
+// Local cache variables to speed up the implementation.
 var (
 	deviceID    string
 	initialized bool
