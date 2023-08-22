@@ -320,9 +320,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally.
 
-    Start by creating a `.devcontainer/devcontainer.json` file in your project repository.
-
-    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section:
+    Start by creating a `.devcontainer/devcontainer.json` file in your project repository:
 
     ```json
     {
@@ -348,8 +346,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
      }
     ```
 
-    Next add the file `.devcontainer/setup_project.sh`. This file runs when a new codespace is launched or when an existing codespace does a rebuild.
+    Your updated file may differ depending on your project, but you should have `install-ddev` in the `features` section.
 
+    Next add the file `.devcontainer/setup_project.sh`: 
+  
     ```
     #!/bin/bash
     set -ex
@@ -367,12 +367,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # ddev composer install 
     ```
 
-    Now you can launch your repository with DDEV support in codespaces:
+    This script is executed when a new codespace is created or when an existing codespace is rebuild.
 
-    <img src="../../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in an repository on GitHub">
+    After adding these two files, you can launch your repository in codespaces:
 
-    To see what's happening during the postCreatedCommand-action, use kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “View creation log”.
-    
+    <div style="text-align:center;"><img style="max-width:350px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in an repository on GitHub"></div>
+
+    To see what's happening during the postCreateCommand-action, use <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “View creation log”:
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-creation-log.png" alt="S"></div>
+
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
 
