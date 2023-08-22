@@ -54,10 +54,12 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```bash
     # Add DDEV’s GPG key to your keyring
-    curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
+    sudo chmod a+r /etc/apt/keyrings/ddev.gpg
 
     # Add DDEV releases to your package repository
-    echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
+    echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
 
     # Update package information and install DDEV
     sudo apt update && sudo apt install -y ddev
@@ -245,8 +247,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     12. Install DDEV:
 
         ```bash
-        curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
-        echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
+        curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
         sudo apt update && sudo apt install -y ddev
         ```
 
@@ -293,10 +295,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod and run the following:
         ```bash
         # Add DDEV’s GPG key to your keyring
-        curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+        curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
 
         # Add DDEV releases to your package repository
-        echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
 
 
         # Update package information and install DDEV
@@ -325,13 +327,12 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     * Open your project’s codespace directly, edit the `.devcontainer/devcontainer.json` file, and rebuild the container with VS Code’s “Codespaces: Rebuild Container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
 
-    Your updated `devcontainer.json` file may differ depending on your project, but you should have `docker-in-docker` and `install-ddev` in the `features` section:
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section:
 
     ```json
     {
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
       "portsAttributes": {
@@ -351,7 +352,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
     ```
-
+    
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
 

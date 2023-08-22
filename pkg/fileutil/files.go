@@ -33,12 +33,12 @@ func CopyFile(src string, dst string) error {
 	defer util.CheckClose(in)
 	out, err := os.Create(dst)
 	if err != nil {
-		return fmt.Errorf("Failed to create file %v, err: %v", src, err)
+		return fmt.Errorf("failed to create file %v, err: %v", src, err)
 	}
 	defer util.CheckClose(out)
 	_, err = io.Copy(out, in)
 	if err != nil {
-		return fmt.Errorf("Failed to copy file from %v to %v err: %v", src, dst, err)
+		return fmt.Errorf("failed to copy file from %v to %v err: %v", src, dst, err)
 	}
 
 	err = out.Sync()
@@ -57,7 +57,7 @@ func CopyFile(src string, dst string) error {
 
 		err = os.Chmod(dst, si.Mode())
 		if err != nil {
-			return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
+			return fmt.Errorf("failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
 		}
 	}
 
@@ -114,7 +114,7 @@ func CopyDir(src string, dst string) error {
 			}
 			err = CopyFile(srcPath, dstPath)
 			if err != nil && deInfo.Mode()&os.ModeSymlink != 0 {
-				output.UserOut.Warnf("failed to copy symlink %s, skipping...\n", srcPath)
+				output.UserOut.Warnf("Failed to copy symlink %s, skipping...\n", srcPath)
 				continue
 			}
 			if err != nil {
@@ -264,7 +264,7 @@ func IsSameFile(path1 string, path2 string) (bool, error) {
 	return os.SameFile(path1fi, path2fi), nil
 }
 
-// ReadFileIntoString just gets the contents of file into string
+// ReadFileIntoString gets the contents of file into string
 func ReadFileIntoString(path string) (string, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
@@ -302,7 +302,7 @@ func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
 		if err != nil {
 			return err
 		}
-		//TODO: Skip a directory named .git? Skip other arbitrary dirs or files?
+		// TODO: Skip a directory named .git? Skip other arbitrary dirs or files?
 		if !info.IsDir() {
 			if info.Size() == 1067 {
 				contents, err := os.ReadFile(path)
@@ -314,7 +314,7 @@ func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
 					return nil
 				}
 				if len(lines) < 4 {
-					return fmt.Errorf("Apparent XSym doesn't have enough lines: %s", path)
+					return fmt.Errorf("apparent XSym doesn't have enough lines: %s", path)
 				}
 				// target is 4th line
 				linkTarget := filepath.Clean(lines[3])

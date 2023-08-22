@@ -56,7 +56,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			amplitude.TrackCommand(&cmdCopy, argsCopy)
 		}
 
-		// Skip docker and other validation for most commands
+		// Skip Docker and other validation for most commands
 		if command != "start" && command != "restart" {
 			return
 		}
@@ -65,16 +65,16 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		if err != nil {
 			if err.Error() == "no docker" {
 				if os.Args[1] != "version" {
-					util.Failed("Could not connect to docker. Please ensure Docker is installed and running.")
+					util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
 				}
 			} else {
-				util.Warning("The docker version currently installed does not seem to meet ddev's requirements: %v", err)
+				util.Warning("The Docker version currently installed does not seem to meet DDEV's requirements: %v", err)
 			}
 		}
 
 		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
-		// Do periodic detection of whether an update is available for ddev users.
+		// Do periodic detection of whether an update is available for DDEV users.
 		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
 		if err != nil {
 			util.Warning("Could not perform update check: %v", err)
@@ -85,7 +85,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			err = updatecheck.ResetUpdateTime(updateFile)
 			if err != nil {
 				util.Warning("Failed to update updatecheck file %s", updateFile)
-				return // Do not continue as we'll end up with github api violations.
+				return // Do not continue as we'll end up with GitHub API violations.
 			}
 
 			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("ddev", "ddev", versionconstants.DdevVersion)
@@ -101,7 +101,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		// TODO remove once it's activated directly in ddevapp
+		// TODO: Remove once it's activated directly in ddevapp
 		if instrumentationApp == nil {
 			app, err := ddevapp.NewApp("", false)
 			if err == nil {
@@ -115,7 +115,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			instrumentationApp.TrackProject()
 		}
 
-		// TODO: remove when we decide to stop reporting to Segment.
+		// TODO: Remove when we decide to stop reporting to Segment.
 		// All code to "end TODO remove once Amplitude" will be removed
 		// Do not report these commands
 		ignores := map[string]bool{"describe": true, "auth": true, "blackfire": false, "clean": true, "composer": true, "debug": true, "delete": true, "drush": true, "exec": true, "export-db": true, "get": true, "help": true, "hostname": true, "import-db": true, "import-files": true, "list": true, "logs": true, "mutagen": true, "mysql": true, "npm": true, "nvm": true, "php": true, "poweroff": true, "pull": true, "push": true, "service": true, "share": true, "snapshot": true, "ssh": true, "stop": true, "version": true, "xdebug": true, "xhprof": true, "yarn": true}
@@ -161,7 +161,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
 		}
-		// end TODO remove once Amplitude has verified with an alpha release.
+		// End TODO remove once Amplitude has verified with an alpha release.
 	},
 }
 
@@ -182,12 +182,12 @@ func init() {
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
-	// ddev --version may be called without docker available.
+	// ddev --version may be called without Docker available.
 	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
-		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/install/")
+		util.Failed("Could not connect to a Docker provider. Please start or install a Docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/install/")
 	}
 
-	// Populate custom/script commands so they're visible
+	// Populate custom/script commands so they're visible.
 	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
 		util.Warning("Not populating custom commands or hostadditions because running with root privileges")
@@ -206,16 +206,16 @@ func init() {
 
 func instrumentationNotSetUpWarning() {
 	if !output.JSONOutput && versionconstants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		util.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
+		util.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built DDEV binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 
 // checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
-// from the last saved version. If it is, prompt to request anon ddev usage stats
+// from the last saved version. If it is, prompt to request anon DDEV usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
-		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/latest/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
+		allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/latest/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 			client, _ := analytics.NewWithConfig(versionconstants.SegmentKey, analytics.Config{
@@ -240,7 +240,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}
-			util.Debug("Terminating all mutagen sync sessions")
+			util.Debug("Terminating all Mutagen sync sessions")
 			ddevapp.TerminateAllMutagenSync()
 		}
 

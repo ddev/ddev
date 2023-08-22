@@ -293,7 +293,7 @@ func Untar(source string, dest string, extractionDir string) error {
 func Unzip(source string, dest string, extractionDir string) error {
 	zf, err := zip.OpenReader(source)
 	if err != nil {
-		return fmt.Errorf("Failed to open zipfile %s, err:%v", source, err)
+		return fmt.Errorf("failed to open zipfile %s, err:%v", source, err)
 	}
 	defer util.CheckClose(zf)
 
@@ -328,7 +328,7 @@ func Unzip(source string, dest string, extractionDir string) error {
 		if strings.HasSuffix(file.Name, "/") {
 			err = os.MkdirAll(fullPath, 0777)
 			if err != nil {
-				return fmt.Errorf("Failed to mkdir %s, err:%v", fullPath, err)
+				return fmt.Errorf("failed to mkdir %s, err:%v", fullPath, err)
 			}
 			continue
 		}
@@ -346,12 +346,12 @@ func Unzip(source string, dest string, extractionDir string) error {
 		// create and copy the file.
 		exFile, err := os.Create(fullPath)
 		if err != nil {
-			return fmt.Errorf("Failed to create file %v, err: %v", fullPath, err)
+			return fmt.Errorf("failed to create file %v, err: %v", fullPath, err)
 		}
 		_, err = io.Copy(exFile, rc)
 		_ = exFile.Close()
 		if err != nil {
-			return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
+			return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 		}
 	}
 
@@ -369,13 +369,13 @@ func Unzip(source string, dest string, extractionDir string) error {
 func Tar(src string, tarballFilePath string, exclusion string) error {
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("Unable to tar files - %v", err.Error())
+		return fmt.Errorf("unable to tar files - %v", err.Error())
 	}
 	separator := string(rune(filepath.Separator))
 
 	tarball, err := os.Create(tarballFilePath)
 	if err != nil {
-		return fmt.Errorf("Could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
+		return fmt.Errorf("could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
 	// nolint: errcheck
 	defer tarball.Close()
@@ -475,7 +475,7 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 	base := filepath.Base(url)
 	f, err := os.CreateTemp("", fmt.Sprintf("%s_*.tar.gz", base))
 	if err != nil {
-		return "", nil, fmt.Errorf("Unable to create temp file: %v", err)
+		return "", nil, fmt.Errorf("unable to create temp file: %v", err)
 	}
 	defer func() {
 		_ = f.Close()
@@ -489,7 +489,7 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 
 	err = util.DownloadFile(tarball, url, true)
 	if err != nil {
-		return "", nil, fmt.Errorf("Unable to download %v: %v", url, err)
+		return "", nil, fmt.Errorf("unable to download %v: %v", url, err)
 	}
 	extractedDir, cleanup, err := ExtractTarballWithCleanup(tarball, removeTopLevel)
 	return extractedDir, cleanup, err
@@ -502,12 +502,12 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, func(), error) {
 	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("ddev_%s_*", filepath.Base(tarball)))
 	if err != nil {
-		return "", nil, fmt.Errorf("Unable to create temp dir: %v", err)
+		return "", nil, fmt.Errorf("unable to create temp dir: %v", err)
 	}
 
 	err = Untar(tarball, tmpDir, "")
 	if err != nil {
-		return "", nil, fmt.Errorf("Unable to untar %v: %v", tmpDir, err)
+		return "", nil, fmt.Errorf("unable to untar %v: %v", tmpDir, err)
 	}
 
 	// If removeTopLevel then the guts of the tarball are the first level directory
@@ -517,10 +517,10 @@ func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, fun
 	if removeTopLevel {
 		list, err := fileutil.ListFilesInDir(tmpDir)
 		if err != nil {
-			return "", nil, fmt.Errorf("Unable to list files in %v: %v", tmpDir, err)
+			return "", nil, fmt.Errorf("unable to list files in %v: %v", tmpDir, err)
 		}
 		if len(list) == 0 {
-			return "", nil, fmt.Errorf("No files found in %v", tmpDir)
+			return "", nil, fmt.Errorf("no files found in %v", tmpDir)
 		}
 		extractedDir = path.Join(tmpDir, list[0])
 	}

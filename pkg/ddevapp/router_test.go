@@ -55,7 +55,7 @@ func TestGlobalPortOverride(t *testing.T) {
 // TestProjectPortOverride makes sure that the project-level
 // router_http_port and router_https_port
 // port overrides work correctly.
-// It starts up 3 ddev projects, looks to see if the config is set right,
+// It starts up three DDEV projects, looks to see if the config is set right,
 // then tests to see that the right ports have been started up on the router.
 func TestProjectPortOverride(t *testing.T) {
 	assert := asrt.New(t)
@@ -108,7 +108,7 @@ func TestProjectPortOverride(t *testing.T) {
 		require.NoError(t, err)
 		// defer the app.Stop() so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
-		// Don't worry about the possible error case as this is just a test cleanup
+		// Don't worry about the possible error case as this is a test cleanup
 		t.Cleanup(func() {
 			err = app.Stop(true, false)
 			assert.NoError(err)
@@ -120,7 +120,7 @@ func TestProjectPortOverride(t *testing.T) {
 }
 
 // Do a modest test of Lets Encrypt functionality
-// This just checks to see that certbot ran and populated /etc/letsencrypt and
+// This checks to see that Certbot ran and populated /etc/letsencrypt and
 // that /etc/letsencrypt is mounted on volume.
 func TestLetsEncrypt(t *testing.T) {
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {

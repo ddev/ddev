@@ -32,7 +32,7 @@ const (
 
 // TextFormatter formats logs into text.
 // This is a specialization of https://github.com/sirupsen/logrus/blob/master/text_formatter.go
-// It's intended to be used for all user-oriented output from ddev
+// It's intended to be used for all user-oriented output from DDEV
 type TextFormatter struct {
 	// Set to true to bypass checking for a TTY before outputting colors.
 	ForceColors bool
@@ -44,7 +44,7 @@ type TextFormatter struct {
 	// system that already adds timestamps.
 	DisableTimestamp bool
 
-	// Enable logging the full timestamp when a TTY is attached instead of just
+	// Enable logging the full timestamp when a TTY is attached instead of
 	// the time passed since beginning of execution.
 	FullTimestamp bool
 
@@ -190,7 +190,7 @@ func (f *TextFormatter) appendValue(b *bytes.Buffer, value interface{}) {
 //
 //	logrus.WithField("level", 1).Info("hello")
 //
-// Would just silently drop the user provided level. Instead with this code
+// Would silently drop the user provided level. Instead with this code
 // it'll logged as:
 //
 //	{"level": "info", "fields.level": 1, "msg": "hello", "time": "..."}

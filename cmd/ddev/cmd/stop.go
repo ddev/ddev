@@ -14,10 +14,10 @@ var removeData bool
 // Stop all projects (but not available with -a
 var stopAll bool
 
-// create a snapshot during remove (default to false with regular remove, default to true with rm --remove-data
+// Create a snapshot during remove (default to false with regular remove, default to true with rm --remove-data
 var createSnapshot bool
 
-// force omission of snapshot during remove-data
+// Force omission of snapshot during remove-data
 var omitSnapshot bool
 
 // Stop the ddev-ssh-agent
@@ -37,7 +37,7 @@ any directory by running 'ddev stop projectname [projectname ...]' or 'ddev stop
 By default, stop is a non-destructive operation and will leave database
 contents intact. It never touches your code or files directories.
 
-To remove database contents and global listing, 
+To remove database contents and global listing,
 use "ddev delete" or "ddev stop --remove-data".
 
 To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is automatically created on
@@ -110,7 +110,7 @@ ddev stop --remove-data`,
 				project.RemoveGlobalProjectInfo()
 				err = ddevapp.TerminateMutagenSync(project)
 				if err != nil {
-					util.Warning("Unable to terminate mutagen sync for project %s", project.Name)
+					util.Warning("Unable to terminate Mutagen sync for project %s", project.Name)
 				}
 			}
 

@@ -32,7 +32,7 @@ type ListCommandSettings struct {
 }
 
 // List provides the functionality for `ddev list`
-// activeOnly if true only shows projects that are currently docker containers
+// activeOnly if true only shows projects that are currently Docker containers
 // continuous if true keeps requesting and outputting continuously
 // wrapTableText if true the text is wrapped instead of truncated to fit the row length
 // continuousSleepTime is the time between reports
@@ -44,13 +44,13 @@ func List(settings ListCommandSettings) {
 	for {
 		apps, err := GetProjects(settings.ActiveOnly)
 		if err != nil {
-			util.Failed("failed getting GetProjects: %v", err)
+			util.Failed("Failed getting GetProjects: %v", err)
 		}
 
 		appDescs := make([]map[string]interface{}, 0)
 
 		if len(apps) < 1 {
-			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
+			output.UserOut.WithField("raw", appDescs).Println("No DDEV projects were found.")
 		} else {
 			t := CreateAppTable(&out, settings.WrapTableText)
 			for _, app := range apps {
@@ -118,7 +118,7 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 		t.SetAllowedRowLength(termWidth)
 	}
 
-	util.Debug("detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d locationWidth=%d urlWidth=%d typeWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, locationWidth, urlWidth, typeWidth, totUsedWidth)
+	util.Debug("Detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d locationWidth=%d urlWidth=%d typeWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, locationWidth, urlWidth, typeWidth, totUsedWidth)
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {

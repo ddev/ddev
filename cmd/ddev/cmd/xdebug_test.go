@@ -17,7 +17,7 @@ import (
 func TestCmdXdebug(t *testing.T) {
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
 		// 2022-03-16: On Docker Desktop 4.6.0, Mac M1, the `ddev xdebug status` fails to return after
-		// turning `ddev xdebug on`. Seems to be new problem with docker desktop 4.6.0, seems to be only
+		// turning `ddev xdebug on`. Seems to be new problem with Docker Desktop 4.6.0, seems to be only
 		// on mac M1. Unable to recreate locally.
 		t.Skip("Skipping test on Mac M1 Docker Desktop")
 	}
@@ -47,20 +47,20 @@ func TestCmdXdebug(t *testing.T) {
 		globalconfig.DdevVerbose = false
 	})
 
-	// An odd bug in v1.16.2 popped up only when composer version was set, might as well set it here
+	// An odd bug in v1.16.2 popped up only when Composer version was set, might as well set it here
 	_, err = exec.RunHostCommand(DdevBin, "config", "--composer-version=2")
 	assert.NoError(err)
 
 	for _, phpVersion := range phpVersions {
-		t.Logf("Testing xdebug command in php%s", phpVersion)
+		t.Logf("Testing Xdebug command in php%s", phpVersion)
 		_, err := exec.RunHostCommand(DdevBin, "config", "--php-version", phpVersion)
 		require.NoError(t, err)
 
 		_, err = exec.RunHostCommand(DdevBin, "restart")
-		assert.NoError(err, "failed ddev start with php=%v: %v", phpVersion, err)
+		assert.NoError(err, "Failed ddev start with php=%v: %v", phpVersion, err)
 
 		out, err := exec.RunHostCommand(DdevBin, "xdebug", "status")
-		assert.NoError(err, "failed ddev xdebug status with php=%v: %v", phpVersion, err)
+		assert.NoError(err, "Failed ddev xdebug status with php=%v: %v", phpVersion, err)
 		assert.Contains(string(out), "xdebug disabled")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "on")
@@ -80,6 +80,6 @@ func TestCmdXdebug(t *testing.T) {
 		assert.Contains(string(out), "xdebug disabled")
 
 		_, err = exec.RunHostCommand(DdevBin, "stop")
-		assert.NoError(err, "failed ddev stop with php=%v: %v", phpVersion, err)
+		assert.NoError(err, "Failed ddev stop with php=%v: %v", phpVersion, err)
 	}
 }

@@ -13,7 +13,7 @@ import (
 // sshDirArg allows a configurable container destination directory.
 var sshDirArg string
 
-// DdevSSHCmd represents the ssh command.
+// DdevSSHCmd represents the SSH command.
 var DdevSSHCmd = &cobra.Command{
 	Use:   "ssh [projectname]",
 	Short: "Starts a shell session in the container for a service. Uses web service by default.",
@@ -33,8 +33,8 @@ ddev ssh -d /var/www/html`,
 
 		app.DockerEnv()
 
-		// Use bash for our containers, sh for 3rd-party containers
-		// that may not have bash.
+		// Use Bash for our containers, sh for 3rd-party containers
+		// that may not have Bash.
 		shell := "bash"
 		if !nodeps.ArrayContainsString([]string{"web", "db", "solr"}, serviceType) {
 			shell = "sh"

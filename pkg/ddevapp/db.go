@@ -10,12 +10,12 @@ import (
 )
 
 // GetExistingDBType returns type/version like mariadb:10.4 or postgres:13 or "" if no existing volume
-// This has to make a docker container run so is fairly costly.
+// This has to make a Docker container run so is fairly costly.
 func (app *DdevApp) GetExistingDBType() (string, error) {
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "GetExistingDBType-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "( test -f /var/tmp/mysql/db_mariadb_version.txt && cat /var/tmp/mysql/db_mariadb_version.txt ) || ( test -f /var/tmp/postgres/PG_VERSION && cat /var/tmp/postgres/PG_VERSION) || true"}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/tmp/mysql", app.GetPostgresVolumeName() + ":/var/tmp/postgres"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
 
 	if err != nil {
-		util.Failed("failed to RunSimpleContainer to inspect database version/type: %v, output=%s", err, out)
+		util.Failed("Failed to RunSimpleContainer to inspect database version/type: %v, output=%s", err, out)
 	}
 
 	out = strings.Trim(out, " \n\r\t")
@@ -29,9 +29,9 @@ func (app *DdevApp) GetExistingDBType() (string, error) {
 
 // dbTypeVersionFromString takes an input string and derives the info from the uses
 // There are 3 possible cases here:
-// 1. It has an _, meaning it's a current mysql or mariadb version. Easy to parse.
-// 2. It has N+.N, meaning it's a pre-v1.19 mariadb or mysql version
-// 3. It has N+, meaning it's postgres
+// 1. It has an _, meaning it's a current MySQL or MariaDB version. Easy to parse.
+// 2. It has N+.N, meaning it's a pre-v1.19 MariaDB or MySQL version
+// 3. It has N+, meaning it's PostgreSQL
 func dbTypeVersionFromString(in string) string {
 
 	idType := ""
@@ -58,7 +58,7 @@ func dbTypeVersionFromString(in string) string {
 		dbType = res[0]
 		dbVersion = res[1]
 
-	// Postgres: value is an int
+	// PostgreSQL: value is an int
 	case "postgres":
 		dbType = nodeps.Postgres
 		parts := strings.Split(in, `.`)

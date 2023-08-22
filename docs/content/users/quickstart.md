@@ -271,10 +271,10 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) jus
 ## Moodle
 
 ```bash
-ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
+ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm --database=mariadb:10.6
 ddev start
 ddev composer create moodle/moodle -y
-ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db--dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
 ddev launch /login
 ```
 
@@ -302,28 +302,28 @@ ddev launch
 * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
 * If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settings are host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.)
 * You can watch `pip install` output in real time on that first slow startup with `ddev logs -f` in another window.
-* If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
+* If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`. 
 
 ## Shopware
 
 You can set up a Shopware 6 environment many ways, we recommend the following technique:
 
 ```bash
-git clone --branch=6.4 https://github.com/shopware/production my-shopware6
-cd my-shopware6
-ddev config --project-type=shopware6 --docroot=public
-ddev start
-ddev composer install --no-scripts
-# During system:setup you may have to enter the Database user (db), Database password (db)
-# Database host (db) and Database name (db).
-ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
-ddev exec bin/console system:install --create-database --basic-setup
-ddev launch /admin
-```
+    git clone --branch=6.4 https://github.com/shopware/production my-shopware6
+    cd my-shopware6
+    ddev config --project-type=shopware6 --docroot=public
+    ddev start
+    ddev composer install --no-scripts
+    # During system:setup you may have to enter the Database user (db), Database password (db)
+    # Database host (db) and Database name (db).
+    ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
+    ddev exec bin/console system:install --create-database --basic-setup
+    ddev launch /admin
+    ```
 
-Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
+    Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
 
-For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
 ## Silverstripe
 
@@ -339,8 +339,8 @@ Use a new or existing Composer project, or clone a Git repository.
     ddev start
     ddev sake dev/build flush=all
     ```
-
-=== "Git Clone"
+        
+ === "Git Clone"
 
     ```bash
     git clone <your-silverstripe-repo>
@@ -351,7 +351,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ddev sake dev/build flush=all
     ```
 
-Your Silverstripe project is now ready.
+Your Silverstripe project is now ready. 
 The CMS can be found at /admin, log into the default admin account using `admin` and `password`.
 
 Visit the [Silverstripe documentation](https://userhelp.silverstripe.org/en/5/) for more information.

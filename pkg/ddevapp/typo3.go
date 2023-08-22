@@ -28,7 +28,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 		util.Warning("TYPO3 does not seem to have been set up yet, missing %s (%s)", filepath.Base(app.SiteSettingsPath), app.SiteSettingsPath)
 	}
 
-	// TYPO3 ddev settings file will be AdditionalConfiguration.php (app.SiteDdevSettingsFile).
+	// TYPO3 DDEV settings file will be AdditionalConfiguration.php (app.SiteDdevSettingsFile).
 	// Check if the file already exists.
 	if fileutil.FileExists(app.SiteDdevSettingsFile) {
 		// Check if the file is managed by ddev.

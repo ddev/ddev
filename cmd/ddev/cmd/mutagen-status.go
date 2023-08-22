@@ -12,7 +12,7 @@ import (
 // MutagenStatusCmd implements the ddev mutagen status command
 var MutagenStatusCmd = &cobra.Command{
 	Use:     "status",
-	Short:   "Shows mutagen sync status",
+	Short:   "Shows Mutagen sync status",
 	Aliases: []string{"st"},
 	Example: `"ddev mutagen status", "ddev mutagen status <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -40,14 +40,14 @@ var MutagenStatusCmd = &cobra.Command{
 		status, shortResult, _, err := app.MutagenStatus()
 
 		if err != nil {
-			util.Failed("unable to get mutagen status for project %s, output='%s': %v", app.Name, shortResult, err)
+			util.Failed("Unable to get Mutagen status for project %s, output='%s': %v", app.Name, shortResult, err)
 		}
 		ok := "Mutagen: " + status
 		resultOut := shortResult
 		if verbose {
 			fullResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "-l", ddevapp.MutagenSyncName(app.Name))
 			if err != nil {
-				util.Failed("unable to get mutagen status for project %s, output='%s': %v", app.Name, fullResult, err)
+				util.Failed("Unable to get Mutagen status for project %s, output='%s': %v", app.Name, fullResult, err)
 			}
 
 			resultOut = "\n" + fullResult
@@ -58,5 +58,5 @@ var MutagenStatusCmd = &cobra.Command{
 
 func init() {
 	MutagenCmd.AddCommand(MutagenStatusCmd)
-	MutagenStatusCmd.Flags().BoolP("verbose", "l", false, "Extended/verbose output for mutagen status")
+	MutagenStatusCmd.Flags().BoolP("verbose", "l", false, "Extended verbose output for Mutagen status")
 }

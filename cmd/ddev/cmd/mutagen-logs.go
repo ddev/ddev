@@ -14,7 +14,7 @@ import (
 // MutagenLogsCmd implements the ddev mutagen logs command
 var MutagenLogsCmd = &cobra.Command{
 	Use:     "logs",
-	Short:   "Show mutagen logs for debugging",
+	Short:   "Show Mutagen logs for debugging",
 	Example: `"ddev mutagen logs"`,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -31,18 +31,18 @@ var MutagenLogsCmd = &cobra.Command{
 			c.Stderr = os.Stderr
 			err := c.Run()
 			if err != nil {
-				util.Warning("mutagen daemon run failed with %v", err)
+				util.Warning("Mutagen daemon run failed with %v", err)
 			}
 			done <- true
 		}()
 		<-done
 
-		util.Success("Completed mutagen logs, now restarting normal mutagen daemon")
+		util.Success("Completed Mutagen logs, now restarting normal Mutagen daemon")
 		ddevapp.StartMutagenDaemon()
 	},
 }
 
 func init() {
 	MutagenCmd.AddCommand(MutagenLogsCmd)
-	MutagenLogsCmd.Flags().Bool("verbose", false, "Show full mutagen logs")
+	MutagenLogsCmd.Flags().Bool("verbose", false, "Show full Mutagen logs")
 }

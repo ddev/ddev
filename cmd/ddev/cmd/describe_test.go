@@ -95,7 +95,7 @@ func TestCmdDescribe(t *testing.T) {
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
 		assert.NoError(err)
 		logItems, err := unmarshalJSONLogs(out)
-		require.NoError(t, err, "Unable to unmarshall ===\n%s\n===\n", logItems)
+		require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", logItems)
 
 		// The description log should be next last item; there may be a warning
 		// or other info before that.
@@ -149,7 +149,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		assert.Equal("healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
 		assert.Equal(v.Dir, desc["approot"])
 
-		// Stop the router using docker and then check the describe
+		// Stop the router using Docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
 		desc, err = app.Describe(false)
@@ -210,7 +210,7 @@ func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 }
 
 // unmarshalJSONLogs takes a string buffer and splits it into lines,
-// discards empty lines, and unmarshalls into an array of logs
+// discards empty lines, and unmarshals into an array of logs
 func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 	logData := make([]log.Fields, 0)
 	logStrings := strings.Split(in, "\n")
@@ -220,7 +220,7 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 			data := make(log.Fields, 4)
 			err := json.Unmarshal([]byte(logLine), &data)
 			if err != nil {
-				return []log.Fields{}, fmt.Errorf("failed to unmarshall logLine='%v'", logLine)
+				return []log.Fields{}, fmt.Errorf("failed to unmarshal logLine='%v'", logLine)
 			}
 			logData = append(logData, data)
 		}

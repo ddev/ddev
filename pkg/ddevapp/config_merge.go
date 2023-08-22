@@ -16,7 +16,7 @@ func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 		return err
 	}
 
-	// If override_config is set in the config.*.yaml, then just load it on top of app
+	// If override_config is set in the config.*.yaml, load it on top of the app.
 	// Otherwise (the normal default case) merge.
 	if newConfig.OverrideConfig {
 		err = app.LoadConfigYamlFile(configPath)

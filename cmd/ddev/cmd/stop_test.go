@@ -35,7 +35,7 @@ func TestCmdStop(t *testing.T) {
 		assert.NoError(err, "ddev stop should succeed but failed, err: %v, output: %s", err, out)
 		assert.Contains(out, "has been stopped")
 
-		// Ensure the site that was just stopped does not appear in the list of sites
+		// Ensure that the stopped site does not appear in the list of sites
 		apps := ddevapp.GetActiveProjects()
 		for _, app := range apps {
 			assert.True(app.GetName() != site.Name)
@@ -54,7 +54,7 @@ func TestCmdStop(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin, "list", "--active-only")
 	assert.NoError(err)
-	assert.Contains(out, "No ddev projects were found.")
+	assert.Contains(out, "No DDEV projects were found.")
 
 	_, err = exec.RunHostCommand(DdevBin, "stop", "--all", "--stop-ssh-agent")
 	assert.NoError(err)

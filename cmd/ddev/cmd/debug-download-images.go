@@ -14,7 +14,7 @@ import (
 // DebugDownloadImagesCmd implements the ddev debug download-images command
 var DebugDownloadImagesCmd = &cobra.Command{
 	Use:     "download-images",
-	Short:   "Download all images required by ddev",
+	Short:   "Download all images required by DDEV",
 	Example: "ddev debug download-images",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
@@ -27,7 +27,7 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
 			err = ddevapp.DownloadMutagenIfNeeded()
 			if err != nil {
-				util.Warning("Unable to download mutagen: %v", err)
+				util.Warning("Unable to download Mutagen: %v", err)
 			}
 		}
 
@@ -44,7 +44,7 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		}
 		util.Debug("Pulled %s", dbImage)
 
-		util.Success("Successfully downloaded ddev images")
+		util.Success("Successfully downloaded DDEV images")
 	},
 }
 

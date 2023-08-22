@@ -25,7 +25,7 @@ ddev hostname --remove-inactive
 `,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
-to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
+to allow DDEV to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
@@ -66,7 +66,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 				return
 			}
 			if err != nil {
-				util.Warning("could not check existence in hosts file: %v", err)
+				util.Warning("Could not check existence in hosts file: %v", err)
 			}
 			os.Exit(1)
 		}
@@ -83,13 +83,13 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 func removeInactiveHostnames() {
 	apps, err := ddevapp.GetInactiveProjects()
 	if err != nil {
-		util.Warning("unable to run GetInactiveProjects: %v", err)
+		util.Warning("Unable to run GetInactiveProjects: %v", err)
 		return
 	}
 	for _, app := range apps {
 		err := app.RemoveHostsEntriesIfNeeded()
 		if err != nil {
-			util.Warning("unable to remove hosts entries for project '%s': %v", app.Name, err)
+			util.Warning("Unable to remove hosts entries for project '%s': %v", app.Name, err)
 		}
 	}
 	return

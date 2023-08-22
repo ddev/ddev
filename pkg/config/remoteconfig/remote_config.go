@@ -90,7 +90,7 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	}
 }
 
-// updateFromGithub downloads the remote config from Github.
+// updateFromGithub downloads the remote config from GitHub.
 func (c *remoteConfig) updateFromGithub() {
 	defer util.TimeTrack()()
 

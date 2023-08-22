@@ -90,7 +90,7 @@ func (site *TestSite) Prepare() error {
 
 	if err != nil {
 		site.Cleanup()
-		return fmt.Errorf("Failed to GetCachedArchive, err=%v", err)
+		return fmt.Errorf("failed to GetCachedArchive, err=%v", err)
 	}
 	// We must copy into a directory that does not yet exist :(
 	err = os.Remove(site.Dir)
@@ -106,7 +106,7 @@ func (site *TestSite) Prepare() error {
 	}
 	if err != nil {
 		site.Cleanup()
-		return fmt.Errorf("Failed to CopyDir from %s to %s, err=%v", cachedSrcDir, site.Dir, err)
+		return fmt.Errorf("failed to CopyDir from %s to %s, err=%v", cachedSrcDir, site.Dir, err)
 	}
 	output.UserOut.Println("Copying complete")
 
@@ -139,7 +139,7 @@ func (site *TestSite) Prepare() error {
 
 	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0777)
 	if err != nil {
-		return fmt.Errorf("Failed to create upload dir for test site: %v", err)
+		return fmt.Errorf("failed to create upload dir for test site: %v", err)
 	}
 
 	// Force creation of new global config if none exists.
@@ -261,7 +261,7 @@ func ClearDockerEnv() {
 
 // ContainerCheck determines if a given container name exists and matches a given state
 func ContainerCheck(checkName string, checkState string) (bool, error) {
-	// ensure we have docker network
+	// Ensure we have Docker network
 	client := dockerutil.GetDockerClient()
 	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
 	if err != nil {
@@ -300,7 +300,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 	_ = os.MkdirAll(filepath.Dir(archiveFullPath), 0777)
 	extractPath := filepath.Join(testCache, uniqueName)
 
-	// Check to see if we have it cached, if so just return it.
+	// Check to see if we have it cached, if so return it.
 	dStat, dErr := os.Stat(extractPath)
 	aStat, aErr := os.Stat(archiveFullPath)
 	if dErr == nil && dStat.IsDir() && aErr == nil && !aStat.IsDir() {
@@ -344,7 +344,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 }
 
 // GetLocalHTTPResponse takes a URL and optional timeout in seconds,
-// hits the local docker for it, returns result
+// hits the local Docker for it, returns result
 // Returns error (with the body) if not 200 status code.
 func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
 	var timeoutSecs = 60
@@ -371,7 +371,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	}
 	localAddress := u.String()
 
-	// use ServerName: fakeHost to verify basic usage of certificate.
+	// Use ServerName: fakeHost to verify basic usage of certificate.
 	// This technique is from https://stackoverflow.com/a/47169975/215713
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{ServerName: fakeHost},
@@ -389,7 +389,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	req, err := http.NewRequest("GET", localAddress, nil)
 
 	if err != nil {
-		return "", nil, fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
+		return "", nil, fmt.Errorf("failed to NewRequest GET %s: %v", localAddress, err)
 	}
 	req.Host = fakeHost
 

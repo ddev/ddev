@@ -13,9 +13,9 @@ import (
 var ComposerCmd = &cobra.Command{
 	DisableFlagParsing: true,
 	Use:                "composer [command]",
-	Short:              "Executes a composer command within the web container",
-	Long: `Executes a composer command at the composer root in the web container. Generally,
-any composer command can be forwarded to the container context by prepending
+	Short:              "Executes a Composer command within the web container",
+	Long: `Executes a Composer command at the Composer root in the web container. Generally,
+any Composer command can be forwarded to the container context by prepending
 the command with 'ddev'.`,
 	Example: `ddev composer install
 ddev composer require <package>
@@ -36,7 +36,7 @@ ddev composer create drupal/recommended-project`,
 
 		stdout, stderr, err := app.Composer(args)
 		if err != nil {
-			util.Failed("composer %v failed, %v. stderr=%v", args, err, stderr)
+			util.Failed("Composer %v failed, %v. stderr=%v", args, err, stderr)
 		}
 		_, _ = fmt.Fprint(os.Stderr, stderr)
 		_, _ = fmt.Fprint(os.Stdout, stdout)

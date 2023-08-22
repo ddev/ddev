@@ -66,7 +66,7 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.
-	// TODO remove once clean up has done.
+	// TODO: Remove once clean up has done.
 	InitAmplitude()
 
 	// Early exit if instrumentation is disabled.
@@ -154,7 +154,7 @@ func IsDisabled() bool {
 // the instrumentation functions can be used.
 // Initialization is currently done before via init() func somewhere while
 // creating the ddevapp. This should be cleaned up.
-// TODO make private once clean up has done.
+// TODO: Make private once clean up has done.
 func InitAmplitude() {
 	defer util.TimeTrack()()
 

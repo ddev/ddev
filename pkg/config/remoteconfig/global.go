@@ -1,4 +1,4 @@
-// TODO inject to a global interface e.g. command factory as soon as it exists
+// TODO: Inject to a global interface e.g. command factory as soon as it exists
 // and remove this file.
 package remoteconfig
 

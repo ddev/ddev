@@ -25,7 +25,7 @@ func (app *DdevApp) TrackProject() {
 
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.
-	// TODO remove once clean up has done.
+	// TODO: Remove once clean up has done.
 	amplitude.InitAmplitude()
 
 	// Early exit if instrumentation is disabled.

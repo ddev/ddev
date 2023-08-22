@@ -68,7 +68,7 @@ ddev exec --raw -- ls -lR`,
 func init() {
 	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Defines the execution directory within the container")
-	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with bash inside container)")
+	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with Bash inside container)")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)

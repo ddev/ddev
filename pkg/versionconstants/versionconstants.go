@@ -1,6 +1,6 @@
 package versionconstants
 
-// DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
+// DdevVersion is the current version of DDEV, by default the Git committish (should be current Git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
 // SegmentKey is the ddev-specific key for Segment service
@@ -15,16 +15,16 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230803_php8.3" // Note that this can be overridden by make
+var WebTag = "20230720_ted933_doc_installation_ubuntu_apt_vulnerability" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.22.0"
+var BaseDBTag = "20230806_mysql_config_windows"
 
-const TraditionalRouterImage = "ddev/ddev-router:v1.22.0"
-const TraefikRouterImage = "traefik:v2.10"
+const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:20230816_traefik_image"
+const TraefikRouterImage = "ddev/ddev-traefik-router:20230816_traefik_image"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
@@ -38,9 +38,9 @@ var BusyboxImage = "busybox:stable"
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
-// MutagenVersion is filled with the version we find for mutagen in use
+// MutagenVersion is filled with the version we find for Mutagen in use
 var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.17.2"
 
-const RequiredDockerComposeVersionDefault = "v2.20.0"
+const RequiredDockerComposeVersionDefault = "v2.20.3"

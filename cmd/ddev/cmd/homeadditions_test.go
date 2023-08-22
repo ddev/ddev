@@ -24,7 +24,7 @@ func TestHomeadditions(t *testing.T) {
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
 			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
 		nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+		t.Skip("Skipping because this changes homedir and breaks Mutagen functionality")
 	}
 	assert := asrt.New(t)
 
@@ -40,7 +40,7 @@ func TestHomeadditions(t *testing.T) {
 	projectHomeadditionsDir := filepath.Join(site.Dir, ".ddev", "homeadditions")
 
 	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
-	// It's changed via $HOME for the ddev subprocess
+	// It's changed via $HOME for the DDEV subprocess
 	err := os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
 	assert.NoError(err)
 	tmpHomeGlobalHomeadditionsDir := filepath.Join(tmpHome, ".ddev", "homeadditions")
@@ -75,13 +75,13 @@ func TestHomeadditions(t *testing.T) {
 	err = os.RemoveAll(filepath.Join(projectHomeadditionsDir, "realprojecttarget.txt"))
 	assert.NoError(err)
 
-	// symlink the project file
+	// Symlink the project file
 	err = os.Symlink(filepath.Join(origDir, "testdata", t.Name(), "project/realprojecttarget.txt"), filepath.Join(projectHomeadditionsDir, "realprojecttarget.txt"))
 	require.NoError(t, err)
-	// symlink the global file
+	// Symlink the global file
 	err = os.Symlink(filepath.Join(origDir, "testdata", t.Name(), "global/realglobaltarget.txt"), filepath.Join(tmpHomeGlobalHomeadditionsDir, "realglobaltarget.txt"))
 	require.NoError(t, err)
-	// Run ddev start make sure homeadditions example files get populated
+	// Run DDEV start make sure homeadditions example files get populated
 	_, err = exec.RunHostCommand(DdevBin, "restart")
 	assert.NoError(err)
 

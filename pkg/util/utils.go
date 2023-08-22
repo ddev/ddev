@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"math"
 	"math/rand"
@@ -25,12 +26,12 @@ import (
 func Failed(format string, a ...interface{}) {
 	format = ColorizeText(format, "red")
 	if a != nil {
-		//output.UserOut.Fatalf(format, a...)
+		// output.UserOut.Fatalf(format, a...)
 		output.UserErr.Fatalf(format, a...)
-		//output.UserOut.WithField("level", "fatal").Fatalf(format, a...)
+		// output.UserOut.WithField("level", "fatal").Fatalf(format, a...)
 	} else {
 		output.UserErr.Fatal(format)
-		//output.UserOut.WithField("level", "fatal").Fatal(format)
+		// output.UserOut.WithField("level", "fatal").Fatal(format)
 	}
 }
 
@@ -109,6 +110,14 @@ func RandString(n int) string {
 	return string(b)
 }
 
+// HashSalt returns a hash of the projectName to be used as a salt.
+// This is appropriate onlly for development work, but means
+// that the HashSalt will be predictable for users on a team
+func HashSalt(projectName string) string {
+	hash := sha256.Sum256([]byte(projectName))
+	return fmt.Sprintf("%x", hash)
+}
+
 // AskForConfirmation requests a y/n from user.
 func AskForConfirmation() bool {
 	response := GetInput("")
@@ -144,7 +153,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
 	username = curUser.Username
-	// Remove at least spaces that aren't allowed in linux usernames and can appear in windows
+	// Remove at least spaces that aren't allowed in Linux usernames and can appear in Windows
 	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
 	// "André Kraus", "Mück"
 	// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
@@ -168,7 +177,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 		username = "a" + username
 	}
 
-	// Windows usernames may have a \ to separate domain\user - get just the user
+	// Windows usernames may have a \ to separate domain\user - get the user
 	parts := strings.Split(username, `\`)
 	username = parts[len(parts)-1]
 
@@ -193,15 +202,15 @@ func IsCommandAvailable(cmdName string) bool {
 	return false
 }
 
-// GetFirstWord just returns the first space-separated word in a string.
+// GetFirstWord returns the first space-separated word in a string.
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
 }
 
-// FindBashPath returns the PATH to bash on any system
+// FindBashPath returns the PATH to Bash on any system
 // on Windows preferring git-bash
-// On Windows we'll need the path to bash to execute anything.
+// On Windows we'll need the path to Bash to execute anything.
 // Returns empty string if not found, path if found
 func FindBashPath() string {
 	if runtime.GOOS != "windows" {
@@ -209,10 +218,10 @@ func FindBashPath() string {
 	}
 	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
 	if err != nil {
-		// This one could come back with the WSL bash, in which case we may have some trouble.
+		// This one could come back with the WSL Bash, in which case we may have some trouble.
 		windowsBashPath, err = osexec.LookPath("bash.exe")
 		if err != nil {
-			fmt.Println("Not loading custom commands; bash is not in PATH")
+			fmt.Println("Not loading custom commands; Bash is not in PATH")
 			return ""
 		}
 	}
@@ -281,7 +290,7 @@ func ColorizeText(s string, c string) (out string) {
 	return out
 }
 
-// Killall a process name on linux/macOS/windows.
+// Killall a process name on Linux/macOS/Windows.
 // Avoid this as it may have unintended consequences.
 func Killall(processName string) {
 	if runtime.GOOS == "windows" {

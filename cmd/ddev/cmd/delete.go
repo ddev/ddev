@@ -10,14 +10,14 @@ import (
 // noConfirm: If true, --yes, we won't stop and prompt before each deletion
 var noConfirm bool
 
-// if deleteAll is true, we'll delete all projects
+// If deleteAll is true, we'll delete all projects
 var deleteAll bool
 
 // DeleteCmd provides the delete command
 var DeleteCmd = &cobra.Command{
 	Use:   "delete [projectname ...]",
 	Short: "Remove all project information (including database) for an existing project",
-	Long:  `Removes all ddev project information (including database) for an existing project, but does not touch the project codebase or the codebase's .ddev folder.'.`,
+	Long:  `Removes all DDEV project information (including database) for an existing project, but does not touch the project codebase or the codebase's .ddev folder.'.`,
 	Example: `ddev delete
 ddev delete proj1 proj2 proj3
 ddev delete --omit-snapshot proj1
@@ -70,7 +70,7 @@ ddev delete --all`,
 }
 
 func init() {
-	DeleteCmd.Flags().Bool("clean-containers", true, "Clean up all ddev docker containers which are not required by this version of ddev")
+	DeleteCmd.Flags().Bool("clean-containers", true, "Clean up all DDEV Docker containers which are not required by this version of DDEV")
 	DeleteCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 	DeleteCmd.Flags().BoolVarP(&noConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DeleteCmd.Flags().BoolVarP(&deleteAll, "all", "a", false, "Delete all projects")

@@ -31,8 +31,8 @@ func (n *SegmentNoopLogger) Errorf(_ string, _ ...interface{}) {}
 // Excludes non-ddev custom commands.
 var ReportableEvents = map[string]bool{"start": true}
 
-// GetInstrumentationUser normally gets just the hashed hostID but if
-// an explicit user is provided in global_config.yaml that will be prepended.
+// GetInstrumentationUser normally gets the hashed hostID but if an explicit
+// user is provided in global_config.yaml that will be prepended.
 func GetInstrumentationUser() string {
 	return hashedHostID
 }
@@ -83,7 +83,7 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 }
 
 // SegmentUser does the enqueue of the Identify action, identifying the user
-// Here we just use the hashed hostid as the user id
+// Here we use the hashed hostid as the user id
 func SegmentUser(client analytics.Client, hashedID string) error {
 	timezone, _ := time.Now().In(time.Local).Zone()
 	lang := os.Getenv("LANG")

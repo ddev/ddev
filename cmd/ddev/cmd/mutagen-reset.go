@@ -10,8 +10,8 @@ import (
 // MutagenResetCmd implements the ddev mutagen reset command
 var MutagenResetCmd = &cobra.Command{
 	Use:     "reset",
-	Short:   "Reset mutagen for project",
-	Long:    "Stops project, removes the mutagen docker volume",
+	Short:   "Reset Mutagen for project",
+	Long:    "Stops project, removes the Mutagen Docker volume",
 	Example: `"ddev mutagen reset", "ddev mutagen reset <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
@@ -34,17 +34,17 @@ var MutagenResetCmd = &cobra.Command{
 
 		err = app.MutagenSyncFlush()
 		if err != nil {
-			// if the mutagen session just did not exist, continue on
+			// If the Mutagen session did not exist, continue on
 			if !strings.Contains(err.Error(), "does not exist") {
-				util.Warning("Could not flush mutagen: %v", err)
+				util.Warning("Could not flush Mutagen: %v", err)
 			}
 		}
 
 		err = ddevapp.MutagenReset(app)
 		if err != nil {
-			util.Failed("Could not reset mutagen: %v", err)
+			util.Failed("Could not reset Mutagen: %v", err)
 		}
-		util.Success("Mutagen has been reset. You may now `ddev start` with or without mutagen enabled.")
+		util.Success("Mutagen has been reset. You may now `ddev start` with or without Mutagen enabled.")
 	},
 }
 

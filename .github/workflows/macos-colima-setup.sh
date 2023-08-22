@@ -6,18 +6,22 @@ sudo chown -R ${USER} /usr/local/*
 
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
-brew uninstall go@1.15 || true
-brew unlink go || true
-brew uninstall go@1.17 || true
-brew uninstall postgresql || true
-brew uninstall composer || true
-brew uninstall php || true
-brew untap homebrew/cask || true
-brew untap homebrew/core || true
+brew uninstall go@1.15 2>/dev/null || true
+brew unlink go 2>/dev/null || true
+brew uninstall go@1.17 2>/dev/null || true
+brew uninstall postgresql 2>/dev/null || true
+brew uninstall composer 2>/dev/null || true
+brew uninstall php 2>/dev/null || true
+brew untap homebrew/cask 2>/dev/null || true
+brew untap homebrew/core 2>/dev/null || true
 echo "====== Running brew install ======"
-brew install -q colima docker docker-compose jq libpq mkcert mysql-client
+brew install -q docker docker-compose jq mkcert mysql-client
+echo "====== Running brew upgrade ======"
+brew upgrade colima lima
+# see https://github.com/lima-vm/lima/issues/1742
+brew reinstall -f --force-bottle qemu
 echo "====== Running brew link ======"
-brew link --force libpq mysql-client
+brew link --force mysql-client
 echo "====== Completed brew link ======"
 
 
@@ -29,7 +33,7 @@ sudo security authorizationdb write com.apple.trust-settings.admin allow
 # Github actions macOS runners have 14BG RAM so might as well use it.
 # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
 echo "====== Starting colima ======"
-colima start --cpu 3 --memory 6 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
+colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
 
 # I haven't been able to get mkcert-trusted certs in there, not sure why
 # You can't answer the security prompt, but that's what the

@@ -12,7 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 )
 
-// TestDebugRefreshCmd tests that ddev debug refresh actually clears docker caache
+// TestDebugRefreshCmd tests that ddev debug refresh actually clears Docker cache
 func TestDebugRefreshCmd(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -64,7 +64,7 @@ RUN shuf -i 0-99999 -n1 > /random.txt
 	require.NoError(t, err)
 	assert.Equal(origRandom, newRandom)
 
-	// Now run ddev debug refresh to blow away the docker cache
+	// Now run ddev debug refresh to blow away the Docker cache
 	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh")
 	require.NoError(t, err)
 

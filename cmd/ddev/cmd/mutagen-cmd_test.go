@@ -21,7 +21,7 @@ func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because mutagen on by default")
+		t.Skip("Skipping because Mutagen on by default")
 	}
 
 	site := TestSites[0]
@@ -62,7 +62,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
 	require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
-	// Turn mutagen off globally
+	// Turn Mutagen off globally
 	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
 	assert.NoError(err)
 
@@ -74,18 +74,18 @@ func TestCmdMutagen(t *testing.T) {
 	require.False(t, globalconfig.DdevGlobalConfig.IsMutagenEnabled())
 	require.False(t, app.IsMutagenEnabled())
 
-	// Project override, turn mutagen on for the project
+	// Project override, turn Mutagen on for the project
 	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode=mutagen")
 	assert.NoError(err)
 
-	// Have to reload the app, since we just changed the config
+	// Have to reload the app, since we have changed the config
 	app, err = ddevapp.GetActiveApp("")
 	require.NoError(t, err)
 
 	// Make sure it got turned on
 	assert.True(app.IsMutagenEnabled())
 
-	// Now test subcommands. Wait just a bit for mutagen to get completely done, with transition problems sorted outx
+	// Now test subcommands. Wait a bit for Mutagen to get completely done, with transition problems sorted out
 	err = app.StartAndWait(10)
 	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
@@ -98,7 +98,7 @@ func TestCmdMutagen(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "reset")
 	assert.NoError(err)
-	assert.Contains(out, fmt.Sprintf("Removed docker volume %s", ddevapp.GetMutagenVolumeName(app)))
+	assert.Contains(out, fmt.Sprintf("Removed Docker volume %s", ddevapp.GetMutagenVolumeName(app)))
 
 	status, statusDesc := app.SiteStatus()
 	assert.Equal("stopped", status)
@@ -111,7 +111,7 @@ func TestCmdMutagen(t *testing.T) {
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 
-	// Turn mutagen off again
+	// Turn Mutagen off again
 	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode-reset")
 	require.NoError(t, err)
 

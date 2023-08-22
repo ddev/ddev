@@ -31,7 +31,7 @@ func IsWindowsDdevExeAvailable() bool {
 		}
 		out, err := exec.RunHostCommand("ddev.exe", "--version")
 		if err != nil {
-			util.Warning("unable to run ddev.exe, please check it on Windows side; err=%v; output=%s", err, out)
+			util.Warning("Unable to run ddev.exe, please check it on Windows side; err=%v; output=%s", err, out)
 			windowsDdevExeAvailable = false
 			return windowsDdevExeAvailable
 		}
@@ -63,13 +63,13 @@ func IsHostnameInHostsFile(hostname string) (bool, error) {
 		hosts, err = ddevhosts.New()
 	}
 	if err != nil {
-		return false, fmt.Errorf("Unable to open hosts file: %v", err)
+		return false, fmt.Errorf("unable to open hosts file: %v", err)
 	}
 	return hosts.Has(dockerIP, hostname), nil
 }
 
 // AddHostsEntriesIfNeeded will run sudo ddev hostname to the site URL to the host's /etc/hosts.
-// This should be run without admin privs; the ddev hostname command will handle escalation.
+// This should be run without admin privs; the DDEV hostname command will handle escalation.
 func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	var err error
 	dockerIP, err := dockerutil.GetDockerIP()
@@ -106,7 +106,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			continue
 		}
 		if err != nil {
-			util.Warning("unable to open hosts file: %v", err)
+			util.Warning("Unable to open hosts file: %v", err)
 			continue
 		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
@@ -161,7 +161,7 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 			continue
 		}
 		if err != nil {
-			util.Warning("unable to open hosts file: %v", err)
+			util.Warning("Unable to open hosts file: %v", err)
 			continue
 		}
 
@@ -177,7 +177,7 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 
 // RemoveHostEntry removes named /etc/hosts entry if it exists
 // This should be run with administrative privileges only and used by
-// ddev hostname only
+// DDEV hostname only
 func RemoveHostEntry(name string, ip string) error {
 	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
 		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
@@ -196,7 +196,7 @@ func RemoveHostEntry(name string, ip string) error {
 	return err
 }
 
-// escalateToAddHostEntry runs the required ddev hostname command to add the entry,
+// escalateToAddHostEntry runs the required DDEV hostname command to add the entry,
 // does it with sudo on the correct platform.
 func escalateToAddHostEntry(hostname string, ip string) (string, error) {
 	ddevBinary, err := os.Executable()
@@ -232,7 +232,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		return "", nil
 	}
 	if err != nil {
-		return "", fmt.Errorf("could not get home directory for current user. is it set?")
+		return "", fmt.Errorf("could not get home directory for current user. Is it set?")
 	}
 
 	if (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) && !IsWindowsDdevExeAvailable() {
@@ -243,7 +243,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		c = []string{"sudo.exe"}
 	}
 	c = append(c, args...)
-	output.UserOut.Printf("ddev needs to run with administrative privileges.\nYou may be required to enter your password for sudo or allow escalation. ddev is about to issue the command:\n  %s\n", strings.Join(c, ` `))
+	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nYou may be required to enter your password for sudo or allow escalation. DDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
 	return out, err

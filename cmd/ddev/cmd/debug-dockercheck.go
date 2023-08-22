@@ -17,7 +17,7 @@ import (
 // DebugDockercheckCmd implements the ddev debug dockercheck command
 var DebugDockercheckCmd = &cobra.Command{
 	Use:     "dockercheck",
-	Short:   "Diagnose DDEV docker/colima setup",
+	Short:   "Diagnose DDEV Docker/Colima setup",
 	Example: "ddev debug dockercheck",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
@@ -41,7 +41,7 @@ var DebugDockercheckCmd = &cobra.Command{
 		case "docker desktop":
 			dockerutil.IsDockerDesktop()
 		}
-		util.Success("Using docker context: %s (%s)", dockerutil.DockerContext, dockerutil.DockerHost)
+		util.Success("Using Docker context: %s (%s)", dockerutil.DockerContext, dockerutil.DockerHost)
 		util.Success("docker-compose: %s", versionInfo["docker-compose"])
 
 		dockerHost := os.Getenv("DOCKER_HOST")
@@ -55,21 +55,21 @@ var DebugDockercheckCmd = &cobra.Command{
 
 		dockerVersion, err := dockerutil.GetDockerVersion()
 		if err != nil {
-			util.Failed("Unable to get docker version: %v", err)
+			util.Failed("Unable to get Docker version: %v", err)
 		}
 		util.Success("Docker version: %s", dockerVersion)
 		err = dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
 		if err != nil {
 			if err.Error() == "no docker" {
-				util.Failed("Docker is not installed or the docker client is not available in the $PATH")
+				util.Failed("Docker is not installed or the Docker client is not available in the $PATH")
 			} else {
-				util.Warning("The docker version currently installed does not seem to meet ddev's requirements: %v", err)
+				util.Warning("The Docker version currently installed does not seem to meet DDEV's requirements: %v", err)
 			}
 		}
 
 		client := dockerutil.GetDockerClient()
 		if client == nil {
-			util.Failed("Unable to get docker client")
+			util.Failed("Unable to get Docker client")
 		}
 
 		uid, _, _ := util.GetContainerUIDGid()

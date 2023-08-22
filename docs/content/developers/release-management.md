@@ -116,7 +116,7 @@ Sadly, there are no ARM64 Docker images for MySQL 5.7 and 8.0, so we have our ow
 
 ## Actual Release Docker Image Updates
 
-We don’t actually build every image for every point release. If there have been no changes to `ddev-router` or `ddev-ssh-agent`, for example, we only usually push those and update `pkg/version/version.go` on major releases.
+We don’t actually build every image for every point release. If there have been no changes to `ddev-traefik-router` or `ddev-ssh-agent`, for example, we only usually push those and update `pkg/version/version.go` on major releases.
 
 But here are the steps for building:
 

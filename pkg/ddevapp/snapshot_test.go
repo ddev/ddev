@@ -101,21 +101,21 @@ func TestGetLatestSnapshot(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(s3Name, latestSnapshot)
 
-	// delete snapshot 3
+	// Delete snapshot 3
 	err = app.DeleteSnapshot(s3Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
 	assert.Equal(s2Name, latestSnapshot, "%s should be latest snapshot", snapshots[1])
 
-	// delete snapshot 2
+	// Delete snapshot 2
 	err = app.DeleteSnapshot(s2Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
 	assert.Equal(s1Name, latestSnapshot, "%s should now be latest snapshot", s1Name)
 
-	// delete snapshot 1 (should be last)
+	// Delete snapshot 1 (should be last)
 	err = app.DeleteSnapshot(s1Name)
 	assert.NoError(err)
 	latestSnapshot, _ = app.GetLatestSnapshot()
@@ -268,7 +268,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// I can't get it to restore in this test. The logs show
 	// " [ERROR] InnoDB: Log block 24712 at lsn 12652032 has valid header, but checksum field contains 1825156513, should be 1116246688"
 	// Since this works everywhere else and this is legacy snapshot support, I'm going to punt
-	// and skip the mysql snapshot. rfay 2022-02-25
+	// and skip the MySQL snapshot. rfay 2022-02-25
 	if runtime.GOOS == "windows" {
 		delete(dirSnapshots, "mysql:5.7")
 	}

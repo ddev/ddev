@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/pkg/errors"
 )
 
 // appTypeFuncs prototypes
@@ -98,7 +98,6 @@ func init() {
 			configOverrideAction: django4ConfigOverrideAction,
 			postConfigAction:     django4PostConfigAction,
 			postStartAction:      django4PostStartAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeDrupal6: {
@@ -160,7 +159,6 @@ func init() {
 			appTypeDetect:        isLaravelApp,
 			postStartAction:      laravelPostStartAction,
 			configOverrideAction: laravelConfigOverrideAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeSilverstripe: {
@@ -188,15 +186,13 @@ func init() {
 		},
 
 		nodeps.AppTypePHP: {
-			postStartAction:   phpPostStartAction,
-			importFilesAction: genericImportFilesAction,
+			postStartAction: phpPostStartAction,
 		},
 
 		nodeps.AppTypePython: {
 			appTypeDetect:        isPythonApp,
 			configOverrideAction: pythonConfigOverrideAction,
 			postConfigAction:     pythonPostConfigAction,
-			importFilesAction:    genericImportFilesAction,
 		},
 
 		nodeps.AppTypeShopware6: {
@@ -271,7 +267,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	}
 
 	// If we have a function to do the settings creation, do it, otherwise
-	// just ignore.
+	// ignore it.
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
 		if err != nil {
@@ -279,7 +275,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		}
 
 		// Don't create gitignore if it would be in top-level directory, where
-		// there is almost certainly already a gitignore (like backdrop)
+		// there is almost certainly already a gitignore (like Backdrop)
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
 			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
@@ -376,7 +372,11 @@ func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extractPath
 		return errors.Errorf("upload_dirs is not set for this project (%s)", app.Type)
 	}
 
-	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.importFilesAction != nil {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok {
+		// if a specific action is not defined, use a generic action
+		if appFuncs.importFilesAction == nil {
+			appFuncs.importFilesAction = genericImportFilesAction
+		}
 		return appFuncs.importFilesAction(app, uploadDir, importPath, extractPath)
 	}
 

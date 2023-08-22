@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-// isPythonApp returns true if the app is otherwise indeterminate python
+// isPythonApp returns true if the app is otherwise indeterminate Python
 func isPythonApp(app *DdevApp) bool {
 	docroot := filepath.Join(app.AppRoot, app.Docroot)
 	// Don't trigger on django4
@@ -21,7 +21,7 @@ func isPythonApp(app *DdevApp) bool {
 		return false
 	}
 
-	// If there are .py files in the docroot, assume python type
+	// If there are .py files in the docroot, assume Python type
 	for _, file := range files {
 		if !file.IsDir() && filepath.Ext(file.Name()) == ".py" {
 			return true
@@ -31,7 +31,7 @@ func isPythonApp(app *DdevApp) bool {
 }
 
 // pythonConfigOverrideAction sets up webserverType and anything else
-// we might need for generic python.
+// we might need for generic Python.
 func pythonConfigOverrideAction(app *DdevApp) error {
 	if app.WebserverType == nodeps.WebserverDefault {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
@@ -43,7 +43,7 @@ func pythonConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// pythonPostConfigAction just reminds people that they may need WSGI_APP env var
+// pythonPostConfigAction reminds people that they may need WSGI_APP env var
 func pythonPostConfigAction(_ *DdevApp) error {
 	util.Warning("Your project may need a WSGI_APP environment variable to work correctly")
 	return nil

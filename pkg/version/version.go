@@ -31,13 +31,13 @@ func GetVersionInfo() map[string]string {
 	versionInfo["os"] = runtime.GOOS
 	versionInfo["architecture"] = runtime.GOARCH
 	if versionInfo["docker"], err = dockerutil.GetDockerVersion(); err != nil {
-		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
+		versionInfo["docker"] = fmt.Sprintf("Failed to GetDockerVersion(): %v", err)
 	}
 	if versionInfo["docker-platform"], err = GetDockerPlatform(); err != nil {
-		versionInfo["docker-platform"] = fmt.Sprintf("failed to GetDockerPlatform(): %v", err)
+		versionInfo["docker-platform"] = fmt.Sprintf("Failed to GetDockerPlatform(): %v", err)
 	}
 	if versionInfo["docker-compose"], err = dockerutil.GetDockerComposeVersion(); err != nil {
-		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
+		versionInfo["docker-compose"] = fmt.Sprintf("Failed to GetDockerComposeVersion(): %v", err)
 	}
 	versionInfo["mutagen"] = versionconstants.RequiredMutagenVersion
 
@@ -48,7 +48,7 @@ func GetVersionInfo() map[string]string {
 	return versionInfo
 }
 
-// GetDockerPlatform gets the platform used for docker engine
+// GetDockerPlatform gets the platform used for Docker engine
 func GetDockerPlatform() (string, error) {
 	var client *dockerClient.Client
 	var err error
@@ -63,16 +63,16 @@ func GetDockerPlatform() (string, error) {
 
 	platform := info.OperatingSystem
 	switch {
-	case nodeps.IsWSL2() && info.OSType == "linux":
-		platform = "wsl2-docker-ce"
 	case strings.HasPrefix(platform, "Rancher Desktop"):
 		platform = "rancher-desktop"
 	case strings.HasPrefix(platform, "Docker Desktop"):
 		platform = "docker-desktop"
-	case info.Name == "colima":
+	case strings.HasPrefix(info.Name, "colima"):
 		platform = "colima"
 	case platform == "OrbStack":
 		platform = "orbstack"
+	case nodeps.IsWSL2() && info.OSType == "linux":
+		platform = "wsl2-docker-ce"
 	default:
 		platform = info.OperatingSystem
 	}

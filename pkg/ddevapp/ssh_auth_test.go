@@ -19,7 +19,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestSSHAuth tests basic ssh authentication
+// TestSSHAuth tests basic SSH authentication
 func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
@@ -27,7 +27,7 @@ func TestSSHAuth(t *testing.T) {
 
 	runTime := util.TimeTrackC(t.Name())
 
-	//  Add a docker-compose service that has ssh server and mounted authorized_keys
+	//  Add a docker-compose service that has SSH server and mounted authorized_keys
 	site := TestSites[0]
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
@@ -93,7 +93,7 @@ func TestSSHAuth(t *testing.T) {
 	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "//test.expect.passphrase"})
 	require.NoError(t, err)
 
-	// Try ssh, should succeed
+	// Try SSH, should succeed
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd",
@@ -109,7 +109,7 @@ func TestSSHAuth(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Try ssh, should succeed
+	// Try SSH, should succeed
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd",
@@ -133,7 +133,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 	_ = os.Chdir(testDir)
 	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.override.yaml")
 
-	// Remove the ddev-ssh-agent, since the start code simply checks to see if it's
+	// Remove the ddev-ssh-agent, since the start code checks to see if it's
 	// running and doesn't restart it if it's running
 	_ = dockerutil.RemoveContainer("ddev-ssh-agent")
 

@@ -25,7 +25,7 @@ func TestCmdRestart(t *testing.T) {
 
 	_, err = ddevapp.GetActiveApp("")
 	if err != nil {
-		assert.Fail("Could not find an active ddev configuration: %v", err)
+		assert.Fail("Could not find an active DDEV configuration: %v", err)
 	}
 
 	assert.Contains(string(out), "Your project can be reached at")
@@ -41,7 +41,7 @@ func TestCmdRestartJSON(t *testing.T) {
 
 	_, err := ddevapp.GetActiveApp("")
 	if err != nil {
-		assert.Fail("Could not find an active ddev configuration: %v", err)
+		assert.Fail("Could not find an active DDEV configuration: %v", err)
 	}
 
 	bash := util.FindBashPath()

@@ -14,7 +14,7 @@ import (
 // DebugTestCmdCmd implements the ddev debug test command
 var DebugTestCmdCmd = &cobra.Command{
 	Use:     "test",
-	Short:   "Run diagnostics on ddev using the embedded test_ddev.sh script",
+	Short:   "Run diagnostics on DDEV using the embedded test_ddev.sh script",
 	Example: "ddev debug test",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {

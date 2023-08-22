@@ -32,7 +32,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 		out, err := exec.RunHostCommand(DdevBin, "debug", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
 		assert.NoError(err, "failed to migrate database; out='%s'", out)
 
-		assert.Contains(out, fmt.Sprintf("database was converted to %s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
+		assert.Contains(out, fmt.Sprintf("Database was converted to %s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
 
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -65,7 +65,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	// Try a migration
 	out, err = exec.RunHostCommand(DdevBin, "debug", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MySQL, nodeps.MySQL80))
 	require.NoError(t, err, "failed to migrate database; out='%s'", out)
-	require.Contains(t, out, fmt.Sprintf("database was converted to %s:%s", nodeps.MySQL, nodeps.MySQL80))
+	require.Contains(t, out, fmt.Sprintf("Database was converted to %s:%s", nodeps.MySQL, nodeps.MySQL80))
 
 	// Make sure our inserted data is still there
 	out, _, err = app.Exec(&ddevapp.ExecOpts{

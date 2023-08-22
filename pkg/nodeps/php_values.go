@@ -32,5 +32,5 @@ var ValidPHPVersions = map[string]bool{
 	PHP83: true,
 }
 
-// Composer version default - will get latest composer v2
+// Composer version default - will get latest Composer v2
 var ComposerDefault = "2"
