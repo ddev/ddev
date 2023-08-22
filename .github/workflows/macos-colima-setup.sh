@@ -18,6 +18,8 @@ echo "====== Running brew install ======"
 brew install -q docker docker-compose jq mkcert mysql-client
 echo "====== Running brew upgrade ======"
 brew upgrade colima lima
+# see https://github.com/lima-vm/lima/issues/1742
+brew reinstall -f --force-bottle qemu
 echo "====== Running brew link ======"
 brew link --force mysql-client
 echo "====== Completed brew link ======"
