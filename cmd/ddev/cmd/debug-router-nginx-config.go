@@ -37,10 +37,10 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 
 		if container == nil {
 			util.Failed("Router is not running")
-			return // extraneous - just for lint to know we exited
+			return // extraneous - for lint to know we exited
 		}
 
-		// see containers/ddev-router/testtools/testgen.sh
+		// See containers/ddev-router/testtools/testgen.sh
 		stdout, _, err := dockerutil.Exec(container.ID, "cat /etc/nginx/conf.d/ddev.conf", "")
 
 		if err != nil {

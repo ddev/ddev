@@ -99,7 +99,7 @@ func NewExportDBCmd() *cobra.Command {
 }
 
 func init() {
-	// TODO move to RootCmd
+	// TODO: Move to RootCmd
 	RootCmd.AddCommand(NewExportDBCmd())
 }
 

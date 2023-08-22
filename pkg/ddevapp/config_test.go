@@ -729,7 +729,7 @@ func TestWriteConfig(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	// Now read the config we just wrote; it should have type php because ignored overrides.
+	// Now read the config we wrote; it should have type php because ignored overrides.
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
 	// app.WriteConfig() writes the version.DdevVersion to the updated config.yaml
@@ -864,7 +864,7 @@ func TestPHPOverrides(t *testing.T) {
 	}
 
 	err = app.MutagenSyncFlush()
-	require.NoError(t, err, "failed to flush mutagen sync")
+	require.NoError(t, err, "failed to flush Mutagen sync")
 	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
 
 }
@@ -1115,10 +1115,10 @@ func TestTimezoneConfig(t *testing.T) {
 	runTime()
 }
 
-// TestComposerVersionConfig tests to make sure setting composer version takes effect in the container.
+// TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
 	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on Mac M1 and Colima, just lots of failed network connections")
+		t.Skip("Skipping on Mac M1 and Colima, lots of network connections failed")
 	}
 	assert := asrt.New(t)
 	app := &DdevApp{}
@@ -1154,7 +1154,7 @@ func TestComposerVersionConfig(t *testing.T) {
 		assert.NoError(err)
 
 		// Ignore the non semantic versions for the moment e.g. stable or preview
-		// TODO: figure out a way to test version key words
+		// TODO: Figure out a way to test version key words
 		if isSemver(testVersion) {
 			if strings.Count(testVersion, ".") < 2 {
 				assert.Contains(strings.TrimSpace(stdout), testVersion)
@@ -1194,7 +1194,7 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// Create simple dockerfiles that just touch /var/tmp/added-by-<container>txt
+	// Create simple dockerfiles with touch /var/tmp/added-by-<container>txt
 	for _, item := range []string{"web", "db"} {
 		err = fileutil.TemplateStringToFile("junkfile", nil, app.GetConfigPath(fmt.Sprintf("%s-build/junkfile", item)))
 		assert.NoError(err)

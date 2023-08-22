@@ -38,14 +38,14 @@ func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 			case interface{}:
 				res[yk] = v
 			default:
-				return nil, fmt.Errorf("YamlToDict: type %T not handled (%v)", yk, yk)
+				return nil, fmt.Errorf("yamlToDict: type %T not handled (%v)", yk, yk)
 			}
 			if err != nil {
 				return nil, err
 			}
 		}
 	default:
-		return nil, fmt.Errorf("YamlToDict: type %T not handled (%v)", topm, topm)
+		return nil, fmt.Errorf("yamlToDict: type %T not handled (%v)", topm, topm)
 	}
 	return res, nil
 }

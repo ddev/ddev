@@ -37,7 +37,7 @@ func TestHardenedStart(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	if app.IsMutagenEnabled() {
-		t.Skip("Skipping test because mutagen is enabled")
+		t.Skip("Skipping test because Mutagen is enabled")
 	}
 
 	runTime := util.TimeTrackC(fmt.Sprintf("%s DdevStart", site.Name))

@@ -112,11 +112,11 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	err := os.MkdirAll(filepath.Dir(expectedFile), 0777)
 	assert.NoError(err)
 
-	// create index.php that defines docroot
+	// Create index.php that defines docroot
 	_, err = os.OpenFile(filepath.Join(tmpdir, testDocrootName, "index.php"), os.O_RDONLY|os.O_CREATE, 0666)
 	assert.NoError(err)
 
-	// create the misc/ahah.js that signals drupal6
+	// Create the misc/ahah.js that signals drupal6
 	_, err = os.OpenFile(expectedFile, os.O_RDONLY|os.O_CREATE, 0666)
 	assert.NoError(err)
 
@@ -277,7 +277,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(strconv.Itoa(defaultContainerTimeout), app.DefaultContainerTimeout)
 	assert.Equal(true, app.DisableUploadDirsWarning)
 
-	// Test that container images, working dirs and composer root dir can be unset with default flags
+	// Test that container images, working dirs and Composer root dir can be unset with default flags
 	args = []string{
 		"config",
 		"--composer-root-default",
@@ -409,7 +409,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 
-	// test some invalid project names.
+	// Test some invalid project names.
 	for _, projName := range []string{"with spaces", "with_underscores", "no,commas-will-make-it"} {
 		args := []string{
 			"config",
@@ -521,7 +521,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	assert.NoError(err)
 
 	// Verify behavior with no existing config.yaml. It should
-	// just add database into the config and nothing else
+	// add a database into the config and nothing else
 	for _, dbTypeVersion := range versionsToTest {
 		parts := strings.Split(dbTypeVersion, ":")
 		err = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))

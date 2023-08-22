@@ -22,9 +22,9 @@ import (
 var DescribeCommand = &cobra.Command{
 	Use:     "describe [projectname]",
 	Aliases: []string{"status", "st", "desc"},
-	Short:   "Get a detailed description of a running ddev project.",
-	Long: `Get a detailed description of a running ddev project. Describe provides basic
-information about a ddev project, including its name, location, url, and status.
+	Short:   "Get a detailed description of a running DDEV project.",
+	Long: `Get a detailed description of a running DDEV project. Describe provides basic
+information about a DDEV project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
 additional services like MailHog. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
@@ -72,7 +72,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		urlPortWidth = float64(tWidth) / urlPortWidthFactor
 		infoWidth = tWidth / 4
 	}
-	util.Debug("detected terminal width=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
+	util.Debug("Detected terminal width=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
@@ -91,7 +91,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	}
 	dockerPlatform, err := version.GetDockerPlatform()
 	if err != nil {
-		util.Warning("Unable to determine docker platform: %v", err)
+		util.Warning("Unable to determine Docker platform: %v", err)
 	}
 
 	router := globalconfig.DdevGlobalConfig.Router
@@ -129,11 +129,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				} else if httpURL, ok = v["http_url"]; ok {
 					urlPortParts = append(urlPortParts, httpURL)
 				}
-			// Gitpod, web container only, using port proxied by gitpod
+			// Gitpod, web container only, using port proxied by Gitpod
 			case (nodeps.IsGitpod() || nodeps.IsCodespaces()) && k == "web":
 				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 
-			// Router disabled, but not because of gitpod, use direct http url
+			// Router disabled, but not because of Gitpod, use direct http url
 			case ddevapp.IsRouterDisabled(app):
 				httpURL = v["host_http_url"]
 				if httpURL != "" {

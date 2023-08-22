@@ -13,14 +13,14 @@ import (
 	"path/filepath"
 )
 
-// sshKeyPath is the full path to the *directory* containing ssh keys.
+// sshKeyPath is the full path to the *directory* containing SSH keys.
 var sshKeyPath string
 
 // AuthSSHCommand implements the "ddev auth ssh" command
 var AuthSSHCommand = &cobra.Command{
 	Use:     "ssh",
-	Short:   "Add ssh key authentication to the ddev-ssh-auth container",
-	Long:    `Use this command to provide the password to your ssh key to the ddev-ssh-agent container, where it can be used by other containers. Normal usage is just "ddev auth ssh", or if your key is not in ~/.ssh, ddev auth ssh --ssh-key-path=/some/path/.ssh"`,
+	Short:   "Add SSH key authentication to the ddev-ssh-auth container",
+	Long:    `Use this command to provide the password to your SSH key to the ddev-ssh-agent container, where it can be used by other containers. Normal usage is "ddev auth ssh", or if your key is not in ~/.ssh, ddev auth ssh --ssh-key-path=/some/path/.ssh"`,
 	Example: `ddev auth ssh`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
@@ -40,18 +40,18 @@ var AuthSSHCommand = &cobra.Command{
 		if !filepath.IsAbs(sshKeyPath) {
 			sshKeyPath, err = filepath.Abs(sshKeyPath)
 			if err != nil {
-				util.Failed("Failed to derive absolute path for ssh key path %s: %v", sshKeyPath, err)
+				util.Failed("Failed to derive absolute path for SSH key path %s: %v", sshKeyPath, err)
 			}
 		}
 		fi, err := os.Stat(sshKeyPath)
 		if os.IsNotExist(err) {
-			util.Failed("The ssh key directory %s was not found", sshKeyPath)
+			util.Failed("The SSH key directory %s was not found", sshKeyPath)
 		}
 		if err != nil {
-			util.Failed("Failed to check status of ssh key directory %s: %v", sshKeyPath, err)
+			util.Failed("Failed to check status of SSH key directory %s: %v", sshKeyPath, err)
 		}
 		if !fi.IsDir() {
-			util.Failed("The ssh key directory (%s) must be a directory", sshKeyPath)
+			util.Failed("The SSH key directory (%s) must be a directory", sshKeyPath)
 		}
 
 		app, err := ddevapp.GetActiveApp("")
@@ -81,7 +81,7 @@ var AuthSSHCommand = &cobra.Command{
 }
 
 func init() {
-	AuthSSHCommand.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "d", "", "full path to ssh key directory")
+	AuthSSHCommand.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "d", "", "full path to SSH key directory")
 
 	AuthCmd.AddCommand(AuthSSHCommand)
 }

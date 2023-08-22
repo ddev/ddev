@@ -11,7 +11,7 @@ import (
 // DebugRefreshCmd implements the ddev debug refresh command
 var DebugRefreshCmd = &cobra.Command{
 	Use:   "refresh",
-	Short: "Refreshes docker cache for project",
+	Short: "Refreshes Docker cache for project",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 
@@ -51,7 +51,7 @@ var DebugRefreshCmd = &cobra.Command{
 			util.Failed("Failed to restart project: %v", err)
 		}
 
-		util.Success("Refreshed docker cache for project %s", app.Name)
+		util.Success("Refreshed Docker cache for project %s", app.Name)
 	},
 }
 

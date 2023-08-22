@@ -29,7 +29,7 @@ var ComposerCreateCmd = &cobra.Command{
 	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
-the composer root directory after install. Any existing files in the
+the Composer root directory after install. Any existing files in the
 composer root will be deleted when creating a project.`,
 	Example: `ddev composer create drupal/recommended-project
 ddev composer create -y drupal/recommended-project
@@ -40,7 +40,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// We only want to pass all flags and args to composer
+		// We only want to pass all flags and args to Composer
 		// cobra does not seem to allow direct access to everything predictably
 		osargs := []string{}
 		if len(os.Args) > 3 {
@@ -65,7 +65,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		composerRoot := app.GetComposerRoot(false, false)
 
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: MOST EXISTING CONTENT in the composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
+		util.Warning("Warning: MOST EXISTING CONTENT in the Composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
 		if !composerCreateYesFlag {
 			if !util.Confirm("Would you like to continue?") {
 				util.Failed("create-project cancelled")
@@ -74,11 +74,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		err = os.MkdirAll(composerRoot, 0755)
 		if err != nil {
-			util.Failed("failed to create composerRoot: %v", err)
+			util.Failed("Failed to create composerRoot: %v", err)
 		}
 
-		// Remove most contents of composer root
-		util.Warning("Removing any existing files in composer root")
+		// Remove most contents of Composer root
+		util.Warning("Removing any existing files in Composer root")
 		objs, err := fileutil.ListFilesInDir(composerRoot)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
@@ -95,10 +95,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
-		// Upload dirs have to be there for bind-mounts to work when mutagen enabled
+		// Upload dirs have to be there for bind-mounts to work when Mutagen enabled
 		app.CreateUploadDirsIfNecessary()
-		// We may have just removed host-side directories, invalidating
-		// the docker bind-mounts are using, so restart to pick up the new ones.
+		// We may have removed host-side directories, invalidating
+		// that Docker bind-mounts are using, so restart to pick up the new ones.
 		if app.IsMutagenEnabled() {
 			err = app.Restart()
 			if err != nil {
@@ -108,7 +108,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		err = app.MutagenSyncFlush()
 		if err != nil {
-			util.Failed("Failed to sync mutagen contents: %v", err)
+			util.Failed("Failed to sync Mutagen contents: %v", err)
 		}
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
@@ -122,7 +122,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			osargs = append(osargs, "--no-install")
 		}
 
-		// Build container composer command
+		// Build container Composer command
 		composerCmd := []string{
 			"composer",
 			"create-project",
@@ -130,7 +130,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		composerCmd = append(composerCmd, osargs...)
 		composerCmd = append(composerCmd, containerInstallPath)
 
-		output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+		output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			RawCmd:  composerCmd,
@@ -145,7 +145,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			fmt.Println(strings.TrimSpace(stdout))
 		}
 
-		output.UserOut.Printf("Moving install to composer root")
+		output.UserOut.Printf("Moving install to Composer root")
 
 		rsyncArgs := "-rltgopD" // Same as -a
 		if runtime.GOOS == "windows" {
@@ -205,7 +205,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 
 			// Run command
-			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				RawCmd:  composerCmd,
@@ -222,7 +222,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Do a spare restart, which will create any needed settings files
-		// and also restart mutagen
+		// and also restart Mutagen
 		err = app.Restart()
 		if err != nil {
 			util.Warning("Failed to restart project after composer create: %v", err)
@@ -234,7 +234,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 	},
 }
 
-// ComposerCreateProjectCmd just sends people to the right thing
+// ComposerCreateProjectCmd sends people to the right thing
 // when they try ddev composer create-project
 var ComposerCreateProjectCmd = &cobra.Command{
 	Use:                "create-project",

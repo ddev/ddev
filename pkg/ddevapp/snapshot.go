@@ -111,8 +111,8 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	return snapshots, nil
 }
 
-// RestoreSnapshot restores a mariadb snapshot of the db to be loaded
-// The project must be stopped and docker volume removed and recreated for this to work.
+// RestoreSnapshot restores a MariaDB snapshot of the db to be loaded
+// The project must be stopped and Docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	var err error
 	err = app.ProcessHooks("pre-restore-snapshot")
@@ -139,7 +139,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// If the snapshot is a directory, (old obsolete style) then
 	// look for db_mariadb_version.txt in the directory to get the version.
 	if fileutil.IsDirectory(hostSnapshotFileOrDir) {
-		// Find out the mariadb version that correlates to the snapshot.
+		// Find out the MariaDB version that correlates to the snapshot.
 		versionFile := filepath.Join(hostSnapshotFileOrDir, "db_mariadb_version.txt")
 		if fileutil.FileExists(versionFile) {
 			snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
@@ -166,7 +166,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
 	status, _ := app.SiteStatus()
@@ -190,7 +190,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := util.GetContainerUIDGid()
-		// for postgres, must be written with postgres user
+		// For PostgreSQL, must be written with PostgreSQL user
 		if app.Database.Type == nodeps.Postgres {
 			uid = "999"
 		}
@@ -213,7 +213,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
 		targetConfName := path.Join(confdDir, "recovery.conf")
 		v, _ := strconv.Atoi(app.Database.Version)
-		// Before postgres v12 the recovery info went into its own file
+		// Before PostgreSQL v12 the recovery info went into its own file
 		if v < 12 {
 			targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
 		}
@@ -263,7 +263,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
 	snapshotsDir := app.GetConfigPath("db_snapshots")
 	snapshotFullPath := filepath.Join(snapshotsDir, name)
-	// If old-style directory-based snapshot, then just use the name, no massaging required
+	// If old-style directory-based snapshot, then use the name, no massaging required
 	if fileutil.IsDirectory(snapshotFullPath) {
 		return name, nil
 	}

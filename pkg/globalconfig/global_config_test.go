@@ -133,7 +133,7 @@ type internetActiveNetResolverStub struct {
 	err       error
 }
 
-// LookupHost is a custom version of net.LookupHost that just wastes some time and then returns
+// LookupHost is a custom version of net.LookupHost that wastes some time and then returns
 func (t internetActiveNetResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
 	select {
 	case <-time.After(t.sleepTime):

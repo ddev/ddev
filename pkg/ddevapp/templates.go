@@ -2,7 +2,7 @@ package ddevapp
 
 // ConfigInstructions is used to add example hooks usage
 const ConfigInstructions = `
-# Key features of ddev's config.yaml:
+# Key features of DDEV's config.yaml:
 
 # name: <projectname> # Name of the project, automatically provides
 #   http://projectname.ddev.site and https://projectname.ddev.site
@@ -14,7 +14,7 @@ const ConfigInstructions = `
 # php_version: "8.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2"
 
 # You can explicitly specify the webimage but this
-# is not recommended, as the images are often closely tied to ddev's' behavior,
+# is not recommended, as the images are often closely tied to DDEV's' behavior,
 # so this can break upgrades.
 
 # webimage: <docker_image>  # nginx/php docker image.
@@ -22,23 +22,23 @@ const ConfigInstructions = `
 # database:
 #   type: <dbtype> # mysql, mariadb, postgres
 #   version: <version> # database version, like "10.4" or "8.0"
-#   mariadb versions can be 5.5-10.8 and 10.11, mysql versions can be 5.5-8.0
-#   postgres versions can be 9-15.
+#   MariaDB versions can be 5.5-10.8 and 10.11, MySQL versions can be 5.5-8.0
+#   PostgreSQL versions can be 9-15.
 
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
 
-# xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
+# xdebug_enabled: false  # Set to true to enable Xdebug and "ddev start" or "ddev restart"
 # Note that for most people the commands
-# "ddev xdebug" to enable xdebug and "ddev xdebug off" to disable it work better,
-# as leaving xdebug enabled all the time is a big performance hit.
+# "ddev xdebug" to enable Xdebug and "ddev xdebug off" to disable it work better,
+# as leaving Xdebug enabled all the time is a big performance hit.
 
-# xhprof_enabled: false  # Set to true to enable xhprof and "ddev start" or "ddev restart"
+# xhprof_enabled: false  # Set to true to enable Xhprof and "ddev start" or "ddev restart"
 # Note that for most people the commands
-# "ddev xhprof" to enable xhprof and "ddev xhprof off" to disable it work better,
-# as leaving xhprof enabled all the time is a big performance hit.
+# "ddev xhprof" to enable Xhprof and "ddev xhprof off" to disable it work better,
+# as leaving Xhprof enabled all the time is a big performance hit.
 
-# webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn 
+# webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn
 
 # timezone: Europe/Berlin
 # This is the timezone used in the containers and by PHP;
@@ -47,7 +47,7 @@ const ConfigInstructions = `
 # For example Europe/Dublin or MST7MDT
 
 # composer_root: <relative_path>
-# Relative path to the composer root directory from the project root. This is
+# Relative path to the Composer root directory from the project root. This is
 # the directory which contains the composer.json and where all Composer related
 # commands are executed.
 
@@ -80,14 +80,14 @@ const ConfigInstructions = `
 # Please take care with this because it can cause great confusion.
 
 # upload_dirs: "custom/upload/dir"
-#    
+#
 # upload_dirs:
 #   - custom/upload/dir
 #   - ../private
 #
 # would set the destination paths for ddev import-files to <docroot>/custom/upload/dir
-# When mutagen is enabled this path is bind-mounted so that all the files
-# in the upload_dirs don't have to be synced into mutagen.
+# When Mutagen is enabled this path is bind-mounted so that all the files
+# in the upload_dirs don't have to be synced into Mutagen.
 
 # disable_upload_dirs_warning: false
 # If true, turns off the normal warning that says
@@ -103,7 +103,7 @@ const ConfigInstructions = `
 # omit_containers: [db, ddev-ssh-agent]
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
-# the "db" container, several standard features of ddev that access the
+# the "db" container, several standard features of DDEV that access the
 # database container will be unusable. In the global configuration it is also
 # possible to omit ddev-router, but not here.
 
@@ -170,7 +170,7 @@ const ConfigInstructions = `
 # https://ngrok.com/docs/ngrok-agent/config or run "ngrok http -h"
 
 # disable_settings_management: false
-# If true, ddev will not create CMS-specific settings files like
+# If true, DDEV will not create CMS-specific settings files like
 # Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalConfiguration.php
 # In this case the user must provide all such settings.
 
@@ -180,19 +180,19 @@ const ConfigInstructions = `
 # - SOMEOTHERENV=someothervalue
 
 # no_project_mount: false
-# (Experimental) If true, ddev will not mount the project into the web container;
+# (Experimental) If true, DDEV will not mount the project into the web container;
 # the user is responsible for mounting it manually or via a script.
 # This is to enable experimentation with alternate file mounting strategies.
 # For advanced users only!
 
 # bind_all_interfaces: false
 # If true, host ports will be bound on all network interfaces,
-# not just the localhost interface. This means that ports
+# not the localhost interface only. This means that ports
 # will be available on the local network if the host firewall
 # allows it.
 
 # default_container_timeout: 120
-# The default time that ddev waits for all containers to become ready can be increased from
+# The default time that DDEV waits for all containers to become ready can be increased from
 # the default 120. This helps in importing huge databases, for example.
 
 #web_extra_exposed_ports:
@@ -242,8 +242,8 @@ const ConfigInstructions = `
 # can have their intended affect. 'override_config' affects only behavior of the
 # config.*.yaml file it exists in.
 
-# Many ddev commands can be extended to run tasks before or after the
-# ddev command is executed, for example "post-start", "post-import-db",
+# Many DDEV commands can be extended to run tasks before or after the
+# DDEV command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"
 # See https://ddev.readthedocs.io/en/stable/users/extend/custom-commands/ for more
 # information on the commands that can be extended and the tasks you can define

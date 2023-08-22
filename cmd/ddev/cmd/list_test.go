@@ -180,12 +180,12 @@ func TestCmdListContinuous(t *testing.T) {
 	require.True(t, byteCount > 300, "byteCount should have been >300 and was %v blob=%s", byteCount, string(blob))
 
 	f, err := unmarshalJSONLogs(string(blob))
-	require.NoError(t, err, "Could not unmarshall blob, err=%v, content=%s", err, blob)
+	require.NoError(t, err, "Could not unmarshal blob, err=%v, content=%s", err, blob)
 
 	assert.NotEmpty(f[0]["raw"])
 	time1 := f[0]["time"]
 	if len(f) > 1 {
-		t.Logf("Expected just one line in initial read, but got %d lines instead", len(f))
+		t.Logf("Expected one line in initial read, but got %d lines instead", len(f))
 	}
 
 	time.Sleep(time.Millisecond * 1500)
@@ -197,9 +197,9 @@ func TestCmdListContinuous(t *testing.T) {
 	blob = blob[:byteCount-1]
 	require.True(t, byteCount > 300, "byteCount should have been >300 and was %v blob=%s", byteCount, string(blob))
 	f, err = unmarshalJSONLogs(string(blob))
-	require.NoError(t, err, "Could not unmarshall blob, err=%v, content=%s", err, blob)
+	require.NoError(t, err, "Could not unmarshal blob, err=%v, content=%s", err, blob)
 	if len(f) > 1 {
-		t.Logf("Expected just one line in second read, but got %d lines instead", len(f))
+		t.Logf("Expected one line in second read, but got %d lines instead", len(f))
 	}
 	assert.NotEmpty(f[0]["raw"]) // Just to make sure it's a list object
 	time2 := f[0]["time"]

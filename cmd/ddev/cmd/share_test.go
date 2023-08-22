@@ -80,7 +80,7 @@ func TestShareCmd(t *testing.T) {
 				case *json.SyntaxError:
 					continue
 				default:
-					t.Errorf("failed unmarshalling %v: %v", logLine, err)
+					t.Errorf("failed unmarshaling %v: %v", logLine, err)
 					break
 				}
 			}

@@ -88,7 +88,7 @@ func TestWriteSettings(t *testing.T) {
 	println("") // Just lets Goland find the PASS when done.
 }
 
-// TestWriteDrushConfig test the drush config we write
+// TestWriteDrushConfig test the Drush config we write
 func TestWriteDrushConfig(t *testing.T) {
 	assert := asrt.New(t)
 	app := &DdevApp{}
@@ -276,7 +276,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
 
-		// Ensure that a .gitignore exists (except for backdrop, which has settings in project root)
+		// Ensure that a .gitignore exists (except for Backdrop, which has settings in project root)
 		if app.Type != nodeps.AppTypeBackdrop {
 			assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
 

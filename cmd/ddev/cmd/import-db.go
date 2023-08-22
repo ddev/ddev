@@ -18,13 +18,13 @@ func NewImportDBCmd() *cobra.Command {
 		Short: "Import a SQL dump file into the project",
 		Long: heredoc.Doc(`
 			Import a SQL dump file into the project.
-			
+
 			The database dump file can be provided as a SQL dump in a .sql, .sql.gz,
 			sql.bz2, sql.xz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz format.
-			
+
 			For the zip and tar formats, the path to a .sql file within the archive
 			can be provided if it is not located at the top level of the archive.
-			
+
 			An optional target database can also be provided; the default is the
 			default database named "db".
 
@@ -125,7 +125,7 @@ func NewImportDBCmd() *cobra.Command {
 }
 
 func init() {
-	// TODO move to RootCmd
+	// TODO: Move to RootCmd
 	RootCmd.AddCommand(NewImportDBCmd())
 }
 

@@ -1,6 +1,6 @@
 package versionconstants
 
-// DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
+// DdevVersion is the current version of DDEV, by default the Git committish (should be current Git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
 // SegmentKey is the ddev-specific key for Segment service
@@ -38,7 +38,7 @@ var BusyboxImage = "busybox:stable"
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
-// MutagenVersion is filled with the version we find for mutagen in use
+// MutagenVersion is filled with the version we find for Mutagen in use
 var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.17.2"

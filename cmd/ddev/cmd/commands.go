@@ -56,7 +56,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		for _, serviceDirOnHost := range commandDirs {
 			service := filepath.Base(serviceDirOnHost)
 
-			// If the item isn't actually a directory, just skip it.
+			// If the item isn't a directory, skip it.
 			if !fileutil.IsDirectory(serviceDirOnHost) {
 				continue
 			}
@@ -90,7 +90,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				// Any command we find will want to be executable on Linux
 				_ = os.Chmod(onHostFullPath, 0755)
 				if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
-					util.Warning("command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
+					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 					continue
 				}
 
@@ -128,7 +128,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					projectTypes = val
 				}
 
-				// Default is to exec with bash interpretation (not raw)
+				// Default is to exec with Bash interpretation (not raw)
 				execRaw := false
 				if val, ok := directives["ExecRaw"]; ok {
 					if val == "true" {
@@ -283,7 +283,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 		// Load environment variables that may be useful for script.
 		app.DockerEnv()
 		if runtime.GOOS == "windows" {
-			// Sadly, not sure how to have a bash interpreter without this.
+			// Sadly, not sure how to have a Bash interpreter without this.
 			args := []string{fullPath}
 			args = append(args, osArgs...)
 			err = exec.RunInteractiveCommand(windowsBashPath, args)

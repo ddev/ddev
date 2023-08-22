@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestNetworkAmbiguity tests the behavior and setup of docker networking.
+// TestNetworkAmbiguity tests the behavior and setup of Docker networking.
 // There should be no crosstalk between different projects
 func TestNetworkAmbiguity(t *testing.T) {
 	assert := asrt.New(t)
@@ -64,8 +64,8 @@ func TestNetworkAmbiguity(t *testing.T) {
 	}
 
 	// With the improved two-network handling, the simple service names
-	// are no longer ambiguious. We'll see just one entry for web and one for db
-	// very ambiguous, but just one on web, because it has 'links'
+	// are no longer ambiguous. We'll see one entry for web and one for db
+	// very ambiguous, but one on web, because it has 'links'
 	expectations := map[string]int{"web": 1, "db": 1}
 	for projName := range projects {
 		app, err := ddevapp.GetActiveApp(projName)

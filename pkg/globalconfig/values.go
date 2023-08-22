@@ -6,7 +6,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 )
 
-// Container types used with ddev (duplicated from ddevapp, avoiding cross-package cycles)
+// Container types used with DDEV (duplicated from ddevapp, avoiding cross-package cycles)
 const (
 	DdevSSHAgentContainer      = "ddev-ssh-agent"
 	DdevRouterContainer        = "ddev-router"

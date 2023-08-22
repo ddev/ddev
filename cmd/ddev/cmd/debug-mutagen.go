@@ -12,12 +12,12 @@ import (
 // DebugMutagenCmd implements the ddev debug mutagen command
 var DebugMutagenCmd = &cobra.Command{
 	Use:   "mutagen",
-	Short: "Allows access to any mutagen command",
+	Short: "Allows access to any Mutagen command",
 	FParseErrWhitelist: cobra.FParseErrWhitelist{
 		UnknownFlags: true,
 	},
 
-	Long: "This simply passes through any mutagen command to the embedded mutagen itself. See Mutagen docs at https://mutagen.io/documentation/introduction",
+	Long: "This passes through any Mutagen command to the embedded Mutagen itself. See Mutagen docs at https://mutagen.io/documentation/introduction",
 	Example: `ddev debug mutagen sync list
 ddev debug mutagen daemon stop
 ddev debug mutagen
@@ -27,7 +27,7 @@ ddev d mutagen sync list
 		mutagenPath := globalconfig.GetMutagenPath()
 		_, err := os.Stat(mutagenPath)
 		if err != nil {
-			util.Warning("mutagen does not seem to be set up in %s, not executing command", mutagenPath)
+			util.Warning("Mutagen does not seem to be set up in %s, not executing command", mutagenPath)
 			return
 		}
 		out, err := exec.RunHostCommand(mutagenPath, os.Args[3:]...)

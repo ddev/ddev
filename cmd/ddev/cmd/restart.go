@@ -64,6 +64,6 @@ ddev restart --all`,
 
 func init() {
 	RestartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
-	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "restart all projects")
+	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "Restart all projects")
 	RootCmd.AddCommand(RestartCmd)
 }

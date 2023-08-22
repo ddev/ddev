@@ -30,8 +30,8 @@ const pantheonPullGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f0173
 const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142@codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142.drush.in:2222/~/repository.git"
 
 // Note that these tests won't run with GitHub actions on a forked PR.
-// Thie is a security feature, but means that PRs intended to test this
-// must be done in the ddev repo.
+// This is a security feature, but means that PRs intended to test this
+// must be done in the DDEV repo.
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
@@ -101,7 +101,7 @@ func TestPantheonPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Make sure we have drush
+	// Make sure we have Drush
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
@@ -146,7 +146,7 @@ func TestPantheonPush(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a D9 codebase for drush to work right
+	// Use a D9 codebase for Drush to work right
 	d9code := FullTestSites[8]
 	d9code.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
@@ -209,13 +209,13 @@ func TestPantheonPush(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Since allow-plugins isn't there and you can't even set it with composer...
+	// Since allow-plugins isn't there and you can't even set it with Composer...
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
 
-	// Make sure we have drush
+	// Make sure we have Drush
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
@@ -265,7 +265,7 @@ func TestPantheonPush(t *testing.T) {
 
 // setupSSHKey takes a privatekey string and turns it into a file and then does `ddev auth ssh`
 func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error {
-	// Provide an ssh key for `ddev auth ssh`
+	// Provide an SSH key for `ddev auth ssh`
 	err := os.Mkdir("sshtest", 0755)
 	require.NoError(t, err)
 	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)

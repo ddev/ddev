@@ -105,12 +105,12 @@ func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
 }
 
-// GetDDEVBinDir returns the directory of the mutagen config and binary
+// GetDDEVBinDir returns the directory of the Mutagen config and binary
 func GetDDEVBinDir() string {
 	return filepath.Join(GetGlobalDdevDir(), "bin")
 }
 
-// GetMutagenPath gets the full path to the mutagen binary
+// GetMutagenPath gets the full path to the Mutagen binary
 func GetMutagenPath() string {
 	mutagenBinary := "mutagen"
 	if runtime.GOOS == "windows" {
@@ -161,7 +161,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
-		return fmt.Errorf("Invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
+		return fmt.Errorf("invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
@@ -177,7 +177,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if DdevGlobalConfig.IsTraefikRouter() && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
-		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
+		return fmt.Errorf("use-letsencrypt is not directly supported with Traefik. But it can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
 	}
 
 	return nil
@@ -193,7 +193,7 @@ func ReadGlobalConfig() error {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
 		// Then create global config.
 		if os.Geteuid() == 0 {
-			logrus.Warning("not reading global config file because running with root privileges")
+			logrus.Warning("Not reading global config file because running with root privileges")
 			return nil
 		}
 		if os.IsNotExist(err) {
@@ -209,7 +209,7 @@ func ReadGlobalConfig() error {
 
 	source, err := os.ReadFile(globalConfigFile)
 	if err != nil {
-		return fmt.Errorf("unable to read ddev global config file %s: %v", source, err)
+		return fmt.Errorf("unable to read DDEV global config file %s: %v", source, err)
 	}
 
 	// ReadConfig config values from file.
@@ -223,7 +223,7 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 
-	// If they set the internetdetectiontimeout below default, just reset to default
+	// If they set the internetdetectiontimeout below default, reset to default
 	// and ignore the setting.
 	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
@@ -283,7 +283,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # ddev-ssh-agent and ddev-router containers with
 # omit_containers["ddev-ssh-agent", "ddev-router"]
 
-# You can opt in or out of sending instrumentation to the ddev developers with
+# You can opt in or out of sending instrumentation to the DDEV developers with
 # instrumentation_opt_in: true # or false
 #
 # Maximum number of collected events in the local queue. If reached, collected
@@ -308,7 +308,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # and https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs.
 
 # You can set the global project_tld. This way any project will use this tld. If not
-# set the local project_tld is used, or the default of ddev.
+# set the local project_tld is used, or the default of DDEV.
 # project_tld: ""
 #
 # You can inject environment variables into the web container with:
@@ -325,9 +325,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # simpler_formatting: false
 
 # In unusual cases the default value to wait to detect internet availability is too short.
-# You can adjust this value higher to make it less likely that ddev will declare internet
-# unavailable, but ddev may wait longer on some commands. This should not be set below the default 3000
-# ddev will ignore low values, as they're not useful
+# You can adjust this value higher to make it less likely that DDEV will declare internet
+# unavailable, but DDEV may wait longer on some commands. This should not be set below the default 3000
+# DDEV will ignore low values, as they're not useful
 # internet_detection_timeout_ms: 3000
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
@@ -342,11 +342,11 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # disable_http2: false
 # Disable http2 on ddev-router if true
 
-# instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
+# instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
 #    If true, ddev-router will bind http/s and MailHog ports on all
-#    network interfaces instead of just localhost, so others on your local network can
+#    network interfaces instead of localhost, so others on your local network can
 #    access those ports. Note that this exposes the MailHog ports as well, which
 #    can be a major security issue, so choose wisely.
 
@@ -358,7 +358,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
 #
-# xdebug_ide_location: 
+# xdebug_ide_location:
 # In some cases, especially WSL2, the IDE may be set up different ways
 # For example, if in WSL2 PhpStorm is running the Linux version inside WSL2
 # or if using JetBrains Gateway
@@ -370,7 +370,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # This integration is entirely experimental; your mileage may vary.
 # * Your host must be directly internet-connected.
 # * DNS for the hostname must be set to point to the host in question
-# * You must have router_bind_all_interfaces: true or else the Let's Encrypt certbot
+# * You must have router_bind_all_interfaces: true or else the Let's Encrypt Certbot
 #   process will not be able to process the IP address of the host (and nobody will be able to access your site)
 # * You will need to add a startup script to start your sites after a host reboot.
 # * If using several sites at a single top-level domain, you'll probably want to set
@@ -379,14 +379,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # use_letsencrypt: false
 # (Experimental, only useful on an internet-based server)
-# Set to true if certificates are to be obtained via certbot on https://letsencrypt.org/
+# Set to true if certificates are to be obtained via Certbot on https://letsencrypt.org/
 
 # letsencrypt_email: <email>
 # Email to be used for experimental letsencrypt certificates
 
 # auto_restart_containers: false
 # Experimental
-# If true, attempt to automatically restart projects/containers after reboot or docker restart.
+# If true, attempt to automatically restart projects/containers after reboot or Docker restart.
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
@@ -406,7 +406,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # It should normally be left alone, but can be set to, for example, "v2.1.1"
 
 # use_docker_compose_from_path: false
-# This can be set to true to allow ddev to use whatever docker-compose is
+# This can be set to true to allow DDEV to use whatever docker-compose is
 # found in the $PATH instead of using the private docker-compose downloaded
 # to ~/.ddev/bin/docker-compose.
 # Please don't use this unless directed to do so
@@ -438,7 +438,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 func GetGlobalDdevDir() string {
 	userHome, err := os.UserHomeDir()
 	if err != nil {
-		logrus.Fatal("could not get home directory for current user. is it set?")
+		logrus.Fatal("Could not get home directory for current user. Is it set?")
 	}
 	ddevDir := filepath.Join(userHome, ".ddev")
 
@@ -513,8 +513,8 @@ func GetFreePort(localIPAddr string) (string, error) {
 	// Limit tries arbitrarily. It will normally succeed on first try.
 	for i := 1; i < 1000; i++ {
 		// From https://github.com/phayes/freeport/blob/master/freeport.go#L8
-		// Ignores that the actual listener may be on a docker toolbox interface,
-		// so this is just a heuristic.
+		// Ignores that the actual listener may be on a Docker toolbox interface,
+		// so this is a heuristic.
 		addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
 		if err != nil {
 			return "", err
@@ -540,7 +540,7 @@ func GetFreePort(localIPAddr string) (string, error) {
 		}
 		return port, nil
 	}
-	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
+	return "-1", fmt.Errorf("getFreePort() failed to find a free port")
 
 }
 
@@ -603,7 +603,7 @@ func GetGlobalProjectList() map[string]*ProjectInfo {
 	return DdevGlobalConfig.ProjectList
 }
 
-// GetCAROOT is just a wrapper on global config
+// GetCAROOT is a wrapper on global config
 func GetCAROOT() string {
 	return DdevGlobalConfig.MkcertCARoot
 }
@@ -653,7 +653,7 @@ func fileExists(name string) bool {
 	return true
 }
 
-// IsInternetActiveAlreadyChecked just flags whether it's been checked
+// IsInternetActiveAlreadyChecked flags whether it's been checked
 var IsInternetActiveAlreadyChecked = false
 
 // IsInternetActiveResult is the result of the check
@@ -667,7 +667,7 @@ var IsInternetActiveNetResolver interface {
 } = net.DefaultResolver
 
 // IsInternetActive checks to see if we have a viable
-// internet connection. It just tries a quick DNS query.
+// internet connection. It tries a quick DNS query.
 // This requires that the named record be query-able.
 // This check will only be made once per command run.
 func IsInternetActive() bool {
@@ -694,14 +694,14 @@ func IsInternetActive() bool {
 		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)
 	}
 
-	// remember the result to not call this twice
+	// Remember the result to not call this twice
 	IsInternetActiveAlreadyChecked = true
 	IsInternetActiveResult = active
 
 	return active
 }
 
-// IsTraefikRouter returns true if the router is traefik
+// IsTraefikRouter returns true if the router is Traefik
 func (c *GlobalConfig) IsTraefikRouter() bool {
 	return c.Router == types.RouterTypeTraefik
 }
@@ -725,7 +725,7 @@ func GetRequiredDockerComposeVersion() string {
 	return v
 }
 
-// Return the traefik router URL
+// Return the Traefik router URL
 func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value

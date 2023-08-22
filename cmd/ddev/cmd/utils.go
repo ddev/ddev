@@ -40,7 +40,7 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 	requestedProjectsMap := map[string]*ddevapp.DdevApp{}
 	for _, name := range names {
 		var exists bool
-		// If the requested project name is found in the docker map, OK
+		// If the requested project name is found in the Docker map, OK
 		// If not, if we find it in the global project list, (if it has approot)
 		// Otherwise, error.
 		if requestedProjectsMap[name], exists = allProjectMap[name]; !exists {

@@ -73,23 +73,23 @@ func TestUnitCmdFlagsLoadFromJSON(t *testing.T) {
 
 	// Duplicate flag
 	assert.EqualError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":"Usage of test 1"},{"Name":"test-1","Usage":"Test duplicate"}]`),
-		"The following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - flag 'test-1' already defined")
+		"the following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - flag 'test-1' already defined")
 
 	// Duplicate shorthand
 	assert.EqualError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":"Usage of test 1"},{"Name":"test-2","Shorthand":"t","Usage":"Usage of test 2 with existing shorthand"}]`),
-		"The following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-2':\n   - shorthand 't' is already defined for flag 'test-1'")
+		"the following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-2':\n   - shorthand 't' is already defined for flag 'test-1'")
 
 	// Invalid shorthand
 	assert.EqualError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t1","Usage":"Usage of test 1"}]`),
-		"The following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - shorthand 't1' is more than one ASCII character")
+		"the following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - shorthand 't1' is more than one ASCII character")
 
 	// Empty usage in multiple commands
 	assert.EqualError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":""},{"Name":"test-2"}]`),
-		"The following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - no usage defined\n * for flag 'test-2':\n   - no usage defined")
+		"the following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - no usage defined\n * for flag 'test-2':\n   - no usage defined")
 
 	// Invalid and not implemented type
 	assert.EqualError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":"Usage of test 1","Type":"_invalid_"},{"Name":"test-2","Usage":"Usage of test 2","Type":"_test1_"}]`),
-		"The following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - type '_invalid_' is not known\n * for flag 'test-2':\n   - type '_test1_' is not implemented")
+		"the following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - type '_invalid_' is not known\n * for flag 'test-2':\n   - type '_test1_' is not implemented")
 	assert.PanicsWithValue("Error implementation of DefValue validation missing for type '_test2_'", func() {
 		assert.NoError(subject.LoadFromJSON(`[{"Name":"test-1","Usage":"Usage of test 1","Type":"_test2_"}]`))
 	})
@@ -192,5 +192,5 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	c = getCommand()
 	assert.NoError(subject.LoadFromJSON(`[{"Name":"test-1","Usage":"Usage of test 1","Type":"bool","DefValue":"no-bool-value"},{"Name":"test-2","Usage":"Usage of test 2","Type":"int","DefValue":"no-int-value"}]`))
 	assert.EqualError(subject.AssignToCommand(&c),
-		"The following problems were found while assigning the flags to the command 'command' in 'script':\n - error 'strconv.ParseBool: parsing \"no-bool-value\": invalid syntax' while set value of flag 'test-1'\n - error 'strconv.ParseInt: parsing \"no-int-value\": invalid syntax' while set value of flag 'test-2'")
+		"the following problems were found while assigning the flags to the command 'command' in 'script':\n - error 'strconv.ParseBool: parsing \"no-bool-value\": invalid syntax' while set value of flag 'test-1'\n - error 'strconv.ParseInt: parsing \"no-int-value\": invalid syntax' while set value of flag 'test-2'")
 }

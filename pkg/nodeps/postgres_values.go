@@ -1,9 +1,9 @@
 package nodeps
 
-// PostgresDefaultVersion is the default Postgres version
+// PostgresDefaultVersion is the default PostgreSQL version
 const PostgresDefaultVersion = Postgres14
 
-// ValidPostgresVersions is the versions of Postgres that are valid
+// ValidPostgresVersions is the versions of PostgreSQL that are valid
 var ValidPostgresVersions = map[string]bool{
 	Postgres15: true,
 	Postgres14: true,
@@ -14,7 +14,7 @@ var ValidPostgresVersions = map[string]bool{
 	Postgres9:  true,
 }
 
-// Postgres Versions
+// PostgreSQL Versions
 const (
 	Postgres15 = "15"
 	Postgres14 = "14"
@@ -25,5 +25,5 @@ const (
 	Postgres9  = "9"
 )
 
-// PostgresConfigDir is in-container location of postgres config
+// PostgresConfigDir is in-container location of PostgreSQL config
 const PostgresConfigDir = "/etc/postgresql"

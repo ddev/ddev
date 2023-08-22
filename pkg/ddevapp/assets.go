@@ -38,7 +38,7 @@ var bundledAssets embed.FS
 func PopulateExamplesCommandsHomeadditions(appName string) error {
 	app, err := GetActiveApp(appName)
 	// If we have an error from GetActiveApp, it means we're not in a project directory
-	// That's not an error, just means we can't do this work, so return nil.
+	// That is not an error. It means we can not do this work, so return nil.
 	if err != nil {
 		return nil
 	}

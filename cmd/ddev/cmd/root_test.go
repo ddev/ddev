@@ -31,7 +31,7 @@ func init() {
 }
 
 var (
-	// DdevBin is the full path to the ddev binary
+	// DdevBin is the full path to the DDEV binary
 	DdevBin   = "ddev"
 	TestSites = []testcommon.TestSite{
 		{
@@ -47,7 +47,7 @@ var (
 			Name:                          "TestCmdWordpress",
 			HTTPProbeURI:                  "wp-admin/setup-config.php",
 		},
-		// Drupal6 is used here just because it's smaller and we don't actually
+		// Drupal6 is used here because it is smaller and we do not actually
 		// care much about CMS functionality.
 		{
 			Name:                          "TestCmdDrupal6",
@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
-	log.Println("Running ddev with ddev=", DdevBin)
+	log.Println("Running DDEV with ddev=", DdevBin)
 
 	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
 	if err != nil {
@@ -83,7 +83,7 @@ func TestMain(m *testing.M) {
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
-	// in the array. Any value can be used, it will default to just using the
+	// in the array. Any value can be used, it will default to using the
 	// first site in the array.
 	gotestShort := os.Getenv("GOTEST_SHORT")
 	if gotestShort != "" {
@@ -185,13 +185,13 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert.Equal(TestSites[0].Dir, appRoot)
 }
 
-// TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
+// TestCreateGlobalDdevDir checks to make sure that DDEV will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
 			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
 		nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+		t.Skip("Skipping because this changes homedir and breaks Mutagen functionality")
 	}
 
 	assert := asrt.New(t)
@@ -237,7 +237,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
 	require.NoError(t, err)
 
-	// Make sure we have the .ddev/bin dir we need for docker-compose and mutagen
+	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
 	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpHomeDir, ".ddev/bin"))
 	require.NoError(t, err)
 
@@ -255,10 +255,10 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
+// TestPoweroffOnNewVersion checks that a poweroff happens when a new DDEV version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
-		t.Skip("Fails on docker desktop because of removal of ~/.docker apparently, skipping")
+		t.Skip("Fails on Docker Desktop because of the apparent removal of ~/.docker, skipping")
 	}
 	assert := asrt.New(t)
 	var err error
@@ -296,7 +296,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		assert.NoError(err)
 		_ = os.RemoveAll(tmpJunkProjectDir)
 
-		// Because the start has done a poweroff (new ddev version),
+		// Because the start has done a poweroff (new DDEV version),
 		// make sure sites are running again.
 		for _, site := range TestSites {
 			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
@@ -350,7 +350,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount = len(apps)
 	assert.Equal(activeCount, 1)
 
-	// Verify that the ddev-router and ddev-ssh-agent have just been newly created
+	// Verify that the ddev-router and ddev-ssh-agent have been newly created
 	routerC, err := dockerutil.FindContainerByName("ddev-router")
 	require.NoError(t, err)
 	require.NotEmpty(t, routerC)

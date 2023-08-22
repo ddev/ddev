@@ -99,11 +99,11 @@ func pushGlobalTraefikConfig() error {
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create global traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create global Traefik certs dir: %v", err)
 	}
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create global traefik config dir: %v", err)
+		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
 	}
 
 	// Assume that the #ddev-generated exists in file unless it doesn't
@@ -169,7 +169,7 @@ func pushGlobalTraefikConfig() error {
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")
 	sigExists = true
-	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty
+	// TODO: Systematize this checking-for-signature, allow an arg to skip if empty
 	fi, err := os.Stat(traefikYamlFile)
 	// Don't use simple fileutil.FileExists() because of the danger of an empty file
 	if err == nil && fi.Size() > 0 {
@@ -184,7 +184,7 @@ func pushGlobalTraefikConfig() error {
 	} else {
 		f, err := os.Create(traefikYamlFile)
 		if err != nil {
-			util.Failed("failed to create traefik config file: %v", err)
+			util.Failed("Failed to create Traefik config file: %v", err)
 		}
 		t, err := template.New("traefik_global_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
 		if err != nil {
@@ -201,7 +201,7 @@ func pushGlobalTraefikConfig() error {
 	sourceConfigDir = globalTraefikDir
 	traefikYamlFile = filepath.Join(sourceConfigDir, "static_config.yaml")
 	sigExists = true
-	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty
+	// TODO: Systematize this checking-for-signature, allow an arg to skip if empty
 	fi, err = os.Stat(traefikYamlFile)
 	// Don't use simple fileutil.FileExists() because of the danger of an empty file
 	if err == nil && fi.Size() > 0 {
@@ -216,7 +216,7 @@ func pushGlobalTraefikConfig() error {
 	} else {
 		f, err := os.Create(traefikYamlFile)
 		if err != nil {
-			util.Failed("failed to create traefik config file: %v", err)
+			util.Failed("Failed to create Traefik config file: %v", err)
 		}
 		t, err := template.New("traefik_static_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 		if err != nil {
@@ -232,9 +232,9 @@ func pushGlobalTraefikConfig() error {
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
-		return fmt.Errorf("failed to copy global traefik config into docker volume ddev-global-cache/traefik: %v", err)
+		return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 	}
-	util.Debug("Copied global traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
+	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
 
 	return nil
 }
@@ -268,11 +268,11 @@ func configureTraefikForApp(app *DdevApp) error {
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create Traefik certs dir: %v", err)
 	}
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create traefik config dir: %v", err)
+		return fmt.Errorf("failed to create Traefik config dir: %v", err)
 	}
 
 	baseName := filepath.Join(sourceCertsPath, app.Name)
@@ -302,7 +302,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 		out, err := exec.RunHostCommand("mkcert", c...)
 		if err != nil {
-			util.Failed("failed to create certificates for project, check mkcert operation: %v; err=%v", out, err)
+			util.Failed("Failed to create certificates for project, check mkcert operation: %v; err=%v", out, err)
 		}
 
 		// Prepend #ddev-generated in generated crt and key files
@@ -364,7 +364,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	} else {
 		f, err := os.Create(traefikYamlFile)
 		if err != nil {
-			return fmt.Errorf("failed to create traefik config file: %v", err)
+			return fmt.Errorf("failed to create Traefik config file: %v", err)
 		}
 		t, err := template.New("traefik_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
@@ -381,14 +381,14 @@ func configureTraefikForApp(app *DdevApp) error {
 
 	err = dockerutil.CopyIntoVolume(projectTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
-		util.Warning("failed to copy traefik into docker volume ddev-global-cache/traefik: %v", err)
+		util.Warning("Failed to copy Traefik into Docker volume ddev-global-cache/traefik: %v", err)
 	} else {
-		util.Debug("Copied traefik certs in %s to ddev-global-cache/traefik", sourceCertsPath)
+		util.Debug("Copied Traefik certs in %s to ddev-global-cache/traefik", sourceCertsPath)
 	}
 	if fileutil.FileExists(filepath.Join(customCertsPath, fmt.Sprintf("%s.crt", app.Name))) {
 		err = dockerutil.CopyIntoVolume(app.GetConfigPath("custom_certs"), "ddev-global-cache", "traefik/certs", uid, "", false)
 		if err != nil {
-			util.Warning("failed copying custom certs into docker volume ddev-global-cache/traefik/certs: %v", err)
+			util.Warning("Failed copying custom certs into Docker volume ddev-global-cache/traefik/certs: %v", err)
 		} else {
 			util.Debug("Copied custom certs in %s to ddev-global-cache/traefik", sourceCertsPath)
 		}

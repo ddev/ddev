@@ -31,8 +31,8 @@ const acquiaPullSiteURL = "http://ddevdemodev.prod.acquia-sites.com/"
 const acquiaSiteExpectation = "Super easy vegetarian pasta"
 
 // Note that these tests won't run with GitHub actions on a forked PR.
-// Thie is a security feature, but means that PRs intended to test this
-// must be done in the ddev repo.
+// This is a security feature, but means that PRs intended to test this
+// must be done in the DDEV repo.
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
@@ -102,7 +102,7 @@ func TestAcquiaPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Make sure we have drush
+	// Make sure we have Drush
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush symfony/http-kernel>/dev/null 2>/dev/null",
 	})
@@ -163,7 +163,7 @@ func TestAcquiaPush(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a D9 codebase for drush to work right
+	// Use a D9 codebase for Drush to work right
 	d9code := FullTestSites[8]
 	d9code.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
@@ -216,12 +216,12 @@ func TestAcquiaPush(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Since allow-plugins isn't there and you can't even set it with composer...
+	// Since allow-plugins isn't there and you can't even set it with Composer
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
-	// Make sure we have drush
+	// Make sure we have Drush
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush >/dev/null 2>/dev/null",
 	})
@@ -286,7 +286,7 @@ func TestAcquiaPush(t *testing.T) {
 	assert.NoError(err)
 }
 
-// isPullSiteValid just checks to make sure the site we're testing against is OK
+// isPullSiteValid checks to make sure the site we're testing against is OK
 func isPullSiteValid(siteURL string, siteExpectation string) bool {
 	resp, err := http.Get(siteURL)
 	if err != nil {

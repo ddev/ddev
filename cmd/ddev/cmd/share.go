@@ -48,14 +48,14 @@ ddev share myproject`,
 			if cmd.Flags().Changed("basic-auth") {
 				auth, err := cmd.Flags().GetString("basic-auth")
 				if err != nil {
-					util.Failed("unable to get --basic-auth flag: %v", err)
+					util.Failed("Unable to get --basic-auth flag: %v", err)
 				}
 				ngrokArgs = append(ngrokArgs, "--basic-auth="+auth)
 			}
 			if cmd.Flags().Changed("subdomain") {
 				sub, err := cmd.Flags().GetString("subdomain")
 				if err != nil {
-					util.Failed("unable to get --subdomain flag: %v", err)
+					util.Failed("Unable to get --subdomain flag: %v", err)
 				}
 				ngrokArgs = append(ngrokArgs, "--subdomain="+sub)
 			}

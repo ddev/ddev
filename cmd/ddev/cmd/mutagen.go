@@ -8,7 +8,7 @@ import (
 // MutagenCmd is the top-level "ddev debug" command
 var MutagenCmd = &cobra.Command{
 	Use:   "mutagen [command]",
-	Short: "Commands for mutagen status and sync, etc.",
+	Short: "Commands for Mutagen status and sync, etc.",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)

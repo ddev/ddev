@@ -100,7 +100,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	if included {
 		util.Debug("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 	} else {
-		util.Debug("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
+		util.Debug("Existing %s file does not include %s, modifying to include DDEV settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
 		if err := appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
@@ -222,8 +222,8 @@ func WriteDrushrc(app *DdevApp, filePath string) error {
 /**
  * @file
  * ` + nodeps.DdevFileSignature + `: Automatically generated drushrc.php file (for Drush 8)
- * ddev manages this file and may delete or overwrite the file unless this comment is removed.
- * Remove this comment if you don't want ddev to manage this file.
+ * DDEV manages this file and may delete or overwrite it unless this comment is removed.
+ * Remove this comment if you don't want DDEV to manage this file.
  */
 
 if (getenv('IS_DDEV_PROJECT') == 'true') {
@@ -274,7 +274,7 @@ func getDrupal7Hooks() []byte {
 
 // getDrupal6Hooks for appending as byte array
 func getDrupal6Hooks() []byte {
-	// We don't have anything new to add yet, so just use Drupal7 version
+	// We don't have anything new to add yet, so use Drupal7 version
 	return []byte(Drupal7Hooks)
 }
 
@@ -402,7 +402,7 @@ func drupalPostStartAction(app *DdevApp) error {
 				NoCapture: false,
 			})
 			if err != nil {
-				util.Warning("unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+				util.Warning("Unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
 			}
 		}
 	}
@@ -511,7 +511,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 }
 
 // settingsHasInclude determines if the settings.php or equivalent includes settings.ddev.php or equivalent.
-// This is done by looking for the ddev settings file (settings.ddev.php) in settings.php.
+// This is done by looking for the DDEV settings file (settings.ddev.php) in settings.php.
 func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (bool, error) {
 	included, err := fileutil.FgrepStringInFile(siteSettingsPath, drupalConfig.SiteSettingsDdev)
 	if err != nil {
@@ -553,12 +553,12 @@ func appendIncludeToDrupalSettingsFile(siteSettingsPath string, appType string) 
 func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
-	// parent of destination dir should exist
+	// Parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
-	// parent of destination dir should be writable.
+	// Parent of destination dir should be writable.
 	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}

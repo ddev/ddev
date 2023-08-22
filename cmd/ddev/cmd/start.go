@@ -23,7 +23,7 @@ var startAll bool
 var StartCmd = &cobra.Command{
 	Use:     "start [projectname ...]",
 	Aliases: []string{"add"},
-	Short:   "Start a ddev project.",
+	Short:   "Start a DDEV project.",
 	Long: `Start initializes and configures the web server and database containers
 to provide a local development environment. You can run 'ddev start' from a
 project directory to start that project, or you can start stopped projects in
@@ -38,7 +38,7 @@ ddev start --all`,
 		// Create a global state to be injected later.
 		state := yaml.NewState(path.Join(globalconfig.GetGlobalDdevDir(), ".state.yaml"))
 
-		// TODO for the time being this triggers the download from Github but
+		// TODO: For the time being this triggers the download from GitHub but
 		// should be realized with a clean bootstrap as soon as it exists. The
 		// download does not hurt here as it's done in a asynchronous call but it's
 		// important to start it as early as possible to have an up to date

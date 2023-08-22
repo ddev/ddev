@@ -9,7 +9,7 @@ import (
 // MutagenMonitorCmd implements the ddev mutagen monitor command
 var MutagenMonitorCmd = &cobra.Command{
 	Use:     "monitor",
-	Short:   "Monitor mutagen status",
+	Short:   "Monitor Mutagen status",
 	Example: `"ddev mutagen monitor", "ddev mutagen monitor <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""

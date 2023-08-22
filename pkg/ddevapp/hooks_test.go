@@ -40,7 +40,7 @@ func TestProcessHooks(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	// create a composer.json just so we can do actions on it.
+	// Create a composer.json so we can do actions on it.
 	fName := filepath.Join(app.AppRoot, "composer.json")
 	err = os.WriteFile(fName, []byte("{}"), 0644)
 	require.NoError(t, err)
@@ -53,8 +53,8 @@ func TestProcessHooks(t *testing.T) {
 	// ExecHost commands must be able to run on Windows.
 	// echo and pwd are things that work pretty much the same in both places.
 
-	// 2022-02-16: I'm unable to get the composer examples to work here. Intermittent results
-	// Half the time they work and get expected composer output, the other half they come up with empty string.
+	// 2022-02-16: I'm unable to get the Composer examples to work here. Intermittent results
+	// Half the time they work and get expected Composer output, the other half they come up with empty string.
 	tasks := []taskExpectation{
 		//{"composer: install", "", "Running task: Composer command '[install]' in web container"},
 		//{"composer: licenses --format=json", "no-version-set", "Running task: Composer command 'licenses --format=json' in web container"},

@@ -86,7 +86,7 @@ func getWordpressUploadDirs(_ *DdevApp) []string {
 
 const wordpressConfigInstructions = `
 An existing user-managed wp-config.php file has been detected!
-Project ddev settings have been written to:
+Project DDEV settings have been written to:
 
 %s
 
@@ -118,7 +118,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 
 	config := NewWordpressConfig(app, absPath)
 
-	//  write ddev settings file
+	// Write DDEV settings file
 	if err := writeWordpressDdevSettingsFile(config, app.SiteDdevSettingsFile); err != nil {
 		return "", err
 	}
@@ -138,10 +138,10 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 			}
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
-			// of the generated ddev settings file
+			// of the generated DDEV settings file
 			includeExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "wp-config-ddev.php")
 			if err != nil {
-				util.Warning("Unable to check that the ddev settings file has been included: %v", err)
+				util.Warning("Unable to check that the DDEV settings file has been included: %v", err)
 			}
 
 			if includeExists {
@@ -234,7 +234,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 }
 
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
-// a wordpress site.
+// a WordPress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
 	config := NewWordpressConfig(app, "")
 
@@ -264,12 +264,12 @@ func isWordpressApp(app *DdevApp) bool {
 func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(target)
 
-	// parent of destination dir should exist
+	// Parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
-	// parent of destination dir should be writable.
+	// Parent of destination dir should be writable.
 	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}

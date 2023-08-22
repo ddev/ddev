@@ -101,7 +101,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	// Read in the .env file
 	envMap, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Unable to read .env file: %v", err)
+		return fmt.Errorf("unable to read .env file: %v", err)
 	}
 
 	port := "3306"
@@ -113,7 +113,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 
 	// If they have older version of .env with DB_DRIVER, DB_SERVER etc, use those
 	if _, ok := envMap["DB_SERVER"]; ok {
-		// TODO remove, was never an official standard of Craft CMS.
+		// TODO: Remove, was never an official standard of Craft CMS.
 		envMap = map[string]string{
 			"DB_DRIVER":             driver,
 			"DB_SERVER":             "db",

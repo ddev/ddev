@@ -10,7 +10,7 @@ import (
 // DebugCapabilitiesCmd implements the ddev debug capabilities command
 var DebugCapabilitiesCmd = &cobra.Command{
 	Use:   "capabilities",
-	Short: "Show capabilities of this version of ddev",
+	Short: "Show capabilities of this version of DDEV",
 	Run: func(cmd *cobra.Command, args []string) {
 		capabilities := []string{
 			"multiple-dockerfiles",

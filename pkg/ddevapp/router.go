@@ -45,7 +45,7 @@ func IsRouterDisabled(app *DdevApp) bool {
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
 }
 
-// StopRouterIfNoContainers stops the router if there are no ddev containers running.
+// StopRouterIfNoContainers stops the router if there are no DDEV containers running.
 func StopRouterIfNoContainers() error {
 	containersRunning, err := ddevContainersRunning()
 	if err != nil {
@@ -80,25 +80,24 @@ func StartDdevRouter() error {
 		return err
 	}
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-
 		err = pushGlobalTraefikConfig()
 		if err != nil {
-			return fmt.Errorf("failed to push global traefik config: %v", err)
+			return fmt.Errorf("failed to push global Traefik config: %v", err)
 		}
 	}
 
 	err = CheckRouterPorts()
 	if err != nil {
-		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
+		return fmt.Errorf("unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
 	}
 
-	// run docker-compose up -d against the ddev-router full compose file
+	// Run docker-compose up -d against the ddev-router full compose file
 	_, _, err = dockerutil.ComposeCmd([]string{routerComposeFullPath}, "-p", RouterProjectName, "up", "--build", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
 
-	// ensure we have a happy router
+	// Ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
 	// Normally the router comes right up, but when
 	// it has to do let's encrypt updates, it can take
@@ -198,7 +197,7 @@ func FindDdevRouter() (*docker.APIContainers, error) {
 		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
 	if container == nil {
-		return nil, fmt.Errorf("No ddev-router was found")
+		return nil, fmt.Errorf("no ddev-router was found")
 	}
 	return container, nil
 }
@@ -246,10 +245,10 @@ func determineRouterPorts() []string {
 	var routerPorts []string
 	containers, err := dockerutil.FindContainersWithLabel("com.ddev.site-name")
 	if err != nil {
-		util.Failed("failed to retrieve containers for determining port mappings: %v", err)
+		util.Failed("Failed to retrieve containers for determining port mappings: %v", err)
 	}
 
-	// loop through all containers with site-name label
+	// Loop through all containers with site-name label
 	for _, container := range containers {
 		if _, ok := container.Labels["com.ddev.site-name"]; ok {
 			if container.State != "running" {
@@ -270,7 +269,7 @@ func determineRouterPorts() []string {
 			}
 
 			for _, exposePortPair := range exposePorts {
-				// ports defined as hostPort:containerPort allow for router to configure upstreams
+				// Ports defined as hostPort:containerPort allow for router to configure upstreams
 				// for containerPort, with server listening on hostPort. exposed ports for router
 				// should be hostPort:hostPort so router can determine what port a request came from
 				// and route the request to the correct upstream
@@ -299,7 +298,7 @@ func determineRouterPorts() []string {
 					}
 				}
 
-				// if no match, we are adding a new port mapping
+				// If no match, we are adding a new port mapping
 				if !match {
 					routerPorts = append(routerPorts, exposePort)
 				}

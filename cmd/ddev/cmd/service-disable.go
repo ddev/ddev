@@ -52,7 +52,7 @@ var ServiceDisable = &cobra.Command{
 			util.Failed("Unable to remove former service file %s: %v", fName, err)
 		}
 
-		util.Success("disabled service %s, use `ddev restart` to see results.", serviceName)
+		util.Success("Disabled service %s, use `ddev restart` to see results.", serviceName)
 	},
 }
 
