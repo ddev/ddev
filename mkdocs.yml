@@ -41,7 +41,7 @@ theme:
   - navigation.tracking
 #  - toc.follow
 #  - toc.integrate
-
+  - navigation.footer
   favicon: favicon.png
   # readthedocs doesn't seem to do logo css right
 #  logo: /logo.svg
