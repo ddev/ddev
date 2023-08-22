@@ -26,9 +26,9 @@ These environments can be extended, version controlled, and shared, so you can t
 
     *You’ll need a Docker provider on your system before you can install DDEV.*
     
-    1. Install Colima (or Docker Desktop) with [recommended settings](users/install/docker-installation.md#macos).
-    1. Install [DDEV for macOS](users/install/ddev-installation.md#macos)
-    1. Launch your [first project](users/project) and start developing 🚀
+    1. Install Colima or Docker Desktop with [recommended settings](users/install/docker-installation.md#macos).
+    2. Install [DDEV for macOS](users/install/ddev-installation.md#macos).
+    3. Launch your [first project](users/project) and start developing. 🚀
 
 === "Windows WSL2"
 
@@ -41,11 +41,11 @@ These environments can be extended, version controlled, and shared, so you can t
 
     **Next steps:**
 
-    You’ll need a Docker provider on your system before you can install DDEV.
+    *You’ll need a Docker provider on your system before you can install DDEV.*
     
     1. Install Docker with [recommended settings](users/install/docker-installation.md#windows).
-    1. Install [DDEV for Windows](users/install/ddev-installation.md#windows)
-    1. Launch your [first project](users/project) and start developing 🚀
+    2. Install [DDEV for Windows](users/install/ddev-installation.md#windows).
+    3. Launch your [first project](users/project) and start developing. 🚀
 
 === "Traditional Windows"
 
@@ -61,8 +61,8 @@ These environments can be extended, version controlled, and shared, so you can t
     *You’ll need a Docker provider on your system before you can install DDEV.*
     
     1. Install Docker with [recommended settings](users/install/docker-installation.md#windows).
-    1. Install [DDEV for Windows](users/install/ddev-installation.md#windows)
-    1. Launch your [first project](users/project) and start developing 🚀
+    2. Install [DDEV for Windows](users/install/ddev-installation.md#windows).
+    3. Launch your [first project](users/project) and start developing. 🚀
 
 === "Linux"
 
@@ -78,8 +78,8 @@ These environments can be extended, version controlled, and shared, so you can t
     *You’ll need a Docker provider on your system before you can install DDEV.*
     
     1. Install Docker with [recommended settings](users/install/docker-installation.md#linux).
-    1. Install [DDEV for Linux](users/install/ddev-installation.md#linux)
-    1. Launch your [first project](users/project) and start developing 🚀
+    2. Install [DDEV for Linux](users/install/ddev-installation.md#linux).
+    3. Launch your [first project](users/project) and start developing. 🚀
 
 === "Gitpod & Codespaces"
 
@@ -90,4 +90,4 @@ These environments can be extended, version controlled, and shared, so you can t
     **Next steps:**
 
     1. Install DDEV within [Gitpod](users/install/ddev-installation.md#gitpod) or [GitHub Codespaces](users/install/ddev-installation.md#github-codespaces).
-    1. Launch your [first project](users/project) and start developing 🚀
+    2. Launch your [first project](users/project) and start developing. 🚀
