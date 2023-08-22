@@ -375,7 +375,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     To see what's happening during the postCreateCommand-action, use <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “View creation log”:
 
-    <div style="text-align:center;"><img src="./../../../images/codespaces-creation-log.png" alt="S"></div>
+    <div style="text-align:center;"><img src="./../../../images/codespaces-creation-log.png" alt=""></div>
 
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
