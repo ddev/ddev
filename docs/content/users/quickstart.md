@@ -2,7 +2,7 @@
 
 With the generic `php` and `python` project types DDEV is [ready to go](./project.md) with any PHP and Python based content management system (CMS) or framework. In addition there are preconfigured project types for many popular platforms and CMSes. To learn more about how to manage projects in DDEV visit the [Managing Projects](../users/usage/managing-projects.md) page.
 
-Before proceeding, make sure your installation of DDEV is up-to-date. In a new and empty project folder, using your favorite shell, run the following commands:
+Before proceeding, make sure your installation of DDEV is up to date. In a new and empty project folder, using your favorite shell, run the following commands:
 
 ## Backdrop
 
@@ -74,11 +74,11 @@ Environment variables will be automatically added to your `.env` file to simplif
     !!!tip "Upgrading or using a generic project type?"
         If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/usage/commands.md#restart) apply the changes.
 
-### Running Craft in a Sub-directory
+### Running Craft in a Subdirectory
 
-In order for `ddev craft` to work when Craft is installed in a sub-directory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-project/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
+In order for `ddev craft` to work when Craft is installed in a subdirectory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-project/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
 
-More information about customizing the environment and persisting configuration can be found in [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
+Read more about customizing the environment and persisting configuration in [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
 
 !!!tip "Installing Craft"
     Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
@@ -97,7 +97,7 @@ ddev start
 ddev launch
 ```
 
-* DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
+* DDEV will install everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
 * DDEV appends a stanza to your settings file which includes the DDEV settings only if running in DDEV context.
 * You can watch the `pip install` in real time on that first slow startup with `ddev logs -f` in another window.
 * If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
@@ -142,7 +142,7 @@ ddev launch
     ddev launch /install.php
     ```
 
-    Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also `drush site-install`, then `ddev exec drush site-install --yes`.
+    Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also run `drush site-install`, then `ddev exec drush site-install --yes`.
 
     See [Importing a Database](#importing-a-database).
 
@@ -196,7 +196,7 @@ ddev launch
 
 Use a new or existing Composer project, or clone a Git repository.
 
-The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
+The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) like it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
 === "Composer"
 
@@ -364,7 +364,7 @@ To open the CMS directly from CLI, run `ddev launch /admin`.
 
 Use a new or existing Composer project, or clone a Git repository.
 
-The Laravel project type can be used for [Statamic](https://statamic.com/) just as it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
+The Laravel project type can be used for [Statamic](https://statamic.com/) like it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
 === "Composer"
 
