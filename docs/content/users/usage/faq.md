@@ -17,6 +17,23 @@ DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/E
 * It’s focused directly on running containers.
 * It’s fast and stable.
 
+### Are there alternate Docker providers I can use?
+
+Many users report good results with alternate Docker providers.
+
+| Docker Provider            | Support Level                                                           |
+|----------------------------|-------------------------------------------------------------------------|
+| Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon         |
+| Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows         |
+| Colima (macOS)             | officially tested and supported                                         |
+| Colima (Linux)             | reported working in v1.22.2+, but poor solution compared to docker-ce   |
+| docker-ce (Linux/WSL2)     | Officially supported with automated tests on WSL2/Ubuntu                |
+| Rancher Desktop (macOS)    | reported working fine on macOS, not supported or automatically tested   |
+| OrbStack (macOS)           | excellent reports on macOS, not yet supported or and no automated tests |
+
+* Docker Desktop for Linux does *not* work with DDEV because it mounts all files into the container owned as root.
+* Rancher Desktop for Windows does not work with DDEV.
+
 ### How can I migrate from one Docker provider to another?
 
 There are many Docker providers on DDEV’s supported platforms. For example, on macOS people use Docker Desktop and Colima (both officially supported) and they also use [OrbStack](https://orbstack.dev/) and [Rancher Desktop](https://rancherdesktop.io/), which don't yet have official DDEV support with automated tests. On Windows WSL2, people may use Docker Desktop or Docker CE inside WSL2. In all cases, if you want to switch between Docker providers, save your database and make sure the Docker providers don't interfere with each other:

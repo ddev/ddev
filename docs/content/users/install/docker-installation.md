@@ -104,6 +104,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
 <a name="troubleshooting"></a>
 
+## Alternate Docker Providers
+
+There are a number of [alternate Docker providers](../usage/faq.md#are-there-alternate-docker-providers-i-can-use) that can be used with DDEV.
+
 ## Testing and Troubleshooting Your Docker Installation
 
 Docker needs to be able to do a few things for DDEV to work:
