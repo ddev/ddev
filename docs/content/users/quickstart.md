@@ -1,6 +1,6 @@
 # CMS Quickstarts
 
-With the generic `php` and `python` project types DDEV is [ready to go](./project.md) with any PHP and Python based content management system (CMS) or framework. In addition there are preconfigured project types for many popular platforms and CMSes. To learn more about how to manage projects in DDEV visit the [Managing Projects](../users/usage/managing-projects.md) page.
+DDEV is [ready to go](./project.md) with generic project types for PHP and Python frameworks, and more specific project types for working with popular platforms and CMSes. To learn more about how to manage projects in DDEV visit [Managing Projects](../users/usage/managing-projects.md).
 
 Before proceeding, make sure your installation of DDEV is up to date. In a new and empty project folder, using your favorite shell, run the following commands:
 
