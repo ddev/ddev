@@ -7,6 +7,7 @@ This section covers day-to-day DDEV usage, reference material, and common suppor
 - [Using the `ddev` Command](cli.md)
 - [Database Management](database-management.md)
 - [Managing CMS Settings](cms-settings.md)
+- [Managing Projects](managing-projects.md)
 - [Troubleshooting](troubleshooting.md)
 - [Using DDEV Offline](offline.md)
 

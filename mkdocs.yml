@@ -139,6 +139,7 @@ nav:
       - users/usage/cli.md
       - users/usage/database-management.md
       - users/usage/cms-settings.md
+      - users/usage/managing-projects.md
       - users/usage/troubleshooting.md
       - users/usage/offline.md
     - 'Reference':

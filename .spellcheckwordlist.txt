@@ -485,6 +485,7 @@ postinstall
 poweroff
 powershell
 pre
+preconfigured
 prepend
 prepending
 preprocess
