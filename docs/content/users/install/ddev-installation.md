@@ -318,9 +318,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## GitHub Codespaces
 
-    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally.
+    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally; you only need a browser and an internet connection.
 
-    Start by creating a `.devcontainer/devcontainer.json` file in your project repository:
+    Start by creating a `.devcontainer/devcontainer.json` file in a GitHub project repository:
 
     ```json
     {
@@ -328,28 +328,51 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
-      "portsAttributes": {
-        "3306": {
-          "label": "database"
-        },
-        "8027": {
-          "label": "mailhog"
-        },
-        "8080": {
-          "label": "web http"
-        },
-        "8443": {
-          "label": "web https"
-        }
-      },
-      "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+      "postCreateCommand": "bash -c 'ddev debug download-images && ddev poweroff'"
      }
     ```
 
-    Your updated file may differ depending on your project, but you should have `install-ddev` in the `features` section.
+    Launch your repository in codespaces:
 
-    Next add the file `.devcontainer/setup_project.sh`: 
-  
+    <div style="text-align:center;"><img style="max-width:350px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in an repository on GitHub"></div>
+
+    Wait for the `postCreateCommand` to finish:
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-fresh-install.png" alt=""></div>
+
+    DDEV is now installed successfully within codespaces:  
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-hello-screen.png" alt=""></div>
+
+    Run `ddev config` to [start a new project](./../project.md).
+
+    You could also install a CMS: [CMS Quickstart](./../quickstart.md).
+    
+    Run `ddev start` if there is already a DDEV project configured in your repository.
+
+    ### Technical information:
+
+    - Your updated file may differ depending on your project, but you should have `install-ddev` in the `features` section. 
+    
+    - `ddev debug download-images` is a helper command to download all required docker images before you run `ddev start`. It is optional.
+    
+    - The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) is executed on fresh creation, rebuilds and full rebuilds of a codespace instance. `ddev poweroff` is used to avoid errors on rebuilds (since some Docker containers are kept in this case). 
+
+    If there are errors after restarting a codespace, use `ddev restart`. 
+
+    !!!note "Normal Linux installation also works"
+        You can also install DDEV as if it were on any normal [Linux installation](#linux).
+
+    ### Advanced usage
+
+    There is a lot more customization possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/).
+
+    You could call a bash file via `postCreateCommand` and add more commands:
+
+    ```
+    "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+    ``` 
+    
     ```
     #!/bin/bash
     set -ex
@@ -360,25 +383,30 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # avoid errors on rebuilds
     ddev poweroff
 
-    # start ddev project
+    # start ddev project automatically
     ddev start -y
 
-    # further install steps, e.g. 
-    # ddev composer install 
+    # further automated install / setup steps, e.g. 
+    ddev composer install 
     ```
 
-    This script is executed when a new codespace is created or when an existing codespace is rebuild.
+    ### Troubleshooting
 
-    After adding these two files, you can launch your repository in codespaces:
+    To check what happened during the `postCreateCommand` action, use "Codespaces: View creation log” via
 
-    <div style="text-align:center;"><img style="max-width:350px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in an repository on GitHub"></div>
-
-    To see what's happening during the postCreateCommand-action, use <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “View creation log”:
+    - <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac
+    - <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows.
 
     <div style="text-align:center;"><img src="./../../../images/codespaces-creation-log.png" alt=""></div>
 
-    !!!note "Normal Linux installation also works"
-        You can also install DDEV as if it were on any normal [Linux installation](#linux).
+    If there are errors after restarting a codespace, use `ddev restart`. 
+
+    You can also use these commands:
+
+    - "Codespaces: Rebuild container"
+    - "Codespaces: Full rebuild container" (database will be deleted)
+
+    If you need DDEV-specific assistance or have further questions, see [support](./../support.md).
 
 === "Manual"
 
