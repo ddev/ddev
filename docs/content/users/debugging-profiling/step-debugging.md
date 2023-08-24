@@ -11,7 +11,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 
 **Key facts:**
 
-* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.  
+* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
@@ -86,6 +86,24 @@ However, if you’ve not yet used PhpStorm with Xdebug for a regular web request
 
 !!!tip "If you’re using VS Code on Windows with WSL2"
     VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “PHP Debug” and “Remote - WSL”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
+
+
+### Netbeans IDE Debugging Setup
+
+The Apache Netbeans IDE is configured by default to accomodate Drupal and Symfony projects.
+
+Complete the following DDEV configuration steps to connect the Netbeans debugger to XDEBUG:
+
+1. Create the xdebug.ini file in `.ddev/php/` directory. The full path will be: `.ddev/php/xdebug.ini`
+2. Add the PHP configuration to the xdebug.ini file:
+```ini
+[PHP]
+xdebug.mode=debug
+xdebug.idekey="netbeans-xdebug"
+```
+3. Restart ddev: `ddev restart`
+4. Verify that Netbeans is configured as shown in the screenshot ![screenshot](../../images/netbeans18-configuration.png)
+5. For debugging Use the command `telnet localhost 9003` to verify that the xdebug is available. To exit telnet press `control+]`and then enter the `quit` command.
 
 ## Using Xdebug on a Port Other than the Default 9003
 
