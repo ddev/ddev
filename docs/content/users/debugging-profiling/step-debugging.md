@@ -94,16 +94,17 @@ The Apache Netbeans IDE is configured by default to accomodate Drupal and Symfon
 
 Complete the following DDEV configuration steps to connect the Netbeans debugger to XDEBUG:
 
-1. Create the xdebug.ini file in `.ddev/php/` directory. The full path will be: `.ddev/php/xdebug.ini`
-2. Add the PHP configuration to the xdebug.ini file:
+1. Create a project in Netbeans and set the project URL to use DDEV's project URL. For example use `https://drupal.ddev.site` and specify the index file as index.php. ![screenshot](../../images/netbeans18-project-configuration.png)
+2. Create the xdebug.ini file in `.ddev/php/` directory. The full path will be: `.ddev/php/xdebug.ini`
+3. Add the PHP configuration to the xdebug.ini file:
 ```ini
 [PHP]
 xdebug.mode=debug
 xdebug.idekey="netbeans-xdebug"
 ```
-3. Restart ddev: `ddev restart`
-4. Verify that Netbeans is configured as shown in the screenshot ![screenshot](../../images/netbeans18-configuration.png)
-5. For debugging Use the command `telnet localhost 9003` to verify that the xdebug is available. To exit telnet press `control+]`and then enter the `quit` command.
+4. Restart ddev: `ddev restart`
+5. Verify that Netbeans is configured as shown in the screenshot ![screenshot](../../images/netbeans18-configuration.png)
+6. For debugging Use the command `telnet localhost 9003` to verify that the xdebug is available. To exit telnet press `control+]`and then enter the `quit` command.
 
 ## Using Xdebug on a Port Other than the Default 9003
 
