@@ -46,6 +46,7 @@ func (app *DdevApp) TrackProject() {
 	}
 
 	builder := ampli.Project.Builder().
+		AddOns(GetInstalledAddonNames(app)).
 		Containers(services).
 		ContainersOmitted(containersOmitted).
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).

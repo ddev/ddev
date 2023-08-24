@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 7
+// Tracking Plan Version: 8
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -309,16 +309,18 @@ func (b *commandBuilder) Build() CommandEvent {
 
 var Project = struct {
 	Builder func() interface {
-		Containers(containers []string) interface {
-			ContainersOmitted(containersOmitted []string) interface {
-				FailOnHookFail(failOnHookFail bool) interface {
-					Id(id string) interface {
-						NodejsVersion(nodejsVersion string) interface {
-							PerformanceMode(performanceMode string) interface {
-								PhpVersion(phpVersion string) interface {
-									ProjectType(projectType string) interface {
-										RouterDisabled(routerDisabled bool) interface {
-											WebserverType(webserverType string) ProjectBuilder
+		AddOns(addOns []string) interface {
+			Containers(containers []string) interface {
+				ContainersOmitted(containersOmitted []string) interface {
+					FailOnHookFail(failOnHookFail bool) interface {
+						Id(id string) interface {
+							NodejsVersion(nodejsVersion string) interface {
+								PerformanceMode(performanceMode string) interface {
+									PhpVersion(phpVersion string) interface {
+										ProjectType(projectType string) interface {
+											RouterDisabled(routerDisabled bool) interface {
+												WebserverType(webserverType string) ProjectBuilder
+											}
 										}
 									}
 								}
@@ -331,16 +333,18 @@ var Project = struct {
 	}
 }{
 	Builder: func() interface {
-		Containers(containers []string) interface {
-			ContainersOmitted(containersOmitted []string) interface {
-				FailOnHookFail(failOnHookFail bool) interface {
-					Id(id string) interface {
-						NodejsVersion(nodejsVersion string) interface {
-							PerformanceMode(performanceMode string) interface {
-								PhpVersion(phpVersion string) interface {
-									ProjectType(projectType string) interface {
-										RouterDisabled(routerDisabled bool) interface {
-											WebserverType(webserverType string) ProjectBuilder
+		AddOns(addOns []string) interface {
+			Containers(containers []string) interface {
+				ContainersOmitted(containersOmitted []string) interface {
+					FailOnHookFail(failOnHookFail bool) interface {
+						Id(id string) interface {
+							NodejsVersion(nodejsVersion string) interface {
+								PerformanceMode(performanceMode string) interface {
+									PhpVersion(phpVersion string) interface {
+										ProjectType(projectType string) interface {
+											RouterDisabled(routerDisabled bool) interface {
+												WebserverType(webserverType string) ProjectBuilder
+											}
 										}
 									}
 								}
@@ -378,6 +382,32 @@ type ProjectBuilder interface {
 
 type projectBuilder struct {
 	properties map[string]interface{}
+}
+
+func (b *projectBuilder) AddOns(addOns []string) interface {
+	Containers(containers []string) interface {
+		ContainersOmitted(containersOmitted []string) interface {
+			FailOnHookFail(failOnHookFail bool) interface {
+				Id(id string) interface {
+					NodejsVersion(nodejsVersion string) interface {
+						PerformanceMode(performanceMode string) interface {
+							PhpVersion(phpVersion string) interface {
+								ProjectType(projectType string) interface {
+									RouterDisabled(routerDisabled bool) interface {
+										WebserverType(webserverType string) ProjectBuilder
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Add-ons`] = addOns
+
+	return b
 }
 
 func (b *projectBuilder) Containers(containers []string) interface {
@@ -591,8 +621,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `7`,
-			VersionID: `dcb6fff6-e5e7-474c-b68c-f1f1c6384499`,
+			Version:   `8`,
+			VersionID: `48e9307f-858c-4b3e-ba94-80431d08f8d4`,
 		}
 	}
 

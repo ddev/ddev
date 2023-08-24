@@ -165,7 +165,7 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 	}
 
 	file, err := os.Open(s.fileName)
-	// If the file does not exists, early exit.
+	// If the file does not exist, early exit.
 	if err != nil {
 		s.loaded = true
 

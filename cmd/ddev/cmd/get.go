@@ -8,13 +8,10 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"text/template"
 	"time"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	ddevgh "github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -29,33 +26,6 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
-
-const addonMetadataDir = "addon-metadata"
-
-// Format of install.yaml
-type installDesc struct {
-	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
-	Name               string            `yaml:"name"`
-	ProjectFiles       []string          `yaml:"project_files"`
-	GlobalFiles        []string          `yaml:"global_files,omitempty"`
-	Dependencies       []string          `yaml:"dependencies,omitempty"`
-	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
-	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
-	RemovalActions     []string          `yaml:"removal_actions,omitempty"`
-	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
-}
-
-// Format of the add-on manifest file
-type addonManifest struct {
-	Name           string   `yaml:"name"`
-	Repository     string   `yaml:"repository"`
-	Version        string   `yaml:"version"`
-	Dependencies   []string `yaml:"dependencies,omitempty"`
-	InstallDate    string   `yaml:"install_date"`
-	ProjectFiles   []string `yaml:"project_files"`
-	GlobalFiles    []string `yaml:"global_files"`
-	RemovalActions []string `yaml:"removal_actions"`
-}
 
 // Get implements the ddev get command
 var Get = &cobra.Command{
@@ -94,7 +64,7 @@ ddev get --remove ddev-someaddonname
 			if cmd.Flag("all").Changed {
 				officialOnly = false
 			}
-			repos, err := listAvailable(officialOnly)
+			repos, err := ddevapp.ListAvailableAddons(officialOnly)
 			if err != nil {
 				util.Failed("Failed to list available add-ons: %v", err)
 			}
@@ -114,7 +84,7 @@ ddev get --remove ddev-someaddonname
 				util.Failed("Unable to find active project: %v", err)
 			}
 
-			listInstalledAddons(app)
+			ListInstalledAddons(app)
 			return
 		}
 
@@ -126,7 +96,7 @@ ddev get --remove ddev-someaddonname
 			}
 			app.DockerEnv()
 
-			err = removeAddon(app, cmd.Flag("remove").Value.String(), nil, bash, verbose)
+			err = ddevapp.RemoveAddon(app, cmd.Flag("remove").Value.String(), nil, bash, verbose)
 			if err != nil {
 				util.Failed("Unable to remove add-on: %v", err)
 			}
@@ -242,7 +212,7 @@ ddev get --remove ddev-someaddonname
 		if err != nil {
 			util.Failed("Unable to read %v: %v", yamlFile, err)
 		}
-		var s installDesc
+		var s ddevapp.InstallDesc
 		err = yaml.Unmarshal([]byte(yamlContent), &s)
 		if err != nil {
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
@@ -272,7 +242,7 @@ ddev get --remove ddev-someaddonname
 		// Check to see if any dependencies are missing
 		if len(s.Dependencies) > 0 {
 			// Read in full existing registered config
-			m, err := gatherAllManifests(app)
+			m, err := ddevapp.GatherAllManifests(app)
 			if err != nil {
 				util.Failed("Unable to gather manifests: %v", err)
 			}
@@ -286,9 +256,9 @@ ddev get --remove ddev-someaddonname
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = processAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
 			if err != nil {
-				desc := getDdevDescription(action)
+				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
 					if !verbose {
 						util.Failed("Could not process pre-install action (%d) '%s'. For more detail use ddev get --verbose", i, desc)
@@ -362,8 +332,8 @@ ddev get --remove ddev-someaddonname
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = processAction(action, dict, bash, verbose)
-			desc := getDdevDescription(action)
+			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			desc := ddevapp.GetAddonDdevDescription(action)
 			if err != nil {
 				if !verbose {
 					util.Failed("Could not process post-install action (%d) '%s'", i, desc)
@@ -396,9 +366,9 @@ ddev get --remove ddev-someaddonname
 }
 
 // createManifestFile creates a manifest file for the addon
-func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) (addonManifest, error) {
+func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc ddevapp.InstallDesc) (ddevapp.AddonManifest, error) {
 	// Create a manifest file
-	manifest := addonManifest{
+	manifest := ddevapp.AddonManifest{
 		Name:           addonName,
 		Repository:     repository,
 		Version:        downloadedRelease,
@@ -408,7 +378,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		GlobalFiles:    desc.GlobalFiles,
 		RemovalActions: desc.RemovalActions,
 	}
-	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", addonMetadataDir, addonName))
+	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", ddevapp.AddonMetadataDir, addonName))
 	if fileutil.FileExists(manifestFile) {
 		util.Warning("Overwriting existing manifest file %s", manifestFile)
 	}
@@ -426,19 +396,10 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 	return manifest, nil
 }
 
-// listInstalledAddons() show the add-ons that have a manifest file
-func listInstalledAddons(app *ddevapp.DdevApp) {
-	metadataDir := app.GetConfigPath(addonMetadataDir)
-	err := os.MkdirAll(metadataDir, 0755)
-	if err != nil {
-		util.Failed("Error creating metadata directory: %v", err)
-	}
-	// Read the contents of the .ddev/addon-metadata directory (directories)
-	dirs, err := os.ReadDir(metadataDir)
-	if err != nil {
-		util.Failed("Error reading metadata directory: %v", err)
-	}
-	manifests := []addonManifest{}
+// ListInstalledAddons() show the add-ons that have a manifest file
+func ListInstalledAddons(app *ddevapp.DdevApp) {
+
+	manifests := ddevapp.GetInstalledAddons(app)
 
 	var out bytes.Buffer
 	t := table.NewWriter()
@@ -464,26 +425,8 @@ func listInstalledAddons(app *ddevapp.DdevApp) {
 	t.AppendHeader(table.Row{"Add-on", "Version", "Repository", "Date Installed"})
 
 	// Loop through the directories in the .ddev/addon-metadata directory
-	for _, d := range dirs {
-		// Check if the file is a directory
-		if d.IsDir() {
-			// Read the contents of the manifest file
-			manifestFile := filepath.Join(metadataDir, d.Name(), "manifest.yaml")
-			manifestBytes, err := os.ReadFile(manifestFile)
-			if err != nil {
-				util.Warning("No manifest file found at %s: %v", manifestFile, err)
-				continue
-			}
-
-			// Parse the manifest file
-			var manifest addonManifest
-			err = yaml.Unmarshal(manifestBytes, &manifest)
-			if err != nil {
-				util.Failed("Unable to parse manifest file: %v", err)
-			}
-			manifests = append(manifests, manifest)
-			t.AppendRow(table.Row{manifest.Name, manifest.Version, manifest.Repository, manifest.InstallDate})
-		}
+	for _, addon := range manifests {
+		t.AppendRow(table.Row{addon.Name, addon.Version, addon.Repository, addon.InstallDate})
 	}
 	if t.Length() == 0 {
 		output.UserOut.Println("No registered add-ons were found. Add-ons installed before DDEV v1.22.0 will not be listed.\nUpdate them with `ddev get` so they'll be shown.")
@@ -491,51 +434,6 @@ func listInstalledAddons(app *ddevapp.DdevApp) {
 	}
 	t.Render()
 	output.UserOut.WithField("raw", manifests).Println(out.String())
-}
-
-// processAction takes a stanza from yaml exec section and executes it.
-func processAction(action string, dict map[string]interface{}, bashPath string, verbose bool) error {
-	action = "set -eu -o pipefail\n" + action
-	t, err := template.New("processAction").Funcs(sprig.TxtFuncMap()).Parse(action)
-	if err != nil {
-		return fmt.Errorf("could not parse action '%s': %v", action, err)
-	}
-
-	var doc bytes.Buffer
-	err = t.Execute(&doc, dict)
-	if err != nil {
-		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
-	}
-	action = doc.String()
-
-	desc := getDdevDescription(action)
-	if verbose {
-		action = "set -x; " + action
-	}
-	out, err := exec.RunHostCommand(bashPath, "-c", action)
-	if len(out) > 0 {
-		util.Warning(out)
-	}
-	if err != nil {
-		util.Warning("%c %s", '\U0001F44E', desc)
-		return fmt.Errorf("unable to run action %v: %v, output=%s", action, err, out)
-	}
-	if desc != "" {
-		util.Success("%c %s", '\U0001F44D', desc)
-	}
-	return nil
-}
-
-// getDdevDescription returns what follows #ddev-description: in any line in action
-func getDdevDescription(action string) string {
-	descLines := nodeps.GrepStringInBuffer(action, `[\r\n]+#ddev-description:.*[\r\n]+`)
-	if len(descLines) > 0 {
-		d := strings.Split(descLines[0], ":")
-		if len(d) > 1 {
-			return strings.Trim(d[1], "\r\n\t")
-		}
-	}
-	return ""
 }
 
 // renderRepositoryList renders the found list of repositories
@@ -570,148 +468,6 @@ func renderRepositoryList(repos []*github.Repository) string {
 	t.Render()
 
 	return out.String() + fmt.Sprintf("%d repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(repos))
-}
-
-// listAvailable lists the services that are listed on github
-func listAvailable(officialOnly bool) ([]*github.Repository, error) {
-	client := ddevgh.GetGithubClient(context.Background())
-	q := "topic:ddev-get fork:true"
-	if officialOnly {
-		q = q + " org:" + globalconfig.DdevGithubOrg
-	}
-
-	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
-	var allRepos []*github.Repository
-	for {
-
-		repos, resp, err := client.Search.Repositories(context.Background(), q, opts)
-		if err != nil {
-			msg := fmt.Sprintf("Unable to get list of available services: %v", err)
-			if resp != nil {
-				msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
-			}
-			return nil, fmt.Errorf(msg)
-		}
-		allRepos = append(allRepos, repos.Repositories...)
-		if resp.NextPage == 0 {
-			break
-		}
-
-		// Set the next page number for the next request
-		opts.ListOptions.Page = resp.NextPage
-	}
-	out := ""
-	for _, r := range allRepos {
-		out = out + fmt.Sprintf("%s: %s\n", r.GetFullName(), r.GetDescription())
-	}
-	if len(allRepos) == 0 {
-		return nil, fmt.Errorf("no add-ons found")
-	}
-	return allRepos, nil
-}
-
-// removeAddon removes an addon, taking care to respect #ddev-generated
-// addonName can be the "Name", or the full "Repository" like ddev/ddev-redis, or
-// the final par of the repository name like ddev-redis
-func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool) error {
-	if addonName == "" {
-		return fmt.Errorf("no add-on name specified for removal")
-	}
-
-	manifests, err := gatherAllManifests(app)
-	if err != nil {
-		util.Failed("Unable to gather all manifests: %v", err)
-	}
-
-	var manifestData addonManifest
-	var ok bool
-
-	if manifestData, ok = manifests[addonName]; !ok {
-		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev get --installed to see installed add-ons.\nIf yours is not there it may have been installed before DDEV v1.22.0.\nUse 'ddev get' to update it.", addonName)
-	}
-
-	// Execute any removal actions
-	for i, action := range manifestData.RemovalActions {
-		err = processAction(action, dict, bash, verbose)
-		desc := getDdevDescription(action)
-		if err != nil {
-			util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
-		}
-	}
-
-	// Remove any project files
-	for _, f := range manifestData.ProjectFiles {
-		p := app.GetConfigPath(f)
-		err = fileutil.CheckSignatureOrNoFile(p, nodeps.DdevFileSignature)
-		if err == nil {
-			_ = os.RemoveAll(p)
-		} else {
-			util.Warning("Unwilling to remove '%s' because it does not have #ddev-generated in it: %v; you can manually delete it if it is safe to delete.", p, err)
-		}
-	}
-
-	// Remove any global files
-	globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
-	for _, f := range manifestData.GlobalFiles {
-		p := filepath.Join(globalDotDdev, f)
-		err = fileutil.CheckSignatureOrNoFile(p, nodeps.DdevFileSignature)
-		if err == nil {
-			_ = os.RemoveAll(p)
-		} else {
-			util.Warning("Unwilling to remove '%s' because it does not have #ddev-generated in it: %v; you can manually delete it if it is safe to delete.", p, err)
-		}
-	}
-	if len(manifestData.Dependencies) > 0 {
-		for _, dep := range manifestData.Dependencies {
-			if m, ok := manifests[dep]; ok {
-				util.Warning("The add-on you're removing ('%s') declares a dependency on '%s', which is not being removed. You may want to remove it manually if it is no longer needed.", addonName, m.Name)
-			}
-		}
-	}
-
-	err = os.RemoveAll(app.GetConfigPath(filepath.Join(addonMetadataDir, manifestData.Name)))
-	if err != nil {
-		return fmt.Errorf("error removing addon metadata directory %s: %v", manifestData.Name, err)
-	}
-	util.Success("Removed add-on %s", addonName)
-	return nil
-}
-
-// gatherAllManifests searches for all addon manifests and presents the result
-// as a map of various names to manifest data
-func gatherAllManifests(app *ddevapp.DdevApp) (map[string]addonManifest, error) {
-	metadataDir := app.GetConfigPath(addonMetadataDir)
-	allManifests := make(map[string]addonManifest)
-
-	dirs, err := fileutil.ListFilesInDirFullPath(metadataDir)
-	if err != nil {
-		return nil, err
-	}
-	for _, d := range dirs {
-		if !fileutil.IsDirectory(d) {
-			continue
-		}
-
-		mPath := filepath.Join(d, "manifest.yaml")
-		manifestString, err := fileutil.ReadFileIntoString(mPath)
-		if err != nil {
-			return nil, err
-		}
-		var manifestData = &addonManifest{}
-		err = yaml.Unmarshal([]byte(manifestString), manifestData)
-		if err != nil {
-			return nil, fmt.Errorf("error unmarshaling manifest data: %v", err)
-		}
-		allManifests[manifestData.Name] = *manifestData
-		allManifests[manifestData.Repository] = *manifestData
-
-		pathParts := strings.Split(manifestData.Repository, "/")
-		if len(pathParts) > 1 {
-			shortRepo := pathParts[len(pathParts)-1]
-			allManifests[shortRepo] = *manifestData
-		}
-	}
-	return allManifests, nil
 }
 
 func init() {
