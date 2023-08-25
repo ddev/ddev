@@ -320,7 +320,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally; you only need a browser and an internet connection.
 
-    Start by creating a `.devcontainer/devcontainer.json` file in a GitHub project repository:
+    Start by creating a `.devcontainer/devcontainer.json` file in a your GitHub repository:
 
     ```json
     {
@@ -328,46 +328,82 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
-      "postCreateCommand": "bash -c 'ddev debug download-images && ddev poweroff'"
-     }
+    }
     ```
 
     Launch your repository in codespaces:
 
     <div style="text-align:center;"><img style="max-width:350px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in an repository on GitHub"></div>
 
-    Wait for the `postCreateCommand` to finish:
-
-    <div style="text-align:center;"><img src="./../../../images/codespaces-fresh-install.png" alt=""></div>
-
-    DDEV is now installed successfully within codespaces:  
+    DDEV is now available within codespaces:  
 
     <div style="text-align:center;"><img src="./../../../images/codespaces-hello-screen.png" alt=""></div>
 
-    Run `ddev config` to [start a new project](./../project.md).
-
-    You could also install a CMS: [CMS Quickstart](./../quickstart.md).
+    Run `ddev config` to [start a new blank project](./../project.md) - or [install a CMS](./../quickstart.md).
     
-    Run `ddev start` if there is already a DDEV project configured in your repository.
+    Run `ddev start` if there is already an existing DDEV project in your repository.
+
+    **Troubleshooting**:
+    
+    If there are errors after restarting a codespace, use `ddev restart`. 
+
+    You can also use these commands:
+
+    - "Codespaces: Rebuild container"
+    - "Codespaces: Full rebuild container" (database will be deleted)
+
+    If you need DDEV-specific assistance or have further questions, see [support](./../support.md).
 
     ### Technical information:
 
-    - Your updated file may differ depending on your project, but you should have `install-ddev` in the `features` section. 
-    
-    - `ddev debug download-images` is a helper command to download all required docker images before you run `ddev start`. It is optional.
-    
-    - The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) is executed on fresh creation, rebuilds and full rebuilds of a codespace instance. `ddev poweroff` is used to avoid errors on rebuilds (since some Docker containers are kept in this case). 
+    DDEV in codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`.
 
-    If there are errors after restarting a codespace, use `ddev restart`. 
+    Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support, there were some issues in the past with starting up Docker.  
+
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section. 
 
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
 
     ### Advanced usage
 
-    There is a lot more customization possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/).
+    A lot more customization is possible via the [`devcontainer.json` configuration](https://containers.dev/implementors/json_reference/).
 
-    You could call a bash file via `postCreateCommand` and add more commands:
+    #### postCreateCommand
+
+    The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. `ddev` commands are available here.
+
+    The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds, since some Docker containers are kept. 
+
+    ```json
+    {
+        "image": "mcr.microsoft.com/devcontainers/universal:2",
+        "features": {
+            "ghcr.io/ddev/ddev/install-ddev:latest": {}
+        },
+        "portsAttributes": {
+            "3306": {
+                "label": "database"
+            },
+            "8027": {
+                "label": "mailhog"
+            },
+            "8080": {
+                "label": "web http"
+            },
+            "8443": {
+                "label": "web https"
+            }
+        },
+        "postCreateCommand": "bash -c 'ddev poweroff && ddev start -y && ddev composer install'"
+        }
+    ```
+
+    After the codespace is initially built, the commands will be triggered (takes a few seconds):
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-fresh-install.png" alt=""></div>
+
+    You could call a separate bash file as well and add more commands: 
 
     ```
     "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
@@ -377,7 +413,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     #!/bin/bash
     set -ex
 
-    # download images beforehand
+    # download images beforehand, optional
     ddev debug download-images
 
     # avoid errors on rebuilds
@@ -390,23 +426,12 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ddev composer install 
     ```
 
-    ### Troubleshooting
-
-    To check what happened during the `postCreateCommand` action, use "Codespaces: View creation log” via
+    To check for errors during the `postCreateCommand` action, use "Codespaces: View creation log” via
 
     - <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac
     - <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows.
 
     <div style="text-align:center;"><img src="./../../../images/codespaces-creation-log.png" alt=""></div>
-
-    If there are errors after restarting a codespace, use `ddev restart`. 
-
-    You can also use these commands:
-
-    - "Codespaces: Rebuild container"
-    - "Codespaces: Full rebuild container" (database will be deleted)
-
-    If you need DDEV-specific assistance or have further questions, see [support](./../support.md).
 
 === "Manual"
 
