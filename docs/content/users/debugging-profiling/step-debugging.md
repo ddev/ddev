@@ -25,6 +25,7 @@ For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/doc
 
 * [PhpStorm](#phpstorm-debugging-setup)
 * [Visual Studio Code (VS Code)](#visual-studio-code-vs-code-debugging-setup)
+* [Netbeans](#netbeans-debugging-setup)
 
 <a name="phpstorm"></a>
 
@@ -88,7 +89,7 @@ However, if you’ve not yet used PhpStorm with Xdebug for a regular web request
     VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “PHP Debug” and “Remote - WSL”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
 
 
-### Netbeans IDE Debugging Setup
+### Netbeans Debugging Setup
 
 The Apache Netbeans IDE is configured by default to accomodate Drupal and Symfony projects.
 
