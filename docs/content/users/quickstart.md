@@ -194,9 +194,10 @@ ddev launch
 
 ## Ibexa DXP
 
+Install Ibexa DXP OSS Edition. Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
+
 ```bash
-mkdir my-ibexa-project
-cd my-ibexa-project
+mkdir my-ibexa-project && cd my-ibexa-project
 ddev config --project-type=php --php-version 8.1 --docroot=public --create-docroot
 ddev config --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
 ddev start
