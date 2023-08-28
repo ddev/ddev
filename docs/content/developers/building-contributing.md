@@ -1,5 +1,7 @@
 # Building, Testing, and Contributing
 
+Note that this section is about DDEV itself, but there are many other places to contribute code and content, including add-ons, etc. Each has its own `README`. To contribute to [ddev.com](ddev.com) see [the docs there](https://github.com/ddev/ddev.com). See also the [blog on contributing to ddev.com](https://ddev.com/blog/ddev-website-for-contributors).
+
 ## Testing Latest Commits on HEAD
 
 There are several ways to use DDEV’s latest-committed HEAD version:
@@ -61,25 +63,48 @@ A Gitpod dummy project for is provided by default in `/workspace/d9simple`. If y
 
 ## Making Changes to DDEV Images
 
-If you need to make a change to one of the DDEV images, it will need to be built with a specific tag that’s updated in `pkg/versionconstants/versionconstants.go`.
+### Test a New Image Locally
 
-For example, make a change to `containers/ddev-webserver/Dockerfile`, then build it:
+If you've changed a Dockerfile or other ingredient of a Docker image, build it locally for testing:
 
-```bash
+```
 cd containers/ddev-webserver
-make VERSION=20210424_fix_dockerfile
+make DOCKER_ORG=<yourdockerhuborg> VERSION=<tag>
 ```
 
-Then edit `pkg/versionconstants/versionconstants.go` to set `var WebTag = "20210424_fix_dockerfile"` and
+For example,
+
+```
+make DOCKER_ORG=rfay VERSION=20230828_some_tag
+```
+
+### Reference the New Image
+
+If you have changed one of the DDEV images, you need to change `pkg/versionconstants/versionconstants.go` to refer to the new built image. You would change `WebImg = "ddev/ddev-webserver"` to `WebImg = "<yourorg>/ddev-webserver"`.
+
+Then you can build the new `ddev` binary that refers to the correct image using:
 
 ```bash
-cd /workspace/ddev
+cd ~/workspace/ddev
 make
 ```
 
 `ddev version` should show you that you are using the correct webtag, and [`ddev start`](../users/usage/commands.md#start) will show it.
 
-It’s easiest to do this using Gitpod (see above) because Gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the `$PATH`.
+### Pushing a New `ddev-webserver` Image
+
+To push a multi-architecture image (and make it available to others or to the DDEV CI) you need the `buildx` Docker cli plugin. It's automatically installed in many environments, but you may need to `brew install docker-buildx` or use [other install techniques](https://github.com/docker/buildx#installing).
+
+(Gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the `$PATH`, so some people prefer to just do use push images from Gitpod.)
+
+Push a new image with:
+
+```bash
+docker login
+docker buildx create --use
+cd containers/ddev-webserver
+make push DOCKER_ORG=<yourorg> VERSION=<tag>
+```
 
 ## Pull Requests and PR Preparation
 
