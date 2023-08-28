@@ -194,7 +194,7 @@ ddev launch
 
 ## Ibexa DXP
 
-Install Ibexa DXP OSS Edition. Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
+Install Ibexa DXP OSS Edition.
 
 ```bash
 mkdir my-ibexa-project && cd my-ibexa-project
@@ -206,6 +206,8 @@ ddev php bin/console ibexa:install
 ddev php bin/console ibexa:graphql:generate-schema
 ddev launch
 ```
+
+Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
 
 ## Laravel
 
