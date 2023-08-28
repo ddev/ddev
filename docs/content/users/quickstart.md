@@ -192,6 +192,20 @@ ddev launch
 
     When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
 
+## Ibexa DXP
+
+```bash
+mkdir my-ibexa-project
+cd my-ibexa-project
+ddev config --project-type=php --php-version 8.1 --docroot=public --create-docroot
+ddev config --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+ddev start
+ddev composer create ibexa/oss-skeleton
+ddev php bin/console ibexa:install
+ddev php bin/console ibexa:graphql:generate-schema
+ddev launch
+```
+
 ## Laravel
 
 Use a new or existing Composer project, or clone a Git repository.
