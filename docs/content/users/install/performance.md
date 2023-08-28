@@ -85,6 +85,8 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means any symlink created will try to sync, regardless of whether it’s valid in the other environment. Mutagen, however, does not support `posix-raw` on traditional Windows, so DDEV uses the `portable` symlink mode. The result is that on Windows, using Mutagen, symlinks must be strictly limited to relative links that are inside the Mutagen section of the project.
     * **It’s a filesystem feature. Make backups!**<br>
     If we’ve learned anything from computer file-storage adventures, it’s that backups are always a good idea!
+    * **`node_modules` on non-NodeJS projects can cause problems**<br>
+    When using npm, yarn, etc to compile front-end themes on a system that only uses the rendered output from these tools, e.g. Drupal themes, including the `node_modules` directory to be included can cause major performance problems. The recommendation is to exclude the `node_modules` directory by adding it to the sync:defaults:ignore:paths list in mutagen.yml; see below for details.
 
     ### Syncing After `git checkout`
 
