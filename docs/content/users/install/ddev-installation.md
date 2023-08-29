@@ -371,7 +371,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`. Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.  
 
-    ###  DDEVs router is not used
+    ###  DDEV's router is not used
 
     Since Codespaces handles all the routing, the internal DDEV router will not be used on Codespaces. Therefore config settings like [`web_extra_exposed_ports`](./../configuration/config.md#web_extra_exposed_ports) will have no effect. 
 
