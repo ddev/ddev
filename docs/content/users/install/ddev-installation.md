@@ -320,7 +320,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally; you only need a browser and an internet connection.
 
-    Start by creating a `.devcontainer/devcontainer.json` file in a your GitHub repository:
+    Start by creating a `.devcontainer/devcontainer.json` file in your GitHub repository:
 
     ```json
     {
@@ -333,9 +333,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     Launch your repository in Codespaces:
 
-    <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in an repository on GitHub"></div>
+    <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in a repository on GitHub"></div>
 
-    <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-setting-up.png" alt="Screenshot of codespace create dialog in an repository on GitHub"></div>
+    <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-setting-up.png" alt="Screenshot of codespace create dialog in a repository on GitHub"></div>
 
     DDEV is now available within your new codespace instance:  
 
@@ -386,7 +386,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Default environment variables
 
-    Codespaces already provides some [default environment values](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace). You can inherit and inject them in your `.ddev/config.yaml`:
+    Codespace instances already provide some [default environment values](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace). You can inherit and inject them in your `.ddev/config.yaml`:
     
     ```
     web_environment: 
@@ -401,9 +401,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     #### postCreateCommand
 
-    The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. `ddev` commands are available here.
+    The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
 
-    The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds, since some Docker containers are kept. 
+    The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept. 
 
     ```json
     {
