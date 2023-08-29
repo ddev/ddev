@@ -2557,6 +2557,9 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
+	// Remove current project network
+	dockerutil.RemoveNetworkWithWarningOnError(os.Getenv("COMPOSE_PROJECT_NAME") + "_default")
+
 	return nil
 }
 
