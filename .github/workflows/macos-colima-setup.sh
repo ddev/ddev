@@ -17,9 +17,15 @@ brew untap homebrew/core 2>/dev/null || true
 echo "====== Running brew install ======"
 brew install -q docker docker-compose jq mkcert mysql-client
 echo "====== Running brew upgrade ======"
-brew upgrade colima lima
+#brew upgrade colima lima
+
 # see https://github.com/lima-vm/lima/issues/1742
-brew reinstall -f --force-bottle qemu
+# Workaround for https://github.com/actions/runner-images/issues/8104
+# https://github.com/actions/runner-images/issues/8104#issuecomment-1695262469
+brew remove --ignore-dependencies qemu
+curl -o ./qemu.rb https://raw.githubusercontent.com/Homebrew/homebrew-core/dc0669eca9479e9eeb495397ba3a7480aaa45c2e/Formula/qemu.rb
+brew install ./qemu.rb
+
 echo "====== Running brew link ======"
 brew link --force mysql-client
 echo "====== Completed brew link ======"
