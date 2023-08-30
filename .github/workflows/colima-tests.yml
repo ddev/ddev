@@ -81,6 +81,9 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
+
+      - run: echo "/usr/local/opt/mysql-client/bin" >> $GITHUB_PATH
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
@@ -90,8 +93,7 @@ jobs:
       - name: Install homebrew dependencies (macOS)
         run: |
           brew install -q docker docker-compose jq >/dev/null
-          brew install -q mysql-client >/dev/null
-          brew link --force mysql-client >/dev/null
+          brew install mysql-client >/dev/null
           colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
           colima version
 
