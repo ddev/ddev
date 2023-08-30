@@ -111,7 +111,6 @@ jobs:
           ddev config --project-type=drupal9 --docroot=web --create-docroot
           ddev debug download-images
           ddev poweroff
-          docker builder prune -f -a || true
           docker buildx prune -f -a || true
           docker rm -f $(docker ps -aq) >/dev/null || true
           docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
