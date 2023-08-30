@@ -59,7 +59,6 @@ if docker volume ls | grep '[Tt]est.*_nfsmount'; then
 fi
 
 # Clean the docker build cache
-docker builder prune -f -a || true
 docker buildx prune -f -a || true
 # Remove any images with name '-built'
 docker rm -f $(docker ps -aq) >/dev/null || true

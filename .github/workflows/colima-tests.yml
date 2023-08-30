@@ -81,15 +81,24 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
+
+      - run: echo "/usr/local/opt/mysql-client/bin" >> $GITHUB_PATH
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      - name: Install Colima and deps (macOS)
-        run: | 
-          bash -x ./.github/workflows/macos-colima-setup.sh
+      - name: Install homebrew dependencies (macOS)
+        run: |
+          set -x
+          sudo chmod ugo+w /usr/local/bin
+          brew install -q docker docker-compose jq >/dev/null
+          brew install --overwrite mysql-client
+          # hopefully qemu reinstall will be temporary. 2023-08-30 after weeks of trouble.
+          brew reinstall --force qemu
+          colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
           colima version
 
       - name: Build ddev
@@ -103,7 +112,6 @@ jobs:
           ddev config --project-type=drupal9 --docroot=web --create-docroot
           ddev debug download-images
           ddev poweroff
-          docker builder prune -f -a || true
           docker buildx prune -f -a || true
           docker rm -f $(docker ps -aq) >/dev/null || true
           docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
