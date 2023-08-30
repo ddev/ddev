@@ -88,8 +88,11 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: Install homebrew dependencies (macOS)
-        run: | 
-          bash -x ./.github/workflows/macos-colima-setup.sh
+        run: |
+          brew install -q docker docker-compose jq >/dev/null
+          brew install -q mysql-client >/dev/null
+          brew link --force mysql-client >/dev/null
+          colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
           colima version
 
       - name: Build ddev
