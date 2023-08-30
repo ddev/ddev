@@ -87,7 +87,7 @@ jobs:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      - name: Install Colima and deps (macOS)
+      - name: Install homebrew dependencies (macOS)
         run: | 
           bash -x ./.github/workflows/macos-colima-setup.sh
           colima version

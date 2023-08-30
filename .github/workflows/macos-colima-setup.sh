@@ -2,39 +2,22 @@
 
 set -eu -o pipefail
 
-sudo chown -R ${USER} /usr/local/*
-
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
-brew uninstall go@1.15 2>/dev/null || true
-brew unlink go 2>/dev/null || true
-brew uninstall go@1.17 2>/dev/null || true
-brew uninstall postgresql 2>/dev/null || true
-brew uninstall composer 2>/dev/null || true
-brew uninstall php 2>/dev/null || true
-brew untap homebrew/cask 2>/dev/null || true
-brew untap homebrew/core 2>/dev/null || true
 echo "====== Running brew install ======"
-brew install -q docker docker-compose jq mkcert mysql-client
-echo "====== Running brew upgrade ======"
-#brew upgrade colima lima
-
-# see https://github.com/lima-vm/lima/issues/1742
-# Workaround for https://github.com/actions/runner-images/issues/8104
-# https://github.com/actions/runner-images/issues/8104#issuecomment-1695262469
-brew remove --ignore-dependencies qemu
-curl -o ./qemu.rb https://raw.githubusercontent.com/Homebrew/homebrew-core/dc0669eca9479e9eeb495397ba3a7480aaa45c2e/Formula/qemu.rb
-brew install ./qemu.rb
+brew install -q docker docker-compose jq mkcert mysql-client >/dev/null
 
 echo "====== Running brew link ======"
-brew link --force mysql-client
+brew link --force mysql-client >/dev/null
 echo "====== Completed brew link ======"
+echo "====== brew doctor ======"
+brew doctor
 
 
 # This command allows adding CA (in mkcert, etc) without the popup trust prompt
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641
-echo "====== Setting trust settings ======"
-sudo security authorizationdb write com.apple.trust-settings.admin allow
+#echo "====== Setting trust settings ======"
+#sudo security authorizationdb write com.apple.trust-settings.admin allow
 
 # Github actions macOS runners have 14BG RAM so might as well use it.
 # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
