@@ -5,7 +5,8 @@ set -eu -o pipefail
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
 echo "====== Running brew install ======"
-brew install -q docker docker-compose jq mkcert mysql-client >/dev/null
+brew install -q docker docker-compose jq >/dev/null
+brew install -q mysql-client >/dev/null
 
 echo "====== Running brew link ======"
 brew link --force mysql-client >/dev/null
