@@ -2468,6 +2468,34 @@ func TestDdevImportFiles(t *testing.T) {
 	}
 }
 
+func TestDdevUploadDirNoPackage(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	for _, site := range TestSites {
+		// This test is only relevant for the project types that do _not_ have a package of files to upload
+		if site.Type == "php" || (site.FilesTarballURL != "" && site.FilesZipballURL != "" && site.FullSiteTarballURL != "") {
+			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are provided) or type php\n", site.Name)
+			continue
+		}
+
+		switchDir := site.Chdir()
+
+		t.Logf("== BEGIN TestDdevUploadDir location for %s\n", site.Name)
+		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		// For now a very simple "make sure it's not empty
+		assert.True(true, app.GetUploadDir() != "")
+		runTime()
+		switchDir()
+	}
+
+}
+
 // TestDdevImportFilesCustomUploadDir ensures that files are imported to a custom upload directory when requested
 func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 	assert := asrt.New(t)
