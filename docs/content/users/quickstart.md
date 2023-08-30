@@ -194,7 +194,7 @@ ddev launch
 
 ## Ibexa DXP
 
-Install Ibexa DXP OSS Edition.
+Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
 
 ```bash
 mkdir my-ibexa-project && cd my-ibexa-project
