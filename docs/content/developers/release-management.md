@@ -10,7 +10,7 @@
 ### How to add new people to these accounts
 
 * AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @cweagans, who can add co-maintainers.
-* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at [link](https://community.chocolatey.org/packages/ddev/1.21.1/ManagePackageOwners); they could then create tokens to push it.
+* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at (login required) `https://community.chocolatey.org/packages/ddev/1.22.1/ManagePackageOwners`; they could then create tokens to push it.
 * GitHub requires write access to this repository, either via permissions on the repository or on the org.
 * Apple signing and notarization requires access to the Localdev Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
 * Windows signing is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
