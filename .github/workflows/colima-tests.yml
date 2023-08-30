@@ -94,8 +94,7 @@ jobs:
         run: |
           set -x
           brew install -q docker docker-compose jq >/dev/null
-          # linking mysql-client seems to often fail. Temporarily adding || true here
-          brew install mysql-client || true
+          brew install --overwrite mysql-client
           # hopefully qemu reinstall will be temporary. 2023-08-30 after weeks of trouble.
           brew reinstall --force qemu
           colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
