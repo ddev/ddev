@@ -118,6 +118,7 @@ Here are basic steps to take to sort out any difficulty:
 * Reboot your computer.
 * If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`.
 * Temporarily disable any *firewall* or *VPN* if you’re having trouble. Xdebug is a network protocol, and the PHP process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
+* Check to confirm that the DDEV configuration parameter `xdebug-ide-location` is set properly. For most situations, this should be set to an empty string. Be sure to check both your project's .ddev/config.yaml and ~/.ddev/global_config.yaml. More information about this parameter can be found in ~/.ddev/global_config.yaml. 
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
 * Set a breakpoint at the first executable line of your `index.php`.
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
