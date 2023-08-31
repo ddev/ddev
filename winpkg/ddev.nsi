@@ -425,26 +425,45 @@ Section "${GSUDO_NAME}" SecSudo
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
-  ; Copy files
-  File "..\.gotmp\bin\windows_amd64\sudo_license.txt"
-
   ; Set URL and temporary file name
-  !define GSUDO_DEST "$INSTDIR\${GSUDO_SETUP}"
+  !define GSUDO_ZIP_DEST "$INSTDIR\gsudo.portable.zip"
+  !define GSUDO_EXE_DEST "$INSTDIR\${GSUDO_SETUP}"
+  !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
+  !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
 
-  ; Download installer
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_URL}" "${GSUDO_DEST}" /END
+  ; Download license file
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
   Pop $R0 ; return value = exit code, "OK" if OK
 
   ; Check download result
   ${If} $R0 != "OK"
     ; Download failed, show message and continue
     SetDetailsView show
-    DetailPrint "Download of `${GSUDO_NAME}` failed:"
+    DetailPrint "Download of `${GSUDO_NAME}` license file failed:"
     DetailPrint " $R0"
-    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
+    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` license file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${EndIf}
 
-  !undef GSUDO_DEST
+  ; Download zip file
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/v2.4.0/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
+  Pop $R0 ; return value = exit code, "OK" if OK
+
+  ; Check download result
+  ${If} $R0 != "OK"
+    ; Download failed, show message and continue
+    SetDetailsView show
+    DetailPrint "Download of `${GSUDO_NAME}` zip file failed:"
+    DetailPrint " $R0"
+    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
+  ${Else}
+    ; Extract gsudo.exe from the zip file
+    Exec 'unzip "${GSUDO_ZIP_DEST}" x64/gsudo.exe -d "${GSUDO_EXE_DEST}"'
+  ${EndIf}
+
+  !undef GSUDO_ZIP_DEST
+  !undef GSUDO_EXE_DEST
+  !undef GSUDO_LICENSE_URL
+  !undef GSUDO_LICENSE_DEST
 SectionEnd
 
 /**
