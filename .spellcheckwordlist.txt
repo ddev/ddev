@@ -261,6 +261,7 @@ describe
 description
 detailed
 dev
+devcontainer
 development
 dir
 directory
@@ -478,6 +479,7 @@ plugin
 png
 pnpm
 posix
+postCreateCommand
 postfix
 postgres
 postgresql

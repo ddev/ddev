@@ -318,16 +318,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## GitHub Codespaces
 
-    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally.
+    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally; you only need a browser and an internet connection.
 
-    Start by [creating a new codespace](https://github.com/codespaces/new) for your project, or open an existing one. Next, edit the project configuration to add Docker-in-Docker support along with DDEV. Pick **one** of these methods:
-
-    * Visit your project’s GitHub repository and click the _Code_ dropdown → _Codespaces_ tab → _..._ to the right of “Codespaces” → _Configure dev container_. This will open a `devcontainer.json` file you can edit with the details below.
-        <img src="./../../../images/codespaces-dev-container.png" alt="GitHub repository’s Code menu, with the Codespaces tab selected to point out the click path described above" width="600" />
-
-    * Open your project’s codespace directly, edit the `.devcontainer/devcontainer.json` file, and rebuild the container with VS Code’s “Codespaces: Rebuild Container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
-
-    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section:
+    Start by creating a `.devcontainer/devcontainer.json` file in your GitHub repository:
 
     ```json
     {
@@ -335,26 +328,145 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
-      "portsAttributes": {
-        "3306": {
-          "label": "database"
-        },
-        "8027": {
-          "label": "mailhog"
-        },
-        "8080": {
-          "label": "web http"
-        },
-        "8443": {
-          "label": "web https"
-        }
-      },
-      "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
     ```
+
+    Launch your repository in Codespaces:
+
+    <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-launch.png" alt="Screenshot of codespace create dialog in a repository on GitHub"></div>
+
+    <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-setting-up.png" alt="Screenshot of codespace create dialog in a repository on GitHub"></div>
+
+    DDEV is now available within your new codespace instance:  
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-hello-screen.png" alt=""></div>
+
+    Run `ddev config` to [start a new blank project](./../project.md) - or [install a CMS](./../quickstart.md).
     
+    Run `ddev start` if there is already a configured DDEV project in your repository.
+
+    **Troubleshooting**:
+    
+    If there are errors after restarting a codespace, use `ddev restart` or `ddev poweroff`.
+
+    You can also use the commands
+
+    - "Codespaces: Rebuild container"
+    - "Codespaces: Full rebuild container" (Beware: database will be deleted)
+
+    via the [Visual Studio Code Command Palette](https://docs.github.com/en/enterprise-cloud@latest/codespaces/codespaces-reference/using-the-vs-code-command-palette-in-codespaces):  
+
+    - <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac
+    - <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows/Linux
+    - from the Application Menu, click View > Command Palette (Firefox)
+    
+    If you need DDEV-specific assistance or have further questions, see [support](./../support.md).
+
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section. 
+
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
+
+    ### Docker integration
+
+    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`. Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.  
+
+    ###  DDEV's router is not used
+
+    Since Codespaces handles all the routing, the internal DDEV router will not be used on Codespaces. Therefore config settings like [`web_extra_exposed_ports`](./../configuration/config.md#web_extra_exposed_ports) will have no effect. 
+
+    You can expose ports via the `ports` setting, which is usually not recommended if you work locally due to port conflicts. But you can load these additional Docker compose files only when Codespaces is detected. See [Defining Additional Services](./../extend/custom-compose-files.md#docker-composeyaml-examples) for more information. 
+
+    ```
+    services:
+        web:
+            ports:
+            - "5174:5174"
+    ```
+
+    ### Default environment variables
+
+    Codespace instances already provide some [default environment values](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace). You can inherit and inject them in your `.ddev/config.yaml`:
+    
+    ```
+    web_environment: 
+        - CODESPACES
+        - CODESPACE_NAME
+        - GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
+    ```
+
+    ### Advanced usage via devcontainer.json
+
+    A lot more customization is possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/). You can install Visual Studio Code extensions by default or run commands automatically. 
+
+    #### postCreateCommand
+
+    The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
+
+    The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept. 
+
+    ```json
+    {
+        "image": "mcr.microsoft.com/devcontainers/universal:2",
+        "features": {
+            "ghcr.io/ddev/ddev/install-ddev:latest": {}
+        },
+        "portsAttributes": {
+            "3306": {
+                "label": "database"
+            },
+            "8027": {
+                "label": "mailhog"
+            },
+            "8080": {
+                "label": "web http"
+            },
+            "8443": {
+                "label": "web https"
+            }
+        },
+        "postCreateCommand": "bash -c 'ddev poweroff && ddev start -y && ddev composer install'"
+        }
+    ```
+
+    After the codespace is initially built, the commands will be triggered (takes a few seconds):
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-fresh-install.png" alt=""></div>
+
+    You could call a separate bash file as well and add more commands: 
+
+    ```
+    "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+    ``` 
+    
+    ```
+    #!/bin/bash
+    set -ex
+
+    # download images beforehand, optional
+    ddev debug download-images
+
+    # avoid errors on rebuilds
+    ddev poweroff
+
+    # start ddev project automatically
+    ddev start -y
+
+    # further automated install / setup steps, e.g. 
+    ddev composer install 
+    ```
+
+    To check for errors during the `postCreateCommand` action, use the command 
+    
+    - "Codespaces: View creation log” 
+    
+    via the [Visual Studio Code Command Palette](https://docs.github.com/en/enterprise-cloud@latest/codespaces/codespaces-reference/using-the-vs-code-command-palette-in-codespaces):  
+
+    - <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac
+    - <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows/Linux
+    - from the Application Menu, click View > Command Palette (Firefox)
+
+    <div style="text-align:center;"><img src="./../../../images/codespaces-creation-log.png" alt=""></div>
 
 === "Manual"
 
