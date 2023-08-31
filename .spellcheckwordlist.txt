@@ -39,6 +39,7 @@ Docs
 Does
 DrupalEasy
 Dump
+DXP
 Enable
 EndeavourOS
 ExecRaw
@@ -62,6 +63,7 @@ Gzipped
 HOWTO
 HeidiSQL
 Homebrew
+Ibexa
 IDE
 IDE's
 IDEs
