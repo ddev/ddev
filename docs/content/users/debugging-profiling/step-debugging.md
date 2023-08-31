@@ -118,6 +118,7 @@ Here are basic steps to take to sort out any difficulty:
 * Reboot your computer.
 * If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`.
 * Temporarily disable any *firewall* or *VPN* if you’re having trouble. Xdebug is a network protocol, and the PHP process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
+* Confirm that DDEV’s [`xdebug_ide_location`](../configuration/config.md#xdebugidelocation) config setting is set properly, which in most cases should be set to an empty string. Check both your project's `.ddev/config.yaml` and DDEV’s global `~/.ddev/global_config.yaml`.
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
 * Set a breakpoint at the first executable line of your `index.php`.
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
@@ -130,6 +131,7 @@ Here are basic steps to take to sort out any difficulty:
 * Check to make sure that Xdebug is enabled. You can use `php -i | grep -i xdebug` inside the container, or use any other technique you want that gives the output of `phpinfo()`, including Drupal’s `admin/reports/status/php`. You should see `with Xdebug v3` and `php -i | grep xdebug.mode` should give you `xdebug.mode => debug,develop => debug,develop"`.
 * Set a breakpoint in the first relevant line of your `index.php` and then visit the site in a browser. It should stop at that first line.
 * If you're using a flavor of IDE that connects directly into the web container like VS Code Language Server, you may want to use the [global `xdebug_ide_location` setting](../configuration/config.md#xdebugidelocation) to explain to DDEV the situation. For example, `ddev config global --xdebug-ide-location=container`, which tells the PHP/Xdebug to connect directly to the listener inside the container.
+* To find out what DDEV is using for the value of `host.docker.internal` you can run `DDEV_DEBUG=true ddev start` and it will explain how it's getting that value, which help troubleshoot some problems. You'll see something like `host.docker.internal=192.168.5.2 because running on Colima` which can explain the usage.
 
 ### WSL2 Xdebug Troubleshooting
 
