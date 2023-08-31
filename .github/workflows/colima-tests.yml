@@ -95,7 +95,9 @@ jobs:
           set -x
           sudo chmod ugo+w /usr/local/bin
           brew install -q docker docker-compose jq >/dev/null
-          brew install --overwrite mysql-client
+          # brew install mysql-client is failing because of existing 2to3
+          sudo rm -f /usr/local/bin/2to3
+          brew install --overwrite mysql-client || true
           # hopefully qemu reinstall will be temporary. 2023-08-30 after weeks of trouble.
           brew reinstall --force qemu
           colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
