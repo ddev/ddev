@@ -63,7 +63,7 @@ Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the contai
 
 ## Email Capture and Review (Mailpit)
 
-[Mailpit](https://github.com/Mailpit/Mailpit) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
+[Mailpit](https://github.com/axllent/mailpit) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
 
 After your project is started, access the Mailpit web interface at `https://mysite.ddev.site:8026`, or run [`ddev launch -m`](../usage/commands.md#launch) to launch it in your default browser.
 
