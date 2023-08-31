@@ -234,10 +234,14 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
+* `--mailpit-port`: The mailpit HTTP port *default* for all projects; can be overridden by project configuration.
+* `--mailpit-https-port`: The mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
+* `--router-http-port`: The router HTTP port *default* for all projects; can be overridden by project configuration.
+* `--router-https-port`: The router HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
 * `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999`.
