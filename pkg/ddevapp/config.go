@@ -86,8 +86,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
-	app.MailpitPort = nodeps.DdevDefaultMailpitPort
-	app.MailpitHTTPSPort = nodeps.DdevDefaultMailpitHTTPSPort
 
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)

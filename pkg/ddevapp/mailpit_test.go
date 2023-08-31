@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -24,6 +25,10 @@ func TestMailpit(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, false)
 	require.NoError(t, err)
 	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.RouterMailpitPort = ""
+		globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = ""
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		err = os.RemoveAll(testDir)
@@ -41,7 +46,7 @@ func TestMailpit(t *testing.T) {
 	require.NoError(t, err)
 
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
@@ -53,10 +58,75 @@ func TestMailpit(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
+	expectation := "Testing DDEV Mailpit on default ports"
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "php send_email.php",
+		Cmd:     `php send_email.php "` + expectation + `"`,
 	})
 	require.NoError(t, err)
 	assert.Contains(stdout, "Message sent!")
+
+	// See if we got the mail.
+	desc, err := app.Describe(true)
+	require.NoError(t, err)
+	require.NotNil(t, desc["mailpit_url"])
+	require.NotNil(t, desc["mailpit_https_url"])
+
+	resp, err := testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
+	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
+	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+
+	// Change the global ports to make sure that works
+	globalconfig.DdevGlobalConfig.RouterMailpitPort = "28023"
+	globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = "28024"
+	require.NoError(t, err)
+
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	err = app.Restart()
+	require.NoError(t, err)
+
+	expectation = fmt.Sprintf("Testing DDEV Mailpit on global ports %v and %v", globalconfig.DdevGlobalConfig.RouterMailpitPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     `php send_email.php "` + expectation + `"`,
+	})
+	require.NoError(t, err)
+	assert.Contains(stdout, "Message sent!")
+
+	desc, err = app.Describe(true)
+	require.NoError(t, err)
+	require.NotNil(t, desc["mailpit_url"])
+	require.NotNil(t, desc["mailpit_https_url"])
+
+	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
+	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
+	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+
+	// Change the ports on the project to make sure that works
+	app.MailpitPort = "18025"
+	app.MailpitHTTPSPort = "18026"
+	err = app.Restart()
+	require.NoError(t, err)
+
+	expectation = fmt.Sprintf("Testing DDEV Mailpit on project-overridden ports %v and %v", app.MailpitPort, app.MailpitHTTPSPort)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     `php send_email.php "` + expectation + `"`,
+	})
+	require.NoError(t, err)
+	assert.Contains(stdout, "Message sent!")
+
+	desc, err = app.Describe(true)
+	require.NoError(t, err)
+	require.NotNil(t, desc["mailpit_url"])
+	require.NotNil(t, desc["mailpit_https_url"])
+
+	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
+	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
+	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 }

@@ -66,8 +66,8 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
-	RouterMailpitPort                string                      `yaml:"mailpit_port"`
-	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port"`
+	RouterMailpitPort                string                      `yaml:"mailpit_port,omitempty"`
+	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
 	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`

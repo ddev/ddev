@@ -188,6 +188,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 }
 
 // Describe returns a map which provides detailed information on services associated with the running site.
+// if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
@@ -207,6 +208,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
+	appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
+	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
@@ -255,9 +258,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			appDesc["dbinfo"] = dbinfo
 		}
-
-		appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
-		appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitPort()
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -486,6 +486,9 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 // Start with global config and then override with project config
 func (app *DdevApp) GetMailpitPort() string {
 	port := globalconfig.DdevGlobalConfig.RouterMailpitPort
+	if port == "" {
+		port = nodeps.DdevDefaultMailpitPort
+	}
 	if app.MailpitPort != "" {
 		port = app.MailpitPort
 	}
@@ -496,6 +499,10 @@ func (app *DdevApp) GetMailpitPort() string {
 // Start with global config and then override with project config
 func (app *DdevApp) GetMailpitHTTPSPort() string {
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort
+	if port == "" {
+		port = nodeps.DdevDefaultMailpitHTTPSPort
+	}
+
 	if app.MailpitHTTPSPort != "" {
 		port = app.MailpitHTTPSPort
 	}

@@ -15,11 +15,16 @@ $mail->setFrom('admin@example.com', 'Sender Name');
 // Add a recipient
 $mail->addAddress('nobody@example.com', 'Nobody at Example');
 
-// Set the subject
-$mail->Subject = 'Test using MailPit';
 
 // Set the plain text message body
 $mail->Body = 'This is a test of Mailpit in DDEV';
+
+// Check if a subject was passed as an argument
+if($argc > 1) {
+  $mail->Subject = $argv[1];
+} else {
+  $mail->Subject = 'Test using mailpit';
+}
 
 // Send the message
 if(!$mail->send()) {
