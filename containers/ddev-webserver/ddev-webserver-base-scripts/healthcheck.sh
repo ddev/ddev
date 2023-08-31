@@ -8,7 +8,7 @@ set -e
 
 sleeptime=59
 
-# Make sure that mounted code, and mailhog
+# Make sure that mounted code, and mailpit
 # are working.
 # Since docker doesn't provide a lazy period for startup,
 # we track health. If the last check showed healthy
@@ -23,7 +23,7 @@ fi
 phpstatus="false"
 htmlaccess="false"
 gunicornstatus="false"
-mailhog="false"
+mailpit="false"
 
 if ls /var/www/html >/dev/null; then
     htmlaccess="true"
@@ -33,10 +33,10 @@ else
 fi
 
 if curl --fail -s 127.0.0.1:8025 >/dev/null; then
-    mailhog="true"
-    printf "mailhog:OK " ;
+    mailpit="true"
+    printf "mailpit:OK " ;
 else
-    printf "mailhog:FAILED "
+    printf "mailpit:FAILED "
 fi
 
 # If DDEV_WEBSERVER_TYPE is not set, use reasonable default
@@ -63,7 +63,7 @@ if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm"  ]; then
   fi
 fi
 
-if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailhog}" = "true" ] ; then
+if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailpit}" = "true" ] ; then
     touch /tmp/healthy
     exit 0
 fi
