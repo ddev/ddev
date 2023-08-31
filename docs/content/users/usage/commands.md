@@ -28,7 +28,7 @@ Use [`ddev help`](#help) to learn more about a specific command, like this examp
 Get a detailed description of a running ddev project. Describe provides basic
 information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
-additional services like MailHog. You can run 'ddev describe' from
+additional services like Mailpit. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>'.
 
@@ -189,8 +189,8 @@ Flags:
 * `--http-port`: The router HTTP port for this project.
 * `--https-port`: The router HTTPS port for this project.
 * `--image-defaults`: Sets the default web and db container images.
-* `--mailhog-https-port`: Router port to be used for MailHog HTTPS access.
-* `--mailhog-port`: Router port to be used for MailHog HTTP access.
+* `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access.
+* `--mailpit-port`: Router port to be used for Mailpit HTTP access.
 * `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
 * `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
@@ -730,7 +730,7 @@ Launch a browser with the current site (global shell host container command).
 
 Flags:
 
-* `--mailhog`, `-m`: Open MailHog.
+* `--mailpit`, `-m`: Open Mailpit.
 
 Example:
 
@@ -738,8 +738,8 @@ Example:
 # Open your project’s base URL in the default browser
 ddev launch
 
-# Open MailHog in the default browser
-ddev launch --mailhog
+# Open Mailpit in the default browser
+ddev launch --mailpit
 
 # Open your project’s base URL appended with `temp/phpinfo.php`
 ddev launch temp/phpinfo.php

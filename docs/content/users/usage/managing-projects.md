@@ -98,8 +98,8 @@ mysql --host=127.0.0.1 --port=33231 --user=db --password=db --database=db
 
 Other Services
 --------------
-MailHog (https):    https://d9composer.ddev.site:8026
-MailHog:            http://d9composer.ddev.site:8025
+Mailpit (https):    https://d9composer.ddev.site:8026
+Mailpit:            http://d9composer.ddev.site:8025
 
 DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy

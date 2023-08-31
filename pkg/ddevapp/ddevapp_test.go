@@ -2089,7 +2089,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		out := restoreOutput()
 		assert.NotContains(out, "Unable to create settings file")
 
-		// Validate MailHog is working and "connected"
+		// Validate Mailpit is working and "connected"
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
@@ -4153,7 +4153,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_HTTPS_PORT":     strconv.Itoa(httpsPort),
 		"DDEV_HOST_WEBSERVER_PORT": strconv.Itoa(httpPort),
-		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
+		"DDEV_HOST_MAILPIT_PORT":   app.HostMailpitPort,
 		"DDEV_HOSTNAME":            app.GetHostname(),
 		"DDEV_PHP_VERSION":         app.PHPVersion,
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),

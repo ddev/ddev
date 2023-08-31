@@ -189,12 +189,12 @@
       "description": "The web container's localhost-bound port",
       "type": "string"
     },
-    "mailhog_https_port": {
-      "description": "Router port to be used for mailhog access (https)",
+    "mailpit_https_port": {
+      "description": "Router port to be used for mailpit access (https)",
       "type": "string"
     },
-    "mailhog_port": {
-      "description": "Router port to be used for mailhog access",
+    "mailpit_port": {
+      "description": "Router port to be used for mailpit access",
       "type": "string"
     },
     "name": {

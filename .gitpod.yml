@@ -67,7 +67,7 @@ ports:
   # Direct-connect ddev-webserver port that is the main port
   - port: 8080
     onOpen: ignore
-  # Currently un-notified and unsupported mailhog https port
+  # Currently un-notified and unsupported mailpit https port
   - port: 8027
     onOpen: ignore
   - port: 8036

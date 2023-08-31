@@ -52,7 +52,7 @@ if (version_compare(DRUPAL::VERSION, "8.8.0", '>=') &&
   $settings['config_sync_directory'] = 'sites/default/files/sync';
 }
 
-// Override drupal/swiftmailer default config to use Mailhog
+// Override drupal/swiftmailer default config to use Mailpit
 $config['swiftmailer.transport']['transport'] = 'smtp';
 $config['swiftmailer.transport']['smtp_host'] = '127.0.0.1';
 $config['swiftmailer.transport']['smtp_port'] = '1025';

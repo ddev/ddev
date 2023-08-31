@@ -121,8 +121,8 @@ func craftCmsPostStartAction(app *DdevApp) error {
 			"DB_DATABASE":           "db",
 			"DB_USER":               "db",
 			"DB_PASSWORD":           "db",
-			"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
-			"MAILHOG_SMTP_PORT":     "1025",
+			"MAILPIT_SMTP_HOSTNAME": "127.0.0.1",
+			"MAILPIT_SMTP_PORT":     "1025",
 			"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
 		}
 	} else {
@@ -136,8 +136,8 @@ func craftCmsPostStartAction(app *DdevApp) error {
 			"CRAFT_DB_PASSWORD":     "db",
 			"CRAFT_WEB_URL":         app.GetPrimaryURL(),
 			"CRAFT_WEB_ROOT":        app.GetAbsDocroot(true),
-			"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
-			"MAILHOG_SMTP_PORT":     "1025",
+			"MAILPIT_SMTP_HOSTNAME": "127.0.0.1",
+			"MAILPIT_SMTP_PORT":     "1025",
 			"PRIMARY_SITE_URL":      app.GetPrimaryURL(), // for backward compatibility only
 		}
 	}

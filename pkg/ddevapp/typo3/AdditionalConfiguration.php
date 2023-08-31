@@ -28,7 +28,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
                 'processor_path' => '/usr/bin/',
                 'processor_path_lzw' => '/usr/bin/',
             ],
-            // This mail configuration sends all emails to mailhog
+            // This mail configuration sends all emails to mailpit
             'MAIL' => [
                 'transport' => 'smtp',
                 'transport_smtp_encrypt' => false,

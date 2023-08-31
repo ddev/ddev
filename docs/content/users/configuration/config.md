@@ -247,17 +247,17 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 
 Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
-## `mailhog_https_port`
+## `mailpit_https_port`
 
-Port for project’s MailHog HTTPS URL.
+Port for project’s Mailpit HTTPS URL.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `8026` | Can be changed to avoid a port conflict.
 
-## `mailhog_port`
+## `mailpit_port`
 
-Port for project’s MailHog HTTP URL.
+Port for project’s Mailpit HTTP URL.
 
 | Type | Default | Usage
 | -- | -- | --

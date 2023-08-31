@@ -110,9 +110,9 @@ type DdevApp struct {
 	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
 	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
-	MailhogPort               string                 `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort          string                 `yaml:"mailhog_https_port,omitempty"`
-	HostMailhogPort           string                 `yaml:"host_mailhog_port,omitempty"`
+	MailpitPort               string                 `yaml:"mailpit_port,omitempty"`
+	MailpitHTTPSPort          string                 `yaml:"mailpit_https_port,omitempty"`
+	HostMailpitPort           string                 `yaml:"host_mailpit_port,omitempty"`
 	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
 	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
@@ -256,8 +256,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			appDesc["dbinfo"] = dbinfo
 		}
 
-		appDesc["mailhog_https_url"] = "https://" + app.GetHostname() + ":" + app.MailhogHTTPSPort
-		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + app.MailhogPort
+		appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.MailpitHTTPSPort
+		appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.MailpitPort
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -1966,8 +1966,8 @@ func (app *DdevApp) DockerEnv() {
 		if app.HostDBPort == "" {
 			app.HostDBPort = "3306"
 		}
-		if app.HostMailhogPort == "" {
-			app.HostMailhogPort = "8027"
+		if app.HostMailpitPort == "" {
+			app.HostMailpitPort = "8027"
 		}
 		app.BindAllInterfaces = true
 	}
@@ -2031,11 +2031,11 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_FILES_DIRS":                strings.Join(app.getContainerUploadDirs(), ","),
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
-		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
+		"DDEV_HOST_MAILPIT_PORT":   app.HostMailpitPort,
 		"DDEV_HOST_HTTPS_PORT":     hostHTTPSPortStr,
 		"DDEV_HOST_WEBSERVER_PORT": hostHTTPPortStr,
-		"DDEV_MAILHOG_PORT":        app.MailhogPort,
-		"DDEV_MAILHOG_HTTPS_PORT":  app.MailhogHTTPSPort,
+		"DDEV_MAILPIT_PORT":        app.MailpitPort,
+		"DDEV_MAILPIT_HTTPS_PORT":  app.MailpitHTTPSPort,
 		"DDEV_DOCROOT":             app.Docroot,
 		"DDEV_HOSTNAME":            app.HostName(),
 		"DDEV_UID":                 uidStr,

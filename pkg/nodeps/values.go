@@ -106,9 +106,9 @@ const (
 
 	// DdevDefaultRouterHTTPSPort is the default router HTTPS port
 	DdevDefaultRouterHTTPSPort = "443"
-	// DdevDefaultMailhogPort is the default router port for Mailhog
-	DdevDefaultMailhogPort      = "8025"
-	DdevDefaultMailhogHTTPSPort = "8026"
+	// DdevDefaultMailpitPort is the default router port for Mailpit
+	DdevDefaultMailpitPort      = "8025"
+	DdevDefaultMailpitHTTPSPort = "8026"
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	DefaultDefaultContainerTimeout  = "120"

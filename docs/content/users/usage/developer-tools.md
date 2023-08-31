@@ -61,21 +61,21 @@ Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the contai
     ![Finding developer mode](../../images/developer-mode-1.png)  
     ![Setting developer mode](../../images/developer-mode-2.png)
 
-## Email Capture and Review (MailHog)
+## Email Capture and Review (Mailpit)
 
-[MailHog](https://github.com/MailHog/MailHog) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
+[Mailpit](https://github.com/Mailpit/Mailpit) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
 
-After your project is started, access the MailHog web interface at `https://mysite.ddev.site:8026`, or run [`ddev launch -m`](../usage/commands.md#launch) to launch it in your default browser.
+After your project is started, access the Mailpit web interface at `https://mysite.ddev.site:8026`, or run [`ddev launch -m`](../usage/commands.md#launch) to launch it in your default browser.
 
-MailHog will **not** intercept emails if your application is configured to use SMTP or a third-party ESP integration.
+Mailpit will **not** intercept emails if your application is configured to use SMTP or a third-party ESP integration.
 
-If you’re using SMTP for outgoing mail—with [Symfony Mailer](https://www.drupal.org/project/symfony_mailer) or [SMTP](https://www.drupal.org/project/smtp) modules, for example—update your application’s SMTP server configuration to use `localhost` and MailHog’s port `1025`.
+If you’re using SMTP for outgoing mail—with [Symfony Mailer](https://www.drupal.org/project/symfony_mailer) or [SMTP](https://www.drupal.org/project/smtp) modules, for example—update your application’s SMTP server configuration to use `localhost` and Mailpit’s port `1025`.
 
-For Drupal 9+ `settings.ddev.php` overrides the Symfony Mailer sendmail configuration to use MailHog.
+For Drupal 9+ `settings.ddev.php` overrides the Symfony Mailer sendmail configuration to use Mailpit.
 
-For Drupal 8/9 `settings.ddev.php` overrides the [Swift Mailer](https://www.drupal.org/project/swiftmailer) transport configuration to use MailHog.
+For Drupal 8/9 `settings.ddev.php` overrides the [Swift Mailer](https://www.drupal.org/project/swiftmailer) transport configuration to use Mailpit.
 
-For Laravel projects, MailHog will capture Swift messages via SMTP. Update your `.env` to use Mailhog with the following settings:
+For Laravel projects, Mailpit will capture Swift messages via SMTP. Update your `.env` to use Mailpit with the following settings:
 
 ```env
 MAIL_MAILER=smtp

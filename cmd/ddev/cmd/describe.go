@@ -26,7 +26,7 @@ var DescribeCommand = &cobra.Command{
 	Long: `Get a detailed description of a running DDEV project. Describe provides basic
 information about a DDEV project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
-additional services like MailHog. You can run 'ddev describe' from
+additional services like Mailpit. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>'.`,
 	Example: "ddev describe\nddev describe <projectname>\nddev status\nddev st",
@@ -173,15 +173,15 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 
 		if !ddevapp.IsRouterDisabled(app) {
-			// MailHog stanza
-			mailhogURL := ""
-			if _, ok := desc["mailhog_url"]; ok {
-				mailhogURL = desc["mailhog_url"].(string)
+			// Mailpit stanza
+			mailpitURL := ""
+			if _, ok := desc["mailpit_url"]; ok {
+				mailpitURL = desc["mailpit_url"].(string)
 			}
-			if _, ok := desc["mailhog_https_url"]; ok {
-				mailhogURL = desc["mailhog_https_url"].(string)
+			if _, ok := desc["mailpit_https_url"]; ok {
+				mailpitURL = desc["mailpit_https_url"].(string)
 			}
-			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s\n`ddev launch -m`", mailhogURL)})
+			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\n`ddev launch -m`", mailpitURL)})
 
 			//WebExtraExposedPorts stanza
 			for _, extraPort := range app.WebExtraExposedPorts {

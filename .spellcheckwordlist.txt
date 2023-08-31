@@ -79,8 +79,8 @@ Localdev
 MAMP
 Magento
 Magento's
-MailHog
-MailHog's
+Mailpit
+Mailpit's
 Mailgun
 Manage
 MariaDB
@@ -405,6 +405,7 @@ magento
 mailgun
 mailhandling
 mailhog
+mailpit
 mailsending
 maintain
 manjaro

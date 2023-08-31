@@ -345,15 +345,15 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
-#    If true, ddev-router will bind http/s and MailHog ports on all
+#    If true, ddev-router will bind http/s and Mailpit ports on all
 #    network interfaces instead of localhost, so others on your local network can
-#    access those ports. Note that this exposes the MailHog ports as well, which
+#    access those ports. Note that this exposes the Mailpit ports as well, which
 #    can be a major security issue, so choose wisely.
 
 # use_hardened_images: false
 # With hardened images a container that is exposed to the internet is
 # a harder target, although not as hard as a fully-secured host.
-# sudo is removed, mailhog is removed, and since the web container
+# sudo and mailpit are removed, and since the web container
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.

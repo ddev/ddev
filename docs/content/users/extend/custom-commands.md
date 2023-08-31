@@ -73,7 +73,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
 * `DDEV_HOST_HTTPS_PORT`: Localhost port for HTTPS on web server
-* `DDEV_HOST_MAILHOG_PORT`: Localhost port for MailHog
+* `DDEV_HOST_MAILPIT_PORT`: Localhost port for Mailpit
 * `DDEV_HOST_WEBSERVER_PORT`: Localhost port of the web server
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version

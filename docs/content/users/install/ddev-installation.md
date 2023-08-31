@@ -416,7 +416,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
                 "label": "database"
             },
             "8027": {
-                "label": "mailhog"
+                "label": "mailpit"
             },
             "8080": {
                 "label": "web http"
