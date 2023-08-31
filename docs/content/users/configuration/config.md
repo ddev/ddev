@@ -253,7 +253,7 @@ Port for project’s Mailpit HTTPS URL.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `8026` | Can be changed to avoid a port conflict.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8026` | Can be changed to avoid a port conflict.
 
 ## `mailpit_port`
 
@@ -261,7 +261,7 @@ Port for project’s Mailpit HTTP URL.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `8025` | Can be changed to avoid a port conflict.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8025` | Can be changed to avoid a port conflict.
 
 ## `messages`
 
