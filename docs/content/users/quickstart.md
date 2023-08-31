@@ -340,7 +340,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ddev sake dev/build flush=all
     ```
 
- === "Git Clone"
+=== "Git Clone"
 
     ```bash
     git clone <your-silverstripe-repo>
