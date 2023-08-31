@@ -49,7 +49,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.NoError(err)
 
 	// Run a simple SSH server to act on and get its internal IP address
-	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "ddev/test-ssh-server:v1.22.0"})
+	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "ddev/test-ssh-server:v1.22.2"})
 	assert.NoError(err)
 	internalIPAddr, err := exec.RunCommand("docker", []string{"inspect", "-f", "'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'", "test-cmd-ssh-server"})
 	internalIPAddr = strings.Trim(internalIPAddr, "\r\n\"'")
@@ -62,7 +62,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	// identity
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "ssh -o BatchMode=yes -o StrictHostKeyChecking=false root@" + internalIPAddr + " pwd",
+		Cmd:     "ssh -o BatchMode=yes root@" + internalIPAddr + " pwd",
 	})
 	assert.Error(err)
 
@@ -78,7 +78,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	// And at this point we should be able to ssh into the test-cmd-ssh-server
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "ssh -o BatchMode=yes -o StrictHostKeyChecking=false root@" + internalIPAddr + " pwd",
+		Cmd:     "ssh -o BatchMode=yes root@" + internalIPAddr + " pwd",
 	})
 	assert.NoError(err)
 	assert.Contains(out, "/root")
