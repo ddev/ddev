@@ -417,7 +417,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
 SectionGroupEnd
 
 /**
- * sudo application install
+ * gsudo application install
  */
 Section "${GSUDO_NAME}" SecSudo
   ; Force installation
@@ -426,10 +426,13 @@ Section "${GSUDO_NAME}" SecSudo
   SetOverwrite try
 
   ; Set URL and temporary file name
+  !define GSUDO_VERSION "v2.4.0"
   !define GSUDO_ZIP_DEST "$INSTDIR\gsudo.portable.zip"
   !define GSUDO_EXE_DEST "$INSTDIR\${GSUDO_SETUP}"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
+  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
+  !define GSUDO_SHA256_DEST "$INSTDIR\gsudo.portable.zip.sha256"
 
   ; Download license file
   INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
@@ -445,7 +448,7 @@ Section "${GSUDO_NAME}" SecSudo
   ${EndIf}
 
   ; Download zip file
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/v2.4.0/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
   Pop $R0 ; return value = exit code, "OK" if OK
 
   ; Check download result
@@ -456,14 +459,69 @@ Section "${GSUDO_NAME}" SecSudo
     DetailPrint " $R0"
     MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${Else}
-    ; Extract gsudo.exe from the zip file
-    Exec 'unzip "${GSUDO_ZIP_DEST}" x64/gsudo.exe -d "${GSUDO_EXE_DEST}"'
+    ; Download SHA-256 hash
+    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_SHA256_URL}" "${GSUDO_SHA256_DEST}" /END
+    Pop $R0 ; return value = exit code, "OK" if OK
+
+    ; Check download result
+    ${If} $R0 != "OK"
+      ; Download failed, show message and continue
+      SetDetailsView show
+      DetailPrint "Download of `${GSUDO_NAME}` SHA-256 hash failed:"
+      DetailPrint " $R0"
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` SHA-256 hash has failed. Continue with the rest of the installation."
+    ${Else}
+      ; Calculate SHA-256 hash of the downloaded file
+      nsExec::ExecToStack 'certutil -hashfile "${GSUDO_ZIP_DEST}" SHA256'
+      Pop $R0 ; return value = exit code, "0" if OK
+      Pop $R1 ; output of the command
+
+      ; Check calculation result
+      ${If} $R0 != "0"
+        ; Calculation failed, show message and continue
+        SetDetailsView show
+        DetailPrint "Calculation of `${GSUDO_NAME}` SHA-256 hash failed:"
+        DetailPrint " $R1"
+        MessageBox MB_ICONEXCLAMATION|MB_OK "Calculation of `${GSUDO_NAME}` SHA-256 hash has failed. Continue with the rest of the installation."
+      ${Else}
+        ; Open SHA-256 hash file
+        FileOpen $2 "${GSUDO_SHA256_DEST}" "r"
+
+        ; Check if file was opened successfully
+        ${If} $2 == ""
+          ; File could not be opened, show message and continue
+          SetDetailsView show
+          DetailPrint "Could not open `${GSUDO_NAME}` SHA-256 hash file:"
+          DetailPrint " ${GSUDO_SHA256_DEST}"
+          MessageBox MB_ICONEXCLAMATION|MB_OK "Could not open `${GSUDO_NAME}` SHA-256 hash file. Continue with the rest of the installation."
+        ${Else}
+          ; Read expected hash from file
+          FileRead $2 $R2
+          FileClose $2
+
+          ; Compare calculated hash with expected hash
+          ${If} $R1 != $R2
+            ; Hashes do not match, show message and continue
+            SetDetailsView show
+            DetailPrint "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash:"
+            DetailPrint " Calculated: $R1"
+            DetailPrint " Expected: $R2"
+            MessageBox MB_ICONEXCLAMATION|MB_OK "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash. Continue with the rest of the installation."
+          ${Else}
+            ; Extract gsudo.exe from the zip file
+            Exec 'unzip "${GSUDO_ZIP_DEST}" x64/gsudo.exe -d "${GSUDO_EXE_DEST}"'
+          ${EndIf}
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
   ${EndIf}
 
   !undef GSUDO_ZIP_DEST
   !undef GSUDO_EXE_DEST
   !undef GSUDO_LICENSE_URL
   !undef GSUDO_LICENSE_DEST
+  !undef GSUDO_SHA256_URL
+  !undef GSUDO_SHA256_DEST
 SectionEnd
 
 /**
