@@ -4095,20 +4095,22 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
-		"DDEV_DOCROOT":           app.GetDocroot(),
-		"DDEV_HOSTNAME":          app.GetHostname(),
-		"DDEV_PHP_VERSION":       app.PHPVersion,
-		"DDEV_PRIMARY_URL":       app.GetPrimaryURL(),
-		"DDEV_PROJECT":           app.Name,
-		"DDEV_PROJECT_TYPE":      app.Type,
-		"DDEV_ROUTER_HTTP_PORT":  app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT": app.GetRouterHTTPSPort(),
-		"DDEV_SITENAME":          app.Name,
-		"DDEV_TLD":               app.ProjectTLD,
-		"DDEV_VERSION":           versionconstants.DdevVersion,
-		"DDEV_WEBSERVER_TYPE":    app.WebserverType,
-		"DDEV_DATABASE_FAMILY":   dbFamily,
-		"DDEV_DATABASE":          app.Database.Type + ":" + app.Database.Version,
+		"DDEV_DOCROOT":            app.GetDocroot(),
+		"DDEV_HOSTNAME":           app.GetHostname(),
+		"DDEV_MAILPIT_PORT":       app.GetMailpitPort(),
+		"DDEV_MAILPIT_HTTPS_PORT": app.GetMailpitHTTPSPort(),
+		"DDEV_PHP_VERSION":        app.PHPVersion,
+		"DDEV_PRIMARY_URL":        app.GetPrimaryURL(),
+		"DDEV_PROJECT":            app.Name,
+		"DDEV_PROJECT_TYPE":       app.Type,
+		"DDEV_ROUTER_HTTP_PORT":   app.GetRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":  app.GetRouterHTTPSPort(),
+		"DDEV_SITENAME":           app.Name,
+		"DDEV_TLD":                app.ProjectTLD,
+		"DDEV_VERSION":            versionconstants.DdevVersion,
+		"DDEV_WEBSERVER_TYPE":     app.WebserverType,
+		"DDEV_DATABASE_FAMILY":    dbFamily,
+		"DDEV_DATABASE":           app.Database.Type + ":" + app.Database.Version,
 	}
 
 	err = app.Start()
