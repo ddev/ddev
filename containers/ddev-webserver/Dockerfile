@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM ddev/ddev-php-base:20230720_ted933_doc_installation_ubuntu_apt_vulnerability as ddev-webserver-base
+FROM ddev/ddev-php-base:20230831_replace_mailhog_with_mailpit as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive

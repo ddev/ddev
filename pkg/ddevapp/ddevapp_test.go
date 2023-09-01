@@ -2090,7 +2090,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate Mailpit is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/api/v1/messages", `"total":0`)
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
