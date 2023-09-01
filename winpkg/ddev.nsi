@@ -419,6 +419,7 @@ SectionGroupEnd
 /**
  * gsudo application install
  */
+
 Section "${GSUDO_NAME}" SecSudo
   ; Force installation
   SectionIn 1 2 3 RO
@@ -498,6 +499,10 @@ Section "${GSUDO_NAME}" SecSudo
           ; Read expected hash from file
           FileRead $2 $R2
           FileClose $2
+
+          ; Convert both hashes to lowercase for case-insensitive comparison
+          StrCpy $R1 $R1 L
+          StrCpy $R2 $R2 L
 
           ; Compare calculated hash with expected hash
           ${If} $R1 != $R2
