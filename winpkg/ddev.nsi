@@ -265,7 +265,7 @@ Var ICONS_GROUP
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Review the release notes"
 !define MUI_FINISHPAGE_LINK "${PRODUCT_PROJECT} (${PRODUCT_PROJECT_URL})"
 !define MUI_FINISHPAGE_LINK_LOCATION ${PRODUCT_PROJECT_URL}
-!insertmacro MUI_PAGE_FINISH
+;!insertmacro MUI_PAGE_FINISH
 
 
 
@@ -421,6 +421,8 @@ SectionGroupEnd
  */
 
 Section "${GSUDO_NAME}" SecSudo
+
+
   ; Force installation
   SectionIn 1 2 3 RO
   SetOutPath "$INSTDIR"
@@ -429,7 +431,7 @@ Section "${GSUDO_NAME}" SecSudo
   ; Set URL and temporary file name
   !define GSUDO_VERSION "v2.4.0"
   !define GSUDO_ZIP_DEST "$INSTDIR\gsudo.portable.zip"
-  !define GSUDO_EXE_DEST "$INSTDIR\${GSUDO_SETUP}"
+  !define GSUDO_EXE_DEST "$INSTDIR"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
   !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
@@ -464,6 +466,7 @@ Section "${GSUDO_NAME}" SecSudo
     INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_SHA256_URL}" "${GSUDO_SHA256_DEST}" /END
     Pop $R0 ; return value = exit code, "OK" if OK
 
+
     ; Check download result
     ${If} $R0 != "OK"
       ; Download failed, show message and continue
@@ -473,9 +476,20 @@ Section "${GSUDO_NAME}" SecSudo
       MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` SHA-256 hash has failed. Continue with the rest of the installation."
     ${Else}
       ; Calculate SHA-256 hash of the downloaded file
-      nsExec::ExecToStack 'certutil -hashfile "${GSUDO_ZIP_DEST}" SHA256'
-      Pop $R0 ; return value = exit code, "0" if OK
-      Pop $R1 ; output of the command
+      ExecDos::exec /TOSTACK 'certutil -hashfile "${GSUDO_ZIP_DEST}" SHA256'
+      Pop $R0 ; exit code
+      Pop $R1 ; stdout
+      Pop $R2 ; stderr
+
+      DetailPrint "R0 exit code='$R0'"
+      DetailPrint "R1 stdout='$R1'"
+      DetailPrint "R2 stderr='$R2'"
+
+
+      ; Copy the hash (R2) into $R9
+      StrCpy $R9 $R2
+
+      DetailPrint "R9 hash='$R9'"
 
       ; Check calculation result
       ${If} $R0 != "0"
@@ -497,24 +511,41 @@ Section "${GSUDO_NAME}" SecSudo
           MessageBox MB_ICONEXCLAMATION|MB_OK "Could not open `${GSUDO_NAME}` SHA-256 hash file. Continue with the rest of the installation."
         ${Else}
           ; Read expected hash from file
-          FileRead $2 $R2
+          FileRead $2 $R8
           FileClose $2
 
-          ; Convert both hashes to lowercase for case-insensitive comparison
-          StrCpy $R1 $R1 L
-          StrCpy $R2 $R2 L
+          ; Get rid of newline on end of expected from file
+          push $R8
+          Call trim
+          pop $R8
 
+          DetailPrint "actualHash=R9=$R9"
+          DetailPrint "expectedHash=R8=$R8"
+          SetDetailsView show
           ; Compare calculated hash with expected hash
-          ${If} $R1 != $R2
+          ${If} $R9 != $R8
             ; Hashes do not match, show message and continue
             SetDetailsView show
             DetailPrint "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash:"
-            DetailPrint " Calculated: $R1"
-            DetailPrint " Expected: $R2"
+            DetailPrint " actual: '$R9'"
+            DetailPrint " expect: '$R8'"
             MessageBox MB_ICONEXCLAMATION|MB_OK "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash. Continue with the rest of the installation."
           ${Else}
             ; Extract gsudo.exe from the zip file
-            Exec 'unzip "${GSUDO_ZIP_DEST}" x64/gsudo.exe -d "${GSUDO_EXE_DEST}"'
+            DetailPrint "extracting from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} the file x64/gsudo.exe"
+
+            ; Extract the ZIP file
+            ;nsUnzip::Extract "C:\Program Files\DDEV\gsudo.portable.zip"
+            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "${GSUDO_EXE_DEST}"
+
+            Pop $0
+            DetailPrint "Unzip results: $0"
+
+            ${If} $0 != "success"
+                ; Handle extraction failure
+                MessageBox MB_OK|MB_ICONSTOP "Failed to extract gsudo.exe from the zip archive. Error code: $0"
+            ${EndIf}
+
           ${EndIf}
         ${EndIf}
       ${EndIf}
@@ -946,6 +977,43 @@ Function StartMenuPre
   ${If} ${IsUpdateMode}
     Abort
   ${EndIf}
+FunctionEnd
+
+; Trim
+;   Removes leading & trailing whitespace from a string
+; Usage:
+;   Push
+;   Call Trim
+;   Pop
+Function Trim
+	Exch $R1 ; Original string
+	Push $R2
+
+Loop:
+	StrCpy $R2 "$R1" 1
+	StrCmp "$R2" " " TrimLeft
+	StrCmp "$R2" "$\r" TrimLeft
+	StrCmp "$R2" "$\n" TrimLeft
+	StrCmp "$R2" "$\t" TrimLeft
+	GoTo Loop2
+TrimLeft:
+	StrCpy $R1 "$R1" "" 1
+	Goto Loop
+
+Loop2:
+	StrCpy $R2 "$R1" 1 -1
+	StrCmp "$R2" " " TrimRight
+	StrCmp "$R2" "$\r" TrimRight
+	StrCmp "$R2" "$\n" TrimRight
+	StrCmp "$R2" "$\t" TrimRight
+	GoTo Done
+TrimRight:
+	StrCpy $R1 "$R1" -1
+	Goto Loop2
+
+Done:
+	Pop $R2
+	Exch $R1
 FunctionEnd
 
 /**
