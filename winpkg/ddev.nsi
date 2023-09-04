@@ -265,7 +265,9 @@ Var ICONS_GROUP
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Review the release notes"
 !define MUI_FINISHPAGE_LINK "${PRODUCT_PROJECT} (${PRODUCT_PROJECT_URL})"
 !define MUI_FINISHPAGE_LINK_LOCATION ${PRODUCT_PROJECT_URL}
-;!insertmacro MUI_PAGE_FINISH
+; To build a version that shows the details on the final page
+; uncomment the following MUI_PAGE_FINISH line
+!insertmacro MUI_PAGE_FINISH
 
 
 
@@ -430,12 +432,12 @@ Section "${GSUDO_NAME}" SecSudo
 
   ; Set URL and temporary file name
   !define GSUDO_VERSION "v2.4.0"
-  !define GSUDO_ZIP_DEST "$INSTDIR\gsudo.portable.zip"
-  !define GSUDO_EXE_DEST "$INSTDIR"
+  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
+  !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
   !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
-  !define GSUDO_SHA256_DEST "$INSTDIR\gsudo.portable.zip.sha256"
+  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable.zip.sha256"
 
   ; Download license file
   INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
@@ -458,8 +460,7 @@ Section "${GSUDO_NAME}" SecSudo
   ${If} $R0 != "OK"
     ; Download failed, show message and continue
     SetDetailsView show
-    DetailPrint "Download of `${GSUDO_NAME}` zip file failed:"
-    DetailPrint " $R0"
+    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
     MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${Else}
     ; Download SHA-256 hash
@@ -532,11 +533,11 @@ Section "${GSUDO_NAME}" SecSudo
             MessageBox MB_ICONEXCLAMATION|MB_OK "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash. Continue with the rest of the installation."
           ${Else}
             ; Extract gsudo.exe from the zip file
-            DetailPrint "extracting from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} the file x64/gsudo.exe"
+            DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
             ;nsUnzip::Extract "C:\Program Files\DDEV\gsudo.portable.zip"
-            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "${GSUDO_EXE_DEST}"
+            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
 
             Pop $0
             DetailPrint "Unzip results: $0"
@@ -546,6 +547,10 @@ Section "${GSUDO_NAME}" SecSudo
                 MessageBox MB_OK|MB_ICONSTOP "Failed to extract gsudo.exe from the zip archive. Error code: $0"
             ${EndIf}
 
+            DetailPrint "CopyFiles $PLUGINSDIR\x64\gsudo.exe ${GSUDO_EXE_DEST}"
+            CopyFiles   "$PLUGINSDIR\x64\gsudo.exe" "${GSUDO_EXE_DEST}"
+
+            ; Since temp files were extracted in $PLUGINSDIR they automatically get cleaned up
           ${EndIf}
         ${EndIf}
       ${EndIf}
@@ -789,6 +794,8 @@ Function .onInit
     MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64 bit only."
     Abort "Unsupported CPU architecture!"
   ${EndIf}
+
+  InitPluginsDir
 
   ; Switch to 64 bit view and disable FS redirection
   SetRegView 64
