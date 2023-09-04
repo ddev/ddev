@@ -234,8 +234,8 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
-* `--mailpit-port`: The mailpit HTTP port *default* for all projects; can be overridden by project configuration.
-* `--mailpit-https-port`: The mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
+* `--mailpit-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
+* `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
