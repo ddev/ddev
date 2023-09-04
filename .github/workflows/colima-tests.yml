@@ -57,7 +57,7 @@ jobs:
       GOTEST_SHORT: "true"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get Date
         id: get-date

@@ -26,7 +26,7 @@ jobs:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
       AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
@@ -81,7 +81,7 @@ jobs:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
       AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Build and sign windows binaries and installer
@@ -125,7 +125,7 @@ jobs:
       - name: "setup macOS"
         run: |
           brew install coreutils gnu-getopt jq
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
@@ -181,7 +181,7 @@ jobs:
         with:
           limit-access-to-actor: true
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Restore build-most builds
