@@ -189,6 +189,16 @@ Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset
 
 Example: `59001` will have the project always use `https://127.0.0.1:59001` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
+## `host_mailpit_port`
+
+Specific, persistent Mailpit port for direct binding to localhost interface.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | automatic |
+
+Not commonly used. Can be a specific port number for a fixed Mailpit URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
+
 ## `host_webserver_port`
 
 Specific, persistent HTTP port for direct binding to localhost interface.
