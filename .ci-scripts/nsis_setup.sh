@@ -24,5 +24,5 @@ curl -sfL -o /tmp/ExecDos.zip https://nsis.sourceforge.io/mediawiki/images/0/0f/
 curl -sfL -o /tmp/ZipDLL.zip https://nsis.sourceforge.io/mediawiki/images/d/d9/ZipDLL.zip && sudo unzip -o -d "${NSIS_HOME}/Plugins/x86-unicode" /tmp/ZipDLL.zip && rm /tmp/ZipDLL.zip
 curl -sfL -o /tmp/NsUnzip.zip https://nsis.sourceforge.io/mediawiki/images/8/88/NsUnzip.zip && sudo unzip -o -d "${NSIS_HOME}/Plugins/x86-unicode" /tmp/NsUnzip.zip && rm /tmp/NsUnzip.zip
 curl -sfL -o /tmp/NSISunzU.zip https://nsis.sourceforge.io/mediawiki/images/5/5a/NSISunzU.zip && sudo unzip -o -d "${NSIS_HOME}/Plugins/x86-unicode" /tmp/NSISunzU.zip && rm /tmp/NSISunzU.zip
-cp "$NSIS_HOME/Plugins/x86-unicode/NSISunzU/Plugin unicode/nsisunz.dll" $NSIS_HOME/Plugins/x86-unicode
+sudo cp "$NSIS_HOME/Plugins/x86-unicode/NSISunzU/Plugin unicode/nsisunz.dll" $NSIS_HOME/Plugins/x86-unicode
 
