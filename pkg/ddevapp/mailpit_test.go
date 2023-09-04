@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -74,9 +75,11 @@ func TestMailpit(t *testing.T) {
 
 	resp, err := testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
 	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
-	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
-	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
-
+	// Colima tests on github don't respect https
+	if !dockerutil.IsColima() {
+		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
+		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+	}
 	// Change the global ports to make sure that works
 	globalconfig.DdevGlobalConfig.RouterMailpitPort = "28023"
 	globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = "28024"
