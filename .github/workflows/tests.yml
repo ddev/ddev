@@ -72,7 +72,7 @@ jobs:
       DDEV_SKIP_NODEJS_TEST: "true"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get Date
         id: get-date
