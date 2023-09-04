@@ -12,6 +12,7 @@ on:
       - "pkg/**"
       - "third_party/**"
       - "vendor/**"
+      - "winpkg/**"
       - "go.*"
       - "Makefile"
 
