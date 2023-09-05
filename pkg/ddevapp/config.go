@@ -183,8 +183,8 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.MailpitPort == nodeps.DdevDefaultMailpitPort {
-		appcopy.MailpitPort = ""
+	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitPort {
+		appcopy.MailpitHTTPPort = ""
 	}
 	if appcopy.MailpitHTTPSPort == nodeps.DdevDefaultMailpitHTTPSPort {
 		appcopy.MailpitHTTPSPort = ""

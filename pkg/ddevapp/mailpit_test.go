@@ -26,7 +26,7 @@ func TestMailpit(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, false)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig.RouterMailpitPort = ""
+		globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = ""
 		globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = ""
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
@@ -81,7 +81,7 @@ func TestMailpit(t *testing.T) {
 		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	}
 	// Change the global ports to make sure that works
-	globalconfig.DdevGlobalConfig.RouterMailpitPort = "28023"
+	globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = "28023"
 	globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = "28024"
 	require.NoError(t, err)
 
@@ -91,7 +91,7 @@ func TestMailpit(t *testing.T) {
 	err = app.Restart()
 	require.NoError(t, err)
 
-	expectation = fmt.Sprintf("Testing DDEV Mailpit on global ports %v and %v", globalconfig.DdevGlobalConfig.RouterMailpitPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort)
+	expectation = fmt.Sprintf("Testing DDEV Mailpit on global ports %v and %v", globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort, globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     `php send_email.php "` + expectation + `"`,
@@ -113,12 +113,12 @@ func TestMailpit(t *testing.T) {
 	}
 
 	// Change the ports on the project to make sure that works
-	app.MailpitPort = "18025"
+	app.MailpitHTTPPort = "18025"
 	app.MailpitHTTPSPort = "18026"
 	err = app.Restart()
 	require.NoError(t, err)
 
-	expectation = fmt.Sprintf("Testing DDEV Mailpit on project-overridden ports %v and %v", app.MailpitPort, app.MailpitHTTPSPort)
+	expectation = fmt.Sprintf("Testing DDEV Mailpit on project-overridden ports %v and %v", app.MailpitHTTPPort, app.MailpitHTTPSPort)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     `php send_email.php "` + expectation + `"`,

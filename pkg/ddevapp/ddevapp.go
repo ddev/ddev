@@ -110,7 +110,7 @@ type DdevApp struct {
 	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
 	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
-	MailpitPort               string                 `yaml:"mailpit_port,omitempty"`
+	MailpitHTTPPort           string                 `yaml:"mailpit_http_port,omitempty"`
 	MailpitHTTPSPort          string                 `yaml:"mailpit_https_port,omitempty"`
 	HostMailpitPort           string                 `yaml:"host_mailpit_port,omitempty"`
 	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
@@ -485,12 +485,12 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 // GetMailpitPort returns app's router http port
 // Start with global config and then override with project config
 func (app *DdevApp) GetMailpitPort() string {
-	port := globalconfig.DdevGlobalConfig.RouterMailpitPort
+	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort
 	if port == "" {
 		port = nodeps.DdevDefaultMailpitPort
 	}
-	if app.MailpitPort != "" {
-		port = app.MailpitPort
+	if app.MailpitHTTPPort != "" {
+		port = app.MailpitHTTPPort
 	}
 	return port
 }

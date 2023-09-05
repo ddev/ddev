@@ -189,7 +189,7 @@ func TestConfigSetValues(t *testing.T) {
 	webImage := "custom-web-image"
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
-	mailpitPort := "5001"
+	mailpitHTTPPort := "5001"
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
 	timezone := "America/Chicago"
@@ -222,7 +222,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--host-https-port", hostHTTPSPort,
 		"--webimage-extra-packages", webimageExtraPackages,
 		"--dbimage-extra-packages", dbimageExtraPackages,
-		"--mailpit-port", mailpitPort,
+		"--mailpit-http-port", mailpitHTTPPort,
 		"--project-tld", projectTLD,
 		"--web-environment", webEnv,
 		"--nodejs-version", nodejsVersion,
@@ -267,7 +267,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
-	assert.Equal(mailpitPort, app.GetMailpitPort())
+	assert.Equal(mailpitHTTPPort, app.GetMailpitPort())
 	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
 	assert.Equal(projectTLD, app.ProjectTLD)
 	assert.Equal(timezone, app.Timezone)

@@ -238,9 +238,9 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("mailpit-port").Changed {
-		val, _ := cmd.Flags().GetString("mailpit-port")
-		globalconfig.DdevGlobalConfig.RouterMailpitPort = val
+	if cmd.Flag("mailpit-http-port").Changed {
+		val, _ := cmd.Flags().GetString("mailpit-http-port")
+		globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = val
 		dirty = true
 	}
 	if cmd.Flag("mailpit-https-port").Changed {
@@ -290,7 +290,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	output.UserOut.Printf("wsl2-no-windows-hosts-mgt=%v", globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt)
 	output.UserOut.Printf("router-http-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	output.UserOut.Printf("router-https-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
-	output.UserOut.Printf("mailpit-port=%v", globalconfig.DdevGlobalConfig.RouterMailpitPort)
+	output.UserOut.Printf("mailpit-http-port=%v", globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort)
 	output.UserOut.Printf("mailpit-https-port=%v", globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort)
 	output.UserOut.Printf("traefik-monitor-port=%v", globalconfig.DdevGlobalConfig.TraefikMonitorPort)
 }
@@ -329,7 +329,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The default router HTTP port for all projects")
 	configGlobalCommand.Flags().String("router-https-port", "", "The default router HTTPS port for all projects")
-	configGlobalCommand.Flags().String("mailpit-port", "", "The default Mailpit HTTP port for all projects")
+	configGlobalCommand.Flags().String("mailpit-http-port", "", "The default Mailpit HTTP port for all projects")
 	configGlobalCommand.Flags().String("mailpit-https-port", "", "The default Mailpit HTTPS port for all projects")
 	configGlobalCommand.Flags().String("traefik-monitor-port", "", "The Traefik monitor port; can be changed in case of port conflicts")
 	ConfigCommand.AddCommand(configGlobalCommand)

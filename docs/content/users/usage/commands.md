@@ -189,8 +189,8 @@ Flags:
 * `--http-port`: The router HTTP port for this project.
 * `--https-port`: The router HTTPS port for this project.
 * `--image-defaults`: Sets the default web and db container images.
+* `--mailpit-http-port`: Router port to be used for Mailpit HTTP access.
 * `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access.
-* `--mailpit-port`: Router port to be used for Mailpit HTTP access.
 * `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
 * `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
@@ -234,7 +234,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
-* `--mailpit-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
+* `--mailpit-http-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
 * `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.

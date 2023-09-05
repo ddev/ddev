@@ -139,7 +139,7 @@ const ConfigInstructions = `
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
 
-# mailpit_port: "8025"
+# mailpit_http_port: "8025"
 # mailpit_https_port: "8026"
 # The Mailpit ports can be changed from the default 8025 and 8026
 

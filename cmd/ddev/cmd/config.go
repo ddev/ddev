@@ -109,8 +109,8 @@ var (
 	// hostHTTPSPortArg sets host_https_port
 	hostHTTPSPortArg string
 
-	// mailpitPortArg is arg for mailpit port
-	mailpitPortArg      string
+	// mailpitHTTPPortArg is arg for mailpit port
+	mailpitHTTPPortArg  string
 	mailpitHTTPSPortArg string
 
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
@@ -252,9 +252,9 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 
-	ConfigCommand.Flags().StringVar(&mailpitPortArg, "mailpit-port", "", "Router port to be used for mailpit access")
-	ConfigCommand.Flags().StringVar(&mailpitPortArg, "mailhog-port", "", "Router port to be used for mailpit access")
-	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-port", "please use --mailpit-port instead")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailpit-http-port", "", "Router HTTP port to be used for mailpit access")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailhog-port", "", "Router port to be used for mailpit access")
+	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-port", "please use --mailpit-http-port instead")
 
 	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailpit-https-port", "", "Router port to be used for mailpit access (https)")
 	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-https-port", "please use --mailpit-https-port instead")
@@ -517,8 +517,8 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.NoProjectMount = noProjectMountArg
 	}
 
-	if cmd.Flag("mailpit-port").Changed {
-		app.MailpitPort = mailpitPortArg
+	if cmd.Flag("mailpit-http-port").Changed {
+		app.MailpitHTTPPort = mailpitHTTPPortArg
 	}
 	if cmd.Flag("mailpit-https-port").Changed {
 		app.MailpitHTTPSPort = mailpitHTTPSPortArg

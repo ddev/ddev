@@ -81,7 +81,7 @@ Then run `ddev start`. This changes the project’s HTTP URL to `http://yoursite
 If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port. You can add the following to `.ddev/config.yaml`:
 
 ```yaml
-mailpit_port: 8300
+mailpit_http_port: 8300
 mailpit_https_port: 8301
 ```
 

@@ -189,12 +189,12 @@
       "description": "The web container's localhost-bound port",
       "type": "string"
     },
-    "mailpit_https_port": {
-      "description": "Router port to be used for mailpit access (https)",
+    "mailpit_http_port": {
+      "description": "Router port to be used for mailpit access",
       "type": "string"
     },
-    "mailpit_port": {
-      "description": "Router port to be used for mailpit access",
+    "mailpit_https_port": {
+      "description": "Router port to be used for mailpit access (https)",
       "type": "string"
     },
     "name": {

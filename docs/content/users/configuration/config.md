@@ -257,6 +257,14 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 
 Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
+## `mailpit_http_port`
+
+Port for project’s Mailpit HTTP URL.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8025` | Can be changed to avoid a port conflict.
+
 ## `mailpit_https_port`
 
 Port for project’s Mailpit HTTPS URL.
@@ -264,14 +272,6 @@ Port for project’s Mailpit HTTPS URL.
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8026` | Can be changed to avoid a port conflict.
-
-## `mailpit_port`
-
-Port for project’s Mailpit HTTP URL.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8025` | Can be changed to avoid a port conflict.
 
 ## `messages`
 
