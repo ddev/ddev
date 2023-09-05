@@ -252,11 +252,12 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 
-	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailpit-http-port", "", "Router HTTP port to be used for mailpit access")
-	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailhog-port", "", "Router port to be used for mailpit access")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailpit-http-port", "", "Router HTTP port to be used for Mailpit access")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailhog-port", "", "Router port to be used for MailHog access")
 	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-port", "please use --mailpit-http-port instead")
 
-	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailpit-https-port", "", "Router port to be used for mailpit access (https)")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailpit-https-port", "", "Router port to be used for Mailpit access (https)")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for MailHog access (https)")
 	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-https-port", "please use --mailpit-https-port instead")
 
 	// projectname flag exists for backwards compatibility.
@@ -517,10 +518,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.NoProjectMount = noProjectMountArg
 	}
 
-	if cmd.Flag("mailpit-http-port").Changed {
+	if cmd.Flag("mailpit-http-port").Changed || cmd.Flag("mailhog-port").Changed {
 		app.MailpitHTTPPort = mailpitHTTPPortArg
 	}
-	if cmd.Flag("mailpit-https-port").Changed {
+	if cmd.Flag("mailpit-https-port").Changed || cmd.Flag("mailhog-https-port").Changed {
 		app.MailpitHTTPSPort = mailpitHTTPSPortArg
 	}
 
