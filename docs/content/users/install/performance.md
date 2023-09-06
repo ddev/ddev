@@ -66,7 +66,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * **Avoid file changes when DDEV is stopped.**<br>
     If you change files—checking out a different branch, removing a file—while DDEV is stopped, Mutagen has no way to know about it. When you start again, it will get the files that are stored and bring them back to the host. If you *do* change files while DDEV is stopped, run `ddev mutagen reset` before restarting the project so Mutagen only starts with awareness of the host’s file contents.
     * **It modestly increases disk usage.**<br>
-    Mutagen integration increases the size of your project code’s disk usage, because the code exists both on your computer *and* inside a Docker volume. (As of DDEV v1.19+, this does not include your file upload directory, so normally it’s not too intrusive.) Take care that you have enough overall disk space, and that on macOS you’ve allocated enough file space in Docker Desktop. For projects before DDEV v1.19, if you have a large amount of data like user-generated content that doesn’t need syncing (i.e. `fileadmin` for TYPO3 or `sites/default/files` for Drupal), you can [exclude specific directories from getting synced](#advanced-mutagen-configuration-options) and use a regular Docker mount for them instead. As of v1.19, this is handled automatically and these files are not Mutagen-synced.
+    Mutagen integration increases the size of your project code’s disk usage, because the code exists both on your computer *and* inside a Docker volume. Your user-uploaded files directories (`upload_dirs`) are normally excluded from mutagen so they're not a problem for most project types or generic configurations where `upload_dirs` is specified. Take care that you have enough overall disk space, and that on macOS you’ve allocated enough file space in Docker Desktop. If you have other large directories you can [exclude specific directories from getting synced](#advanced-mutagen-configuration-options) and use a regular Docker mount for them instead.
     * **Beware simultaneous changes to the same file in both filesystems.**<br>
     As we pointed out above, any project likely to change the same file on the host *and* inside the container may encounter conflicts.
     * **Massive changes can cause problems.**<br>
@@ -85,8 +85,8 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means any symlink created will try to sync, regardless of whether it’s valid in the other environment. Mutagen, however, does not support `posix-raw` on traditional Windows, so DDEV uses the `portable` symlink mode. The result is that on Windows, using Mutagen, symlinks must be strictly limited to relative links that are inside the Mutagen section of the project.
     * **It’s a filesystem feature. Make backups!**<br>
     If we’ve learned anything from computer file-storage adventures, it’s that backups are always a good idea!
-    * **`node_modules` on non-Node.js projects can cause problems**<br>
-    When you’re compiling static, front-end assets with tools like `npm` and `yarn`, e.g. Drupal themes, including the `node_modules` directory can cause major performance problems. We recommend excluding `node_modules` by adding it to the `sync:defaults:ignore:paths` list in `mutagen.yml`; see below for details.
+    * **Large `node_modules` can cause cause slow sync times**<br>
+    When you’re compiling static, front-end assets with tools like `npm` and `yarn`, e.g. Drupal themes, syncing the `node_modules` directory can be very slow. We recommend excluding `node_modules` by adding it to the `sync:defaults:ignore:paths` list in `mutagen.yml`; see [Advanced Mutagen Configuration Options](#advanced-mutagen-configuration-options) for details. This problem can also occur with directories that contain large binaries or fonts, for example.
 
     ### Syncing After `git checkout`
 
@@ -120,22 +120,25 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     You can exclude a path from Mutagen syncing and bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have a heavy project subdirectory (lots of fonts or user-generated content, for example), you could exclude that subdirectory in `.ddev/mutagen/mutagen.yml` and add a `docker-compose.exclude.yaml`.
 
-    For example, if you want the `stored-binaries` subdirectory of the project to be available inside the container, but don’t need Mutagen to be syncing it, you can use normal Docker bind-mounting for that subdirectory:
+    For example, if you want the `node_modules` subdirectory of the project to be available inside the container, but don’t need Mutagen to be syncing it, you can use normal Docker bind-mounting for that subdirectory:
 
-    1. Take over the `.ddev/mutagen/mutagen.yml` by removing the `#ddev-generated` line.
-    2. Add `/stored-binaries` to the excluded paths:
-        ```yaml
-            ignore:
-            paths:
-                - "/stored-binaries"
-        ```
-    3. Add a `.ddev/docker-compose.bindmount.yaml`:
-        ```yaml
-        services:
-        web:
-            volumes:
-            - "./stored-binaries:/var/www/html/stored-binaries"
-        ```
+    * Take over the `.ddev/mutagen/mutagen.yml` by removing the `#ddev-generated` line.
+    * Add `/web/core/node_modules` to the excluded paths:
+
+    ```yaml
+    ignore:
+      paths:
+      - "/web/core/node_modules"
+    ```
+
+    * Add a `.ddev/docker-compose.bindmount.yaml`:
+
+    ```yaml
+    services:
+      web:
+        volumes:
+        - "../web/core/node_modules:/var/www/html/web/core/node_modules"
+    ```
 
     ### Troubleshooting Mutagen Sync Issues
 
@@ -165,8 +168,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     #### Advanced Mutagen Troubleshooting
 
-    Most people get all the information they need about mutagen by running `ddev mutagen monitor` to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
-
+    Most people get all the information they need about mutagen by watching `ddev mutagen monitor` in another terminal window to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
 
     ### Mutagen Strategies and Design Considerations
 
