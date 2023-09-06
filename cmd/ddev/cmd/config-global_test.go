@@ -69,7 +69,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "router=traefik")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 	assert.Contains(out, "router-http-port=80\nrouter-https-port=443")
-	assert.Contains(out, "-mailpit-http-port=8025\nmailpit-https-port=8026")
+	assert.Contains(out, "mailpit-http-port=8025\nmailpit-https-port=8026")
 	assert.Contains(out, "traefik-monitor-port=10999")
 
 	// Update a config
