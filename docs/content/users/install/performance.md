@@ -59,8 +59,9 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     Mutagen has generally been great for those using it, but it’s good to be aware of its trade-offs:
 
-    * **It’s not the right choice for every project.**<br>
+    * **It may not be the right choice for every project.**<br>
     Filesystem consistency has been excellent with Mutagen, but performance is its specialty. If consistency is your highest priority, then there are reasons to be cautious. Two-way sync is a very difficult computational problem, and problems *may* surface.
+    * For most projects the initial first-time Mutagen sync of a project is no more than 30 seconds, and subsequent starts take 10 seconds or less. If your project is taking a long time to sync, especially after the initial sync, see [Advanced Configuration](#advanced-mutagen-configuration-options) below to figure out what's taking time and how to bind-mount it.
     * **Reset if you change `mutagen.yml`.**<br>
     If you take control of the `mutagen.yml` file and make changes to it, run `ddev mutagen reset` after making changes.
     * **Avoid file changes when DDEV is stopped.**<br>
@@ -139,6 +140,8 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
         volumes:
         - "../web/core/node_modules:/var/www/html/web/core/node_modules"
     ```
+
+    * `ddev mutagen reset` and `ddev start` to get the new configuration.
 
     ### Troubleshooting Mutagen Sync Issues
 
