@@ -291,7 +291,7 @@ The URL-friendly name DDEV should use to reference the project.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | enclosing directory name | Must be unique; no two projects can have the same name. It’s best if this matches the directory name. If this option is omitted, the project will take the name of the enclosing directory.
+| :octicons-file-directory-16: project | enclosing directory name | Must be unique; no two projects can have the same name. It’s best if this matches the directory name. If this option is omitted, the project will take the name of the enclosing directory. This value may also be set via `ddev config --project-name=<name>`. (The `ddev config` flag is `project-name`, not `name`, see [`ddev config` docs](../usage/commands.md#config).)"
 
 ## `ngrok_args`
 
