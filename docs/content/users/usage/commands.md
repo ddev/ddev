@@ -28,7 +28,7 @@ Use [`ddev help`](#help) to learn more about a specific command, like this examp
 Get a detailed description of a running ddev project. Describe provides basic
 information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
-additional services like MailHog. You can run 'ddev describe' from
+additional services like Mailpit. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>'.
 
@@ -189,8 +189,8 @@ Flags:
 * `--http-port`: The router HTTP port for this project.
 * `--https-port`: The router HTTPS port for this project.
 * `--image-defaults`: Sets the default web and db container images.
-* `--mailhog-https-port`: Router port to be used for MailHog HTTPS access.
-* `--mailhog-port`: Router port to be used for MailHog HTTP access.
+* `--mailpit-http-port`: Router port to be used for Mailpit HTTP access.
+* `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access.
 * `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
 * `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
@@ -234,10 +234,14 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
+* `--mailpit-http-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
+* `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
+* `--router-http-port`: The router HTTP port *default* for all projects; can be overridden by project configuration.
+* `--router-https-port`: The router HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
 * `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999`.
@@ -730,7 +734,7 @@ Launch a browser with the current site (global shell host container command).
 
 Flags:
 
-* `--mailhog`, `-m`: Open MailHog.
+* `--mailpit`, `-m`: Open Mailpit.
 
 Example:
 
@@ -738,8 +742,8 @@ Example:
 # Open your project’s base URL in the default browser
 ddev launch
 
-# Open MailHog in the default browser
-ddev launch --mailhog
+# Open Mailpit in the default browser
+ddev launch --mailpit
 
 # Open your project’s base URL appended with `temp/phpinfo.php`
 ddev launch temp/phpinfo.php

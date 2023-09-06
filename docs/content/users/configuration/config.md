@@ -189,6 +189,16 @@ Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset
 
 Example: `59001` will have the project always use `https://127.0.0.1:59001` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
+## `host_mailpit_port`
+
+Specific, persistent Mailpit port for direct binding to localhost interface.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | automatic |
+
+Not commonly used. Can be a specific port number for a fixed Mailpit URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
+
 ## `host_webserver_port`
 
 Specific, persistent HTTP port for direct binding to localhost interface.
@@ -247,21 +257,21 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 
 Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
-## `mailhog_https_port`
+## `mailpit_http_port`
 
-Port for project’s MailHog HTTPS URL.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `8026` | Can be changed to avoid a port conflict.
-
-## `mailhog_port`
-
-Port for project’s MailHog HTTP URL.
+Port for project’s Mailpit HTTP URL.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `8025` | Can be changed to avoid a port conflict.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8025` | Can be changed to avoid a port conflict.
+
+## `mailpit_https_port`
+
+Port for project’s Mailpit HTTPS URL.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8026` | Can be changed to avoid a port conflict.
 
 ## `messages`
 

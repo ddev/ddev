@@ -2,9 +2,9 @@
 
 ## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Launch a browser with the current site
-## Usage: launch [path] [-m|--mailhog]
-## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for MailHog "ddev launch -m"
-## Flags: [{"Name":"mailhog","Shorthand":"m","Usage":"ddev launch -m launches the mailhog UI"}]
+## Usage: launch [path] [-m|--mailpit]
+## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for Mailpit "ddev launch -m"
+## Flags: [{"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the mailpit UI"}]
 
 FULLURL=${DDEV_PRIMARY_URL}
 HTTPS=""
@@ -15,14 +15,14 @@ while :; do
          -p|--phpmyadmin)
             echo "phpMyAdmin is no longer built into DDEV, please 'ddev get ddev/ddev-phpmyadmin' and use 'ddev phpmyadmin' to launch phpMyAdmin" && exit 2
             ;;
-         -m|--mailhog)
+         -m|--mailpit|--mailhog)
             if [[ ! -z "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then
-                FULLURL="${FULLURL/-${DDEV_HOST_WEBSERVER_PORT}/-${DDEV_HOST_MAILHOG_PORT}}"
+                FULLURL="${FULLURL/-${DDEV_HOST_WEBSERVER_PORT}/-${DDEV_HOST_MAILPIT_PORT}}"
             else
                 if [ "${HTTPS}" = "" ]; then
-                    FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILHOG_PORT}"
+                    FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILPIT_PORT}"
                 else
-                    FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILHOG_HTTPS_PORT}"
+                    FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILPIT_HTTPS_PORT}"
                 fi
             fi
              ;;

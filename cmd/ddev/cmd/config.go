@@ -109,9 +109,9 @@ var (
 	// hostHTTPSPortArg sets host_https_port
 	hostHTTPSPortArg string
 
-	// mailhogPortArg is arg for mailhog port
-	mailhogPortArg      string
-	mailhogHTTPSPortArg string
+	// mailpitHTTPPortArg is arg for mailpit port
+	mailpitHTTPPortArg  string
+	mailpitHTTPSPortArg string
 
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
@@ -252,8 +252,13 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 
-	ConfigCommand.Flags().StringVar(&mailhogPortArg, "mailhog-port", "", "Router port to be used for mailhog access")
-	ConfigCommand.Flags().StringVar(&mailhogHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for mailhog access (https)")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailpit-http-port", "", "Router HTTP port to be used for Mailpit access")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailhog-port", "", "Router port to be used for MailHog access")
+	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-port", "please use --mailpit-http-port instead")
+
+	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailpit-https-port", "", "Router port to be used for Mailpit access (https)")
+	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for MailHog access (https)")
+	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-https-port", "please use --mailpit-https-port instead")
 
 	// projectname flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -513,11 +518,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.NoProjectMount = noProjectMountArg
 	}
 
-	if cmd.Flag("mailhog-port").Changed {
-		app.MailhogPort = mailhogPortArg
+	if cmd.Flag("mailpit-http-port").Changed || cmd.Flag("mailhog-port").Changed {
+		app.MailpitHTTPPort = mailpitHTTPPortArg
 	}
-	if cmd.Flag("mailhog-https-port").Changed {
-		app.MailhogHTTPSPort = mailhogHTTPSPortArg
+	if cmd.Flag("mailpit-https-port").Changed || cmd.Flag("mailhog-https-port").Changed {
+		app.MailpitHTTPSPort = mailpitHTTPSPortArg
 	}
 
 	if additionalHostnamesArg != "" {

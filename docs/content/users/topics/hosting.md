@@ -88,7 +88,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 Caveats:
 
 * It’s unknown how much traffic a given server and Docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
-* DDEV does not provide outgoing SMTP mail handling service, and the development-focused MailHog feature is disabled if you’re using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to use SMTP in your application via a third-party transactional email service such as [SendGrid](https://sendgrid.com), [Postmark](https://postmarkapp.com), or [Mailgun](https://www.mailgun.com). This is the best way to ensure mail is actually delivered.
+* DDEV does not provide outgoing SMTP mail handling service, and the development-focused Mailpit feature is disabled if you’re using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to use SMTP in your application via a third-party transactional email service such as [SendGrid](https://sendgrid.com), [Postmark](https://postmarkapp.com), or [Mailgun](https://www.mailgun.com). This is the best way to ensure mail is actually delivered.
 * You may need an external cron trigger for some CMSes.
 * Debugging Let’s Encrypt failures requires viewing the `ddev-router` logs with `docker logs ddev-router`.
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.

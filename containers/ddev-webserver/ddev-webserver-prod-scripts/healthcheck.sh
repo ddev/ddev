@@ -8,8 +8,8 @@ set -e
 
 sleeptime=59
 
-# Make sure that both phpstatus, mounted code NOT mailhog
-# (mailhog is excluded on hardened/prod)
+# Make sure that both phpstatus, mounted code NOT mailpit
+# (mailpit is excluded on hardened/prod)
 # are working.
 # Since docker doesn't provide a lazy period for startup,
 # we track health. If the last check showed healthy

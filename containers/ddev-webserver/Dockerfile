@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM ddev/ddev-php-base:20230720_ted933_doc_installation_ubuntu_apt_vulnerability as ddev-webserver-base
+FROM ddev/ddev-php-base:20230831_replace_mailhog_with_mailpit as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -47,7 +47,7 @@ RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
 FROM ddev-webserver-base as ddev-webserver-dev-base
-ENV MAILHOG_VERSION="1.0.2"
+ENV MAILPIT_VERSION="v1.8.2"
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.1"
 
@@ -97,7 +97,7 @@ RUN mkdir -p /home/blackfire && chown blackfire:blackfire /home/blackfire && use
 ADD ddev-webserver-dev-base-files /
 RUN phpdismod blackfire xdebug xhprof
 
-RUN set -x; curl --fail -sSL "https://github.com/ddev/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_${TARGETPLATFORM##linux/}" -o /usr/local/bin/mailhog && chmod +x /usr/local/bin/mailhog
+RUN set -x; curl --fail -sSL "https://github.com/axllent/mailpit/releases/download/${MAILPIT_VERSION}/mailpit-linux-${TARGETPLATFORM##linux/}.tar.gz" -o /tmp/mailpit.tar.gz && tar -zx -C /usr/local/bin -f /tmp/mailpit.tar.gz mailpit && rm /tmp/mailpit.tar.gz
 
 RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive
 RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus

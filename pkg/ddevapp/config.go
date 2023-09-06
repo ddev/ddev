@@ -86,8 +86,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
-	app.MailhogPort = nodeps.DdevDefaultMailhogPort
-	app.MailhogHTTPSPort = nodeps.DdevDefaultMailhogHTTPSPort
 
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
@@ -185,11 +183,11 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
-		appcopy.MailhogPort = ""
+	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitPort {
+		appcopy.MailpitHTTPPort = ""
 	}
-	if appcopy.MailhogHTTPSPort == nodeps.DdevDefaultMailhogHTTPSPort {
-		appcopy.MailhogHTTPSPort = ""
+	if appcopy.MailpitHTTPSPort == nodeps.DdevDefaultMailpitHTTPSPort {
+		appcopy.MailpitHTTPSPort = ""
 	}
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD || appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
@@ -677,8 +675,8 @@ type composeYAMLVars struct {
 	Name                            string
 	Plugin                          string
 	AppType                         string
-	MailhogPort                     string
-	HostMailhogPort                 string
+	MailpitPort                     string
+	HostMailpitPort                 string
 	DBType                          string
 	DBVersion                       string
 	DBMountDir                      string
@@ -772,8 +770,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                      app.Name,
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
-		MailhogPort:               GetExposedPort(app, "mailhog"),
-		HostMailhogPort:           app.HostMailhogPort,
+		MailpitPort:               GetExposedPort(app, "mailpit"),
+		HostMailpitPort:           app.HostMailpitPort,
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",

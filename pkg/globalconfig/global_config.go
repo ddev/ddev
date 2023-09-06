@@ -66,6 +66,8 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
+	RouterMailpitHTTPPort            string                      `yaml:"mailpit_port,omitempty"`
+	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
 	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`
@@ -80,6 +82,8 @@ func New() GlobalConfig {
 		TableStyle:                   "default",
 		RouterHTTPPort:               nodeps.DdevDefaultRouterHTTPPort,
 		RouterHTTPSPort:              nodeps.DdevDefaultRouterHTTPSPort,
+		RouterMailpitHTTPPort:        nodeps.DdevDefaultMailpitPort,
+		RouterMailpitHTTPSPort:       nodeps.DdevDefaultMailpitHTTPSPort,
 		LastStartedVersion:           "v0.0",
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
 		Router:                       types.RouterTypeDefault,
@@ -237,6 +241,13 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.RouterHTTPSPort == "" {
 		DdevGlobalConfig.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
 	}
+	if DdevGlobalConfig.RouterMailpitHTTPPort == "" {
+		DdevGlobalConfig.RouterMailpitHTTPPort = nodeps.DdevDefaultMailpitPort
+	}
+	if DdevGlobalConfig.RouterMailpitHTTPSPort == "" {
+		DdevGlobalConfig.RouterMailpitHTTPSPort = nodeps.DdevDefaultMailpitHTTPSPort
+	}
+
 	if DdevGlobalConfig.TraefikMonitorPort == "" {
 		DdevGlobalConfig.TraefikMonitorPort = nodeps.TraefikMonitorPortDefault
 	}
@@ -345,15 +356,15 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
-#    If true, ddev-router will bind http/s and MailHog ports on all
+#    If true, ddev-router will bind http/s and Mailpit ports on all
 #    network interfaces instead of localhost, so others on your local network can
-#    access those ports. Note that this exposes the MailHog ports as well, which
+#    access those ports. Note that this exposes the Mailpit ports as well, which
 #    can be a major security issue, so choose wisely.
 
 # use_hardened_images: false
 # With hardened images a container that is exposed to the internet is
 # a harder target, although not as hard as a fully-secured host.
-# sudo is removed, mailhog is removed, and since the web container
+# sudo and mailpit are removed, and since the web container
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.

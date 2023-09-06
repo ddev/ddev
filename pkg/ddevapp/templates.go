@@ -139,12 +139,12 @@ const ConfigInstructions = `
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
 
-# mailhog_port: "8025"
-# mailhog_https_port: "8026"
-# The MailHog ports can be changed from the default 8025 and 8026
+# mailpit_http_port: "8025"
+# mailpit_https_port: "8026"
+# The Mailpit ports can be changed from the default 8025 and 8026
 
-# host_mailhog_port: "8025"
-# The mailhog port is not normally bound on the host at all, instead being routed
+# host_mailpit_port: "8025"
+# The mailpit port is not normally bound on the host at all, instead being routed
 # through ddev-router, but it can be bound directly to localhost if specified here.
 
 # webimage_extra_packages: [php7.4-tidy, php-bcmath]

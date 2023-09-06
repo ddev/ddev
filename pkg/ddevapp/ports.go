@@ -15,7 +15,7 @@ func GetExposedPort(app *DdevApp, service string) string {
 			return "5432"
 		}
 		return "3306"
-	case "mailhog":
+	case "mailpit":
 		return "8025"
 	case "web":
 		return "80"
