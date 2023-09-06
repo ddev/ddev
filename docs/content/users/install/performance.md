@@ -67,7 +67,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * **Avoid file changes when DDEV is stopped.**<br>
     If you change files—checking out a different branch, removing a file—while DDEV is stopped, Mutagen has no way to know about it. When you start again, it will get the files that are stored and bring them back to the host. If you *do* change files while DDEV is stopped, run `ddev mutagen reset` before restarting the project so Mutagen only starts with awareness of the host’s file contents.
     * **It modestly increases disk usage.**<br>
-    Mutagen integration increases the size of your project code’s disk usage, because the code exists both on your computer *and* inside a Docker volume. Your user-uploaded files directories (`upload_dirs`) are normally excluded from mutagen so they're not a problem for most project types or generic configurations where `upload_dirs` is specified. Take care that you have enough overall disk space, and that on macOS you’ve allocated enough file space in Docker Desktop. If you have other large directories you can [exclude specific directories from getting synced](#advanced-mutagen-configuration-options) and use a regular Docker mount for them instead.
+    Mutagen integration increases the size of your project code’s disk usage, because the code exists both on your computer *and* inside a Docker volume. Your user-uploaded files directories (`upload_dirs`) are normally excluded from Mutagen so they're not a problem for most project types or generic configurations where `upload_dirs` is specified. Take care that you have enough overall disk space, and that on macOS you’ve allocated enough file space in Docker Desktop. If you have other large directories you can [exclude specific directories from getting synced](#advanced-mutagen-configuration-options) and use a regular Docker mount for them instead.
     * **Beware simultaneous changes to the same file in both filesystems.**<br>
     As we pointed out above, any project likely to change the same file on the host *and* inside the container may encounter conflicts.
     * **Massive changes can cause problems.**<br>
@@ -171,7 +171,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     #### Advanced Mutagen Troubleshooting
 
-    Most people get all the information they need about mutagen by watching `ddev mutagen monitor` in another terminal window to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
+    You can observe what Mutagen is doing by watching `ddev mutagen monitor` in another terminal window to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
 
     ### Mutagen Strategies and Design Considerations
 
