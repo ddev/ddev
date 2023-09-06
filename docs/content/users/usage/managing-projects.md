@@ -146,10 +146,10 @@ Database imports can be any of the following file types:
 - Gzipped SQL Dump (`.sql.gz`)
 - Xz’d SQL Dump (`.sql.xz`)
 - (Gzipped) Tarball Archive (`.tar`, `.tar.gz`, `.tgz`)
-- Zip Archive (`.zip`)
+- ZIP Archive (`.zip`)
 - stdin
 
-If a Tarball Archive or Zip Archive is provided for the import, you’ll be prompted to specify a path within the archive to use for the import asset. The specified path should provide a raw SQL dump (`.sql`). In the following example, the database we want to import is named `data.sql` and resides at the top level of the archive:
+If a Tarball Archive or ZIP Archive is provided for the import, you’ll be prompted to specify a path within the archive to use for the import asset. The specified path should provide a raw SQL dump (`.sql`). In the following example, the database we want to import is named `data.sql` and resides at the top level of the archive:
 
 ```bash
 ddev import-db
