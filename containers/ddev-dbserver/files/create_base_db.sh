@@ -13,7 +13,6 @@ chmod ugo+w /var/tmp
 mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
-
 mysqld --version
 mysqld_version=$(mysqld --version | awk '{ print $3 }')
 mysqld_version=${mysqld_version%%-*}
