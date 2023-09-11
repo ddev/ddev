@@ -77,6 +77,7 @@ if [  "${mysqld_version%%%.*}" = "8.0" ]; then
 EOF
 fi
 
+mysql -uroot -proot -e "SELECT @@character_set_database, @@collation_database;"
 
 rm -rf ${OUTDIR}/*
 
