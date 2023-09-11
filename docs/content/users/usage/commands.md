@@ -240,6 +240,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
+* `--project-tld`: Set the default top-level domain to be used for all projects. (default `"ddev.site"`). Note that this will be overridden in a project that defines `project_tld`.
 * `--router-http-port`: The router HTTP port *default* for all projects; can be overridden by project configuration.
 * `--router-https-port`: The router HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
