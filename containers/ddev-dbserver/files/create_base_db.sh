@@ -84,10 +84,10 @@ mysql -uroot -proot -e "SELECT @@character_set_database, @@collation_database;"
 
 rm -rf ${OUTDIR}/*
 
-backuptool=mariabackup
+backuptool="mariabackup --defaults-file=/var/tmp/my.cnf"
 streamtool=xbstream
 if command -v xtrabackup; then
-  backuptool="xtrabackup --datadir=/var/lib/mysql";
+  backuptool="xtrabackup --defaults-file=/var/tmp/my.cnf --datadir=/var/lib/mysql";
   streamtool=xbstream
 fi
 
@@ -98,7 +98,7 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 # mysql-8.0 or mariadb-10.5.
 server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
 echo ${server_db_version} >/var/lib/mysql/db_mariadb_version.txt
-${backuptool} --defaults-file=/var/tmp/my.cnf --backup --stream=${streamtool} --user=root --password=root --socket=$SOCKET  | gzip >${OUTDIR}/base_db.gz
+${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=$SOCKET  | gzip >${OUTDIR}/base_db.gz
 rm -f /tmp/raw_mysql_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
