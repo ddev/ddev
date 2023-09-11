@@ -50,6 +50,9 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
+RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
+RUN ln -s -f /dev/stderr /var/log/mysqld.err
+
 # Build a starter base db
 RUN /create_base_db.sh
 
@@ -57,9 +60,6 @@ RUN chmod ugo+x /healthcheck.sh
 
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
-
-RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
-RUN ln -s -f /dev/stderr /var/log/mysqld.err
 
 RUN rm -rf /var/lib/mysql/*
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
