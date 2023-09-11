@@ -396,13 +396,13 @@ func drupalPostStartAction(app *DdevApp) error {
 		}
 		// SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED required in Drupal 9.5+
 		if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
-			stdout, stderr, err := app.Exec(&ExecOpts{
+			_, _, err := app.Exec(&ExecOpts{
 				Service:   "db",
-				Cmd:       `mysql -uroot -proot -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;"`,
+				Cmd:       `mysql -uroot -proot -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;" >/dev/null 2>&1`,
 				NoCapture: false,
 			})
 			if err != nil {
-				util.Warning("Unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+				util.Warning("Unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: %v", err)
 			}
 		}
 	}
