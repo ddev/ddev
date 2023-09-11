@@ -14,6 +14,8 @@ mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmo
 
 echo 'Initializing mysql'
 
+id
+ls -l /etc/my.cnf
 grep utf8mb4 /etc/my.cnf
 
 mysqld --version
@@ -32,7 +34,7 @@ else
     mysql_install_db --force --datadir=/var/lib/mysql
 fi
 echo "Starting mysqld --skip-networking --socket=${SOCKET}"
-mysqld --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+mysqld --defaults-file=/etc/my.cnf --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
