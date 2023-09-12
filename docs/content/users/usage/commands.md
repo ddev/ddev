@@ -1159,12 +1159,11 @@ ddev service enable solr
 [Share the current project](../topics/sharing.md) on the internet via [ngrok](https://ngrok.com).
 
 !!!tip
-    Some ngrok arguments are supported via CLI, but *any* ngrok flag can be specified in the [`ngrok_args` config setting](../configuration/config.md#ngrok_args).
+    Any ngrok flag can also be specified in the [`ngrok_args` config setting](../configuration/config.md#ngrok_args).
 
 Flags:
 
-* `--basic-auth`: Username and password, separated by a colon.
-* `--subdomain`: Subdomain to use with paid ngrok account.
+* `--ngrok-args`: Accepts any flag from `ngrok http --help`.
 
 Example:
 
@@ -1172,11 +1171,11 @@ Example:
 # Share the current project with ngrok
 ddev share
 
-# Share the current project with ngrok, using subdomain `foo.*`
-ddev share --subdomain foo
+# Share the current project with ngrok, using domain `foo.ngrok-free.app`
+ddev share --ngrok-args "--domain foo.ngrok-free.app"
 
 # Share the current project using ngrok’s basic-auth argument
-ddev share --basic-auth username:pass1234
+ddev share --ngrok-args "--basic-auth username:pass1234"
 
 # Share my-project with ngrok
 ddev share my-project

@@ -14,37 +14,44 @@ There are at least three different ways to share a running DDEV project outside 
 
 ## Using `ddev share` (Easiest)
 
-`ddev share` proxies the project via [ngrok](https://ngrok.com) for sharing your project with others on your team or around the world. It’s built into DDEV and requires a free or paid [ngrok.com](https://ngrok.com) account. Run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device. [Read the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok) or run `ddev share -h` for more.
+`ddev share` proxies the project via [ngrok](https://ngrok.com) for sharing your project with others on your team or around the world. It’s built into DDEV and requires an [ngrok.com](https://ngrok.com) account. Run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device.
 
-CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok’s $8/month [personal plan](https://ngrok.com/pricing) allows you to use a persistent subdomain so you won’t have to frequently change the base URL.
+!!!tip "How to setup ngrok"
+    Read [Getting Started with ngrok](https://ngrok.com/docs/getting-started/) and run `ddev share -h` for more.
 
-### Setting up a Stable ngrok Subdomain
+    Also see [the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok).
 
-1. Get a paid token with at least the basic plan, and configure it. It will be in `~/.ngrok2/ngrok.yml` as `authtoken`.
-2. Configure `ngrok_args` to use a stable subdomain. In `.ddev/config.yaml`, `ngrok_args: --subdomain wp23` will result in ngrok always using `wp23.ngrok.io` as the URL, so it’s not changing on you all the time.
+CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok allows you to use one static domain for free so you won’t have to frequently change the base URL.
+
+### Setting up a Stable ngrok Domain
+
+1. [Get a free static domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) from ngrok. Let's say we got `wp23.ngrok-free.app`.
+2. Pass the domain to the ngrok args:
+    * In `.ddev/config.yaml`, `ngrok_args: --domain wp23.ngrok-free.app` will result in ngrok always using `wp23.ngrok-free.app` as the URL, so it’s not changing on you all the time.
+    * Alternatively you can pass the domain directly to `ddev share --ngrok-args "--domain wp23.ngrok-free.app"`
 
 ### WordPress: Change the URL with `wp search-replace`
 
 WordPress only has the one base URL, but the `wp` command is built into DDEV’s web container.
 
-This set of steps assumes an ngrok subdomain of `wp23` and a starting URL of `https://wordpress.ddev.site`.
+This set of steps assumes an ngrok domain of `wp23.ngrok-free.app` and a starting URL of `https://wordpress.ddev.site`.
 
-* Configure `.ddev/config.yaml` to use a custom subdomain: `ngrok_args: --subdomain wp23`.
+* Configure `.ddev/config.yaml` to use a custom domain: `ngrok_args: --domain wp23.ngrok-free.app`.
 * Make a backup of your database with [`ddev export-db`](../usage/commands.md#export-db) or [`ddev shapshot`](../usage/commands.md#snapshot).
-* Edit `wp-config-ddev.php` (or whatever your config is) to change `WP_HOME`, for example, `define('WP_HOME', 'https://wp23.ngrok.io');`
-* `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok.io`, assuming your project is configured for `https://wordpress.ddev.site` and your `ngrok_args` are configured for the wp23 subdomain.
+* Edit `wp-config-ddev.php` (or whatever your config is) to change `WP_HOME`, for example, `define('WP_HOME', 'https://wp23.ngrok-free.app');`
+* `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok-free.app`, assuming your project is configured for `https://wordpress.ddev.site` and your `ngrok_args` are configured for the `wp23.ngrok-free.app` domain.
 * Now run [`ddev share`](../usage/commands.md#share).
 
 ### Magento2: Change the URL with Magento Tool
 
-This set of steps assumes an ngrok subdomain `mg2`:
+This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
 
-* Configure `.ddev/config.yaml` to use a custom subdomain with `ngrok_args: --subdomain mg2`.
+* Configure `.ddev/config.yaml` to use a custom domain with `ngrok_args: --domain mg2.ngrok-free.app`.
 * Make a backup of your database.
 * Edit your `.ddev/config.yaml`.
 * Run [`ddev ssh`](../usage/commands.md#ssh).
-* Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok.io/`.
-* Run [`ddev share`](../usage/commands.md#share) and you’ll see your project at `mg2.ngrok.io`.
+* Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/`.
+* Run [`ddev share`](../usage/commands.md#share) and you’ll see your project at `mg2.ngrok-free.app`.
 
 ## Using nip.io or Custom Name Resolution Locally
 

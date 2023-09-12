@@ -319,10 +319,7 @@ Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) w
 | -- | -- | --
 | :octicons-file-directory-16: project | `` |
 
-Example: `--basic-auth username:pass1234`.
-
-!!!warning
-    Some ngrok flags, such as `--subdomain`, require a paid ngrok account.
+Example: `--basic-auth username:pass1234 --domain foo.ngrok-free.app`.
 
 ## `no_bind_mounts`
 
