@@ -11,13 +11,6 @@ $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 $driver = "{{ $config.DatabaseDriver }}";
 
-// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
-// so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
-  $host = "{{ $config.DockerIP }}";
-  $port = {{ $config.DBPublishedPort }};
-}
-
 $databases['default']['default']['database'] = "{{ $config.DatabaseName }}";
 $databases['default']['default']['username'] = "{{ $config.DatabaseUsername }}";
 $databases['default']['default']['password'] = "{{ $config.DatabasePassword }}";
