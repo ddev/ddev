@@ -30,15 +30,18 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        dbtype: [mariadb_5.5, mariadb_10.0, mariadb_10.1, mariadb_10.2, mariadb_10.3, mariadb_10.4, mariadb_10.5, mariadb_10.6, mariadb_10.7, mysql_5.5, mysql_5.6, mysql_5.7, mysql_8.0]
+        dbtype: [mariadb_5.5, mariadb_10.0, mariadb_10.1, mariadb_10.2, mariadb_10.3, mariadb_10.4, mariadb_10.5, mariadb_10.6, mariadb_10.7, mariadb_10.8, mariadb_10.11, mysql_5.5, mysql_5.6, mysql_5.7, mysql_8.0]
       fail-fast: false
 
     steps:
     - uses: actions/checkout@v4
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
+      with:
+        image: tonistiigi/binfmt:master
+        platforms: all
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@master
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:

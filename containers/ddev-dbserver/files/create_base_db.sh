@@ -12,6 +12,10 @@ chown -R "$(id -u):$(id -g)" $OUTDIR
 chmod ugo+w /var/tmp
 mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
 
+# On Github Actions, it seems that Apparmor prevents mysqld from having access to /etc/my.cnf, so
+# copy to a simpler directory
+cp /etc/my.cnf /var/tmp
+
 echo 'Initializing mysql'
 mysqld --version
 mysqld_version=$(mysqld --version | awk '{ print $3 }')
@@ -20,16 +24,16 @@ mysqld_version=${mysqld_version%.*}
 echo version=$mysqld_version
 # Oracle mysql 5.7+ deprecates mysql_install_db
 if [ "${mysqld_version}" = "5.7" ] || [  "${mysqld_version%%%.*}" = "8.0" ]; then
-    mysqld --initialize-insecure --datadir=/var/lib/mysql --server-id=0
+    mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=/var/lib/mysql --server-id=0
 else
     # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
     if command -v mysqld | grep usr.local; then
         cd /usr/local/mysql
     fi
-    mysql_install_db --force --datadir=/var/lib/mysql
+    mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=/var/lib/mysql
 fi
 echo "Starting mysqld --skip-networking --socket=${SOCKET}"
-mysqld --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
@@ -77,13 +81,14 @@ if [  "${mysqld_version%%%.*}" = "8.0" ]; then
 EOF
 fi
 
+mysql -uroot -proot -e "SELECT @@character_set_database, @@collation_database;"
 
 rm -rf ${OUTDIR}/*
 
-backuptool=mariabackup
+backuptool="mariabackup --defaults-file=/var/tmp/my.cnf"
 streamtool=xbstream
 if command -v xtrabackup; then
-  backuptool="xtrabackup --datadir=/var/lib/mysql";
+  backuptool="xtrabackup --defaults-file=/var/tmp/my.cnf --datadir=/var/lib/mysql";
   streamtool=xbstream
 fi
 

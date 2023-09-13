@@ -21,7 +21,7 @@ var WebTag = "20230831_replace_mailhog_with_mailpit" // Note that this can be ov
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20230806_mysql_config_windows"
+var BaseDBTag = "20230911_fix_dbserver"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:20230816_traefik_image"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20230816_traefik_image"

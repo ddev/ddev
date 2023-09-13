@@ -81,16 +81,18 @@ The easiest way to push Docker images is to use the GitHub Actions workflow, esp
 3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
 <!-- markdown-link-check-disable-next-line -->
-You can push an image at <https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml>
+You can push all images besides `ddev-dbserver` at <https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml>
+<!-- markdown-link-check-disable-next-line -->
+You can push `ddev-dbserver` images at <https://github.com/ddev/ddev/actions/workflows/push-tagged-dbimage.yml>
 
 <!-- markdown-link-check-disable-next-line -->
-If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/rfay/ddev/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`.
+If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/rfay/ddev/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`. You can do the same with `ddev-dbserver` at `https://github.com/rfay/ddev/actions/workflows/push-tagged-dbimage.yml` for example.
 
 * Visit `https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml`.
 * Click the “Push tagged image” workflow on the left side of the page.
 * Click the “Run workflow” button in the blue section above the workflow runs.
 * Choose the branch to build from (usually `master`).
-* Enter the image (`ddev-webserver`, `ddev-dbserver`, `ddev-php-base`, etc.).
+* Enter the image (`ddev-webserver`, `ddev-php-base`, etc.).
 * Enter the tag that will be used in `pkg/version/version.go`.
 
 ## Pushing Docker Images Manually
@@ -102,6 +104,7 @@ While it’s more error-prone, images can be pushed from the command line:
 3. `cd containers/<image>`.
 4. Before pushing `ddev-webserver`, make sure you’ve pushed a version of `ddev-php-base` and updated `ddev-webserver`’s Dockerfile to use that as a base.
 5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.
+6. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
 
 ## Maintaining `ddev-dbserver` MySQL 5.7 & 8.0 ARM64 Images
 
