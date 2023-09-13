@@ -19,7 +19,6 @@ There are at least three different ways to share a running DDEV project outside 
 !!!tip "ngrok in depth"
     Run `ddev share -h` for more, and consider reading [ngrok’s getting started guide](https://ngrok.com/docs/getting-started/) and [DrupalEasy’s more detailed walkthrough of the `share` command](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok).
 
-
 CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok allows you to use one static domain for free so you won’t have to frequently change the base URL.
 
 ### Setting up a Stable ngrok Domain
