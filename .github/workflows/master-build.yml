@@ -148,6 +148,7 @@ jobs:
         env:
           DDEV_MACOS_SIGNING_PASSWORD: ${{ secrets.DDEV_MACOS_SIGNING_PASSWORD }}
           DDEV_MACOS_APP_PASSWORD: ${{ secrets.DDEV_MACOS_APP_PASSWORD }}
+          TEAM_ID: "9HQ298V2BW"
         run: |
           set -o errexit -o pipefail
           if [ -z "${DDEV_MACOS_SIGNING_PASSWORD}" ] ; then echo "DDEV_MACOS_SIGNING_PASSWORD is empty"; exit 1; fi
