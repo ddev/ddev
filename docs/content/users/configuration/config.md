@@ -63,7 +63,7 @@ The wildcard (`*`) setting only works if you’re using DNS to resolve hostnames
 
 ## `bind_all_interfaces`
 
-When the network interfaces of a project should be exposed to the local network, you can specify `bind_all_interfaces: true` to do that. This is sometimes used to share projects on a local network, see [Sharing Your Project](../topics/sharing.md#exposing-a-host-port-and-providing-a-direct-url). This is an unusual application.
+When the network interfaces of a project should be exposed to the local network, you can specify `bind_all_interfaces: true` to do that. This is an unusual application, sometimes used to [share projects on a local network](../topics/sharing.md#exposing-a-host-port-and-providing-a-direct-url).
 
 | Type | Default | Usage
 | -- | -- | --
