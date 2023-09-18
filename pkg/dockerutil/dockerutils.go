@@ -512,7 +512,7 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 // returns stdout, stderr, error/nil
 func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
 	var arg []string
-	var stdout string
+	var stdout bytes.Buffer
 	var stderr string
 
 	_, err := DownloadDockerComposeIfNeeded()
@@ -547,7 +547,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
 	}
 
-	chanOut := make(chan string)
+	chanOut := make(chan []byte)
 	chanErr := make(chan string)
 	stopOut := make(chan struct{})
 	stopErr := make(chan struct{})
@@ -558,6 +558,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	// Read command's stdout and stderr line by line
 	inOut := bufio.NewScanner(stdoutPipe)
 	inErr := bufio.NewScanner(stderrPipe)
+	inOut.Split(bufio.ScanBytes)
 
 	// Ignore chatty things from docker-compose like:
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
@@ -571,7 +572,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	go func() {
 		for inOut.Scan() {
-			chanOut <- inOut.Text()
+			chanOut <- inOut.Bytes()
 		}
 		close(stopOut)
 	}()
@@ -590,7 +591,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 			_, _ = fmt.Fprintf(os.Stderr, ".")
 
 		case line := <-chanOut:
-			stdout = stdout + line + "\n"
+			stdout.Write(line)
 
 		case line := <-chanErr:
 			if len(stderr) > 0 {
@@ -615,9 +616,9 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	err = proc.Wait()
 	if err != nil {
-		return stdout, stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout, stderr)
+		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
 	}
-	return stdout, stderr, nil
+	return stdout.String(), stderr, nil
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
