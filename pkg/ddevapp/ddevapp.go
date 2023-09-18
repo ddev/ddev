@@ -2016,11 +2016,15 @@ func (app *DdevApp) DockerEnv() {
 		dbPortStr = app.HostDBPort
 	}
 
-	// Figure out what the host-webserver port is
+	// Figure out what the host-webserver (host-http) port is
+	// First we try to see if there's an existing webserver container and use that
 	hostHTTPPort, err := app.GetPublishedPort("web")
 	hostHTTPPortStr := ""
+	// Otherwise we'll use the configured value from app.HostWebserverPort
 	if hostHTTPPort > 0 || err == nil {
 		hostHTTPPortStr = strconv.Itoa(hostHTTPPort)
+	} else {
+		hostHTTPPortStr = app.HostWebserverPort
 	}
 
 	// Figure out what the host-webserver https port is
@@ -2030,6 +2034,9 @@ func (app *DdevApp) DockerEnv() {
 	hostHTTPSPortStr := ""
 	if hostHTTPSPort > 0 || err == nil {
 		hostHTTPSPortStr = strconv.Itoa(hostHTTPSPort)
+	} else {
+		hostHTTPSPortStr = app.HostHTTPSPort
+
 	}
 
 	// DDEV_DATABASE_FAMILY can be use for connection URLs
@@ -2059,6 +2066,7 @@ func (app *DdevApp) DockerEnv() {
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_MAILPIT_PORT":   app.HostMailpitPort,
+		"DDEV_HOST_HTTP_PORT":      hostHTTPPortStr,
 		"DDEV_HOST_HTTPS_PORT":     hostHTTPSPortStr,
 		"DDEV_HOST_WEBSERVER_PORT": hostHTTPPortStr,
 		"DDEV_MAILPIT_PORT":        app.GetMailpitPort(),
