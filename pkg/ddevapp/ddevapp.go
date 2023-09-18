@@ -1259,10 +1259,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Build extra layers on web and db images if necessary
 	output.UserOut.Printf("Building project-specific images... This can take some time.")
 	buildDurationStart := util.ElapsedDuration(time.Now())
-	progress := "quiet"
-	if globalconfig.DdevVerbose {
-		progress = "auto"
-	}
+	progress := "plain"
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
 	out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "--progress="+progress, "build")
 	if err != nil {

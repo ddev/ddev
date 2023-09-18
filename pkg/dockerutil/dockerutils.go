@@ -512,7 +512,7 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 // returns stdout, stderr, error/nil
 func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
 	var arg []string
-	var stdout bytes.Buffer
+	var stdout string
 	var stderr string
 
 	_, err := DownloadDockerComposeIfNeeded()
@@ -530,10 +530,14 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	if err != nil {
 		return "", "", err
 	}
+
 	proc := exec.Command(path, arg...)
-	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
 
+	stdoutPipe, err := proc.StdoutPipe()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to proc.StdoutPipe(): %v", err)
+	}
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {
 		return "", "", fmt.Errorf("failed to proc.StderrPipe(): %v", err)
@@ -543,8 +547,17 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
 	}
 
+	chanOut := make(chan string)
+	chanErr := make(chan string)
+	stopOut := make(chan struct{})
+	stopErr := make(chan struct{})
+
+	endOut := false
+	endErr := false
+
 	// Read command's stdout line by line
-	in := bufio.NewScanner(stderrPipe)
+	inOut := bufio.NewScanner(stdoutPipe)
+	inErr := bufio.NewScanner(stderrPipe)
 
 	// Ignore chatty things from docker-compose like:
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
@@ -556,26 +569,57 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
 	}
 
-	for in.Scan() {
-		line := in.Text()
-		if len(stderr) > 0 {
-			stderr = stderr + "\n"
+	go func() {
+		for inOut.Scan() {
+			chanOut <- inOut.Text()
 		}
-		stderr = stderr + line
-		line = strings.Trim(line, "\n\r")
-		switch {
-		case downRE.MatchString(line):
-			break
-		default:
-			output.UserOut.Println(line)
+		close(stopOut)
+	}()
+
+	go func() {
+		for inErr.Scan() {
+			chanErr <- inErr.Text()
+		}
+		close(stopErr)
+	}()
+
+	for !endOut || !endErr {
+		select {
+		case <-time.After(1 * time.Second):
+			// Printed when timed out
+			_, _ = fmt.Fprintf(os.Stderr, ".")
+
+		case line := <-chanOut:
+			if len(stdout) > 0 {
+				stdout = stdout + "\n"
+			}
+			stdout = stdout + line
+
+		case line := <-chanErr:
+			if len(stderr) > 0 {
+				stderr = stderr + "\n"
+			}
+			stderr = stderr + line
+			switch {
+			case downRE.MatchString(line):
+				break
+			default:
+				output.UserOut.Println(line)
+			}
+
+		case <-stopOut:
+			endOut = true
+
+		case <-stopErr:
+			endErr = true
 		}
 	}
 
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
+		return stdout, stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout, stderr)
 	}
-	return stdout.String(), stderr, nil
+	return stdout, stderr, nil
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
