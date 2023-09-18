@@ -555,7 +555,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	endOut := false
 	endErr := false
 
-	// Read command's stdout line by line
+	// Read command's stdout and stderr line by line
 	inOut := bufio.NewScanner(stdoutPipe)
 	inErr := bufio.NewScanner(stderrPipe)
 
