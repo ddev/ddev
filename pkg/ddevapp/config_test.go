@@ -1431,3 +1431,62 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 		assert.Empty(app.MariaDBVersion)
 	}
 }
+
+// TestConfigFunctionality tests to make sure that config values actually
+// cause their desired effects
+func TestConfigFunctionality(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+
+	app, err := NewApp(site.Dir, false)
+	assert.NoError(err)
+	err = os.Chdir(site.Dir)
+	assert.NoError(err)
+
+	origApp := *app
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		err = origApp.WriteConfig()
+		assert.NoError(err)
+	})
+
+	hostHTTPPort := "9998"
+	hostHTTPSPort := "9999"
+	hostDBPort := "10099"
+
+	app.HostWebserverPort = hostHTTPPort
+	app.HostHTTPSPort = hostHTTPSPort
+	app.HostDBPort = hostDBPort
+
+	err = app.WriteConfig()
+	require.NoError(t, err)
+	err = app.Restart()
+	require.NoError(t, err)
+
+	require.Equal(t, hostHTTPPort, app.HostWebserverPort)
+	require.Equal(t, hostHTTPSPort, app.HostHTTPSPort)
+
+	safeURL := "http://127.0.0.1:" + hostHTTPPort + site.Safe200URIWithExpectation.URI
+	out, _, err := testcommon.GetLocalHTTPResponse(t, safeURL, 60)
+	assert.NoError(err)
+	assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+
+	if !dockerutil.IsColima() {
+		safeURL = "https://127.0.0.1:" + hostHTTPSPort + site.Safe200URIWithExpectation.URI
+		out, _, err = testcommon.GetLocalHTTPResponse(t, safeURL, 60)
+		assert.NoError(err)
+		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+	}
+
+	// Make sure that the db port is configured
+	_, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
+	require.NoError(t, err)
+}
