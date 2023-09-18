@@ -209,7 +209,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
-	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitPort()
+	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
@@ -482,9 +482,9 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 	return port
 }
 
-// GetMailpitPort returns app's router http port
+// GetMailpitHTTPPort returns app's router http port
 // Start with global config and then override with project config
-func (app *DdevApp) GetMailpitPort() string {
+func (app *DdevApp) GetMailpitHTTPPort() string {
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort
 	if port == "" {
 		port = nodeps.DdevDefaultMailpitPort
@@ -2065,12 +2065,16 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_FILES_DIRS":                strings.Join(app.getContainerUploadDirs(), ","),
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT":   app.HostMailpitPort,
 		"DDEV_HOST_MAILPIT_PORT":   app.HostMailpitPort,
 		"DDEV_HOST_HTTP_PORT":      hostHTTPPortStr,
 		"DDEV_HOST_HTTPS_PORT":     hostHTTPSPortStr,
 		"DDEV_HOST_WEBSERVER_PORT": hostHTTPPortStr,
-		"DDEV_MAILPIT_PORT":        app.GetMailpitPort(),
+		"DDEV_MAILHOG_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
+		"DDEV_MAILHOG_PORT":        app.GetMailpitHTTPPort(),
+		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
 		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
+		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
 		"DDEV_DOCROOT":             app.Docroot,
 		"DDEV_HOSTNAME":            app.HostName(),
 		"DDEV_UID":                 uidStr,

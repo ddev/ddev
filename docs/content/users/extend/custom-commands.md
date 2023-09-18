@@ -75,6 +75,8 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_HOST_HTTPS_PORT`: Localhost port for HTTPS on web server
 * `DDEV_HOST_MAILPIT_PORT`: Localhost port for Mailpit
 * `DDEV_HOST_WEBSERVER_PORT`: Localhost port of the web server
+* `DDEV_MAILPIT_HTTP_PORT`: Router Mailpit port for HTTP
+* `DDEV_MAILPIT_HTTPS_PORT`: Router Mailpit port for HTTPS
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary project URL
