@@ -590,16 +590,14 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 			_, _ = fmt.Fprintf(os.Stderr, ".")
 
 		case line := <-chanOut:
-			if len(stdout) > 0 {
-				stdout = stdout + "\n"
-			}
-			stdout = stdout + line
+			stdout = stdout + line + "\n"
 
 		case line := <-chanErr:
 			if len(stderr) > 0 {
 				stderr = stderr + "\n"
 			}
 			stderr = stderr + line
+			line = strings.Trim(line, "\n\r")
 			switch {
 			case downRE.MatchString(line):
 				break
