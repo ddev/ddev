@@ -267,7 +267,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
-	assert.Equal(mailpitHTTPPort, app.GetMailpitPort())
+	assert.Equal(mailpitHTTPPort, app.GetMailpitHTTPPort())
 	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
 	assert.Equal(projectTLD, app.ProjectTLD)
 	assert.Equal(timezone, app.Timezone)
