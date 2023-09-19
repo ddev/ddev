@@ -185,6 +185,10 @@
       "description": "The web container's localhost-bound https port",
       "type": "string"
     },
+    "host_mailpit_port": {
+      "description": "The mailpit localhost-bound port",
+      "type": "string"
+    },
     "host_webserver_port": {
       "description": "The web container's localhost-bound port",
       "type": "string"
