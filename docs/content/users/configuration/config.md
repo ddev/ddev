@@ -464,17 +464,17 @@ Port for DDEV router’s HTTPS traffic.
 
 See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
 
-## `simple-formatting`
+## `simple_formatting`
 
 Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) table formatting.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`. If you don't like the table lines in `ddev list` or `ddev describe`, you can completely turn them off with `ddev config --simple-formatting=true`.
 
 When `true`, turns off most table formatting in [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) and suppresses colorized text everywhere.
 
-## `table-style`
+## `table_style`
 
 Style for [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe).
 
@@ -482,7 +482,7 @@ Style for [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usag
 | -- | -- | --
 | :octicons-globe-16: global | `default` | Can be `default`, `bold`, and `bright`.
 
-`bright` is a pleasant, colorful output some people may prefer.
+`bright` is a pleasant, colorful output some people may prefer. If you don't like the table lines at all, you can remove them with `ddev config --simple-formatting=true`.
 
 ## `timezone`
 
