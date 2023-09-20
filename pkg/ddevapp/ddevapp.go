@@ -1261,7 +1261,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	buildDurationStart := util.ElapsedDuration(time.Now())
 	progress := "plain"
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
-	out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "--progress="+progress, "build")
+	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Action:       []string{"--progress=" + progress, "build"},
+		Progress:     true,
+	})
 	if err != nil {
 		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
 	}
@@ -1272,7 +1276,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	util.Success("Project-specific images built in %s.", buildDuration)
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
-	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "-d")
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Action:       []string{"up", "-d"},
+	})
 	if err != nil {
 		return err
 	}
@@ -1783,7 +1790,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.NoCapture || opts.Tty {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
 	} else {
-		outRes, errRes, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, r...)
+		outRes, errRes, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       r,
+		})
 		stdoutResult = outRes
 		stderrResult = errRes
 	}
@@ -2142,7 +2152,10 @@ func (app *DdevApp) Pause() error {
 
 	_ = SyncAndPauseMutagenSession(app)
 
-	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
+	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Action:       []string{"stop"},
+	}); err != nil {
 		return err
 	}
 	err = app.ProcessHooks("post-pause")

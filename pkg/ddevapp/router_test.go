@@ -142,7 +142,10 @@ func TestLetsEncrypt(t *testing.T) {
 
 	// Force router stop so it will start up with Lets Encrypt mount
 	dest := ddevapp.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{dest},
+		Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+	})
 	assert.NoError(err)
 
 	err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
@@ -157,7 +160,10 @@ func TestLetsEncrypt(t *testing.T) {
 		globalconfig.DdevGlobalConfig = savedGlobalconfig
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
-		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{dest},
+			Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+		})
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)

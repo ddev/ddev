@@ -259,7 +259,10 @@ func TestComposeCmd(t *testing.T) {
 
 	composeFiles := []string{filepath.Join("testdata", "docker-compose.yml")}
 
-	stdout, stderr, err := ComposeCmd(composeFiles, "config", "--services")
+	stdout, stderr, err := ComposeCmd(&ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"config", "--services"},
+	})
 	assert.NoError(err)
 	assert.Contains(stdout, "web")
 	assert.Contains(stdout, "db")
@@ -267,7 +270,10 @@ func TestComposeCmd(t *testing.T) {
 
 	composeFiles = append(composeFiles, filepath.Join("testdata", "docker-compose.override.yml"))
 
-	stdout, stderr, err = ComposeCmd(composeFiles, "config", "--services")
+	stdout, stderr, err = ComposeCmd(&ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"config", "--services"},
+	})
 	assert.NoError(err)
 	assert.Contains(stdout, "web")
 	assert.Contains(stdout, "db")
@@ -275,7 +281,10 @@ func TestComposeCmd(t *testing.T) {
 	assert.Contains(stderr, "Defaulting to a blank string")
 
 	composeFiles = []string{"invalid.yml"}
-	_, _, err = ComposeCmd(composeFiles, "config", "--services")
+	_, _, err = ComposeCmd(&ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"config", "--services"},
+	})
 	assert.Error(err)
 }
 
@@ -300,11 +309,17 @@ func TestComposeWithStreams(t *testing.T) {
 	composeFiles := []string{realComposeFile}
 
 	t.Cleanup(func() {
-		_, _, err = ComposeCmd(composeFiles, "down")
+		_, _, err = ComposeCmd(&ComposeCmdOpts{
+			ComposeFiles: composeFiles,
+			Action:       []string{"down"},
+		})
 		assert.NoError(err)
 	})
 
-	_, _, err = ComposeCmd(composeFiles, "up", "-d")
+	_, _, err = ComposeCmd(&ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"up", "-d"},
+	})
 	require.NoError(t, err)
 
 	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": t.Name()})

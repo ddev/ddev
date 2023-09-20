@@ -3020,7 +3020,10 @@ func TestRouterPortsCheck(t *testing.T) {
 	// StopRouterIfNoContainers can't be used here because it checks to see if containers are running
 	// and doesn't do its job as a result.
 	dest := ddevapp.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{dest},
+		Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+	})
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
 	// Occupy ports 80/443 using docker run of ddev-webserver, then see if we can start router.

@@ -36,7 +36,10 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: files,
+		Action:       []string{"config"},
+	})
 	if err != nil {
 		return err
 	}

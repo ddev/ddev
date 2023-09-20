@@ -33,6 +33,12 @@ import (
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
 
+type ComposeCmdOpts struct {
+	ComposeFiles []string
+	Action       []string
+	Progress     bool
+}
+
 // EnsureNetwork will ensure the Docker network for DDEV is created.
 func EnsureNetwork(client *docker.Client, name string) error {
 	if !NetExists(client, name) {
@@ -510,8 +516,9 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 
 // ComposeCmd executes docker-compose commands via shell.
 // returns stdout, stderr, error/nil
-func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
+func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	var arg []string
+	var action []string
 	var stdout bytes.Buffer
 	var stderr string
 
@@ -520,11 +527,11 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		return "", "", err
 	}
 
-	for _, file := range composeFiles {
+	for _, file := range cmd.ComposeFiles {
 		arg = append(arg, "-f", file)
 	}
 
-	arg = append(arg, action...)
+	arg = append(arg, cmd.Action...)
 
 	path, err := globalconfig.GetDockerComposePath()
 	if err != nil {
@@ -587,8 +594,9 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	for !endOut || !endErr {
 		select {
 		case <-time.After(1 * time.Second):
-			// Printed when timed out
-			_, _ = fmt.Fprintf(os.Stderr, ".")
+			if cmd.Progress {
+				_, _ = fmt.Fprintf(os.Stderr, ".")
+			}
 
 		case line := <-chanOut:
 			stdout.Write(line)
