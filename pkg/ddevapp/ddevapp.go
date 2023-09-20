@@ -1257,7 +1257,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Build extra layers on web and db images if necessary
-	output.UserOut.Printf("Building project-specific images... This can take some time.")
+	output.UserOut.Printf("Building project images... This can take some time.")
 	buildDurationStart := util.ElapsedDuration(time.Now())
 	progress := "plain"
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
@@ -1273,7 +1273,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Debug("docker-compose build output:\n%s\n\n", out)
 	}
 	buildDuration := util.FormatDuration(buildDurationStart())
-	util.Success("Project-specific images built in %s.", buildDuration)
+	util.Success("Project images built in %s.", buildDuration)
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
