@@ -36,7 +36,8 @@ const NetName = "ddev_default"
 type ComposeCmdOpts struct {
 	ComposeFiles []string
 	Action       []string
-	Progress     bool
+	Progress     bool // Add dots every second while the compose command is running
+	RealTime     bool // Print stdout as it happens
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
@@ -520,6 +521,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	var arg []string
 	var action []string
 	var stdout bytes.Buffer
+	var lineBytes bytes.Buffer
 	var stderr string
 
 	_, err := DownloadDockerComposeIfNeeded()
@@ -598,8 +600,16 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 				_, _ = fmt.Fprintf(os.Stderr, ".")
 			}
 
-		case line := <-chanOut:
-			stdout.Write(line)
+		case b := <-chanOut:
+			stdout.Write(b)
+			if cmd.RealTime {
+				if string(b) == "\n" {
+					output.UserOut.Println(lineBytes.String())
+					lineBytes.Reset()
+				} else {
+					lineBytes.Write(b)
+				}
+			}
 
 		case line := <-chanErr:
 			if len(stderr) > 0 {

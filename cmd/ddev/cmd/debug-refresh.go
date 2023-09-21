@@ -45,12 +45,11 @@ var DebugRefreshCmd = &cobra.Command{
 		output.UserOut.Printf("Rebuilding project images... This can take some time.")
 		buildDurationStart := util.ElapsedDuration(time.Now())
 		util.Debug("Executing docker-compose -f %s build --no-cache", app.DockerComposeFullRenderedYAMLPath())
-		out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       []string{"build", "--no-cache"},
-			Progress:     true,
+			RealTime:     true,
 		})
-		output.UserOut.Printf("docker-compose build output:\n%s\n\n", out)
 		if err != nil {
 			util.Failed("Failed to execute docker-compose -f %s build --no-cache: %v; stderr=\n%s\n\n", err, stderr)
 		}
