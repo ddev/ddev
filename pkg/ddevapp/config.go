@@ -1025,6 +1025,7 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 ### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
+SHELL ["/bin/bash", "-c"]
 `
 	contents = contents + `
 ARG username
