@@ -1057,6 +1057,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		case <-time.After(time.Second * 11):
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
+		listener.Close()
 	}
 	runTime()
 }
