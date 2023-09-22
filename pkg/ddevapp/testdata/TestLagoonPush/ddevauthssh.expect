@@ -1,0 +1,8 @@
+#!/usr/bin/env expect -f
+
+set ddevpath [lindex $argv 0];
+set keypath [lindex $argv 1];
+
+spawn "$ddevpath" auth ssh -d "$keypath"
+expect "Identity added"
+interact
