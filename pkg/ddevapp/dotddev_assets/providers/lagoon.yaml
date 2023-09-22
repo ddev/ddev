@@ -3,17 +3,17 @@
 
 # To use this configuration,
 
-# 1. Check out the project and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working. Your project must have a .lagoon.yml properly configured.
+# 1. Check out the project and then configure it with 'ddev config'. You'll want to use 'ddev start' and make sure the basic functionality is working. Your project must have a .lagoon.yml properly configured.
 # 2. Obtain and configure an SSH key at https://dashboard.amazeeio.cloud/settings
-# 3. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in `web_environment` or a `.ddev/.env`
-# `ddev pull lagoon`
+# 3. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'
+# 'ddev pull lagoon'
 
 auth_command:
   command: |
     set -eu -o pipefail
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
-    if [ -z "${LAGOON_PROJECT:-}" ]; then echo "Please make sure you have set the LAGOON_PROJECT environment variable in your `web_environment` or .ddev/.env." && exit 1; fi
-    if [ -z "${LAGOON_ENVIRONMENT}" ]; then echo "Please make sure you have set the LAGOON_ENVIRONMENT environment variable in your `web_environment` or .ddev/.env." && exit 1; fi
+    if [ -z "${LAGOON_PROJECT:-}" ]; then echo "Please make sure you have set the LAGOON_PROJECT environment variable in your 'web_environment' or .ddev/.env." && exit 1; fi
+    if [ -z "${LAGOON_ENVIRONMENT}" ]; then echo "Please make sure you have set the LAGOON_ENVIRONMENT environment variable in your 'web_environment' or .ddev/.env." && exit 1; fi
 
 
 db_import_command:
