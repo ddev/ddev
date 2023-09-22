@@ -106,7 +106,7 @@ RUN set -o pipefail && curl --fail -sSL https://github.com/platformsh/platformsh
 # Install lagoon cli
 RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETPLATFORM##linux/}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
 # Install lagoon-sync
-RUN set -x && set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-sync/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-sync/releases/download/${tag}/lagoon-sync-${tag:1}-linux-${TARGETPLATFORM##linux/}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
+RUN set -x && set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-sync/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-sync/releases/download/${tag}/lagoon-sync_${tag:1}_linux_${TARGETPLATFORM##linux/}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
 
 
 RUN mkdir -p "/opt/phpstorm-coverage" && \
