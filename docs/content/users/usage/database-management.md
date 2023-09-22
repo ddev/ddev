@@ -29,9 +29,9 @@ DDEV creates a default database named `db` and default permissions for the `db` 
 
 ## Extra Databases
 
-You can easily create and populate additional databases. For example, `ddev import-db --target-db=backend --file=backend.sql.gz` will create the database named `backend` with permissions for that same `db` user and import from the `backend.sql.gz dumpfile`.
+You can easily create and populate additional databases. For example, `ddev import-db --database=backend --file=backend.sql.gz` will create the database named `backend` with permissions for that same `db` user and import from the `backend.sql.gz` dumpfile.
 
-You can export in the same way: `ddev export-db -f mysite.sql.gz` will export your default database (`db`). `ddev export-db --target-db=backend -f backend-export.sql.gz` will dump the database named `backend`.
+You can export in the same way: `ddev export-db -f mysite.sql.gz` will export your default database (`db`). `ddev export-db --database=backend -f backend-export.sql.gz` will dump the database named `backend`.
 
 ## Snapshots
 
