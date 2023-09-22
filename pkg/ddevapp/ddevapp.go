@@ -1333,7 +1333,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if !mounted {
 			util.Failed("Mutagen Docker volume is not mounted. Please use `ddev restart`")
 		}
-		output.UserOut.Printf("Starting Mutagen sync process... This can take some time.")
+		output.UserOut.Printf("Starting Mutagen sync process...")
 		mutagenDuration := util.ElapsedDuration(time.Now())
 
 		err = SetMutagenVolumeOwnership(app)
