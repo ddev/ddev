@@ -35,8 +35,8 @@ files_import_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    set -x   # You can enable bash debugging output by uncommenting
     MARIADB_HOST=db
     MARIADB_USERNAME=db
     MARIADB_PASSWORD=db
@@ -46,7 +46,7 @@ db_push_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    set -x   # You can enable bash debugging output by uncommenting
     lagoon-sync sync files -p ${LAGOON_PROJECT} -e local -t ${LAGOON_ENVIRONMENT} --no-interaction 
 

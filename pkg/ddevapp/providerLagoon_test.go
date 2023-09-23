@@ -111,6 +111,7 @@ func TestLagoonPull(t *testing.T) {
 
 // TestLagoonPush ensures we can push to lagoon for a configured environment.
 func TestLagoonPush(t *testing.T) {
+	t.Skip("This can't be executed until we can push to an environment we won't damage; need a push environment")
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
