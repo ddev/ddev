@@ -36,7 +36,7 @@ files_import_command:
 db_push_command:
   command: |
     set -eu -o pipefail
-    set -x   # You can enable bash debugging output by uncommenting
+    #set -x   # You can enable bash debugging output by uncommenting
     MARIADB_HOST=db
     MARIADB_USERNAME=db
     MARIADB_PASSWORD=db
@@ -47,6 +47,6 @@ db_push_command:
 files_push_command:
   command: |
     set -eu -o pipefail
-    set -x   # You can enable bash debugging output by uncommenting
+    #set -x   # You can enable bash debugging output by uncommenting
     lagoon-sync sync files -p ${LAGOON_PROJECT} -e local -t ${LAGOON_ENVIRONMENT} --no-interaction 
 

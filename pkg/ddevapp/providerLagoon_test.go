@@ -24,11 +24,11 @@ import (
 const lagoonProjectName = "amazeeio-ddev"
 
 // TODO: Change to use the  "pull" environment when we have one
-const lagoonPullTestSiteEnvironment = "main"
+const lagoonPullTestSiteEnvironment = "pull"
 const lagoonPushTestSiteEnvironment = "push"
 
 // TODO: Change this to the actual dediicated pull environment
-const lagoonPullSiteURL = "https://nginx.main.amazeeio-ddev.us2.amazee.io/"
+const lagoonPullSiteURL = "https://nginx.pull.amazeeio-ddev.us2.amazee.io/"
 const lagoonSiteExpectation = "Super easy vegetarian pasta"
 
 // These tests won't run with GitHub actions on a forked PR.
@@ -111,7 +111,6 @@ func TestLagoonPull(t *testing.T) {
 
 // TestLagoonPush ensures we can push to lagoon for a configured environment.
 func TestLagoonPush(t *testing.T) {
-	t.Skip("This can't be executed until we can push to an environment we won't damage; need a push environment")
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
@@ -181,18 +180,19 @@ func TestLagoonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
+	c := fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | lagoon ssh -p %s -e %s -C 'mysql --host=$MARIADB_HOST --user=$MARIADB_USERNAME --password=$MARIADB_PASSWORD --database=$MARIADB_DATABASE'`, t.Name(), tval, lagoonProjectName, lagoonPushTestSiteEnvironment)
+	//t.Logf("attempting command '%s'", c)
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | lagoon ssh -p %s -e %s -C 'mysql --host${MARIADB_HOST} --user=${
-MARIADB_USERNAME} --password=${MARIADB_PASSWORD} --database=${MARIADB_DATABASE}"`, t.Name(), tval, lagoonProjectName, lagoonPushTestSiteEnvironment),
+		Cmd: c,
 	})
-	require.NoError(t, err)
+	assert.NoError(err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there
 	out, _, err = app.Exec(&ExecOpts{
 		Cmd: fmt.Sprintf(`lagoon ssh -p %s -e %s -C 'ls -l /app/web/sites/default/files/%s'`, lagoonProjectName, lagoonPushTestSiteEnvironment, fName),
 	})
-	require.NoError(t, err)
+	assert.NoError(err)
 	assert.Contains(out, tval)
 
 	err = app.MutagenSyncFlush()
