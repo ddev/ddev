@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -89,10 +90,12 @@ func TestLagoonPull(t *testing.T) {
 	provider, err := app.GetProvider("lagoon")
 	require.NoError(t, err)
 
-	provider.EnvironmentVariables["LAGOON_PROJECT"] = lagoonProjectName
-	provider.EnvironmentVariables["LAGOON_ENVIRONMENT"] = lagoonPullTestSiteEnvironment
+	app.WebEnvironment = []string{"LAGOON_PROJECT=" + lagoonProjectName, "LAGOON_ENVIRONMENT=" + lagoonPullTestSiteEnvironment}
 
 	err = setupSSHKey(t, sshKey, filepath.Join(origDir, "testdata", t.Name()))
+	require.NoError(t, err)
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), ".lagoon.yml"), filepath.Join(app.AppRoot, ".lagoon.yml"))
 	require.NoError(t, err)
 
 	err = app.Start()
@@ -154,8 +157,11 @@ func TestLagoonPush(t *testing.T) {
 	provider.EnvironmentVariables["LAGOON_ENVIRONMENT"] = lagoonPushTestSiteEnvironment
 
 	err = setupSSHKey(t, sshKey, filepath.Join(origDir, "testdata", t.Name()))
-
 	require.NoError(t, err)
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), ".lagoon.yml"), filepath.Join(app.AppRoot, ".lagoon.yml"))
+	require.NoError(t, err)
+
 	err = app.Start()
 	require.NoError(t, err)
 
