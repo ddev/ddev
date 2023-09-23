@@ -69,7 +69,6 @@ jobs:
       TESTARGS: "-failfast"
       DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
       DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
-      DDEV_LAGOON_SSH_KEY: ${{ secrets.DDEV_LAGOON_SSH_KEY }}
       DDEV_SKIP_NODEJS_TEST: "true"
 
     steps:
