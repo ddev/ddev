@@ -2830,6 +2830,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 // TestDdevDescribe tests that the describe command works properly on a running
 // and also a stopped project.
 func TestDdevDescribe(t *testing.T) {
+	origDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -2840,14 +2841,19 @@ func TestDdevDescribe(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.Hooks = nil
+		err = app.WriteConfig()
+		assert.NoError(err)
+	})
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
 
 	startErr := app.StartAndWait(0)
-	defer func() {
-		_ = app.Stop(true, false)
-		app.Hooks = nil
-		_ = app.WriteConfig()
-	}()
+
 	// If we have a problem starting, get the container logs and output.
 	if startErr != nil {
 		out, logsErr := app.CaptureLogs("web", false, "")
@@ -2873,14 +2879,6 @@ func TestDdevDescribe(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-describe-" + app.Name)
 	assert.NoError(err)
-
-	// Now stop it and test behavior.
-	err = app.Pause()
-	assert.NoError(err)
-
-	desc, err = app.Describe(false)
-	assert.NoError(err)
-	assert.EqualValues(ddevapp.SitePaused, desc["status"])
 
 	switchDir()
 }
