@@ -1412,7 +1412,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// WebExtraDaemons have to be started after Mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
-		output.UserOut.Printf("Starting web_extra_daaemons...")
+		output.UserOut.Printf("Starting web_extra_daemons...")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `supervisorctl start webextradaemons:*`,
 		})
