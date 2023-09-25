@@ -2835,7 +2835,6 @@ func TestDdevDescribe(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	site := TestSites[0]
-	switchDir := site.Chdir()
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -2879,8 +2878,6 @@ func TestDdevDescribe(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-describe-" + app.Name)
 	assert.NoError(err)
-
-	switchDir()
 }
 
 // TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or DDEV configs.
