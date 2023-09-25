@@ -42,7 +42,7 @@ var DebugRefreshCmd = &cobra.Command{
 			util.Failed("Failed to get compose-config: %v", err)
 		}
 
-		output.UserOut.Printf("Rebuilding project images... This can take some time.")
+		output.UserOut.Printf("Rebuilding project images...")
 		buildDurationStart := util.ElapsedDuration(time.Now())
 		util.Debug("Executing docker-compose -f %s build --no-cache", app.DockerComposeFullRenderedYAMLPath())
 		_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
