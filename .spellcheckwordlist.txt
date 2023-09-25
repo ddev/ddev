@@ -4,6 +4,7 @@ AdditionalConfiguration
 Adminer
 Apache
 Acquia
+Amazee
 Autocompletion
 Available
 Bash
