@@ -1,21 +1,23 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/spf13/cobra"
 )
 
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
 	Use:   "share [project]",
 	Short: "Share project on the internet via ngrok.",
-	Long:  `Requires a free or paid account on ngrok.com, use the "ngrok config add-authtoken <token>" command to set up ngrok. Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml.`,
+	Long:  `Requires an account on ngrok.com, use the "ngrok config add-authtoken <token>" command to set up ngrok. Any ngrok flag can be added in the "ngrok_args" section of .ddev/config.yaml or via --ngrok-args.`,
 	Example: `ddev share
-ddev share --basic-auth username:pass1234
+ddev share --ngrok-args "--basic-auth username:pass1234"
+ddev share --ngrok-args "--domain foo.ngrok-free.app"
 ddev share myproject`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
@@ -45,19 +47,12 @@ ddev share myproject`,
 			if app.NgrokArgs != "" {
 				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
 			}
-			if cmd.Flags().Changed("basic-auth") {
-				auth, err := cmd.Flags().GetString("basic-auth")
+			if cmd.Flags().Changed("ngrok-args") {
+				cmdNgrokArgs, err := cmd.Flags().GetString("ngrok-args")
 				if err != nil {
-					util.Failed("Unable to get --basic-auth flag: %v", err)
+					util.Failed("Unable to get --ngrok-args flag: %v", err)
 				}
-				ngrokArgs = append(ngrokArgs, "--basic-auth="+auth)
-			}
-			if cmd.Flags().Changed("subdomain") {
-				sub, err := cmd.Flags().GetString("subdomain")
-				if err != nil {
-					util.Failed("Unable to get --subdomain flag: %v", err)
-				}
-				ngrokArgs = append(ngrokArgs, "--subdomain="+sub)
+				ngrokArgs = append(ngrokArgs, strings.Split(cmdNgrokArgs, " ")...)
 			}
 
 			ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
@@ -98,6 +93,5 @@ ddev share myproject`,
 
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
-	DdevShareCommand.Flags().String("basic-auth", "", `works as in "ngrok http --basic-auth username:pass1234"`)
-	DdevShareCommand.Flags().String("subdomain", "", `requires a paid ngrok account, works as in "ngrok http --subdomain mysite"`)
+	DdevShareCommand.Flags().String("ngrok-args", "", `accepts any flag from "ngrok http --help"`)
 }
