@@ -75,7 +75,8 @@ func TestLagoonPull(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		_ = os.Chdir(origDir)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
 	})
@@ -114,6 +115,8 @@ func TestLagoonPush(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
+	sshKey := lagoonSetupSSHKey(t)
+
 	siteDir := testcommon.CreateTmpDir(t.Name())
 
 	err := os.Chdir(siteDir)
@@ -122,8 +125,6 @@ func TestLagoonPush(t *testing.T) {
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
 
-	sshKey := lagoonSetupSSHKey(t)
-
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 
@@ -131,7 +132,8 @@ func TestLagoonPush(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		_ = os.Chdir(origDir)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
 	})
