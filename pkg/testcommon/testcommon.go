@@ -269,22 +269,18 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 		log.Fatal(err)
 	}
 
-	containers, err := dockerutil.GetDockerContainers(true)
+	c, err := dockerutil.FindContainerByName(checkName)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	for _, container := range containers {
-		name := dockerutil.ContainerName(container)
-		if name == checkName {
-			if container.State == checkState {
-				return true, nil
-			}
-			return false, errors.New("container " + name + " returned " + container.State)
-		}
+	if c == nil {
+		return false, errors.New("unable to find container " + checkName)
 	}
 
-	return false, errors.New("unable to find container " + checkName)
+	if c.State == checkState {
+		return true, nil
+	}
+	return false, errors.New("container " + checkName + " returned " + c.State)
 }
 
 // GetCachedArchive returns a directory populated with the contents of the specified archive, either from cache or

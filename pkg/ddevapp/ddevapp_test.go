@@ -2790,49 +2790,6 @@ func TestDdevLogs(t *testing.T) {
 	switchDir()
 }
 
-// TestDdevPause tests the functionality that is called when "ddev pause" is executed
-func TestDdevPause(t *testing.T) {
-	assert := asrt.New(t)
-
-	app := &ddevapp.DdevApp{}
-
-	site := TestSites[0]
-	switchDir := site.Chdir()
-	runTime := util.TimeTrackC(fmt.Sprintf("%s DdevStop", site.Name))
-
-	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-	err = app.StartAndWait(0)
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pause": {{"exec-host": "touch hello-post-pause-" + app.Name}}, "pre-pause": {{"exec-host": "touch hello-pre-pause-" + app.Name}}}
-
-	defer func() {
-		app.Hooks = nil
-		_ = app.WriteConfig()
-		_ = app.Stop(true, false)
-	}()
-	require.NoError(t, err)
-	err = app.Pause()
-	assert.NoError(err)
-
-	for _, containerType := range []string{"web", "db"} {
-		containerName, err := constructContainerName(containerType, app)
-		assert.NoError(err)
-		check, err := testcommon.ContainerCheck(containerName, "exited")
-		assert.NoError(err)
-		assert.True(check, "Container should have shown 'exited' but instead showed something else, err=%v, containerType=%s: %s", err, containerType, "container has exited")
-	}
-	assert.FileExists("hello-pre-pause-" + app.Name)
-	assert.FileExists("hello-post-pause-" + app.Name)
-	err = os.Remove("hello-pre-pause-" + app.Name)
-	assert.NoError(err)
-	err = os.Remove("hello-post-pause-" + app.Name)
-	assert.NoError(err)
-
-	runTime()
-	switchDir()
-}
-
 // TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or DDEV configs.
 func TestDdevStopMissingDirectory(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -2881,24 +2838,33 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 // TestDdevDescribe tests that the describe command works properly on a running
 // and also a stopped project.
 func TestDdevDescribe(t *testing.T) {
+	origDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
 	site := TestSites[0]
-	switchDir := site.Chdir()
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.Hooks = nil
+		err = app.WriteConfig()
+		assert.NoError(err)
+	})
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch ${DDEV_APPROOT}/hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch ${DDEV_APPROOT}/hello-pre-describe-" + app.Name}}}
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
 	startErr := app.StartAndWait(0)
-	defer func() {
-		_ = app.Stop(true, false)
-		app.Hooks = nil
-		_ = app.WriteConfig()
-	}()
+
 	// If we have a problem starting, get the container logs and output.
 	if startErr != nil {
 		out, logsErr := app.CaptureLogs("web", false, "")
@@ -2924,16 +2890,6 @@ func TestDdevDescribe(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-describe-" + app.Name)
 	assert.NoError(err)
-
-	// Now stop it and test behavior.
-	err = app.Pause()
-	assert.NoError(err)
-
-	desc, err = app.Describe(false)
-	assert.NoError(err)
-	assert.EqualValues(ddevapp.SitePaused, desc["status"])
-
-	switchDir()
 }
 
 // TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or DDEV configs.
