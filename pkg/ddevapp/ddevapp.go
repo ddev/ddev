@@ -1341,7 +1341,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if !mounted {
 			util.Failed("Mutagen Docker volume is not mounted. Please use `ddev restart`")
 		}
-		output.UserOut.Printf("Starting Mutagen sync process... This can take some time.")
+		output.UserOut.Printf("Starting Mutagen sync process...")
 		mutagenDuration := util.ElapsedDuration(time.Now())
 
 		err = SetMutagenVolumeOwnership(app)
@@ -1402,6 +1402,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		dependers = append(dependers, "db")
 	}
+	output.UserOut.Printf("Waiting for web/db containers to become ready: %v", dependers)
 	err = app.Wait(dependers)
 	if err != nil {
 		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
@@ -1419,7 +1420,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// WebExtraDaemons have to be started after Mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
-		util.Debug("Starting web_extra_daaemons")
+		output.UserOut.Printf("Starting web_extra_daemons...")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `supervisorctl start webextradaemons:*`,
 		})
@@ -1437,18 +1438,19 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if !IsRouterDisabled(app) {
+		output.UserOut.Printf("Starting ddev-router if necessary...")
 		err = StartDdevRouter()
 		if err != nil {
 			return err
 		}
 	}
 
-	util.Debug("Waiting for all project containers to become ready")
+	output.UserOut.Printf("Waiting for additional project containers to become ready...")
 	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
 	if err != nil {
 		return err
 	}
-	util.Debug("Project containers are now ready")
+	output.UserOut.Printf("All project containers are now ready.")
 
 	if _, err = app.CreateSettingsFile(); err != nil {
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
