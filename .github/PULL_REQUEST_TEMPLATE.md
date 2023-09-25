@@ -1,3 +1,8 @@
+<!-- 
+  PR titles have very precise rules, please read 
+  https://ddev.readthedocs.io/en/stable/developers/building-contributing/#open-pull-requests
+-->
+
 ## The Issue
 
 ## How This PR Solves The Issue
