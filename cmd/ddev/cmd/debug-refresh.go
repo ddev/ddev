@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
@@ -40,18 +42,24 @@ var DebugRefreshCmd = &cobra.Command{
 			util.Failed("Failed to get compose-config: %v", err)
 		}
 
+		output.UserOut.Printf("Rebuilding project images...")
+		buildDurationStart := util.ElapsedDuration(time.Now())
 		util.Debug("Executing docker-compose -f %s build --no-cache", app.DockerComposeFullRenderedYAMLPath())
-		out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "build", "--no-cache")
-		output.UserOut.Printf("docker-compose build output:\n%s\n\n", out)
+		_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       []string{"build", "--no-cache"},
+			RealTime:     true,
+		})
 		if err != nil {
 			util.Failed("Failed to execute docker-compose -f %s build --no-cache: %v; stderr=\n%s\n\n", err, stderr)
 		}
+		buildDuration := util.FormatDuration(buildDurationStart())
+		util.Success("Refreshed Docker cache for project %s in %s", app.Name, buildDuration)
+
 		err = app.Restart()
 		if err != nil {
 			util.Failed("Failed to restart project: %v", err)
 		}
-
-		util.Success("Refreshed Docker cache for project %s", app.Name)
 	},
 }
 

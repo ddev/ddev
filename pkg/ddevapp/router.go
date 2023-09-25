@@ -92,7 +92,10 @@ func StartDdevRouter() error {
 	}
 
 	// Run docker-compose up -d against the ddev-router full compose file
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposeFullPath}, "-p", RouterProjectName, "up", "--build", "-d")
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{routerComposeFullPath},
+		Action:       []string{"-p", RouterProjectName, "up", "--build", "-d"},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
@@ -174,7 +177,10 @@ func generateRouterCompose() (string, error) {
 		return "", err
 	}
 	files := append([]string{RouterComposeYAMLPath()}, userFiles...)
-	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: files,
+		Action:       []string{"config"},
+	})
 	if err != nil {
 		return "", err
 	}

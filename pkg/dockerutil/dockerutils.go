@@ -33,6 +33,13 @@ import (
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
 
+type ComposeCmdOpts struct {
+	ComposeFiles []string
+	Action       []string
+	Progress     bool // Add dots every second while the compose command is running
+	RealTime     bool // Print stdout as it happens
+}
+
 // EnsureNetwork will ensure the Docker network for DDEV is created.
 func EnsureNetwork(client *docker.Client, name string) error {
 	if !NetExists(client, name) {
@@ -510,9 +517,11 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 
 // ComposeCmd executes docker-compose commands via shell.
 // returns stdout, stderr, error/nil
-func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
+func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	var arg []string
+	var action []string
 	var stdout bytes.Buffer
+	var lineBytes bytes.Buffer
 	var stderr string
 
 	_, err := DownloadDockerComposeIfNeeded()
@@ -520,20 +529,24 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		return "", "", err
 	}
 
-	for _, file := range composeFiles {
+	for _, file := range cmd.ComposeFiles {
 		arg = append(arg, "-f", file)
 	}
 
-	arg = append(arg, action...)
+	arg = append(arg, cmd.Action...)
 
 	path, err := globalconfig.GetDockerComposePath()
 	if err != nil {
 		return "", "", err
 	}
+
 	proc := exec.Command(path, arg...)
-	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
 
+	stdoutPipe, err := proc.StdoutPipe()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to proc.StdoutPipe(): %v", err)
+	}
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {
 		return "", "", fmt.Errorf("failed to proc.StderrPipe(): %v", err)
@@ -543,8 +556,18 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
 	}
 
-	// Read command's stdout line by line
-	in := bufio.NewScanner(stderrPipe)
+	chanOut := make(chan []byte)
+	chanErr := make(chan string)
+	stopOut := make(chan struct{})
+	stopErr := make(chan struct{})
+
+	endOut := false
+	endErr := false
+
+	// Read command's stdout and stderr line by line
+	inOut := bufio.NewScanner(stdoutPipe)
+	inErr := bufio.NewScanner(stderrPipe)
+	inOut.Split(bufio.ScanBytes)
 
 	// Ignore chatty things from docker-compose like:
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
@@ -556,18 +579,56 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
 	}
 
-	for in.Scan() {
-		line := in.Text()
-		if len(stderr) > 0 {
-			stderr = stderr + "\n"
+	go func() {
+		for inOut.Scan() {
+			chanOut <- inOut.Bytes()
 		}
-		stderr = stderr + line
-		line = strings.Trim(line, "\n\r")
-		switch {
-		case downRE.MatchString(line):
-			break
-		default:
-			output.UserOut.Println(line)
+		close(stopOut)
+	}()
+
+	go func() {
+		for inErr.Scan() {
+			chanErr <- inErr.Text()
+		}
+		close(stopErr)
+	}()
+
+	for !endOut || !endErr {
+		select {
+		case <-time.After(1 * time.Second):
+			if cmd.Progress {
+				_, _ = fmt.Fprintf(os.Stderr, ".")
+			}
+
+		case b := <-chanOut:
+			stdout.Write(b)
+			if cmd.RealTime {
+				if string(b) == "\n" {
+					output.UserOut.Println(lineBytes.String())
+					lineBytes.Reset()
+				} else {
+					lineBytes.Write(b)
+				}
+			}
+
+		case line := <-chanErr:
+			if len(stderr) > 0 {
+				stderr = stderr + "\n"
+			}
+			stderr = stderr + line
+			line = strings.Trim(line, "\n\r")
+			switch {
+			case downRE.MatchString(line):
+				break
+			default:
+				output.UserOut.Println(line)
+			}
+
+		case <-stopOut:
+			endOut = true
+
+		case <-stopErr:
+			endErr = true
 		}
 	}
 

@@ -54,7 +54,10 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
-	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "up", "--build", "--force-recreate", "-d")
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{path},
+		Action:       []string{"-p", SSHAuthName, "up", "--build", "--force-recreate", "-d"},
+	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
@@ -132,7 +135,10 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		return "", err
 	}
 	files := append([]string{SSHAuthComposeYAMLPath()}, userFiles...)
-	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: files,
+		Action:       []string{"config"},
+	})
 	if err != nil {
 		return "", err
 	}
