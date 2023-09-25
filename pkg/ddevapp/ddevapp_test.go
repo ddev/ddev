@@ -1053,8 +1053,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		select {
 		case <-acceptListenDone:
+			listener.Close()
 			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
 		case <-time.After(time.Second * 11):
+			listener.Close()
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
