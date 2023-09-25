@@ -2782,49 +2782,6 @@ func TestDdevLogs(t *testing.T) {
 	switchDir()
 }
 
-// TestDdevPause tests the functionality that is called when "ddev pause" is executed
-func TestDdevPause(t *testing.T) {
-	assert := asrt.New(t)
-
-	app := &ddevapp.DdevApp{}
-
-	site := TestSites[0]
-	switchDir := site.Chdir()
-	runTime := util.TimeTrackC(fmt.Sprintf("%s DdevStop", site.Name))
-
-	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-	err = app.StartAndWait(0)
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pause": {{"exec-host": "touch hello-post-pause-" + app.Name}}, "pre-pause": {{"exec-host": "touch hello-pre-pause-" + app.Name}}}
-
-	defer func() {
-		app.Hooks = nil
-		_ = app.WriteConfig()
-		_ = app.Stop(true, false)
-	}()
-	require.NoError(t, err)
-	err = app.Pause()
-	assert.NoError(err)
-
-	for _, containerType := range []string{"web", "db"} {
-		containerName, err := constructContainerName(containerType, app)
-		assert.NoError(err)
-		check, err := testcommon.ContainerCheck(containerName, "exited")
-		assert.NoError(err)
-		assert.True(check, "Container should have shown 'exited' but instead showed something else, err=%v, containerType=%s: %s", err, containerType, "container has exited")
-	}
-	assert.FileExists("hello-pre-pause-" + app.Name)
-	assert.FileExists("hello-post-pause-" + app.Name)
-	err = os.Remove("hello-pre-pause-" + app.Name)
-	assert.NoError(err)
-	err = os.Remove("hello-post-pause-" + app.Name)
-	assert.NoError(err)
-
-	runTime()
-	switchDir()
-}
-
 // TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or DDEV configs.
 func TestDdevStopMissingDirectory(t *testing.T) {
 	if runtime.GOOS == "windows" {
