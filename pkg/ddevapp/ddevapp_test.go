@@ -2849,7 +2849,11 @@ func TestDdevDescribe(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 	})
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch ${DDEV_APPROOT}/hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch ${DDEV_APPROOT}/hello-pre-describe-" + app.Name}}}
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
 	startErr := app.StartAndWait(0)
 
