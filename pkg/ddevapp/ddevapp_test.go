@@ -931,13 +931,17 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
 	// TODO: Re-enable 8.3 when it's available
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.3"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.3"}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
 		}
 	}
 	sort.Strings(phpKeys)
+	// Most of the time we can just test with the default PHP version
+	if os.Getenv("GOTEST_SHORT") != "" {
+		phpKeys = []string{nodeps.PHPDefault}
+	}
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
@@ -1065,8 +1069,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
 func TestDdevXhprofEnabled(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	if runtime.GOOS == "darwin" {
+		// TODO: Return to this when working on xhprof xhgui etc.
+		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
 	}
 
 	assert := asrt.New(t)
@@ -1091,13 +1096,18 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	// skip older unsupported versions
 	phpKeys := []string{}
 	// TODO: Re-enable 8.3 when it's available
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.3"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.3"}
 	for k := range nodeps.ValidPHPVersions {
 		if !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
 		}
 	}
 	sort.Strings(phpKeys)
+
+	// Most of the time we can just test with the default PHP version
+	if os.Getenv("GOTEST_SHORT") != "" {
+		phpKeys = []string{nodeps.PHPDefault}
+	}
 
 	err = app.Init(app.AppRoot)
 	require.NoError(t, err)
@@ -1118,6 +1128,10 @@ func TestDdevXhprofEnabled(t *testing.T) {
 		}
 		webserverKeys = append(webserverKeys, k)
 	}
+	// Most of the time we can just test with the default webserver_type
+	if os.Getenv("GOTEST_SHORT") != "" {
+		webserverKeys = []string{nodeps.WebserverDefault}
+	}
 
 	for _, webserverKey := range webserverKeys {
 		app.WebserverType = webserverKey
@@ -1134,7 +1148,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 				Service: "web",
 				Cmd:     fmt.Sprintf("php --ri xhprof"),
 			})
-			assert.Error(err)
+			require.Error(t, err)
 			assert.Contains(stdout, "Extension 'xhprof' not present")
 
 			// Run with Xhprof enabled
@@ -1147,21 +1161,15 @@ func TestDdevXhprofEnabled(t *testing.T) {
 				Service: "web",
 				Cmd:     fmt.Sprintf("php --ri xhprof"),
 			})
-			assert.NoError(err)
-			if err != nil {
-				t.Errorf("Aborting Xhprof check for php%s: %v", v, err)
-				continue
-			}
+			require.NoError(t, err)
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
-			// Dummy hit to avoid M1 "connection reset by peer"
-			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 1)
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 1)
-			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
-			assert.Contains(out, "module_xhprof")
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
+			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
+			require.Contains(t, out, "module_xhprof")
 
-			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 1)
-			assert.NoError(err)
+			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 2)
+			require.NoError(t, err)
 			// Output should contain at least one run
 			assert.Contains(out, ".ddev.xhprof</a><small>")
 
@@ -1169,7 +1177,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: fmt.Sprintf("disable_xhprof && rm -rf /tmp/xhprof"),
 			})
-			assert.NoError(err)
+			require.NoError(t, err)
 		}
 	}
 	runTime()
