@@ -1,16 +1,16 @@
 # Amazee Lagoon Integration
 
-DDEV provides integration with the [Amazee Lagoon](https://lagoon.sh/), allowing Lagoon users to quickly download database and files from a Lagoon project to the local DDEV project.
+DDEV provides integration with the [Amazee Lagoon](https://lagoon.sh/), allowing Lagoon users to quickly download the files and database from a Lagoon project to the local DDEV project.
 
 ## Amazee Lagoon Per-Project Configuration
 
-1. Check out the Lagoon project and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
+1. Check out the Lagoon project and configure it by running [`ddev config`](../usage/commands.md#config). You’ll want to run [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
 2. Configure an SSH key at on the [Amazee Cloud Dashboard](https://dashboard.amazeeio.cloud/settings).
-3. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'. For example, `ddev config --web-environment-add="LAGOON_PROJECT=<project-name> LAGOON_ENVIRONMENT=<environment-name>"`.
-4. `ddev auth ssh` if you haven't already done so. This will make your SSH key available in the web container of your project.
+3. Add `LAGOON_PROJECT` and `LAGOON_ENVIRONMENT` variables to your project using `'web_environment'` in its YAML configuration or a `.ddev/.env` file. For example, run `ddev config --web-environment-add="LAGOON_PROJECT=<project-name> LAGOON_ENVIRONMENT=<environment-name>"`.
+4. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
 5. Run [`ddev restart`](../usage/commands.md#restart).
 6. Run `ddev pull lagoon`. After you agree to the prompt, the current upstream databases and files will be downloaded.
-7. Optionally use `ddev push lagoon` to push local files and database to Lagoon. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
+7. Optionally run `ddev push lagoon` to push local files and database to Lagoon. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
 ## Usage
 
