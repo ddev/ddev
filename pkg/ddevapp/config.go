@@ -12,6 +12,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
@@ -21,6 +22,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -423,6 +425,23 @@ func ValidateProjectName(name string) error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
+
+	// Validate ddev version constraint, if any
+	if app.DdevVersionConstraint != "" {
+
+		c, err := semver.NewConstraint(app.DdevVersionConstraint)
+		if err != nil {
+			return fmt.Errorf("%s is not a valid constraint. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.DdevVersionConstraint).(invalidConstraint)
+		}
+
+		// Make sure we do this check with valid released versions
+		v, err := semver.NewVersion(versionconstants.DdevVersion)
+		if err == nil {
+			if !c.Check(v) {
+				return fmt.Errorf("ddev version %v is not supported by this project (%v), use a supported version or update your project config.yaml's `ddev_version_constraint`", versionconstants.DdevVersion, c)
+			}
+		}
+	}
 
 	// Validate project name
 	if err := ValidateProjectName(app.Name); err != nil {

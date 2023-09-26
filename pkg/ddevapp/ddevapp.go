@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
@@ -1022,20 +1021,6 @@ func (app *DdevApp) GetDBImage() string {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
-
-	if app.DdevVersionConstraint != "" {
-		v, err := semver.NewVersion(versionconstants.DdevVersion)
-		if err != nil {
-			util.Warning("%v %v, ddev version constraint cannot be verified", err, versionconstants.DdevVersion)
-		} else {
-			c, err := semver.NewConstraint(app.DdevVersionConstraint)
-			if err != nil {
-				util.Warning("%v, ddev version constraint cannot be verified", err)
-			} else if !c.Check(v) {
-				util.Failed("ddev version %v is not supported by this project (%v), use a supported version or update your project config.yaml's `ddev_version_constraint`", versionconstants.DdevVersion, c)
-			}
-		}
-	}
 
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
@@ -2799,7 +2784,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// incomplete one we have to add to it.
 	if err = app.Init(activeAppRoot); err != nil {
 		switch err.(type) {
-		case webContainerExists, invalidConfigFile, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
+		case webContainerExists, invalidConfigFile, invalidConstraint, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
 			return app, err
 		}
 	}
