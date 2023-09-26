@@ -1026,13 +1026,13 @@ func (app *DdevApp) Start() error {
 	if app.DdevVersionConstraint != "" {
 		v, err := semver.NewVersion(versionconstants.DdevVersion)
 		if err != nil {
-			util.Warning("%v %v, ddev version cannot be enforced", err, versionconstants.DdevVersion)
+			util.Warning("%v %v, ddev version constraint cannot be verified", err, versionconstants.DdevVersion)
 		} else {
 			c, err := semver.NewConstraint(app.DdevVersionConstraint)
 			if err != nil {
-				util.Warning("%v", err)
+				util.Warning("%v, ddev version constraint cannot be verified", err)
 			} else if !c.Check(v) {
-				util.Failed("ddev version currently installed (%v) is not supported by this project (%v), please upgrade to a supported version or update your project's enforced version constraint", versionconstants.DdevVersion, c)
+				util.Failed("ddev version %v is not supported by this project (%v), use a supported version or update your project config.yaml's `ddev_version_constraint`", versionconstants.DdevVersion, c)
 			}
 		}
 	}
