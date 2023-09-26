@@ -248,13 +248,12 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     mkdir ddev-magento2 && cd ddev-magento2
     ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
-    ddev get ddev/ddev-elasticsearch
+    ddev get netz98/ddev-opensearch
     ddev start
     ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
-    rm -f app/etc/env.php
 
     # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=Password123 --language=en_US
+    ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --opensearch-host=opensearch --search-engine=opensearch --opensearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=Password123 --language=en_US
 
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
