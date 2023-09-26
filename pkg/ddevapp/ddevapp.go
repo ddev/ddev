@@ -1031,8 +1031,7 @@ func (app *DdevApp) Start() error {
 			c, err := semver.NewConstraint(app.EnforceDdevVersion)
 			if err != nil {
 				util.Warning("%v", err)
-			}
-			if !c.Check(v) {
+			} else if !c.Check(v) {
 				util.Failed("ddev version currently installed (%v) is not supported by this project (%v), please upgrade to a supported version or update your project's enforced version constraint", versionconstants.DdevVersion, c)
 			}
 		}
