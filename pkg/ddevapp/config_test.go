@@ -636,6 +636,13 @@ func TestConfigValidate(t *testing.T) {
 	app.DdevVersionConstraint = ""
 	versionconstants.DdevVersion = ddevVersion
 
+	versionconstants.DdevVersion = "2134asdf-dirty"
+	app.DdevVersionConstraint = ">= 1.23"
+	err = app.ValidateConfig()
+	assert.NoError(err)
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
 	assert.Error(err)
