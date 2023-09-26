@@ -93,7 +93,7 @@ const ConfigInstructions = `
 # If true, turns off the normal warning that says
 # "You have Mutagen enabled and your 'php' project type doesn't have upload_dirs set"
 
-# enforce_ddev_version: >= 1.22.4
+# ddev_version_constraint: >= 1.22.4
 # This will validate the currently installed ddev version against a constraint
 # and prevent starting if it doesn't match.
 # See https://github.com/Masterminds/semver#checking-version-constraints for

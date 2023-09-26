@@ -131,7 +131,7 @@ type DdevApp struct {
 	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
-	EnforceDdevVersion        string                 `yaml:"enforce_ddev_version,omitempty"`
+	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -1023,12 +1023,12 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) Start() error {
 	var err error
 
-	if app.EnforceDdevVersion != "" {
+	if app.DdevVersionConstraint != "" {
 		v, err := semver.NewVersion(versionconstants.DdevVersion)
 		if err != nil {
 			util.Warning("%v %v, ddev version cannot be enforced", err, versionconstants.DdevVersion)
 		} else {
-			c, err := semver.NewConstraint(app.EnforceDdevVersion)
+			c, err := semver.NewConstraint(app.DdevVersionConstraint)
 			if err != nil {
 				util.Warning("%v", err)
 			} else if !c.Check(v) {
