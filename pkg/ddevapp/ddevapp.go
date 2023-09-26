@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
@@ -29,7 +30,6 @@ import (
 	"github.com/otiai10/copy"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
-  "github.com/Masterminds/semver/v3"
 )
 
 const (
@@ -1023,23 +1023,21 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) Start() error {
 	var err error
 
-  if app.EnforceDdevVersion != "" {
-    v, err := semver.NewVersion(versionconstants.DdevVersion)
-    if err != nil {
-      util.Warning("%v %v, ddev version cannot be enforced", err, versionconstants.DdevVersion)
-    } else {
-      c, err := semver.NewConstraint(app.EnforceDdevVersion)
-      if err != nil {
-        util.Warning("%v", err)
-      }
-      if !c.Check(v) {
-        util.Failed("ddev version currently installed (%v) is not supported by this project (%v), please upgrade to a supported version or update your project's enforced version constraint", versionconstants.DdevVersion, c)
-      }
-    }
-  }
+	if app.EnforceDdevVersion != "" {
+		v, err := semver.NewVersion(versionconstants.DdevVersion)
+		if err != nil {
+			util.Warning("%v %v, ddev version cannot be enforced", err, versionconstants.DdevVersion)
+		} else {
+			c, err := semver.NewConstraint(app.EnforceDdevVersion)
+			if err != nil {
+				util.Warning("%v", err)
+			}
+			if !c.Check(v) {
+				util.Failed("ddev version currently installed (%v) is not supported by this project (%v), please upgrade to a supported version or update your project's enforced version constraint", versionconstants.DdevVersion, c)
+			}
+		}
+	}
 
-  util.Failed(versionconstants.DdevVersion)
-  util.Failed(app.EnforceDdevVersion)
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
