@@ -56,7 +56,7 @@ func silverstripePostStartAction(app *DdevApp) error {
 		"SS_DEFAULT_ADMIN_USERNAME": "admin",
 		"SS_DEFAULT_ADMIN_PASSWORD": "password",
 	}
-	err = WriteProjectEnvFile(envFilePath, envMap, envText)
+	err = WriteProjectEnvFileNoOverwrite(envFilePath, envMap, envText)
 	if err != nil {
 		return err
 	}

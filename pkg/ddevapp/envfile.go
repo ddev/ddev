@@ -42,7 +42,7 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 
 // WriteProjectEnvFileNoOverwrite writes the passed envText into the project-root .env file
 // with all items in envMap added that do not already exist
-func WriteProjectEnvFileNoOverwrite(envFilePath string, envMap map[string]string, envText string, overwrite) error {
+func WriteProjectEnvFileNoOverwrite(envFilePath string, envMap map[string]string, envText string) error {
 	// envFilePath := filepath.Join(app.AppRoot, ".env")
 	for k, v := range envMap {
 		// If the item is already in envText (checking via regex)
