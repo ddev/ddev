@@ -107,6 +107,8 @@ Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the
 
 You can configure a [ddev version constraint](https://github.com/Masterminds/semver#checking-version-constraints) that will be validated against the running ddev and prevent any command from running if it doesn't match.
 
+Note: this will only work with ddev versions above v1.22.4, older ddev versions will ignore this setting.
+
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | | `>= 1.22.4`
