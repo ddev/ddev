@@ -103,6 +103,16 @@ Extra Debian packages for the project’s database container.
 
 Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the database container is built.
 
+## `ddev_version_constraint`
+
+You can configure a ddev version constraint that will be validated against the running ddev and prevent any command from running if it doesn't match.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | | `>= 1.22.4`
+
+You can see the different constraint formats at https://github.com/Masterminds/semver#checking-version-constraints.
+
 ## `default_container_timeout`
 
 Seconds DDEV will wait for all containers to become ready.
