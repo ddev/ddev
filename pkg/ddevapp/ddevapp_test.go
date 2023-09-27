@@ -2492,7 +2492,8 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		app.Init(site.Dir)
+		err := app.Init(site.Dir)
+		assert.NoError(err)
 
 		t.Logf("== BEGIN TestDdevUploadDir location for %s\n", site.Type)
 		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
