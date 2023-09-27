@@ -75,6 +75,10 @@
       },
       "uniqueItems": true
     },
+    "ddev_version_constraint": {
+      "description": "Validate that ddev version being used is valid within this constraint.",
+      "type": "string"
+    },
     "default_container_timeout": {
       "description": "Seconds DDEV will wait for all containers to become ready.",
       "type": "integer"
