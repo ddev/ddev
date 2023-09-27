@@ -123,6 +123,9 @@ var (
 	ngrokArgs string
 
 	webEnvironmentLocal string
+
+	// ddevVersionConstraint sets a ddev version constraint to validate the ddev against
+	ddevVersionConstraint string
 )
 
 var providerName = nodeps.ProviderDefault
@@ -302,6 +305,7 @@ func init() {
 	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that DDEV waits for all containers to become ready on start`)
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
+	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", fmt.Sprintf(`Specify a ddev version constraint to validate ddev against.`))
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -697,6 +701,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if dbWorkingDirDefaultArg {
 		app.WorkingDir["db"] = defaults["db"]
+	}
+
+	if ddevVersionConstraint != "" {
+		app.DdevVersionConstraint = ddevVersionConstraint
 	}
 
 	// Ensure the configuration passes validation before writing config file.
