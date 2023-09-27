@@ -2468,28 +2468,44 @@ func TestDdevImportFiles(t *testing.T) {
 	}
 }
 
+// TestDdevUploadDirNoPackage tests if the getUploadDir(s) returns what's expected for each app type.
 func TestDdevUploadDirNoPackage(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
+	// Expected values for each (known) app type
+	dirs := map[string][]string{
+		nodeps.AppTypeWordPress:    {"wp-content/uploads"},
+		nodeps.AppTypeCraftCms:     {"files"},
+		nodeps.AppTypeDrupal6:      {"sites/default/files"},
+		nodeps.AppTypeDrupal7:      {"sites/default/files"},
+		nodeps.AppTypeDrupal8:      {"sites/default/files"},
+		nodeps.AppTypeDrupal9:      {"sites/default/files"},
+		nodeps.AppTypeDrupal10:     {"sites/default/files"},
+		nodeps.AppTypeShopware6:    {"media"},
+		nodeps.AppTypeBackdrop:     {"files"},
+		nodeps.AppTypeTYPO3:        {"fileadmin"},
+		nodeps.AppTypeMagento:      {"media"},
+		nodeps.AppTypeMagento2:     {"media"},
+		nodeps.AppTypeSilverstripe: {"public/assets"},
+	}
+
 	for _, site := range TestSites {
-		// This test is only relevant for the project types that do _not_ have a package of files to upload
-		if site.Type == "php" || (site.FilesTarballURL != "" && site.FilesZipballURL != "" && site.FullSiteTarballURL != "") {
-			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are provided) or type php\n", site.Name)
-			continue
-		}
-
 		switchDir := site.Chdir()
+		app.Init(site.Dir)
 
-		t.Logf("== BEGIN TestDdevUploadDir location for %s\n", site.Name)
+		t.Logf("== BEGIN TestDdevUploadDir location for %s\n", site.Type)
 		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+		// Only check those that are not empty
+		if dirs[site.Type] != nil {
+			t.Logf("== Expected: %s\n", dirs[site.Type])
+			t.Logf("== Actual: %s\n", app.GetUploadDirs())
+			assert.EqualValues(dirs[site.Type], app.GetUploadDirs())
+		}
 
-		// For now a very simple "make sure it's not empty
-		assert.True(true, app.GetUploadDir() != "")
+		testcommon.ClearDockerEnv()
+
 		runTime()
 		switchDir()
 	}
