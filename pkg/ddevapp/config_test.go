@@ -643,6 +643,39 @@ func TestConfigValidate(t *testing.T) {
 	app.DdevVersionConstraint = ""
 	versionconstants.DdevVersion = ddevVersion
 
+	// prereleases with a constraint that does not include them
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.23"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.3-11-g8baef014e is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.22.0"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.3-11-g8baef014e is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	// prereleases with a constraint that does include them
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.23.0-0"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.3-11-g8baef014e is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.22.0-0"
+	err = app.ValidateConfig()
+	assert.NoError(err)
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
 	assert.Error(err)
