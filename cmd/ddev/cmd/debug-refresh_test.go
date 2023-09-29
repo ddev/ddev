@@ -32,8 +32,8 @@ func TestDebugRefreshCmd(t *testing.T) {
 		_ = os.Chdir(origDir)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err := os.RemoveAll(tmpdir)
-		assert.NoError(err)
+		// On Windows the tmpdir may not be removable for unknown reasons, don't check result
+		_ = os.RemoveAll(tmpdir)
 	})
 
 	err = fileutil.AppendStringToFile(app.GetConfigPath("web-build/Dockerfile"), `
