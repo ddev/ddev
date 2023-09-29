@@ -83,7 +83,7 @@ It’s easiest to do this using Gitpod (see above) because Gitpod already has `d
 
 ## Pull Requests and PR Preparation
 
-When preparing your pull request, please use a branch name like `2022MMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
+When preparing your pull request, please use a branch name like `YYYYMMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
 
 ## Docker Image Changes
 
