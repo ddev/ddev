@@ -1,10 +1,10 @@
 #ddev-generated
-# Amazee Lagoon provider configuration.
+# Lagoon provider configuration.
 
 # To use this configuration,
 
 # 1. Check out the project and then configure it with 'ddev config'. You'll want to use 'ddev start' and make sure the basic functionality is working. Your project must have a .lagoon.yml properly configured.
-# 2. Configure an SSH key at https://dashboard.amazeeio.cloud/settings
+# 2. Configure an SSH key for your Lagoon user https://docs.lagoon.sh/using-lagoon-advanced/ssh/
 # 3. `ddev auth ssh`.
 # 4. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'
 # 5. `ddev restart`
