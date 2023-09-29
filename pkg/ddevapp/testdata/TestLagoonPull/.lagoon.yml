@@ -28,11 +28,11 @@ lagoon-sync:
   mariadb:
     config:
       # TODO: How can this be done properly in a new project? Or should we just set MARIADB_HOST etc?
-      hostname: "${MARIADB_HOST:-db}"
-      username: "${MARIADB_USERNAME:-db}"
-      password: "${MARIADB_PASSWORD:-db}"
+      hostname: "${MARIADB_HOST:-mariadb}"
+      username: "${MARIADB_USERNAME:-mariadb}"
+      password: "${MARIADB_PASSWORD:-mariadb}"
       port: "${MARIADB_PORT:-3306}"
-      database: "${MARIADB_DATABASE:-db}"
+      database: "${MARIADB_DATABASE:-mariadb}"
   files:
     config:
       sync-directory: "web/sites/default/files"

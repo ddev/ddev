@@ -23,10 +23,7 @@ db_import_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    MARIADB_HOST=db
-    MARIADB_USERNAME=db
-    MARIADB_PASSWORD=db
-    MARIADB_DATABASE=db
+    export MARIADB_HOST=db MARIADB_USERNAME=db MARIADB_PASSWORD=db MARIADB_DATABASE=db
     lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction 
 
 files_import_command:
@@ -40,10 +37,7 @@ db_push_command:
   command: |
     set -eu -o pipefail
     #set -x   # You can enable bash debugging output by uncommenting
-    MARIADB_HOST=db
-    MARIADB_USERNAME=db
-    MARIADB_PASSWORD=db
-    MARIADB_DATABASE=db
+    export MARIADB_HOST=db MARIADB_USERNAME=db MARIADB_PASSWORD=db MARIADB_DATABASE=db
     lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -t ${LAGOON_ENVIRONMENT} -e local --no-interaction 
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.

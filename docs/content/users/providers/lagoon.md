@@ -5,7 +5,7 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
 ## Lagoon Per-Project Configuration
 
 1. Check out the Lagoon project and configure it by running [`ddev config`](../usage/commands.md#config). You’ll want to run [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
-2. Add `LAGOON_PROJECT` and `LAGOON_ENVIRONMENT` variables to your project using `'web_environment'` in its YAML configuration or a `.ddev/.env` file. For example, run `ddev config --web-environment-add="LAGOON_PROJECT=<project-name> LAGOON_ENVIRONMENT=<environment-name>"`.
+2. Add `LAGOON_PROJECT` and `LAGOON_ENVIRONMENT` variables to your project using `'web_environment'` in its YAML configuration or a `.ddev/.env` file. For example, run `ddev config --web-environment-add="LAGOON_PROJECT=<project-name>,LAGOON_ENVIRONMENT=<environment-name>"`.
 3. Configure an [SSH key](https://docs.lagoon.sh/using-lagoon-advanced/ssh/) for your Lagoon user.
 4. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
 5. Run [`ddev restart`](../usage/commands.md#restart).

@@ -23,6 +23,7 @@ ddev pull platform
 ddev pull pantheon -y
 ddev pull platform --skip-files -y
 ddev pull localfile --skip-db -y
+ddev pull lagoon --environment=LAGOON_PROJECT=amazeeio-ddev,LAGOON_ENVIRONMENT=pull
 ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
 `,
 
