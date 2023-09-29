@@ -38,10 +38,12 @@
 
 auth_command:
   command: |
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     set -eu -o pipefail
     if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN." && exit 1; fi
     if [ -z "${PLATFORM_PROJECT:-}" ]; then echo "Please make sure you have set PLATFORM_PROJECT." && exit 1; fi
     if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1; fi
+    platform environment:resume --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --yes 2>/dev/null || true
 
 db_pull_command:
   command: |
