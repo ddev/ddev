@@ -1,0 +1,49 @@
+#ddev-generated
+# Lagoon provider configuration.
+
+# To use this configuration,
+
+# 1. Check out the project and then configure it with 'ddev config'. You'll want to use 'ddev start' and make sure the basic functionality is working. Your project must have a .lagoon.yml properly configured.
+# 2. Configure an SSH key for your Lagoon user https://docs.lagoon.sh/using-lagoon-advanced/ssh/
+# 3. `ddev auth ssh`.
+# 4. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'
+# 5. `ddev restart`
+#
+# 'ddev pull lagoon'
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+    if [ -z "${LAGOON_PROJECT:-}" ]; then echo "Please make sure you have set the LAGOON_PROJECT environment variable in your 'web_environment' or .ddev/.env." && exit 1; fi
+    if [ -z "${LAGOON_ENVIRONMENT}" ]; then echo "Please make sure you have set the LAGOON_ENVIRONMENT environment variable in your 'web_environment' or .ddev/.env." && exit 1; fi
+
+
+db_import_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export MARIADB_HOST=db MARIADB_USERNAME=db MARIADB_PASSWORD=db MARIADB_DATABASE=db
+    lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction 
+
+files_import_command:
+  command: |
+    #set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    lagoon-sync sync files -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction 
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    set -eu -o pipefail
+    #set -x   # You can enable bash debugging output by uncommenting
+    export MARIADB_HOST=db MARIADB_USERNAME=db MARIADB_PASSWORD=db MARIADB_DATABASE=db
+    lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -t ${LAGOON_ENVIRONMENT} -e local --no-interaction 
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+files_push_command:
+  command: |
+    set -eu -o pipefail
+    #set -x   # You can enable bash debugging output by uncommenting
+    lagoon-sync sync files -p ${LAGOON_PROJECT} -e local -t ${LAGOON_ENVIRONMENT} --no-interaction 
+

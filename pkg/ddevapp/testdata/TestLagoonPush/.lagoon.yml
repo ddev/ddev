@@ -1,0 +1,38 @@
+docker-compose-yaml: docker-compose.yml
+
+project: amazeeio-ddev
+
+tasks:
+#   pre-rollout:
+#     - run:
+#         name: drush sql-dump
+#         command: mkdir -p /app/web/sites/default/files/private/ && drush sql-dump --ordered-dump --gzip --result-file=/app/web/sites/default/files/private/pre-deploy-dump.sql.gz || true
+#         service: cli
+
+  post-rollout:
+    # Enable once config sync has been setup.
+    # - run:
+    #     name: drush cim
+    #     command: drush -y cim
+    #     service: cli
+    # - run:
+    #     name: drush updb
+    #     command: drush -y updb
+    #     service: cli
+    - run:
+        name: drush cr
+        command: drush -y cr
+        service: cli
+
+lagoon-sync:
+  mariadb:
+    config:
+      # TODO: How can this be done properly in a new project? Or should we just set MARIADB_HOST etc?
+      hostname: "${MARIADB_HOST:-mariadb}"
+      username: "${MARIADB_USERNAME:-mariadb}"
+      password: "${MARIADB_PASSWORD:-mariadb}"
+      port: "${MARIADB_PORT:-3306}"
+      database: "${MARIADB_DATABASE:-mariadb}"
+  files:
+    config:
+      sync-directory: "web/sites/default/files"

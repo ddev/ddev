@@ -1,0 +1,15 @@
+current: ""
+default: amazeeio
+lagoons:
+  amazeeio:
+    graphql: https://api.lagoon.amazeeio.cloud/graphql
+    hostname: ssh.lagoon.amazeeio.cloud
+    ui: https://dashboard.amazeeio.cloud
+    kibana: https://logs.amazeeio.cloud/
+    port: "32222"
+    token: ""
+    version: ""
+    sshkey: ""
+    sshportal: false
+updatecheckdisable: false
+environmentfromdirectory: false
