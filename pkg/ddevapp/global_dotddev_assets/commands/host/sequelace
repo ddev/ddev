@@ -10,7 +10,7 @@
 
 DATABASE="${1:-db}"
 
-query="mysql://root:root@${DDEV_HOSTNAME}:${DDEV_HOST_DB_PORT}/${DATABASE}"
+query="mysql://root:root@$${DDEV_PROJECT}.${DDEV_TLD}:${DDEV_HOST_DB_PORT}/${DATABASE}"
 
 set -x
 open "$query" -a "/Applications/Sequel Ace.app/Contents/MacOS/Sequel Ace"
