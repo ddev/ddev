@@ -193,7 +193,7 @@ Flags:
 * `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access.
 * `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
-* `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
+* `--nodejs-version`: Specify the Node.js version to use if you don’t want the default version.
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
 * `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance mode to global configuration.

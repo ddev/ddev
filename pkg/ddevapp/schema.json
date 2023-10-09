@@ -221,7 +221,6 @@
       "description": "Node.js version for the web container’s “system” version.",
       "type": "string",
       "enum": [
-        "14",
         "16",
         "18",
         "20"

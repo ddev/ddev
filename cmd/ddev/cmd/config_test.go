@@ -194,7 +194,7 @@ func TestConfigSetValues(t *testing.T) {
 	useDNSWhenPossible := false
 	timezone := "America/Chicago"
 	webEnv := "SOMEENV=some+val"
-	nodejsVersion := "14"
+	nodejsVersion := "16"
 	defaultContainerTimeout := 300
 
 	args := []string{
