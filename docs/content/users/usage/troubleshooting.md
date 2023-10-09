@@ -50,7 +50,7 @@ or
 
 > Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:443 -> 0.0.0.0:0: listen tcp 127.0.0.1:443: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
 
-This means there’s another web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
+This means there’s another process or web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
 
 In some cases, the conflict could be over Mailpit’s port 8025 or 8026.
 
@@ -58,7 +58,7 @@ To resolve this conflict, choose one of these methods:
 
 1. Stop all Docker containers that might be using the port by running `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
 2. If you’re using another local development environment that uses these ports (MAMP, WAMP, Lando, etc.), consider stopping it.
-3. Fix port conflicts by configuring your project to use different ports.
+3. Fix port conflicts by configuring DDEV globally to use different ports.
 4. Fix port conflicts by stopping the competing application.
 
 ### Method 1: Stop the conflicting application
@@ -67,22 +67,21 @@ Consider `lando poweroff` for Lando, or `fin system stop` for Docksal, or stop M
 
 ### Method 2: Fix port conflicts by configuring your project to use different ports
 
-To configure a project to use non-conflicting ports, edit the project’s `.ddev/config.yaml` to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then, use `ddev start` again.
+To configure a project to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
 
-For example, if there was a port conflict with a local Apache HTTP on port 80, add the following to the `config.yaml` file:
-
-```yaml
-router_http_port: 8080
-router_https_port: 8443
+```
+ddev config --router-http-port="" --router-https-port=""
+ddev config global --router-http-port=8080 --router-https-port=8443
+ddev start
 ```
 
-Then run `ddev start`. This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
+This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
 
-If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port. You can add the following to `.ddev/config.yaml`:
+If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port:
 
-```yaml
-mailpit_http_port: 8300
-mailpit_https_port: 8301
+```
+ddev config --mailpit-http-port="" --mailpit-https-port=""
+ddev config global --mailpit-http-port=8301 --mailpit-https-port=8302
 ```
 
 ### Method 3: Fix port conflicts by stopping the competing application
