@@ -130,6 +130,7 @@ type DdevApp struct {
 	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
+	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -2783,7 +2784,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// incomplete one we have to add to it.
 	if err = app.Init(activeAppRoot); err != nil {
 		switch err.(type) {
-		case webContainerExists, invalidConfigFile, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
+		case webContainerExists, invalidConfigFile, invalidConstraint, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
 			return app, err
 		}
 	}

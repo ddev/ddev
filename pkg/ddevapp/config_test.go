@@ -21,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -607,11 +608,73 @@ func TestConfigValidate(t *testing.T) {
 
 	appName := app.Name
 	appType := app.Type
+	ddevVersion := versionconstants.DdevVersion
 
 	err = app.ValidateConfig()
 	if err != nil {
 		t.Fatalf("Failed to app.ValidateConfig(), err=%v", err)
 	}
+
+	app.DdevVersionConstraint = ">= 1.twentythree"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "not a valid constraint")
+	app.DdevVersionConstraint = ""
+
+	versionconstants.DdevVersion = "v1.22.0"
+	app.DdevVersionConstraint = ">= 1.23"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.0 is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	versionconstants.DdevVersion = "v1.23.0"
+	app.DdevVersionConstraint = ">= 1.23"
+	err = app.ValidateConfig()
+	assert.NoError(err)
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	versionconstants.DdevVersion = "2134asdf-dirty"
+	app.DdevVersionConstraint = ">= 1.23"
+	err = app.ValidateConfig()
+	assert.NoError(err)
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	// prereleases with a constraint that does not include them
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.23"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.3-11-g8baef014e is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.22.0"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.3-11-g8baef014e is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	// prereleases with a constraint that does include them
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.23.0-0"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev version v1.22.3-11-g8baef014e is not supported by this project")
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
+
+	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
+	app.DdevVersionConstraint = ">= 1.22.0-0"
+	err = app.ValidateConfig()
+	assert.NoError(err)
+	app.DdevVersionConstraint = ""
+	versionconstants.DdevVersion = ddevVersion
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
