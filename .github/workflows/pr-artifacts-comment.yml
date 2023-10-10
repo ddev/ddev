@@ -20,12 +20,11 @@ jobs:
             // get a PR number
             const {owner, repo} = context.repo;
             const pullHeadSHA = '${{github.event.workflow_run.head_sha}}';
-            const pullUserId = ${{github.event.sender.id}};
             const prNumber = await (async () => {
               const pulls = await github.rest.pulls.list({owner, repo});
               for await (const {data} of github.paginate.iterator(pulls)) {
                 for (const pull of data) {
-                  if (pull.head.sha === pullHeadSHA && pull.user.id === pullUserId) {
+                  if (pull.head.sha === pullHeadSHA) {
                     return pull.number;
                   }
                 }
