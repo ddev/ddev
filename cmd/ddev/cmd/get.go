@@ -94,6 +94,21 @@ ddev get --remove ddev-someaddonname
 			if err != nil {
 				util.Failed("Unable to find active project: %v", err)
 			}
+
+			origDir, _ := os.Getwd()
+
+			defer func() {
+				err = os.Chdir(origDir)
+				if err != nil {
+					util.Failed("Unable to chdir to %v: %v", origDir, err)
+				}
+			}()
+
+			err = os.Chdir(app.GetConfigPath(""))
+			if err != nil {
+				util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
+			}
+
 			app.DockerEnv()
 
 			err = ddevapp.RemoveAddon(app, cmd.Flag("remove").Value.String(), nil, bash, verbose)
