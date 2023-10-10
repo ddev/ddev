@@ -900,9 +900,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
-		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.x  ||  curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
-		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh >/dev/null && apt-get install -y nodejs >/dev/null\n" +
+		extraWebContent = extraWebContent + "\nRUN curl -sSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor > /usr/share/keyrings/nodesource.gpg"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN echo \"deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_%s.x nodistro main\" > /etc/apt/sources.list.d/nodesource.list", app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN apt-get update >/dev/null && apt-get install -y nodejs >/dev/null\n" +
 			"RUN npm install --unsafe-perm=true --global gulp-cli yarn || ( npm config set unsafe-perm true && npm install --global gulp-cli yarn )"
 	}
 
