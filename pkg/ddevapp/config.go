@@ -198,6 +198,10 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.DefaultContainerTimeout = ""
 	}
 
+	if appcopy.NodeJSVersion == nodeps.NodeJSDefault {
+		appcopy.NodeJSVersion = ""
+	}
+
 	// Ensure valid type
 	if appcopy.Type == nodeps.AppTypeNone {
 		appcopy.Type = nodeps.AppTypePHP
@@ -476,7 +480,9 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidNodeVersion(app.NodeJSVersion) {
-		return fmt.Errorf("unsupported system Node.js version: '%s'; for the system Node.js version DDEV only supports %s. However, you can use 'ddev nvm install' at runtime to use any supported version", app.NodeJSVersion, nodeps.GetValidNodeVersions())
+		util.Warning("Node.js version '%s' is not currently supported by DDEV, ignoring and using default version '%v'.", app.NodeJSVersion, nodeps.NodeJSDefault)
+		util.Warning("Use `ddev config --auto` to fix, or use `ddev nvm` to support an arbitrary Node.js version.")
+		app.NodeJSVersion = nodeps.NodeJSDefault
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {

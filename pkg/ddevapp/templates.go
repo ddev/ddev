@@ -66,6 +66,8 @@ const ConfigInstructions = `
 # change from the default system Node.js version to another supported version, like 16, 18, 20.
 # Note that you can use 'ddev nvm' or nvm inside the web container to provide nearly any
 # Node.js version, including v6, etc.
+# You only need to configure this if you are not using nvm and you want to use a major
+# version that is not the default.
 
 # additional_hostnames:
 #  - somename
