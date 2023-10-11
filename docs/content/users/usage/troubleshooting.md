@@ -98,7 +98,7 @@ sudo apachectl stop
 
 Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
-* macOS Content Filtering: Under "Screen Time" -> "Choose Screen Time content and privacy settings" turn off "Content and Privacy". Then you must reboot. This has been a common issue with macOS Sonoma.
+* macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
 * macOS or Linux Homebrew: Look at `brew services` and temporarily `brew services stop` anything that's running.
 * MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
