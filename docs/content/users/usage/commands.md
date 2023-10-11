@@ -262,6 +262,17 @@ Example:
 ddev craft up
 ```
 
+## `dbeaver`
+
+Open [DBeaver](https://dbeaver.io/) with the current project’s database (global shell host container command). This command is only available if `DBeaver.app` is installed as `/Applications/DBeaver.app` for macOS, and if `dbeaver` (or another binary like `dbeaver-ce`) available inside `/usr/bin` for Linux (Flatpak and snap support included).
+
+Example:
+
+```shell
+# Open the current project’s database in DBeaver
+ddev dbeaver
+```
+
 ## `debug`
 
 *Aliases: `d`, `dbg`.*
@@ -1117,7 +1128,7 @@ ddev sequelace
 ## `sequelpro`
 
 !!!warning "Sequel Pro is abandoned!"
-    The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, and TablePlus.
+    The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, TablePlus, and DBeaver.
 
 Open Sequel Pro with the current project’s database (global shell host container command). This command is only available if `Sequel Pro.app` is installed as `/Applications/Sequel pro.app`, and only for projects with `mysql` or `mariadb` databases.
 
