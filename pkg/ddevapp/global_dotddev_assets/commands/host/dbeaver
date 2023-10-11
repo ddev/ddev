@@ -13,6 +13,11 @@ database="${1:-db}"
 user="${2:-root}"
 type="$(echo $DDEV_DATABASE | sed 's/:.*//')"
 
+if [ "${type}" = "postgres" ]; then
+  type="postgresql"
+  user="${2:-db}"
+fi
+
 # See: https://dbeaver.com/docs/wiki/Command-Line/#connection-parameters
 CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
 
