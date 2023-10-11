@@ -4,35 +4,41 @@
 ## Description: Run DBeaver against current db
 ## Usage: dbeaver
 ## Example: "ddev dbeaver [db] [user]"
-## HostBinaryExists: /mnt/c/Program Files/dbeaver/dbeaver.exe,C:\Program Files\dbeaver\dbeaver.exe,/Applications/dbeaver.app,/snap/bin/dbeaver-ce,/snap/bin/dbeaver-ee,/snap/bin/dbeaver
+
+# Note that this example uses $DDEV_HOST_DB_PORT to get the port for the connection
+# DBeaver command line options can be viewed here https://dbeaver.com/docs/dbeaver/Command-Line/
+# DBeaver can be obtained here https://dbeaver.io
 
 database="${1:-db}"
 user="${2:-root}"
 type="$(echo $DDEV_DATABASE | sed 's/:.*//')"
 
 # See: https://dbeaver.com/docs/wiki/Command-Line/#connection-parameters
-arguments="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true"
+CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
 
 case $OSTYPE in
   "win*"* | "msys"*)
-    '/c/Program Files/DBeaver/dbeaver.exe' -con "$arguments" &
+    '/c/Program Files/DBeaver/dbeaver.exe' -con "$CONNECTION" &
     ;;
   "linux-gnu")
+    # For WSL2.
     if [ -f "/mnt/c/Program Files/DBeaver/dbeaver.exe" ]; then
-      # wsl2 needs cmd to start the dbeaver
-      /mnt/c/Windows/System32/cmd.exe /C 'C:"Program Files"\DBeaver\dbeaver.exe -con '\"$arguments\"'' 2>nul &
+      # WSL2 needs cmd to start dbeaver.
+      /mnt/c/Windows/System32/cmd.exe /C 'C:"Program Files"\DBeaver\dbeaver.exe -con '\"$CONNECTION\"'' 2>nul &
+      exit 0
     fi
-    if [ -f "/snap/bin/dbeaver-ce" ]; then
-      "/snap/bin/dbeaver-ce" -con "$arguments" &
-    fi
-    if [ -f "/snap/bin/dbeaver-ee" ]; then
-      "/snap/bin/dbeaver-ee" -con "$arguments" &
-    fi
-    if [ -f "/snap/bin/dbeaver" ]; then
-      "/snap/bin/dbeaver" -con "$arguments" &
-    fi
+    # Check for different editions. Launch the first one found.
+    EDITIONS=(dbeaver-ce dbeaver-ee dbeaver)
+    for edition in "${EDITIONS[@]}"; do
+      if [ -x "$(command -v $edition)" ]; then
+        echo "Launching $edition."
+        $edition -con "$CONNECTION" &> /dev/null & disown
+        exit 0
+      fi
+    done
     ;;
   "darwin"*)
-    open -a dbeaver.app --args -con "$arguments" &
+    open -a dbeaver.app --args -con "$CONNECTION" &
+    echo "Attempted to launch DBeaver.app"
     ;;
 esac
