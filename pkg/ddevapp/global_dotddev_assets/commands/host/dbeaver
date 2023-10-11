@@ -4,10 +4,8 @@
 ## Description: Run DBeaver against current db
 ## Usage: dbeaver
 ## Example: "ddev dbeaver [db] [user]"
-
-# Note that this example uses $DDEV_HOST_DB_PORT to get the port for the connection
-# DBeaver command line options can be viewed here https://dbeaver.com/docs/dbeaver/Command-Line/
-# DBeaver can be obtained here https://dbeaver.io
+## OSTypes: darwin,linux
+## HostBinaryExists: /Applications/DBeaver.app,/usr/bin/dbeaver,/usr/bin/dbeaver-ce,/usr/bin/dbeaver-le,/usr/bin/dbeaver-ue,/usr/bin/dbeaver-ee,/var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity,/snap/bin/dbeaver-ce
 
 database="${1:-db}"
 user="${2:-root}"
@@ -22,22 +20,17 @@ fi
 CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
 
 case $OSTYPE in
-  "win*"* | "msys"*)
-    '/c/Program Files/DBeaver/dbeaver.exe' -con "$CONNECTION" &
-    ;;
   "linux-gnu")
-    # For WSL2.
-    if [ -f "/mnt/c/Program Files/DBeaver/dbeaver.exe" ]; then
-      # WSL2 needs cmd to start dbeaver.
-      /mnt/c/Windows/System32/cmd.exe /C 'C:"Program Files"\DBeaver\dbeaver.exe -con '\"$CONNECTION\"'' 2>nul &
-      exit 0
-    fi
-    # Check for different editions. Launch the first one found.
-    EDITIONS=(dbeaver-ce dbeaver-ee dbeaver)
-    for edition in "${EDITIONS[@]}"; do
-      if [ -x "$(command -v $edition)" ]; then
-        echo "Launching $edition."
-        $edition -con "$CONNECTION" &> /dev/null & disown
+    # Check for different binaries. Launch the first one found.
+    BINARIES=(
+      /usr/bin/dbeaver{,-ce,-le,-ue,-ee}
+      /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity
+      /snap/bin/dbeaver-ce
+    )
+    for binary in "${BINARIES[@]}"; do
+      if [ -x "$binary" ]; then
+        echo "Launching $binary"
+        $binary -con "$CONNECTION" &> /dev/null & disown
         exit 0
       fi
     done
