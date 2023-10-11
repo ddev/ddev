@@ -5,7 +5,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 ## General Troubleshooting Strategies
 
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
-* Temporarily disable firewalls, VPNs, network proxies, and virus checkers while you’re troubleshooting.
+* Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
 * On macOS, check to make sure Docker Desktop or Colima are not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
@@ -98,6 +98,8 @@ sudo apachectl stop
 
 Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
+* macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
+* macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.
 * MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
 * nginx (macOS Homebrew): `sudo brew services stop nginx` or `sudo launchctl stop homebrew.mxcl.nginx`.
@@ -116,6 +118,24 @@ $ sudo lsof -i :443 -sTCP:LISTEN
 COMMAND  PID     USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
+```
+
+You can also use the `netstat -anv -p tcp` command to examine processes running on specific ports:
+
+```
+sudo netstat -anv -p tcp | egrep 'Proto|(\*\.(80|443))'
+Proto Recv-Q Send-Q  Local Address          Foreign Address        (state)      rhiwat  shiwat    pid   epid state  options           gencnt    flags   flags1 usscnt rtncnt fltrs
+tcp4       0      0  *.80                   *.*                    LISTEN       131072  131072  10521      0 00100 00000006 000000000000965d 00000000 00000900      1      0 000001
+tcp4       0      0  *.443                  *.*                    LISTEN       131072  131072  10521      0 00100 00000006 000000000000965c 00000000 00000900      1      0 000001```
+```
+
+The `pid` column shows the process ID of the process listening on the port. In this case, it’s `10521`. You can use `ps` to find out what process that is:
+
+```
+$ ps -p 10521
+$ ps -fp 10521
+UID   PID  PPID   C STIME   TTY           TIME CMD
+501 10521     1   0 12:35PM ??         0:05.16 /Applications/OrbStack.app/Contents/MacOS/../Frameworks/OrbStack Helper.app/Contents/MacOS/OrbStack Helper vmgr -build-id 339077377 -handoff
 ```
 
 On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview) or try using `netstat` and `tasklist` to find the process ID:
