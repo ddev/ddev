@@ -27,6 +27,7 @@ Codeception
 Commands
 Completely
 Create
+DBeaver
 DDEV's
 DDEV
 DHCP
@@ -53,6 +54,7 @@ ExpressionEngine
 FPATH
 FSTYPE
 Flags
+Flatpak
 FQDNs
 Fritzbox
 GUI
