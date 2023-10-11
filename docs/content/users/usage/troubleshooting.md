@@ -99,7 +99,7 @@ sudo apachectl stop
 Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
 * macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
-* macOS or Linux Homebrew: Look at `brew services` and temporarily `brew services stop` anything that's running.
+* macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.
 * MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
 * nginx (macOS Homebrew): `sudo brew services stop nginx` or `sudo launchctl stop homebrew.mxcl.nginx`.
@@ -120,7 +120,7 @@ nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 ```
 
-The `netstat -anv -p tcp` command can also be used:
+You can also use the `netstat -anv -p tcp` command to examine processes running on specific ports:
 
 ```
 sudo netstat -anv -p tcp | egrep 'Proto|(\*\.(80|443))'
