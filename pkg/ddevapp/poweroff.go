@@ -50,14 +50,17 @@ func PowerOff() {
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
-	// Remove current global network ("ddev") plus the former "ddev_default"
-	removals := []string{"ddev_default"}
-	for _, networkName := range removals {
-		err = dockerutil.RemoveNetwork(networkName)
-		_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
-		// If it's a "no such network" there's no reason to report error
-		if err != nil && !isNoSuchNetwork {
-			util.Warning("Unable to remove network %s: %v", "ddev", err)
+
+	// Remove all global networks created with DDEV
+	removals, err := dockerutil.FindNetworksWithLabel("com.ddev.platform")
+	if err == nil {
+		for _, network := range removals {
+			dockerutil.RemoveNetworkWithWarningOnError(network.Name)
 		}
+	} else {
+		util.Warning("Unable to run dockerutil.FindNetworksWithLabel(): %v", err)
 	}
+
+	// Remove old network from DDEV before v1.22.4
+	dockerutil.RemoveNetworkWithWarningOnError(dockerutil.NetName)
 }
