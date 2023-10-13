@@ -2,7 +2,6 @@
 import sys
 import os
 import signal
-import pdb
 
 # From https://blog.zhaw.ch/icclab/process-management-in-docker-containers/
 
@@ -68,7 +67,6 @@ def main():
             isNginxAlive = check_nginx()
 
             if (not isApacheAlive and not isNginxAlive and isSupervisordAlive):
-                pdb.set_trace()
                 supervisordPid = int(open('/var/run/supervisord.pid','r').readline())
                 os.kill(supervisordPid, signal.SIGQUIT)
         except Exception as e:
