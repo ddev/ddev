@@ -76,4 +76,3 @@ def main():
         write_stdout('RESULT 2\nOK')
 if __name__ == '__main__':
     main()
-   import sys
