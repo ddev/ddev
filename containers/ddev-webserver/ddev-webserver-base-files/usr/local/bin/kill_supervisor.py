@@ -35,13 +35,12 @@ def main():
         line = sys.stdin.readline()
         write_stdout('This line kills supervisor: ' + line)
         try:
-            supervisorPidFile = '/var/run/supervisord.pid'
-            isSupervisordAlive = check_by_pid_file(supervisorPidFile)
+            isSupervisordAlive = check_by_pid_file('/var/run/supervisord.pid')
             isApacheAlive = check_by_pid_file('/var/run/apache2/apache2.pid')
             isNginxAlive = check_by_pid_file('/var/run/nginx.pid')
 
             if (not isApacheAlive and not isNginxAlive and isSupervisordAlive):
-                supervisordPid = int(open(supervisorPidFile,'r').readline())
+                supervisordPid = int(open('/var/run/supervisord.pid','r').readline())
                 os.kill(supervisordPid, signal.SIGQUIT)
         except Exception as e:
                 write_stdout('Could not kill supervisor: ' + e.strerror + '\n')
