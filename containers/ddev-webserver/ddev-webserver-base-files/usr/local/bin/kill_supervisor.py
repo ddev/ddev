@@ -22,40 +22,26 @@ def check_pid(pid):
     else:
         return True
 
-def check_supervisord():
-    if(not os.path.isfile('/var/run/supervisord.pid')):
+def check_by_pid_file(pidFile):
+    if(not os.path.isfile(pidFile)):
         return False
     
-    supervisordPid = int(open('/var/run/supervisord.pid','r').readline())
-    return check_pid(supervisordPid)
-
-def check_apache():
-    if(not os.path.isfile('/var/run/apache2/apache2.pid')):
-        return False
+    pid = int(open(pidFile,'r').readline())
+    return check_pid(pid)
     
-    apachePid = int(open('/var/run/apache2/apache2.pid','r').readline())
-    return check_pid(apachePid)
-
-def check_nginx():
-    if(not os.path.isfile('/var/run/nginx.pid')):
-        return False
-    
-    nginxPid = int(open('/var/run/nginx.pid','r').readline())
-    return check_pid(nginxPid)
-    
-        
 def main():
     while 1:
         write_stdout('READY\n')
         line = sys.stdin.readline()
         write_stdout('This line kills supervisor: ' + line)
         try:
-            isSupervisordAlive = check_supervisord()
-            isApacheAlive = check_apache()
-            isNginxAlive = check_nginx()
+            supervisorPidFile = '/var/run/supervisord.pid'
+            isSupervisordAlive = check_by_pid_file(supervisorPidFile)
+            isApacheAlive = check_by_pid_file('/var/run/apache2/apache2.pid')
+            isNginxAlive = check_by_pid_file('/var/run/nginx.pid')
 
             if (not isApacheAlive and not isNginxAlive and isSupervisordAlive):
-                supervisordPid = int(open('/var/run/supervisord.pid','r').readline())
+                supervisordPid = int(open(supervisorPidFile,'r').readline())
                 os.kill(supervisordPid, signal.SIGQUIT)
         except Exception as e:
                 write_stdout('Could not kill supervisor: ' + e.strerror + '\n')
