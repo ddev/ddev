@@ -27,10 +27,6 @@ def check_supervisord():
         return False
     
     supervisordPid = int(open('/var/run/supervisord.pid','r').readline())
-    if(check_pid(supervisordPid)):
-        write_stdout("supervisord alive\n")
-    else:
-        write_stdout("supervisord dead\n")
     return check_pid(supervisordPid)
 
 def check_apache():
@@ -38,10 +34,6 @@ def check_apache():
         return False
     
     apachePid = int(open('/var/run/apache2/apache2.pid','r').readline())
-    if(check_pid(apachePid)):
-        write_stdout("apache alive\n")
-    else:
-        write_stdout("apache dead\n")
     return check_pid(apachePid)
 
 def check_nginx():
@@ -49,10 +41,6 @@ def check_nginx():
         return False
     
     nginxPid = int(open('/var/run/nginx.pid','r').readline())
-    if(check_pid(nginxPid)):
-        write_stdout("nginx alive\n")
-    else:
-        write_stdout("nginx dead\n")
     return check_pid(nginxPid)
     
         
