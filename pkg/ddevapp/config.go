@@ -434,7 +434,7 @@ func (app *DdevApp) ValidateConfig() error {
 	if app.DdevVersionConstraint != "" {
 		constraint := app.DdevVersionConstraint
 		if !strings.Contains(constraint, "-") {
-			// Allow preleases to be included in the constraint validation
+			// Allow prereleases to be included in the constraint validation
 			// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
 			constraint += "-0"
 		}
