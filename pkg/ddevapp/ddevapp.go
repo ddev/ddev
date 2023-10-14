@@ -488,7 +488,7 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 func (app *DdevApp) GetMailpitHTTPPort() string {
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort
 	if port == "" {
-		port = nodeps.DdevDefaultMailpitPort
+		port = nodeps.DdevDefaultMailpitHTTPPort
 	}
 	if app.MailpitHTTPPort != "" {
 		port = app.MailpitHTTPPort
