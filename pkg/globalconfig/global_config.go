@@ -49,7 +49,6 @@ type GlobalConfig struct {
 	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
 	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
 	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email"`
-	AutoRestartContainers            bool                        `yaml:"auto_restart_containers"`
 	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
 	WebEnvironment                   []string                    `yaml:"web_environment"`
 	DisableHTTP2                     bool                        `yaml:"disable_http2"`
@@ -394,10 +393,6 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # letsencrypt_email: <email>
 # Email to be used for experimental letsencrypt certificates
-
-# auto_restart_containers: false
-# Experimental
-# If true, attempt to automatically restart projects/containers after reboot or Docker restart.
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook

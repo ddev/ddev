@@ -62,7 +62,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "disable-http2=false")
 	assert.Contains(out, "use-letsencrypt=false\nletsencrypt-email=\n")
 	assert.Contains(out, "table-style=default\nsimple-formatting=false")
-	assert.Contains(out, "auto-restart-containers=false\nuse-hardened-images=false\n")
+	assert.Contains(out, "use-hardened-images=false\n")
 	assert.Contains(out, "fail-on-hook-fail=false")
 	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s\nuse-docker-compose-from-path=false", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
 	assert.Contains(out, "project-tld=\nxdebug-ide-location=")
@@ -75,7 +75,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// Update a config
 	// Don't include no-bind-mounts because global testing
 	// will turn it on and break this
-	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--performance-mode=mutagen", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router=nginx-proxy`, `--router-http-port=8081`, `--router-https-port=8882`, "--mailpit-http-port=18025", "--mailpit-https-port=10826", `--traefik-monitor-port=11999`}
+	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--performance-mode=mutagen", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router=nginx-proxy`, `--router-http-port=8081`, `--router-https-port=8882`, "--mailpit-http-port=18025", "--mailpit-https-port=10826", `--traefik-monitor-port=11999`}
 	out, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
 	assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -88,7 +88,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "disable-http2=false")
 	assert.Contains(out, "use-letsencrypt=false\nletsencrypt-email=\n")
 	assert.Contains(out, "table-style=bright\nsimple-formatting=true")
-	assert.Contains(out, "auto-restart-containers=true\nuse-hardened-images=true\n")
+	assert.Contains(out, "use-hardened-images=true\n")
 	assert.Contains(out, "fail-on-hook-fail=true")
 	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s\nuse-docker-compose-from-path=false", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
 	assert.Contains(out, "project-tld=")

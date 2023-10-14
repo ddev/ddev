@@ -33,7 +33,7 @@ services:
       - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
       - USE_LETSENCRYPT={{ .letsencrypt }}
         {{ end }}{{/* end if .letsencrypt */}}
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    restart: "no"
     healthcheck:
       {{ if eq .Router "traefik" }}
       test: "/healthcheck.sh"

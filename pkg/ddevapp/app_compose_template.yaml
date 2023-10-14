@@ -30,7 +30,7 @@ services:
       - ./db_snapshots:/mnt/snapshots
       {{ end }} {{/* end if .NoBindMounts */}}
       - ddev-global-cache:/mnt/ddev-global-cache
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    restart: "no"
 
     # The postgres image is set up for user 999, we won't try to change that.
     user: {{ if ne .DBType "postgres" }} '$DDEV_UID:$DDEV_GID' {{ else }} "999:999" {{end}}
@@ -154,7 +154,7 @@ services:
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{- end }}
 
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    restart: "no"
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
 

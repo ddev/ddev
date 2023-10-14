@@ -148,7 +148,6 @@ func generateRouterCompose() (string, error) {
 		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
-		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
