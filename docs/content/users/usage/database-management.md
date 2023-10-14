@@ -23,7 +23,7 @@ You can also:
 
 ## Database Backends and Defaults
 
-You can use a [variety of different database types](../extend/database-types.md#database-server-types), including MariaDB (5.5–10.8), MySQL (5.5–8.0), and PostgreSQL (9–15). If you want to _change_ database type, you need to export your database, run [`ddev delete`](../usage/commands.md#delete) to remove the project (and its existing database), change to a new database type, run [`ddev start`](../usage/commands.md#start) again, and [import your data](../usage/commands.md#import-db).
+You can use a [variety of different database types](../extend/database-types.md#database-server-types), including MariaDB (5.5–10.8), MySQL (5.5–8.0), and PostgreSQL (9–16). If you want to _change_ database type, you need to export your database, run [`ddev delete`](../usage/commands.md#delete) to remove the project (and its existing database), change to a new database type, run [`ddev start`](../usage/commands.md#start) again, and [import your data](../usage/commands.md#import-db).
 
 DDEV creates a default database named `db` and default permissions for the `db` user with password `db`, and it’s on the (inside Docker) hostname `db`.
 
