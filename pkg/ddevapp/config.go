@@ -447,8 +447,8 @@ func (app *DdevApp) ValidateConfig() error {
 		v, err := semver.NewVersion(versionconstants.DdevVersion)
 		if err == nil {
 			if !c.Check(v) {
-				return fmt.Errorf("This project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint.", app.DdevVersionConstraint, 
- versionconstants.DdevVersion)
+				return fmt.Errorf("This project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint.", app.DdevVersionConstraint,
+					versionconstants.DdevVersion)
 			}
 		}
 	}
