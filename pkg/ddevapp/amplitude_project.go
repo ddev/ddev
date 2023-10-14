@@ -8,7 +8,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/third_party/ampli"
 	"github.com/denisbrodbeck/machineid"
 )
@@ -21,7 +20,7 @@ func (app *DdevApp) ProtectedID() string {
 
 // TrackProject collects and tracks information about the project for instrumentation.
 func (app *DdevApp) TrackProject() {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.
