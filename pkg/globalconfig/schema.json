@@ -25,10 +25,6 @@
     }
   },
   "properties": {
-    "auto_restart_containers": {
-      "description": "If true, automatically restart containers after a reboot or docker restart",
-      "type": "boolean"
-    },
     "developer_mode": {
       "description": "Not currently used.",
       "type": "boolean"
