@@ -48,7 +48,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
-    Some versions of Firefox (Developer Edition, Flatpaks) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305), see also [this issue](https://github.com/ddev/ddev/issues/5415).
+    Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305), see also [this issue](https://github.com/ddev/ddev/issues/5415).
 
     ### Debian/Ubuntu
 
