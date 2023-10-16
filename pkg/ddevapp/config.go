@@ -432,8 +432,13 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
-
-		c, err := semver.NewConstraint(app.DdevVersionConstraint)
+		constraint := app.DdevVersionConstraint
+		if !strings.Contains(constraint, "-") {
+			// Allow prereleases to be included in the constraint validation
+			// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
+			constraint += "-0"
+		}
+		c, err := semver.NewConstraint(constraint)
 		if err != nil {
 			return fmt.Errorf("%s is not a valid constraint. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.DdevVersionConstraint).(invalidConstraint)
 		}
@@ -442,7 +447,8 @@ func (app *DdevApp) ValidateConfig() error {
 		v, err := semver.NewVersion(versionconstants.DdevVersion)
 		if err == nil {
 			if !c.Check(v) {
-				return fmt.Errorf("ddev version %v is not supported by this project (%v), use a supported version or update your project config.yaml's `ddev_version_constraint`", versionconstants.DdevVersion, c)
+				return fmt.Errorf("this project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint", app.DdevVersionConstraint,
+					versionconstants.DdevVersion)
 			}
 		}
 	}
