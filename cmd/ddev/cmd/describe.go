@@ -95,6 +95,10 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	}
 
 	router := globalconfig.DdevGlobalConfig.Router
+	if nodeps.ArrayContainsString(app.GetOmittedContainers(), `ddev-router`) {
+		router = "disabled"
+	}
+
 	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
