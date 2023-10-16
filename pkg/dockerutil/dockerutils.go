@@ -47,6 +47,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 			Name:     name,
 			Driver:   "bridge",
 			Internal: false,
+			Labels:   map[string]string{"com.ddev.platform": "ddev"},
 		}
 		_, err := client.CreateNetwork(netOptions)
 		if err != nil {
@@ -82,6 +83,16 @@ func RemoveNetwork(netName string) error {
 	client := GetDockerClient()
 	err := client.RemoveNetwork(netName)
 	return err
+}
+
+// RemoveNetworkWithWarningOnError removes the named Docker network
+func RemoveNetworkWithWarningOnError(netName string) {
+	err := RemoveNetwork(netName)
+	_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
+	// If it's a "no such network" there's no reason to report error
+	if err != nil && !isNoSuchNetwork {
+		util.Warning("Unable to remove network %s: %v", netName, err)
+	}
 }
 
 var DockerHost string
@@ -279,6 +290,27 @@ func NetExists(client *docker.Client, name string) bool {
 		}
 	}
 	return false
+}
+
+// FindNetworksWithLabel returns all networks with the given label
+// It ignores the value of the label, is only interested that the label exists.
+func FindNetworksWithLabel(label string) ([]docker.Network, error) {
+	client := GetDockerClient()
+	networks, err := client.ListNetworks()
+	if err != nil {
+		return nil, err
+	}
+
+	var matchingNetworks []docker.Network
+	for _, network := range networks {
+		if network.Labels != nil {
+			if _, exists := network.Labels[label]; exists {
+				matchingNetworks = append(matchingNetworks, network)
+			}
+		}
+	}
+
+	return matchingNetworks, nil
 }
 
 // ContainerWait provides a wait loop to check for a single container in "healthy" status.
