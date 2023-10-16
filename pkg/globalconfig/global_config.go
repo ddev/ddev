@@ -65,7 +65,7 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
-	RouterMailpitHTTPPort            string                      `yaml:"mailpit_port,omitempty"`
+	RouterMailpitHTTPPort            string                      `yaml:"mailpit_http_port,omitempty"`
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
@@ -81,7 +81,7 @@ func New() GlobalConfig {
 		TableStyle:                   "default",
 		RouterHTTPPort:               nodeps.DdevDefaultRouterHTTPPort,
 		RouterHTTPSPort:              nodeps.DdevDefaultRouterHTTPSPort,
-		RouterMailpitHTTPPort:        nodeps.DdevDefaultMailpitPort,
+		RouterMailpitHTTPPort:        nodeps.DdevDefaultMailpitHTTPPort,
 		RouterMailpitHTTPSPort:       nodeps.DdevDefaultMailpitHTTPSPort,
 		LastStartedVersion:           "v0.0",
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
@@ -241,7 +241,7 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
 	}
 	if DdevGlobalConfig.RouterMailpitHTTPPort == "" {
-		DdevGlobalConfig.RouterMailpitHTTPPort = nodeps.DdevDefaultMailpitPort
+		DdevGlobalConfig.RouterMailpitHTTPPort = nodeps.DdevDefaultMailpitHTTPPort
 	}
 	if DdevGlobalConfig.RouterMailpitHTTPSPort == "" {
 		DdevGlobalConfig.RouterMailpitHTTPSPort = nodeps.DdevDefaultMailpitHTTPSPort
