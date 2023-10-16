@@ -92,6 +92,8 @@ func RemoveNetworkWithWarningOnError(netName string) {
 	// If it's a "no such network" there's no reason to report error
 	if err != nil && !isNoSuchNetwork {
 		util.Warning("Unable to remove network %s: %v", netName, err)
+	} else if err == nil {
+		output.UserOut.Println("Network", netName, "removed")
 	}
 }
 
