@@ -14,7 +14,7 @@ func main() {
 		err = os.MkdirAll(targetDir, 0755)
 		util.CheckErr(err)
 	}
-	err := cmd.RootCmd.GenBashCompletionFileV2(filepath.Join(targetDir, "ddev_bash_completion.sh"), false)
+	err := cmd.RootCmd.GenBashCompletionFileV2(filepath.Join(targetDir, "ddev_bash_completion.sh"), true)
 	if err != nil {
 		util.Failed("could not generate ddev_bash_completion.sh: %v", err)
 	}
