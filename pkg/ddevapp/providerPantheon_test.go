@@ -2,17 +2,18 @@ package ddevapp_test
 
 import (
 	"fmt"
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 /**
@@ -57,7 +58,7 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	require.NoError(t, err)
 
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -75,7 +76,7 @@ func TestPantheonPull(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal8
-	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
 	_ = app.Stop(true, false)
 
@@ -84,7 +85,7 @@ func TestPantheonPull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our pantheon.yaml from the example file
@@ -102,7 +103,7 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure we have Drush
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
@@ -153,7 +154,7 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 	err = d9code.Prepare()
 	require.NoError(t, err)
-	app, err := NewApp(d9code.Dir, false)
+	app, err := ddevapp.NewApp(d9code.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
 
@@ -176,7 +177,7 @@ func TestPantheonPush(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
-	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -184,7 +185,7 @@ func TestPantheonPush(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	tval := nodeps.RandomString(10)
@@ -210,13 +211,13 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Since allow-plugins isn't there and you can't even set it with Composer...
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
 
 	// Make sure we have Drush
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
@@ -224,13 +225,13 @@ func TestPantheonPush(t *testing.T) {
 	assert.NoError(err)
 
 	// Do minimal install so it can find %file dir
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "time drush si -y minimal",
 	})
 	require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
 	})
 	require.NoError(t, err)
@@ -239,14 +240,14 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonPushTestSite),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
-	out, _, err = app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonPushTestSite, fName, fName),
 	})
 	require.NoError(t, err)
