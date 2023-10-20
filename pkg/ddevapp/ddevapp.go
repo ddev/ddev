@@ -1486,8 +1486,8 @@ func (app *DdevApp) PullContainerImages() error {
 	if err != nil {
 		return err
 	}
+	images = append(images, FindNotOmittedImages(app)...)
 
-	images = append(images, dockerImages.GetRouterImage(), dockerImages.GetSSHAuthImage())
 	for _, i := range images {
 		err := dockerutil.Pull(i)
 		if err != nil {
@@ -1499,16 +1499,11 @@ func (app *DdevApp) PullContainerImages() error {
 	return nil
 }
 
-// PullBaseontainerImages pulls only the fundamentally needed images so they can be available early.
+// PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image and busybox for housekeeping.
 func PullBaseContainerImages() error {
 	images := []string{dockerImages.GetWebImage(), versionconstants.BusyboxImage}
-	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, SSHAuthName) {
-		images = append(images, dockerImages.GetSSHAuthImage())
-	}
-	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, RouterProjectName) {
-		images = append(images, dockerImages.GetRouterImage())
-	}
+	images = append(images, FindNotOmittedImages(nil)...)
 
 	for _, i := range images {
 		err := dockerutil.Pull(i)
@@ -1542,6 +1537,26 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 	}
 
 	return images, nil
+}
+
+// FindNotOmittedImages returns an array of image names not omitted by global or project configuration
+func FindNotOmittedImages(app *DdevApp) []string {
+	var images []string
+	containerImageMap := map[string]func() string{
+		SSHAuthName:       dockerImages.GetSSHAuthImage,
+		RouterProjectName: dockerImages.GetRouterImage,
+	}
+
+	for containerName, getImage := range containerImageMap {
+		if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, containerName) {
+			continue
+		}
+		if app == nil || !nodeps.ArrayContainsString(app.OmitContainers, containerName) {
+			images = append(images, getImage())
+		}
+	}
+
+	return images
 }
 
 // FindMaxTimeout looks through all services and returns the max timeout found
