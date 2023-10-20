@@ -285,7 +285,7 @@ If you need to _override_ existing values, set [`override_config: true`](../conf
 
 ```yaml
 override_config: true
-performance_mode: none
+use_dns_when_possible: false
 ```
 
 can override the existing values, and
