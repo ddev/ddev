@@ -385,7 +385,7 @@ Whether to override config values instead of merging.
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
-When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `performance_mode: none` or `additional_hostnames: []` to work.
+When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `use_dns_when_possible: false` or `additional_hostnames: []` to work.
 
 See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
 
