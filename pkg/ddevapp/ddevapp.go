@@ -1035,6 +1035,11 @@ Please use the built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
 	}
 
+	err = app.ProcessHooks("pre-start")
+	if err != nil {
+		return err
+	}
+
 	err = PullBaseContainerImages()
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
@@ -1127,11 +1132,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	err = DownloadMutagenIfNeededAndEnabled(app)
-	if err != nil {
-		return err
-	}
-
-	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
