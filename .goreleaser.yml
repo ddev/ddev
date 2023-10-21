@@ -188,7 +188,7 @@ brews:
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
-        system "make", "VERSION=v{{.Version}}-#{version}", "COMMIT=v#{version}"
+        system "make"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
     else
         bin.install "ddev"
@@ -223,7 +223,7 @@ brews:
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
-        system "make", "VERSION=v{{.Version}}-#{version}", "COMMIT=v#{version}"
+        system "make"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
     else
         bin.install "ddev"
