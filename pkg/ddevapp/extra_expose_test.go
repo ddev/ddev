@@ -2,16 +2,17 @@ package ddevapp_test
 
 import (
 	"fmt"
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 // TestExtraPortExpose tests exposing additional ports with web_extra_exposed_ports.
@@ -22,7 +23,7 @@ func TestExtraPortExpose(t *testing.T) {
 	site := TestSites[0]
 
 	testcommon.ClearDockerEnv()
-	app := new(DdevApp)
+	app := new(ddevapp.DdevApp)
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
@@ -40,11 +41,11 @@ func TestExtraPortExpose(t *testing.T) {
 	err = os.WriteFile(filepath.Join(app.AppRoot, "sub", "testfile.html"), []byte(`this is test2 in root/sub`), 0755)
 	require.NoError(t, err)
 
-	app.WebExtraExposedPorts = []WebExposedPort{
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "first", WebContainerPort: 3000, HTTPPort: 2999, HTTPSPort: 3000},
 		{Name: "second", WebContainerPort: 4000, HTTPPort: 3999, HTTPSPort: 4000},
 	}
-	app.WebExtraDaemons = []WebExtraDaemon{
+	app.WebExtraDaemons = []ddevapp.WebExtraDaemon{
 		{Name: "FirstDaemon", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
 		{Name: "SecondDaemon", Command: "php -S 0.0.0.0:4000", Directory: "/var/www/html/sub"},
 	}
@@ -56,7 +57,7 @@ func TestExtraPortExpose(t *testing.T) {
 
 	// Careful with portsToTest because https ports won't work on GitHub Actions Colima tests (although they work fine on normal Mac)
 	portsToTest := []string{"3000", "4000"}
-	if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
+	if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app)) {
 		portsToTest = []string{"2999", "3999"}
 	}
 

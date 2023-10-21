@@ -2,18 +2,18 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
 
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type settingsLocations struct {
@@ -45,7 +45,7 @@ func TestWriteSettings(t *testing.T) {
 	}
 	testDir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(testDir, true)
+	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -91,7 +91,7 @@ func TestWriteSettings(t *testing.T) {
 // TestWriteDrushConfig test the Drush config we write
 func TestWriteDrushConfig(t *testing.T) {
 	assert := asrt.New(t)
-	app := &DdevApp{}
+	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
@@ -121,7 +121,7 @@ func TestWriteDrushConfig(t *testing.T) {
 		//nolint: errcheck
 		defer app.Stop(true, false)
 		if startErr != nil {
-			logs, health, _ := GetErrLogsFromApp(app, startErr)
+			logs, health, _ := ddevapp.GetErrLogsFromApp(app, startErr)
 			t.Fatalf("app.Start failed, startErr=%v, healthcheck:\n%s\n\nlogs=\n========\n%s\n===========\n", startErr, health, logs)
 		}
 
@@ -155,7 +155,7 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true)
+	app, err := ddevapp.NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -200,7 +200,7 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true)
+	app, err := ddevapp.NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -255,7 +255,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true)
+	app, err := ddevapp.NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -298,12 +298,12 @@ func TestDrupalBackdropConsistentHash(t *testing.T) {
 	for _, projectType := range projectTypes {
 		// Make a spare directory for the first project
 		firstProjectDir := testcommon.CreateTmpDir(t.Name() + "-firstproject")
-		app, err := NewApp(firstProjectDir, true)
+		app, err := ddevapp.NewApp(firstProjectDir, true)
 		app.Type = projectType
 		require.NoError(t, err)
 
 		secondProjectDir := testcommon.CreateTmpDir(t.Name() + "-secondproject")
-		secondApp, err := NewApp(secondProjectDir, true)
+		secondApp, err := ddevapp.NewApp(secondProjectDir, true)
 		secondApp.Type = projectType
 		require.NoError(t, err)
 
@@ -341,7 +341,7 @@ func TestDrupalBackdropConsistentHash(t *testing.T) {
 	}
 }
 
-func extractSettingsHashSalt(app *DdevApp) (string, error) {
+func extractSettingsHashSalt(app *ddevapp.DdevApp) (string, error) {
 	// Read the file content
 	content, err := os.ReadFile(app.SiteDdevSettingsFile)
 	if err != nil {
@@ -367,7 +367,7 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true)
+	app, err := ddevapp.NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -410,7 +410,7 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true)
+	app, err := ddevapp.NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)

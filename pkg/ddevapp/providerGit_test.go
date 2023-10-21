@@ -1,17 +1,17 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/mitchellh/go-homedir"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/mitchellh/go-homedir"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestGitPull ensures we can pull backups from a Git repository
@@ -25,7 +25,7 @@ func TestGitPull(t *testing.T) {
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
@@ -47,7 +47,7 @@ func TestGitPull(t *testing.T) {
 		_ = os.RemoveAll(filepath.Join(home, "tmp", "ddev-pull-git-test-repo"))
 	})
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our git.yaml from the example file
@@ -67,7 +67,7 @@ func TestGitPull(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "tmp/veggie-pasta-bake-hero-umami.jpg"))
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
 		Service: "db",
 	})

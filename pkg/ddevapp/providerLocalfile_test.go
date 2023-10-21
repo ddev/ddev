@@ -1,19 +1,19 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestLocalfilePull ensures we can pull backups from a flat file for a configured environment.
@@ -28,7 +28,7 @@ func TestLocalfilePull(t *testing.T) {
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
 
-	app, err := NewApp(tmpDir, true)
+	app, err := ddevapp.NewApp(tmpDir, true)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -55,7 +55,7 @@ func TestLocalfilePull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our localfile.yaml from the example file
@@ -78,7 +78,7 @@ func TestLocalfilePull(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "docs/developers/building-contributing.md"))
-	out, _, err = app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
 		Service: "db",
 	})

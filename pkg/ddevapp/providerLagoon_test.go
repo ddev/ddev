@@ -2,19 +2,19 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 /**
@@ -60,7 +60,7 @@ func TestLagoonPull(t *testing.T) {
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
@@ -81,7 +81,7 @@ func TestLagoonPull(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	app.Docroot = "web"
@@ -125,7 +125,7 @@ func TestLagoonPush(t *testing.T) {
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
 
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -149,7 +149,7 @@ func TestLagoonPush(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("lagoon")
@@ -169,7 +169,7 @@ func TestLagoonPush(t *testing.T) {
 
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
 	})
 	require.NoError(t, err)
@@ -184,14 +184,14 @@ func TestLagoonPush(t *testing.T) {
 	// Test that the database row was added
 	c := fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | lagoon ssh -p %s -e %s -C 'mysql --host=$MARIADB_HOST --user=$MARIADB_USERNAME --password=$MARIADB_PASSWORD --database=$MARIADB_DATABASE'`, t.Name(), tval, lagoonProjectName, lagoonPushTestSiteEnvironment)
 	//t.Logf("attempting command '%s'", c)
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: c,
 	})
 	assert.NoError(err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there
-	out, _, err = app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`lagoon ssh -p %s -e %s -C 'ls -l /app/web/sites/default/files/%s'`, lagoonProjectName, lagoonPushTestSiteEnvironment, fName),
 	})
 	assert.NoError(err)
