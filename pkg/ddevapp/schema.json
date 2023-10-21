@@ -209,10 +209,6 @@
       "description": "Provide the name of the project to configure (normally the same as the last part of directory name)",
       "type": "string"
     },
-    "nfs_mount_enabled": {
-      "description": "enable NFS mounting of project in container",
-      "type": "boolean"
-    },
     "ngrok_args": {
       "description": "Provide extra args to ngrok in ddev share",
       "type": "string"

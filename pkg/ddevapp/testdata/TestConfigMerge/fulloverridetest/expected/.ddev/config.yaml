@@ -3,5 +3,5 @@ database:
   version: 10.5
 php_version: 5.6
 webserver_type: apache-fpm
-nfs_mount_enabled: false
+use_dns_when_possible: false
 additional_hostnames: [overrideone, overridetwo, z-one]

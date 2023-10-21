@@ -3626,9 +3626,9 @@ func TestCaptureLogs(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestNFSMount tests ddev start functionality with nfs_mount_enabled: true
+// TestNFSMount tests ddev start functionality with performance_mode: nfs
 // This requires that the test machine must have NFS shares working
-// Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
+// Tests using both app-specific performance_mode: nfs and etc
 func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")
