@@ -51,9 +51,9 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 
 		app, err := ddevapp.GetActiveApp("")
 		if err == nil {
-			err = app.ProcessHooks("pre-cmd")
+			err = app.ProcessHooks("pre-command")
 			if err != nil {
-				util.Failed("failed to process pre-cmd hooks: %v", err)
+				util.Failed("failed to process pre-command hooks: %v", err)
 			}
 		}
 
@@ -111,9 +111,9 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err == nil {
-			err = app.ProcessHooks("post-cmd")
+			err = app.ProcessHooks("post-command")
 			if err != nil {
-				util.Failed("failed to process post-cmd hooks: %v", err)
+				util.Failed("failed to process post-command hooks: %v", err)
 			}
 		}
 		if instrumentationApp == nil {
