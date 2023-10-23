@@ -1356,6 +1356,8 @@ func PrepDdevDirectory(app *DdevApp) error {
 // validateHookYAML validates command hooks and tasks defined in hooks for config.yaml
 func validateHookYAML(source []byte) error {
 	validHooks := []string{
+		"pre-cmd",
+		"post-cmd",
 		"pre-start",
 		"post-start",
 		"pre-import-db",

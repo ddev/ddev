@@ -49,6 +49,15 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			argsCopy = []string{}
 		}
 
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil {
+			util.Failed("Can't find active project: %v", err)
+		}
+		err = app.ProcessHooks("pre-cmd")
+		if err != nil {
+			util.Failed("failed to process pre-cmd hooks: %v", err)
+		}
+
 		// We don't want to send to amplitude if using --json-output
 		// That captures an enormous number of PhpStorm running the
 		// ddev describe -j over and over again.
@@ -61,7 +70,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			return
 		}
 
-		err := dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
+		err = dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
 		if err != nil {
 			if err.Error() == "no docker" {
 				if os.Args[1] != "version" {
@@ -101,6 +110,14 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil {
+			util.Failed("Can't find active project: %v", err)
+		}
+		err = app.ProcessHooks("post-cmd")
+		if err != nil {
+			util.Failed("failed to process post-cmd hooks: %v", err)
+		}
 		if instrumentationApp == nil {
 			app, err := ddevapp.GetActiveApp("")
 			if err == nil {
