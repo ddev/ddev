@@ -238,10 +238,10 @@ const ConfigInstructions = `
 # override_config: false
 # By default, config.*.yaml files are *merged* into the configuration
 # But this means that some things can't be overridden
-# For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge
+# For example, if you have 'use_dns_when_possible: true'' you can't override it with a merge
 # and you can't erase existing hooks or all environment variables.
 # However, with "override_config: true" in a particular config.*.yaml file,
-# 'nfs_mount_enabled: false' can override the existing values, and
+# 'use_dns_when_possible: false' can override the existing values, and
 # hooks:
 #   post-start: []
 # or

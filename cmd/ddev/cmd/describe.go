@@ -157,12 +157,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			// Get extra info for web container
 			if k == "web" {
 				extraInfo = append(extraInfo, fmt.Sprintf("%s PHP%s\n%s\ndocroot:'%s'", desc["type"], desc["php_version"], desc["webserver_type"], desc["docroot"]))
-				if desc["nfs_mount_enabled"].(bool) {
-					extraInfo = append(extraInfo, fmt.Sprintf("NFS Enabled"))
-				}
-				if desc["mutagen_enabled"].(bool) {
-					extraInfo = append(extraInfo, fmt.Sprintf("Mutagen enabled (%s)", ddevapp.FormatSiteStatus(desc["mutagen_status"].(string))))
-				}
+				extraInfo = append(extraInfo, fmt.Sprintf("Perf mode: %s", desc["performance_mode"].(string)))
 				if v, ok := desc["nodejs_version"].(string); ok {
 					extraInfo = append(extraInfo, fmt.Sprintf("NodeJS:%s", v))
 				}
