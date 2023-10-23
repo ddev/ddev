@@ -50,12 +50,11 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 
 		app, err := ddevapp.GetActiveApp("")
-		if err != nil {
-			util.Failed("Can't find active project: %v", err)
-		}
-		err = app.ProcessHooks("pre-cmd")
-		if err != nil {
-			util.Failed("failed to process pre-cmd hooks: %v", err)
+		if err == nil {
+			err = app.ProcessHooks("pre-cmd")
+			if err != nil {
+				util.Failed("failed to process pre-cmd hooks: %v", err)
+			}
 		}
 
 		// We don't want to send to amplitude if using --json-output
@@ -111,12 +110,11 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
-		if err != nil {
-			util.Failed("Can't find active project: %v", err)
-		}
-		err = app.ProcessHooks("post-cmd")
-		if err != nil {
-			util.Failed("failed to process post-cmd hooks: %v", err)
+		if err == nil {
+			err = app.ProcessHooks("post-cmd")
+			if err != nil {
+				util.Failed("failed to process post-cmd hooks: %v", err)
+			}
 		}
 		if instrumentationApp == nil {
 			app, err := ddevapp.GetActiveApp("")
