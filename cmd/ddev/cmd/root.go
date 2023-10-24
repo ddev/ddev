@@ -110,16 +110,14 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		command := os.Args[1]
+
 		app, err := ddevapp.GetActiveApp("")
 		if err == nil {
 			err = app.ProcessHooks("post-command", command)
 			if err != nil {
 				util.Failed("failed to process post-command hooks: %v", err)
 			}
-		}
-		if instrumentationApp == nil {
-			app, err := ddevapp.GetActiveApp("")
-			if err == nil {
+			if instrumentationApp == nil {
 				instrumentationApp = app
 			}
 		}
