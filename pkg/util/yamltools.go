@@ -38,7 +38,8 @@ func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 			case interface{}:
 				res[yk] = v
 			default:
-				return nil, fmt.Errorf("yamlToDict: type %T not handled (%v)", yk, yk)
+				Warning("Configuration has invalid type '%T' for '%s'", v, yk)
+				continue
 			}
 			if err != nil {
 				return nil, err
