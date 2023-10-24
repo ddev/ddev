@@ -55,6 +55,11 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 
 	// Convert map back to slice
 	for _, project := range requestedProjectsMap {
+		err = project.ValidateConfig()
+		if err != nil {
+			return nil, err
+		}
+
 		requestedProjects = append(requestedProjects, project)
 	}
 
