@@ -53,7 +53,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		if err == nil {
 			err = app.ProcessHooks("pre-command", command)
 			if err != nil {
-				util.Failed("failed to process pre-command hooks: %v", err)
+				output.UserOut.Errorf("failed to process pre-command hooks: %v", err)
 			}
 		}
 
@@ -115,7 +115,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		if err == nil {
 			err = app.ProcessHooks("post-command", command)
 			if err != nil {
-				util.Failed("failed to process post-command hooks: %v", err)
+				output.UserOut.Errorf("failed to process post-command hooks: %v", err)
 			}
 			if instrumentationApp == nil {
 				instrumentationApp = app
