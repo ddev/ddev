@@ -961,8 +961,8 @@ Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (globa
 Example:
 
 ```shell
-# Use `nvm` to switch to Node.js v18
-ddev nvm install 18
+# Use `nvm` to switch to Node.js v20
+ddev nvm install 20
 ```
 
 ## `php`
