@@ -19,6 +19,8 @@ Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) cre
 
 Download and unzip the appropriate binary and place it in your `$PATH`.
 
+### Homebrew with macOS
+
 If you’re using Homebrew, start by unlinking your current binary:
 
 ```
@@ -50,6 +52,33 @@ After you’re done, you can delete your downloaded binary and re-link the origi
 ```
 sudo rm /usr/local/bin/ddev
 brew link --force ddev
+```
+
+
+### Linux
+
+Start by removing your current binary, for Debian flavor systems use this:
+
+```
+sudo apt remove ddev
+```
+
+Next, unzip the binary you downloaded, make it executable, and move it to a folder in your path. Check with `echo $PATH`:
+
+```
+unzip ddev.zip
+chmod +x ddev && mv ddev ~/.local/bin/ddev
+```
+
+Verify the replacement worked by running `ddev version`. The output should be something like `DDEV version v1.22.3-39-gfbb878843`, instead of the regular `DDEV version v1.22.3`.
+
+You need to restart DDEV, to download the Docker images that it needs
+
+After you’re done, you can delete your downloaded binary and re-install the latest DDEV:
+
+```
+rm ~/.local/bin/ddev
+sudo apt install ddev
 ```
 
 ## Open in Gitpod
