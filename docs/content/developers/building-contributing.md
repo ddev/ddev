@@ -54,12 +54,12 @@ sudo rm /usr/local/bin/ddev
 brew link --force ddev
 ```
 
-### Linux
+### Installing a downloaded binary in the $PATH
 
-Start by removing your current binary, for Debian flavor systems use this:
-
+Normally, you can put any binary in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. In this example, `~/.local/bin` is used. Since not every distro has `~/.local/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
 ```
-sudo apt remove ddev
+mkdir -p ~/.local/bin
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 Next, unzip the binary you downloaded, make it executable, and move it to a folder in your path. Check with `echo $PATH`:
@@ -69,15 +69,14 @@ unzip ddev.zip
 chmod +x ddev && mv ddev ~/.local/bin/ddev
 ```
 
-Verify the replacement worked by running `ddev version`. The output should be something like `DDEV version v1.22.3-39-gfbb878843`, instead of the regular `DDEV version v1.22.3`.
+Now, close and reopen your terminal, and verify the replacement worked by running `ddev version`. The output should be something like `DDEV version v1.22.3-39-gfbb878843`, instead of the regular `DDEV version v1.22.3`.
 
-You need to restart DDEV, to download the Docker images that it needs
+You need to run `ddev poweroff` and `ddev start` to download the Docker images that it needs.
 
-After you’re done, you can delete your downloaded binary and re-install the latest DDEV:
+After you’re done testing, you can delete your downloaded binary, restart your terminal, and again use the standard DDEV:
 
 ```
 rm ~/.local/bin/ddev
-sudo apt install ddev
 ```
 
 ## Open in Gitpod
