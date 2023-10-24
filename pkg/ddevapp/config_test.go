@@ -1085,48 +1085,43 @@ func TestExtraPackages(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Test db container to make sure no ncdu in there at beginning
+	addedDBPackage := "sudo"
+	addedWebPackage := "tmux"
+
+	// Test db container to make sure no sudo in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "command -v ncdu 2>/dev/null",
+		Cmd:     fmt.Sprintf("command -v %s 2>/dev/null", addedDBPackage),
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
 
-	addedPackage := "tidy"
-	addedPackageTitle := "Tidy"
-
+	// Test web container to make sure we don't have the test package already
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     fmt.Sprintf("dpkg -s php%s-%s >/dev/null 2>&1", app.PHPVersion, addedPackage),
+		Cmd:     fmt.Sprintf("dpkg -s %s >/dev/null 2>&1", addedWebPackage),
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
 
 	// Now add the packages and start again, they should be in there
-	app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-" + addedPackage}
-	app.DBImageExtraPackages = []string{"ncdu"}
+	app.WebImageExtraPackages = []string{addedWebPackage}
+	app.DBImageExtraPackages = []string{addedDBPackage}
 	err = app.Restart()
 	require.NoError(t, err)
 
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "dpkg -s php" + app.PHPVersion + "-" + addedPackage,
+		Cmd:     "dpkg -s " + addedWebPackage,
 	})
-	assert.NoError(err, "dpkg -s php%s-%s failed", app.PHPVersion, addedPackage, stdout, stderr)
-
-	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     fmt.Sprintf("php -i | grep  '%s support =. enabled'", addedPackageTitle),
-	})
-	assert.NoError(err, "failed to grep for %s support, stdout=%s, stderr=%s", addedPackage, stdout, stderr)
+	assert.NoError(err, "dpkg -s %s failed", app.PHPVersion, addedWebPackage, stdout, stderr)
 
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "command -v ncdu",
+		Cmd:     "command -v sudo",
 	})
 	assert.NoError(err)
-	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\r\n"))
+	assert.Equal(fmt.Sprintf("/usr/bin/%s", addedDBPackage), strings.Trim(stdout, "\r\n"))
 }
 
 // TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
