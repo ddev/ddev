@@ -54,7 +54,6 @@ sudo rm /usr/local/bin/ddev
 brew link --force ddev
 ```
 
-
 ### Linux
 
 Start by removing your current binary, for Debian flavor systems use this:
