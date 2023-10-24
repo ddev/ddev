@@ -28,6 +28,7 @@ type ExecTask struct {
 	execRaw []string // Use execRaw if configured instead of exec
 	exec    string   // Actual command to be executed.
 	app     *DdevApp
+	args    []string // Task internal arguments
 }
 
 // ExecHostTask is the struct that defines "exec-host" tasks for hooks,
@@ -35,6 +36,7 @@ type ExecTask struct {
 type ExecHostTask struct {
 	exec string
 	app  *DdevApp
+	args []string // Task internal arguments
 }
 
 // ComposerTask is the struct that defines "composer" tasks for hooks, commands
@@ -116,10 +118,10 @@ func (c ComposerTask) GetDescription() string {
 // NewTask is the factory method to create whatever kind of task
 // we need using the yaml description of the task.
 // Returns a task (of various types) or nil
-func NewTask(app *DdevApp, ytask YAMLTask) Task {
+func NewTask(app *DdevApp, ytask YAMLTask, args ...string) Task {
 	if e, ok := ytask["exec-host"]; ok {
 		if v, ok := e.(string); ok {
-			t := ExecHostTask{app: app, exec: v}
+			t := ExecHostTask{app: app, exec: v, args: args}
 			return t
 		}
 		util.Warning("Invalid exec-host value, not executing it: %v", e)
@@ -144,7 +146,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		util.Warning("Invalid Composer value, not executing it: %v", e)
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
-			t := ExecTask{app: app, exec: v}
+			t := ExecTask{app: app, exec: v, args: args}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
 			}
@@ -158,7 +160,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 				return nil
 			}
 
-			t := ExecTask{app: app, execRaw: raw}
+			t := ExecTask{app: app, execRaw: raw, args: args}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
 			}
@@ -168,7 +170,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
-			t := ExecTask{app: app, exec: v}
+			t := ExecTask{app: app, exec: v, args: args}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
 			}

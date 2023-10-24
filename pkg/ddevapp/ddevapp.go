@@ -976,15 +976,26 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 }
 
 // ProcessHooks executes Tasks defined in Hooks
-func (app *DdevApp) ProcessHooks(hookName string) error {
+func (app *DdevApp) ProcessHooks(hookName string, args ...string) error {
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Debugf("Executing %s hook...", hookName)
 	}
 
+TASKS:
 	for _, c := range app.Hooks[hookName] {
-		a := NewTask(app, c)
+		a := NewTask(app, c, args...)
 		if a == nil {
 			return fmt.Errorf("unable to create task from %v", c)
+		}
+
+		status, _ := app.SiteStatus()
+		if hookName == "pre-command" || hookName == "post-command" {
+			for k := range c {
+				if status != SiteRunning && (k == "exec" || k == "composer") {
+					util.Warning("%v %v hook ignored for 'ddev %v' because the project is not currently running", hookName, k, args[0])
+					continue TASKS
+				}
+			}
 		}
 
 		if hookName == "pre-start" {
