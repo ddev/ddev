@@ -54,7 +54,7 @@ sudo rm /usr/local/bin/ddev
 brew link --force ddev
 ```
 
-### Installing a downloaded binary in the $PATH
+### Installing a Downloaded Binary in the `$PATH`
 
 Normally, you can put any binary in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. In this example, `~/.local/bin` is used. `echo $PATH` and `which ddev` are valuable commands for debugging. Since not every distro has `~/.local/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
 
