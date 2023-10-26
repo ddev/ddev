@@ -222,6 +222,9 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
 	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
+	// Allow extra time by default for the snapshot restore. This is arbitrary but may help.
+	origTimeout := app.DefaultContainerTimeout
+	app.DefaultContainerTimeout = "600"
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
@@ -251,6 +254,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			fmt.Print(".")
 		}
 	}
+	app.DefaultContainerTimeout = origTimeout
 	util.Success("\nDatabase snapshot %s was restored in %vs", snapshotName, int(time.Since(start).Seconds()))
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {

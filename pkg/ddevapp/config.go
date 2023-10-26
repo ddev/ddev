@@ -130,6 +130,10 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+		// On Windows the default timeout may be too short for mutagen to succeed.
+		if runtime.GOOS == "windows" {
+			app.DefaultContainerTimeout = "240"
+		}
 	}
 
 	// Migrate UploadDir to UploadDirs
