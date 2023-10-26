@@ -49,6 +49,7 @@ theme:
 # Plugins
 plugins:
 - search
+- privacy
 - redirects:
     redirect_maps:
 - minify:
@@ -58,7 +59,6 @@ plugins:
 #- git-committers:
 #    repository: https://github.com/ddev/ddev
 #    token: !ENV GH_TOKEN
-
 
 # Customization
 extra:
