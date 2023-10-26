@@ -486,11 +486,11 @@ func renderRepositoryList(repos []*github.Repository) string {
 }
 
 func init() {
-	Get.Flags().Bool("list", true, fmt.Sprintf(`List available add-ons for 'ddev get'`))
-	Get.Flags().Bool("all", true, fmt.Sprintf(`List unofficial add-ons for 'ddev get' in addition to the official ones`))
-	Get.Flags().Bool("installed", true, fmt.Sprintf(`Show installed ddev-get add-ons`))
-	Get.Flags().String("remove", "", fmt.Sprintf(`Remove a ddev-get add-on`))
-	Get.Flags().String("version", "", fmt.Sprintf(`Specify a particular version of add-on to install`))
+	Get.Flags().Bool("list", true, `List available add-ons for 'ddev get'`)
+	Get.Flags().Bool("all", true, `List unofficial add-ons for 'ddev get' in addition to the official ones`)
+	Get.Flags().Bool("installed", true, `Show installed ddev-get add-ons`)
+	Get.Flags().String("remove", "", `Remove a ddev-get add-on`)
+	Get.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
 	RootCmd.AddCommand(Get)
 }
