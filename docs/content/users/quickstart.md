@@ -57,14 +57,13 @@ Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing on
 Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
 
 === "New projects"
+    ```bash
+    # Boot the project and install the starter project:
+    ddev start
+    ddev composer create -y craftcms/craft
 
-        # Boot the project and install the starter project:
-        ddev start
-        ddev composer create -y craftcms/craft
-
-        # Open site in the browser:
-        ddev launch
-        ```
+    # Open site in the browser:
+    ddev launch
 
     # Set up the DDEV environment:
     ddev config --project-type=craftcms --docroot=web
