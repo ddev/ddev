@@ -935,6 +935,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
 		extraWebContent = extraWebContent + "\nRUN curl -sSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor > /usr/share/keyrings/nodesource.gpg"
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN echo \"deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_%s.x nodistro main\" > /etc/apt/sources.list.d/nodesource.list", app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN echo 'disk usage problems: ' && df -h /tmp && ls -l /var/lib/apt/lists\n"
 		extraWebContent = extraWebContent + "\nRUN apt-get update >/dev/null && apt-get install -y nodejs >/dev/null\n" +
 			"RUN npm install --unsafe-perm=true --global gulp-cli yarn || ( npm config set unsafe-perm true && npm install --global gulp-cli yarn )"
 	}
@@ -1087,7 +1088,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 	if extraPackages != nil {
 		contents = contents + `
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
-RUN df -h /tmp && ls -l /var/lib/apt/lists
+RUN echo "Disk usage problems: " && df -h /tmp && ls -l /var/lib/apt/lists
 RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
