@@ -8,7 +8,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
-* Make sure you do not have disk space problems on the host. This can be especially tricky on WSL2, where you need to check both the host disk space and WSL2 disk space as well.
+* Make sure you do not have disk space problems on your computer. This can be especially tricky on WSL2, where you need to check both the host disk space and WSL2 disk space as well.
 * On macOS, check to make sure Docker Desktop or Colima are not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
 * If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
