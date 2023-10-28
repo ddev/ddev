@@ -122,7 +122,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
-		instrumentationNotSetUpWarning()
 
 		// All this nonsense is to capture the official usage we used for this command.
 		// Unfortunately cobra doesn't seem to provide this easily.
