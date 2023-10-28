@@ -196,12 +196,6 @@ func init() {
 	}
 }
 
-func instrumentationNotSetUpWarning() {
-	if !output.JSONOutput && versionconstants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		util.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built DDEV binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
-	}
-}
-
 // checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
 // from the last saved version. If it is, prompt to request anon DDEV usage stats
 // and update the info.
