@@ -16,7 +16,6 @@ func main() {
 	amplitude.InitAmplitude()
 	defer func() {
 		amplitude.Flush()
-		amplitude.CheckSetUp()
 	}()
 
 	// Prevent running as root for most cases
