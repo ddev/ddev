@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ddev/ddev/pkg/amplitude"
 	"os"
 	"path"
 	"strings"
@@ -141,6 +142,7 @@ ddev start --all`,
 			}
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
 		}
+		amplitude.CheckSetUp()
 	},
 }
 
