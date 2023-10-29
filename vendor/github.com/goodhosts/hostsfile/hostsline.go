@@ -89,6 +89,7 @@ func (l *HostsLine) RemoveDuplicateHosts() {
 func (l *HostsLine) Combine(hostline HostsLine) {
 	l.combine(hostline)
 }
+
 func (l *HostsLine) combine(hostline HostsLine) {
 	l.Hosts = append(l.Hosts, hostline.Hosts...)
 	if l.Comment == "" {

@@ -175,7 +175,10 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 		})
 	} else {
 		// add new host to the first one we find
-		hostsCopy := h.Lines[position[0]].Hosts
+		loc := position[len(position)-1] // last element
+		hostsCopy := make([]string, len(h.Lines[position[loc]].Hosts))
+		copy(hostsCopy, h.Lines[position[loc]].Hosts)
+
 		for _, addHost := range hosts {
 			if h.Has(ip, addHost) {
 				continue // this combo already exists
@@ -186,10 +189,10 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 			}
 
 			hostsCopy = append(hostsCopy, addHost)
-			h.hosts.add(addHost, position[0])
+			h.hosts.add(addHost, position[loc])
 		}
-		h.Lines[position[0]].Hosts = hostsCopy
-		h.Lines[position[0]].Raw = h.Lines[position[0]].ToRaw() // reset raw
+		h.Lines[position[loc]].Hosts = hostsCopy
+		h.Lines[position[loc]].RegenRaw()
 	}
 
 	return nil
@@ -477,7 +480,7 @@ func (h *Hosts) HostsPerLine(count int) {
 			h.ips.add(line.IP, ln+j)
 
 			lineCopy.Hosts = line.Hosts[i:end]
-			lineCopy.Raw = lineCopy.ToRaw()
+			lineCopy.RegenRaw()
 			h.Lines = append(h.Lines, lineCopy)
 		}
 	}
