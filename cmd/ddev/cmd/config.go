@@ -207,7 +207,7 @@ func init() {
 
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 	projectTypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
-	projectNameUsage := fmt.Sprintf("Provide the project name of project to configure (normally the same as the last part of directory name)")
+	projectNameUsage := "Provide the project name of project to configure (normally the same as the last part of directory name)"
 
 	ConfigCommand.Flags().StringVar(&projectNameArg, "project-name", "", projectNameUsage)
 	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
@@ -305,7 +305,7 @@ func init() {
 	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that DDEV waits for all containers to become ready on start`)
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
-	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", fmt.Sprintf(`Specify a ddev version constraint to validate ddev against.`))
+	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
