@@ -127,7 +127,7 @@ github.com/gogo/protobuf/proto
 # github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
-# github.com/goodhosts/hostsfile v0.1.5
+# github.com/goodhosts/hostsfile v0.1.6
 ## explicit; go 1.21
 github.com/goodhosts/hostsfile
 github.com/goodhosts/hostsfile/mage/install

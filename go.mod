@@ -9,7 +9,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v24.0.4+incompatible
 	github.com/fsouza/go-dockerclient v1.9.7
-	github.com/goodhosts/hostsfile v0.1.5
+	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v52 v52.0.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.16

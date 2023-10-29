@@ -176,8 +176,8 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 	} else {
 		// add new host to the first one we find
 		loc := position[len(position)-1] // last element
-		hostsCopy := make([]string, len(h.Lines[position[loc]].Hosts))
-		copy(hostsCopy, h.Lines[position[loc]].Hosts)
+		hostsCopy := make([]string, len(h.Lines[loc].Hosts))
+		copy(hostsCopy, h.Lines[loc].Hosts)
 
 		for _, addHost := range hosts {
 			if h.Has(ip, addHost) {
@@ -189,10 +189,10 @@ func (h *Hosts) Add(ip string, hosts ...string) error {
 			}
 
 			hostsCopy = append(hostsCopy, addHost)
-			h.hosts.add(addHost, position[loc])
+			h.hosts.add(addHost, loc)
 		}
-		h.Lines[position[loc]].Hosts = hostsCopy
-		h.Lines[position[loc]].RegenRaw()
+		h.Lines[loc].Hosts = hostsCopy
+		h.Lines[loc].RegenRaw()
 	}
 
 	return nil
