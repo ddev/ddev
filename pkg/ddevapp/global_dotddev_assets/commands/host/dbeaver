@@ -5,6 +5,7 @@
 ## Usage: dbeaver
 ## Example: "ddev dbeaver [db] [user]"
 ## OSTypes: darwin,linux
+## HostBinaryExists: /Applications/DBeaver.app,/usr/bin/dbeaver,/usr/bin/dbeaver-ce,/usr/bin/dbeaver-le,/usr/bin/dbeaver-ue,/usr/bin/dbeaver-ee,/var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity,/snap/bin/dbeaver-ce,$HOME/.local/share/flatpak/app/io.dbeaver.DBeaverCommunity/current/active/export/bin/io.dbeaver.DBeaverCommunity
 
 database="${1:-db}"
 user="${2:-root}"
