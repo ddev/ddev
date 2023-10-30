@@ -610,6 +610,7 @@ system32
 systemctl
 systemd
 tableplus
+tar
 tasklist
 tcp
 tcpview
@@ -698,6 +699,7 @@ you
 your
 yoursite
 zcompdump
+zip
 zsh
 zshrc
 zxf
