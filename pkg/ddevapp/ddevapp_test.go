@@ -2487,7 +2487,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
 		nodeps.AppTypeMagento:      {"media"},
 		nodeps.AppTypeMagento2:     {"media"},
-		nodeps.AppTypeSilverstripe: {"public/assets"},
+		nodeps.AppTypeSilverstripe: {"assets"},
 	}
 
 	for _, site := range TestSites {

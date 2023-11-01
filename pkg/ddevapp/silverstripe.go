@@ -66,7 +66,7 @@ func silverstripePostStartAction(app *DdevApp) error {
 
 // getSilverstripeUploadDirs will return the default paths.
 func getSilverstripeUploadDirs(_ *DdevApp) []string {
-	uploadDirs := []string{"public/assets"}
+	uploadDirs := []string{"assets"}
 
 	return uploadDirs
 }
