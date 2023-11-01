@@ -326,16 +326,23 @@ ddev launch
 You can set up a Shopware 6 environment many ways, we recommend the following technique:
 
 ```bash
-git clone --branch=6.4 https://github.com/shopware/production my-shopware6
-cd my-shopware6
-ddev config --project-type=shopware6 --docroot=public
-ddev start
-ddev composer install --no-scripts
+mkdir my-shopware6 && cd my-shopware6
+ddev config --project-type=shopware6 --docroot=public --create-docroot
+ddev composer create shopware/production:^v6.5
+# If it asks `Do you want to include Docker configuration from recipes?` answer `x`, as we're setting it up.
 # During system:setup you may have to enter the Database user (db), Database password (db)
 # Database host (db) and Database name (db).
-ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='{DDEV_PRIMARY_URL}'
+
+# When this asks for database configuration, use the following:
+# Database user: [db]
+# Database password: [db]
+# Database host: [db]
+# Database name: [db]
+ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
+
 ddev exec bin/console system:install --create-database --basic-setup
 ddev launch /admin
+# The default user/password are admin/shopware
 ```
 
 Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
