@@ -9,7 +9,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/fsouza/go-dockerclient v1.9.7
-	github.com/goodhosts/hostsfile v0.1.1
+	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v52 v52.0.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.16
@@ -57,6 +57,7 @@ require (
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -84,4 +85,4 @@ require (
 	gotest.tools/v3 v3.4.0 // indirect
 )
 
-go 1.20
+go 1.21

@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	exec2 "os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -129,7 +130,10 @@ func AddHostEntry(name string, ip string) error {
 		return nil
 	}
 
-	hosts, err := goodhosts.NewHosts()
+	osHostsFilePath := os.ExpandEnv(filepath.FromSlash(goodhosts.HostsFilePath))
+
+	hosts, err := goodhosts.NewCustomHosts(osHostsFilePath)
+
 	if err != nil {
 		return err
 	}
@@ -137,6 +141,7 @@ func AddHostEntry(name string, ip string) error {
 	if err != nil {
 		return err
 	}
+	hosts.HostsPerLine(8)
 	err = hosts.Flush()
 	return err
 }
