@@ -193,7 +193,7 @@ Flags:
 * `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access.
 * `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
-* `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
+* `--nodejs-version`: Specify the Node.js version to use if you don’t want the default version.
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
 * `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance mode to global configuration.
@@ -228,7 +228,6 @@ ddev config global --instrumentation-opt-in=false
 ddev config global --omit-containers=ddev-ssh-agent
 ```
 
-* `--auto-restart-containers`: If `true`, automatically restart containers after a reboot or Docker restart.
 * `--disable-http2`: Optionally disable http2 in `ddev-router`; `ddev config global --disable-http2` or `ddev config global --disable-http2=false`. This option is not available in the current Traefik-based `ddev-router`, but only in the deprecated `nginx-proxy` router.
 * `--fail-on-hook-fail`: If true, `ddev start` will fail when a hook fails.
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
@@ -260,6 +259,17 @@ Example:
 ```shell
 # Run pending Craft migrations and apply pending project config changes
 ddev craft up
+```
+
+## `dbeaver`
+
+Open [DBeaver](https://dbeaver.io/) with the current project’s database (global shell host container command). This command is only available if `DBeaver.app` is installed as `/Applications/DBeaver.app` for macOS, and if `dbeaver` (or another binary like `dbeaver-ce`) available inside `/usr/bin` for Linux (Flatpak and snap support included).
+
+Example:
+
+```shell
+# Open the current project’s database in DBeaver
+ddev dbeaver
 ```
 
 ## `debug`
@@ -1117,7 +1127,7 @@ ddev sequelace
 ## `sequelpro`
 
 !!!warning "Sequel Pro is abandoned!"
-    The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, and TablePlus.
+    The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, TablePlus, and DBeaver.
 
 Open Sequel Pro with the current project’s database (global shell host container command). This command is only available if `Sequel Pro.app` is installed as `/Applications/Sequel pro.app`, and only for projects with `mysql` or `mariadb` databases.
 

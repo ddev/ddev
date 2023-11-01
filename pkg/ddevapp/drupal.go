@@ -378,7 +378,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 }
 
 func drupalPostStartAction(app *DdevApp) error {
-	if isDrupal9App(app) || isDrupal10App(app) {
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupal9App(app) || isDrupal10App(app)) {
 		err := app.Wait([]string{nodeps.DBContainer})
 		if err != nil {
 			return err

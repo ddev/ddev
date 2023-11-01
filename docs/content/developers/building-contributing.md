@@ -83,7 +83,7 @@ It’s easiest to do this using Gitpod (see above) because Gitpod already has `d
 
 ## Pull Requests and PR Preparation
 
-When preparing your pull request, please use a branch name like `2022MMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
+When preparing your pull request, please use a branch name like `YYYYMMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
 
 ## Docker Image Changes
 
@@ -208,11 +208,10 @@ First, local `ddev` binaries have to be built with `AmplitudeAPIKey` set. Visit 
 
 Then run `ddev` commands as usual, and the data will be sent to Amplitude.
 
-* You can examine data on the local side with `export DDEV_DEBUG=true` but it's awkward. However, the actual data is always marked with `AMPLITUDE:` and the `EventType` will be `Command`, `Project`, or `$identify` (User data).
+* You can examine data on the local side with `export DDEV_VERBOSE=true` but it's awkward. However, the actual data is always marked with `AMPLITUDE:` and the `EventType` will be `Command`, `Project`, or `$identify` (User data). For example, DDEV_VERBOSE=true ddev start 2>&1 | grep AMPLITUDE`
 * To see the data show up on Amplitude, you'll need to `ddev debug instrumentation flush`.
 * To make it easier to find your data, use the "Development" key and set your `instrumentation_user` to a familiar value in `~/.ddev/global_config.yaml`. For example, `instrumentation_user: rfay` would make it so you can find the user `rfay`.
 * To inspect data, visit "User Lookup", (`https://app.amplitude.com/analytics/ddev/activity`) and choose the correct source in the upper left ("DDEV Production" or "DDEV Development"). Then use "Search users" in the upper right to find the user you are studying. If you've used an `instrumentation_user` it will be searchable as "User".  (Advanced->where: "User" = "rfay". for example). You'll then have a page devoted to the events of that user.
-* Alternately, visit Data→Sources→Ingestion Debugger for interesting data.
 
 ## Building
 

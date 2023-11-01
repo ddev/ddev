@@ -75,6 +75,10 @@
       },
       "uniqueItems": true
     },
+    "ddev_version_constraint": {
+      "description": "Validate that ddev version being used is valid within this constraint.",
+      "type": "string"
+    },
     "default_container_timeout": {
       "description": "Seconds DDEV will wait for all containers to become ready.",
       "type": "integer"
@@ -205,10 +209,6 @@
       "description": "Provide the name of the project to configure (normally the same as the last part of directory name)",
       "type": "string"
     },
-    "nfs_mount_enabled": {
-      "description": "enable NFS mounting of project in container",
-      "type": "boolean"
-    },
     "ngrok_args": {
       "description": "Provide extra args to ngrok in ddev share",
       "type": "string"
@@ -221,7 +221,6 @@
       "description": "Node.js version for the web container’s “system” version.",
       "type": "string",
       "enum": [
-        "14",
         "16",
         "18",
         "20"

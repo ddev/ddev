@@ -2,10 +2,6 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"os"
@@ -14,9 +10,13 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 /**
@@ -70,7 +70,7 @@ func TestAcquiaPull(t *testing.T) {
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
 
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.PHPVersion = "8.0"
 
@@ -96,14 +96,14 @@ func TestAcquiaPull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	err = app.Start()
 	require.NoError(t, err)
 
 	// Make sure we have Drush
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush symfony/http-kernel>/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	err = d9code.Prepare()
 	require.NoError(t, err)
-	app, err := NewApp(d9code.Dir, false)
+	app, err := ddevapp.NewApp(d9code.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
 
@@ -193,7 +193,7 @@ func TestAcquiaPush(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -201,7 +201,7 @@ func TestAcquiaPush(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Create the uploaddir and a file; it won't have existed in our download
@@ -217,30 +217,30 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Since allow-plugins isn't there and you can't even set it with Composer
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
 	// Make sure we have Drush
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "composer require --no-interaction drush/drush >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
 
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "time drush si -y minimal",
 	})
 	require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
 	writeQuery := fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval)
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: writeQuery,
 	})
 	require.NoError(t, err)
 
 	// Make sure that the file we created exists in the container
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("ls %s", path.Join("/var/www/html", app.Docroot, "sites/default/files", fName)),
 	})
 	require.NoError(t, err)
@@ -262,14 +262,14 @@ func TestAcquiaPush(t *testing.T) {
 
 	// Test that the database row was added
 	readQuery := fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s --alias-path=~/.drush sql-cli --extra=-N`, t.Name(), tval, acquiaPushTestSite)
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: readQuery,
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
-	out, _, err = app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("drush --alias-path=~/.drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaPushTestSite, fName, fName),
 	})
 	require.NoError(t, err)

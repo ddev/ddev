@@ -1,0 +1,42 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Run DBeaver against current db
+## Usage: dbeaver
+## Example: "ddev dbeaver [db] [user]"
+## OSTypes: darwin,linux
+## HostBinaryExists: /Applications/DBeaver.app,/usr/bin/dbeaver,/usr/bin/dbeaver-ce,/usr/bin/dbeaver-le,/usr/bin/dbeaver-ue,/usr/bin/dbeaver-ee,/var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity,/snap/bin/dbeaver-ce
+
+database="${1:-db}"
+user="${2:-root}"
+type="$(echo $DDEV_DATABASE | sed 's/:.*//')"
+
+if [ "${type}" = "postgres" ]; then
+  type="postgresql"
+  user="${2:-db}"
+fi
+
+# See: https://dbeaver.com/docs/wiki/Command-Line/#connection-parameters
+CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
+
+case $OSTYPE in
+  "linux-gnu")
+    # Check for different binaries. Launch the first one found.
+    BINARIES=(
+      /usr/bin/dbeaver{,-ce,-le,-ue,-ee}
+      /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity
+      /snap/bin/dbeaver-ce
+    )
+    for binary in "${BINARIES[@]}"; do
+      if [ -x "$binary" ]; then
+        echo "Launching $binary"
+        $binary -con "$CONNECTION" &> /dev/null & disown
+        exit 0
+      fi
+    done
+    ;;
+  "darwin"*)
+    open -a dbeaver.app --args -con "$CONNECTION" &
+    echo "Attempted to launch DBeaver.app"
+    ;;
+esac

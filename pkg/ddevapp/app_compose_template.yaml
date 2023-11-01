@@ -30,7 +30,7 @@ services:
       - ./db_snapshots:/mnt/snapshots
       {{ end }} {{/* end if .NoBindMounts */}}
       - ddev-global-cache:/mnt/ddev-global-cache
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    restart: "no"
 
     # The postgres image is set up for user 999, we won't try to change that.
     user: {{ if ne .DBType "postgres" }} '$DDEV_UID:$DDEV_GID' {{ else }} "999:999" {{end}}
@@ -79,8 +79,9 @@ services:
       {{ end }}
       interval: 1s
       retries: 120
-      start_period: 120s
-      timeout: "{{ .DefaultContainerTimeout }}s"
+      start_period: "{{ .DefaultContainerTimeout }}s"
+      start_interval: 1s
+      timeout: 70s
   {{ end }} {{/* end if not .OmitDB */}}
 
   web:
@@ -154,7 +155,7 @@ services:
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{- end }}
 
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    restart: "no"
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
 
@@ -240,18 +241,21 @@ services:
     healthcheck:
       interval: 1s
       retries: 120
-      start_period: 120s
-      timeout: "{{ .DefaultContainerTimeout }}s"
+      start_period: "{{ .DefaultContainerTimeout }}s"
+      start_interval: 1s
+      timeout: 70s
 
 networks:
   ddev_default:
     name: ddev_default
     external: true
-  {{if .IsGitpod}}{{/* see https://github.com/ddev/ddev/issues/3766 */}}
   default:
+    name: ${COMPOSE_PROJECT_NAME}_default
+    external: true
+    {{ if .IsGitpod }}{{/* see https://github.com/ddev/ddev/issues/3766 */}}
     driver_opts:
       com.docker.network.driver.mtu: 1440
-  {{end}}
+    {{ end }}
 
 volumes:
   {{if and (not .OmitDB) (ne .DBType "postgres") }}

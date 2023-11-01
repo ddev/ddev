@@ -181,6 +181,7 @@ nav:
       - users/topics/remote-docker.md
     - 'Hosting Provider Integrations':
       - 'Acquia': users/providers/acquia.md
+      - 'Lagoon': users/providers/lagoon.md
       - 'Pantheon': users/providers/pantheon.md
       - 'Platform.sh': users/providers/platform.md
   - 'Development':

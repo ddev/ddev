@@ -4,6 +4,7 @@ AdditionalConfiguration
 Adminer
 Apache
 Acquia
+amazee.io
 Autocompletion
 Available
 Bash
@@ -26,6 +27,7 @@ Codeception
 Commands
 Completely
 Create
+DBeaver
 DDEV's
 DDEV
 DHCP
@@ -52,6 +54,7 @@ ExpressionEngine
 FPATH
 FSTYPE
 Flags
+Flatpak
 FQDNs
 Fritzbox
 GUI

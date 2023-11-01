@@ -12,6 +12,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
@@ -21,6 +22,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -128,6 +130,10 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+		// On Windows the default timeout may be too short for mutagen to succeed.
+		if runtime.GOOS == "windows" {
+			app.DefaultContainerTimeout = "240"
+		}
 	}
 
 	// Migrate UploadDir to UploadDirs
@@ -183,7 +189,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitPort {
+	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitHTTPPort {
 		appcopy.MailpitHTTPPort = ""
 	}
 	if appcopy.MailpitHTTPSPort == nodeps.DdevDefaultMailpitHTTPSPort {
@@ -194,6 +200,10 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
 		appcopy.DefaultContainerTimeout = ""
+	}
+
+	if appcopy.NodeJSVersion == nodeps.NodeJSDefault {
+		appcopy.NodeJSVersion = ""
 	}
 
 	// Ensure valid type
@@ -424,6 +434,29 @@ func ValidateProjectName(name string) error {
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
 
+	// Validate ddev version constraint, if any
+	if app.DdevVersionConstraint != "" {
+		constraint := app.DdevVersionConstraint
+		if !strings.Contains(constraint, "-") {
+			// Allow prereleases to be included in the constraint validation
+			// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
+			constraint += "-0"
+		}
+		c, err := semver.NewConstraint(constraint)
+		if err != nil {
+			return fmt.Errorf("%s is not a valid constraint. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.DdevVersionConstraint).(invalidConstraint)
+		}
+
+		// Make sure we do this check with valid released versions
+		v, err := semver.NewVersion(versionconstants.DdevVersion)
+		if err == nil {
+			if !c.Check(v) {
+				return fmt.Errorf("this project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint", app.DdevVersionConstraint,
+					versionconstants.DdevVersion)
+			}
+		}
+	}
+
 	// Validate project name
 	if err := ValidateProjectName(app.Name); err != nil {
 		return err
@@ -457,7 +490,9 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidNodeVersion(app.NodeJSVersion) {
-		return fmt.Errorf("unsupported system Node.js version: '%s'; for the system Node.js version DDEV only supports %s. However, you can use 'ddev nvm install' at runtime to use any supported version", app.NodeJSVersion, nodeps.GetValidNodeVersions())
+		util.Warning("Node.js version '%s' is not currently supported by DDEV, ignoring and using default version '%v'.", app.NodeJSVersion, nodeps.NodeJSDefault)
+		util.Warning("Use `ddev config --auto` to fix, or use `ddev nvm` to support an arbitrary Node.js version.")
+		app.NodeJSVersion = nodeps.NodeJSDefault
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
@@ -714,7 +749,6 @@ type composeYAMLVars struct {
 	Username                        string
 	UID                             string
 	GID                             string
-	AutoRestartContainers           bool
 	FailOnHookFail                  bool
 	WebWorkingDir                   string
 	DBWorkingDir                    string
@@ -786,34 +820,33 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled(),
 
-		NFSMountEnabled:       app.IsNFSMountEnabled(),
-		NFSSource:             "",
-		IsWindowsFS:           runtime.GOOS == "windows",
-		NoProjectMount:        app.NoProjectMount,
-		MountType:             "bind",
-		WebMount:              "../",
-		Hostnames:             app.GetHostnames(),
-		Timezone:              app.Timezone,
-		ComposerVersion:       app.ComposerVersion,
-		Username:              username,
-		UID:                   uid,
-		GID:                   gid,
-		WebBuildContext:       "./.webimageBuild",
-		DBBuildContext:        "./.dbimageBuild",
-		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
-		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
-		WebWorkingDir:         app.GetWorkingDir("web", ""),
-		DBWorkingDir:          app.GetWorkingDir("db", ""),
-		WebEnvironment:        webEnvironment,
-		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
-		PostgresVolumeName:    app.GetPostgresVolumeName(),
-		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
-		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
-		Docroot:               app.GetDocroot(),
-		UploadDirsMap:         app.getUploadDirsHostContainerMapping(),
-		GitDirMount:           false,
-		IsGitpod:              nodeps.IsGitpod(),
-		IsCodespaces:          nodeps.IsCodespaces(),
+		NFSMountEnabled:    app.IsNFSMountEnabled(),
+		NFSSource:          "",
+		IsWindowsFS:        runtime.GOOS == "windows",
+		NoProjectMount:     app.NoProjectMount,
+		MountType:          "bind",
+		WebMount:           "../",
+		Hostnames:          app.GetHostnames(),
+		Timezone:           app.Timezone,
+		ComposerVersion:    app.ComposerVersion,
+		Username:           username,
+		UID:                uid,
+		GID:                gid,
+		WebBuildContext:    "./.webimageBuild",
+		DBBuildContext:     "./.dbimageBuild",
+		FailOnHookFail:     app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebWorkingDir:      app.GetWorkingDir("web", ""),
+		DBWorkingDir:       app.GetWorkingDir("db", ""),
+		WebEnvironment:     webEnvironment,
+		MariaDBVolumeName:  app.GetMariaDBVolumeName(),
+		PostgresVolumeName: app.GetPostgresVolumeName(),
+		NFSMountVolumeName: app.GetNFSMountVolumeName(),
+		NoBindMounts:       globalconfig.DdevGlobalConfig.NoBindMounts,
+		Docroot:            app.GetDocroot(),
+		UploadDirsMap:      app.getUploadDirsHostContainerMapping(),
+		GitDirMount:        false,
+		IsGitpod:           nodeps.IsGitpod(),
+		IsCodespaces:       nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
@@ -900,9 +933,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
-		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.x  ||  curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
-		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh >/dev/null && apt-get install -y nodejs >/dev/null\n" +
+		extraWebContent = extraWebContent + "\nRUN curl -sSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor > /usr/share/keyrings/nodesource.gpg"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN echo \"deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_%s.x nodistro main\" > /etc/apt/sources.list.d/nodesource.list", app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN echo 'disk usage problems: ' && df -h /tmp && ls -l /var/lib/apt/lists\n"
+		extraWebContent = extraWebContent + "\nRUN apt-get update >/dev/null && apt-get install -y nodejs >/dev/null\n" +
 			"RUN npm install --unsafe-perm=true --global gulp-cli yarn || ( npm config set unsafe-perm true && npm install --global gulp-cli yarn )"
 	}
 
@@ -1025,6 +1059,7 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 ### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
+SHELL ["/bin/bash", "-c"]
 `
 	contents = contents + `
 ARG username
@@ -1053,7 +1088,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 	if extraPackages != nil {
 		contents = contents + `
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
-
+RUN echo "Disk usage problems: " && df -h /tmp && ls -l /var/lib/apt/lists
 RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
@@ -1310,7 +1345,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 		return err
 	}
 
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/lagoon.yaml", "providers/platform.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

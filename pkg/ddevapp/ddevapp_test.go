@@ -649,7 +649,7 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 	// via php-fpm. It is *not* available in regular shell because it
 	// was set in start.sh, whose shell is not inherited this way.
 	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`curl -s --fail localhost/env.php`),
+		Cmd: `curl -s --fail localhost/env.php`,
 	})
 	require.NoError(t, err, "stdout=%s, stderr=%s", stdout, stderr)
 	require.Equal(t, r, stdout)
@@ -1146,20 +1146,20 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 			stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     fmt.Sprintf("php --ri xhprof"),
+				Cmd:     "php --ri xhprof",
 			})
 			require.Error(t, err)
 			assert.Contains(stdout, "Extension 'xhprof' not present")
 
 			// Run with Xhprof enabled
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Cmd: fmt.Sprintf("enable_xhprof"),
+				Cmd: "enable_xhprof",
 			})
 			assert.NoError(err)
 
 			stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     fmt.Sprintf("php --ri xhprof"),
+				Cmd:     "php --ri xhprof",
 			})
 			require.NoError(t, err)
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
@@ -1175,7 +1175,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 			// Disable all to avoid confusion
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Cmd: fmt.Sprintf("disable_xhprof && rm -rf /tmp/xhprof"),
+				Cmd: "disable_xhprof && rm -rf /tmp/xhprof",
 			})
 			require.NoError(t, err)
 		}
@@ -1360,7 +1360,7 @@ func TestDdevImportDB(t *testing.T) {
 		require.NoError(t, err)
 
 		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
-		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`)
+		c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     c[dbType],
@@ -1525,7 +1525,7 @@ func TestDdevImportDB(t *testing.T) {
 	// Make sure database "test" does not exist initially
 	dbType := nodeps.MariaDB
 	c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
-	c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`)
+	c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
 	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     c[dbType],
@@ -1780,9 +1780,9 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		// Delete the user in the database so we can later verify snapshot restore
 		c := map[string]string{
-			nodeps.MySQL:    fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
-			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
-			nodeps.Postgres: fmt.Sprintf(`echo "DELETE FROM users;" | psql`),
+			nodeps.MySQL:    `echo "DELETE FROM users;" | mysql`,
+			nodeps.MariaDB:  `echo "DELETE FROM users;" | mysql`,
+			nodeps.Postgres: `echo "DELETE FROM users;" | psql`,
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -2013,8 +2013,8 @@ func TestDdevExportDB(t *testing.T) {
 		assert.NoError(err)
 
 		c := map[string]string{
-			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
-			nodeps.Postgres: fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | psql -t -q thirddb`),
+			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`,
+			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t -q thirddb`,
 		}
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -3671,9 +3671,9 @@ func TestCaptureLogs(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestNFSMount tests ddev start functionality with nfs_mount_enabled: true
+// TestNFSMount tests ddev start functionality with performance_mode: nfs
 // This requires that the test machine must have NFS shares working
-// Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
+// Tests using both app-specific performance_mode: nfs and etc
 func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")

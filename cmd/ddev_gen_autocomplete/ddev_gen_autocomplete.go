@@ -14,7 +14,7 @@ func main() {
 		err = os.MkdirAll(targetDir, 0755)
 		util.CheckErr(err)
 	}
-	err := cmd.RootCmd.GenBashCompletionFile(filepath.Join(targetDir, "ddev_bash_completion.sh"))
+	err := cmd.RootCmd.GenBashCompletionFileV2(filepath.Join(targetDir, "ddev_bash_completion.sh"), true)
 	if err != nil {
 		util.Failed("could not generate ddev_bash_completion.sh: %v", err)
 	}
@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		util.Failed("could not generate ddev_fish_completion.sh: %v", err)
 	}
-	err = cmd.RootCmd.GenPowerShellCompletionFile(filepath.Join(targetDir, "ddev_powershell_completion.ps1"))
+	err = cmd.RootCmd.GenPowerShellCompletionFileWithDesc(filepath.Join(targetDir, "ddev_powershell_completion.ps1"))
 	if err != nil {
 		util.Failed("could not generate ddev_powershell_completion.ps1: %v", err)
 	}

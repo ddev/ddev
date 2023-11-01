@@ -169,12 +169,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		}
 	}
 
-	if cmd.Flag("auto-restart-containers").Changed {
-		val, _ := cmd.Flags().GetBool("auto-restart-containers")
-		globalconfig.DdevGlobalConfig.AutoRestartContainers = val
-		dirty = true
-	}
-
 	if cmd.Flag("use-hardened-images").Changed {
 		val, _ := cmd.Flags().GetBool("use-hardened-images")
 		globalconfig.DdevGlobalConfig.UseHardenedImages = val
@@ -278,7 +272,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	output.UserOut.Printf("letsencrypt-email=%v", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
 	output.UserOut.Printf("table-style=%v", globalconfig.DdevGlobalConfig.TableStyle)
 	output.UserOut.Printf("simple-formatting=%v", globalconfig.DdevGlobalConfig.SimpleFormatting)
-	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
 	output.UserOut.Printf("use-hardened-images=%v", globalconfig.DdevGlobalConfig.UseHardenedImages)
 	output.UserOut.Printf("fail-on-hook-fail=%v", globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
 	output.UserOut.Printf("required-docker-compose-version=%v", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion)
@@ -307,7 +300,6 @@ func init() {
 	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in deprecated nginx-proxy ddev-router, 'ddev global --disable-http2' or `ddev global --disable-http2=false'")
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev global --letsencrypt-email=me@example.com'")
-	configGlobalCommand.Flags().Bool("auto-restart-containers", false, "If true, automatically restart containers after a reboot or docker restart")
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment.")
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")

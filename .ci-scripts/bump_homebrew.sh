@@ -52,7 +52,7 @@ class Ddev < Formula
     sha256 cellar: :any_skip_relocation, arm64_big_sur: "${MACOS_ARM64_BOTTLE_SHA}"
   end
   def install
-    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+    system "make"
     system "mkdir", "-p", "#{bin}"
     if OS.mac?
         if Hardware::CPU.arm?
@@ -69,7 +69,7 @@ class Ddev < Formula
     end
     bash_completion.install ".gotmp/bin/ddev_bash_completion.sh" => "ddev"
     zsh_completion.install ".gotmp/bin/ddev_zsh_completion.sh" => "_ddev"
-    fish_completion.install ".gotmp/bin/ddev_fish_completion.sh" => "ddev"
+    fish_completion.install ".gotmp/bin/ddev_fish_completion.sh" => "ddev.fisn"
   end
 
   def caveats

@@ -23,7 +23,7 @@ const ConfigInstructions = `
 #   type: <dbtype> # mysql, mariadb, postgres
 #   version: <version> # database version, like "10.4" or "8.0"
 #   MariaDB versions can be 5.5-10.8 and 10.11, MySQL versions can be 5.5-8.0
-#   PostgreSQL versions can be 9-15.
+#   PostgreSQL versions can be 9-16.
 
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
@@ -63,9 +63,11 @@ const ConfigInstructions = `
 # To reinstall Composer after the image was built, run "ddev debug refresh".
 
 # nodejs_version: "18"
-# change from the default system Node.js version to another supported version, like 14, 16, 18, 20.
+# change from the default system Node.js version to another supported version, like 16, 18, 20.
 # Note that you can use 'ddev nvm' or nvm inside the web container to provide nearly any
 # Node.js version, including v6, etc.
+# You only need to configure this if you are not using nvm and you want to use a major
+# version that is not the default.
 
 # additional_hostnames:
 #  - somename
@@ -92,6 +94,13 @@ const ConfigInstructions = `
 # disable_upload_dirs_warning: false
 # If true, turns off the normal warning that says
 # "You have Mutagen enabled and your 'php' project type doesn't have upload_dirs set"
+
+# ddev_version_constraint: ""
+# Example:
+# ddev_version_constraint: ">= 1.22.4"
+# This will enforce that the running ddev version is within this constraint.
+# See https://github.com/Masterminds/semver#checking-version-constraints for
+# supported constraint formats
 
 # working_dir:
 #   web: /var/www/html
@@ -229,10 +238,10 @@ const ConfigInstructions = `
 # override_config: false
 # By default, config.*.yaml files are *merged* into the configuration
 # But this means that some things can't be overridden
-# For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge
+# For example, if you have 'use_dns_when_possible: true'' you can't override it with a merge
 # and you can't erase existing hooks or all environment variables.
 # However, with "override_config: true" in a particular config.*.yaml file,
-# 'nfs_mount_enabled: false' can override the existing values, and
+# 'use_dns_when_possible: false' can override the existing values, and
 # hooks:
 #   post-start: []
 # or

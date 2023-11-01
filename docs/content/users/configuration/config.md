@@ -103,6 +103,16 @@ Extra Debian packages for the project’s database container.
 
 Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the database container is built.
 
+## `ddev_version_constraint`
+
+You can configure a [DDEV version constraint](https://github.com/Masterminds/semver#checking-version-constraints) that will be validated against the running DDEV executable and prevent any command from running if it doesn't match.
+
+This will only work with DDEV versions above v1.22.4; older versions will ignore this setting.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | | `>= 1.22.4`
+
 ## `default_container_timeout`
 
 Seconds DDEV will wait for all containers to become ready.
@@ -348,7 +358,9 @@ Node.js version for the web container’s “system” version.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | current LTS version | Can be `14`, `16`, `18`, or `20`.
+| :octicons-file-directory-16: project | current LTS version | Can be `16`, `18`, or `20`.
+
+There is no need to configure the `nodejs_version` unless you want to use a major version that is not the default.
 
 `nvm` is also available inside the container and via [`ddev nvm`](../usage/commands.md#nvm), and can be set to any valid version including much older ones.
 
@@ -358,7 +370,7 @@ Containers that should not be loaded automatically for one or more projects.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | **For projects**, can include `db`, and `ddev-ssh-agent`.<br>**Globally**, can include `ddev-ssh-agent` only.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | **For projects**, can include `db`, and `ddev-ssh-agent`.<br>**Globally**, can include `ddev-router`, and `ddev-ssh-agent`.
 
 Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `db` container and SSH agent. Some containers can be omitted globally in `~/.ddev/global_config.yaml` and the result is additive; all containers named in both places will be omitted.
 
@@ -373,7 +385,7 @@ Whether to override config values instead of merging.
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
-When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `nfs_mount_enabled: false` or `additional_hostnames: []` to work.
+When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `use_dns_when_possible: false` or `additional_hostnames: []` to work.
 
 See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
 

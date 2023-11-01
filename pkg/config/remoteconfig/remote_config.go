@@ -13,7 +13,7 @@ import (
 
 // New creates and returns a new RemoteConfig.
 func New(config *Config, stateManager statetypes.State, isInternetActive func() bool) types.RemoteConfig {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	// Create RemoteConfig.
 	cfg := &remoteConfig{
@@ -64,7 +64,7 @@ type remoteConfig struct {
 
 // write saves the remote config to the local storage.
 func (c *remoteConfig) write() {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	err := c.fileStorage.Write(c.remoteConfig)
 
@@ -76,7 +76,7 @@ func (c *remoteConfig) write() {
 // loadFromLocalStorage loads the remote config from the local storage and
 // initiates an update from the remote asynchronously.
 func (c *remoteConfig) loadFromLocalStorage() {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -92,7 +92,7 @@ func (c *remoteConfig) loadFromLocalStorage() {
 
 // updateFromGithub downloads the remote config from GitHub.
 func (c *remoteConfig) updateFromGithub() {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	if !c.isInternetActive() {
 		util.Debug("No internet connection.")

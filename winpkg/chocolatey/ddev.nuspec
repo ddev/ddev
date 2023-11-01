@@ -24,7 +24,6 @@
       <dependency id="gsudo" />
       <dependency id="ngrok" />
       <dependency id="mkcert" />
-      <dependency id="nssm" />
   </dependencies>
 
   </metadata>

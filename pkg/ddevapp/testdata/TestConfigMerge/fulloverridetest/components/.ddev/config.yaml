@@ -3,5 +3,5 @@ database:
   version: 10.5
 php_version: 5.6
 webserver_type: apache-fpm
-nfs_mount_enabled: true
+use_dns_when_possible: true
 additional_hostnames: [baseone, basetwo, basethree]

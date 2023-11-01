@@ -12,7 +12,7 @@ import (
 	"time"
 
 	dockerImages "github.com/ddev/ddev/pkg/docker"
-	. "github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -29,7 +29,7 @@ var testContainerName = "TestDockerUtils"
 
 func init() {
 	globalconfig.EnsureGlobalConfig()
-	EnsureDdevNetwork()
+	dockerutil.EnsureDdevNetwork()
 }
 
 func TestMain(m *testing.M) { os.Exit(testMain(m)) }
@@ -45,23 +45,23 @@ func testMain(m *testing.M) int {
 	}
 
 	// Prep Docker container for Docker util tests
-	imageExists, err := ImageExistsLocally(dockerImages.GetWebImage())
+	imageExists, err := dockerutil.ImageExistsLocally(dockerImages.GetWebImage())
 	if err != nil {
 		logOutput.Errorf("Failed to check for local image %s: %v", dockerImages.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
-		err := Pull(dockerImages.GetWebImage())
+		err := dockerutil.Pull(dockerImages.GetWebImage())
 		if err != nil {
 			logOutput.Errorf("Failed to pull test image: %v", err)
 			return 7
 		}
 	}
 
-	foundContainer, _ := FindContainerByLabels(labels)
+	foundContainer, _ := dockerutil.FindContainerByLabels(labels)
 
 	if foundContainer != nil {
-		err = RemoveContainer(foundContainer.ID)
+		err = dockerutil.RemoveContainer(foundContainer.ID)
 		if err != nil {
 			logOutput.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
 			return 5
@@ -74,9 +74,9 @@ func testMain(m *testing.M) int {
 		return 3
 	}
 	defer func() {
-		foundContainer, _ := FindContainerByLabels(labels)
+		foundContainer, _ := dockerutil.FindContainerByLabels(labels)
 		if foundContainer != nil {
-			err = RemoveContainer(foundContainer.ID)
+			err = dockerutil.RemoveContainer(foundContainer.ID)
 			if err != nil {
 				logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 			}
@@ -84,7 +84,7 @@ func testMain(m *testing.M) int {
 	}()
 
 	log.Printf("ContainerWait at %v", time.Now())
-	out, err := ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
+	out, err := dockerutil.ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
 	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
 
 	if err != nil {
@@ -107,7 +107,7 @@ func startTestContainer() (string, error) {
 		"8025/tcp": {
 			{HostPort: "8890"},
 		}}
-	containerID, _, err := RunSimpleContainer(dockerImages.GetWebImage(), testContainerName, nil, nil, []string{
+	containerID, _, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), testContainerName, nil, nil, []string{
 		"HOTDOG=superior-to-corndog",
 		"POTATO=future-fry",
 		"DDEV_WEBSERVER_TYPE=nginx-fpm",
@@ -122,46 +122,46 @@ func startTestContainer() (string, error) {
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
 	assert := asrt.New(t)
-	client := GetDockerClient()
+	client := dockerutil.GetDockerClient()
 
 	labels := map[string]string{
 		"com.ddev.site-name": testContainerName,
 	}
 
 	t.Cleanup(func() {
-		container, err := FindContainerByLabels(labels)
+		container, err := dockerutil.FindContainerByLabels(labels)
 		if err == nil || container != nil {
-			err = RemoveContainer(container.ID)
+			err = dockerutil.RemoveContainer(container.ID)
 			assert.NoError(err)
 		}
 
 		// Make sure test container exists again
 		_, err = startTestContainer()
 		assert.NoError(err)
-		healthDetail, err := ContainerWait(30, labels)
+		healthDetail, err := dockerutil.ContainerWait(30, labels)
 		assert.NoError(err, "healtdetail='%s'", healthDetail)
 
-		container, err = FindContainerByLabels(labels)
+		container, err = dockerutil.FindContainerByLabels(labels)
 		assert.NoError(err)
 		assert.NotNil(container)
 
-		status, healthDetail := GetContainerHealth(container)
+		status, healthDetail := dockerutil.GetContainerHealth(container)
 		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK ")
 		assert.Equal("healthy", status)
 	})
 
-	container, err := FindContainerByLabels(labels)
+	container, err := dockerutil.FindContainerByLabels(labels)
 	require.NoError(t, err)
 	require.NotNil(t, container)
 
-	status, log := GetContainerHealth(container)
+	status, log := dockerutil.GetContainerHealth(container)
 	assert.Equal(status, "healthy", "container should be healthy; log=%v", log)
 
 	// Now break the container and make sure it's unhealthy
 	err = client.StopContainer(container.ID, 10)
 	assert.NoError(err)
 
-	status, log = GetContainerHealth(container)
+	status, log = dockerutil.GetContainerHealth(container)
 	assert.Equal(status, "unhealthy", "container should be unhealthy; log=%v", log)
 	assert.NoError(err)
 
@@ -176,48 +176,48 @@ func TestContainerWait(t *testing.T) {
 	}
 
 	// Try a zero-wait, should show timed-out
-	_, err := ContainerWait(0, labels)
+	_, err := dockerutil.ContainerWait(0, labels)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "health check timed out")
 	}
 
 	// Try 30-second wait for "healthy", should show OK
-	healthDetail, err := ContainerWait(30, labels)
+	healthDetail, err := dockerutil.ContainerWait(30, labels)
 	assert.NoError(err)
 
 	assert.Contains(healthDetail, "phpstatus:OK")
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{"com.ddev.site-name": "nothing-there"}
-	_, err = ContainerWait(1, labels)
+	_, err = dockerutil.ContainerWait(1, labels)
 	require.Error(t, err)
 	assert.Contains(err.Error(), "failed to query container")
 
 	// If we run a quick container and it immediately exits, ContainerWait should find it is not there
 	// and note that it exited.
 	labels = map[string]string{"test": "quickexit"}
-	_ = RemoveContainersByLabels(labels)
-	cID, _, err := RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels, nil)
+	_ = dockerutil.RemoveContainersByLabels(labels)
+	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels, nil)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID)
+		_ = dockerutil.RemoveContainer(cID)
 	})
 	require.NoError(t, err)
-	_, err = ContainerWait(5, labels)
+	_, err = dockerutil.ContainerWait(5, labels)
 	assert.Error(err)
 	assert.Contains(err.Error(), "container exited")
-	_ = RemoveContainer(cID)
+	_ = dockerutil.RemoveContainer(cID)
 
 	// If we run a container that does not have a healthcheck
 	// it should be found as good immediately
 	labels = map[string]string{"test": "nohealthcheck"}
-	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels, nil)
+	_ = dockerutil.RemoveContainersByLabels(labels)
+	cID, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels, nil)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID)
+		_ = dockerutil.RemoveContainer(cID)
 	})
 	require.NoError(t, err)
-	_, err = ContainerWait(5, labels)
+	_, err = dockerutil.ContainerWait(5, labels)
 	assert.NoError(err)
 
 	ddevWebserver := versionconstants.WebImg + ":" + versionconstants.WebTag
@@ -225,31 +225,31 @@ func TestContainerWait(t *testing.T) {
 	// then ContainerWait shouldn't return until specified wait, and should fail
 	// Use ddev-webserver for this; it won't have good health on normal run
 	labels = map[string]string{"test": "hashealthcheckbutbad"}
-	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil)
+	_ = dockerutil.RemoveContainersByLabels(labels)
+	cID, _, err = dockerutil.RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID)
+		_ = dockerutil.RemoveContainer(cID)
 	})
 	require.NoError(t, err)
-	_, err = ContainerWait(3, labels)
+	_, err = dockerutil.ContainerWait(3, labels)
 	assert.Error(err)
 	assert.Contains(err.Error(), "timed out without becoming healthy")
-	_ = RemoveContainer(cID)
+	_ = dockerutil.RemoveContainer(cID)
 
 	// If we run a container that *does* have a healthcheck but it's not healthy for a while
 	// then ContainerWait should detect failure early, but should succeed later
 	labels = map[string]string{"test": "hashealthcheckbutbad"}
-	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil)
+	_ = dockerutil.RemoveContainersByLabels(labels)
+	cID, _, err = dockerutil.RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID)
+		_ = dockerutil.RemoveContainer(cID)
 	})
 	require.NoError(t, err)
-	_, err = ContainerWait(3, labels)
+	_, err = dockerutil.ContainerWait(3, labels)
 	assert.Error(err)
 	assert.Contains(err.Error(), "timed out without becoming healthy")
 	// Try it again, wait 60s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
-	out, err := ContainerWait(60, labels)
+	out, err := dockerutil.ContainerWait(60, labels)
 	assert.NoError(err, "output=%s", out)
 }
 
@@ -259,7 +259,7 @@ func TestComposeCmd(t *testing.T) {
 
 	composeFiles := []string{filepath.Join("testdata", "docker-compose.yml")}
 
-	stdout, stderr, err := ComposeCmd(&ComposeCmdOpts{
+	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: composeFiles,
 		Action:       []string{"config", "--services"},
 	})
@@ -270,7 +270,7 @@ func TestComposeCmd(t *testing.T) {
 
 	composeFiles = append(composeFiles, filepath.Join("testdata", "docker-compose.override.yml"))
 
-	stdout, stderr, err = ComposeCmd(&ComposeCmdOpts{
+	stdout, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: composeFiles,
 		Action:       []string{"config", "--services"},
 	})
@@ -281,7 +281,7 @@ func TestComposeCmd(t *testing.T) {
 	assert.Contains(stderr, "Defaulting to a blank string")
 
 	composeFiles = []string{"invalid.yml"}
-	_, _, err = ComposeCmd(&ComposeCmdOpts{
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: composeFiles,
 		Action:       []string{"config", "--services"},
 	})
@@ -292,9 +292,9 @@ func TestComposeCmd(t *testing.T) {
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
 
-	container, _ := FindContainerByName(t.Name())
+	container, _ := dockerutil.FindContainerByName(t.Name())
 	if container != nil {
-		_ = RemoveContainer(container.ID)
+		_ = dockerutil.RemoveContainer(container.ID)
 	}
 
 	// Use the current actual web container for this, so replace in base docker-compose file
@@ -309,20 +309,20 @@ func TestComposeWithStreams(t *testing.T) {
 	composeFiles := []string{realComposeFile}
 
 	t.Cleanup(func() {
-		_, _, err = ComposeCmd(&ComposeCmdOpts{
+		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: composeFiles,
 			Action:       []string{"down"},
 		})
 		assert.NoError(err)
 	})
 
-	_, _, err = ComposeCmd(&ComposeCmdOpts{
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: composeFiles,
 		Action:       []string{"up", "-d"},
 	})
 	require.NoError(t, err)
 
-	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": t.Name()})
+	_, err = dockerutil.ContainerWait(60, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
@@ -331,21 +331,21 @@ func TestComposeWithStreams(t *testing.T) {
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
 	stdout := util.CaptureStdOut()
-	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ps", "-ef")
+	err = dockerutil.ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ps", "-ef")
 	assert.NoError(err)
 	output := stdout()
 	assert.Contains(output, "supervisord")
 
 	// Reverse stdout and stderr and create an error and normal stdout. We should see only the error captured in stdout
 	stdout = util.CaptureStdOut()
-	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stderr, os.Stdout, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
+	err = dockerutil.ComposeWithStreams(composeFiles, os.Stdin, os.Stderr, os.Stdout, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
 	assert.Error(err)
 	output = stdout()
 	assert.Contains(output, "ls: cannot access 'xx': No such file or directory")
 
 	// Flip stdout and stderr and create an error and normal stdout. We should see only the success captured in stdout
 	stdout = util.CaptureStdOut()
-	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
+	err = dockerutil.ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
 	assert.Error(err)
 	output = stdout()
 	assert.Contains(output, "/var/run/apache2", output)
@@ -356,7 +356,7 @@ func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
 	globalconfig.DockerComposeVersion = ""
-	composeErr := CheckDockerCompose()
+	composeErr := dockerutil.CheckDockerCompose()
 	if composeErr != nil {
 		out, err := exec.RunHostCommand(DdevBin, "config", "global")
 		require.NoError(t, err)
@@ -369,7 +369,7 @@ func TestCheckCompose(t *testing.T) {
 // TestGetAppContainers looks for container with sitename dockerutils-test
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
-	containers, err := GetAppContainers(testContainerName)
+	containers, err := dockerutil.GetAppContainers(testContainerName)
 	assert.NoError(err)
 	assert.Contains(containers[0].Image, versionconstants.WebImg)
 }
@@ -385,31 +385,31 @@ func TestFindContainerByName(t *testing.T) {
 	containerName := t.Name() + fileutil.RandomFilenameBase()
 
 	// Make sure we don't already have one running
-	c, err := FindContainerByName(containerName)
+	c, err := dockerutil.FindContainerByName(containerName)
 	assert.NoError(err)
 	if err == nil && c != nil {
-		err = RemoveContainer(c.ID)
+		err = dockerutil.RemoveContainer(c.ID)
 		assert.NoError(err)
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := RunSimpleContainer(versionconstants.BusyboxImage, containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil, nil)
+	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil, nil)
 	assert.NoError(err)
 
 	defer func() {
-		_ = RemoveContainer(cID)
+		_ = dockerutil.RemoveContainer(cID)
 	}()
 
 	// Now find the container by name
-	c, err = FindContainerByName(containerName)
+	c, err = dockerutil.FindContainerByName(containerName)
 	assert.NoError(err)
 	require.NotNil(t, c)
 	// Remove it
-	err = RemoveContainer(c.ID)
+	err = dockerutil.RemoveContainer(c.ID)
 	assert.NoError(err)
 
 	// Verify that we no longer find it.
-	c, err = FindContainerByName(containerName)
+	c, err = dockerutil.FindContainerByName(containerName)
 	assert.NoError(err)
 	assert.Nil(c)
 }
@@ -417,15 +417,15 @@ func TestFindContainerByName(t *testing.T) {
 func TestGetContainerEnv(t *testing.T) {
 	assert := asrt.New(t)
 
-	container, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
+	container, err := dockerutil.FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 	assert.NoError(err)
 	require.NotEmpty(t, container)
 
-	env := GetContainerEnv("HOTDOG", *container)
+	env := dockerutil.GetContainerEnv("HOTDOG", *container)
 	assert.Equal("superior-to-corndog", env)
-	env = GetContainerEnv("POTATO", *container)
+	env = dockerutil.GetContainerEnv("POTATO", *container)
 	assert.Equal("future-fry", env)
-	env = GetContainerEnv("NONEXISTENT", *container)
+	env = dockerutil.GetContainerEnv("NONEXISTENT", *container)
 	assert.Equal("", env)
 }
 
@@ -440,35 +440,35 @@ func TestRunSimpleContainer(t *testing.T) {
 	assert.DirExists(testdata)
 
 	// Try the success case; script found, runs, all good.
-	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false, nil, nil)
 	assert.NoError(err)
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 	assert.Contains(out, "stdout is captured")
 	assert.Contains(out, "stderr is also captured")
 
 	// Try the case of running nonexistent script
-	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "failed to StartContainer")
 	}
 
 	// Try the case of running a script that fails
-	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "container run failed with exit code 5")
 	}
 
 	// Provide an unqualified tag name
-	_, _, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "image name must specify tag")
 	}
 
 	// Provide a malformed tag name
-	_, _, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "malformed tag provided")
@@ -480,10 +480,10 @@ func TestRunSimpleContainer(t *testing.T) {
 func TestGetExposedContainerPorts(t *testing.T) {
 	assert := asrt.New(t)
 
-	testContainer, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
+	testContainer, err := dockerutil.FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 	require.NoError(t, err)
 	require.NotNil(t, testContainer)
-	ports, err := GetExposedContainerPorts(testContainer.ID)
+	ports, err := dockerutil.GetExposedContainerPorts(testContainer.ID)
 	assert.NoError(err)
 	assert.NotNil(ports)
 	assert.Equal([]string{"8889", "8890"}, ports)
@@ -492,9 +492,9 @@ func TestGetExposedContainerPorts(t *testing.T) {
 // TestDockerExec() checks docker.Exec()
 func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
-	client := GetDockerClient()
+	client := dockerutil.GetDockerClient()
 
-	id, _, err := RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil, nil)
+	id, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil, nil)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -505,11 +505,11 @@ func TestDockerExec(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	stdout, _, err := Exec(id, "ls /etc", "")
+	stdout, _, err := dockerutil.Exec(id, "ls /etc", "")
 	assert.NoError(err)
 	assert.Contains(stdout, "group\nhostname")
 
-	_, stderr, err := Exec(id, "ls /nothingthere", "")
+	_, stderr, err := dockerutil.Exec(id, "ls /nothingthere", "")
 	assert.Error(err)
 	assert.Contains(stderr, "No such file or directory")
 
@@ -520,12 +520,12 @@ func TestCreateVolume(t *testing.T) {
 	assert := asrt.New(t)
 	// Make sure there's no existing volume.
 	//nolint: errcheck
-	RemoveVolume("junker99")
-	volume, err := CreateVolume("junker99", "local", map[string]string{}, nil)
+	dockerutil.RemoveVolume("junker99")
+	volume, err := dockerutil.CreateVolume("junker99", "local", map[string]string{}, nil)
 	require.NoError(t, err)
 
 	//nolint: errcheck
-	defer RemoveVolume("junker99")
+	defer dockerutil.RemoveVolume("junker99")
 	require.NotNil(t, volume)
 	assert.Equal("junker99", volume.Name)
 }
@@ -533,12 +533,12 @@ func TestCreateVolume(t *testing.T) {
 // TestRemoveVolume makes sure we can remove a volume successfully
 func TestRemoveVolume(t *testing.T) {
 	assert := asrt.New(t)
-	client := GetDockerClient()
+	client := dockerutil.GetDockerClient()
 
 	testVolume := "junker999"
 	spareVolume := "someVolumeThatCanNeverExit"
 
-	_ = RemoveVolume(testVolume)
+	_ = dockerutil.RemoveVolume(testVolume)
 	pwd, err := os.Getwd()
 	assert.NoError(err)
 
@@ -546,9 +546,9 @@ func TestRemoveVolume(t *testing.T) {
 	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
 		source = filepath.Join("/System/Volumes/Data", source)
 	}
-	nfsServerAddr, _ := GetNFSServerAddr()
-	volume, err := CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr),
-		"device": ":" + MassageWindowsNFSMount(source)}, nil)
+	nfsServerAddr, _ := dockerutil.GetNFSServerAddr()
+	volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr),
+		"device": ":" + dockerutil.MassageWindowsNFSMount(source)}, nil)
 	assert.NoError(err)
 
 	volumes, err := client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})
@@ -558,7 +558,7 @@ func TestRemoveVolume(t *testing.T) {
 
 	require.NotNil(t, volume)
 	assert.Equal(testVolume, volume.Name)
-	err = RemoveVolume(testVolume)
+	err = dockerutil.RemoveVolume(testVolume)
 	assert.NoError(err)
 
 	volumes, err = client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})
@@ -567,8 +567,8 @@ func TestRemoveVolume(t *testing.T) {
 
 	// Make sure spareVolume doesn't exist, then make sure removal
 	// of nonexistent volume doesn't result in error
-	_ = RemoveVolume(spareVolume)
-	err = RemoveVolume(spareVolume)
+	_ = dockerutil.RemoveVolume(spareVolume)
+	err = dockerutil.RemoveVolume(spareVolume)
 	assert.NoError(err)
 
 }
@@ -576,16 +576,16 @@ func TestRemoveVolume(t *testing.T) {
 // TestCopyIntoVolume makes sure CopyToVolume copies a local directory into a volume
 func TestCopyIntoVolume(t *testing.T) {
 	assert := asrt.New(t)
-	err := RemoveVolume(t.Name())
+	err := dockerutil.RemoveVolume(t.Name())
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
-	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
+	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
 	// Make sure that the content is the same, and that .test.sh is executable
 	// On Windows the upload can result in losing executable bit
-	_, out, err := RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil)
 	assert.NoError(err)
 	assert.Equal(`.test.sh
 root.txt
@@ -595,9 +595,9 @@ subdir1.txt
 hi this is a test file
 `, out)
 
-	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
+	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
 	assert.NoError(err)
-	_, out, err = RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil, nil)
+	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil, nil)
 	assert.NoError(err)
 	assert.Equal(`/mnt/TestCopyIntoVolume/somesubdir
 .:
@@ -609,11 +609,11 @@ subdir1.txt
 `, out)
 
 	// Now try a file
-	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), t.Name(), "", "0", "", true)
+	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
 	// Make sure that the content is the same, and that .test.sh is executable
-	_, out, err = RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil)
+	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil)
 	assert.NoError(err)
 	assert.Equal("root.txt here\n", out)
 
@@ -635,8 +635,8 @@ func TestGetDockerIP(t *testing.T) {
 	for k, v := range expectations {
 		t.Setenv("DOCKER_HOST", k)
 		// DockerIP is cached, so we have to reset it to check
-		DockerIP = ""
-		result, err := GetDockerIP()
+		dockerutil.DockerIP = ""
+		result, err := dockerutil.GetDockerIP()
 		assert.NoError(err)
 		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)
 	}
@@ -648,19 +648,19 @@ func TestCopyIntoContainer(t *testing.T) {
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
 
-	cid, err := FindContainerByName(testContainerName)
+	cid, err := dockerutil.FindContainerByName(testContainerName)
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
 	uid, _, _ := util.GetContainerUIDGid()
-	targetDir, _, err := Exec(cid.ID, "mktemp -d", uid)
+	targetDir, _, err := dockerutil.Exec(cid.ID, "mktemp -d", uid)
 	require.NoError(t, err)
 	targetDir = strings.Trim(targetDir, "\n")
 
-	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir, "")
+	err = dockerutil.CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir, "")
 	require.NoError(t, err)
 
-	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R * .test.sh && ./.test.sh"`, targetDir), uid)
+	out, _, err := dockerutil.Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R * .test.sh && ./.test.sh"`, targetDir), uid)
 	require.NoError(t, err)
 	assert.Equal(`.test.sh
 root.txt
@@ -671,10 +671,10 @@ hi this is a test file
 `, out)
 
 	// Now try a file
-	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), testContainerName, "/tmp", "")
+	err = dockerutil.CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), testContainerName, "/tmp", "")
 	require.NoError(t, err)
 
-	out, _, err = Exec(cid.ID, `cat /tmp/root.txt`, uid)
+	out, _, err = dockerutil.Exec(cid.ID, `cat /tmp/root.txt`, uid)
 	require.NoError(t, err)
 	assert.Equal("root.txt here\n", out)
 }
@@ -685,14 +685,14 @@ func TestCopyFromContainer(t *testing.T) {
 	assert := asrt.New(t)
 	containerSourceDir := "/var/tmp/backdrop_drush_commands/backdrop-drush-extension"
 	containerExpectedFile := "backdrop.drush.inc"
-	cid, err := FindContainerByName(testContainerName)
+	cid, err := dockerutil.FindContainerByName(testContainerName)
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
 	targetDir, err := os.MkdirTemp("", t.Name())
 	require.NoError(t, err)
 
-	err = CopyFromContainer(testContainerName, containerSourceDir, targetDir)
+	err = dockerutil.CopyFromContainer(testContainerName, containerSourceDir, targetDir)
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(targetDir, path.Base(containerSourceDir), containerExpectedFile))

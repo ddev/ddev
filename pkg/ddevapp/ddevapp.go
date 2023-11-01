@@ -124,12 +124,13 @@ type DdevApp struct {
 	ComposerVersion           string                 `yaml:"composer_version"`
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
-	NodeJSVersion             string                 `yaml:"nodejs_version"`
+	NodeJSVersion             string                 `yaml:"nodejs_version,omitempty"`
 	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
 	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
 	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
+	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -229,7 +230,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
-	appDesc["nfs_mount_enabled"] = app.IsNFSMountEnabled()
+	appDesc["performance_mode"] = app.GetPerformanceMode()
 	appDesc["fail_on_hook_fail"] = app.FailOnHookFail || app.FailOnHookFailGlobal
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
@@ -487,7 +488,7 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 func (app *DdevApp) GetMailpitHTTPPort() string {
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort
 	if port == "" {
-		port = nodeps.DdevDefaultMailpitPort
+		port = nodeps.DdevDefaultMailpitHTTPPort
 	}
 	if app.MailpitHTTPPort != "" {
 		port = app.MailpitHTTPPort
@@ -1034,6 +1035,11 @@ Please use the built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
 	}
 
+	err = app.ProcessHooks("pre-start")
+	if err != nil {
+		return err
+	}
+
 	err = PullBaseContainerImages()
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
@@ -1126,11 +1132,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	err = DownloadMutagenIfNeededAndEnabled(app)
-	if err != nil {
-		return err
-	}
-
-	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
@@ -1485,8 +1486,8 @@ func (app *DdevApp) PullContainerImages() error {
 	if err != nil {
 		return err
 	}
+	images = append(images, FindNotOmittedImages(app)...)
 
-	images = append(images, dockerImages.GetRouterImage(), dockerImages.GetSSHAuthImage())
 	for _, i := range images {
 		err := dockerutil.Pull(i)
 		if err != nil {
@@ -1498,16 +1499,11 @@ func (app *DdevApp) PullContainerImages() error {
 	return nil
 }
 
-// PullBaseontainerImages pulls only the fundamentally needed images so they can be available early.
+// PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image and busybox for housekeeping.
 func PullBaseContainerImages() error {
 	images := []string{dockerImages.GetWebImage(), versionconstants.BusyboxImage}
-	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, SSHAuthName) {
-		images = append(images, dockerImages.GetSSHAuthImage())
-	}
-	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, RouterProjectName) {
-		images = append(images, dockerImages.GetRouterImage())
-	}
+	images = append(images, FindNotOmittedImages(nil)...)
 
 	for _, i := range images {
 		err := dockerutil.Pull(i)
@@ -1541,6 +1537,26 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 	}
 
 	return images, nil
+}
+
+// FindNotOmittedImages returns an array of image names not omitted by global or project configuration
+func FindNotOmittedImages(app *DdevApp) []string {
+	var images []string
+	containerImageMap := map[string]func() string{
+		SSHAuthName:       dockerImages.GetSSHAuthImage,
+		RouterProjectName: dockerImages.GetRouterImage,
+	}
+
+	for containerName, getImage := range containerImageMap {
+		if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, containerName) {
+			continue
+		}
+		if app == nil || !nodeps.ArrayContainsString(app.OmitContainers, containerName) {
+			images = append(images, getImage())
+		}
+	}
+
+	return images
 }
 
 // FindMaxTimeout looks through all services and returns the max timeout found
@@ -2541,6 +2557,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
+	// Remove current project network
+	// Working around duplicate network creation problem apparently caused by
+	// https://github.com/docker/compose/issues/6532#issuecomment-769263484
+	// see https://github.com/ddev/ddev/issues/5193 and
+	// https://github.com/ddev/ddev/pull/5305
+	dockerutil.RemoveNetworkWithWarningOnError(os.Getenv("COMPOSE_PROJECT_NAME") + "_default")
+
 	return nil
 }
 
@@ -2783,7 +2806,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// incomplete one we have to add to it.
 	if err = app.Init(activeAppRoot); err != nil {
 		switch err.(type) {
-		case webContainerExists, invalidConfigFile, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
+		case webContainerExists, invalidConfigFile, invalidConstraint, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
 			return app, err
 		}
 	}

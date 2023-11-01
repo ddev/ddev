@@ -5,9 +5,10 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 ## General Troubleshooting Strategies
 
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
-* Temporarily disable firewalls, VPNs, network proxies, and virus checkers while you’re troubleshooting.
+* Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
+* Make sure you do not have disk space problems on your computer. This can be especially tricky on WSL2, where you need to check both the main Windows disk space and WSL2 disk space as well.
 * On macOS, check to make sure Docker Desktop or Colima are not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
 * If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
@@ -50,7 +51,7 @@ or
 
 > Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:443 -> 0.0.0.0:0: listen tcp 127.0.0.1:443: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
 
-This means there’s another web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
+This means there’s another process or web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
 
 In some cases, the conflict could be over Mailpit’s port 8025 or 8026.
 
@@ -58,7 +59,7 @@ To resolve this conflict, choose one of these methods:
 
 1. Stop all Docker containers that might be using the port by running `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
 2. If you’re using another local development environment that uses these ports (MAMP, WAMP, Lando, etc.), consider stopping it.
-3. Fix port conflicts by configuring your project to use different ports.
+3. Fix port conflicts by configuring DDEV globally to use different ports.
 4. Fix port conflicts by stopping the competing application.
 
 ### Method 1: Stop the conflicting application
@@ -67,22 +68,21 @@ Consider `lando poweroff` for Lando, or `fin system stop` for Docksal, or stop M
 
 ### Method 2: Fix port conflicts by configuring your project to use different ports
 
-To configure a project to use non-conflicting ports, edit the project’s `.ddev/config.yaml` to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then, use `ddev start` again.
+To configure a project to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
 
-For example, if there was a port conflict with a local Apache HTTP on port 80, add the following to the `config.yaml` file:
-
-```yaml
-router_http_port: 8080
-router_https_port: 8443
+```
+ddev config --router-http-port="" --router-https-port=""
+ddev config global --router-http-port=8080 --router-https-port=8443
+ddev start
 ```
 
-Then run `ddev start`. This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
+This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
 
-If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port. You can add the following to `.ddev/config.yaml`:
+If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port:
 
-```yaml
-mailpit_http_port: 8300
-mailpit_https_port: 8301
+```
+ddev config --mailpit-http-port="" --mailpit-https-port=""
+ddev config global --mailpit-http-port=8301 --mailpit-https-port=8302
 ```
 
 ### Method 3: Fix port conflicts by stopping the competing application
@@ -99,6 +99,8 @@ sudo apachectl stop
 
 Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
+* macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
+* macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.
 * MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
 * nginx (macOS Homebrew): `sudo brew services stop nginx` or `sudo launchctl stop homebrew.mxcl.nginx`.
@@ -117,6 +119,24 @@ $ sudo lsof -i :443 -sTCP:LISTEN
 COMMAND  PID     USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
+```
+
+You can also use the `netstat -anv -p tcp` command to examine processes running on specific ports:
+
+```
+sudo netstat -anv -p tcp | egrep 'Proto|(\*\.(80|443))'
+Proto Recv-Q Send-Q  Local Address          Foreign Address        (state)      rhiwat  shiwat    pid   epid state  options           gencnt    flags   flags1 usscnt rtncnt fltrs
+tcp4       0      0  *.80                   *.*                    LISTEN       131072  131072  10521      0 00100 00000006 000000000000965d 00000000 00000900      1      0 000001
+tcp4       0      0  *.443                  *.*                    LISTEN       131072  131072  10521      0 00100 00000006 000000000000965c 00000000 00000900      1      0 000001```
+```
+
+The `pid` column shows the process ID of the process listening on the port. In this case, it’s `10521`. You can use `ps` to find out what process that is:
+
+```
+$ ps -p 10521
+$ ps -fp 10521
+UID   PID  PPID   C STIME   TTY           TIME CMD
+501 10521     1   0 12:35PM ??         0:05.16 /Applications/OrbStack.app/Contents/MacOS/../Frameworks/OrbStack Helper.app/Contents/MacOS/OrbStack Helper vmgr -build-id 339077377 -handoff
 ```
 
 On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview) or try using `netstat` and `tasklist` to find the process ID:

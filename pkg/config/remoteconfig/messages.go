@@ -57,7 +57,7 @@ func ListConditions() (conditions map[string]string) {
 
 // ShowNotifications shows notifications provided by the remote config to the user.
 func (c *remoteConfig) ShowNotifications() {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	if !c.showNotifications() {
 		return
@@ -111,7 +111,7 @@ func (c *remoteConfig) ShowNotifications() {
 
 // ShowTicker shows ticker messages provided by the remote config to the user.
 func (c *remoteConfig) ShowTicker() {
-	defer util.TimeTrack()()
+	// defer util.TimeTrack()()
 
 	if !c.showTickerMessage() || len(c.remoteConfig.Messages.Ticker.Messages) == 0 {
 		return

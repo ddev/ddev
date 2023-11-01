@@ -101,9 +101,8 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		// TODO: Remove once it's activated directly in ddevapp
 		if instrumentationApp == nil {
-			app, err := ddevapp.NewApp("", false)
+			app, err := ddevapp.GetActiveApp("")
 			if err == nil {
 				instrumentationApp = app
 			}
@@ -123,7 +122,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
-		instrumentationNotSetUpWarning()
 
 		// All this nonsense is to capture the official usage we used for this command.
 		// Unfortunately cobra doesn't seem to provide this easily.
@@ -147,14 +145,8 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && versionconstants.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
 			defer util.TimeTrackC("Instrumentation")()
-			// Try to get default instrumentationApp from current directory if not already set
-			if instrumentationApp == nil {
-				app, err := ddevapp.NewApp("", false)
-				if err == nil {
-					instrumentationApp = app
-				}
-			}
-			// If it has been set, provide the tags, otherwise no app tags
+
+			// If instrumentationApp has been set, provide the tags, otherwise no app tags
 			if instrumentationApp != nil {
 				instrumentationApp.SetInstrumentationAppTags()
 			}
@@ -201,12 +193,6 @@ func init() {
 		if err != nil {
 			util.Warning("Adding custom/shell commands failed: %v", err)
 		}
-	}
-}
-
-func instrumentationNotSetUpWarning() {
-	if !output.JSONOutput && versionconstants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		util.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built DDEV binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 

@@ -47,6 +47,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 			Name:     name,
 			Driver:   "bridge",
 			Internal: false,
+			Labels:   map[string]string{"com.ddev.platform": "ddev"},
 		}
 		_, err := client.CreateNetwork(netOptions)
 		if err != nil {
@@ -58,14 +59,24 @@ func EnsureNetwork(client *docker.Client, name string) error {
 	return nil
 }
 
+// EnsureNetworkWithFatal creates or ensures the provided network exists or
+// exits with fatal.
+func EnsureNetworkWithFatal(name string) {
+	client := GetDockerClient()
+	err := EnsureNetwork(client, name)
+	if err != nil {
+		log.Fatalf("Failed to ensure Docker network %s: %v", name, err)
+	}
+}
+
 // EnsureDdevNetwork creates or ensures the DDEV network exists or
 // exits with fatal.
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
-	client := GetDockerClient()
-	err := EnsureNetwork(client, NetName)
-	if err != nil {
-		log.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
+	EnsureNetworkWithFatal(NetName)
+	// Ensure we have the current project network
+	if os.Getenv("COMPOSE_PROJECT_NAME") != "" {
+		EnsureNetworkWithFatal(os.Getenv("COMPOSE_PROJECT_NAME") + "_default")
 	}
 }
 
@@ -82,6 +93,18 @@ func RemoveNetwork(netName string) error {
 	client := GetDockerClient()
 	err := client.RemoveNetwork(netName)
 	return err
+}
+
+// RemoveNetworkWithWarningOnError removes the named Docker network
+func RemoveNetworkWithWarningOnError(netName string) {
+	err := RemoveNetwork(netName)
+	_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
+	// If it's a "no such network" there's no reason to report error
+	if err != nil && !isNoSuchNetwork {
+		util.Warning("Unable to remove network %s: %v", netName, err)
+	} else if err == nil {
+		output.UserOut.Println("Network", netName, "removed")
+	}
 }
 
 var DockerHost string
@@ -279,6 +302,27 @@ func NetExists(client *docker.Client, name string) bool {
 		}
 	}
 	return false
+}
+
+// FindNetworksWithLabel returns all networks with the given label
+// It ignores the value of the label, is only interested that the label exists.
+func FindNetworksWithLabel(label string) ([]docker.Network, error) {
+	client := GetDockerClient()
+	networks, err := client.ListNetworks()
+	if err != nil {
+		return nil, err
+	}
+
+	var matchingNetworks []docker.Network
+	for _, network := range networks {
+		if network.Labels != nil {
+			if _, exists := network.Labels[label]; exists {
+				matchingNetworks = append(matchingNetworks, network)
+			}
+		}
+	}
+
+	return matchingNetworks, nil
 }
 
 // ContainerWait provides a wait loop to check for a single container in "healthy" status.
@@ -573,7 +617,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
 	// Container Stopped or Created
 	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^ *(Network|Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
+	ignoreRegex := "(^ *(Network|Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)

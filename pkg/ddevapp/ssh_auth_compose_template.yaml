@@ -18,7 +18,7 @@ services:
     image: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built'
     networks:
       - ddev_default
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    restart: "no"
     user: '$DDEV_UID:$DDEV_GID'
     volumes:
       - "dot_ssh:/tmp/.ssh"

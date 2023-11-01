@@ -129,10 +129,9 @@ func AskForConfirmation() bool {
 		return true
 	} else if nodeps.ArrayContainsString(nokayResponses, responseLower) {
 		return false
-	} else {
-		output.UserOut.Println("Please type yes or no and then press enter:")
-		return AskForConfirmation()
 	}
+	output.UserOut.Println("Please type yes or no and then press enter:")
+	return AskForConfirmation()
 }
 
 // MapKeysToArray takes the keys of the map and turns them into a string array

@@ -38,7 +38,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '>=1.20'
+          go-version: '>=1.21'
 
       - name: Add Homebrew to PATH
         run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
@@ -59,7 +59,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '>=1.20'
+          go-version: '>=1.21'
 
       # Fails if something is wrong with the dependencies 
       - name: Verify Go Modules

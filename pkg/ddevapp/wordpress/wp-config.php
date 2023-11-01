@@ -23,6 +23,12 @@ define( 'SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}' );
 define( 'LOGGED_IN_SALT', '{{ $config.LoggedInSalt }}' );
 define( 'NONCE_SALT', '{{ $config.NonceSalt }}' );
 
+/* Add any custom values between this line and the "stop editing" line. */
+
+
+
+/* That's all, stop editing! Happy publishing. */
+
 /** Absolute path to the WordPress directory. */
 defined( 'ABSPATH' ) || define( 'ABSPATH', dirname( __FILE__ ) . '/{{ $config.AbsPath }}' );
 

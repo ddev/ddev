@@ -2,19 +2,19 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 /**
@@ -57,7 +57,7 @@ func TestPlatformPull(t *testing.T) {
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
@@ -77,7 +77,7 @@ func TestPlatformPull(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	app.Docroot = "web"
@@ -120,7 +120,7 @@ func TestPlatformPush(t *testing.T) {
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
 
-	app, err := NewApp(siteDir, true)
+	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -134,7 +134,7 @@ func TestPlatformPush(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal8
-	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
 	app.Docroot = "web"
@@ -144,7 +144,7 @@ func TestPlatformPush(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("platform")
@@ -159,7 +159,7 @@ func TestPlatformPush(t *testing.T) {
 
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
-	_, _, err = app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
 	})
 	require.NoError(t, err)
@@ -172,7 +172,7 @@ func TestPlatformPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | PLATFORMSH_CLI_TOKEN=%s platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, token, platformTestSiteID, platformPushTestSiteEnvironment),
 	})
 	require.NoError(t, err)
@@ -180,7 +180,7 @@ func TestPlatformPush(t *testing.T) {
 
 	// Test that the file arrived there (by rsyncing it back)
 	tmpRsyncDir := filepath.Join("/tmp", t.Name()+util.RandString(5))
-	out, _, err = app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf(`PLATFORMSH_CLI_TOKEN=%s platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, token, platformTestSiteID, platformPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
 	})
 	require.NoError(t, err)
