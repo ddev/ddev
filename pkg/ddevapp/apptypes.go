@@ -165,6 +165,7 @@ func init() {
 			appTypeDetect:        isSilverstripeApp,
 			postStartAction:      silverstripePostStartAction,
 			configOverrideAction: silverstripeConfigOverrideAction,
+			uploadDirs:           getSilverstripeUploadDirs,
 		},
 
 		nodeps.AppTypeMagento: {
