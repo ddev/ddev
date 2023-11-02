@@ -1,7 +1,9 @@
 package ddevapp
 
 import (
+	"errors"
 	"fmt"
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 
@@ -82,16 +84,22 @@ func shopware6PostStartAction(app *DdevApp) error {
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	var envMap = map[string]string{
 		"DATABASE_URL": `mysql://db:db@db:3306/db`,
+		"LOCK_DSN":     "flock",
 		"APP_URL":      app.GetPrimaryURL(),
-		"MAILER_URL":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
+		"MAILER_DSN":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
 	}
-	// Shopware 6 refuses to do bin/console system:setup if the env file exists,
-	// so if it doesn't exist, wait for it to be created
-	if err == nil {
+	// If the .env.local doesn't exist, create it.
+	switch {
+	case err == nil:
+		util.Warning("Updating %s with %v", envFilePath, envMap)
+		fallthrough
+	case errors.Is(err, os.ErrNotExist):
 		err := WriteProjectEnvFile(envFilePath, envMap, envText)
 		if err != nil {
 			return err
 		}
+	default:
+		util.Warning("error opening %s: %v", envFilePath, err)
 	}
 
 	return nil

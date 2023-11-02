@@ -323,24 +323,19 @@ ddev launch
 
 ## Shopware
 
-You can set up a Shopware 6 environment many ways, we recommend the following technique:
+You can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a .env.local file for you by default; if you already have one DDEV leaves it alone.
 
 ```bash
 mkdir my-shopware6 && cd my-shopware6
 ddev config --project-type=shopware6 --docroot=public --create-docroot
+ddev get ddev/ddev-elasticsearch
 ddev composer create shopware/production:^v6.5
 # If it asks `Do you want to include Docker configuration from recipes?` answer `x`, as we're setting it up.
 # During system:setup you may have to enter the Database user (db), Database password (db)
 # Database host (db) and Database name (db).
-
-# When this asks for database configuration, use the following:
-# Database user: [db]
-# Database password: [db]
-# Database host: [db]
-# Database name: [db]
-ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
-
-ddev exec bin/console system:install --create-database --basic-setup
+rm .env # composer create creates a .env file, but we want to start with .env.local
+ddev exec console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}' --mailer-url='smtp://127.0.0.1:1025?encryption=&auth_mode='
+ddev exec console system:install --create-database --basic-setup
 ddev launch /admin
 # The default user/password are admin/shopware
 ```
