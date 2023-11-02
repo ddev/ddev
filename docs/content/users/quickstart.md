@@ -323,7 +323,7 @@ ddev launch
 
 ## Shopware
 
-You can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a .env.local file for you by default; if you already have one DDEV leaves it alone.
+Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV leaves it alone.
 
 ```bash
 mkdir my-shopware6 && cd my-shopware6
@@ -337,7 +337,7 @@ rm .env # composer create creates a .env file, but we want to start with .env.lo
 ddev exec console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}' --mailer-url='smtp://127.0.0.1:1025?encryption=&auth_mode='
 ddev exec console system:install --create-database --basic-setup
 ddev launch /admin
-# The default user/password are admin/shopware
+# Default username and password are `admin` and `shopware`
 ```
 
 Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
