@@ -17,7 +17,7 @@ The [`ddev mysql`](../usage/commands.md#mysql) runs the `mysql` client inside th
 
 ## Host Commands
 
-To provide host commands, place a Bash script in `.ddev/commands/host`. For example, a PhpStorm launcher to make the `ddev phpstorm` command might go in `.ddev/commands/host/phpstorm` with these contents. The OSTypes and HostBinaryExists annotations are optional, but are useful to prevent the command from showing up if it's not useful to the user.
+To provide host commands, place a Bash script in `.ddev/commands/host`. For example, a PhpStorm launcher to make the `ddev phpstorm` command might go in `.ddev/commands/host/phpstorm` with these contents. The `OSTypes` and `HostBinaryExists` annotations are optional, but are useful to prevent the command from showing up if it's not useful to the user.
 
 ```bash
 #!/usr/bin/env bash
