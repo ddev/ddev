@@ -71,7 +71,7 @@ Other project types need a custom configuration to be able to use this command.
 ```bash
 $ ddev import-files
 Provide the path to the source directory or archive you wish to import.
-Please note: if the destination directory exists, it will be replaced with the
+Please note: if the destination directory exists, it will be emptied and replaced with the
 import assets specified here.
 Path to file(s): ~/workspace/d10/.tarballs/files.tgz
 You provided an archive. Do you want to extract from a specific path in your
@@ -84,7 +84,7 @@ Successfully imported files for d10
 
 It can also import a directory containing static assets.
 
-If using a Tar or Zip archive, the archive should contain *only the files inside the files directory*. For example in a Drupal site with files at `sites/default/files`, the archive should **not* contain the `files` directory, just the contents of the `files directory`. The easiest way to do this with the `tar` command is to `cd` into the directory and create the archive there. For example:
+If using a Tar or Zip archive, the archive should contain *only the files inside the files directory*. For example in a Drupal site with files at `sites/default/files`, the archive should only contain the contents of the `files` directory; it should not contain a single `files` directory. The easiest way to do this with the `tar` command is to `cd` into the directory and create the archive there. An example Tar file creation is:
 
 ```bash
 cd web/sites/default/files

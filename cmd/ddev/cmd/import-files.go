@@ -121,7 +121,7 @@ func importFilesRun(app *ddevapp.DdevApp, uploadDir, sourcePath, extractPath str
 
 const importPathPrompt = `Provide the path to the source directory or archive you wish to import.`
 
-const importPathWarn = `Please note: if the destination directory exists, it will be replaced with the
+const importPathWarn = `Please note: if the destination directory exists, it will be emptied and replaced with the
 import assets specified here.`
 
 // promptForFileSource prompts the user for the path to the source file.
