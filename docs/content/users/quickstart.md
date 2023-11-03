@@ -111,6 +111,8 @@ ddev launch
     cd my-drupal10-site
     ddev config --project-type=drupal10 --docroot=web --create-docroot
     ddev start
+    # ddev start will have created some startup files, remove them so the next command can run
+    rm -fr ../my-drupal10-site/web/*
     ddev composer create drupal/recommended-project
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
@@ -125,6 +127,8 @@ ddev launch
     cd my-drupal9-site
     ddev config --project-type=drupal9 --docroot=web --create-docroot
     ddev start
+    # ddev start will have created some startup files, remove them so the next command can run
+    rm -fr ../my-drupal9-site/web/*
     ddev composer create "drupal/recommended-project:^9"
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
