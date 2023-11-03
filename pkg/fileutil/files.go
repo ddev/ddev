@@ -136,6 +136,7 @@ func IsDirectory(path string) bool {
 }
 
 // IsDirectoryEmpty returns true if path is a dir and it's empty
+// From https://socketloop.com/tutorials/golang-determine-if-directory-is-empty-with-os-file-readdir-function
 func IsDirectoryEmpty(path string) bool {
 	if IsDirectory(path) {
 		f, err := os.Open(path)
