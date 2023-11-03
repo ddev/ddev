@@ -80,8 +80,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				util.Failed("Failed to create project: %v", err)
 			}
 
-			allowedEmpty := []string{".ddev", ".git", ".tarballs"}
-			allowed := allowedEmpty
+			allowedNotEmpty := []string{".ddev", ".git", ".tarballs"}
+			allowed := allowedNotEmpty
 
 			if len(docRoot) > 0 {
 				allowed = append(allowed, docRoot)
@@ -99,10 +99,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 					util.Failed("Failed to create project: project has to be recently init, only %v are allowed to be present.", allowedString)
 				}
 
-				if !nodeps.ArrayContainsString(allowedEmpty, o) {
-					if !fileutil.IsDirectoryEmpty(o) {
-						util.Failed("Failed to create project: although '%v' is allowed to be present, it has to be empty", o)
-					}
+				if !nodeps.ArrayContainsString(allowedNotEmpty, o) && !fileutil.IsDirectoryEmpty(o) {
+					util.Failed("Failed to create project: although '%v' is allowed to be present, it has to be empty", o)
 				}
 			}
 		}
