@@ -135,6 +135,26 @@ func IsDirectory(path string) bool {
 	return fileInfo.IsDir()
 }
 
+// IsDirectoryEmpty returns true if path is a dir and it's empty
+func IsDirectoryEmpty(path string) bool {
+	if IsDirectory(path) {
+		f, err := os.Open(path)
+		if err != nil {
+			return false
+		}
+		defer f.Close()
+
+		// read in ONLY one file
+		_, err = f.Readdir(1)
+
+		// and if the file is EOF... well, the dir is empty.
+		if err == io.EOF {
+			return true
+		}
+	}
+	return false
+}
+
 // FileIsReadable checks to make sure a file exists and is readable
 func FileIsReadable(name string) bool {
 	file, err := os.OpenFile(name, os.O_RDONLY, 0666)

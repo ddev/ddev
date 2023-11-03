@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -62,54 +61,52 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		docRoot := app.GetDocroot()
 		composerRoot := app.GetComposerRoot(false, false)
-
-		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: MOST EXISTING CONTENT in the Composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
-		if !composerCreateYesFlag {
-			if !util.Confirm("Would you like to continue?") {
-				util.Failed("create-project cancelled")
-			}
-		}
 
 		err = os.MkdirAll(composerRoot, 0755)
 		if err != nil {
 			util.Failed("Failed to create composerRoot: %v", err)
 		}
 
-		// Remove most contents of Composer root
-		util.Warning("Removing any existing files in Composer root")
-		objs, err := fileutil.ListFilesInDir(composerRoot)
-		if err != nil {
-			util.Failed("Failed to create project: %v", err)
-		}
-
-		for _, o := range objs {
-			// Preserve .ddev, .git, .tarballs
-			if o == ".ddev" || o == ".git" || o == ".tarballs" {
-				continue
+		// If composer root is not the app root, make sure it's empty
+		if app.GetAbsAppRoot(false) != composerRoot {
+			if !fileutil.IsDirectoryEmpty(composerRoot) {
+				util.Failed("Failed to create project: '%v' has to be empty", composerRoot)
 			}
-
-			if err = os.RemoveAll(filepath.Join(composerRoot, o)); err != nil {
+		} else {
+			objs, err := fileutil.ListFilesInDir(composerRoot)
+			if err != nil {
 				util.Failed("Failed to create project: %v", err)
 			}
-		}
 
-		// Upload dirs have to be there for bind-mounts to work when Mutagen enabled
-		app.CreateUploadDirsIfNecessary()
-		// We may have removed host-side directories, invalidating
-		// that Docker bind-mounts are using, so restart to pick up the new ones.
-		if app.IsMutagenEnabled() {
-			err = app.Restart()
-			if err != nil {
-				util.Failed("Failed to restart project after removal of project files: %v", err)
+			allowed_empty := []string{".ddev", ".git", ".tarballs"}
+			allowed := allowed_empty
+
+			if len(docRoot) > 0 {
+				allowed = append(allowed, docRoot)
+			}
+
+			for _, o := range objs {
+				// Only allow specific things to be present.
+				if !nodeps.ArrayContainsString(allowed, o) {
+					var allowed_string = ""
+					if len(allowed) > 1 {
+						allowed_string = "'" + strings.Join(allowed[:len(allowed)-1], "', '") + "'"
+						allowed_string += " and "
+						allowed_string += "'" + allowed[len(allowed)-1] + "'"
+					}
+					util.Failed("Failed to create project: project has to be recently init, only %v are allowed to be present.", allowed_string)
+				}
+
+				if !nodeps.ArrayContainsString(allowed_empty, o) {
+					if !fileutil.IsDirectoryEmpty(o) {
+						util.Failed("Failed to create project: although '%v' is allowed to be present, it has to be empty", o)
+					}
+				}
 			}
 		}
 
-		err = app.MutagenSyncFlush()
-		if err != nil {
-			util.Failed("Failed to sync Mutagen contents: %v", err)
-		}
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
