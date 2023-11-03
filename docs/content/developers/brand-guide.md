@@ -1,3 +1,7 @@
+---
+search:
+  boost: .5
+---
 # Brand Guide
 
 ## Logos

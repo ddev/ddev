@@ -1,3 +1,7 @@
+---
+search:
+  boost: .2
+---
 # Buildkite Test Agent Setup
 
 We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testing. The build machines and `buildkite-agent` must be set up before use.

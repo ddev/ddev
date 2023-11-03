@@ -1,8 +1,9 @@
 ---
 hide:
   - toc
+search:
+  boost: .2
 ---
-
 # GitHub Self-Hosted Agent Setup
 
 We are using GitHub Self-Hosted Agents for Windows and macOS testing. The build machines and agents must be set up before use.

@@ -1,3 +1,7 @@
+---
+search:
+  boost: 2 
+---
 # Database Management
 
 DDEV provides lots of flexibility for managing your databases between your local, staging and production environments. You may commonly use the [`ddev import-db`](../usage/commands.md#import-db) and [`ddev export-db`](../usage/commands.md#export-db) commands, but there are plenty of other adaptable ways to work with your databases.

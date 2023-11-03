@@ -1,3 +1,8 @@
+---
+search:
+  boost: 0.5
+---
+
 # Config Options
 
 DDEV configuration is stored in YAML files that come in two flavors:

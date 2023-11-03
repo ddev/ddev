@@ -1,3 +1,7 @@
+---
+search:
+  boost: .5
+---
 # Writing Style Guide
 
 This page formalizes the writing conventions we aspire to use in the documentation.  

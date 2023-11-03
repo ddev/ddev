@@ -1,3 +1,7 @@
+---
+search:
+  boost: .5
+---
 # Release Management & Docker Images
 
 ## Release process and tools
