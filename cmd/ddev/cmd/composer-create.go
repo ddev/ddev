@@ -80,8 +80,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				util.Failed("Failed to create project: %v", err)
 			}
 
-			allowed_empty := []string{".ddev", ".git", ".tarballs"}
-			allowed := allowed_empty
+			allowedEmpty := []string{".ddev", ".git", ".tarballs"}
+			allowed := allowedEmpty
 
 			if len(docRoot) > 0 {
 				allowed = append(allowed, docRoot)
@@ -90,16 +90,16 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			for _, o := range objs {
 				// Only allow specific things to be present.
 				if !nodeps.ArrayContainsString(allowed, o) {
-					var allowed_string = ""
+					var allowedString = ""
 					if len(allowed) > 1 {
-						allowed_string = "'" + strings.Join(allowed[:len(allowed)-1], "', '") + "'"
-						allowed_string += " and "
-						allowed_string += "'" + allowed[len(allowed)-1] + "'"
+						allowedString = "'" + strings.Join(allowed[:len(allowed)-1], "', '") + "'"
+						allowedString += " and "
+						allowedString += "'" + allowed[len(allowed)-1] + "'"
 					}
-					util.Failed("Failed to create project: project has to be recently init, only %v are allowed to be present.", allowed_string)
+					util.Failed("Failed to create project: project has to be recently init, only %v are allowed to be present.", allowedString)
 				}
 
-				if !nodeps.ArrayContainsString(allowed_empty, o) {
+				if !nodeps.ArrayContainsString(allowedEmpty, o) {
 					if !fileutil.IsDirectoryEmpty(o) {
 						util.Failed("Failed to create project: although '%v' is allowed to be present, it has to be empty", o)
 					}
