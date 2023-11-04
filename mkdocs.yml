@@ -77,6 +77,19 @@ extra:
   generator: false
   analytics:
     provider: plausible
+    feedback:
+      title: Did this page help you solve your problem?
+      ratings:
+        - icon: material/thumb-up-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thank you for your feedback! Happy
+        - icon: material/thumb-down-outline
+          name: Search results and/or this page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve this page and the search experience in general by creating an issue <a href="https://github.com/ddev/ddev/issues/new/?title=[Feedback]+{title}+-+{url}&labels=feedback&template=mkdocs_feedback.yml" target="_blank" rel="noopener">on Github</a>.
 
 # Extensions
 markdown_extensions:
