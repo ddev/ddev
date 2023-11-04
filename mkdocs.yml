@@ -89,7 +89,7 @@ extra:
           name: Search results and/or this page could be improved
           data: 0
           note: >-
-            Thanks for your feedback! Help us improve this page and the search experience in general by creating an issue <a href="https://github.com/ddev/ddev/issues/new/?title=[Feedback]+{title}+-+{url}&labels=feedback&template=mkdocs_feedback.yml" target="_blank" rel="noopener">on Github</a>.
+            Thanks for your feedback! Help us improve this page and the search experience in general by creating an issue <a href="https://github.com/ddev/ddev/issues/new/?title=[Feedback]+{title}+-+{url}&labels=feedback&template=bug_report.yml&labels=documenation" target="_blank" rel="noopener">on Github</a>.
 
 # Extensions
 markdown_extensions:
