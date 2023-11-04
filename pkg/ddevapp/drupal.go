@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -592,4 +593,28 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 	}
 
 	return nil
+}
+
+// getDrupalComposerCreateAllowedPaths returns paths that are allowed to be present when running composer create
+func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
+	var allowed []string
+
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return []string{}, nil
+	}
+
+	drupalConfig := NewDrupalSettings(app)
+
+	// Sync paths
+	syncDirPath := path.Join("sites/default", drupalConfig.SyncDir)
+	allowed = append(allowed, nodeps.PathExplode(syncDirPath)...)
+
+	// Settings paths
+	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(filepath.Dir(app.SiteSettingsPath), settingsFileBasePath)+"/.gitignore")...)
+	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteSettingsPath, settingsFileBasePath))...)
+	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteDdevSettingsFile, settingsFileBasePath))...)
+
+	return allowed, nil
 }

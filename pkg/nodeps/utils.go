@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 
@@ -134,4 +135,15 @@ func GrepStringInBuffer(buffer string, needle string) []string {
 	re := regexp.MustCompilePOSIX(needle)
 	matches := re.FindStringSubmatch(buffer)
 	return matches
+}
+
+func PathExplode(path string) []string {
+	var paths []string
+	var partial string
+	for _, p := range strings.Split(path, "/") {
+		partial += p
+		paths = append(paths, partial)
+		partial += "/"
+	}
+	return paths
 }

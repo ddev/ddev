@@ -25,6 +25,9 @@ type uploadDirs func(*DdevApp) []string
 // config refactor is done.
 type hookDefaultComments func() []byte
 
+// composerCreateAllowedPaths
+type composerCreateAllowedPaths func(app *DdevApp) ([]string, error)
+
 // appTypeSettingsPaths
 type appTypeSettingsPaths func(app *DdevApp)
 
@@ -57,6 +60,7 @@ type appTypeFuncs struct {
 	settingsCreator
 	uploadDirs
 	hookDefaultComments
+	composerCreateAllowedPaths
 	appTypeSettingsPaths
 	appTypeDetect
 	postImportDBAction
@@ -145,14 +149,15 @@ func init() {
 		},
 
 		nodeps.AppTypeDrupal10: {
-			settingsCreator:      createDrupalSettingsPHP,
-			uploadDirs:           getDrupalUploadDirs,
-			hookDefaultComments:  getDrupal8Hooks,
-			appTypeSettingsPaths: setDrupalSiteSettingsPaths,
-			appTypeDetect:        isDrupal10App,
-			configOverrideAction: drupal10ConfigOverrideAction,
-			postStartAction:      drupalPostStartAction,
-			importFilesAction:    drupalImportFilesAction,
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupal8Hooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal10App,
+			configOverrideAction:       drupal10ConfigOverrideAction,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeLaravel: {
@@ -304,6 +309,19 @@ func (app *DdevApp) GetHookDefaultComments() []byte {
 		return suggestions
 	}
 	return []byte("")
+}
+
+// GetHookDefaultComments gets the actual text of the config.yaml hook suggestions
+// for a given apptype
+func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.composerCreateAllowedPaths != nil {
+		paths, err := appFuncs.composerCreateAllowedPaths(app)
+		if err != nil {
+			return []string{""}, err
+		}
+		return paths, nil
+	}
+	return []string{""}, nil
 }
 
 // SetApptypeSettingsPaths chooses and sets the settings.php/settings.local.php

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -61,7 +62,6 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
-		docRoot := app.GetDocroot()
 		composerRoot := app.GetComposerRoot(false, false)
 
 		err = os.MkdirAll(composerRoot, 0755)
@@ -75,33 +75,27 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				util.Failed("Failed to create project: '%v' has to be empty", composerRoot)
 			}
 		} else {
-			objs, err := fileutil.ListFilesInDir(composerRoot)
+			allowedPaths := []string{".", ".."}
+			skipDirs := []string{".ddev", ".git", ".tarballs"}
+			composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
+			err := filepath.Walk(".",
+				func(path string, info os.FileInfo, err error) error {
+					if info.IsDir() && nodeps.ArrayContainsString(skipDirs, path) {
+						return filepath.SkipDir
+					}
+					if nodeps.ArrayContainsString(allowedPaths, path) {
+						return nil
+					}
+					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, path) {
+						return fmt.Errorf("%v not allowed", path)
+					}
+					if err != nil {
+						return err
+					}
+					return nil
+				})
 			if err != nil {
 				util.Failed("Failed to create project: %v", err)
-			}
-
-			allowedNotEmpty := []string{".ddev", ".git", ".tarballs"}
-			allowed := allowedNotEmpty
-
-			if len(docRoot) > 0 {
-				allowed = append(allowed, docRoot)
-			}
-
-			for _, o := range objs {
-				// Only allow specific things to be present.
-				if !nodeps.ArrayContainsString(allowed, o) {
-					var allowedString = ""
-					if len(allowed) > 1 {
-						allowedString = "'" + strings.Join(allowed[:len(allowed)-1], "', '") + "'"
-						allowedString += " and "
-						allowedString += "'" + allowed[len(allowed)-1] + "'"
-					}
-					util.Failed("Failed to create project: project has to be recently init, only %v are allowed to be present.", allowedString)
-				}
-
-				if !nodeps.ArrayContainsString(allowedNotEmpty, o) && !fileutil.IsDirectoryEmpty(o) {
-					util.Failed("Failed to create project: although '%v' is allowed to be present, it has to be empty", o)
-				}
 			}
 		}
 
