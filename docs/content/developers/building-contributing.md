@@ -300,13 +300,13 @@ The pull request title must follow this convention which is based on the [Conven
 
 Must be one of the following:
 
-* **build**: Changes that affect the build or external dependencies
-* **ci**: Changes to our CI configuration files and scripts
-* **docs**: Documentation only changes
-* **feat**: A new feature
-* **fix**: A bugfix
-* **refactor**: A code change that neither fixes a bug nor adds a feature
-* **test**: Adding missing tests or correcting existing tests
+* **build**: changes that affect the build or external dependencies
+* **ci**: changes to our CI configuration files and scripts
+* **docs**: documentation only changes
+* **feat**: a new feature
+* **fix**: a bugfix
+* **refactor**: a code change that neither fixes a bug nor adds a feature
+* **test**: adding missing tests or correcting existing tests
 
 Regarding SemVer, all types above except `feat` increase the patch version, `feat` increases the minor version.
 
