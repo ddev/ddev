@@ -137,8 +137,10 @@ func TestCustomCommands(t *testing.T) {
 	err = os.RemoveAll(localCommandsDir)
 	assert.NoError(err)
 
-	// Now copy a project commands and global commands and make sure they show up and execute properly
+	// Now copy a project, local and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
+	assert.NoError(err)
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "local_commands"), localCommandsDir)
 	assert.NoError(err)
 	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 
