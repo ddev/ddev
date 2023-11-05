@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: testhostcmd-overwritten-locally project local
+## Usage: testhostcmd-overwritten-locally
+## Example: "ddev testhostcmd-overwritten-locally"
+
+echo "testhostcmd-overwritten-locally was executed with args=$@ on host $(hostname)"

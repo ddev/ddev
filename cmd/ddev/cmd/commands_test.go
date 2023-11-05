@@ -152,8 +152,10 @@ func TestCustomCommands(t *testing.T) {
 	assert.Contains(out, "testwebglobal global (global shell web container command)")
 	assert.Contains(out, "testhostlocalcmd project local (shell host container command)")
 	assert.Contains(out, "testweblocalcmd project local (shell web container command)")
-	assert.NotContains(out, "testhostcmd global") //the global testhostcmd should have been overridden by the project one
-	assert.NotContains(out, "testwebcmd global")  //the global testwebcmd should have been overridden by the project one
+	assert.Contains(out, "testhostcmd-overwritten-locally project local (shell host container command)")
+	assert.NotContains(out, "testhostcmd global")                       //the global testhostcmd should have been overridden by the project one
+	assert.NotContains(out, "testwebcmd global")                        //the global testwebcmd should have been overridden by the project one
+	assert.NotContains(out, "testhostcmd-overwritten-locally project")  //the project testhostcmd-overwritten-locally should have been overridden by the local one
 
 	// Have to do app.Start() because commands are copied into containers on start
 	err = app.Start()
