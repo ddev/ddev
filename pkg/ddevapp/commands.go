@@ -45,7 +45,7 @@ func PopulateCustomCommandFiles(app *DdevApp) error {
 		return nil
 	}
 
-	if !fileutil.FileExists(projectCommandPath) || !fileutil.IsDirectory(projectCommandPath) {
+	if !fileutil.FileExists(localCommandPath) || !fileutil.IsDirectory(localCommandPath) {
 		return nil
 	}
 
