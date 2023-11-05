@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: testweblocalcmd project local
+## Usage: testweblocalcmd
+## Example: ddev testweblocalcmd
+
+echo "testweblocalcmd was executed with args=$@ on host $(hostname)"

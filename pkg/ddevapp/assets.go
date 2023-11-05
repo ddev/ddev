@@ -11,7 +11,7 @@ import (
 // The bundled assets for the project .ddev directory are in directory dotddev_assets
 // And the global .ddev assets are in directory global_dotddev_assets
 //
-//go:embed dotddev_assets/* dotddev_assets/commands/.gitattributes
+//go:embed dotddev_assets/* dotddev_assets/commands/.gitattributes dotddev_assets/local_commands/.gitattributes
 //go:embed global_dotddev_assets/* global_dotddev_assets/.gitignore global_dotddev_assets/commands/.gitattributes
 //go:embed app_compose_template.yaml
 //go:embed router_compose_template.yaml

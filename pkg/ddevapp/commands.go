@@ -20,6 +20,7 @@ func PopulateCustomCommandFiles(app *DdevApp) error {
 	}
 
 	projectCommandPath := app.GetConfigPath("commands")
+	localCommandPath := app.GetConfigPath("local_commands")
 	// Make sure our target global command directory is empty
 	copiedGlobalCommandPath := app.GetConfigPath(".global_commands")
 	err = os.MkdirAll(copiedGlobalCommandPath, 0755)
@@ -43,5 +44,10 @@ func PopulateCustomCommandFiles(app *DdevApp) error {
 	if !fileutil.FileExists(projectCommandPath) || !fileutil.IsDirectory(projectCommandPath) {
 		return nil
 	}
+
+	if !fileutil.FileExists(projectCommandPath) || !fileutil.IsDirectory(projectCommandPath) {
+		return nil
+	}
+
 	return nil
 }

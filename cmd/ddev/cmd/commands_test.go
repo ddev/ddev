@@ -85,6 +85,8 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 		assert.NoError(err)
+		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "local_commands"))
+		assert.NoError(err)
 	})
 	err = app.Start()
 	require.NoError(t, err)
@@ -99,6 +101,7 @@ func TestCustomCommands(t *testing.T) {
 
 	projectCommandsDir := app.GetConfigPath("commands")
 	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
+	localCommandsDir := app.GetConfigPath("local_commands")
 	_ = os.RemoveAll(projectGlobalCommandsCopy)
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
@@ -147,13 +150,15 @@ func TestCustomCommands(t *testing.T) {
 	assert.Contains(out, "testwebcmd project (shell web container command)")
 	assert.Contains(out, "testhostglobal global (global shell host container command)")
 	assert.Contains(out, "testwebglobal global (global shell web container command)")
+	assert.Contains(out, "testhostlocalcmd project local (shell host container command)")
+	assert.Contains(out, "testweblocalcmd project local (shell web container command)")
 	assert.NotContains(out, "testhostcmd global") //the global testhostcmd should have been overridden by the project one
 	assert.NotContains(out, "testwebcmd global")  //the global testwebcmd should have been overridden by the project one
 
 	// Have to do app.Start() because commands are copied into containers on start
 	err = app.Start()
 	require.NoError(t, err)
-	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
+	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal", "testhostlocalcmd", "testweblocalcmd"} {
 		out, err = exec.RunHostCommand(DdevBin, c, "hostarg1", "hostarg2", "--hostflag1")
 		if err != nil {
 			userHome, err := os.UserHomeDir()
@@ -288,6 +293,10 @@ func TestCustomCommands(t *testing.T) {
 	}
 	// Make sure that the non-command stuff we installed is in project commands dir
 	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt"} {
+		assert.FileExists(filepath.Join(projectCommandsDir, f))
+	}
+	// Make sure that the non-command stuff we installed is in project local commands dir
+	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "web/README.txt"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 

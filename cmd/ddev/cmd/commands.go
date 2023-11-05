@@ -47,8 +47,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	localCommandPath := app.GetConfigPath("local_commands")
 	commandsAdded := map[string]int{}
-	for _, commandSet := range []string{projectCommandPath, copiedGlobalCommandPath} {
+	for _, commandSet := range []string{localCommandPath, projectCommandPath, copiedGlobalCommandPath} {
 		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
 		if err != nil {
 			return err
