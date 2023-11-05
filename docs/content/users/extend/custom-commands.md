@@ -57,6 +57,10 @@ tail -f /opt/solr/server/logs/solr.log
 
 Global commands work exactly the same as project-level commands, but they need to go in your *global* `.ddev` directory. Your home directory has a `.ddev/commands` in it, where you can add host, web, or db commands.
 
+## User local commands
+
+User local commands work exactly the same as project-level commands, but they need to go in your `.ddev/local_commands` directory. User local commands are not under VCS control, thus they are not committed in the repository. They serve only the local development environment.
+
 ## Shell Command Examples
 
 There are many examples of [global](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `~/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
