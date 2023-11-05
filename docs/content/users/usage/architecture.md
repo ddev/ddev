@@ -46,6 +46,9 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 `homeadditions` directory
 : Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `~/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
 
+`local_commands` subdirectories
+: User local custom [shell commands](../extend/custom-commands.md) that can run on the host or inside a container.
+
 `mutagen` directory
 : Contains `mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
 
