@@ -7,7 +7,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -16,9 +15,6 @@ import (
 )
 
 func TestComposerCmd1(t *testing.T) {
-	if dockerutil.IsColima() {
-		t.Skip("Skipping test on Colima because of odd unable to delete vendor error")
-	}
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
@@ -93,9 +89,6 @@ func TestComposerCmd1(t *testing.T) {
 }
 
 func TestComposerCmd2(t *testing.T) {
-	if dockerutil.IsColima() {
-		t.Skip("Skipping test on Colima because of odd unable to delete vendor error")
-	}
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
