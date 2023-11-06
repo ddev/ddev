@@ -321,8 +321,9 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	allowed = append(allowed, uploadDirs...)
 
 	// If we have a function to do the settings creation, allow .gitignore
+	// see CreateSettingsFile
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
-		// WedDon't create gitignore if it would be in top-level directory, where
+		// We don't create gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
 			allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(filepath.Dir(app.SiteSettingsPath), app.AppRoot)+"/.gitignore")...)
