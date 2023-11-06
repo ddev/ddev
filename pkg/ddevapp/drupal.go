@@ -606,15 +606,13 @@ func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 
 	drupalConfig := NewDrupalSettings(app)
 
-	// Sync paths
-	syncDirPath := path.Join("sites/default", drupalConfig.SyncDir)
+	// Sync path
+	syncDirPath := path.Join(app.GetDocroot(), "sites/default", drupalConfig.SyncDir)
 	allowed = append(allowed, nodeps.PathExplode(syncDirPath)...)
 
 	// Settings paths
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(filepath.Dir(app.SiteSettingsPath), settingsFileBasePath)+"/.gitignore")...)
-	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteSettingsPath, settingsFileBasePath))...)
-	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteDdevSettingsFile, settingsFileBasePath))...)
+	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteSettingsPath, app.AppRoot))...)
+	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteDdevSettingsFile, app.AppRoot))...)
 
 	return allowed, nil
 }

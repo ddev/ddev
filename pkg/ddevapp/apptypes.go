@@ -311,17 +311,34 @@ func (app *DdevApp) GetHookDefaultComments() []byte {
 	return []byte("")
 }
 
-// GetHookDefaultComments gets the actual text of the config.yaml hook suggestions
-// for a given apptype
+// GetComposerCreateAllowedPaths gets all paths relative to the app root that are allowed to be present
+// for a given apptype when running ddev composer create
 func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
+	var allowed []string
+
+	// allow upload dirs
+	uploadDirs := app.getUploadDirsRelative()
+	allowed = append(allowed, uploadDirs...)
+
+	// If we have a function to do the settings creation, allow .gitignore
+	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
+		// WedDon't create gitignore if it would be in top-level directory, where
+		// there is almost certainly already a gitignore (like Backdrop)
+		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
+			allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(filepath.Dir(app.SiteSettingsPath), app.AppRoot)+"/.gitignore")...)
+		}
+	}
+
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.composerCreateAllowedPaths != nil {
 		paths, err := appFuncs.composerCreateAllowedPaths(app)
 		if err != nil {
 			return []string{""}, err
 		}
-		return paths, nil
+		allowed = append(allowed, paths...)
 	}
-	return []string{""}, nil
+	allowed = util.SliceToUniqueSlice(&allowed)
+	sort.Strings(allowed)
+	return allowed, nil
 }
 
 // SetApptypeSettingsPaths chooses and sets the settings.php/settings.local.php

@@ -87,7 +87,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 						return nil
 					}
 					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, path) {
-						return fmt.Errorf("%v not allowed", path)
+						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", path, composerCreateAllowedPaths)
 					}
 					if err != nil {
 						return err
