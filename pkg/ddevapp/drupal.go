@@ -606,9 +606,15 @@ func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 
 	drupalConfig := NewDrupalSettings(app)
 
-	// Sync path
-	syncDirPath := path.Join(app.GetDocroot(), "sites/default", drupalConfig.SyncDir)
-	allowed = append(allowed, nodeps.PathExplode(syncDirPath)...)
+	if app.Type == "drupal6" || app.Type == "drupal7" {
+		// drushrc.php path
+		drushRCPath := strings.TrimLeft(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"), app.AppRoot)
+		allowed = append(allowed, nodeps.PathExplode(drushRCPath)...)
+	} else {
+		// Sync path
+		syncDirPath := path.Join(app.GetDocroot(), "sites/default", drupalConfig.SyncDir)
+		allowed = append(allowed, nodeps.PathExplode(syncDirPath)...)
+	}
 
 	// Settings paths
 	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteSettingsPath, app.AppRoot))...)
