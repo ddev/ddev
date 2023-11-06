@@ -35,7 +35,7 @@ func TestComposerCreateCmd(t *testing.T) {
 	for _, docRoot := range []string{"", "doc-root"} {
 		for _, projectType := range types {
 			t.Logf("== BEGIN TestComposerCreateCmd for project of type '%s' with docroot  '%s'\n", projectType, docRoot)
-			tmpDir := testcommon.CreateTmpDir(t.Name())
+			tmpDir := testcommon.CreateTmpDir(t.Name() + projectType)
 			err = os.Chdir(tmpDir)
 			assert.NoError(err)
 

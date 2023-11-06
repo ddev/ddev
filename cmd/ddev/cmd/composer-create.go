@@ -29,8 +29,7 @@ var ComposerCreateCmd = &cobra.Command{
 	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
-the Composer root directory after install. Any existing files in the
-composer root will be deleted when creating a project.`,
+the Composer root directory after install.`,
 	Example: `ddev composer create drupal/recommended-project
 ddev composer create -y drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
@@ -70,24 +69,32 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// If composer root is not the app root, make sure it's empty
-		if app.GetAbsAppRoot(false) != composerRoot {
+		appRoot := app.GetAbsAppRoot(false)
+
+		if appRoot != composerRoot {
 			if !fileutil.IsDirectoryEmpty(composerRoot) {
 				util.Failed("Failed to create project: '%v' has to be empty", composerRoot)
 			}
 		} else {
-			allowedPaths := []string{".", ".."}
+			allowedPaths := []string{""}
 			skipDirs := []string{".ddev", ".git", ".tarballs"}
 			composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
-			err := filepath.Walk(".",
-				func(path string, info os.FileInfo, err error) error {
-					if info.IsDir() && nodeps.ArrayContainsString(skipDirs, path) {
-						return filepath.SkipDir
-					}
-					if nodeps.ArrayContainsString(allowedPaths, path) {
+			err := filepath.Walk(appRoot,
+				func(walkPath string, walkInfo os.FileInfo, err error) error {
+					if walkPath == appRoot {
 						return nil
 					}
-					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, path) {
-						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", path, composerCreateAllowedPaths)
+
+					checkPath := path.Join(strings.TrimLeft(walkPath, appRoot))
+
+					if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
+						return filepath.SkipDir
+					}
+					if nodeps.ArrayContainsString(allowedPaths, checkPath) {
+						return nil
+					}
+					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
+						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", walkPath, composerCreateAllowedPaths)
 					}
 					if err != nil {
 						return err
