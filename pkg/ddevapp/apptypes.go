@@ -333,7 +333,7 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 		// We don't create gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
-			allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath),".gitignore")))...)
+			allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), ".gitignore")))...)
 		}
 	}
 

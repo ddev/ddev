@@ -76,7 +76,6 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				util.Failed("Failed to create project: '%v' has to be empty", composerRoot)
 			}
 		} else {
-			allowedPaths := []string{""}
 			skipDirs := []string{".ddev", ".git", ".tarballs"}
 			composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
 			err := filepath.Walk(appRoot,
@@ -89,9 +88,6 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 					if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
 						return filepath.SkipDir
-					}
-					if nodeps.ArrayContainsString(allowedPaths, checkPath) {
-						return nil
 					}
 					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
 						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", path.Join(appRoot, checkPath), composerCreateAllowedPaths)
