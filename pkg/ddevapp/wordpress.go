@@ -337,3 +337,14 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 
 	return absPath, nil
 }
+
+// getWordpressComposerCreateAllowedPaths returns paths that are allowed to be present when running composer create
+func getWordpressComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
+	var allowed []string
+
+	// Settings paths
+	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.SiteSettingsPath))...)
+	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.SiteDdevSettingsFile))...)
+
+	return allowed, nil
+}
