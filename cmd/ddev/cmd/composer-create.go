@@ -85,7 +85,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 						return nil
 					}
 
-					checkPath := path.Join(strings.TrimLeft(walkPath, appRoot))
+					checkPath := app.GetRelativeDirectory(walkPath)
 
 					if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
 						return filepath.SkipDir
@@ -94,7 +94,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 						return nil
 					}
 					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
-						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", walkPath, composerCreateAllowedPaths)
+						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", path.Join(appRoot, checkPath), composerCreateAllowedPaths)
 					}
 					if err != nil {
 						return err

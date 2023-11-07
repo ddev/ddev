@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -608,7 +607,7 @@ func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 
 	if app.Type == "drupal6" || app.Type == "drupal7" {
 		// drushrc.php path
-		drushRCPath := strings.TrimLeft(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"), app.AppRoot)
+		drushRCPath := app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		allowed = append(allowed, nodeps.PathExplode(drushRCPath)...)
 	} else {
 		// Sync path
@@ -617,8 +616,8 @@ func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 	}
 
 	// Settings paths
-	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteSettingsPath, app.AppRoot))...)
-	allowed = append(allowed, nodeps.PathExplode(strings.TrimLeft(app.SiteDdevSettingsFile, app.AppRoot))...)
+	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.SiteSettingsPath))...)
+	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.SiteDdevSettingsFile))...)
 
 	return allowed, nil
 }
