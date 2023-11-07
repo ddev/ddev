@@ -14,7 +14,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-func TestComposerCmd1(t *testing.T) {
+func TestComposerCmdCreateConfigInstall(t *testing.T) {
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
@@ -88,7 +88,7 @@ func TestComposerCmd1(t *testing.T) {
 	}
 }
 
-func TestComposerCmd2(t *testing.T) {
+func TestComposerCmdCreateRequireRemove(t *testing.T) {
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
