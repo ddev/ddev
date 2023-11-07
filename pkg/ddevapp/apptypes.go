@@ -78,15 +78,16 @@ var appTypeMatrix map[string]appTypeFuncs
 func init() {
 	appTypeMatrix = map[string]appTypeFuncs{
 		nodeps.AppTypeBackdrop: {
-			settingsCreator:      createBackdropSettingsFile,
-			uploadDirs:           getBackdropUploadDirs,
-			hookDefaultComments:  getBackdropHooks,
-			appTypeSettingsPaths: setBackdropSiteSettingsPaths,
-			appTypeDetect:        isBackdropApp,
-			postImportDBAction:   backdropPostImportDBAction,
-			postStartAction:      backdropPostStartAction,
-			importFilesAction:    backdropImportFilesAction,
-			defaultWorkingDirMap: docrootWorkingDir,
+			settingsCreator:            createBackdropSettingsFile,
+			uploadDirs:                 getBackdropUploadDirs,
+			hookDefaultComments:        getBackdropHooks,
+			appTypeSettingsPaths:       setBackdropSiteSettingsPaths,
+			appTypeDetect:              isBackdropApp,
+			postImportDBAction:         backdropPostImportDBAction,
+			postStartAction:            backdropPostStartAction,
+			importFilesAction:          backdropImportFilesAction,
+			defaultWorkingDirMap:       docrootWorkingDir,
+			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeCraftCms: {
