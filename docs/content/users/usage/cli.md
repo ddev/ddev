@@ -62,7 +62,8 @@ To import static file assets for a project, such as uploaded images and document
 * For Drupal projects, these are the `sites/default/files` and `../private` directories.
 * For Magento 1 projects, this is the `media` directory.
 * For Magento 2 projects, this is the `pub/media` directory.
-* For Shopware projects, this is the `media` directory.
+* For Shopware 5 projects, this is the `media` directory.
+* For Shopware 6 projects, this is the `public/media` directory.
 * For TYPO3 projects, this is the `fileadmin` directory.
 * For WordPress projects, this is the `wp-content/uploads` directory.
 
