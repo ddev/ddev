@@ -54,7 +54,6 @@ func EnsureNetwork(client *docker.Client, name string) error {
 			return err
 		}
 		output.UserOut.Println("Network", name, "created")
-
 	}
 	return nil
 }
@@ -97,7 +96,21 @@ func RemoveNetwork(netName string) error {
 
 // RemoveNetworkWithWarningOnError removes the named Docker network
 func RemoveNetworkWithWarningOnError(netName string) {
-	err := RemoveNetwork(netName)
+	client := GetDockerClient()
+	nets, _ := client.ListNetworks()
+	for _, n := range nets {
+		if n.Name == netName {
+			RemoveNetworkWithWarningOnErrorByID(n.Name, n.ID)
+		}
+	}
+}
+
+// RemoveNetworkWithWarningOnErrorByID removes the named Docker network by ID
+func RemoveNetworkWithWarningOnErrorByID(netName string, netID string) {
+	if netID == "" {
+		netID = netName
+	}
+	err := RemoveNetwork(netID)
 	_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
 	// If it's a "no such network" there's no reason to report error
 	if err != nil && !isNoSuchNetwork {
@@ -296,12 +309,21 @@ func FindContainersWithLabel(label string) ([]docker.APIContainers, error) {
 // NetExists checks to see if the Docker network for DDEV exists.
 func NetExists(client *docker.Client, name string) bool {
 	nets, _ := client.ListNetworks()
+	netExists := false
 	for _, n := range nets {
-		if n.Name == name {
-			return true
+		if n.Name != name {
+			continue
 		}
+		// found the first match for the network
+		if netExists == false {
+			netExists = true
+			continue
+		}
+		// found a second match and so on
+		// remove the duplicate network
+		RemoveNetworkWithWarningOnErrorByID(n.Name, n.ID)
 	}
-	return false
+	return netExists
 }
 
 // FindNetworksWithLabel returns all networks with the given label
