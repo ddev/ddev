@@ -55,7 +55,8 @@ func PowerOff() {
 	removals, err := dockerutil.FindNetworksWithLabel("com.ddev.platform")
 	if err == nil {
 		for _, network := range removals {
-			dockerutil.RemoveNetworkWithWarningOnErrorByID(network.Name, network.ID)
+			util.Warning("Don't remove the network %s", network.Name)
+			//dockerutil.RemoveNetworkWithWarningOnErrorByID(network.Name, network.ID)
 		}
 	} else {
 		util.Warning("Unable to run dockerutil.FindNetworksWithLabel(): %v", err)
