@@ -236,3 +236,17 @@ func TestIsSameFile(t *testing.T) {
 	assert.NoError(err)
 	assert.False(isSame)
 }
+
+// TestIsDirectoryEmpty tests the IsDirectoryEmpty utility function
+func TestIsDirectoryEmpty(t *testing.T) {
+	assert := asrt.New(t)
+
+	emptyDir := testcommon.CreateTmpDir("TestDirEmpty")
+	assert.True(fileutil.IsDirectoryEmpty(emptyDir))
+
+	file, err := os.Create(filepath.Join(emptyDir, "touch1.txt"))
+	assert.NoError(err)
+	_ = file.Close()
+
+	assert.False(fileutil.IsDirectoryEmpty(emptyDir))
+}
