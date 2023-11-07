@@ -42,19 +42,19 @@ type ComposeCmdOpts struct {
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
 func EnsureNetwork(client *docker.Client, name string) error {
-	//if !NetExists(client, name) {
-	netOptions := docker.CreateNetworkOptions{
-		Name:     name,
-		Driver:   "bridge",
-		Internal: false,
-		Labels:   map[string]string{"com.ddev.platform": "ddev"},
+	if !NetExists(client, name) {
+		netOptions := docker.CreateNetworkOptions{
+			Name:     name,
+			Driver:   "bridge",
+			Internal: false,
+			Labels:   map[string]string{"com.ddev.platform": "ddev"},
+		}
+		_, err := client.CreateNetwork(netOptions)
+		if err != nil {
+			return err
+		}
+		output.UserOut.Println("Network", name, "created")
 	}
-	_, err := client.CreateNetwork(netOptions)
-	if err != nil {
-		return err
-	}
-	output.UserOut.Println("Network", name, "created")
-	//}
 	return nil
 }
 
@@ -100,8 +100,7 @@ func RemoveNetworkWithWarningOnError(netName string) {
 	nets, _ := client.ListNetworks()
 	for _, n := range nets {
 		if n.Name == netName {
-			util.Warning("Don't remove the network %s", n.Name)
-			//RemoveNetworkWithWarningOnErrorByID(n.Name, n.ID)
+			RemoveNetworkWithWarningOnErrorByID(n.Name, n.ID)
 		}
 	}
 }
