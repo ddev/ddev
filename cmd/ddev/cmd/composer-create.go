@@ -68,10 +68,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to create composerRoot: %v", err)
 		}
 
-		// If composer root is not the app root, make sure it's empty
 		appRoot := app.GetAbsAppRoot(false)
-
 		if appRoot != composerRoot {
+			// If composer root is not the app root, fail if it's not fully empty.
 			if !fileutil.IsDirectoryEmpty(composerRoot) {
 				util.Failed("Failed to create project: '%v' has to be empty", composerRoot)
 			}
