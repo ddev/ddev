@@ -34,6 +34,12 @@ func TestComposerCreateCmd(t *testing.T) {
 
 	for _, docRoot := range []string{"", "doc-root"} {
 		for _, projectType := range types {
+			if projectType == nodeps.AppTypeDjango4 {
+				// Skip as an empty django4 do not start nicely
+				// https://github.com/ddev/ddev/issues/5171
+				t.Logf("== SKIP TestComposerCreateCmd for project of type '%s' with docroot  '%s'\n", projectType, docRoot)
+				continue
+			}
 			t.Logf("== BEGIN TestComposerCreateCmd for project of type '%s' with docroot  '%s'\n", projectType, docRoot)
 			tmpDir := testcommon.CreateTmpDir(t.Name() + projectType)
 			err = os.Chdir(tmpDir)
