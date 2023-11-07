@@ -1,3 +1,7 @@
+---
+search:
+  boost: .5
+---
 # Working on the Docs
 
 This page is about working with the DDEV documentation. See the [Writing Style Guide](writing-style-guide.md) for stylistic guidance.

@@ -1,3 +1,7 @@
+---
+search:
+  boost: .5
+---
 # Adding New Project Types
 
 Adding and maintaining project types (like `typo3`, `magento2`, etc.) is not too hard. Please update and add to this doc when you find things that have been missed.

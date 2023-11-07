@@ -1,9 +1,13 @@
+---
+search:
+  boost: .5
+---
 # Remote Config
 
 DDEV supports downloading a [`remote config`](https://github.com/ddev/remote-config/blob/main/remote-config.jsonc)
 from the [`ddev/remote-config`](https://github.com/ddev/remote-config)
-GitHub repository with messages that will be shown to the user. This feature
-could be enhanced later with more information and configuration.
+GitHub repository with messages that will be shown to the user as a "Tip of the Day". This feature
+may be enhanced later with more information and filtering.
 
 ## Messages
 

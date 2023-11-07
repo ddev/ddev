@@ -1,3 +1,7 @@
+---
+search:
+  boost: 2
+---
 # Built-in Developer Tools
 
 Run [`ddev describe`](../usage/commands.md#describe) to see the project information and services available for your project and how to access them.

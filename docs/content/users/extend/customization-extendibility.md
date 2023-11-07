@@ -1,3 +1,8 @@
+---
+search:
+  boost: 2
+---
+
 # Extending and Customizing Environments
 
 DDEV provides several ways to customize and extend project environments.

@@ -1,3 +1,7 @@
+---
+search:
+  boost: .5
+---
 # Building, Testing, and Contributing
 
 ## Testing Latest Commits on HEAD

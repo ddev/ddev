@@ -1,3 +1,7 @@
+---
+search:
+  exclude: true
+---
 # DDEV Version History
 
 This version history has been driven by what we hear from our wonderful community of users. Please share your comments or ideas in the [issue queue](https://github.com/ddev/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
