@@ -320,6 +320,9 @@ func (app *DdevApp) GetHookDefaultComments() []byte {
 func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	var allowed []string
 
+	// doc root
+	allowed = append(allowed, app.GetDocroot())
+
 	// allow upload dirs
 	uploadDirs := app.getUploadDirsRelative()
 	allowed = append(allowed, uploadDirs...)
