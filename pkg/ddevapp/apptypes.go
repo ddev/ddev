@@ -323,12 +323,14 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	var allowed []string
 
 	// doc root
-	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.GetDocroot()))...)
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.GetDocroot()))...)
 
 	// allow upload dirs
+	// upload dirs are probably always relative and with slashes, but we run
+	// it through GetRelativeDirectory() just in case.
 	uploadDirs := app.getUploadDirsRelative()
 	for _, uploadDir := range uploadDirs {
-		allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(uploadDir))...)
+		allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(uploadDir))...)
 	}
 
 	// If we have a function to do the settings creation, allow .gitignore
@@ -337,7 +339,7 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 		// We don't create gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
-			allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), ".gitignore")))...)
+			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), ".gitignore")))...)
 		}
 	}
 
@@ -347,7 +349,7 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 			return []string{""}, err
 		}
 		for _, path := range paths {
-			allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(path))...)
+			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(path))...)
 		}
 	}
 	allowed = util.SliceToUniqueSlice(&allowed)

@@ -137,10 +137,10 @@ func GrepStringInBuffer(buffer string, needle string) []string {
 	return matches
 }
 
-// PathExplode returns an array of all possible paths separated by slashes out
+// PathWithSlashesToArray returns an array of all possible paths separated by slashes out
 // of a single one.
 // i.e. path/to/file will return {"path", "path/to", "path/to/file"}
-func PathExplode(path string) []string {
+func PathWithSlashesToArray(path string) []string {
 	var paths []string
 	var partial string
 	for _, p := range strings.Split(path, "/") {
