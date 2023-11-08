@@ -24,7 +24,7 @@ To check out live examples, docs, contributor live training, guides and more vis
 
 ## Questions
 
-If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support). The issue list of this repo is exclusively for bug reports and feature requests.
+If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support). 
 
 ## Contributing
 
