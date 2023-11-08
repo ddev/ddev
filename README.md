@@ -12,7 +12,7 @@ DDEV is an open-source tool for running local web development environments for P
 
 ## Wonderful Sponsors
 
-DDEV is an Apache License 2.0 open-source project with its ongoing development made possible entirely by the support of these awesome backers. If you'd like to join them, please consider sponsoring DDEV development.
+DDEV is an Apache License 2.0 open-source project with its ongoing development made possible entirely by the support of these awesome backers. If you'd like to join them, please consider [sponsoring DDEV development](https://github.com/sponsors/ddev).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg">
