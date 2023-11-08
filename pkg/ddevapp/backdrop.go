@@ -232,9 +232,5 @@ func getBackdropComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 	// drushrc.php path
 	allowed = append(allowed, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 
-	// Settings paths
-	allowed = append(allowed, app.SiteSettingsPath)
-	allowed = append(allowed, app.SiteDdevSettingsFile)
-
 	return allowed, nil
 }

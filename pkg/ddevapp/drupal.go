@@ -613,9 +613,5 @@ func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 		allowed = append(allowed, path.Join(app.GetDocroot(), "sites/default", drupalConfig.SyncDir))
 	}
 
-	// Settings paths
-	allowed = append(allowed, app.SiteSettingsPath)
-	allowed = append(allowed, app.SiteDdevSettingsFile)
-
 	return allowed, nil
 }

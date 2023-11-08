@@ -224,13 +224,12 @@ func init() {
 		},
 
 		nodeps.AppTypeWordPress: {
-			settingsCreator:            createWordpressSettingsFile,
-			uploadDirs:                 getWordpressUploadDirs,
-			hookDefaultComments:        getWordpressHooks,
-			appTypeSettingsPaths:       setWordpressSiteSettingsPaths,
-			appTypeDetect:              isWordpressApp,
-			importFilesAction:          wordpressImportFilesAction,
-			composerCreateAllowedPaths: getWordpressComposerCreateAllowedPaths,
+			settingsCreator:      createWordpressSettingsFile,
+			uploadDirs:           getWordpressUploadDirs,
+			hookDefaultComments:  getWordpressHooks,
+			appTypeSettingsPaths: setWordpressSiteSettingsPaths,
+			appTypeDetect:        isWordpressApp,
+			importFilesAction:    wordpressImportFilesAction,
 		},
 	}
 }
@@ -332,6 +331,10 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	for _, uploadDir := range uploadDirs {
 		allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(uploadDir))...)
 	}
+
+	// Settings files
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.SiteSettingsPath))...)
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.SiteDdevSettingsFile))...)
 
 	// If we have a function to do the settings creation, allow .gitignore
 	// see CreateSettingsFile
