@@ -323,12 +323,12 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	var allowed []string
 
 	// doc root
-	allowed = append(allowed, app.GetDocroot())
+	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.GetDocroot()))...)
 
 	// allow upload dirs
 	uploadDirs := app.getUploadDirsRelative()
 	for _, uploadDir := range uploadDirs {
-		allowed = append(allowed, nodeps.PathExplode(uploadDir)...)
+		allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(uploadDir))...)
 	}
 
 	// If we have a function to do the settings creation, allow .gitignore
@@ -346,7 +346,9 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 		if err != nil {
 			return []string{""}, err
 		}
-		allowed = append(allowed, paths...)
+		for _, path := range paths {
+			allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(path))...)
+		}
 	}
 	allowed = util.SliceToUniqueSlice(&allowed)
 	sort.Strings(allowed)

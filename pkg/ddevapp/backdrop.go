@@ -225,17 +225,16 @@ func backdropPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// getDrupalComposerCreateAllowedPaths returns paths that are allowed to be present when running composer create
+// getDrupalComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create
 func getBackdropComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 	var allowed []string
 
 	// drushrc.php path
-	drushRCPath := app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
-	allowed = append(allowed, nodeps.PathExplode(drushRCPath)...)
+	allowed = append(allowed, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 
 	// Settings paths
-	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.SiteSettingsPath))...)
-	allowed = append(allowed, nodeps.PathExplode(app.GetRelativeDirectory(app.SiteDdevSettingsFile))...)
+	allowed = append(allowed, app.SiteSettingsPath)
+	allowed = append(allowed, app.SiteDdevSettingsFile)
 
 	return allowed, nil
 }
