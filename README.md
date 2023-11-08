@@ -38,6 +38,8 @@ See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io
 2. **Install [Docker/Colima and DDEV](https://ddev.readthedocs.io/en/latest/users/install/)**.
 3. **Try a [CMS Quick Start Guide](https://ddev.readthedocs.io/en/latest/users/quickstart/)**.
 
+Additionally, [https://ddev.com/get-started/](https://ddev.com/get-started/) provides an up-to-date getting-started guide.
+
 ## Highlighted Features
 
 * Quickly create local web development environments based on code repositories, with minimal configuration.
