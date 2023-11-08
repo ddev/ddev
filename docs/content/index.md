@@ -9,6 +9,8 @@ hide:
 
 These environments can be extended, version controlled, and shared, so you can take advantage of a Docker workflow without Docker experience or bespoke configuration. Projects can be changed, powered down, or removed as easily as they’re started.
 
+This is a simple dummy PR.
+
 ## System Requirements
 
 === "macOS"
