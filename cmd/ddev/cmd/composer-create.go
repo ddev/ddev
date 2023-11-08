@@ -89,7 +89,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 						return filepath.SkipDir
 					}
 					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
-						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", path.Join(appRoot, checkPath), composerCreateAllowedPaths)
+						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
 					}
 					if err != nil {
 						return err
