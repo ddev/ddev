@@ -44,6 +44,6 @@ See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io
 ## Wonderful Sponsors
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg#gh-dark-mode-only">
-  <img alt="DDEV Sponsor logos with light and dark mode variants" src="https://ddev.com/resources/featured-sponsors.svg#gh-light-mode-only">
+  <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg">
+  <img alt="DDEV Sponsor logos with light and dark mode variants" src="https://ddev.com/resources/featured-sponsors.svg">
 </picture>
