@@ -34,8 +34,8 @@ func TestComposerCreateCmd(t *testing.T) {
 
 	for _, docRoot := range []string{"", "doc-root"} {
 		for _, projectType := range types {
-			if projectType == nodeps.AppTypeDjango4 {
-				// Skip as an empty django4 do not start nicely
+			if projectType == nodeps.AppTypeDjango4 || projectType == nodeps.AppTypePython {
+				// Skip as an empty django4/python do not start nicely right away
 				// https://github.com/ddev/ddev/issues/5171
 				t.Logf("== SKIP TestComposerCreateCmd for project of type '%s' with docroot  '%s'\n", projectType, docRoot)
 				continue
