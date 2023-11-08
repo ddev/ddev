@@ -1,6 +1,6 @@
 #ddev-generated
 # Platform.sh provider configuration. This works out of the box, but can be edited to add
-# your own preferences. If you edit it, remove the `#ddev-generated` line from the top so
+# your own preferences. If you edit it, remove the `ddev-generated` line from the top so
 # that it won't be overwritten.
 
 # Consider using `ddev get ddev/ddev-platformsh` (https://github.com/ddev/ddev-platformsh) for more
@@ -74,7 +74,7 @@ db_pull_command:
 
 files_import_command:
   command: |
-    #set -x   # You can enable bash debugging output by uncommenting
+    # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     export PLATFORMSH_CLI_NO_INTERACTION=1
     # Use $PLATFORM_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
@@ -104,4 +104,3 @@ files_push_command:
     export PLATFORMSH_CLI_NO_INTERACTION=1
     ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
     platform mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
-
