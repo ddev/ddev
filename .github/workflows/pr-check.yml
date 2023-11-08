@@ -19,7 +19,7 @@ jobs:
       - name: Check Type
         uses: gsactions/commit-message-checker@v2
         with:
-          pattern: '^(build|ci|docs|feat|fix|refactor|test)(|!): [a-z].+?((, fixes #\d+)*)($|\n|\r|\n\r)'
+          pattern: '^(build|ci|docs|feat|fix|refactor|test)(|!): [A-Za-z].+?((, fixes #\d+)*)($|\n|\r|\n\r)'
           flags: ''
           error: 'Title does not follow our conventions see https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines'
 
