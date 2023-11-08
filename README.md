@@ -1,5 +1,7 @@
-![DDEV Logo](https://ddev.com/logos/ddev.svg#gh-light-mode-only)
-![DDEV Logo](https://ddev.com/logos/dark-ddev.svg#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/logos/dark-ddev.svg">
+  <img alt="DDEV logo with light and dark mode variants" src="https://ddev.com/logos/ddev.svg">
+</picture>
 ---
 
 [![CircleCI](https://circleci.com/gh/ddev/ddev.svg?style=shield)](https://circleci.com/gh/ddev/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2024.svg)
@@ -41,5 +43,7 @@ See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io
 
 ## Wonderful Sponsors
 
-![DDEV featured sponsor logos](https://ddev.com/resources/featured-sponsors.svg#gh-light-mode-only)
-![DDEV featured sponsor logos](https://ddev.com/resources/featured-sponsors-darkmode.svg#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg">
+  <img alt="DDEV Sponsor logos with light and dark mode variants" src="https://ddev.com/resources/featured-sponsors.svg">
+</picture>
