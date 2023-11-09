@@ -7,7 +7,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -41,7 +40,8 @@ func TestNodeJSVersions(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	for _, v := range nodeps.GetValidNodeVersions() {
+	// Testing some random versions
+	for _, v := range []string{"6", "10", "14", "16", "20"} {
 		app.NodeJSVersion = v
 		err = app.Restart()
 		assert.NoError(err)

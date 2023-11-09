@@ -75,8 +75,6 @@ var ValidWebserverTypes = map[string]bool{
 	WebserverNginxGunicorn: true,
 }
 
-var ValidNodeJSVersions = []string{"16", "18", "20"}
-
 // App types
 const (
 	AppTypeNone         = ""
@@ -136,16 +134,6 @@ func GetValidPHPVersions() []string {
 	}
 	sort.Strings(s)
 	return s
-}
-
-// GetValidNodeVersions is a helper function that returns a list of valid nodejs versions.
-func GetValidNodeVersions() []string {
-	return ValidNodeJSVersions
-}
-
-// IsValidNodeVersion is a helper function to determine if a NodeJS version is valid
-func IsValidNodeVersion(v string) bool {
-	return ArrayContainsString(GetValidNodeVersions(), v)
 }
 
 // IsValidDatabaseVersion checks if the version is valid for the provided database type
