@@ -672,7 +672,7 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old provider/*.example as we migrate to not needing them.
-	for _, providerFile := range []string{"platform.yaml.example"} {
+	for _, providerFile := range []string{"acquia.yaml.example", "platform.yaml.example"} {
 		providerFilePath := app.GetConfigPath(filepath.Join("providers", providerFile))
 		err := os.Remove(providerFilePath)
 		if err == nil {
