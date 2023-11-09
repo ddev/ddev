@@ -23,9 +23,8 @@ import (
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
-const acquiaPullTestSite = "ddevdemo.dev"
-const acquiaPullDatabase = "ddevdemo"
-const acquiaPushTestSite = "ddevdemo.test"
+const acquiaPullTestEnvironment = "ddevdemo.dev"
+const acquiaPushTestEnvironment = "ddevdemo.test"
 
 const acquiaPullSiteURL = "http://ddevdemodev.prod.acquia-sites.com/"
 const acquiaSiteExpectation = "Super easy vegetarian pasta"
@@ -48,6 +47,7 @@ func TestAcquiaPull(t *testing.T) {
 	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
+
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	require.True(t, isPullSiteValid(acquiaPullSiteURL, acquiaSiteExpectation), "acquiaPullSiteURL %s isn't working right", acquiaPullSiteURL)
@@ -57,12 +57,16 @@ func TestAcquiaPull(t *testing.T) {
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"ACQUIA_API_KEY=" + acquiaKey, "ACQUIA_API_SECRET=" + acquiaSecret}
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"ACQUIA_API_KEY=" + acquiaKey, "ACQUIA_API_SECRET=" + acquiaSecret, "ACQUIA_ENVIRONMENT_ID=" + acquiaPullTestEnvironment}
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
 	drupalcode := FullTestSites[12]
+	require.NoError(t, err)
 	siteDir := drupalcode.Dir
+	err = os.Chdir(siteDir)
+	require.NoError(t, err)
+
 	drupalcode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
@@ -71,8 +75,6 @@ func TestAcquiaPull(t *testing.T) {
 	app, err := ddevapp.NewApp(drupalcode.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
-	err = os.Chdir(siteDir)
-	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
@@ -109,16 +111,6 @@ func TestAcquiaPull(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Build our acquia.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
-	require.NoError(t, err)
-
-	// Replace the project_id and database_name
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaPullTestSite), -1)
-	x = strings.Replace(x, "database_name: ", fmt.Sprintf("database_name: %s\n#database_name:", acquiaPullDatabase), -1)
-
-	err = os.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
-	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 	err = app.MutagenSyncFlush()
@@ -160,11 +152,11 @@ func TestAcquiaPush(t *testing.T) {
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"ACQUIA_API_KEY=" + acquiaKey, "ACQUIA_API_SECRET=" + acquiaSecret}
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"ACQUIA_API_KEY=" + acquiaKey, "ACQUIA_API_SECRET=" + acquiaSecret, "ACQUIA_ENVIRONMENT_ID=" + acquiaPushTestEnvironment}
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a D10 codebase for Drush to work right
+	// Use a Drupal 10 codebase (test CMS 12)
 	drupalCode := FullTestSites[12]
 	drupalCode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
@@ -174,9 +166,10 @@ func TestAcquiaPush(t *testing.T) {
 	app, err := ddevapp.NewApp(drupalCode.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
-
 	err = os.Chdir(drupalCode.Dir)
 	require.NoError(t, err)
+	// acli really wants the project to look like the target project
+	app.Docroot = "docroot"
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
@@ -222,16 +215,17 @@ func TestAcquiaPush(t *testing.T) {
 		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
-	// Make sure we have Drush
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "composer require --no-interaction drush/drush >/dev/null 2>/dev/null",
-	})
-	require.NoError(t, err)
 
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "time drush si -y minimal",
-	})
-	require.NoError(t, err)
+	// Make sure we have Drush
+	//_, _, err = app.Exec(&ddevapp.ExecOpts{
+	//	Cmd: "composer require --no-interaction drush/drush >/dev/null 2>/dev/null",
+	//})
+	//require.NoError(t, err)
+	//
+	//_, _, err = app.Exec(&ddevapp.ExecOpts{
+	//	Cmd: "time drush si -y minimal",
+	//})
+	//require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
 	writeQuery := fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval)
@@ -246,12 +240,6 @@ func TestAcquiaPush(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Build our PUSH acquia.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaPushTestSite), -1)
-	err = os.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
-	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -262,7 +250,7 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	readQuery := fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s --alias-path=~/.drush sql-cli --extra=-N`, t.Name(), tval, acquiaPushTestSite)
+	readQuery := fmt.Sprintf(`acli -n ssh %s 'echo "SELECT title FROM %s WHERE title=\"%s\";" | docroot/vendor/bin/drush  sql-cli --extra=-N'`, acquiaPushTestEnvironment, t.Name(), tval)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: readQuery,
 	})
@@ -271,7 +259,7 @@ func TestAcquiaPush(t *testing.T) {
 
 	// Test that the file arrived there (by rsyncing it back)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("drush --alias-path=~/.drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaPushTestSite, fName, fName),
+		Cmd: fmt.Sprintf("drush --alias-path=~/.drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaPushTestEnvironment, fName, fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

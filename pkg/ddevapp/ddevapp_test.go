@@ -225,8 +225,8 @@ var (
 		// 12: drupal10
 		{
 			Name:                          "TestPkgDrupal10",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.1.1.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-10.1.1/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.1.6.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-10.1.6/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",

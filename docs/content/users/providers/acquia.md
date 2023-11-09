@@ -16,11 +16,14 @@ DDEV’s Acquia integration pulls database and files from an existing project in
    - ACQUIA_API_KEY=xxxxxxxx
    - ACQUIA_API_SECRET=xxxxx
    ```
+
 5. In the project `.ddev/config.yaml` add the `ACQUIA_ENVIRONMENT_ID` environment variable:
+
    ```yaml
    web_environment:
    - ACQUIA_ENVIRONMENT_ID=yoursite.dev
    ```
+
 6. Run [`ddev restart`](../usage/commands.md#restart).
 7. Use `ddev pull acquia` to pull the project database and files.
 8. Optionally use `ddev push acquia` to push local files and database to Acquia. Be aware that [`ddev push`](../usage/commands.md#push) is a command that can potentially damage your production site, so we don’t recommend using it.
