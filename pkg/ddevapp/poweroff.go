@@ -51,16 +51,19 @@ func PowerOff() {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
 
-	// Remove all global networks created with DDEV
+	// Remove global DDEV default network
+	dockerutil.RemoveNetworkWithWarningOnError(dockerutil.NetName)
+
+	// Remove all external networks created with DDEV
+	// This is needed for compatibility if we decide to undo the changes
+	// made for the external project networks
+	// see https://github.com/ddev/ddev/pull/5508
 	removals, err := dockerutil.FindNetworksWithLabel("com.ddev.platform")
 	if err == nil {
 		for _, network := range removals {
-			dockerutil.RemoveNetworkWithWarningOnErrorByID(network.Name, network.ID)
+			dockerutil.RemoveNetworkWithWarningOnError(network.Name)
 		}
 	} else {
 		util.Warning("Unable to run dockerutil.FindNetworksWithLabel(): %v", err)
 	}
-
-	// Remove old network from DDEV before v1.22.4
-	dockerutil.RemoveNetworkWithWarningOnError(dockerutil.NetName)
 }
