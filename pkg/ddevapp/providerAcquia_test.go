@@ -61,18 +61,21 @@ func TestAcquiaPull(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	siteDir := testcommon.CreateTmpDir(t.Name())
-	err = os.MkdirAll(filepath.Join(siteDir, "docroot/sites/default"), 0777)
-	assert.NoError(err)
+	drupalcode := FullTestSites[12]
+	siteDir := drupalcode.Dir
+	drupalcode.Name = t.Name()
+	err = globalconfig.RemoveProjectInfo(t.Name())
+	require.NoError(t, err)
+	err = drupalcode.Prepare()
+	require.NoError(t, err)
+	app, err := ddevapp.NewApp(drupalcode.Dir, false)
+	require.NoError(t, err)
+	_ = app.Stop(true, false)
 	err = os.Chdir(siteDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
-
-	app, err := ddevapp.NewApp(siteDir, true)
-	assert.NoError(err)
-	app.PHPVersion = "8.0"
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -83,12 +86,10 @@ func TestAcquiaPull(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal9
+	app.Type = nodeps.AppTypeDrupal10
 
 	_ = app.Stop(true, false)
 	err = app.WriteConfig()
@@ -163,18 +164,18 @@ func TestAcquiaPush(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a D9 codebase for Drush to work right
-	d9code := FullTestSites[8]
-	d9code.Name = t.Name()
+	// Use a D10 codebase for Drush to work right
+	drupalCode := FullTestSites[12]
+	drupalCode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
-	err = d9code.Prepare()
+	err = drupalCode.Prepare()
 	require.NoError(t, err)
-	app, err := ddevapp.NewApp(d9code.Dir, false)
+	app, err := ddevapp.NewApp(drupalCode.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
 
-	err = os.Chdir(d9code.Dir)
+	err = os.Chdir(drupalCode.Dir)
 	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
@@ -189,7 +190,7 @@ func TestAcquiaPush(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(d9code.Dir)
+		err = os.RemoveAll(drupalCode.Dir)
 		assert.NoError(err)
 	})
 
