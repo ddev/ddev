@@ -47,7 +47,7 @@ RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
 FROM ddev-webserver-base as ddev-webserver-dev-base
-ENV MAILPIT_VERSION="v1.8.2"
+ENV MAILPIT_VERSION="v1.9.10"
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.1"
 
