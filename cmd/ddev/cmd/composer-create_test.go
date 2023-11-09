@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestComposerCreateCmd(t *testing.T) {
@@ -66,10 +66,6 @@ func TestComposerCreateCmd(t *testing.T) {
 			assert.NoError(err)
 
 			t.Cleanup(func() {
-				//nolint: errcheck
-				err = app.Stop(true, false)
-				assert.NoError(err)
-
 				err = os.Chdir(origDir)
 				assert.NoError(err)
 				err = os.RemoveAll(tmpDir)
@@ -88,6 +84,9 @@ func TestComposerCreateCmd(t *testing.T) {
 			assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 			assert.Contains(out, "Created project in ")
 			assert.FileExists(filepath.Join(tmpDir, "composer.json"))
+
+			err = app.Stop(true, false)
+			require.NoError(t, err)
 		}
 	}
 }
