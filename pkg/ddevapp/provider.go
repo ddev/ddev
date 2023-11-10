@@ -244,7 +244,6 @@ func (p *Provider) UploadDB() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPushCommand.Command == "" {
-		util.Warning("No DBPushCommand is defined for provider '%s'", p.ProviderType)
 		return nil
 	}
 
@@ -274,7 +273,6 @@ func (p *Provider) UploadFiles() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.FilesPushCommand.Command == "" {
-		util.Warning("No FilesPushCommand is defined for provider '%s'", p.ProviderType)
 		return nil
 	}
 
@@ -309,7 +307,6 @@ func (p *Provider) doFilesPullCommand() (filename []string, error error) {
 	_ = os.MkdirAll(destDir, 0755)
 
 	if p.FilesPullCommand.Command == "" {
-		util.Warning("No FilesPullCommand is defined for provider '%s'", p.ProviderType)
 		return nil, nil
 	}
 	s := p.FilesPullCommand.Service
@@ -332,7 +329,6 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPullCommand.Command == "" {
-		util.Warning("No DBPullCommand is defined for provider '%s'", p.ProviderType)
 		return nil, nil
 	}
 

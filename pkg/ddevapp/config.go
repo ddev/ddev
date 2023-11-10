@@ -672,7 +672,7 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old provider/*.example as we migrate to not needing them.
-	for _, providerFile := range []string{"platform.yaml.example"} {
+	for _, providerFile := range []string{"acquia.yaml.example", "platform.yaml.example"} {
 		providerFilePath := app.GetConfigPath(filepath.Join("providers", providerFile))
 		err := os.Remove(providerFilePath)
 		if err == nil {
@@ -1345,7 +1345,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 		return err
 	}
 
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/lagoon.yaml", "providers/platform.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/platform.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

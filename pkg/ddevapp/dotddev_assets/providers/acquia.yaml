@@ -1,0 +1,71 @@
+#ddev-generated
+# Acquia provider configuration.
+
+# To use this configuration,
+
+# 1. Get your Acquia API token from your Account Settings->API Tokens.
+# 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
+# 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull).
+# 4. Add / update the web_environment section in ~/.ddev/global_config.yaml
+#    or your project config.yamlwith the API keys:
+#    ```yaml
+#    web_environment:
+#    - ACQUIA_API_KEY=xxxxxxxx
+#    - ACQUIA_API_SECRET=xxxxx
+#    ```
+# 5. Add the ACQUIA_ENVIRONMENT_ID environment variable to your project config.yaml, for example:
+#    ```yaml
+#    web_environment:
+#    - ACQUIA_ENVIRONMENT_ID=project1.dev
+#   - On the Acquia Cloud Platform you can find this out by navigating to the environments page,
+#     clicking on the header and look for the "SSH URL" line.
+#     Eg. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
+# 6. `ddev restart`
+# 7. Use `ddev pull acquia` to pull the project database and files.
+# 8. Optionally use `ddev push acquia` to push local files and database to Acquia. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+# Debugging: Use `ddev exec acli command` and `ddev exec acli auth:login`
+
+# Instead of setting the environment variables in configuration files, you can use
+# `ddev pull acquia --environment=ACQUIA_ENVIRONMENT_ID=yourproject.dev` for example
+
+auth_command:
+  command: |
+     set -eu -o pipefail
+     if [ -z "${ACQUIA_API_KEY:-}" ] || [ -z "${ACQUIA_API_SECRET:-}" ]; then echo "Please make sure you have set ACQUIA_API_KEY and ACQUIA_API_SECRET in ~/.ddev/global_config.yaml" && exit 1; fi
+      if [ -z "${ACQUIA_ENVIRONMENT_ID:-}" ] ; then echo "Please set ACQUIA_ENVIRONMENT_ID via config.yaml or with '--environment=ACQUIA_ENVIRONMENT_ID=xxx'" && exit 1; fi
+      ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+      acli -n auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
+
+db_pull_command:
+  command: |
+    set -eu -o pipefail
+    # xargs here just trims whitespace
+    # We could use an easier technique when https://github.com/acquia/cli/issues/1629 is resolved
+    # just using `acli pull:db ${ACQUIA_ENVIRONMENT_ID}`
+    echo "Using ACQUIA_ENVIRONMENT_ID=${ACQUIA_ENVIRONMENT_ID}"
+    set -x   # You can enable bash debugging output by uncommenting
+    db_dump=$(acli pull:db ${ACQUIA_ENVIRONMENT_ID} --no-interaction --no-import | tail -2l | xargs)
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    cp ${db_dump} /var/www/html/.ddev/.downloads/db.sql.gz
+
+files_import_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    acli -n pull:files ${ACQUIA_ENVIRONMENT_ID}
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    set -eu -o pipefail
+    export ACLI_DB_HOST=db ACLI_DB_NAME=db ACLI_DB_USER=db ACLI_DB_PASSWORD=db
+    set -x   # You can enable bash debugging output by uncommenting
+    acli push:db ${ACQUIA_ENVIRONMENT_ID} --no-interaction
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    acli push:files ${ACQUIA_ENVIRONMENT_ID} --no-interaction

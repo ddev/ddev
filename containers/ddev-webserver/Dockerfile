@@ -22,7 +22,7 @@ ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
 
 RUN apt-get -qq update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all supervisor
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all pv supervisor
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
