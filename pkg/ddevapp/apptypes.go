@@ -324,6 +324,9 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	// doc root
 	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.GetDocroot()))...)
 
+	// composer root
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.GetComposerRoot(false, false)))...)
+
 	// allow upload dirs
 	// upload dirs are probably always relative and with slashes, but we run
 	// it through GetRelativeDirectory() just in case.

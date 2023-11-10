@@ -69,36 +69,30 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		appRoot := app.GetAbsAppRoot(false)
-		if appRoot != composerRoot {
-			// If composer root is not the app root, fail if it's not fully empty.
-			if !fileutil.IsDirectoryEmpty(composerRoot) {
-				util.Failed("Failed to create project: '%v' has to be empty", composerRoot)
-			}
-		} else {
-			skipDirs := []string{".ddev", ".git", ".tarballs"}
-			composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
-			err := filepath.Walk(appRoot,
-				func(walkPath string, walkInfo os.FileInfo, err error) error {
-					if walkPath == appRoot {
-						return nil
-					}
-
-					checkPath := app.GetRelativeDirectory(walkPath)
-
-					if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
-						return filepath.SkipDir
-					}
-					if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
-						return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
-					}
-					if err != nil {
-						return err
-					}
+		skipDirs := []string{".ddev", ".git", ".tarballs"}
+		composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
+		err = filepath.Walk(appRoot,
+			func(walkPath string, walkInfo os.FileInfo, err error) error {
+				if walkPath == appRoot {
 					return nil
-				})
-			if err != nil {
-				util.Failed("Failed to create project: %v", err)
-			}
+				}
+
+				checkPath := app.GetRelativeDirectory(walkPath)
+
+				if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
+					return filepath.SkipDir
+				}
+				if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
+					return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a recently init project with only the following paths: %v", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
+				}
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+
+		if err != nil {
+			util.Failed("Failed to create project: %v", err)
 		}
 
 		// Define a randomly named temp directory for install target

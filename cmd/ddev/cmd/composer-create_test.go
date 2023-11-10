@@ -56,8 +56,14 @@ func TestComposerCreateCmd(t *testing.T) {
 			// Prepare arguments
 			arguments := []string{"config", "--project-type", projectType}
 
+			composerRoot := tmpDir
 			if docRoot != "" {
 				arguments = append(arguments, "--docroot", docRoot, "--create-docroot")
+				// For Drupal10 we test that the composer root is the same as the create root
+				if projectType == nodeps.AppTypeDrupal10 {
+					arguments = append(arguments, "--composer-root", docRoot)
+					composerRoot = filepath.Join(tmpDir, docRoot)
+				}
 			}
 
 			// Basic config
@@ -80,18 +86,24 @@ func TestComposerCreateCmd(t *testing.T) {
 				assert.NoError(err)
 			})
 
-			// Test create-project
-			// This often fail on Windows with NFS, also Colima
-			// It appears to be something about Composer itself?
-
 			err = app.StartAndWait(5)
 			require.NoError(t, err)
 			// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 			args := []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "--no-install", "psr/log:1.1.0"}
+
+			// Test failure
+			file, err := os.Create(filepath.Join(composerRoot, "touch1.txt"))
+			out, err = exec.RunHostCommand(DdevBin, args...)
+			assert.Error(err)
+			assert.Contains(out, "touch1.txt")
+			_ = file.Close()
+			os.Remove(filepath.Join(composerRoot, "touch1.txt"))
+
+			// Test success
 			out, err = exec.RunHostCommand(DdevBin, args...)
 			assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 			assert.Contains(out, "Created project in ")
-			assert.FileExists(filepath.Join(tmpDir, "composer.json"))
+			assert.FileExists(filepath.Join(composerRoot, "composer.json"))
 
 			err = app.Stop(true, false)
 			require.NoError(t, err)
