@@ -257,9 +257,20 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
-	// Test that the file arrived there (by rsyncing it back)
+	// Remove the file we pushed to we know it's gone
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf(`rm docroot/sites/default/files/%s`, fName),
+	})
+	// Pull the files back using acli
+	require.NoError(t, err)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf(`acli pull:files %s`, acquiaPushTestEnvironment),
+	})
+	require.NoError(t, err)
+
+	// Test that the file arrived back with the pull
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("drush --alias-path=~/.drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaPushTestEnvironment, fName, fName),
+		Cmd: fmt.Sprintf("ls docroot/sites/default/files/%s", fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
