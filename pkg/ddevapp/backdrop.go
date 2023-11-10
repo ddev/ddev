@@ -225,7 +225,7 @@ func backdropPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// getDrupalComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create
+// getBackdropComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create
 func getBackdropComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 	var allowed []string
 
