@@ -42,6 +42,9 @@ type ComposeCmdOpts struct {
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
 func EnsureNetwork(client *docker.Client, name string) error {
+	// Pre-check for network duplicates
+	RemoveNetworkDuplicates(client, name)
+
 	if !NetExists(client, name) {
 		netOptions := docker.CreateNetworkOptions{
 			Name:     name,
@@ -54,7 +57,6 @@ func EnsureNetwork(client *docker.Client, name string) error {
 			return err
 		}
 		output.UserOut.Println("Network", name, "created")
-
 	}
 	return nil
 }
@@ -89,9 +91,18 @@ func NetworkExists(netName string) bool {
 }
 
 // RemoveNetwork removes the named Docker network
+// netName can also be network's ID
 func RemoveNetwork(netName string) error {
 	client := GetDockerClient()
-	err := client.RemoveNetwork(netName)
+	networks, _ := client.ListNetworks()
+	var err error
+	// loop through all networks because there may be duplicates
+	// and delete only by ID - it's unique, but the name isn't
+	for _, network := range networks {
+		if network.Name == netName || network.ID == netName {
+			err = client.RemoveNetwork(network.ID)
+		}
+	}
 	return err
 }
 
@@ -104,6 +115,28 @@ func RemoveNetworkWithWarningOnError(netName string) {
 		util.Warning("Unable to remove network %s: %v", netName, err)
 	} else if err == nil {
 		output.UserOut.Println("Network", netName, "removed")
+	}
+}
+
+// RemoveNetworkDuplicates removes the duplicates for the named Docker network
+// This means that if there is only one network with this name - no action,
+// and if there are several such networks, then we leave the first one, and delete the others
+func RemoveNetworkDuplicates(client *docker.Client, netName string) {
+	networks, _ := client.ListNetworks()
+	networkMatchFound := false
+	for _, network := range networks {
+		if network.Name == netName || network.ID == netName {
+			if networkMatchFound == true {
+				err := client.RemoveNetwork(network.ID)
+				_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
+				// If it's a "no such network" there's no reason to report error
+				if err != nil && !isNoSuchNetwork {
+					util.Warning("Unable to remove network %s: %v", netName, err)
+				}
+			} else {
+				networkMatchFound = true
+			}
+		}
 	}
 }
 
