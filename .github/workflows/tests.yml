@@ -141,6 +141,7 @@ jobs:
           echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|TestDdevImportFiles|TestDdevAllDatabases|TestComposerCreateCmd|Test.*(Push|Pull))'" >> $GITHUB_ENV
           echo "GOTEST_SHORT=" >> $GITHUB_ENV
           echo "DDEV_PLATFORM_API_TOKEN=${{ secrets.DDEV_PLATFORM_API_TOKEN }}" >> $GITHUB_ENV
+          echo "DDEV_UPSUN_API_TOKEN=${{ secrets.DDEV_UPSUN_API_TOKEN }}" >> $GITHUB_ENV
           echo "DDEV_PANTHEON_API_TOKEN=${{ secrets.DDEV_PANTHEON_API_TOKEN }}" >> $GITHUB_ENV
           echo "DDEV_ALLOW_ACQUIA_PUSH=${{ secrets.DDEV_ALLOW_ACQUIA_PUSH }}" >> $GITHUB_ENV
           echo "DDEV_ACQUIA_API_KEY=${{ secrets.DDEV_ACQUIA_API_KEY }}" >> $GITHUB_ENV

@@ -187,6 +187,7 @@ nav:
       - 'Lagoon': users/providers/lagoon.md
       - 'Pantheon': users/providers/pantheon.md
       - 'Platform.sh': users/providers/platform.md
+      - 'Upsun': users/providers/upsun.md
   - 'Development':
       - developers/index.md
       - developers/building-contributing.md

@@ -1,0 +1,104 @@
+#ddev-generated
+# Upsun provider configuration. This works out of the box, but can be edited to add
+# your own preferences. If you edit it, remove the `ddev-generated` line from the top so
+# that it won't be overwritten.
+
+# To use this configuration,
+
+# 1. Check out the site from Upsun and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
+# 2. Obtain and configure an API token.
+#    a. Login to the Upsun Dashboard and go to My Profile->API Tokens to create an API token for DDEV to use.
+#    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
+#    ```yaml
+#    web_environment:
+#    - UPSUN_CLI_TOKEN=abcdeyourtoken
+#    ```
+# 3. Add UPSUN_PROJECT and UPSUN_ENVIRONMENT variables to your project `.ddev/config.yaml` or a `.ddev/config.upsun.yaml`
+#    ```yaml
+#    web_environment:
+#    - UPSUN_PROJECT=nf4amudfn23biyourproject
+#    - UPSUN_ENVIRONMENT=main
+# 4. `ddev restart`
+# 5. Run `ddev pull upsun`. After you agree to the prompt, the current upstream database and files will be downloaded.
+# 6. Optionally use `ddev push upsun` to push local files and database to Upsun. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+# If you have more than one database on your Upsun project,
+# you will likely to choose which one you want to use
+# as the primary database ('db').
+# Do this by setting UPSUN_PRIMARY_RELATIONSHIP, for example, `ddev config --web-environment-add=UPSUN_PRIMARY_RELATIONSHIP=main`
+# or run `ddev pull upsun` with the environment variable, for example
+# `ddev pull upsun -y --environment=UPSUN_PRIMARY_RELATIONSHIP=main`
+# If you need to change this `upsun.yaml` recipe, you can change it to suit your needs, but remember to remove the "ddev-generated" line from the top.
+
+# Debugging: Use `ddev exec upsun` to see what Upsun knows about
+# your configuration and whether it's working correctly.
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    if [ -z "${UPSUN_CLI_TOKEN:-}" ]; then echo "Please make sure you have set UPSUN_CLI_TOKEN." && exit 1; fi
+    if [ -z "${UPSUN_PROJECT:-}" ]; then echo "Please make sure you have set UPSUN_PROJECT." && exit 1; fi
+    if [ -z "${UPSUN_ENVIRONMENT:-}" ]; then echo "Please make sure you have set UPSUN_ENVIRONMENT." && exit 1; fi
+
+db_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    # /tmp/db_relationships.yaml is the full yaml output of the database relationships
+    db_relationships_file=/tmp/db_relationships.yaml
+    # The variable is $PLATFORM_RELATIONSHIPS from the Upsun docs and we can define the second one $UPSUN_RELATIONSHIPS if it is renamed:
+    PLATFORM_RELATIONSHIPS="" UPSUN_RELATIONSHIPS="" upsun relationships --yes --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}" | yq 'with_entries(select(.[][].type == "mariadb:*" or  .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
+    db_relationships=($(yq ' keys | .[] ' ${db_relationships_file}))
+    db_names=($(yq '.[][].path' ${db_relationships_file}))
+    db_count=${#db_relationships[@]}
+    # echo "db_relationships=${db_relationships} sizeof db_relationships=${#db_relationships[@]} db_names=${db_names} db_count=${db_count} UPSUN_PRIMARY_RELATIONSHIP=${UPSUN_PRIMARY_RELATIONSHIP}"
+    # If we have only one database, import it into local database named 'db'
+    if [ ${#db_names[@]} -eq 1 ]; then db_names[0]="db"; fi
+
+    for (( i=0; i<${#db_relationships[@]}; i++ )); do
+      db_name=${db_names[$i]}
+      rel=${db_relationships[$i]}
+      # if UPSUN_PRIMARY_RELATIONSHIP is set, then when doing that one, import it into local database 'db'
+      if [ "${rel}" = "${UPSUN_PRIMARY_RELATIONSHIP:-notset}" ] ; then
+        echo "UPSUN_PRIMARY_RELATIONSHIP=${UPSUN_PRIMARY_RELATIONSHIP:-} so using it as database 'db' instead of the upstream '${db_name}'"
+        db_name="db"
+      fi
+
+      upsun db:dump --yes --relationship=${rel} --gzip --file=/var/www/html/.ddev/.downloads/${db_name}.sql.gz --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}"
+    done
+    echo "Downloaded db dumps for databases '${db_names[@]}'"
+
+files_import_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    # Use $UPSUN_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
+    declare -a mounts=(${UPSUN_MOUNTS:-/web/sites/default/files})
+    upsun mount:download --all --yes --quiet --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}"  --target=/var/www/html
+
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    if [ "${UPSUN_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
+      rel="--relationship ${UPSUN_PRIMARY_RELATIONSHIP}"
+    fi
+    gzip -dc db.sql.gz | upsun db:sql --project="${UPSUN_PROJECT}" ${rel:-} --environment="${UPSUN_ENVIRONMENT}"
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
+    upsun mount:upload --yes --quiet --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
