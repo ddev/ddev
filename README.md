@@ -10,6 +10,12 @@
 
 DDEV is an open-source tool for running local web development environments for PHP, Python and Node.js, ready in minutes. Its powerful, flexible per-project environment configurations can be extended, version controlled, and shared. DDEV allows development teams to adopt a consistent Docker workflow without the complexities of bespoke configuration.
 
+## Documentation
+To check out live examples, docs, contributor live training, guides and more visit [ddev.com](https://ddev.com) and [ddev.readthedocs.io](https://ddev.readthedocs.io/en/latest/users/support)
+
+## Questions
+If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support). 
+
 ## Wonderful Sponsors
 
 DDEV is an Apache License 2.0 open-source project with its ongoing development made possible entirely by the support of these awesome backers. If you'd like to join them, please consider [sponsoring DDEV development](https://github.com/sponsors/ddev).
@@ -18,13 +24,6 @@ DDEV is an Apache License 2.0 open-source project with its ongoing development m
   <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg">
   <img alt="DDEV Sponsor logos with light and dark mode variants" src="https://ddev.com/resources/featured-sponsors.svg">
 </picture>
-
-## Documentation
-To check out live examples, docs, contributor live training, guides and more visit [ddev.com](https://ddev.com) and [ddev.readthedocs.io](https://ddev.readthedocs.io/en/latest/users/support)
-
-## Questions
-
-If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support). 
 
 ## Contributing
 
