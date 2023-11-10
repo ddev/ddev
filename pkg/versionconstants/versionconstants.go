@@ -15,7 +15,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20231102_joelpittet_revert_sendmail_t" // Note that this can be overridden by make
+var WebTag = "20231110_syssi_mailpit_latest" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
