@@ -61,20 +61,20 @@ func TestAcquiaPull(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	drupalcode := FullTestSites[12]
-	require.NoError(t, err)
-	siteDir := drupalcode.Dir
-	err = os.Chdir(siteDir)
-	require.NoError(t, err)
-
-	drupalcode.Name = t.Name()
+	// Use a Drupal 10 codebase (test CMS 12)
+	drupalCode := FullTestSites[12]
+	drupalCode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
-	err = drupalcode.Prepare()
+	err = drupalCode.Prepare()
 	require.NoError(t, err)
-	app, err := ddevapp.NewApp(drupalcode.Dir, false)
+	app, err := ddevapp.NewApp(drupalCode.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
+	err = os.Chdir(drupalCode.Dir)
+	require.NoError(t, err)
+	// acli really wants the project to look like the target project
+	app.Docroot = "docroot"
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
