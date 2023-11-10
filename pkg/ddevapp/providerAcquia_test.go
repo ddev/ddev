@@ -105,12 +105,6 @@ func TestAcquiaPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Make sure we have Drush
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "composer require --no-interaction drush/drush symfony/http-kernel>/dev/null 2>/dev/null",
-	})
-	require.NoError(t, err)
-
 	err = app.WriteConfig()
 	require.NoError(t, err)
 	err = app.MutagenSyncFlush()
@@ -215,17 +209,6 @@ func TestAcquiaPush(t *testing.T) {
 		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
-
-	// Make sure we have Drush
-	//_, _, err = app.Exec(&ddevapp.ExecOpts{
-	//	Cmd: "composer require --no-interaction drush/drush >/dev/null 2>/dev/null",
-	//})
-	//require.NoError(t, err)
-	//
-	//_, _, err = app.Exec(&ddevapp.ExecOpts{
-	//	Cmd: "time drush si -y minimal",
-	//})
-	//require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
 	writeQuery := fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval)
