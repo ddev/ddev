@@ -106,15 +106,6 @@ You can use this port with various tools that need a direct port, like `mysql` o
 
 (If you use PhpStorm and its integrated database browser, use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) to manage all of this for you.)
 
-## Using Drush 8 Installation on Your Host Machine
-
-!!!warning
-    We don’t recommend using `drush` on your host machine. It’s also mostly irrelevant for Drupal 9+, as you should be using Composer-installed, project-level `drush`.
-
-If you have PHP and Drush installed on your host system and the environment variable `IS_DDEV_PROJECT=true`, you can use Drush to interact with a DDEV project. On the host machine, extra host-side configuration for the database and port in `settings.ddev.php` allow Drush to access the database server. This may not work for all Drush commands because the actual web server environment is not available.
-
-On Drupal 8+, if you want to use `drush uli` on the host (or other Drush commands that require a default URI), you’ll need to set `DRUSH_OPTIONS_URI` on the host. For example, `export DRUSH_OPTIONS_URI=https://mysite.ddev.site`.
-
 ## DDEV and Terminus
 
 [Terminus](https://docs.pantheon.io/terminus) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
