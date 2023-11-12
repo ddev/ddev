@@ -77,7 +77,6 @@ However, if you’ve not yet used PhpStorm with Xdebug for a regular web request
 
 If you have error: "Can't find a source position. Server with name 'SITE_NAME.ddev.site' doesn't exist.". Try to change the "PHP | Servers" **Name** to _SITE_NAME.ddev.site_. You can see on screenshot above that both Name, Host are "_d8composer.ddev.site_".
     
-
 ### Visual Studio Code (VS Code) Debugging Setup
 
 1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
