@@ -1,12 +1,12 @@
 # Upsun Integration
 
-DDEV provides integration with the [Upsun Website Management Platform](https://upsun.com/), which allows Upsun users to quickly download and provision a project from Upsun in a local DDEV-managed environment.
+DDEV provides integration with the [Upsun Website Management by Platform](https://upsun.com/), which allows Upsun users to quickly download and provision a project from Upsun in a local DDEV-managed environment.
 
 DDEV’s Upsun integration pulls databases and files from an existing Upsun site/environment into your local system so you can develop locally.
 
 ## Upsun Global Configuration
 
-You need to obtain and configure an API token first. This is only needed once.
+You need to obtain and configure an API token first. This only needs to be done once.
 
 1. Login to the Upsun Dashboard and go to *My Profile* → *API Tokens*. Create an API token DDEV can use.
 2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`:
