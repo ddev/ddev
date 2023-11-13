@@ -41,7 +41,7 @@ type ComposeCmdOpts struct {
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
-func EnsureNetwork(client *docker.Client, name string) error {
+func EnsureNetwork(client *docker.Client, name string, labels map[string]string) error {
 	// Pre-check for network duplicates
 	RemoveNetworkDuplicates(client, name)
 
@@ -50,7 +50,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 			Name:     name,
 			Driver:   "bridge",
 			Internal: false,
-			Labels:   map[string]string{"com.ddev.platform": "ddev"},
+			Labels:   labels,
 		}
 		_, err := client.CreateNetwork(netOptions)
 		if err != nil {
@@ -61,24 +61,36 @@ func EnsureNetwork(client *docker.Client, name string) error {
 	return nil
 }
 
-// EnsureNetworkWithFatal creates or ensures the provided network exists or
-// exits with fatal.
-func EnsureNetworkWithFatal(name string) {
-	client := GetDockerClient()
-	err := EnsureNetwork(client, name)
-	if err != nil {
-		log.Fatalf("Failed to ensure Docker network %s: %v", name, err)
-	}
-}
-
 // EnsureDdevNetwork creates or ensures the DDEV network exists or
 // exits with fatal.
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
-	EnsureNetworkWithFatal(NetName)
-	// Ensure we have the current project network
-	if os.Getenv("COMPOSE_PROJECT_NAME") != "" {
-		EnsureNetworkWithFatal(os.Getenv("COMPOSE_PROJECT_NAME") + "_default")
+	client := GetDockerClient()
+	err := EnsureNetwork(client, NetName, map[string]string{"com.ddev.platform": "ddev"})
+	if err != nil {
+		log.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
+	}
+}
+
+// EnsureProjectNetwork creates or ensures the project network exists or
+// exits with fatal.
+func EnsureProjectNetwork() {
+	if os.Getenv("COMPOSE_PROJECT_NAME") == "" {
+		log.Fatalf("dockerutil.EnsureProjectNetwork() must be called after app.DockerEnv()")
+	}
+	networkName := os.Getenv("COMPOSE_PROJECT_NAME") + "_default"
+	client := GetDockerClient()
+	err := EnsureNetwork(client, networkName, map[string]string{
+		"com.ddev.platform": "ddev",
+		// add docker-compose labels needed for "docker compose up"
+		"com.docker.compose.network": "default",
+		"com.docker.compose.project": os.Getenv("COMPOSE_PROJECT_NAME"),
+		"com.docker.compose.version": func() string {
+			version, _ := GetDockerComposeVersion()
+			return strings.TrimPrefix(version, "v")
+		}()})
+	if err != nil {
+		log.Fatalf("Failed to ensure Docker network %s: %v", networkName, err)
 	}
 }
 
@@ -95,7 +107,8 @@ func NetworkExists(netName string) bool {
 func RemoveNetwork(netName string) error {
 	client := GetDockerClient()
 	networks, _ := client.ListNetworks()
-	var err error
+	// the loop below may not contain such a network
+	var err error = &docker.NoSuchNetwork{ID: netName}
 	// loop through all networks because there may be duplicates
 	// and delete only by ID - it's unique, but the name isn't
 	for _, network := range networks {

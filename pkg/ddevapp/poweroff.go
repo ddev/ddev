@@ -54,10 +54,7 @@ func PowerOff() {
 	// Remove global DDEV default network
 	dockerutil.RemoveNetworkWithWarningOnError(dockerutil.NetName)
 
-	// Remove all external networks created with DDEV
-	// This is needed for compatibility if we decide to undo the changes
-	// made for the external project networks
-	// see https://github.com/ddev/ddev/pull/5508
+	// Remove all networks created with DDEV
 	removals, err := dockerutil.FindNetworksWithLabel("com.ddev.platform")
 	if err == nil {
 		for _, network := range removals {
