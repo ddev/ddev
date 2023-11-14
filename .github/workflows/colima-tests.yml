@@ -93,6 +93,7 @@ jobs:
         run: |
           set -x
           sudo chmod ugo+w /usr/local/bin
+          brew install --overwrite python@3.11
           brew install colima docker docker-compose
           # brew install mysql-client is failing because of existing 2to3
           sudo rm -f /usr/local/bin/2to3*
