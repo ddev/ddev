@@ -43,7 +43,7 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests: [ test ]
-        os: [ macos-latest ]
+        os: [ macos-13 ]
         no-bind-mounts: ['false']
       fail-fast: true
 
@@ -81,7 +81,6 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-
       - run: echo "/usr/local/opt/mysql-client/bin" >> $GITHUB_PATH
 
       - name: Setup tmate session
@@ -98,9 +97,7 @@ jobs:
           # brew install mysql-client is failing because of existing 2to3
           sudo rm -f /usr/local/bin/2to3
           brew install --overwrite mysql-client || true
-          # hopefully qemu reinstall will be temporary. 2023-08-30 after weeks of trouble.
-          brew reinstall --force qemu
-          colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
+          colima start --cpu 3 --memory 6 --mount-type=sshfs --vm-type=qemu --dns=1.1.1.1
           colima version
 
       - name: Build ddev
@@ -124,7 +121,7 @@ jobs:
           done >/dev/null
 
       - name: "show versions"
-        run: "set -x && ddev version && docker version && go version"
+        run: "set -x && ddev version && docker version && go version && colima version"
 
       - name: time make "${{ matrix.tests }}"
         run: |
