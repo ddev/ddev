@@ -93,9 +93,9 @@ jobs:
         run: |
           set -x
           sudo chmod ugo+w /usr/local/bin
+          sudo rm -f /usr/local/bin/2to3
           brew install colima docker docker-compose
           # brew install mysql-client is failing because of existing 2to3
-          sudo rm -f /usr/local/bin/2to3
           brew install --overwrite mysql-client || true
           colima start --cpu 3 --memory 6 --mount-type=sshfs --vm-type=qemu --dns=1.1.1.1
           colima version
