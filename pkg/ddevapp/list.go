@@ -105,7 +105,7 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	usableWidth := termWidth - 15
 	statusWidth := 7 // Maybe just "running"
 	nameWidth := 10
-	typeWidth := 9 // drupal7, magento2 or wordpress
+	typeWidth := 12 // drupal7, magento2, wordpress or silverstripe
 	locationWidth := 20
 	urlWidth := 20
 	if termWidth > 80 {
