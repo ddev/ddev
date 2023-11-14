@@ -75,8 +75,8 @@ If you need to debug command-line PHP processes, especially code that’s outsid
 However, if you’ve not yet used PhpStorm with Xdebug for a regular web request, do that to automatically create the PhpStorm “server” with the same name as your primary URL (*Languages and Frameworks* → *PHP* → *Servers*). The key job of the server is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server—in this case the `ddev-webserver` container. Often, PhpStorm automatically sets up a mapping that doesn’t include the entire project, meaning things like the `vendor` directory may not be mapped. You can fix this by mapping the top-level directory of your project to `/var/www/html` in the container:
 ![PhpStorm mapping](../../images/phpstorm-server-mapping.png)
 
-If you encounter the error: "Can't find a source position. Server with name 'SITE_NAME.ddev.site' doesn't exist", change the "PHP | Servers" **Name** to _SITE_NAME.ddev.site_. In the example screenshot above both Name and Host are "_d8composer.ddev.site_".
-    
+If you encounter the error: "Can't find a source position. Server with name 'SITE_NAME.ddev.site' doesn't exist", change the "PHP | Servers" **Name** to **`SITE_NAME.ddev.site`**. In the example screenshot above both Name and Host are "**`d8composer.ddev.site`**".
+
 ### Visual Studio Code (VS Code) Debugging Setup
 
 1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
