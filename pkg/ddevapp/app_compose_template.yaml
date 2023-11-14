@@ -251,7 +251,6 @@ networks:
     external: true
   default:
     name: ${COMPOSE_PROJECT_NAME}_default
-    external: true
     {{ if .IsGitpod }}{{/* see https://github.com/ddev/ddev/issues/3766 */}}
     driver_opts:
       com.docker.network.driver.mtu: 1440

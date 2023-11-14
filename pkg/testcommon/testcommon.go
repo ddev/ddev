@@ -262,12 +262,8 @@ func ClearDockerEnv() {
 
 // ContainerCheck determines if a given container name exists and matches a given state
 func ContainerCheck(checkName string, checkState string) (bool, error) {
-	// Ensure we have Docker network
-	client := dockerutil.GetDockerClient()
-	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Ensure we have DDEV network
+	dockerutil.EnsureDdevNetwork()
 
 	c, err := dockerutil.FindContainerByName(checkName)
 	if err != nil {

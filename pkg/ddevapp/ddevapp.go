@@ -1028,6 +1028,10 @@ func (app *DdevApp) Start() error {
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
+	// "docker-compose up", which is called in this function later, may create
+	// duplicate project networks, we can create this network in advance
+	// see https://github.com/ddev/ddev/pull/5533
+	dockerutil.EnsureProjectNetwork()
 
 	if err = dockerutil.CheckDockerCompose(); err != nil {
 		util.Failed(`Your docker-compose version does not exist or is set to an invalid version.
@@ -2556,11 +2560,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to process post-stop hooks: %v", err)
 		}
 	}
-
-	// Remove current project network
-	// Working around duplicate network creation problem
-	// see https://github.com/ddev/ddev/pull/5508
-	dockerutil.RemoveNetworkWithWarningOnError(os.Getenv("COMPOSE_PROJECT_NAME") + "_default")
 
 	return nil
 }
