@@ -39,24 +39,6 @@ web_environment:
 4. Run `ddev pull upsun`. After you agree to the prompt, the current upstream databases and files will be downloaded.
 5. Optionally use `ddev push upsun` to push local files and database to Upsun. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
-### Managing Multiple Databases
-
-If your project has only one database, it will automatically be pulled into and pushed from DDEV’s `'db'` database.
-
-If your project has multiple databases, they’ll all be pulled into DDEV with their respective remote names. You can optionally designate a *primary* to use DDEV’s default `'db'` database, which may be useful in some cases—particularly if you’ve been using the default solo-database behavior and happened to add another one to your project.
-
-You can designate the primary database using the `UPSUN_PRIMARY_RELATIONSHIP` environment variable:
-
-```
-ddev config --web-environment-add="UPSUN_PRIMARY_RELATIONSHIP=main"
-```
-
-You can also do the same thing by running `ddev pull upsun` and using the `--environment` flag:
-
-```
-ddev pull upsun --environment="UPSUN_PRIMARY_RELATIONSHIP=main"
-```
-
 ## Usage
 
 * `ddev pull upsun` will connect to Upsun to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
