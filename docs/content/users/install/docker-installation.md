@@ -25,7 +25,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
 
-    When your computer restarts, you’ll need to `colima start` again. Starting with Colima 0.6.0 you are able to automate the startup process. `brew services start colima` adds Colima to the list of login items for your MacOS user account. With `brew services list` you are able to verify if the service's plist file was correctly added to `~/Library/LaunchAgents`.
+    When your computer restarts, you’ll need to `colima start` again. Starting with Colima 0.6.0 you are able to automate the startup process. `brew services start colima` adds Colima to the list of login items for your MacOS user account. With `brew services list` you are able to verify if the service's property list file was correctly added to `~/Library/LaunchAgents`.
 
     !!!tip "Colima disk allocation"
         In Colima versions starting with 0.5.4 you can increase—but not decrease—the disk allocation by editing `~/.colima/default/colima.yaml` to change the `disk` setting to a higher value. For example, `disk: 200` will increase allocation to 200 gigabytes. Then `colima restart` will result in the new disk allocation.
