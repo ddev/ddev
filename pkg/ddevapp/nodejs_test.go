@@ -40,8 +40,8 @@ func TestNodeJSVersions(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Testing some random versions
-	for _, v := range []string{"6", "10", "14", "16", "20"} {
+	// Testing some random versions, both complete and incomplete
+	for _, v := range []string{"6", "10", "14.20", "16.0.0", "20"} {
 		app.NodeJSVersion = v
 		err = app.Restart()
 		assert.NoError(err)
