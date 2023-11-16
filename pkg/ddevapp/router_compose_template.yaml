@@ -9,15 +9,18 @@ services:
     {{ end }}
 
     networks:
-        - ddev_default
+      - ddev_default
     container_name: ddev-router
-    ports:{{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
-    - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
-    - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
-    {{ if eq .Router "traefik" }}
-    # Traefik router; configured in static config as entrypoint
-    - "{{ if not .router_bind_all_interfaces }}{{ $dockerIP }}:{{ end }}{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
-    {{ end }}
+    ports: {{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
+      - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
+      - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
+      {{ if eq .Router "traefik" }}
+      # Traefik router; configured in static config as entrypoint
+      - "{{ if not .router_bind_all_interfaces }}{{ $dockerIP }}:{{ end }}{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
+      {{ end }}
+    labels:
+      # For cleanup on ddev poweroff
+      com.ddev.site-name: ""
     volumes:
       {{ if ne .Router "traefik" }}
       - /var/run/docker.sock:/tmp/docker.sock:ro
