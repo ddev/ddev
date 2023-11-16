@@ -7,7 +7,7 @@ const ConfigInstructions = `
 # name: <projectname> # Name of the project, automatically provides
 #   http://projectname.ddev.site and https://projectname.ddev.site
 
-# type: <projecttype>  # drupal6/7/8, backdrop, typo3, wordpress, php
+# type: <projecttype>  # drupal6/7/8, backdrop, typo3, wordpress, php, craftcms, laravel, magento2, shopware6, silverstripe
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
