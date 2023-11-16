@@ -433,7 +433,6 @@ func ValidateProjectName(name string) error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
 		constraint := app.DdevVersionConstraint
@@ -460,6 +459,11 @@ func (app *DdevApp) ValidateConfig() error {
 	// Validate project name
 	if err := ValidateProjectName(app.Name); err != nil {
 		return err
+	}
+
+	// Stop here if no config found
+	if err := CheckForMissingProjectFiles(app); err != nil {
+		return nil
 	}
 
 	// Validate hostnames
