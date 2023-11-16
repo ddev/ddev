@@ -22,10 +22,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
     ```
     (On macOS versions before Ventura, omit the `--vm-type=qemu` flag as it doesn't work on older OS versions.)
-    
+
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
 
-    When your computer restarts, you’ll need to `colima start` again. This will eventually be automated in later versions of Colima.
+    When your computer restarts, you’ll need to `colima start` again. If you prefer to start Colima automatically on reboot, use `brew services start colima` in Colima version 0.6+ to configure auto-start.
 
     !!!tip "Colima disk allocation"
         In Colima versions starting with 0.5.4 you can increase—but not decrease—the disk allocation by editing `~/.colima/default/colima.yaml` to change the `disk` setting to a higher value. For example, `disk: 200` will increase allocation to 200 gigabytes. Then `colima restart` will result in the new disk allocation.
@@ -41,12 +41,12 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     1. Move your project databases from Docker Desktop to Colima using the technique in [How can I migrate from one Docker provider to another?](../usage/faq.md#how-can-i-migrate-from-one-docker-provider-to-another).
 
-    2. Docker Desktop may have left a bad `~/.docker/config.json`". If you have trouble running `ddev start` with a project you’ve migrated, remove the `credsStore` line in `~/.docker/config.json` 
+    2. Docker Desktop may have left a bad `~/.docker/config.json`". If you have trouble running `ddev start` with a project you’ve migrated, remove the `credsStore` line in `~/.docker/config.json`
 
     ### Docker Desktop for Mac
 
     Docker Desktop for Mac can be installed via Homebrew (`brew install homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
-    
+
     !!!warning "Ports unavailable?"
         If you get messages like `Ports are not available... exposing port failed... is vmnetd running?` it means you need to check the "Allow privileged port mapping (requires password)" checkbox in the "Advanced" section of the Docker Desktop configuration. You may have to stop and restart Docker Desktop.
 
