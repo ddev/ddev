@@ -105,7 +105,7 @@ jobs:
           sudo mkdir -p /usr/local/bin && sudo curl -L -o /usr/local/bin/colima https://github.com/abiosoft/colima/releases/download/v0.5.6/colima-Darwin-x86_64 && sudo chmod +x /usr/local/bin/colima
           hash -r
           colima version
-          colima start --cpu 3 --memory 6 --mount-type=virtiofs --vm-type=vz
+          colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
 
       - name: Build ddev
         run: | 
