@@ -29,6 +29,18 @@
     },
     {
       "pattern": "^https://nightly.link/ddev/ddev/workflows/master-build/master"
+    },
+    {
+      "pattern": "^https://github.com/ddev/maintainer-info"
+    },
+    {
+      "pattern": "^https://buildkite.com/organizations/ddev"
+    },
+    {
+      "pattern": "^https://github.com/orgs/ddev"
+    },
+    {
+      "pattern": "^https://newmonitor.thefays.us/icingaweb2"
     }
   ],
   "httpHeaders": [
