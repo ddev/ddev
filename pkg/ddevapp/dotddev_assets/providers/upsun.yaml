@@ -1,0 +1,71 @@
+#ddev-generated
+# Upsun provider configuration. This works out of the box, but can be edited to add
+# your own preferences. If you edit it, remove the `ddev-generated` line from the top so
+# that it won't be overwritten.
+
+# To use this configuration,
+
+# 1. Check out the site from Upsun and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
+# 2. Obtain and configure an API token.
+#    a. Login to the Upsun Dashboard and go to My Profile->API Tokens to create an API token for DDEV to use.
+#    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
+#    ```yaml
+#    web_environment:
+#    - UPSUN_CLI_TOKEN=abcdeyourtoken
+#    ```
+# 3. Add UPSUN_PROJECT and UPSUN_ENVIRONMENT variables to your project `.ddev/config.yaml` or a `.ddev/config.upsun.yaml`
+#    ```yaml
+#    web_environment:
+#    - UPSUN_PROJECT=nf4amudfn23biyourproject
+#    - UPSUN_ENVIRONMENT=main
+# 4. `ddev restart`
+# 5. Run `ddev pull upsun`. After you agree to the prompt, the current upstream database and files will be downloaded.
+# 6. Optionally use `ddev push upsun` to push local files and database to Upsun. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+# Debugging: Use `ddev exec upsun` to see what Upsun knows about
+# your configuration and whether it's working correctly.
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    if [ -z "${UPSUN_CLI_TOKEN:-}" ]; then echo "Please make sure you have set UPSUN_CLI_TOKEN." && exit 1; fi
+    if [ -z "${UPSUN_PROJECT:-}" ]; then echo "Please make sure you have set UPSUN_PROJECT." && exit 1; fi
+    if [ -z "${UPSUN_ENVIRONMENT:-}" ]; then echo "Please make sure you have set UPSUN_ENVIRONMENT." && exit 1; fi
+
+db_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    upsun db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}"
+
+files_import_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    # Use $UPSUN_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
+    declare -a mounts=(${UPSUN_MOUNTS:-/web/sites/default/files})
+    upsun mount:download --all --yes --quiet --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}"  --target=/var/www/html
+
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null
+    gzip -dc db.sql.gz | upsun db:sql --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}"
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    export UPSUN_CLI_NO_INTERACTION=1
+    ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
+    upsun mount:upload --yes --quiet --project="${UPSUN_PROJECT}" --environment="${UPSUN_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
