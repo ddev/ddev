@@ -1,6 +1,6 @@
 # Upsun Integration
 
-DDEV provides integration with the [Upsun Website Management by Platform](https://upsun.com/), which allows Upsun users to quickly download and provision a project from Upsun in a local DDEV-managed environment.
+DDEV provides integration with the [Upsun by Platform](https://upsun.com/) hosting system, allowing Upsun users to easily download database and files from Upsun to a local DDEV-managed environment.
 
 DDEV’s Upsun integration pulls databases and files from an existing Upsun site/environment into your local system so you can develop locally.
 
@@ -18,7 +18,7 @@ web_environment:
 
 ## Upsun Per-Project Configuration
 
-1. Check out the site from Upsun and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
+1. Check out the Upsun site and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
 2. Add `UPSUN_PROJECT` and `UPSUN_ENVIRONMENT` variables to your project.
 
     * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
