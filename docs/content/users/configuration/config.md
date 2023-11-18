@@ -365,9 +365,7 @@ Node.js version for the web container’s “system” version.
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
-There is no need to configure the `nodejs_version` unless you want to use a different version that is not the default.
-
-`nvm` is also available inside the container and via [`ddev nvm`](../usage/commands.md#nvm), and can be set to any valid version including much older ones.
+There is no need to configure `nodejs_version` unless you want a version other than the default version.
 
 ## `omit_containers`
 
