@@ -43,7 +43,7 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests: [ test ]
-        os: [ macos-latest ]
+        os: [ macos-13 ]
         no-bind-mounts: ['false']
       fail-fast: true
 
@@ -81,7 +81,6 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-
       - run: echo "/usr/local/opt/mysql-client/bin" >> $GITHUB_PATH
 
       - name: Setup tmate session
@@ -90,18 +89,23 @@ jobs:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      - name: Install homebrew dependencies (macOS)
+      - name: Install homebrew dependencies
         run: |
           set -x
           sudo chmod ugo+w /usr/local/bin
-          brew install -q docker docker-compose jq >/dev/null
+          brew install --overwrite python@3.11
+          brew install docker docker-compose lima
           # brew install mysql-client is failing because of existing 2to3
-          sudo rm -f /usr/local/bin/2to3
+          sudo rm -f /usr/local/bin/2to3*
           brew install --overwrite mysql-client || true
-          # hopefully qemu reinstall will be temporary. 2023-08-30 after weeks of trouble.
-          brew reinstall --force qemu
-          colima start --cpu 3 --memory 6 --mount-type=sshfs --dns=1.1.1.1
+
+      - name: Install and start Colima
+        run: |
+          # Temporarily use colima 0.5.6 as 0.6.* can't pass tests
+          sudo mkdir -p /usr/local/bin && sudo curl -L -o /usr/local/bin/colima https://github.com/abiosoft/colima/releases/download/v0.5.6/colima-Darwin-x86_64 && sudo chmod +x /usr/local/bin/colima
+          hash -r
           colima version
+          colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
 
       - name: Build ddev
         run: | 
@@ -124,7 +128,7 @@ jobs:
           done >/dev/null
 
       - name: "show versions"
-        run: "set -x && ddev version && docker version && go version"
+        run: "set -x && ddev version && docker version && go version && colima version"
 
       - name: time make "${{ matrix.tests }}"
         run: |
