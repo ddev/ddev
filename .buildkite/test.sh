@@ -10,7 +10,7 @@ export GOTEST_SHORT=8
 function cleanup {
     orb stop || true
     open -a Docker
-    docker context use default
+    docker context use desktop-linux
 }
 trap cleanup EXIT
 
@@ -20,10 +20,12 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     "docker-desktop")
       orb stop || true
       open -a Docker
+      docker context use desktop-linux
       ;;
     "orbstack")
       killall com.docker.backend || true
       orb start &
+      docker context use orbstack
       ;;
     *)
       open -a Docker
