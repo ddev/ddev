@@ -142,14 +142,18 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 14. Run `ngrok config add-authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
-17. Run iTerm. You may need to allow full disk access permissions.
-18. Set up `nfsd` by running [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh).
-19. `git config --global --add safe.directory '*'`
-20. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
+17. If OrbStack will be deployed, install it from [orbstack.dev](https://orbstack.dev).
+    * Install with Docker only.
+    * Click "Sign in" in the lower left to sign in with OrbStack credentials (normal test runner gmail address; it will receive an email with a login code).
+    * Configure it to automatically start and download updates, see ![OrbStack configuration](../images/orbstack_configuration.png).
+18. Run iTerm. You may need to allow full disk access permissions.
+19. Set up `nfsd` by running [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh).
+20. `git config --global --add safe.directory '*'`
+21. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
     * the agent token (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
     * tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-21. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
+22. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
 ```bash
 #!/bin/bash
