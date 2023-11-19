@@ -146,14 +146,16 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * Install with Docker only.
     * Click "Sign in" in the lower left to sign in with OrbStack credentials (normal test runner gmail address; it will receive an email with a login code).
     * Configure it to automatically start and download updates, see ![OrbStack configuration](../images/orbstack_configuration.png).
-18. Run iTerm. You may need to allow full disk access permissions.
-19. Set up `nfsd` by running [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh).
-20. `git config --global --add safe.directory '*'`
-21. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
+18. If Rancher Desktop will be deployed, install it.
+    * Turn off kubernetes.
+19. Run iTerm. You may need to allow full disk access permissions.
+20. Set up `nfsd` by running [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh).
+21. `git config --global --add safe.directory '*'`
+22. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
     * the agent token (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
     * tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-22. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
+23. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
     ```bash
     #!/bin/bash
@@ -162,7 +164,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     set -e
     ```
 
-23. Run `brew services start buildkite-agent`.
-24. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+24. Run `brew services start buildkite-agent`.
+25. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 25.`mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
-25. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+26. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
