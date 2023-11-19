@@ -1,4 +1,11 @@
-  - command: ".buildkite/test.sh"
+  - label: "Run test.sh if code changes"
+    command: |
+      if [ "${BUILDKITE_PULL_REQUEST:-}" != "" ] && git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null
+      then 
+        .buildkite/test.sh
+      else
+        true # If no code has been changed, don't run the full test suite
+      fi
     plugins:
       - docker-login#v2.1.0:
           username: druddockerpullaccount

@@ -4,7 +4,7 @@
       then 
         .buildkite/test.sh
       else
-        true
+        true # If no code has been changed, don't run the full test suite
       fi
     plugins:
       - docker-login#v2.1.0:
