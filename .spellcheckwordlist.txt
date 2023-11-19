@@ -77,6 +77,7 @@ IPv
 If
 IIS
 Kalabox
+Kubernetes
 Lando
 Laravel
 Let's
