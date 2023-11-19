@@ -1,5 +1,5 @@
 
-  - command: ".buildkite/test.sh"
+  - command: "echo hello world"
     plugins:
       - docker-login#v2.1.0:
           username: druddockerpullaccount
