@@ -6,17 +6,27 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ## macOS
 
-    Install either [Colima](#colima) or [Docker Desktop](#docker-desktop-for-mac).
+    Install one of the supported Docker providers. OrbStack is the easiest to set up.
+
+        * [OrbStack](#orbstack)
+        * [Colima](#colima)
+        * [Docker Desktop](#docker-desktop-for-mac)
+        * [Rancher Desktop](#rancher-desktop)
+
+    ### OrbStack
+
+    [OrbStack](https://orbstack.dev) is a new Docker provider that is very popular with DDEV users because it’s fast, lightweight, and easy to install. It’s a good choice for most users. It is *not* open-source, and it is not free for professional use.
+    
+    1. Install OrbStack with `brew install orbstack` or [download it directly](https://orbstack.dev/download).
+    2. Run the OrbStack app (from Applications) to finish setup, choosing "Docker" as the option. Answer any prompts to allow OrbStack access.
+
 
     ### Colima
 
-    We recommend [Colima](https://github.com/abiosoft/colima), a project that bundles a container management tool called [Lima](https://github.com/lima-vm/lima) with a Docker (Linux) backend.
-
-    !!!tip "Wait ... Colima?"
-        Yes! See *Why do you recommend Colima over Docker Desktop on macOS?* in [the FAQ](../usage/faq.md).
+    [Colima](https://github.com/abiosoft/colima) is a free and open-source project that bundles a container management tool called [Lima](https://github.com/lima-vm/lima) with a Docker (Linux) backend.
 
     1. Run `docker help` to make sure you’ve got the Docker client installed. If you get an error, install it with [Homebrew](https://brew.sh) by running `brew install docker`.
-    2. Install Colima with `brew install colima` or one of the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
+    2. Install Colima with `brew install colima`.
     3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
     ```
     colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
@@ -37,18 +47,21 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         By default, Colima only mounts your home directory, so it’s easiest to use it in a subdirectory there. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/fc948f8f055600986f87e29e3e632daf56ac8774/embedded/defaults/colima.yaml#L130-L143).
 
 
-    #### Migrating Projects from Docker Desktop to Colima
-
-    1. Move your project databases from Docker Desktop to Colima using the technique in [How can I migrate from one Docker provider to another?](../usage/faq.md#how-can-i-migrate-from-one-docker-provider-to-another).
-
-    2. Docker Desktop may have left a bad `~/.docker/config.json`". If you have trouble running `ddev start` with a project you’ve migrated, remove the `credsStore` line in `~/.docker/config.json`
-
     ### Docker Desktop for Mac
 
-    Docker Desktop for Mac can be installed via Homebrew (`brew install homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
+    Docker Desktop for Mac can be installed via Homebrew (`brew install --cask docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
 
     !!!warning "Ports unavailable?"
         If you get messages like `Ports are not available... exposing port failed... is vmnetd running?` it means you need to check the "Allow privileged port mapping (requires password)" checkbox in the "Advanced" section of the Docker Desktop configuration. You may have to stop and restart Docker Desktop.
+
+    ### Rancher Desktop
+
+    Rancher Desktop is another free and open-source Docker provider. Install from [rancherdesktop.io](https://rancherdesktop.io/). It has automated testing with DDEV. When installing, choose only the Docker option and turn off Kubernetes.
+
+    #### Migrating Projects Between Docker Providers
+
+    * OrbStack has built-in migration of images and volumes from Docker Desktop.
+    * Move projects between other Docker providers using [How can I migrate from one Docker provider to another?](../usage/faq.md#how-can-i-migrate-from-one-docker-provider-to-another).
 
 === "Linux"
 
