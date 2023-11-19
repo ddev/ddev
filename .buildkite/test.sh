@@ -18,9 +18,11 @@ trap cleanup EXIT
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   case ${DOCKER_TYPE} in
     "docker-desktop")
+      orb stop || true
       open -a Docker
       ;;
     "orbstack")
+      killall com.docker.backend || true
       orb start
       ;;
     *)
