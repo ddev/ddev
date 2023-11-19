@@ -131,7 +131,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 3. Download and install Chrome and log the browser into the account used for test runners. It will pick up the Chrome Remote Desktop setup as a result. Configure Chrome Remote Desktop to serve. When this is done, the machine will be available for remote access and most other tasks can be done using Chrome Remote Desktop.
 4. The machine should be on the correct network and have a static IP handed out by DHCP. IP addresses are listed in /etc/hosts on `pi.ddev.site`, so this one should be added.
 5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png).
-6. Auto login should be set up as in ![macos users and groups](../images/macos_users_and_groups.png).
+6. Auto login should be set up as in ![macos users and groups](../images/macos_users_and_groups.png), see [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 7. Remote login should be enabled as in ![macos remote login](../images/macos_remote_login.png).
 8. Automatic updates should be set to mostly security only as in ![macos automatic_updatees](../images/macos_automatic_updates.png).
 9. Set the time zone to US MT (nearest city: Denver, Colorado).
@@ -164,5 +164,5 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 23. Run `brew services start buildkite-agent`.
 24. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-25. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-26. `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
+25.`mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
+25. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
