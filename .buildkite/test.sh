@@ -20,16 +20,19 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   case ${DOCKER_TYPE} in
     "docker-desktop")
       orb stop || true
+      ~/.rd/bin/rdctl shutdown || true
       open -a Docker
       docker context use desktop-linux
       ;;
     "orbstack")
+      ~/.rd/bin/rdctl shutdown || true
       killall com.docker.backend || true
       orb start &
       docker context use orbstack
       ;;
     "rancher-desktop")
       killall com.docker.backend || true
+      orb stop || true
       ~/.rd/bin/rdctl start
       docker context use rancher-desktop
       ;;
