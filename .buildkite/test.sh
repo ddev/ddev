@@ -23,7 +23,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
     "orbstack")
       killall com.docker.backend || true
-      orb start
+      orb start &
       ;;
     *)
       open -a Docker
