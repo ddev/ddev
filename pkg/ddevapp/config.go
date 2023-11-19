@@ -489,12 +489,6 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
-	if !nodeps.IsValidNodeVersion(app.NodeJSVersion) {
-		util.Warning("Node.js version '%s' is not currently supported by DDEV, ignoring and using default version '%v'.", app.NodeJSVersion, nodeps.NodeJSDefault)
-		util.Warning("Use `ddev config --auto` to fix, or use `ddev nvm` to support an arbitrary Node.js version.")
-		app.NodeJSVersion = nodeps.NodeJSDefault
-	}
-
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
 		return fmt.Errorf("unsupported omit_containers: %s, DDEV (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
@@ -932,12 +926,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
-		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
-		extraWebContent = extraWebContent + "\nRUN curl -sSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor > /usr/share/keyrings/nodesource.gpg"
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN echo \"deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_%s.x nodistro main\" > /etc/apt/sources.list.d/nodesource.list", app.NodeJSVersion)
-		extraWebContent = extraWebContent + "\nRUN echo 'disk usage problems: ' && df -h /tmp && ls -l /var/lib/apt/lists\n"
-		extraWebContent = extraWebContent + "\nRUN apt-get update >/dev/null && apt-get install -y nodejs >/dev/null\n" +
-			"RUN npm install --unsafe-perm=true --global gulp-cli yarn || ( npm config set unsafe-perm true && npm install --global gulp-cli yarn )"
+		extraWebContent = extraWebContent + "\nRUN npm install -g n"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s", app.NodeJSVersion)
 	}
 
 	// Add supervisord config for WebExtraDaemons
