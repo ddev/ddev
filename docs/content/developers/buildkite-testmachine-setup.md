@@ -168,3 +168,4 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 25. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 25.`mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
 26. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+27. Add the new machine to Icinga by copying an existing Icinga service to the new one.
