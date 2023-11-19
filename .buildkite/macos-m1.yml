@@ -1,6 +1,6 @@
   - label: "check-no-code-changes"
     command: |
-      [ "${BUILDKITE_PULL_REQUEST:-}" == "" ] || (git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null)
+      [ "${BUILDKITE_PULL_REQUEST:-}" == "" ] || ! (git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null)
     key: "check-no-code-changes"
   - command: ".buildkite/test.sh"
     depends_on: "check-no-code-changes"
