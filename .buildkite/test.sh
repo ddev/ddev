@@ -31,6 +31,11 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   esac
 fi
 
+export TIMEOUT_CMD="timeout -v"
+if [ ${OSTYPE%%-*} = "linux" ]; then
+  TIMEOUT_CMD="timeout"
+fi
+
 # Make sure docker is working
 echo "Waiting for docker to come up: $(date)"
 date && ${TIMEOUT_CMD} 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
@@ -80,11 +85,6 @@ fi
 #  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 #  sleep 10
 #fi
-
-export TIMEOUT_CMD="timeout -v"
-if [ ${OSTYPE%%-*} = "linux" ]; then
-  TIMEOUT_CMD="timeout"
-fi
 
 docker volume rm ddev-global-cache >/dev/null 2>&1 || true
 
