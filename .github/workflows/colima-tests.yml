@@ -101,8 +101,7 @@ jobs:
 
       - name: Install and start Colima
         run: |
-          brew unlink colima || true
-          brew install --HEAD --fetch-head colima
+          brew install colima
           colima version
           colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
 
