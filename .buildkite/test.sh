@@ -9,6 +9,7 @@ export GOTEST_SHORT=8
 # Always leave docker desktop running
 function cleanup {
     orb stop || true
+    ~/.rd/bin/rdctl shutdown || true
     open -a Docker
     docker context use desktop-linux
 }
@@ -27,6 +28,12 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb start &
       docker context use orbstack
       ;;
+    "rancher-desktop")
+      killall com.docker.backend || true
+      ~/.rd/bin/rdctl start
+      docker context use rancher-desktop
+      ;;
+
     *)
       open -a Docker
       ;;

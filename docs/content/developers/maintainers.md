@@ -54,6 +54,10 @@ There are cases like access to hosting provider integrations that have essential
 * [Newmonitor.thefays.us](https://newmonitor.thefays.us/icingaweb2/dashboard) (Test runner monitoring).
 * SSH (and sudo) access to `newmonitor.thefays.us`
 * **[developer.apple.com](https://developer.apple.com)** - Maintainers should be added to the DDEV team in the Apple Developer program, so that they can create new certificates.
+* **SSH access to newmonitor.thefays.us**.
+* **Notifications from newmonitor.thefays.us**.
+* **Web access to newmonitor.thefays.us**.
+* **SSH access to behind-firewall monitoring proxy**.
 
 ## Newmonitor.thefays.us use and maintenance
 
