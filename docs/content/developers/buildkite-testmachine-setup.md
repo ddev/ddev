@@ -155,14 +155,14 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * `build-path="~/tmp/buildkite-agent/builds"`
 22. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
-```bash
-#!/bin/bash
-export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-export DOCKERHUB_PULL_PASSWORD=xxx
-set -e
-```
+    ```bash
+    #!/bin/bash
+    export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+    export DOCKERHUB_PULL_PASSWORD=xxx
+    set -e
+    ```
 
-20. Run `brew services start buildkite-agent`.
-21. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+23. Run `brew services start buildkite-agent`.
+24. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 25. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 26. `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
