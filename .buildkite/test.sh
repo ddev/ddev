@@ -6,7 +6,31 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+# Always leave docker desktop running
+function cleanup {
+    orb stop || true
+    open -a Docker
+    docker context use default
+}
+trap cleanup EXIT
+
+# On macOS, we can have several different docker providers, allow testing all
+if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+  case ${DOCKER_TYPE} in
+    "docker-desktop")
+      open -a Docker
+      ;;
+    "orbstack")
+      orb start
+      ;;
+    *)
+      open -a Docker
+      ;;
+  esac
+fi
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+
+ddev version
 
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true

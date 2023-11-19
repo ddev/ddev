@@ -5,7 +5,7 @@
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
-      - "dockertype=orbstack"
+      - "orbstack=true"
       - "architecture=arm64"
     #branches: "master"
     env:
@@ -14,4 +14,5 @@
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_SHARE_CMD: "false"
       DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "orbstack"
     parallelism: 1

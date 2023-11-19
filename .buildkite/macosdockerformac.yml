@@ -11,6 +11,6 @@
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
-      DDEV_TEST_USE_NFSMOUNT: true
       DDEV_TEST_SHARE_CMD: "true"
+      DOCKER_TYPE: "docker-desktop"
     parallelism: 1
