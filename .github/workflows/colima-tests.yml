@@ -101,9 +101,7 @@ jobs:
 
       - name: Install and start Colima
         run: |
-          # Temporarily use colima 0.5.6 as 0.6.* can't pass tests
-          sudo mkdir -p /usr/local/bin && sudo curl -L -o /usr/local/bin/colima https://github.com/abiosoft/colima/releases/download/v0.5.6/colima-Darwin-x86_64 && sudo chmod +x /usr/local/bin/colima
-          hash -r
+          brew install colima
           colima version
           colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
 
