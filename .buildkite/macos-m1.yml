@@ -1,9 +1,11 @@
-  - label: "check-no-code-changes"
+  - label: "Run test.sh if code changes"
     command: |
-      [ "${BUILDKITE_PULL_REQUEST:-}" == "" ] || (git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null)
-    key: "check-no-code-changes"
-  - command: ".buildkite/test.sh"
-    depends_on: "check-no-code-changes"
+      if [ "${BUILDKITE_PULL_REQUEST:-}" == "" ] || (git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null)
+      then 
+        true # Here we don't have code changes, so just stop the test with success
+      else
+        .buildkite/test.sh
+      fi
     plugins:
       - docker-login#v2.1.0:
           username: druddockerpullaccount
