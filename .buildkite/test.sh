@@ -6,17 +6,17 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
 
-# Always leave docker desktop running
-function cleanup {
-    orb stop || true
-    ~/.rd/bin/rdctl shutdown || true
-    open -a Docker
-    docker context use desktop-linux
-}
-trap cleanup EXIT
-
 # On macOS, we can have several different docker providers, allow testing all
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+  # Always leave docker desktop running on macOS test runners
+  function cleanup {
+      orb stop || true
+      ~/.rd/bin/rdctl shutdown >/dev/null 2>&1 || true
+      open -a Docker >/dev/null 2>&1 || true
+      docker context use desktop-linux
+  }
+  trap cleanup EXIT
+
   case ${DOCKER_TYPE} in
     "docker-desktop")
       orb stop || true
