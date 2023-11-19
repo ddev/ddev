@@ -1,4 +1,3 @@
-
   - command: ".buildkite/test.sh"
     plugins:
       - docker-login#v2.1.0:
