@@ -6,7 +6,7 @@ search:
 
 ## Release process and tools
 
-* [Goreleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). Goreleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in LastPass to DDEV maintainers who need it.
+* [Goreleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). Goreleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
 * The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the goreleaser actions and provides the needed secrets.
 
 ## GitHub Actions Required Secrets
@@ -176,7 +176,7 @@ However, you can manually publish the release to [the DDEV AUR repository](https
 
 This is done automatically by the release build on a dedicated Windows test runner (GitHub Actions runner) named `testbot-asus-win10pro`. You would need to do this process manually on that build machine or install the fob on another machine.
 
-**After rebooting this machine, sometimes an automated reboot, the password for the security fob has to be re-entered or Windows signing will fail. We do this by opening up `tb-win11-06` using Chrome Remote Desktop (or manually physically opening it), opening Git Bash, and `cd ~/tmp && signtool sign gsudo.exe`. There happens to be a `gsudo.exe` there but it doesn’t matter what you sign—the idea is to pop up the GUI where you enter the password (which is in LastPass).**
+**After rebooting this machine, sometimes an automated reboot, the password for the security fob has to be re-entered or Windows signing will fail. We do this by opening up `tb-win11-06` using Chrome Remote Desktop (or manually physically opening it), opening Git Bash, and `cd ~/tmp && signtool sign gsudo.exe`. There happens to be a `gsudo.exe` there but it doesn’t matter what you sign—the idea is to pop up the GUI where you enter the password (which is in 1Password).**
 
 ### Basic Instructions
 
