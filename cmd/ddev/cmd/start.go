@@ -119,7 +119,7 @@ ddev start --all`,
 
 		projects, err := getRequestedProjects(args, startAll)
 		if err != nil {
-			util.Failed("Failed to get project(s): %v", err)
+			util.Failed("Failed to start project(s): %v", err)
 		}
 		if len(projects) > 0 {
 			instrumentationApp = projects[0]

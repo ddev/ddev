@@ -437,21 +437,21 @@ func (app *DdevApp) ValidateConfig() error {
 	if app.DdevVersionConstraint != "" {
 		constraint := app.DdevVersionConstraint
 		if !strings.Contains(constraint, "-") {
-			// Allow prereleases to be included in the constraint validation
+			// Allow pre-releases to be included in the constraint validation
 			// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
 			constraint += "-0"
 		}
 		c, err := semver.NewConstraint(constraint)
 		if err != nil {
-			return fmt.Errorf("%s is not a valid constraint. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.DdevVersionConstraint).(invalidConstraint)
+			return fmt.Errorf("the %s project has '%s' constraint that is not valid. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.Name, app.DdevVersionConstraint).(invalidConstraint)
 		}
 
 		// Make sure we do this check with valid released versions
 		v, err := semver.NewVersion(versionconstants.DdevVersion)
 		if err == nil {
 			if !c.Check(v) {
-				return fmt.Errorf("this project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint", app.DdevVersionConstraint,
-					versionconstants.DdevVersion)
+				return fmt.Errorf("the %s project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint",
+					app.Name, app.DdevVersionConstraint, versionconstants.DdevVersion)
 			}
 		}
 	}
@@ -474,34 +474,34 @@ func (app *DdevApp) ValidateConfig() error {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
 		if hn == "ddev.site" {
-			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
+			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
-			return fmt.Errorf("invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", hn).(invalidHostname)
+			return fmt.Errorf("the %s project has an invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.Name, hn).(invalidHostname)
 		}
 	}
 
 	// Validate apptype
 	if !IsValidAppType(app.Type) {
-		return fmt.Errorf("invalid app type: %s", app.Type).(invalidAppType)
+		return fmt.Errorf("the %s project has an invalid app type: %s", app.Name, app.Type).(invalidAppType)
 	}
 
 	// Validate PHP version
 	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("unsupported PHP version: %s, DDEV only supports the following versions: %v", app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+		return fmt.Errorf("the %s project has an unsupported PHP version: %s, DDEV only supports the following versions: %v", app.Name, app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
 	// Validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
-		return fmt.Errorf("unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
+		return fmt.Errorf("the %s project has unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.Name, app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("unsupported omit_containers: %s, DDEV (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
+		return fmt.Errorf("the %s project has an unsupported omit_containers: %s, DDEV (%s) only supports the following for omit_containers: %s", app.Name, app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: '%s:%s', DDEV %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
+		return fmt.Errorf("the %s project has an unsupported database type/version: '%s:%s', DDEV %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Name, app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// This check is too intensive for app.Init() and ddevapp.GetActiveApp(), slows things down dramatically
@@ -520,12 +520,12 @@ func (app *DdevApp) ValidateConfig() error {
 			// Golang on Windows is often not able to time.LoadLocation.
 			// It often works if go is installed and $GOROOT is set, but
 			// that's not the norm for our users.
-			return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
+			return fmt.Errorf("the %s project has an invalid timezone %s: %v", app.Name, app.Timezone, err)
 		}
 	}
 
 	// if app.Database.Type == nodeps.Postgres && (nodeps.ArrayContainsString([]string{"wordpress", "magento", "magento2"}, app.Type)) {
-	//	return fmt.Errorf("project type %s does not support PostgreSQL database", app.Type)
+	//	return fmt.Errorf("the %s project has a project type %s that does not support PostgreSQL database", app.Name, app.Type)
 	// }
 
 	return nil
