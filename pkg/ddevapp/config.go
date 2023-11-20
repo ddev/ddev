@@ -461,8 +461,11 @@ func (app *DdevApp) ValidateConfig() error {
 		return err
 	}
 
-	// Stop here if no config found
+	// Skip any validation below this check if there is nothing to validate
 	if err := CheckForMissingProjectFiles(app); err != nil {
+		// Do not return an error here because not all DDEV commands should be stopped by this check
+		// It matters when you start a project, but not when you stop or delete it
+		// This check is reused elsewhere where appropriate
 		return nil
 	}
 
