@@ -493,7 +493,7 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// Validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
-		return fmt.Errorf("the %s project has unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.Name, app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
+		return fmt.Errorf("the %s project has an unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.Name, app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
