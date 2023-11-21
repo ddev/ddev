@@ -61,5 +61,5 @@ fi
 # Clean the docker build cache
 docker buildx prune -f -a || true
 # Remove any images with name '-built'
-docker rm -f $(docker ps -aq) >/dev/null || true
-docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
+docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
+docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null 2>&1 || true

@@ -9,5 +9,5 @@
       - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
-      DDEV_TEST_USE_NFSMOUNT: true
+      DDEV_TEST_USE_NFSMOUNT: false
     parallelism: 1

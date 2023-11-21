@@ -5,12 +5,14 @@
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
-      - "dockertype=dockerformac"
-      - "architecture=amd64"
+      - "orbstack=true"
+      - "architecture=arm64"
+    #branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
-      DDEV_TEST_USE_NFSMOUNT: true
-      DDEV_TEST_SHARE_CMD: "true"
+      DDEV_TEST_SHARE_CMD: "false"
+      DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "orbstack"
     parallelism: 1

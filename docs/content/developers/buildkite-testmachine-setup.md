@@ -8,7 +8,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 ## Windows Test Agent Setup
 
-1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in LastPass.
+1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. In admin PowerShell, `wsl --install`.
 3. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`.
 4. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
@@ -126,36 +126,46 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 ## macOS Test Agent Setup (Intel and Apple Silicon)
 
-1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in LastPass.
-2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
-3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent  bats-core colima composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 google-chrome nosleep ngrok`.
-5. Run `ngrok config add-authtoken <token>` with token for free account.
-6. Run `mkcert -install`.
-7. Run Docker manually and go through its configuration routine.
-8. Run iTerm. On Mojave and higher you may need to allow full disk access permissions.
-9. Set up `nfsd` by running `macos_ddev_nfs_setup.sh`.
-10. `git config --global --add safe.directory '*'`
-11. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
-    * the agent token
-    * tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
+1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
+2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
+3. Download and install Chrome and log the browser into the account used for test runners. It will pick up the Chrome Remote Desktop setup as a result. Configure Chrome Remote Desktop to serve. When this is done, the machine will be available for remote access and most other tasks can be done using Chrome Remote Desktop.
+4. The machine should be on the correct network and have a static IP handed out by DHCP. IP addresses are listed in /etc/hosts on `pi.ddev.site`, so this one should be added.
+5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png).
+6. Auto login should be set up as in ![macos users and groups](../images/macos_users_and_groups.png), see [automatically log in on boot](https://support.apple.com/en-us/HT201476).
+7. Remote login should be enabled as in ![macos remote login](../images/macos_remote_login.png).
+8. Automatic updates should be set to mostly security only as in ![macos automatic_updatees](../images/macos_automatic_updates.png).
+9. Set the time zone to US MT (nearest city: Denver, Colorado).
+10. `sudo mkdir -p /usr/local/bin && chown -R testbot /usr/local/bin`
+11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok`.
+14. Run `ngrok config add-authtoken <token>` with token for free account from 1Password.
+15. Run `mkcert -install`.
+16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
+17. If OrbStack will be deployed, install it from [orbstack.dev](https://orbstack.dev).
+    * Install with Docker only.
+    * Click "Sign in" in the lower left to sign in with OrbStack credentials (normal test runner gmail address; it will receive an email with a login code).
+    * Configure it to automatically start and download updates, see ![OrbStack configuration](../images/orbstack_configuration.png).
+18. If Rancher Desktop will be deployed, install it.
+    * Turn off kubernetes.
+19. Run iTerm. You may need to allow full disk access permissions.
+20. Set up `nfsd` by running [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh).
+21. `git config --global --add safe.directory '*'`
+22. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
+    * the agent token (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
+    * tags, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-12. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
+23. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
     ```bash
-        #!/bin/bash
-        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-        export DOCKERHUB_PULL_PASSWORD=xxx
-        set -e
+    #!/bin/bash
+    export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+    export DOCKERHUB_PULL_PASSWORD=xxx
+    set -e
     ```
 
-13. Run `brew services start buildkite-agent`.
-14. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-15. Enable nosleep using its shortcut in the Mac status bar.
-16. In nosleep Preferences, enable “Never sleep on AC Adapter”, “Never sleep on Battery”, and “Start nosleep utility on system startup”.
-17. `sudo chown testbot /usr/local/bin`
-18. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-19. Try checking out [ddev/ddev](https://github.com/ddev/ddev) and running `.buildkite/sanetestbot.sh` to check your work.
-20. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
-21. Set the timezone (US MT).
-22. Start the agent with `brew services start buildkite-agent`.
+24. Run `brew services start buildkite-agent`.
+25. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+26. `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
+27. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+28. Add the new machine to Icinga by copying an existing Icinga service to the new one.

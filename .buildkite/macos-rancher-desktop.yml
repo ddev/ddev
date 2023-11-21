@@ -5,14 +5,14 @@
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
-      - "dockertype=dockerformac"
+      - "rancher-desktop=true"
       - "architecture=arm64"
+    branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
-      DDEV_TEST_SHARE_CMD: "true"
-      DDEV_RUN_GET_TESTS: "true"
-      DOCKER_TYPE: "docker-desktop"
-
+      DDEV_TEST_SHARE_CMD: "false"
+      DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "rancher-desktop"
     parallelism: 1

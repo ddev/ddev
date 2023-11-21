@@ -6,7 +6,63 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+# On macOS, we can have several different docker providers, allow testing all
+if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+  # Always leave docker desktop running on macOS test runners
+  function cleanup {
+      orb stop || true
+      ~/.rd/bin/rdctl shutdown >/dev/null 2>&1 || true
+      open -a Docker >/dev/null 2>&1 || true
+      docker context use desktop-linux
+  }
+  trap cleanup EXIT
+
+  case ${DOCKER_TYPE} in
+    "docker-desktop")
+      orb stop || true
+      ~/.rd/bin/rdctl shutdown || true
+      open -a Docker
+      docker context use desktop-linux
+      ;;
+    "orbstack")
+      ~/.rd/bin/rdctl shutdown || true
+      killall com.docker.backend || true
+      orb start &
+      docker context use orbstack
+      ;;
+    "rancher-desktop")
+      killall com.docker.backend || true
+      orb stop || true
+      ~/.rd/bin/rdctl start
+      docker context use rancher-desktop
+      ;;
+
+    *)
+      open -a Docker
+      ;;
+  esac
+fi
+
+export TIMEOUT_CMD="timeout -v"
+if [ ${OSTYPE%%-*} = "linux" ]; then
+  TIMEOUT_CMD="timeout"
+fi
+
+# Make sure docker is working
+echo "Waiting for docker to come up: $(date)"
+date && ${TIMEOUT_CMD} 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
+  sleep 10
+  echo "Waiting for docker to come up: $(date)"
+done'
+echo "Testing again to make sure docker came up: $(date)"
+if ! docker ps >/dev/null 2>&1 ; then
+  echo "Docker is not running, exiting"
+  exit 1
+fi
+
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+
+ddev version
 
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
@@ -41,22 +97,6 @@ fi
 #  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 #  sleep 10
 #fi
-
-export TIMEOUT_CMD="timeout -v"
-if [ ${OSTYPE%%-*} = "linux" ]; then
-  TIMEOUT_CMD="timeout"
-fi
-# Make sure docker is working
-echo "Waiting for docker to come up: $(date)"
-date && ${TIMEOUT_CMD} 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
-  sleep 10
-  echo "Waiting for docker to come up: $(date)"
-done'
-echo "Testing again to make sure docker came up: $(date)"
-if ! docker ps >/dev/null 2>&1 ; then
-  echo "Docker is not running, exiting"
-  exit 1
-fi
 
 docker volume rm ddev-global-cache >/dev/null 2>&1 || true
 

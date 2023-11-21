@@ -6,13 +6,11 @@
     agents:
       - "os=macos"
       - "dockertype=dockerformac"
-      - "architecture=arm64"
+      - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_SHARE_CMD: "true"
-      DDEV_RUN_GET_TESTS: "true"
       DOCKER_TYPE: "docker-desktop"
-
     parallelism: 1
