@@ -618,14 +618,14 @@ func TestConfigValidate(t *testing.T) {
 	app.DdevVersionConstraint = ">= 1.twentythree"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "not a valid constraint")
+	assert.Contains(err.Error(), "constraint that is not valid")
 	app.DdevVersionConstraint = ""
 
 	versionconstants.DdevVersion = "v1.22.0"
 	app.DdevVersionConstraint = ">= 1.23"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "this project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.0') does not meet the constraint")
+	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.0') does not meet the constraint")
 	app.DdevVersionConstraint = ""
 	versionconstants.DdevVersion = ddevVersion
 
@@ -648,7 +648,7 @@ func TestConfigValidate(t *testing.T) {
 	app.DdevVersionConstraint = ">= 1.23"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "this project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
+	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
 	app.DdevVersionConstraint = ""
 	versionconstants.DdevVersion = ddevVersion
 
@@ -663,7 +663,7 @@ func TestConfigValidate(t *testing.T) {
 	app.DdevVersionConstraint = ">= 1.23.0-0"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "this project has a DDEV version constraint of '>= 1.23.0-0' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
+	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23.0-0' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
 	app.DdevVersionConstraint = ""
 	versionconstants.DdevVersion = ddevVersion
 
@@ -671,7 +671,7 @@ func TestConfigValidate(t *testing.T) {
 	app.DdevVersionConstraint = ">= v1.22.3-alpha3"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "this project has a DDEV version constraint of '>= v1.22.3-alpha3' and the version of DDEV you are using ('v1.22.3-alpha2') does not meet the constraint")
+	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= v1.22.3-alpha3' and the version of DDEV you are using ('v1.22.3-alpha2') does not meet the constraint")
 	app.DdevVersionConstraint = ""
 	versionconstants.DdevVersion = ddevVersion
 
