@@ -127,7 +127,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## macOS Test Agent Setup (Intel and Apple Silicon)
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
-2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
+2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
 3. Download and install Chrome and log the browser into the account used for test runners. It will pick up the Chrome Remote Desktop setup as a result. Configure Chrome Remote Desktop to serve. When this is done, the machine will be available for remote access and most other tasks can be done using Chrome Remote Desktop.
 4. The machine should be on the correct network and have a static IP handed out by DHCP. IP addresses are listed in /etc/hosts on `pi.ddev.site`, so this one should be added.
 5. Power should be set up as in ![macos power settings](../images/macos_power_settings.png).
@@ -138,7 +138,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 10. `sudo mkdir -p /usr/local/bin && chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2  nosleep ngrok`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok`.
 14. Run `ngrok config add-authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
@@ -153,7 +153,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 21. `git config --global --add safe.directory '*'`
 22. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
     * the agent token (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
-    * tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
+    * tags, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
     * `build-path="~/tmp/buildkite-agent/builds"`
 23. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
@@ -166,6 +166,6 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 24. Run `brew services start buildkite-agent`.
 25. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-25.`mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
-26. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
-27. Add the new machine to Icinga by copying an existing Icinga service to the new one.
+26. `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
+27. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+28. Add the new machine to Icinga by copying an existing Icinga service to the new one.
