@@ -27,6 +27,13 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 
 	// If all projects are requested, return here
 	if all {
+		for _, project := range allProjects {
+			err = project.ValidateConfig()
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		return allProjects, nil
 	}
 
