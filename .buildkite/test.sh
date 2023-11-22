@@ -10,7 +10,7 @@ export GOTEST_SHORT=8
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   # Always leave docker desktop running on macOS test runners
   function cleanup {
-      orb stop || true
+      orb stop &
       ~/.rd/bin/rdctl shutdown >/dev/null 2>&1 || true
       open -a Docker >/dev/null 2>&1 || true
       docker context use desktop-linux
@@ -19,7 +19,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
 
   case ${DOCKER_TYPE} in
     "docker-desktop")
-      orb stop || true
+      orb stop &
       ~/.rd/bin/rdctl shutdown || true
       open -a Docker
       docker context use desktop-linux
@@ -32,7 +32,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
     "rancher-desktop")
       killall com.docker.backend || true
-      orb stop || true
+      orb stop &
       ~/.rd/bin/rdctl start
       docker context use rancher-desktop
       ;;
