@@ -5,7 +5,7 @@
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
-      - "dockertype=docker-desktop"
+      - "docker-desktop=true"
       - "architecture=arm64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
