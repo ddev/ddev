@@ -19,6 +19,8 @@ Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) cre
 
 Download and unzip the appropriate binary and place it in your `$PATH`.
 
+### Homebrew with macOS or Linux
+
 If you’re using Homebrew, start by unlinking your current binary:
 
 ```
@@ -32,7 +34,7 @@ unzip ddev.zip
 chmod +x ddev && sudo mv ddev /usr/local/bin/ddev
 ```
 
-Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
+Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.22.5-alpha1-70-g0852fc2df`, instead of the regular `ddev version v1.22.5`.
 
 !!!tip "macOS and Unsigned Binaries"
     macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
@@ -50,6 +52,32 @@ After you’re done, you can delete your downloaded binary and re-link the origi
 ```
 sudo rm /usr/local/bin/ddev
 brew link --force ddev
+```
+
+### Installing a Downloaded Binary in the `$PATH`
+
+Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. `echo $PATH` and `which ddev` are valuable commands for debugging. Since not every distro has `~/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
+
+```
+mkdir -p ~/bin
+export PATH="~/bin:$PATH"
+```
+
+Next, unzip the Zip file you downloaded, make it executable, and move it to a folder in your path. Check with `echo $PATH`:
+
+```
+unzip ddev.zip
+chmod +x ddev && mv ddev ~/bin
+```
+
+Now, close and reopen your terminal, and verify the replacement worked by running `ddev version`. The output should be something like `DDEV version v1.22.3-39-gfbb878843`, instead of the regular `DDEV version v1.22.3`.
+
+You need to run `ddev poweroff` and `ddev start` to download the Docker images that it needs.
+
+After you’re done testing, you can delete your downloaded executable, restart your terminal, and again use the standard DDEV:
+
+```
+rm ~/bin/ddev
 ```
 
 ## Open in Gitpod
