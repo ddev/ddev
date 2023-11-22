@@ -71,6 +71,8 @@ func GetDockerPlatform() (string, error) {
 		platform = "orbstack"
 	case nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "wsl2-docker-ce"
+	case !nodeps.IsWSL2() && info.OSType == "linux":
+		platform = "linux-docker"
 	case strings.HasPrefix(platform, "Rancher Desktop") || strings.Contains(info.Name, "rancher-desktop"):
 
 		platform = "rancher-desktop"
