@@ -84,7 +84,7 @@ Successfully imported files for d10
 
 It can also import a directory containing static assets.
 
-If using a Tar or Zip archive, the archive should contain *only the files inside the files directory*. For example in a Drupal site with files at `sites/default/files`, the archive should only contain the contents of the `files` directory; it should not contain a single `files` directory. The easiest way to do this with the `tar` command is to `cd` into the directory and create the archive there. An example Tar file creation is:
+If using a Tar or Zip archive, the archive should contain *only the files inside the files directory*. For example in a Drupal site with files at `sites/default/files`, the archive should only contain the contents of the `files` directory; it should not contain a single `files` directory. To do this with the `tar` command, `cd` into the directory and create the archive there. An example Tar file creation is:
 
 ```bash
 cd web/sites/default/files
