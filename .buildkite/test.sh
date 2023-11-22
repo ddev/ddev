@@ -8,37 +8,33 @@ export GOTEST_SHORT=8
 
 # On macOS, we can have several different docker providers, allow testing all
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
-  # Always leave docker desktop running on macOS test runners
   function cleanup {
-      orb stop || true
-      ~/.rd/bin/rdctl shutdown >/dev/null 2>&1 || true
-      open -a Docker >/dev/null 2>&1 || true
-      docker context use desktop-linux
+      docker context use default
   }
   trap cleanup EXIT
 
   case ${DOCKER_TYPE} in
     "docker-desktop")
-      orb stop || true
+      orb stop &
       ~/.rd/bin/rdctl shutdown || true
-      open -a Docker
-      docker context use desktop-linux
+      open -a Docker &
+      docker context use default
       ;;
     "orbstack")
       ~/.rd/bin/rdctl shutdown || true
       killall com.docker.backend || true
       orb start &
-      docker context use orbstack
+      docker context use default
       ;;
     "rancher-desktop")
       killall com.docker.backend || true
-      orb stop || true
+      orb stop &
       ~/.rd/bin/rdctl start
       docker context use rancher-desktop
       ;;
 
     *)
-      open -a Docker
+      echo "no DOCKER_TYPE specified, exiting" && exit 10
       ;;
   esac
 fi
