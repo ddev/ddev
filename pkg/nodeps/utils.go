@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 
@@ -134,4 +135,20 @@ func GrepStringInBuffer(buffer string, needle string) []string {
 	re := regexp.MustCompilePOSIX(needle)
 	matches := re.FindStringSubmatch(buffer)
 	return matches
+}
+
+// PathWithSlashesToArray returns an array of all possible paths separated by slashes out
+// of a single one.
+// i.e. path/to/file will return {"path", "path/to", "path/to/file"}
+func PathWithSlashesToArray(path string) []string {
+	var paths []string
+	var partial string
+	for _, p := range strings.Split(path, "/") {
+		partial += p
+		if len(partial) > 0 {
+			paths = append(paths, partial)
+		}
+		partial += "/"
+	}
+	return paths
 }

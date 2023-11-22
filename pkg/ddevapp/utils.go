@@ -400,17 +400,22 @@ func ExtractProjectNames(apps []*DdevApp) []string {
 	return names
 }
 
-// GetRelativeWorkingDirectory returns the relative working directory relative to project root
+// GetRelativeDirectory returns the directory relative to project root
 // Note that the relative dir is returned as unix-style forward-slashes
-func (app *DdevApp) GetRelativeWorkingDirectory() string {
-	pwd, _ := os.Getwd()
-
+func (app *DdevApp) GetRelativeDirectory(path string) string {
 	// Find the relative dir
-	relativeWorkingDir := strings.TrimPrefix(pwd, app.AppRoot)
+	relativeWorkingDir := strings.TrimPrefix(path, app.AppRoot)
 	// Convert to slash/linux/macos notation, should work everywhere
 	relativeWorkingDir = filepath.ToSlash(relativeWorkingDir)
 	// Remove any leading /
 	relativeWorkingDir = strings.TrimLeft(relativeWorkingDir, "/")
 
 	return relativeWorkingDir
+}
+
+// GetRelativeWorkingDirectory returns the relative working directory relative to project root
+// Note that the relative dir is returned as unix-style forward-slashes
+func (app *DdevApp) GetRelativeWorkingDirectory() string {
+	pwd, _ := os.Getwd()
+	return app.GetRelativeDirectory(pwd)
 }

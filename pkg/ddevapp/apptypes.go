@@ -25,6 +25,9 @@ type uploadDirs func(*DdevApp) []string
 // config refactor is done.
 type hookDefaultComments func() []byte
 
+// composerCreateAllowedPaths
+type composerCreateAllowedPaths func(app *DdevApp) ([]string, error)
+
 // appTypeSettingsPaths
 type appTypeSettingsPaths func(app *DdevApp)
 
@@ -57,6 +60,7 @@ type appTypeFuncs struct {
 	settingsCreator
 	uploadDirs
 	hookDefaultComments
+	composerCreateAllowedPaths
 	appTypeSettingsPaths
 	appTypeDetect
 	postImportDBAction
@@ -74,15 +78,16 @@ var appTypeMatrix map[string]appTypeFuncs
 func init() {
 	appTypeMatrix = map[string]appTypeFuncs{
 		nodeps.AppTypeBackdrop: {
-			settingsCreator:      createBackdropSettingsFile,
-			uploadDirs:           getBackdropUploadDirs,
-			hookDefaultComments:  getBackdropHooks,
-			appTypeSettingsPaths: setBackdropSiteSettingsPaths,
-			appTypeDetect:        isBackdropApp,
-			postImportDBAction:   backdropPostImportDBAction,
-			postStartAction:      backdropPostStartAction,
-			importFilesAction:    backdropImportFilesAction,
-			defaultWorkingDirMap: docrootWorkingDir,
+			settingsCreator:            createBackdropSettingsFile,
+			uploadDirs:                 getBackdropUploadDirs,
+			hookDefaultComments:        getBackdropHooks,
+			appTypeSettingsPaths:       setBackdropSiteSettingsPaths,
+			appTypeDetect:              isBackdropApp,
+			postImportDBAction:         backdropPostImportDBAction,
+			postStartAction:            backdropPostStartAction,
+			importFilesAction:          backdropImportFilesAction,
+			defaultWorkingDirMap:       docrootWorkingDir,
+			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeCraftCms: {
@@ -101,58 +106,63 @@ func init() {
 		},
 
 		nodeps.AppTypeDrupal6: {
-			settingsCreator:      createDrupalSettingsPHP,
-			uploadDirs:           getDrupalUploadDirs,
-			hookDefaultComments:  getDrupal6Hooks,
-			appTypeSettingsPaths: setDrupalSiteSettingsPaths,
-			appTypeDetect:        isDrupal6App,
-			configOverrideAction: drupal6ConfigOverrideAction,
-			postStartAction:      drupal6PostStartAction,
-			importFilesAction:    drupalImportFilesAction,
-			defaultWorkingDirMap: docrootWorkingDir,
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupal6Hooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal6App,
+			configOverrideAction:       drupal6ConfigOverrideAction,
+			postStartAction:            drupal6PostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			defaultWorkingDirMap:       docrootWorkingDir,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeDrupal7: {
-			settingsCreator:      createDrupalSettingsPHP,
-			uploadDirs:           getDrupalUploadDirs,
-			hookDefaultComments:  getDrupal7Hooks,
-			appTypeSettingsPaths: setDrupalSiteSettingsPaths,
-			appTypeDetect:        isDrupal7App,
-			postStartAction:      drupal7PostStartAction,
-			importFilesAction:    drupalImportFilesAction,
-			defaultWorkingDirMap: docrootWorkingDir,
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupal7Hooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal7App,
+			postStartAction:            drupal7PostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			defaultWorkingDirMap:       docrootWorkingDir,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeDrupal8: {
-			settingsCreator:      createDrupalSettingsPHP,
-			uploadDirs:           getDrupalUploadDirs,
-			hookDefaultComments:  getDrupal8Hooks,
-			appTypeSettingsPaths: setDrupalSiteSettingsPaths,
-			appTypeDetect:        isDrupal8App,
-			configOverrideAction: drupal8ConfigOverrideAction,
-			postStartAction:      drupal8PostStartAction,
-			importFilesAction:    drupalImportFilesAction,
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupal8Hooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal8App,
+			configOverrideAction:       drupal8ConfigOverrideAction,
+			postStartAction:            drupal8PostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeDrupal9: {
-			settingsCreator:      createDrupalSettingsPHP,
-			uploadDirs:           getDrupalUploadDirs,
-			hookDefaultComments:  getDrupal8Hooks,
-			appTypeSettingsPaths: setDrupalSiteSettingsPaths,
-			appTypeDetect:        isDrupal9App,
-			postStartAction:      drupalPostStartAction,
-			importFilesAction:    drupalImportFilesAction,
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupal8Hooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal9App,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeDrupal10: {
-			settingsCreator:      createDrupalSettingsPHP,
-			uploadDirs:           getDrupalUploadDirs,
-			hookDefaultComments:  getDrupal8Hooks,
-			appTypeSettingsPaths: setDrupalSiteSettingsPaths,
-			appTypeDetect:        isDrupal10App,
-			configOverrideAction: drupal10ConfigOverrideAction,
-			postStartAction:      drupalPostStartAction,
-			importFilesAction:    drupalImportFilesAction,
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupal8Hooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal10App,
+			configOverrideAction:       drupal10ConfigOverrideAction,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
 		nodeps.AppTypeLaravel: {
@@ -304,6 +314,53 @@ func (app *DdevApp) GetHookDefaultComments() []byte {
 		return suggestions
 	}
 	return []byte("")
+}
+
+// GetComposerCreateAllowedPaths gets all paths relative to the app root that are allowed to be present
+// for a given apptype when running ddev composer create
+func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
+	var allowed []string
+
+	// doc root
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.GetDocroot()))...)
+
+	// composer root
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.GetComposerRoot(false, false)))...)
+
+	// allow upload dirs
+	// upload dirs are probably always relative and with slashes, but we run
+	// it through GetRelativeDirectory() just in case.
+	uploadDirs := app.getUploadDirsRelative()
+	for _, uploadDir := range uploadDirs {
+		allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(uploadDir))...)
+	}
+
+	// Settings files
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.SiteSettingsPath))...)
+	allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(app.SiteDdevSettingsFile))...)
+
+	// If we have a function to do the settings creation, allow .gitignore
+	// see CreateSettingsFile
+	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
+		// We don't create gitignore if it would be in top-level directory, where
+		// there is almost certainly already a gitignore (like Backdrop)
+		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
+			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(filepath.Join(filepath.Dir(app.SiteSettingsPath), ".gitignore")))...)
+		}
+	}
+
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.composerCreateAllowedPaths != nil {
+		paths, err := appFuncs.composerCreateAllowedPaths(app)
+		if err != nil {
+			return []string{""}, err
+		}
+		for _, path := range paths {
+			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(path))...)
+		}
+	}
+	allowed = util.SliceToUniqueSlice(&allowed)
+	sort.Strings(allowed)
+	return allowed, nil
 }
 
 // SetApptypeSettingsPaths chooses and sets the settings.php/settings.local.php

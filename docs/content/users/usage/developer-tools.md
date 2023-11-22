@@ -30,13 +30,15 @@ DDEV provides a built-in command to simplify use of PHP’s dependency manager, 
 * `ddev composer help` runs Composer’s help command to learn more about what’s available.
 * `ddev composer require <package>` tells Composer to require a specific PHP package for the current project.
 
-Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the project root in `/var/www/html`. The package and version arguments are required:
+Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the composer root (normally `/var/www/html`). The package and version arguments are required:
 
 `ddev composer create [<flags>] "<package>:<version>"`
 
 For example:
 
 `ddev composer create --no-dev "typo3/cms-base-distribution:^9"`
+
+When using `ddev composer create` your project should be essentially empty or the command will refuse to run, to avoid loss of your files.
 
 To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing [`ddev ssh`](../usage/commands.md#ssh), or pass the full command to [`ddev exec`](../usage/commands.md#exec), like so:
 

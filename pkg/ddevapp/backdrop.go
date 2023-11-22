@@ -224,3 +224,13 @@ func backdropPostStartAction(app *DdevApp) error {
 	}
 	return nil
 }
+
+// getBackdropComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create
+func getBackdropComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
+	var allowed []string
+
+	// drushrc.php path
+	allowed = append(allowed, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+
+	return allowed, nil
+}

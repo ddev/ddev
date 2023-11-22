@@ -29,8 +29,7 @@ var ComposerCreateCmd = &cobra.Command{
 	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
-the Composer root directory after install. Any existing files in the
-composer root will be deleted when creating a project.`,
+the Composer root directory after install.`,
 	Example: `ddev composer create drupal/recommended-project
 ddev composer create -y drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
@@ -64,52 +63,38 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		composerRoot := app.GetComposerRoot(false, false)
 
-		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: MOST EXISTING CONTENT in the Composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
-		if !composerCreateYesFlag {
-			if !util.Confirm("Would you like to continue?") {
-				util.Failed("create-project cancelled")
-			}
-		}
-
 		err = os.MkdirAll(composerRoot, 0755)
 		if err != nil {
 			util.Failed("Failed to create composerRoot: %v", err)
 		}
 
-		// Remove most contents of Composer root
-		util.Warning("Removing any existing files in Composer root")
-		objs, err := fileutil.ListFilesInDir(composerRoot)
+		appRoot := app.GetAbsAppRoot(false)
+		skipDirs := []string{".ddev", ".git", ".tarballs"}
+		composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
+		err = filepath.Walk(appRoot,
+			func(walkPath string, walkInfo os.FileInfo, err error) error {
+				if walkPath == appRoot {
+					return nil
+				}
+
+				checkPath := app.GetRelativeDirectory(walkPath)
+
+				if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
+					return filepath.SkipDir
+				}
+				if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
+					return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
+				}
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
 
-		for _, o := range objs {
-			// Preserve .ddev, .git, .tarballs
-			if o == ".ddev" || o == ".git" || o == ".tarballs" {
-				continue
-			}
-
-			if err = os.RemoveAll(filepath.Join(composerRoot, o)); err != nil {
-				util.Failed("Failed to create project: %v", err)
-			}
-		}
-
-		// Upload dirs have to be there for bind-mounts to work when Mutagen enabled
-		app.CreateUploadDirsIfNecessary()
-		// We may have removed host-side directories, invalidating
-		// that Docker bind-mounts are using, so restart to pick up the new ones.
-		if app.IsMutagenEnabled() {
-			err = app.Restart()
-			if err != nil {
-				util.Failed("Failed to restart project after removal of project files: %v", err)
-			}
-		}
-
-		err = app.MutagenSyncFlush()
-		if err != nil {
-			util.Failed("Failed to sync Mutagen contents: %v", err)
-		}
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)

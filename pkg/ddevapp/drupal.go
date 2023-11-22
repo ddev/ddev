@@ -593,3 +593,25 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 
 	return nil
 }
+
+// getDrupalComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create
+func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
+	var allowed []string
+
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return []string{}, nil
+	}
+
+	drupalConfig := NewDrupalSettings(app)
+
+	if app.Type == "drupal6" || app.Type == "drupal7" {
+		// drushrc.php path
+		allowed = append(allowed, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+	} else {
+		// Sync path
+		allowed = append(allowed, path.Join(app.GetDocroot(), "sites/default", drupalConfig.SyncDir))
+	}
+
+	return allowed, nil
+}
