@@ -63,7 +63,7 @@ mkdir -p ~/bin
 export PATH="~/bin:$PATH"
 ```
 
-Next, unzip the Zip file you downloaded, make it executable, and move it to a folder in your path. Check with `echo $PATH`:
+Next, unzip the ZIP file you downloaded, make it executable, and move it to a folder in your path. Check with `echo $PATH`:
 
 ```
 unzip ddev.zip
