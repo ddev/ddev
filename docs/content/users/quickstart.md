@@ -333,7 +333,10 @@ ddev composer create shopware/production:^v6.5
 # If it asks `Do you want to include Docker configuration from recipes?` answer `x`, as we're setting it up.
 # During system:setup you may have to enter the Database user (db), Database password (db)
 # Database host (db) and Database name (db).
-rm .env # composer create creates a .env file, but we want to start with .env.local
+#rm .env # composer create creates a .env file, but we want to start with .env.local
+
+ddev exec console system:install --basic-setup
+
 ddev exec console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}' --mailer-url='smtp://127.0.0.1:1025?encryption=&auth_mode='
 ddev exec console system:install --create-database --basic-setup
 ddev launch /admin
