@@ -58,8 +58,8 @@ ddev export-db >/tmp/db.sql.gz
 
 To import static file assets for a project, such as uploaded images and documents, use the command [`ddev import-files`](../usage/commands.md#import-files). This command will prompt you to specify the location of your import asset, then import the assets into the project’s upload directory. To define a custom upload directory, set the [`upload_dirs`](../configuration/config.md#upload_dirs) config option. If no custom upload directory is defined, the default will be used:
 
-* For Backdrop projects, this is the `files`.
-* For Drupal projects, these are the `sites/default/files` and `../private` directories.
+* For Backdrop projects, this is `files`.
+* For Drupal projects, this is `sites/default/files`.
 * For Magento 1 projects, this is the `media` directory.
 * For Magento 2 projects, this is the `pub/media` directory.
 * For Shopware projects, this is the `media` directory.
@@ -69,16 +69,27 @@ To import static file assets for a project, such as uploaded images and document
 Other project types need a custom configuration to be able to use this command.
 
 ```bash
-ddev import-files
-Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
-Import path:
-~/Downloads/files.tar.gz
-Successfully imported files for drupal8
+$ ddev import-files
+Provide the path to the source directory or archive you wish to import.
+Please note: if the destination directory exists, it will be emptied and replaced with the
+import assets specified here.
+Path to file(s): ~/workspace/d10/.tarballs/files.tgz
+You provided an archive. Do you want to extract from a specific path in your
+archive? You may leave this blank if you wish to use the full archive contents.
+Archive extraction path:
+Successfully imported files for d10
 ```
 
 `ddev import-files` supports the following file types: `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.
 
 It can also import a directory containing static assets.
+
+If using a Tar or Zip archive, the archive should contain *only the files inside the files directory*. For example in a Drupal site with files at `sites/default/files`, the archive should only contain the contents of the `files` directory; it should not contain a single `files` directory. To do this with the `tar` command, `cd` into the directory and create the archive there. An example Tar file creation is:
+
+```bash
+cd web/sites/default/files
+tar -czf ~/Downloads/files.tgz .
+```
 
 If you want to use `import-files` without answering prompts, use the `--source` or `-s` flag to provide the path to the import asset. If you’re importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--source` flag. Example:
 

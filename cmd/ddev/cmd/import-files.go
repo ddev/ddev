@@ -29,6 +29,8 @@ func NewImportFileCmd() *cobra.Command {
 			The destination directories can be configured in your project's config.yaml
 			under the upload_dirs key. If no custom upload directory is defined, the app
 			type's default upload directory will be used.
+
+			If importing a Tar or Zip archive, the archive should contain only the *contents* of the top-level target directory. For example in a Drupal site with files at sites/default/files, the archive should only contain the contents of that 'files' directory. You shouldn't have a single 'files' directory in the archive containing all the contents.
 		`),
 		Example: heredoc.DocI2S(`
 			ddev import-files --source=/path/to/files.tar.gz
@@ -119,7 +121,7 @@ func importFilesRun(app *ddevapp.DdevApp, uploadDir, sourcePath, extractPath str
 
 const importPathPrompt = `Provide the path to the source directory or archive you wish to import.`
 
-const importPathWarn = `Please note: if the destination directory exists, it will be replaced with the
+const importPathWarn = `Please note: if the destination directory exists, it will be emptied and replaced with the
 import assets specified here.`
 
 // promptForFileSource prompts the user for the path to the source file.
