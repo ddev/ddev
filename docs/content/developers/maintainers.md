@@ -22,7 +22,7 @@ Not all maintainers can do all these things at any given time, but these are the
 ## Appropriate Use of Privileges
 
 * We prefer the forked-PR workflow for all code changes. There are a few cases where a branch-PR on `ddev/ddev`, but in general, to do a fix or a feature, do it on a branch on your fork, and submit it as a forked PR.
-* Even though you may have privileges to do things like push directly to the default branch of a repository, it doesn't mean you should use them. The vast majority of the time you'll use the codebase just like any other contributor. PRs make it clear both now and in the future why changes were made.
+* Even though you may have privileges to do things like push directly to the default branch of a repository, it doesn't mean you should use them. The vast majority of the time you'll use the codebase the same as any other contributor. PRs make it clear both now and in the future why changes were made.
 * Use clear PRs and write great issues even though you yourself may understand exactly what's going on. Remember that you may need a refresher course in what you did in a month or a year, so write a great PR description and fill in the form.
 * Remember to talk about configuration changes you make with other maintainers. Don't waste their time by changing things they'll then have to discover and debug.
 

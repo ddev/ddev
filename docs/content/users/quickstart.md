@@ -46,11 +46,11 @@ Environment variables will be automatically added to your `.env` file to simplif
     ddev launch
     ```
 
-    Third-party starter projects can by used the same way—just substitute the package name when running `ddev composer create`.
+    Third-party starter projects can by used the same way—substitute the package name when running `ddev composer create`.
 
 === "Existing projects"
 
-    You can start using DDEV with an existing project, too—just make sure you have a database backup handy!
+    You can start using DDEV with an existing project, too—but make sure you have a database backup handy!
 
     ```bash
     # Clone an existing repository (or navigate to a local project directory):

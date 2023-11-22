@@ -48,7 +48,7 @@ docker run -it --volumes-from=ssh-agent -e SSH_AUTH_SOCK=/.ssh-agent/socket ubun
 
 **Run script**
 
-You can run the `run.sh` script which will build the images for you, launch the ssh-agent and add your keys. If your keys are password protected (hopefully) you will just need to input your passphrase.
+You can run the `run.sh` script which will build the images for you, launch the ssh-agent and add your keys. If your keys are password protected (hopefully) you will need to input your passphrase.
 
 Launch everything:
 
