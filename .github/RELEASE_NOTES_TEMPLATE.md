@@ -7,7 +7,7 @@ See the [installation instructions](https://github.com/ddev/ddev/blob/master/doc
 `curl https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash`
 - Windows: Download the ddev_windows_installer above or `choco upgrade ddev`
 
-And anywhere, you can just download the tarball or zipball, un-tar or un-zip it, and place the executable in your path where it belongs.
+And anywhere, you can download the tarball or zipball, un-tar or un-zip it, and place the executable in your path where it belongs.
 
 # Caveats
 

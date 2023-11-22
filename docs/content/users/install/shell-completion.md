@@ -28,7 +28,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     On Debian and Yum based systems, using `apt install ddev` you should find that `bash`, `zsh`, and `fish` completions are automatically installed.
 
-    Manual installation is easy though, the completion script is exactly the same, it’s just that you have to download and install it yourself. Each system may have a slightly different technique, and you’ll need to figure it out. On Debian/Ubuntu, manually install like this:
+    Manual installation is easy though, the completion script is exactly the same, but you have to download and install it yourself. Each system may have a slightly different technique, and you’ll need to figure it out. On Debian/Ubuntu, manually install like this:
 
     1. Download the completion files and extract them with
         ```bash

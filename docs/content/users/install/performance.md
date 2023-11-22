@@ -82,7 +82,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * **Perform big Git operations on the host side.**<br>
     Git actions that change lots of files, like switching branches, are best done on the host side and not inside the container. You may want to do an explicit `ddev mutagen sync` command after doing something like that to be sure all changes are picked up quickly.
     * **Share projects carefully with non-Mutagen users.**<br>
-    If you share a project with some users that want Mutagen, perhaps on macOS, and other users that don’t want or need it, perhaps on WSL2, don’t check in `.ddev/config.yaml`’s [`performance_mode: "mutagen"`](../configuration/config.md#performance_mode). Instead, either use [global performance mode configuration](../configuration/config.md#performance_mode) or add a not-checked-in, project-level `.ddev/config.performance.yaml` just to include `performance_mode: "mutagen"` in it. That way, only users with that file will have Mutagen enabled.
+    If you share a project with some users that want Mutagen, perhaps on macOS, and other users that don’t want or need it, perhaps on WSL2, don’t check in `.ddev/config.yaml`’s [`performance_mode: "mutagen"`](../configuration/config.md#performance_mode). Instead, either use [global performance mode configuration](../configuration/config.md#performance_mode) or add a not-checked-in, project-level `.ddev/config.performance.yaml` solely to include `performance_mode: "mutagen"` in it. That way, only users with that file will have Mutagen enabled.
     * **Windows symlinks have some Mutagen restrictions.**<br>
     On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means any symlink created will try to sync, regardless of whether it’s valid in the other environment. Mutagen, however, does not support `posix-raw` on traditional Windows, so DDEV uses the `portable` symlink mode. The result is that on Windows, using Mutagen, symlinks must be strictly limited to relative links that are inside the Mutagen section of the project.
     * **It’s a filesystem feature. Make backups!**<br>
@@ -239,7 +239,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
         If your DDEV projects are set up outside your home directory, you’ll need to add a line to `/etc/exports` for that share as well:
 
         1. Run `sudo vi /etc/exports`.
-        2. Copy the line the script just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`).
+        2. Copy the line the script you created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`).
         3. Edit to add the additional path, e.g:
         `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
 
