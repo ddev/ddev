@@ -26,7 +26,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     ```bash
     @echo off
     set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-    set DOCKERHUB_PULL_PASSWORD=
+    set DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
     ```
 
 15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
@@ -78,7 +78,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     ```bash
         #!/bin/bash
         export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-        export DOCKERHUB_PULL_PASSWORD=xxx
+        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
         set -e
     ```
 
@@ -118,7 +118,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     ```
         #!/bin/bash
         export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-        export DOCKERHUB_PULL_PASSWORD=xxx
+        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
         set -e
     ```
 
@@ -135,7 +135,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 7. Remote login should be enabled as in ![macos remote login](../images/macos_remote_login.png).
 8. Automatic updates should be set to mostly security only as in ![macos automatic_updatees](../images/macos_automatic_updates.png).
 9. Set the time zone to US MT (nearest city: Denver, Colorado).
-10. `sudo mkdir -p /usr/local/bin && chown -R testbot /usr/local/bin`
+10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
 13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok`.
@@ -149,23 +149,25 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 18. If Rancher Desktop will be deployed, install it.
     * Turn off kubernetes.
 19. Run iTerm. You may need to allow full disk access permissions.
-20. Set up `nfsd` by running [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh).
-21. `git config --global --add safe.directory '*'`
-22. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
-    * the agent token (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
-    * tags, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
+20. Run `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev`.
+21. Set up `nfsd` by running `bash ~/workspace/ddev/scripts/macos_ddev_nfs_setup.sh`.
+22. `git config --global --add safe.directory '*'`.
+23. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
+    * the agent `token` (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
+    * the agent `name` (the name of the machine).
+    * `tags`, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-23. The buildkite/hooks/environment file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
+24. The `buildkite-agent/hooks/environment` file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
     ```bash
     #!/bin/bash
     export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-    export DOCKERHUB_PULL_PASSWORD=xxx
+    export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
     set -e
     ```
 
-24. Run `brew services start buildkite-agent`.
-25. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-26. `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev` and run `.buildkite/sanetestbot.sh` to check your work.
-27. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
-28. Add the new machine to Icinga by copying an existing Icinga service to the new one.
+25. Run `brew services start buildkite-agent`.
+26. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
+27. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
+28. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+29. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**.
