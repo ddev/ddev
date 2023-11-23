@@ -103,7 +103,7 @@ RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/term
 RUN set -o pipefail && curl --fail -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl -L --fail --silent "https://api.github.com/repositories/16695539/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 
 # Install upsun cli
-RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | VENDOR=upsun bash
+RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/platformsh/cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/platformsh/cli/releases/download/${tag}/upsun_${tag}_linux_${TARGETPLATFORM##linux/}.tar.gz" -o /tmp/upsun.tar.gz && tar -zx -C /usr/local/bin -f /tmp/upsun.tar.gz upsun && rm /tmp/upsun.tar.gz
 
 # Install lagoon cli
 RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETPLATFORM##linux/}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
