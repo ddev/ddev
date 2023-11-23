@@ -724,7 +724,7 @@ gzip -dc db.sql.gz | ddev import-db
 
 ## `import-files`
 
-Pull the uploaded files directory of an existing project to the default public upload directory of your project. More usage information and a description of the Tar or Zip archive is in the [usage section](../usage/cli.md#ddev-import-files).
+Pull the uploaded files directory of an existing project to the default public upload directory of your project. More usage information and a description of the Tar or ZIP archive is in the [usage section](../usage/cli.md#ddev-import-files).
 
 Flags:
 
