@@ -84,7 +84,7 @@ func shopware6PostStartAction(app *DdevApp) error {
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	var envMap = map[string]string{
 		"DATABASE_URL": `mysql://db:db@db:3306/db`,
-		"LOCK_DSN":     "flock",
+		"APP_ENV":      "dev",
 		"APP_URL":      app.GetPrimaryURL(),
 		"MAILER_DSN":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
 	}
