@@ -15,24 +15,24 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20231123_stasadev_upsun" // Note that this can be overridden by make
+var WebTag = "v1.22.5-rc1" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.22.4"
+var BaseDBTag = "v1.22.5"
 
-const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.22.4"
-const TraefikRouterImage = "ddev/ddev-traefik-router:v1.22.4"
+const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.22.5"
+const TraefikRouterImage = "ddev/ddev-traefik-router:v1.22.5"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.22.4"
+var SSHAuthTag = "v1.22.5"
 
-// Busybox is used a couple of places for a quick-pull
+// BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
 
 // BUILDINFO is information with date and context, supplied by make
