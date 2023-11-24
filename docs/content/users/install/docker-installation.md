@@ -8,10 +8,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Install one of the supported Docker providers. OrbStack is the easiest to set up.
 
-        * [OrbStack](#orbstack)
-        * [Colima](#colima)
-        * [Docker Desktop](#docker-desktop-for-mac)
-        * [Rancher Desktop](#rancher-desktop)
+    * [OrbStack](#orbstack)
+    * [Colima](#colima)
+    * [Docker Desktop](#docker-desktop-for-mac)
+    * [Rancher Desktop](#rancher-desktop)
 
     ### OrbStack
 
