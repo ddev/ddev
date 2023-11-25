@@ -22,8 +22,8 @@ $databases['default']['default']['database'] = "{{ $config.DatabaseName }}";
 $databases['default']['default']['username'] = "{{ $config.DatabaseUsername }}";
 $databases['default']['default']['password'] = "{{ $config.DatabasePassword }}";
 $databases['default']['default']['host'] = $host;
-$databases['default']['default']['driver'] = $driver;
 $databases['default']['default']['port'] = $port;
+$databases['default']['default']['driver'] = $driver;
 
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
