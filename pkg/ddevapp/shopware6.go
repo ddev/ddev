@@ -1,7 +1,9 @@
 package ddevapp
 
 import (
+	"errors"
 	"fmt"
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 
@@ -11,16 +13,16 @@ import (
 
 // isShopware6App returns true if the app is of type shopware6
 func isShopware6App(app *DdevApp) bool {
-	isShopware6, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config", "README.md"), "packages/shopware.yaml")
+	isShopware6, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "composer.json"), `"name": "shopware/production"`)
 	if err == nil && isShopware6 {
 		return true
 	}
 	return false
 }
 
-// setShopware6SiteSettingsPaths sets the paths to .env file.
+// setShopware6SiteSettingsPaths sets the paths to .env.local file.
 func setShopware6SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env.local")
 }
 
 // shopware6ImportFilesAction defines the shopware6 workflow for importing user-generated files.
@@ -73,25 +75,31 @@ func getShopwareUploadDirs(_ *DdevApp) []string {
 	return []string{"media"}
 }
 
-// shopware6PostStartAction checks to see if the .env file is set up
+// shopware6PostStartAction checks to see if the .env.local file is set up
 func shopware6PostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	envFilePath := filepath.Join(app.AppRoot, ".env")
+	envFilePath := filepath.Join(app.AppRoot, ".env.local")
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	var envMap = map[string]string{
 		"DATABASE_URL": `mysql://db:db@db:3306/db`,
+		"APP_ENV":      "dev",
 		"APP_URL":      app.GetPrimaryURL(),
-		"MAILER_URL":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
+		"MAILER_DSN":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
 	}
-	// Shopware 6 refuses to do bin/console system:setup if the env file exists,
-	// so if it doesn't exist, wait for it to be created
-	if err == nil {
+	// If the .env.local doesn't exist, create it.
+	switch {
+	case err == nil:
+		util.Warning("Updating %s with %v", envFilePath, envMap)
+		fallthrough
+	case errors.Is(err, os.ErrNotExist):
 		err := WriteProjectEnvFile(envFilePath, envMap, envText)
 		if err != nil {
 			return err
 		}
+	default:
+		util.Warning("error opening %s: %v", envFilePath, err)
 	}
 
 	return nil
