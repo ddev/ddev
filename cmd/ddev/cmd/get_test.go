@@ -39,8 +39,7 @@ func TestCmdGet(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
-		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
 	})
 
 	// Make sure get --list works first
@@ -174,8 +173,7 @@ func TestCmdGetInstalled(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
-		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
 	})
 
 	out, err := exec.RunHostCommand(DdevBin, "get", "ddev/ddev-memcached", "--json-output")

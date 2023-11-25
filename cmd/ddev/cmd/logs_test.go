@@ -54,8 +54,7 @@ func TestCmdLogs(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.Remove(logtestFilePath)
-		assert.NoError(err)
+		_ = os.Remove(logtestFilePath)
 	})
 	// We have to sync or our logtest.php may not yet be available inside container
 	err = app.MutagenSyncFlush()

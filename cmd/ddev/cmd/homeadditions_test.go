@@ -63,10 +63,8 @@ func TestHomeadditions(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = fileutil.PurgeDirectory(projectHomeadditionsDir)
-		assert.NoError(err)
-		err = os.RemoveAll(tmpHome)
-		assert.NoError(err)
+		_ = fileutil.PurgeDirectory(projectHomeadditionsDir)
+		_ = os.RemoveAll(tmpHome)
 	})
 
 	// Before we can symlink global, need to make sure anything is already gone

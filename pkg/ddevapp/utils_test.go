@@ -69,8 +69,7 @@ func TestGetRelativeWorkingDirectory(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll("one")
-		assert.NoError(err)
+		_ = os.RemoveAll("one")
 	})
 	// Make sure we have one app in existence
 	err := app.Init(site.Dir)

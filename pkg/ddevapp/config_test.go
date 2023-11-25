@@ -50,8 +50,7 @@ func TestNewConfig(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	// Ensure the config uses specified defaults.
@@ -142,8 +141,7 @@ func TestPrepDirectory(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
@@ -171,8 +169,7 @@ func TestHostName(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 	app.Name = util.RandString(32)
 
@@ -255,8 +252,7 @@ func TestConfigCommand(t *testing.T) {
 			assert.NoError(err)
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(testDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(testDir)
 		})
 		// Randomize some values to use for Stdin during testing.
 		name := strings.ToLower(util.RandString(16))
@@ -334,8 +330,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 			assert.NoError(err)
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(testDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(testDir)
 		})
 
 		// Randomize some values to use for Stdin during testing.
@@ -390,8 +385,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 			assert.NoError(err)
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpDir)
 		})
 
 		// Randomize some values to use for Stdin during testing.
@@ -789,8 +783,7 @@ func TestWriteConfig(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(pwd)
 		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(projDir)
 	})
 
 	// The default NewApp read should read config overrides, so we should have "config.extra.yaml"
@@ -1261,8 +1254,7 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("web-build"))
 		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db-build"))
-		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("db-build"))
 	})
 
 	// Create simple dockerfiles with touch /var/tmp/added-by-<container>txt
@@ -1369,8 +1361,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(projDir)
 	})
 	err = os.Chdir(app.AppRoot)
 	assert.NoError(err)

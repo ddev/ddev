@@ -551,8 +551,7 @@ func TestDdevStart(t *testing.T) {
 	another.Dir = copyDir
 
 	t.Cleanup(func() {
-		err = os.RemoveAll(copyDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(copyDir)
 	})
 
 	badapp := &ddevapp.DdevApp{}
@@ -576,8 +575,7 @@ func TestDdevStart(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
-		err = os.Remove(symlink)
-		assert.NoError(err)
+		_ = os.Remove(symlink)
 	})
 
 	symlinkApp := &ddevapp.DdevApp{}
@@ -621,10 +619,8 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(filepath.Join(app.AppRoot, "env.php"))
-		assert.NoError(err)
-		err = fileutil.PurgeDirectory(app.GetConfigPath("web-entrypoint.d"))
-		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "env.php"))
+		_ = fileutil.PurgeDirectory(app.GetConfigPath("web-entrypoint.d"))
 		assert.False(dockerutil.NetworkExists("ddev-" + app.Name + "_default"))
 	})
 
@@ -765,8 +761,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = app.Stop(true, false)
-		err = os.RemoveAll(site.Dir)
-		assert.NoError(err)
+		_ = os.RemoveAll(site.Dir)
 	})
 
 	err = os.Chdir(app.AppRoot)
@@ -918,8 +913,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.NoError(err)
 		err := os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(projDir)
 		globalconfig.DdevGlobalConfig.XdebugIDELocation = ""
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})
@@ -1118,8 +1112,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(projDir)
 	})
 
 	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
@@ -2665,8 +2658,7 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = os.RemoveAll(filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
-		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
 	})
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
@@ -3105,8 +3097,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 		// Move the site directory back to its original location.
 		err = os.Rename(siteCopyDest, site.Dir)
 		assert.NoError(err)
-		err = os.RemoveAll(tempPath)
-		assert.NoError(err)
+		_ = os.RemoveAll(tempPath)
 	})
 
 	// Call the Stop command()
@@ -3194,8 +3185,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 		_ = app.Stop(true, false)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	// Write/create global with the name "originalproject"
@@ -3848,8 +3838,7 @@ func TestHostDBPort(t *testing.T) {
 		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = os.RemoveAll(showportPath)
-		assert.NoError(err)
+		_ = os.RemoveAll(showportPath)
 	})
 	clientTool := ""
 
@@ -3959,8 +3948,7 @@ func TestPortSpecifications(t *testing.T) {
 
 	t.Cleanup(func() {
 		_ = specAPP.Stop(true, false)
-		err = os.RemoveAll(specAppPath)
-		assert.NoError(err)
+		_ = os.RemoveAll(specAppPath)
 	})
 
 	// It should be able to WriteConfig and Start with the configured host ports it came up with

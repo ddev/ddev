@@ -40,8 +40,7 @@ func TestCmdSSH(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	err = fileutil.AppendStringToFile("index.php", `

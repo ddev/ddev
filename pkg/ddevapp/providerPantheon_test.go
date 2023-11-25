@@ -70,8 +70,7 @@ func TestPantheonPull(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(siteDir)
 	})
 
 	app.Name = t.Name()

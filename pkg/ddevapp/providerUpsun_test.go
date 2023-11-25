@@ -73,8 +73,7 @@ func TestUpsunPull(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(siteDir)
 	})
 
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
@@ -128,8 +127,7 @@ func TestUpsunPush(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(siteDir)
 	})
 
 	app.Name = t.Name()

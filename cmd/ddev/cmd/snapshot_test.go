@@ -27,8 +27,7 @@ func TestCmdSnapshot(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 	})
 
 	err = app.Start()

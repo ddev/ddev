@@ -204,8 +204,7 @@ func TestMutagenConfigChange(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		// We can remove mutagen.yml and it will be recreated.
-		err = os.RemoveAll(app.GetConfigPath("mutagen/mutagen.yml"))
-		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("mutagen/mutagen.yml"))
 		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
 	err = app.Start()

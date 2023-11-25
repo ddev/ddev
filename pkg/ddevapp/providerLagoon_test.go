@@ -77,8 +77,7 @@ func TestLagoonPull(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(siteDir)
 	})
 
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
@@ -134,8 +133,7 @@ func TestLagoonPush(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(siteDir)
 	})
 
 	app.Name = t.Name()

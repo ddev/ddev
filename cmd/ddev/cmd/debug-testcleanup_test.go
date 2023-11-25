@@ -27,8 +27,7 @@ func TestDebugTestCleanupCmd(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", debugAppName)

@@ -35,8 +35,7 @@ func TestNetworkAmbiguity(t *testing.T) {
 			assert.NoError(err)
 			err = app.Stop(true, false)
 			assert.NoError(err)
-			err = os.RemoveAll(projDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(projDir)
 		}
 	})
 

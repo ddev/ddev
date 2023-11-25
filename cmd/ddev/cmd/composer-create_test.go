@@ -82,8 +82,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			t.Cleanup(func() {
 				err = os.Chdir(origDir)
 				assert.NoError(err)
-				err = os.RemoveAll(tmpDir)
-				assert.NoError(err)
+				_ = os.RemoveAll(tmpDir)
 			})
 
 			err = app.StartAndWait(5)

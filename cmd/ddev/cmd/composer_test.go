@@ -61,8 +61,7 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpDir)
 		})
 
 		// Test create-project
@@ -135,8 +134,7 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpDir)
 		})
 
 		// Test create-project

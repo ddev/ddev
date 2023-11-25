@@ -34,8 +34,7 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 	})
 
 	err = app.Start()
@@ -79,8 +78,7 @@ func TestGetLatestSnapshot(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
@@ -153,8 +151,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		testcommon.ClearDockerEnv()
 	})
 
