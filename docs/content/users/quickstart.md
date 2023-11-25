@@ -323,13 +323,14 @@ ddev launch
 
 ## Shopware
 
-Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV leaves it alone.
+Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV adds necessary information to it. When `ddev composer create` asks if you want to include Docker configuration, answer `x`, as this approach does not use their Docker configuration.
 
 ```bash
 mkdir my-shopware6 && cd my-shopware6
 ddev config --project-type=shopware6 --docroot=public --create-docroot
 ddev composer create shopware/production:^v6.5
-# If it asks `Do you want to include Docker configuration from recipes?` answer `x`, as we're setting it up.
+# If it asks `Do you want to include Docker configuration from recipes?`
+# answer `x`, as we're using DDEV for this rather than its recipes.
 ddev exec console system:install --basic-setup
 ddev launch /admin
 # Default username and password are `admin` and `shopware`
