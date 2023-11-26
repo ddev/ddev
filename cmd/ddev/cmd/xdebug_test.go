@@ -27,8 +27,7 @@ func TestCmdXdebug(t *testing.T) {
 
 	// TestDdevXdebugEnabled has already tested enough versions, so limit it here.
 	// and this is a pretty limited test, doesn't do much but turn on and off
-	// TODO: Move from PHP81 to PHP82
-	phpVersions := []string{nodeps.PHP80, nodeps.PHP81}
+	phpVersions := []string{nodeps.PHP81, nodeps.PHP82}
 
 	pwd, _ := os.Getwd()
 	v := TestSites[0]
