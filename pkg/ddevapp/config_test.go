@@ -968,12 +968,14 @@ func TestPHPConfig(t *testing.T) {
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
-	for k := range nodeps.ValidPHPVersions {
-		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
-			phpKeys = append(phpKeys, k)
-		}
-	}
+	phpKeys = nodeps.GetValidPHPVersions()
+	//exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
+	//for k := range nodeps.ValidPHPVersions {
+	//if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
+	//	phpKeys = append(phpKeys, k)
+	//}
+
+	//}
 	sort.Strings(phpKeys)
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
@@ -1010,6 +1012,12 @@ func TestPHPConfig(t *testing.T) {
 		assert.Contains(out, "IS_DDEV_PROJECT=true")
 		// Make sure the .ddev/.env file works
 		assert.Contains(out, "SOMEENV=someenv-value")
+
+		// This list does not contain all expected, as php5.6 is missing some, etc.
+		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		for _, e := range expectedExtensions {
+			assert.Contains(out, fmt.Sprintf(`,%s,`, e))
+		}
 	}
 
 	err = app.Stop(true, false)
