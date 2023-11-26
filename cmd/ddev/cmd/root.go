@@ -194,6 +194,8 @@ func init() {
 			util.Warning("Adding custom/shell commands failed: %v", err)
 		}
 	}
+
+	setHelpFunc(RootCmd)
 }
 
 // checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
