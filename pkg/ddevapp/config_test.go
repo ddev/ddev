@@ -962,17 +962,24 @@ func TestPHPConfig(t *testing.T) {
 		_ = os.Chdir(origDir)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		_ = os.Remove(filepath.Join(app.AppRoot, ".ddev", ".env"))
+		_ = os.Remove(filepath.Join(app.AppRoot, "phpinfo.php"))
 	})
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
 		}
 	}
 	sort.Strings(phpKeys)
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
+	require.NoError(t, err)
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(site.Dir, "phpinfo.php"))
+	require.NoError(t, err)
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
@@ -992,6 +999,14 @@ func TestPHPConfig(t *testing.T) {
 		require.NoError(t, err)
 		out = strings.Trim(out, "\n")
 		require.Equal(t, `float(0.6)`, out)
+
+		// Verify that environment variables are available in php-fpm
+		out, _, err = testcommon.GetLocalHTTPResponse(t, "http://"+app.GetHostname()+"/phpinfo.php")
+		require.NoError(t, err)
+		assert.Contains(out, "phpversion="+v)
+		// Make sure that php-fpm isn't clearing environment variables
+		assert.Contains(out, "SOMEENV=someenv-value")
+		assert.Contains(out, "IS_DDEV_PROJECT=true")
 	}
 
 	err = app.Stop(true, false)
