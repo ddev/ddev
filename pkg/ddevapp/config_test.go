@@ -986,11 +986,13 @@ func TestPHPConfig(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
+		t.Logf("============= PHP version=%s ================", v)
+
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: "php --version",
 		})
 		require.NoError(t, err)
-		t.Logf("============= PHP version=%s ================", out)
+		assert.Contains(out, v)
 
 		// Look for problems with serialize_precision,https://github.com/ddev/ddev/issues/5092
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1005,8 +1007,9 @@ func TestPHPConfig(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(out, "phpversion="+v)
 		// Make sure that php-fpm isn't clearing environment variables
-		assert.Contains(out, "SOMEENV=someenv-value")
 		assert.Contains(out, "IS_DDEV_PROJECT=true")
+		// Make sure the .ddev/.env file works
+		assert.Contains(out, "SOMEENV=someenv-value")
 	}
 
 	err = app.Stop(true, false)
