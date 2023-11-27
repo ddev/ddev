@@ -267,7 +267,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	tmpHome := testcommon.CreateTmpDir(t.Name())
 	t.Cleanup(func() {
-		assert.NoError(os.RemoveAll(tmpHome))
+		_ = os.RemoveAll(tmpHome)
 	})
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)

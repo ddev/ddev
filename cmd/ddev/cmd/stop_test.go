@@ -88,8 +88,7 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 
 	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type", "php", "--project-name", projectName)

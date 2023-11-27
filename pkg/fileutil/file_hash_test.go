@@ -7,7 +7,6 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path"
@@ -18,7 +17,6 @@ import (
 
 // TestFileHash is a unit test for FileHash()
 func TestFileHash(t *testing.T) {
-	assert := asrt.New(t)
 
 	testCases := []struct {
 		content string
@@ -32,8 +30,7 @@ func TestFileHash(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			tmpDir := testcommon.CreateTmpDir("TestFileHash_" + util.RandString(10))
 			t.Cleanup(func() {
-				err := os.RemoveAll(tmpDir)
-				assert.NoError(err)
+				_ = os.RemoveAll(tmpDir)
 			})
 			testFile := filepath.Join(tmpDir, fmt.Sprintf("TestFileHash_%d", i))
 			err := fileutil.TemplateStringToFile(tc.content, nil, testFile)

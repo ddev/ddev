@@ -30,8 +30,7 @@ func TestExtraPortExpose(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(filepath.Join(app.AppRoot, "testfile1.html"))
-		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "testfile1.html"))
 	})
 
 	err = os.WriteFile(filepath.Join(app.AppRoot, "testfile.html"), []byte(`this is test1 in root`), 0755)

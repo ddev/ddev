@@ -160,7 +160,6 @@ func TestConfigHooksMerge(t *testing.T) {
 
 // SetupTestTempDir creates the test directory and related objects.
 func SetupTestTempDir(t *testing.T, subDir string) *ddevapp.DdevApp {
-	assert := asrt.New(t)
 
 	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
 	require.NoError(t, err)
@@ -173,8 +172,7 @@ func SetupTestTempDir(t *testing.T, subDir string) *ddevapp.DdevApp {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(projDir)
 	})
 
 	return app

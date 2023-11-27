@@ -55,8 +55,7 @@ func TestListWithoutDir(t *testing.T) {
 		_ = globalconfig.RemoveProjectInfo(app.Name)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 		globalconfig.DdevGlobalConfig.SimpleFormatting = false
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})

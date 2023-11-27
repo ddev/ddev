@@ -95,8 +95,7 @@ func TestArchiveTar(t *testing.T) {
 			// Could not figure out what causes this not to be removable
 			//err = os.Remove(tarballFile.Name())
 			//assert.NoError(err)
-			err = os.RemoveAll(tmpDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpDir)
 		})
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
 	assert.NoError(err)
@@ -131,8 +130,7 @@ func TestArchiveTarGz(t *testing.T) {
 			// Could not figure out what causes this not to be removable
 			//err = os.Remove(tarballFile.Name())
 			//assert.NoError(err)
-			err = os.RemoveAll(tmpDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpDir)
 		})
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
 	assert.NoError(err)

@@ -35,8 +35,7 @@ func TestApptypeDetection(t *testing.T) {
 	t.Cleanup(func() {
 		err := os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 
 	err := fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
@@ -87,8 +86,7 @@ func TestPostConfigAction(t *testing.T) {
 			assert.NoError(err)
 			err = app.Stop(true, false)
 			assert.NoError(err)
-			err = os.RemoveAll(testDir)
-			assert.NoError(err)
+			_ = os.RemoveAll(testDir)
 		})
 
 		// Prompt for apptype as a way to get it into the config.

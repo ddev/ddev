@@ -177,8 +177,7 @@ func TestAcquiaPush(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(drupalCode.Dir)
-		assert.NoError(err)
+		_ = os.RemoveAll(drupalCode.Dir)
 	})
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}

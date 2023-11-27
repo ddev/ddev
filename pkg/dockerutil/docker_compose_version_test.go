@@ -41,8 +41,7 @@ func TestDockerComposeDownload(t *testing.T) {
 			ddevapp.StopMutagenDaemon()
 		}
 
-		err = os.RemoveAll(tmpHome)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpHome)
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = origRequiredComposeVersion
 		// Reset the cached DockerComposeVersion so it doesn't come into play again
 		globalconfig.DockerComposeVersion = ""

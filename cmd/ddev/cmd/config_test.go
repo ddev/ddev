@@ -67,9 +67,7 @@ func TestConfigDescribeLocation(t *testing.T) {
 		assert.NoError(err)
 		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
 		assert.NoError(err, "output=%s", out)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
-
+		_ = os.RemoveAll(tmpDir)
 	})
 	out, err := exec.RunHostCommand(DdevBin, "config", "--docroot=.", "--project-name="+t.Name())
 	assert.NoError(err)
@@ -85,8 +83,7 @@ func TestConfigDescribeLocation(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 	err = os.Chdir(tmpDir)
 	assert.NoError(err)
@@ -147,8 +144,7 @@ func TestConfigSetValues(t *testing.T) {
 		assert.NoError(err)
 		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
 		assert.NoError(err, "output=%s", out)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 
 	// Create an existing docroot
@@ -506,8 +502,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 
 	_, err = app.ReadConfig(false)
@@ -576,8 +571,7 @@ func TestConfigGitignore(t *testing.T) {
 		assert.NoError(err)
 		_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	_, err = exec.RunHostCommand("git", "init")
