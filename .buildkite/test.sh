@@ -9,7 +9,8 @@ export GOTEST_SHORT=8
 # On macOS, we can have several different docker providers, allow testing all
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
-      docker context use default
+#      docker context use default
+    true
   }
   trap cleanup EXIT
 
@@ -18,13 +19,13 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       ~/.rd/bin/rdctl shutdown || true
       open -a Docker &
-      docker context use default
+      docker context use desktop-linux
       ;;
     "orbstack")
       ~/.rd/bin/rdctl shutdown || true
       killall com.docker.backend || true
       orb start &
-      docker context use default
+      docker context use orbstack
       ;;
     "rancher-desktop")
       killall com.docker.backend || true
