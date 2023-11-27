@@ -955,11 +955,13 @@ func TestPHPConfig(t *testing.T) {
 		_ = os.Chdir(origDir)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		_ = os.Remove(filepath.Join(app.AppRoot, ".ddev", ".env"))
+		_ = os.Remove(filepath.Join(app.AppRoot, "phpinfo.php"))
 	})
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4"}
+	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -967,16 +969,23 @@ func TestPHPConfig(t *testing.T) {
 	}
 	sort.Strings(phpKeys)
 
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
+	require.NoError(t, err)
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(site.Dir, "phpinfo.php"))
+	require.NoError(t, err)
+
 	for _, v := range phpKeys {
 		app.PHPVersion = v
 		err = app.Start()
 		require.NoError(t, err)
 
+		t.Logf("============= PHP version=%s ================", v)
+
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: "php --version",
 		})
 		require.NoError(t, err)
-		t.Logf("============= PHP version=%s ================", out)
+		assert.Contains(out, v)
 
 		// Look for problems with serialize_precision,https://github.com/ddev/ddev/issues/5092
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -985,6 +994,24 @@ func TestPHPConfig(t *testing.T) {
 		require.NoError(t, err)
 		out = strings.Trim(out, "\n")
 		require.Equal(t, `float(0.6)`, out)
+
+		// Verify that environment variables are available in php-fpm
+		out, _, err = testcommon.GetLocalHTTPResponse(t, "http://"+app.GetHostname()+"/phpinfo.php")
+		require.NoError(t, err)
+		assert.Contains(out, "phpversion="+v)
+		// Make sure that php-fpm isn't clearing environment variables
+		assert.Contains(out, "IS_DDEV_PROJECT=true")
+		// Make sure the .ddev/.env file works
+		assert.Contains(out, "SOMEENV=someenv-value")
+
+		// Remove the PHP83 exception when it has missing extensions
+		if v != nodeps.PHP83 {
+			// This list does not contain all expected, as php5.6 is missing some, etc.
+			expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+			for _, e := range expectedExtensions {
+				assert.Contains(out, fmt.Sprintf(`,%s,`, e))
+			}
+		}
 	}
 
 	err = app.Stop(true, false)
