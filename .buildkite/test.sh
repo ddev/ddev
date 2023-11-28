@@ -14,6 +14,8 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   }
   trap cleanup EXIT
 
+  echo "original docker context situation:"
+  docker context ls
   case ${DOCKER_TYPE} in
     "docker-desktop")
       orb stop &
