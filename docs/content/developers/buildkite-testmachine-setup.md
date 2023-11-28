@@ -170,4 +170,9 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 26. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
 27. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
 28. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
-29. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**.
+29. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**. The new service has to have `by-ssh-address` set to the name of the test runner, and that address needs to be added to `pi.ddev.site`'s `/etc/hosts` file.
+30. If `zsh` is the shell configured, add `/etc/zshenv` so that `/usr/local/bin/docker` will be picked up:
+
+    ```bash
+    PATH=$PATH:/usr/local/bin:/opt/homebrew/bin
+    ```

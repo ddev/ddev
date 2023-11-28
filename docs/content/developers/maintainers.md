@@ -34,8 +34,6 @@ Not all maintainers can do all these things at any given time, but these are the
 * [DDEV blog](https://ddev.com/blog)
 * 1Password passwords and tokens: Maintainers should be added to the DDEV team in 1Password. This gives access to the DDEV team vault, which has tokens and passwords that are needed for various things. Please try to maintain things like tokens in there.
 
-## Maintainer Training Outline
-
 ## Privileges Required for Maintainers
 
 Most privileges should be granted per-developer as separate accounts. In general, we don't want to share a common login. So for example, instead of sharing a login to [developer.apple.com](https://developer.apple.com) or [buildkite.com](https://buildkite.com/ddev) each maintainer should have their own login.
@@ -44,6 +42,15 @@ There are cases like access to hosting provider integrations that have essential
 
 * **GitHub**: Maintainers should usually be added to the [DDEV organization](https://github.com/orgs/ddev/people), usually was "owner", but lesser privileges are possible, and some maintainers may want only access to the DDEV project, etc.
 * **Buildkite**: Maintainers should be added to the [DDEV Buildkite organization](https://buildkite.com/organizations/ddev/users) with "maintainer" privileges. This gives access to the Buildkite pipelines and the ability to add new pipelines. Do not require "SSO" or people won't be able to get in.
+* **Chrome Remote Desktop**: This is the test runner login ("DDEV buildkite test-runners - remotedesktop.google.com") from 1Password, but it will need to be authorized via 2FA or a backup code from 1Password.
+* **CircleCI**: Maintainers automatically have some access via their GitHub team membership, but should probably get more.
+* **developer.apple.com**: Add to the DDEV team there so certificates can be managed.
+* **hub.docker.com**: Add user to owners team in DDEV org.
+* **Chocolatey**: Add user to [Manage maintainers](https://community.chocolatey.org/packages/ddev/1.22.5/ManagePackageOwners).
+* **Icinga monitoring system**: This is documented in [maintainer-info](https://github.com/ddev/maintainer-info).
+* **Discord**: Make admin in Discord.
+* **Twitter (X)**: Posting is enabled by login in 1Password.
+* **Mastodon**: Posting is enabled by login in 1Password.
 * **Zoho Mail** is how `ddev.com` mail is routed; currently only Randy has an account, but we should consider adding others and making sure that more than one person can maintain it.
 * **Zoho CRM** is how we track contacts and send monthly emails or announcements. People involved in marketing will want to have access to this, but it will cost for additional users.
 * **[1Password](https://1password.com/)**. Maintainers should be added to the DDEV team in 1Password. This gives access to the DDEV team vault, which has tokens and passwords that are needed for various things. Please try to maintain things like tokens in there.
@@ -55,9 +62,12 @@ There are cases like access to hosting provider integrations that have essential
 * SSH (and sudo) access to `newmonitor.thefays.us`
 * **[developer.apple.com](https://developer.apple.com)** - Maintainers should be added to the DDEV team in the Apple Developer program, so that they can create new certificates.
 * **SSH access to newmonitor.thefays.us**.
+* **Account on pi.ddev.site**.
 * **Notifications from newmonitor.thefays.us**.
 * **Web access to newmonitor.thefays.us**.
 * **SSH access to behind-firewall monitoring proxy**.
+* **Amplitude**: Invite new user at [team management](https://analytics.amplitude.com/ddev/settings/team).
+* **Stack Overflow**: Follow the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and answer or comment on questions there when possible.
 
 ## Newmonitor.thefays.us use and maintenance
 

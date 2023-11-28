@@ -41,6 +41,9 @@
     },
     {
       "pattern": "^https://newmonitor.thefays.us/icingaweb2"
+    },
+    {
+      "pattern": "^https://analytics.amplitude.com"
     }
   ],
   "httpHeaders": [
