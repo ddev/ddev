@@ -47,7 +47,7 @@ There are cases like access to hosting provider integrations that have essential
 * **developer.apple.com**: Add to the DDEV team there so certificates can be managed.
 * **hub.docker.com**: Add user to owners team in DDEV org.
 * **Chocolatey**: Add user to [Manage maintainers](https://community.chocolatey.org/packages/ddev/1.22.5/ManagePackageOwners).
-* **Icinga monitoring system**: This is documented in https://github.com/ddev/maintainer-info). 
+* **Icinga monitoring system**: This is documented in [maintainer-info](https://github.com/ddev/maintainer-info).
 * **Discord**: Make admin in Discord.
 * **Twitter (X)**: Posting is enabled by login in 1Password.
 * **Mastodon**: Posting is enabled by login in 1Password.
