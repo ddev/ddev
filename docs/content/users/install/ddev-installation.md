@@ -405,7 +405,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     #### postCreateCommand
 
-    The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
+    The [`postAttachCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
 
     The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept. 
 
@@ -429,7 +429,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
                 "label": "web https"
             }
         },
-        "postCreateCommand": "bash -c 'ddev poweroff && ddev start -y && ddev composer install'"
+        "postAttachCommand": "bash -c 'ddev poweroff && ddev start -y && ddev composer install'"
         }
     ```
 
@@ -440,7 +440,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     You could call a separate bash file as well and add more commands: 
 
     ```
-    "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+    "postAttachCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
     ``` 
     
     ```
@@ -460,7 +460,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ddev composer install 
     ```
 
-    To check for errors during the `postCreateCommand` action, use the command 
+    To check for errors during the `postAttachCommand` action, use the command 
     
     - "Codespaces: View creation log” 
     
