@@ -43,8 +43,6 @@ theme:
 #  - toc.integrate
   - navigation.footer
   - search.suggest
-  - search.highlight
-  - search.share
   favicon: favicon.png
   # readthedocs doesn't seem to do logo css right
 #  logo: /logo.svg
