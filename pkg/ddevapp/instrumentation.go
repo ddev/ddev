@@ -1,6 +1,8 @@
 package ddevapp
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"runtime"
@@ -19,6 +21,7 @@ import (
 )
 
 var hashedHostID string
+var appName = "ddev"
 
 // SegmentNoopLogger defines a no-op logger to prevent Segment log messages from being emitted
 type SegmentNoopLogger struct{}
@@ -143,6 +146,18 @@ func SendInstrumentationEvents(event string) {
 	}
 }
 
+func protect(appID, id string) string {
+	mac := hmac.New(sha256.New, []byte(id))
+	mac.Write([]byte(appID))
+	return fmt.Sprintf("%x", mac.Sum(nil))
+}
+
 func init() {
-	hashedHostID, _ = machineid.ProtectedID("ddev")
+	// Special case for Gitpod
+	if value, exists := os.LookupEnv("GITPOD_OWNER_ID"); exists {
+		hashedHostID = protect(appName, value)
+		return
+	}
+
+	hashedHostID, _ = machineid.ProtectedID(appName)
 }
