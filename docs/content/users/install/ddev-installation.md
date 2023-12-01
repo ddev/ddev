@@ -403,7 +403,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     A lot more customization is possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/). You can install Visual Studio Code extensions by default or run commands automatically. 
 
-    #### postAttachCommand
+    #### `postAttachCommand`
 
     The [`postAttachCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
 
