@@ -146,6 +146,7 @@ func SendInstrumentationEvents(event string) {
 	}
 }
 
+// Ref: https://github.com/denisbrodbeck/machineid#security-considerations
 func protect(appID, id string) string {
 	mac := hmac.New(sha256.New, []byte(id))
 	mac.Write([]byte(appID))
@@ -154,6 +155,7 @@ func protect(appID, id string) string {
 
 func init() {
 	// Special case for Gitpod
+	// Needed because /etc/machine-id is not unique to the Gitpod workspace user and it may not remain constant
 	if value, exists := os.LookupEnv("GITPOD_OWNER_ID"); exists {
 		hashedHostID = protect(appName, value)
 		return
