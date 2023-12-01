@@ -1069,6 +1069,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	app.CreateUploadDirsIfNecessary()
 
 	if app.IsMutagenEnabled() {
+		if globalconfig.DdevGlobalConfig.NoBindMounts {
+			util.Warning("Mutagen is enabled because `no_bind_mounts: true` is set.\n`ddev config global --no-bind-mounts=false` if you do not intend that.")
+		}
 		err = app.GenerateMutagenYml()
 		if err != nil {
 			return err
