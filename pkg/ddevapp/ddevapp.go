@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/ddev/ddev/pkg/appimport"
@@ -1041,13 +1040,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if runtime.GOOS == "darwin" {
-		r, err := syscall.Sysctl("sysctl.proc_translated")
-		if err == nil {
-			// from https://www.yellowduck.be/posts/detecting-apple-silicon-via-go
-			if r == "\x01\x00\x00" {
-				util.Failed("You seem to be running under Rosetta, please install the ARM64 version of DDEV. If you're using homebrew, you need to reinstall it properly, see https://brew.sh")
-			}
-		}
+		failOnRosetta()
 	}
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
