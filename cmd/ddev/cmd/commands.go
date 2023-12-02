@@ -267,14 +267,10 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 
 	return func(cmd *cobra.Command, cobraArgs []string) {
 		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			err := app.Start()
-			if err != nil {
-				util.Failed("Failed to start project for custom command: %v", err)
-			}
-		}
+
 		app.DockerEnv()
 
+		_ = os.Setenv("DDEV_PROJECT_STATUS", status)
 		osArgs := []string{}
 		if len(os.Args) > 2 {
 			osArgs = os.Args[2:]
