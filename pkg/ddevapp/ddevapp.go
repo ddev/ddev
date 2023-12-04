@@ -1727,6 +1727,8 @@ type ExecOpts struct {
 	Stderr *os.File
 	// Detach does docker-compose detach
 	Detach bool
+	// Env is the array of environment variables
+	Env []string
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -1773,6 +1775,12 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	if opts.Detach {
 		baseComposeExecCmd = append(baseComposeExecCmd, "--detach")
+	}
+
+	if len(opts.Env) > 0 {
+		for _, envVar := range opts.Env {
+			baseComposeExecCmd = append(baseComposeExecCmd, "-e", envVar)
+		}
 	}
 
 	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)
