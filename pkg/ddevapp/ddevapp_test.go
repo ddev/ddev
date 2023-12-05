@@ -925,8 +925,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	// TODO: Enable 8.3 when php8.3-xdebug becomes available
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.3"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
