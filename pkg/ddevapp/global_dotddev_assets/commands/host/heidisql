@@ -9,7 +9,7 @@
 
 arguments="--host=\"127.0.0.1\" --port=${DDEV_HOST_DB_PORT} --user=root --password=root --description=${DDEV_SITENAME}"
 
-if [ ${DDEV_PROJECT_STATUS} != "running" ]; then
+if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
 fi

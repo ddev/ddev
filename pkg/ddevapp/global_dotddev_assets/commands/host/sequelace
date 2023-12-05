@@ -10,7 +10,7 @@
 
 DATABASE="${1:-db}"
 
-if [ ${DDEV_PROJECT_STATUS} != "running" ]; then
+if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
 fi
