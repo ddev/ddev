@@ -426,7 +426,7 @@ func (app *DdevApp) PromptForConfig() error {
 func ValidateProjectName(name string) error {
 	match := hostRegex.MatchString(name)
 	if !match {
-		return fmt.Errorf("%s is not a valid project name. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", name)
+		return fmt.Errorf("%s is not a valid project name. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", name)
 	}
 	return nil
 }
@@ -477,7 +477,7 @@ func (app *DdevApp) ValidateConfig() error {
 			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
-			return fmt.Errorf("the %s project has an invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.Name, hn).(invalidHostname)
+			return fmt.Errorf("the %s project has an invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)
 		}
 	}
 
