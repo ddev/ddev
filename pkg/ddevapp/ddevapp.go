@@ -1039,6 +1039,9 @@ Please use the built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
 	}
 
+	if runtime.GOOS == "darwin" {
+		failOnRosetta()
+	}
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
@@ -1059,6 +1062,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	app.CreateUploadDirsIfNecessary()
 
 	if app.IsMutagenEnabled() {
+		if globalconfig.DdevGlobalConfig.NoBindMounts {
+			util.Warning("Mutagen is enabled because `no_bind_mounts: true` is set.\n`ddev config global --no-bind-mounts=false` if you do not intend that.")
+		}
 		err = app.GenerateMutagenYml()
 		if err != nil {
 			return err
