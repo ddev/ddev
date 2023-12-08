@@ -41,17 +41,11 @@ type ComposeCmdOpts struct {
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
-func EnsureNetwork(client *docker.Client, name string, labels map[string]string) error {
+func EnsureNetwork(client *docker.Client, name string, netOptions docker.CreateNetworkOptions) error {
 	// Pre-check for network duplicates
 	RemoveNetworkDuplicates(client, name)
 
 	if !NetExists(client, name) {
-		netOptions := docker.CreateNetworkOptions{
-			Name:     name,
-			Driver:   "bridge",
-			Internal: false,
-			Labels:   labels,
-		}
 		_, err := client.CreateNetwork(netOptions)
 		if err != nil {
 			return err
@@ -66,7 +60,13 @@ func EnsureNetwork(client *docker.Client, name string, labels map[string]string)
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
 	client := GetDockerClient()
-	err := EnsureNetwork(client, NetName, map[string]string{"com.ddev.platform": "ddev"})
+	netOptions := docker.CreateNetworkOptions{
+		Name:     NetName,
+		Driver:   "bridge",
+		Internal: false,
+		Labels:   map[string]string{"com.ddev.platform": "ddev"},
+	}
+	err := EnsureNetwork(client, NetName, netOptions)
 	if err != nil {
 		log.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
 	}
@@ -80,15 +80,27 @@ func EnsureProjectNetwork() {
 	}
 	networkName := os.Getenv("COMPOSE_PROJECT_NAME") + "_default"
 	client := GetDockerClient()
-	err := EnsureNetwork(client, networkName, map[string]string{
-		"com.ddev.platform": "ddev",
-		// add docker-compose labels needed for "docker compose up"
-		"com.docker.compose.network": "default",
-		"com.docker.compose.project": os.Getenv("COMPOSE_PROJECT_NAME"),
-		"com.docker.compose.version": func() string {
-			version, _ := GetDockerComposeVersion()
-			return strings.TrimPrefix(version, "v")
-		}()})
+	netOptions := docker.CreateNetworkOptions{
+		Name:     networkName,
+		Driver:   "bridge",
+		Internal: false,
+		Labels: map[string]string{
+			"com.ddev.platform": "ddev",
+			// add docker-compose labels needed for "docker compose up"
+			"com.docker.compose.network": "default",
+			"com.docker.compose.project": os.Getenv("COMPOSE_PROJECT_NAME"),
+			"com.docker.compose.version": func() string {
+				version, _ := GetDockerComposeVersion()
+				return strings.TrimPrefix(version, "v")
+			}()},
+	}
+	// see https://github.com/ddev/ddev/issues/3766
+	if nodeps.IsGitpod() {
+		netOptions.Options = map[string]any{
+			"com.docker.network.driver.mtu": "1440",
+		}
+	}
+	err := EnsureNetwork(client, networkName, netOptions)
 	if err != nil {
 		log.Fatalf("Failed to ensure Docker network %s: %v", networkName, err)
 	}
