@@ -9,6 +9,11 @@
 ## OSTypes: darwin
 ## HostBinaryExists: /Applications/TablePlus.app
 
+if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
+  echo "Project ${DDEV_PROJECT} is not running, starting it"
+  ddev start
+fi
+
 dbtype=${DDEV_DBIMAGE%:*}
 driver=mysql
 if [[ $dbtype == "postgres" ]]; then

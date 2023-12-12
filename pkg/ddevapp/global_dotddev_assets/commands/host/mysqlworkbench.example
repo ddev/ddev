@@ -8,6 +8,10 @@
 # Note that this example uses $DDEV_HOST_DB_PORT to get the port for the connection
 # Mysql Workbench can be obtained from https://dev.mysql.com/downloads/workbench/
 
+if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
+  echo "Project ${DDEV_PROJECT} is not running, starting it"
+  ddev start
+fi
 query="root:root@127.0.0.1:${DDEV_HOST_DB_PORT}"
 
 case $OSTYPE in
