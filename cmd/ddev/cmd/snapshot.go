@@ -89,7 +89,7 @@ func createAppSnapshot(app *ddevapp.DdevApp) {
 		errorMsg := util.ColorizeText("Failed to snapshot %s: %v", "red")
 		util.Warning(errorMsg, app.GetName(), err)
 	} else {
-		util.Success("Created database snapshot %s", snapshotNameOutput)
+		util.Success("Created database snapshot %s. Use the 'snapshot restore' command to restore this.", snapshotNameOutput)
 	}
 	// Return the app to its previous state, stopped or paused.
 	if appStatus == ddevapp.SiteStopped {
