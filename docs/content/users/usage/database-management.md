@@ -51,11 +51,11 @@ The `ddev mysql` and `ddev psql` commands give you direct access to the `mysql` 
 
 The `web` and `db` containers are each ready with MySQL/PostgreSQL clients, so you can [`ddev ssh`](../usage/commands.md#ssh) or `ddev ssh -s db` and use `mysql` or `psql`.
 
-## `mysqldump` and `pgdump`
+## `mysqldump` and `pg_dump`
 
 The `web` and `db` containers come with `mysqldump`. You could run [`ddev ssh`](../usage/commands.md#ssh) to enter the web container, for example, then `mkdir /var/www/html/.tarballs` and run `mysqldump db >/var/www/html/.tarballs/db.sql` or run `mysqldump db | gzip >/var/www/html/.tarballs/db.sql.gz` to create database dumps. Because `/var/www/html` is mounted into the container from your project root, the `.tarballs` directory will also show up in the root of the project on your host machine.
 
-The PostgreSQL database container includes normal `pg` commands like `pgdump`.
+The PostgreSQL database container includes normal `pg` commands like `pg_dump`.
 
 ## Database GUIs
 
