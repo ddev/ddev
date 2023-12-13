@@ -2,8 +2,8 @@
 
 ## #ddev-generated
 ## Description: Enable or disable xdebug
-## Usage: xdebug on|off|enable|disable|true|false|status
-## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug status"
+## Usage: xdebug on|off|enable|disable|true|false|toggle|status
+## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status"
 ## Execraw: false
 ## Flags: []
 
@@ -21,6 +21,29 @@ case $1 in
 	off|false|disable)
 	disable_xdebug
 	;;
+  toggle)
+    case ${xdebug_version} in
+    v3*)
+      status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
+      if [[ "${status}" =~ .*"debug".* ]]; then
+        disable_xdebug
+      else
+        enable_xdebug
+      fi
+      ;;
+    v2*)
+      status=$(php -r 'echo ini_get("xdebug.remote_enable");')
+      if [ "${status}" = "1" ]; then
+        disable_xdebug
+      else
+        enable_xdebug
+      fi
+      ;;
+    *)
+      enable_xdebug
+      ;;
+    esac
+    ;;
 	status)
   case ${xdebug_version} in
   v3*)
