@@ -14,6 +14,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 * Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.  
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
+* Toggle Xdebug on and off easily with `ddev xdebug toggle`.
 * `ddev xdebug status` will show Xdebug’s current status.
 * You may need to open port 9003 in your firewall to allow Xdebug access. (See [Troubleshooting Xdebug](#troubleshooting-xdebug) below.)
 * The IDE’s debug server port must be set to Xdebug’s default 9003, which is already the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
@@ -122,6 +123,7 @@ Here are basic steps to take to sort out any difficulty:
 * Temporarily disable any *firewall* or *VPN* if you’re having trouble. Xdebug is a network protocol, and the PHP process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
 * Confirm that DDEV’s [`xdebug_ide_location`](../configuration/config.md#xdebugidelocation) config setting is set properly, which in most cases should be set to an empty string. Check both your project's `.ddev/config.yaml` and DDEV’s global `~/.ddev/global_config.yaml`.
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
+* You can also use `ddev xdebug toggle` to easily toggle Xdebug on and off.
 * Set a breakpoint at the first executable line of your `index.php`.
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
 * Use `curl` or a browser to create a web request. For example, `curl https://d10.ddev.site` or run `ddev exec curl localhost`.

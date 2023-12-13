@@ -1402,6 +1402,9 @@ ddev xdebug on
 
 # Turn Xdebug off
 ddev xdebug off
+
+# Toggle Xdebug on and off
+ddev xdebug toggle
 ```
 
 ## `xhprof`

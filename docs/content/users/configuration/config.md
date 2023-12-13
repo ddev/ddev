@@ -662,7 +662,7 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use [`ddev xdebug`](../usage/commands.md#xdebug) and `ddev xdebug off` commands.
+| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use [`ddev xdebug`](../usage/commands.md#xdebug) and `ddev xdebug off` (or `ddev xdebug toggle`) commands.
 
 ## `xdebug_ide_location`
 
