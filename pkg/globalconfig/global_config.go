@@ -89,6 +89,7 @@ func New() GlobalConfig {
 		MkcertCARoot:                 readCAROOT(),
 		ProjectList:                  make(map[string]*ProjectInfo),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
+		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
 	}
 
 	return cfg

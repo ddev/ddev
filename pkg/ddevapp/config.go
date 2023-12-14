@@ -473,7 +473,7 @@ func (app *DdevApp) ValidateConfig() error {
 	for _, hn := range app.GetHostnames() {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
-		if hn == "ddev.site" {
+		if hn == nodeps.DdevDefaultTLD {
 			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
