@@ -69,11 +69,11 @@ func TestConfigDescribeLocation(t *testing.T) {
 		assert.NoError(err, "output=%s", out)
 		_ = os.RemoveAll(tmpDir)
 	})
-	out, err := exec.RunHostCommand(DdevBin, "config", "--docroot=.", "--project-name="+t.Name())
+	_, err = exec.RunHostCommand(DdevBin, "config", "--docroot=.", "--project-name="+t.Name())
 	assert.NoError(err)
 
 	// Now see if we can detect it
-	out, err = exec.RunHostCommand(DdevBin, "config", "--show-config-location")
+	out, err := exec.RunHostCommand(DdevBin, "config", "--show-config-location")
 	assert.NoError(err)
 	assert.Contains(string(out), tmpDir)
 
