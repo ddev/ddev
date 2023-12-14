@@ -180,7 +180,6 @@ Flags:
 * `--composer-root`: Overrides the default Composer root directory for the web service.
 * `--composer-root-default`: Unsets a web service Composer root directory override.
 * `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"1"`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
-* `--create-docroot`: Create the docroot if it doesn’t exist.
 * `--database`: Specify the database type:version to use. Defaults to `mariadb:10.4`.
 * `--db-image`: Sets the db container image.
 * `--db-image-default`: Sets the default db container image for this DDEV version.

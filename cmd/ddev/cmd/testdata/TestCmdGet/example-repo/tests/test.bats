@@ -5,7 +5,7 @@ setup() {
   export DDEV_NON_INTERACTIVE=true
   ddev delete -Oy ${PROJNAME} || true
   cd "${TESTDIR}"
-  ddev config --project-name=${PROJNAME} --project-type=drupal9 --docroot=web --create-docroot
+  ddev config --project-name=${PROJNAME} --project-type=drupal9 --docroot=web
   ddev start
 }
 

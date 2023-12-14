@@ -227,6 +227,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts DDEV to create the docroot if it doesn't exist")
+	_ = ConfigCommand.Flags().MarkDeprecated("create-docroot", "--create-docroot flag is no longer required")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, "Sets the project's upload directories, the destination directories of the import-files command.")
 	ConfigCommand.Flags().String("upload-dir", "", "Sets the project's upload directories, the destination directories of the import-files command.")
@@ -384,11 +385,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	if docrootRelPathArg != "" {
 		app.Docroot = docrootRelPathArg
 		if _, err = os.Stat(docrootRelPathArg); os.IsNotExist(err) {
-			// If the user has indicated that the docroot should be created, create it.
-			if !createDocroot {
-				util.Failed("The provided docroot %s does not exist. Allow DDEV to create it with the --create-docroot flag.", docrootRelPathArg)
-			}
-
 			var docrootAbsPath string
 			docrootAbsPath, err = filepath.Abs(app.Docroot)
 			if err != nil {
@@ -399,7 +395,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 				util.Failed("Could not create docroot at %s: %v", docrootAbsPath, err)
 			}
 
-			util.Success("Created docroot at %s", docrootAbsPath)
+			util.Success("Created docroot directory at %s", docrootAbsPath)
 		}
 	} else if !cmd.Flags().Changed("docroot") {
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
@@ -426,26 +422,16 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	switch {
-	case projectTypeArg != "" && detectedApptype == nodeps.AppTypePHP: // apptype was passed, but we found no app at all
-		app.Type = projectTypeArg
-		util.Warning("You have specified a project type of '%s' but no project of that type is found in %s", projectTypeArg, fullPath)
-	case projectTypeArg != "" && detectedApptype != projectTypeArg: // apptype was passed, app was found, but not the same type
-		app.Type = projectTypeArg
-		util.Warning("You have specified a project type of '%s' but a project of type '%s' was discovered in %s", projectTypeArg, detectedApptype, fullPath)
 	case app.Type != nodeps.AppTypeNone && projectTypeArg == "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
 		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
+		fallthrough
 	default:
 		if projectTypeArg == "" {
 			projectTypeArg = detectedApptype
 		}
 
 		app.Type = projectTypeArg
-
-		if detectedApptype == nodeps.AppTypePHP {
-			util.Success("Configuring unrecognized codebase as project of type '%s' at %s", app.Type, fullPath)
-		} else {
-			util.Success("Configuring a '%s' codebase with docroot '%s' at %s", detectedApptype, app.Docroot, fullPath)
-		}
+		util.Success("Configuring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
 	}
 
 	// App overrides are done after app type is detected, but

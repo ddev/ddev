@@ -58,7 +58,7 @@ func TestComposerCreateCmd(t *testing.T) {
 
 			composerRoot := tmpDir
 			if docRoot != "" {
-				arguments = append(arguments, "--docroot", docRoot, "--create-docroot")
+				arguments = append(arguments, "--docroot", docRoot)
 				// For Drupal10 we test that the composer root is the same as the create root
 				if projectType == nodeps.AppTypeDrupal10 {
 					arguments = append(arguments, "--composer-root", docRoot)

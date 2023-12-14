@@ -1264,13 +1264,6 @@ func (app *DdevApp) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		util.Warning("Warning: the provided docroot at %s does not currently exist.", fullPath)
-
-		// Ask the user for permission to create the docroot
-		if !util.Confirm(fmt.Sprintf("Create docroot at %s?", fullPath)) {
-			return fmt.Errorf("docroot must exist to continue configuration")
-		}
-
 		if err = os.MkdirAll(fullPath, 0755); err != nil {
 			return fmt.Errorf("unable to create docroot: %v", err)
 		}
