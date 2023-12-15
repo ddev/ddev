@@ -40,6 +40,8 @@ $env:CAROOT="$(mkcert -CAROOT)"
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 wsl -u root -e bash -c "touch /etc/resolv.conf && printf 'nameserver 8.8.8.8\n' >>/etc/resolv.conf;"
+wsl -u root -e bash -c "chattr +i /etc/resolv.conf>/dev/null;"
+wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[network]' /etc/wsl.conf >/dev/null; then printf '\n[network]\generateResolvConf=false\n' >>/etc/wsl.conf; fi"
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
@@ -52,6 +54,7 @@ wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://
 wsl -u root -e bash -c "apt update && apt install -y ddev docker-ce docker-ce-cli containerd.io wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 wsl bash -c 'sudo usermod -aG docker $USER'
+
 
 wsl bash -c 'echo CAROOT=$CAROOT'
 wsl -u root mkcert -install
