@@ -273,14 +273,25 @@ or
 ~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml --progress=plain build --no-cache
 ```
 
+### Docker build fails `apt-get update`, perhaps "SSL certificate problem: self-signed certificate"
+
+The Docker build environment (where all projects have a little bit happening) is very sensitive to problems with `apt-get update` or with TLS certificate authentication. If you ware seeing problems with `apt-get update` failing, some of these strategies may help:
+
+* **WSL2**: On WSL2 it's a known issue that the WSL2 environment time can get out of sync with the real time. This is an [ongoing problem](https://github.com/microsoft/WSL/issues/10006) with WSL2, and can be fixed with various workarounds. One good workaround is to install `ntpdate` and `sudo ntpdate pool.ntp.org` to sync the time. The time in WSL2 can get out of sync due to laptop sleeping or other causes. A reboot also fixes it.
+* **VPN**: If you are on a packet-inspection VPN, it often causes problems with validation of certificates on internet sites. In that situation you'll need to get the CA updates required and install them with a custom Dockerfile, as described on [Stack Overflow](https://stackoverflow.com/questions/71595327/corporate-network-ddev-composer-create-results-in-ssl-certificate-error/71595428#71595428).
+* **Other Docker Build**: The Dockerfile build environment is different from the host-side build and different from what you get with `ddev ssh`. If you're having trouble with it it may be caused by name resolution or IP connectivity problems, most often caused by a firewall or VPN. Turn off your firewall temporarily and VPN. A good debugging technique would be to do a simple `.ddev/web-build/Dockerfile` that does `RUN curl -I https://www.google.com` and then use `ddev debug refresh` to see the result. If it gets a 200 result, then your name resolution and internet connectivity are working in the Docker build environment.
+
 ## DDEV Starts but Browser Can’t Access URL
 
-You may see one of two messages in your browser:
+You may see one of these messages in your browser:
 
+* `403` Forbidden
 * *[url] server IP address could not be found*
 * *We can’t connect to the server at [url]*
 
-Most people use `*.ddev.site` URLs, which work great most of the time but require internet access.
+If you get the `403 Forbidden` it's almost always because your [docroot is set wrong](faq.md#why-do-i-get-a-403-or-404-on-my-project-after-ddev-launch). You should have something like `docroot: web` or `docroot: ""` or `docroot: docroot` with the relative path to the directory where your `index.php` lives in the project.
+
+**Name resolution**: Most people use `*.ddev.site` URLs, which work great most of the time but require internet access.
 
 `*.ddev.site` is a wildcard DNS entry that always returns the IP address 127.0.0.1 (localhost). If you’re not connected to the internet, however, or if various other name resolution issues fail, this name resolution won’t work.
 
@@ -291,7 +302,7 @@ While DDEV can create a web server and a Docker network infrastructure for a pro
 * If DDEV detects that it can’t look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, which requires administrative privileges (sudo or Windows UAC).
     * This technique may not work on Windows WSL2, see below.
 
-### DNS Rebinding Prohibited
+### DNS Rebinding Prohibited (Mostly on Fritzbox Routers)
 
 You may see one of several messages:
 
