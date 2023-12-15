@@ -257,6 +257,10 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.OmitContainersGlobal = nodeps.RemoveItemFromSlice(DdevGlobalConfig.OmitContainersGlobal, "dba")
 	}
 
+	if DdevGlobalConfig.ProjectTldGlobal == "" {
+		DdevGlobalConfig.ProjectTldGlobal = nodeps.DdevDefaultTLD
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
