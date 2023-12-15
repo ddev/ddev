@@ -44,11 +44,11 @@ mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
+wsl -u root -e bash -c "touch /etc/resolv.conf && printf 'nameserver 8.8.8.8\n' >>/etc/resolv.conf;"
 wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ \* \* > /etc/apt/sources.list.d/ddev.list'
 wsl -u root -e bash -c "apt update && apt install -y ddev wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
-
 
 wsl bash -c 'echo $CAROOT'
 wsl -u root mkcert -install
