@@ -55,7 +55,6 @@ wsl -u root -e bash -c "apt update && apt install -y ddev docker-ce docker-ce-cl
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 wsl bash -c 'sudo usermod -aG docker $USER'
 
-
 wsl bash -c 'echo CAROOT=$CAROOT'
 wsl -u root mkcert -install
 wsl -u root service docker start
