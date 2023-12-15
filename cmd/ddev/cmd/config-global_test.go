@@ -65,7 +65,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "use-hardened-images=false\n")
 	assert.Contains(out, "fail-on-hook-fail=false")
 	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s\nuse-docker-compose-from-path=false", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	assert.Contains(out, "project-tld=\nxdebug-ide-location=")
+	assert.Contains(out, "project-tld="+globalconfig.DdevGlobalConfig.ProjectTldGlobal+"\nxdebug-ide-location=")
 	assert.Contains(out, "router=traefik")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 	assert.Contains(out, "router-http-port=80\nrouter-https-port=443")
