@@ -131,7 +131,7 @@ for more information.
 
 ## Public Communication
 
-* [Discord](https://discord.gg/EV8aNbU) (maintained by Flyingmana)
+* [Discord](https://discord.gg/5wjP76mBJD) (maintained by Flyingmana)
 
 ## Maintainers
 
