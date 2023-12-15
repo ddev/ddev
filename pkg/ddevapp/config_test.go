@@ -266,7 +266,7 @@ func TestConfigCommand(t *testing.T) {
 
 		restoreOutput := util.CaptureUserOut()
 		err = app.PromptForConfig()
-		assert.NoError(err, t)
+		require.Error(t, err, "invalid project type error should have been caught")
 		out := restoreOutput()
 
 		// Ensure we have expected vales in output.

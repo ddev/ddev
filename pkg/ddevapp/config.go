@@ -1305,7 +1305,7 @@ func (app *DdevApp) AppTypePrompt() error {
 		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
 
 		fmt.Printf(typePrompt, validAppTypes, appType)
-		appType = strings.ToLower(util.GetInput(appType))
+		return fmt.Errorf("invalid project type")
 	}
 
 	app.Type = appType
