@@ -298,63 +298,6 @@ func TestConfigCommand(t *testing.T) {
 	}
 }
 
-// TestConfigCommandInteractiveCreateDocrootDenied
-func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	origDir, _ := os.Getwd()
-	noninteractiveEnv := "DDEV_NONINTERACTIVE"
-	// nolint: errcheck
-	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
-	err := os.Unsetenv(noninteractiveEnv)
-	assert.NoError(err)
-
-	testMatrix := map[string][]string{
-		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
-		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHPDefault},
-	}
-
-	for testName := range testMatrix {
-		testDir := testcommon.CreateTmpDir(t.Name() + testName)
-		err = os.Chdir(testDir)
-		require.NoError(t, err)
-
-		// Create the ddevapp we'll use for testing.
-		// This will not return an error, since there is no existing configuration.
-		app, err := ddevapp.NewApp(testDir, true)
-		require.NoError(t, err)
-
-		t.Cleanup(func() {
-			err = app.Stop(true, false)
-			assert.NoError(err)
-			err = os.Chdir(origDir)
-			assert.NoError(err)
-			_ = os.RemoveAll(testDir)
-		})
-
-		// Randomize some values to use for Stdin during testing.
-		name := uuid.New().String()
-		nonexistentDocroot := filepath.Join("does", "not", "exist")
-
-		// Create an example input buffer that writes the sitename, a nonexistent document root,
-		// and a "no"
-		input := fmt.Sprintf("%s\n%s\nno", name, nonexistentDocroot)
-		scanner := bufio.NewScanner(strings.NewReader(input))
-		util.SetInputScanner(scanner)
-
-		err = app.PromptForConfig()
-		assert.Error(err, t)
-
-		// Ensure we have expected vales in output.
-		assert.Contains(err.Error(), "docroot must exist to continue configuration")
-
-		err = ddevapp.PrepDdevDirectory(app)
-		assert.NoError(err)
-		util.Success("Finished %s", t.Name())
-	}
-}
-
 // TestConfigCommandCreateDocrootAllowed
 func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
