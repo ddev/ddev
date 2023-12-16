@@ -33,9 +33,11 @@ RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
 # look there when doing apt-get update. And we don't use new packages from there.
 # And we're going to install our own percona.list if needed, so get that if needed
 # and remove it here
+USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
-
-RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
+RUN id -a
+RUN mkdir -p /var/lib/apt/lists/partial
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
 
 # If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
 # Use http when connecting. This currently only affects MariaDB 5.5
@@ -57,9 +59,11 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
+ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s -f /dev/stderr /var/log/mysqld.err
-
+RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
+RUN useradd -u 1001 mysql
 # Build a starter base db
 RUN /create_base_db.sh
 
