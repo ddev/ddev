@@ -1,9 +1,11 @@
 #!/bin/bash
 
 set -eu
+set -x
 set -o pipefail
 
 SOCKET=/var/tmp/mysql.sock
+MYSQL_UNIX_PORT=$SOCKET
 OUTDIR=/mysqlbase
 
 mkdir -p ${OUTDIR}
@@ -32,14 +34,14 @@ else
     fi
     mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=/var/lib/mysql
 fi
-echo "Starting mysqld --skip-networking --socket=${SOCKET}"
-mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
 # or if the process dies.
 for i in {90..0}; do
-	if mysqladmin ping -uroot --socket=$SOCKET 2>/dev/null; then
+	if mysqladmin ping -uroot --socket=${MYSQL_UNIX_PORT} 2>/dev/null; then
 		break
 	fi
 	# Test to make sure we got it started in the first place. kill -s 0 just tests to see if process exists.
@@ -55,9 +57,9 @@ if [ "$i" -eq 0 ]; then
 fi
 
 
-mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot  mysql
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot  --socket=${MYSQL_UNIX_PORT} mysql
 
-mysql -uroot <<EOF
+mysql -uroot --socket=${MYSQL_UNIX_PORT} <<EOF
 	CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
 	CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
 	CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
@@ -71,17 +73,17 @@ mysql -uroot <<EOF
 	FLUSH TABLES;
 EOF
 
-mysqladmin -uroot password root
+mysqladmin -uroot --socket=${MYSQL_UNIX_PORT} password root
 
 if [  "${mysqld_version%%%.*}" = "8.0" ]; then
-    mysql -uroot -proot <<EOF
+    mysql -uroot -proot --socket=${MYSQL_UNIX_PORT} <<EOF
         ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_PASSWORD';
         ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
         ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
 EOF
 fi
 
-mysql -uroot -proot -e "SELECT @@character_set_database, @@collation_database;"
+mysql -uroot -proot --socket=${MYSQL_UNIX_PORT} -e "SELECT @@character_set_database, @@collation_database;"
 
 rm -rf ${OUTDIR}/*
 
@@ -99,7 +101,7 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 # mysql-8.0 or mariadb-10.5.
 server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
 echo ${server_db_version} >/var/lib/mysql/db_mariadb_version.txt
-${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=$SOCKET  | gzip >${OUTDIR}/base_db.gz
+${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT}  | gzip >${OUTDIR}/base_db.gz
 rm -f /tmp/raw_mysql_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then

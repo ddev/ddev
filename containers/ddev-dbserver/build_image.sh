@@ -104,8 +104,8 @@ BASE_IMAGE=${DB_TYPE}
 # For mysql, we have to use our own base images at ddev/mysql
 set -x
 
-if [ ${DB_TYPE} = "mysql" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
-  BASE_IMAGE=ddev/mysql
+if [ ${DB_TYPE} = "mysql" ]; then
+  BASE_IMAGE=bitnami/mysql
 fi
 printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
 
