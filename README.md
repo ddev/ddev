@@ -16,7 +16,7 @@ To check out live examples, docs, contributor live training, guides and more vis
 
 ## Questions
 
-If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support). 
+If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support).
 
 ## Wonderful Sponsors
 
