@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Launch a browser with Mailpit (an email & SMTP testing tool)
+## Usage: mailpit
+## Example: "ddev mailpit"
+
+ddev launch -m

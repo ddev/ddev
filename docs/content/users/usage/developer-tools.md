@@ -71,7 +71,7 @@ Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the contai
 
 [Mailpit](https://github.com/axllent/mailpit) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
 
-After your project is started, access the Mailpit web interface at `https://mysite.ddev.site:8026`, or run [`ddev launch -m`](../usage/commands.md#launch) to launch it in your default browser.
+After your project is started, access the Mailpit web interface at `https://mysite.ddev.site:8026`, or run [`ddev mailpit`](../usage/commands.md#mailpit) to launch it in your default browser.
 
 Mailpit will **not** intercept emails if your application is configured to use SMTP or a third-party ESP integration.
 
