@@ -3104,7 +3104,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// by ensuring any associated database files get cleaned up as well.
 	err = app.Stop(true, false)
 	assert.NoError(err)
-	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
+	assert.Empty(globalconfig.DdevProjectList[app.Name])
 	for _, containerType := range []string{"web", "db"} {
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
@@ -3925,7 +3925,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
 	// Since host ports were not explicitly set in nospecApp, they shouldn't be in globalconfig.
-	require.Empty(t, globalconfig.DdevGlobalConfig.ProjectList[nospecApp.Name].UsedHostPorts)
+	require.Empty(t, globalconfig.DdevProjectList[nospecApp.Name].UsedHostPorts)
 
 	err = nospecApp.Start()
 	assert.NoError(err)
@@ -3958,8 +3958,8 @@ func TestPortSpecifications(t *testing.T) {
 	err = specAPP.Stop(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
-	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
-	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
+	require.NotEmpty(t, globalconfig.DdevProjectList[specAPP.Name])
+	require.NotEmpty(t, globalconfig.DdevProjectList[specAPP.Name].UsedHostPorts)
 
 	// However, if we change change the name to make it appear to be a
 	// different project, we should not be able to config or start
@@ -3979,15 +3979,15 @@ func TestPortSpecifications(t *testing.T) {
 	// Now delete the specAPP and we should be able to use the conflictApp
 	err = specAPP.Stop(true, false)
 	assert.NoError(err)
-	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
+	assert.Empty(globalconfig.DdevProjectList[specAPP.Name])
 
 	err = conflictApp.WriteConfig()
 	assert.NoError(err)
 	err = conflictApp.Start()
 	assert.NoError(err)
 
-	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
-	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
+	require.NotEmpty(t, globalconfig.DdevProjectList[conflictApp.Name])
+	require.NotEmpty(t, globalconfig.DdevProjectList[conflictApp.Name].UsedHostPorts)
 }
 
 // TestDdevGetProjects exercises GetProjects()

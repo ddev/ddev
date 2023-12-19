@@ -31,7 +31,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set -x
 fi
 
-rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands
+rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/project_list.yaml ~/.ddev/homeadditions ~/.ddev/commands
 
 # Run any testbot maintenance that may need to be done
 echo "running selfhosted-upgrades.sh"

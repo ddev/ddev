@@ -2606,7 +2606,7 @@ func deleteServiceVolumes(app *DdevApp) {
 	}
 }
 
-// RemoveGlobalProjectInfo deletes the project from ProjectList
+// RemoveGlobalProjectInfo deletes the project from DdevProjectList
 func (app *DdevApp) RemoveGlobalProjectInfo() {
 	_ = globalconfig.RemoveProjectInfo(app.Name)
 }

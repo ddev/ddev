@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -24,9 +25,14 @@ import (
 // DdevGlobalConfigName is the name of the global config file.
 const DdevGlobalConfigName = "global_config.yaml"
 
+// DdevProjectListFileName is the name of the global projects file.
+const DdevProjectListFileName = "project_list.yaml"
+
 var (
 	// DdevGlobalConfig is the currently active global configuration struct
 	DdevGlobalConfig GlobalConfig
+	// DdevProjectList is the list of all existing DDEV projects
+	DdevProjectList map[string]*ProjectInfo
 )
 
 type ProjectInfo struct {
@@ -98,15 +104,25 @@ func New() GlobalConfig {
 // Make sure the global configuration has been initialized
 func EnsureGlobalConfig() {
 	DdevGlobalConfig = New()
+	DdevProjectList = make(map[string]*ProjectInfo)
 	err := ReadGlobalConfig()
 	if err != nil {
 		output.UserErr.Fatalf("unable to read global config: %v", err)
+	}
+	err = ReadProjectList()
+	if err != nil {
+		output.UserErr.Fatalf("unable to read global projects list: %v", err)
 	}
 }
 
 // GetGlobalConfigPath gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
+}
+
+// GetProjectListPath gets the path to global projects file
+func GetProjectListPath() string {
+	return filepath.Join(GetGlobalDdevDir(), DdevProjectListFileName)
 }
 
 // GetDDEVBinDir returns the directory of the Mutagen config and binary
@@ -445,6 +461,82 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	return nil
 }
 
+// ReadProjectList reads the global projects file into DdevProjectList
+// Or creates the file
+func ReadProjectList() error {
+	globalProjectsFile := GetProjectListPath()
+
+	// Can't use fileutil.FileExists() here because of import cycle.
+	if _, err := os.Stat(globalProjectsFile); err != nil {
+		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
+		// Then create global projects list.
+		if os.Geteuid() == 0 {
+			logrus.Warning("Not reading global projects file because running with root privileges")
+			return nil
+		}
+		if os.IsNotExist(err) {
+			// write an empty file
+			err := os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	source, err := os.ReadFile(globalProjectsFile)
+	if err != nil {
+		return fmt.Errorf("unable to read DDEV global projects file %s: %v", source, err)
+	}
+
+	// ReadConfig config values from file.
+	err = yaml.Unmarshal(source, &DdevProjectList)
+	if err != nil {
+		return err
+	}
+
+	// For backwards compatability we're keeping the project_list in global config
+	// in sync with the list in project_list.yaml. If someone upgrades from an earlier
+	// version the global config will have correct content that isn't in projects.yaml.
+	// For now, treat global config as the source of truth when the two lists differ.
+	if !reflect.DeepEqual(DdevGlobalConfig.ProjectList, DdevProjectList) {
+		DdevProjectList = DdevGlobalConfig.ProjectList
+		err := WriteProjectList(DdevProjectList)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// WriteProjectList writes the global projects list into ~/.ddev.
+func WriteProjectList(projects map[string]*ProjectInfo) error {
+	// Write to global config for backwards compatability.
+	// This allows devs to downgrade to an earlier version without
+	// worrying about copying project info into their global config file.
+	DdevGlobalConfig.ProjectList = projects
+	err := WriteGlobalConfig(DdevGlobalConfig)
+	if err != nil {
+		return err
+	}
+
+	// Prepare projects file content
+	projectsBytes, err := yaml.Marshal(projects)
+	if err != nil {
+		return err
+	}
+
+	// Write to projects file
+	err = os.WriteFile(GetProjectListPath(), projectsBytes, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
 	userHome, err := os.UserHomeDir()
@@ -499,7 +591,7 @@ func GetValidOmitContainers() []string {
 // HostPostIsAllocated returns the project name that has allocated
 // the port, or empty string.
 func HostPostIsAllocated(port string) string {
-	for project, item := range DdevGlobalConfig.ProjectList {
+	for project, item := range DdevProjectList {
 		if nodeps.ArrayContainsString(item.UsedHostPorts, port) {
 			return project
 		}
@@ -558,38 +650,38 @@ func GetFreePort(localIPAddr string) (string, error) {
 // ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports
 func ReservePorts(projectName string, ports []string) error {
 	// If the project doesn't exist, add it.
-	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	_, ok := DdevProjectList[projectName]
 	if !ok {
-		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
+		DdevProjectList[projectName] = &ProjectInfo{}
 	}
-	DdevGlobalConfig.ProjectList[projectName].UsedHostPorts = ports
-	err := WriteGlobalConfig(DdevGlobalConfig)
+	DdevProjectList[projectName].UsedHostPorts = ports
+	err := WriteProjectList(DdevProjectList)
 	return err
 }
 
 // SetProjectAppRoot sets the approot in the ProjectInfo of global config
 func SetProjectAppRoot(projectName string, appRoot string) error {
 	// If the project doesn't exist, add it.
-	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	_, ok := DdevProjectList[projectName]
 	if !ok {
-		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
+		DdevProjectList[projectName] = &ProjectInfo{}
 	}
 	// Can't use fileutil.FileExists because of import cycle.
 	if _, err := os.Stat(appRoot); err != nil {
 		return fmt.Errorf("project %s project root %s does not exist", projectName, appRoot)
 	}
-	if DdevGlobalConfig.ProjectList[projectName].AppRoot != "" && DdevGlobalConfig.ProjectList[projectName].AppRoot != appRoot {
-		return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot, projectName)
+	if DdevProjectList[projectName].AppRoot != "" && DdevProjectList[projectName].AppRoot != appRoot {
+		return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev stop --unlist %s` and start again if the listed project root is in error", projectName, DdevProjectList[projectName].AppRoot, appRoot, projectName)
 	}
-	DdevGlobalConfig.ProjectList[projectName].AppRoot = appRoot
-	err := WriteGlobalConfig(DdevGlobalConfig)
+	DdevProjectList[projectName].AppRoot = appRoot
+	err := WriteProjectList(DdevProjectList)
 	return err
 }
 
 // GetProject returns a project given name provided,
 // or nil if not found.
 func GetProject(projectName string) *ProjectInfo {
-	project, ok := DdevGlobalConfig.ProjectList[projectName]
+	project, ok := DdevProjectList[projectName]
 	if !ok {
 		return nil
 	}
@@ -598,10 +690,10 @@ func GetProject(projectName string) *ProjectInfo {
 
 // RemoveProjectInfo removes the ProjectInfo line for a project
 func RemoveProjectInfo(projectName string) error {
-	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	_, ok := DdevProjectList[projectName]
 	if ok {
-		delete(DdevGlobalConfig.ProjectList, projectName)
-		err := WriteGlobalConfig(DdevGlobalConfig)
+		delete(DdevProjectList, projectName)
+		err := WriteProjectList(DdevProjectList)
 		if err != nil {
 			return err
 		}
@@ -611,7 +703,7 @@ func RemoveProjectInfo(projectName string) error {
 
 // GetGlobalProjectList returns the global project list map
 func GetGlobalProjectList() map[string]*ProjectInfo {
-	return DdevGlobalConfig.ProjectList
+	return DdevProjectList
 }
 
 // GetCAROOT is a wrapper on global config

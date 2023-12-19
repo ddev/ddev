@@ -144,6 +144,7 @@ func (site *TestSite) Prepare() error {
 
 	// Force creation of new global config if none exists.
 	_ = globalconfig.ReadGlobalConfig()
+	_ = globalconfig.ReadProjectList()
 
 	err = app.WriteConfig()
 	if err != nil {
