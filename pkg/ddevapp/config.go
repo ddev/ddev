@@ -477,7 +477,7 @@ func (app *DdevApp) ValidateConfig() error {
 			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
-			return fmt.Errorf("the %s project has an invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)
+			return fmt.Errorf("the %s project has an invalid hostname: '%s', see https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)
 		}
 	}
 
