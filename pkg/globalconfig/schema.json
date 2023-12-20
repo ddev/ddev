@@ -224,7 +224,7 @@
       "type": "boolean"
     },
     "use_letsencrypt": {
-      "description": "hether to enable Let’s Encrypt integration. (Works in conjunction with letsencrypt_email.) (Not currently compatible with Traefik router.)",
+      "description": "Whether to enable Let’s Encrypt integration. (Works in conjunction with letsencrypt_email.) (Not currently compatible with Traefik router.)",
       "type": "boolean"
     },
     "web_environment": {
