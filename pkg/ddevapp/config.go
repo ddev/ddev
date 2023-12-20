@@ -195,7 +195,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.MailpitHTTPSPort == nodeps.DdevDefaultMailpitHTTPSPort {
 		appcopy.MailpitHTTPSPort = ""
 	}
-	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD || appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
+	if appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
 	}
 	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
