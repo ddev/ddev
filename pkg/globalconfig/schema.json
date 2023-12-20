@@ -135,6 +135,14 @@
       "description": "Email associated with Let’s Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
       "type": "string"
     },
+    "mailpit_http_port": {
+      "description": "Port for project’s Mailpit HTTP URL.",
+      "type": "string"
+    },
+    "mailpit_https_port": {
+      "description": "Port for project’s Mailpit HTTPS URL.",
+      "type": "string"
+    },
     "messages": {
       "description": "Configure messages like the Tip of the Day.",
       "type": "object",
@@ -157,6 +165,14 @@
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "project_info": {
+      "description": "List of all projects DDEV currently knows about. DDEV manages this list when using `config` and `delete` commands.",
+      "type": "array",
+      "items": {
+        "type": "array"
       },
       "uniqueItems": true
     },
