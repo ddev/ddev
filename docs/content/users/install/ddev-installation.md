@@ -413,25 +413,25 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```json
     {
-      "image": "mcr.microsoft.com/devcontainers/universal:2",
-      "features": {
-        "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      },
-      "portsAttributes": {
-        "3306": {
-            "label": "database"
+        "image": "mcr.microsoft.com/devcontainers/universal:2",
+        "features": {
+            "ghcr.io/ddev/ddev/install-ddev:latest": {}
         },
-        "8027": {
-            "label": "mailpit"
+        "portsAttributes": {
+            "3306": {
+                "label": "database"
+            },
+            "8027": {
+                "label": "mailpit"
+            },
+            "8080": {
+                "label": "web http"
+            },
+            "8443": {
+                "label": "web https"
+            }
         },
-        "8080": {
-            "label": "web http"
-        },
-        "8443": {
-            "label": "web https"
-        }
-      },
-      "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+        "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
     }
     ``` 
     
