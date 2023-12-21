@@ -413,11 +413,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```json
     {
-    "image": "mcr.microsoft.com/devcontainers/universal:2",
-    "features": {
+      "image": "mcr.microsoft.com/devcontainers/universal:2",
+      "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
-    },
-    "portsAttributes": {
+      },
+      "portsAttributes": {
         "3306": {
             "label": "database"
         },
@@ -430,8 +430,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         "8443": {
             "label": "web https"
         }
-    },
-    "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+      },
+      "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
     }
     ``` 
     
