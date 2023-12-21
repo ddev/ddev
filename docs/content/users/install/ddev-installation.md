@@ -403,49 +403,51 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     A lot more customization is possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/). You can install Visual Studio Code extensions by default or run commands automatically. 
 
-    #### `postAttachCommand`
+    #### `postCreateCommand`
 
-    The [`postAttachCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
+    The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
 
     The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept. 
 
-    ```json
+    You usually want to use a separate bash script to do this, as docker [might not yet be available when the command starts to run](https://github.com/devcontainers/features/issues/780).
+
+    ```
     {
-        "image": "mcr.microsoft.com/devcontainers/universal:2",
-        "features": {
-            "ghcr.io/ddev/ddev/install-ddev:latest": {}
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "features": {
+        "ghcr.io/ddev/ddev/install-ddev:latest": {}
+    },
+    "portsAttributes": {
+        "3306": {
+            "label": "database"
         },
-        "portsAttributes": {
-            "3306": {
-                "label": "database"
-            },
-            "8027": {
-                "label": "mailpit"
-            },
-            "8080": {
-                "label": "web http"
-            },
-            "8443": {
-                "label": "web https"
-            }
+        "8027": {
+            "label": "mailpit"
         },
-        "postAttachCommand": "bash -c 'ddev poweroff && ddev start -y && ddev composer install'"
+        "8080": {
+            "label": "web http"
+        },
+        "8443": {
+            "label": "web https"
         }
-    ```
-
-    After the codespace is initially built, the commands will be triggered (takes a few seconds):
-
-    <div style="text-align:center;"><img src="./../../../images/codespaces-fresh-install.png" alt=""></div>
-
-    You could call a separate bash file as well and add more commands: 
-
-    ```
-    "postAttachCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+    },
+    "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+    }
     ``` 
     
     ```
     #!/bin/bash
     set -ex
+
+    wait_for_docker() {
+      while true; do
+        docker ps > /dev/null 2>&1 && break
+        sleep 1
+      done
+      echo "Docker is ready."
+    }
+
+    wait_for_docker
 
     # download images beforehand, optional
     ddev debug download-images
@@ -460,7 +462,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ddev composer install 
     ```
 
-    To check for errors during the `postAttachCommand` action, use the command 
+    To check for errors during the `postCreateCommand` action, use the command 
     
     - "Codespaces: View creation log” 
     
