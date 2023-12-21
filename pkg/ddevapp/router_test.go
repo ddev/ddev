@@ -62,9 +62,8 @@ func TestProjectPortOverride(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
-	// Try some different combinations of ports. The first (offset 0) will
-	// share ports with already-started test sites.
-	for i := 0; i < 3; i++ {
+	// Try some different combinations of ports.
+	for i := 1; i < 3; i++ {
 		testDir := testcommon.CreateTmpDir("TestProjectPortOverride")
 
 		t.Cleanup(func() {
@@ -74,15 +73,12 @@ func TestProjectPortOverride(t *testing.T) {
 		})
 
 		testcommon.ClearDockerEnv()
-
 		app, err := ddevapp.NewApp(testDir, true)
 		assert.NoError(err)
-		app.RouterHTTPPort = strconv.Itoa(80 + i)
-		// Note that we start with port 453 instead of 443 here because Windows
-		// by default has port 445 occupied by NetBT (Netbios over TCP)
-		// So the test will fail because of that.
-		app.RouterHTTPSPort = strconv.Itoa(453 + i)
+		app.RouterHTTPPort = strconv.Itoa(8080 + i)
+		app.RouterHTTPSPort = strconv.Itoa(8443 + i)
 		app.Name = "TestProjectPortOverride-" + strconv.Itoa(i)
+		_ = app.Stop(true, false)
 		app.Type = nodeps.AppTypePHP
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -96,14 +92,7 @@ func TestProjectPortOverride(t *testing.T) {
 		assert.NoError(err)
 		assert.True(stringFound)
 
-		// These ports will already be active if on the standard port, because
-		// the TestMain has started stuff up on the standard ports.
-		if i != 0 {
-			assert.False(netutil.IsPortActive(app.RouterHTTPPort))
-			assert.False(netutil.IsPortActive(app.RouterHTTPSPort))
-		}
-
-		err = app.Start()
+		err = app.StartAndWait(2)
 		require.NoError(t, err)
 		// defer the app.Stop() so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.

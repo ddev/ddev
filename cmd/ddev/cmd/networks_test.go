@@ -60,7 +60,7 @@ func TestNetworkDuplicates(t *testing.T) {
 	}
 
 	// The duplicate network is removed here
-	err = dockerutil.EnsureNetwork(client, networkName, labels)
+	err = dockerutil.EnsureNetwork(client, networkName, netOptions)
 	assert.NoError(err)
 
 	// This check would fail if there is a network duplicate

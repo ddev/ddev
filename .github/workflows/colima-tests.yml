@@ -73,7 +73,7 @@ jobs:
           restore-keys: |
             ddev-test-cache-
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '>=1.21'
 
@@ -89,15 +89,16 @@ jobs:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
+      - name: Fix Python conflicts between macOS runner and Homebrew
+        run: |
+          # see https://github.com/actions/setup-python/issues/577
+          brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
+
       - name: Install homebrew dependencies
         run: |
           set -x
           sudo chmod ugo+w /usr/local/bin
-          brew install --overwrite python@3.11
-          brew install docker docker-compose lima
-          # brew install mysql-client is failing because of existing 2to3
-          sudo rm -f /usr/local/bin/2to3*
-          brew install --overwrite mysql-client || true
+          brew install docker docker-compose lima mysql-client
 
       - name: Install and start Colima
         run: |

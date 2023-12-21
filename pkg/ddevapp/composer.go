@@ -22,6 +22,8 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		Dir:     app.GetComposerRoot(true, true),
 		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+		// Prevent Composer from debugging when Xdebug is enabled
+		Env: []string{"XDEBUG_MODE=off"},
 	})
 	if err != nil {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)

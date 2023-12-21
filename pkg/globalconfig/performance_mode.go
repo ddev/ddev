@@ -7,8 +7,10 @@ import (
 // GetPerformanceMode returns the performance mode config respecting
 // defaults.
 func (c *GlobalConfig) GetPerformanceMode() types.PerformanceMode {
-	switch c.PerformanceMode {
-	case types.PerformanceModeEmpty:
+	switch {
+	case c.NoBindMounts:
+		return types.PerformanceModeMutagen
+	case c.PerformanceMode == types.PerformanceModeEmpty:
 		return types.GetPerformanceModeDefault()
 	default:
 		return c.PerformanceMode
