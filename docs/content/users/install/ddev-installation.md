@@ -409,6 +409,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept. 
 
+    You usually want to use a separate bash script to do this, as docker [might not yet be available when the command starts to run](https://github.com/devcontainers/features/issues/780).
+
     ```json
     {
         "image": "mcr.microsoft.com/devcontainers/universal:2",
@@ -429,23 +431,23 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
                 "label": "web https"
             }
         },
-        "postCreateCommand": "bash -c 'ddev poweroff && ddev start -y && ddev composer install'"
-        }
-    ```
-
-    After the codespace is initially built, the commands will be triggered (takes a few seconds):
-
-    <div style="text-align:center;"><img src="./../../../images/codespaces-fresh-install.png" alt=""></div>
-
-    You could call a separate bash file as well and add more commands: 
-
-    ```
-    "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+        "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+    }
     ``` 
     
     ```
     #!/bin/bash
     set -ex
+
+    wait_for_docker() {
+      while true; do
+        docker ps > /dev/null 2>&1 && break
+        sleep 1
+      done
+      echo "Docker is ready."
+    }
+
+    wait_for_docker
 
     # download images beforehand, optional
     ddev debug download-images
