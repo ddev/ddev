@@ -132,7 +132,15 @@
       "type": "integer"
     },
     "letsencrypt_email": {
-      "description": "Email associated with Let’s Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
+      "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
+      "type": "string"
+    },
+    "mailpit_http_port": {
+      "description": "Port for project's Mailpit HTTP URL.",
+      "type": "string"
+    },
+    "mailpit_https_port": {
+      "description": "Port for project's Mailpit HTTPS URL.",
       "type": "string"
     },
     "messages": {
@@ -157,6 +165,14 @@
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "project_info": {
+      "description": "List of all projects DDEV currently knows about. DDEV manages this list when using `config` and `delete` commands.",
+      "type": "array",
+      "items": {
+        "type": "array"
       },
       "uniqueItems": true
     },
@@ -187,7 +203,7 @@
       ]
     },
     "router_bind_all_interfaces": {
-      "description": "Whether to bind ddev-router’s ports on all network interfaces.",
+      "description": "Whether to bind ddev-router's ports on all network interfaces.",
       "type": "boolean"
     },
     "router_http_port": {
@@ -224,7 +240,7 @@
       "type": "boolean"
     },
     "use_letsencrypt": {
-      "description": "hether to enable Let’s Encrypt integration. (Works in conjunction with letsencrypt_email.) (Not currently compatible with Traefik router.)",
+      "description": "Whether to enable Let's Encrypt integration. (Works in conjunction with letsencrypt_email.) (Not currently compatible with Traefik router.)",
       "type": "boolean"
     },
     "web_environment": {
