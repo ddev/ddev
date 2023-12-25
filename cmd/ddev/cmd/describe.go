@@ -3,6 +3,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -10,8 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
-	"sort"
-	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -180,7 +181,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if _, ok := desc["mailpit_https_url"]; ok {
 				mailpitURL = desc["mailpit_https_url"].(string)
 			}
-			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\n`ddev launch -m`", mailpitURL)})
+			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\n`ddev mailpit`", mailpitURL)})
 
 			//WebExtraExposedPorts stanza
 			for _, extraPort := range app.WebExtraExposedPorts {

@@ -822,6 +822,17 @@ ddev logs -s db
 ddev logs -s db my-project
 ```
 
+## `mailpit`
+
+Launch a browser with mailpit for the current project (global shell host container command).
+
+Example:
+
+```shell
+# Open Mailpit in the default browser
+ddev mailpit
+```
+
 ## `magento`
 
 Run the `magento` command; available only in projects of type `magento2`, and only works if `bin/magento` is in the project.
