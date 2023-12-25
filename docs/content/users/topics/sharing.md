@@ -35,7 +35,7 @@ WordPress only has the one base URL, but the `wp` command is built into DDEV’s
 This set of steps assumes an ngrok domain of `wp23.ngrok-free.app` and a starting URL of `https://wordpress.ddev.site`.
 
 * Configure `.ddev/config.yaml` to use a custom domain: `ngrok_args: --domain wp23.ngrok-free.app`.
-* Make a backup of your database with [`ddev export-db`](../usage/commands.md#export-db) or [`ddev shapshot`](../usage/commands.md#snapshot).
+* Make a backup of your database with [`ddev export-db`](../usage/commands.md#export-db) or [`ddev snapshot`](../usage/commands.md#snapshot).
 * Edit `wp-config-ddev.php` (or whatever your config is) to change `WP_HOME`, for example, `define('WP_HOME', 'https://wp23.ngrok-free.app');`
 * `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok-free.app`, assuming your project is configured for `https://wordpress.ddev.site` and your `ngrok_args` are configured for the `wp23.ngrok-free.app` domain.
 * Now run [`ddev share`](../usage/commands.md#share).
