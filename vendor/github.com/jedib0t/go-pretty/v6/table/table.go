@@ -32,13 +32,13 @@ func (row rowStr) areEqual(colIdx1 int, colIdx2 int) bool {
 	return colIdx1 >= 0 && colIdx2 < len(row) && row[colIdx1] == row[colIdx2]
 }
 
-// Table helps print a 2-dimensional array in a human readable pretty-table.
+// Table helps print a 2-dimensional array in a human-readable pretty-table.
 type Table struct {
 	// allowedRowLength is the max allowed length for a row (or line of output)
 	allowedRowLength int
 	// enable automatic indexing of the rows and columns like a spreadsheet?
 	autoIndex bool
-	// autoIndexVIndexMaxLength denotes the length in chars for the last rownum
+	// autoIndexVIndexMaxLength denotes the length in chars for the last row
 	autoIndexVIndexMaxLength int
 	// caption stores the text to be rendered just below the table; and doesn't
 	// get used when rendered as a CSV
@@ -164,14 +164,15 @@ func (t *Table) AppendRows(rows []Row, config ...RowConfig) {
 // append is a separator, it will not be rendered in addition to the usual table
 // separator.
 //
-//******************************************************************************
+// ******************************************************************************
 // Please note the following caveats:
-// 1. SetPageSize(): this may end up creating consecutive separator rows near
-//    the end of a page or at the beginning of a page
-// 2. SortBy(): since SortBy could inherently alter the ordering of rows, the
-//    separators may not appear after the row it was originally intended to
-//    follow
-//******************************************************************************
+//  1. SetPageSize(): this may end up creating consecutive separator rows near
+//     the end of a page or at the beginning of a page
+//  2. SortBy(): since SortBy could inherently alter the ordering of rows, the
+//     separators may not appear after the row it was originally intended to
+//     follow
+//
+// ******************************************************************************
 func (t *Table) AppendSeparator() {
 	if t.separators == nil {
 		t.separators = make(map[int]bool)
@@ -228,7 +229,7 @@ func (t *Table) SetColumnConfigs(configs []ColumnConfig) {
 	t.columnConfigs = configs
 }
 
-// SetHTMLCSSClass sets the the HTML CSS Class to use on the <table> node
+// SetHTMLCSSClass sets the HTML CSS Class to use on the <table> node
 // when rendering the Table in HTML format.
 //
 // Deprecated: in favor of Style().HTML.CSSClass
@@ -388,7 +389,7 @@ func (t *Table) getBorderRight(hint renderHint) string {
 
 func (t *Table) getColumnColors(colIdx int, hint renderHint) text.Colors {
 	if hint.isBorderOrSeparator() {
-		if colors := t.getColumnColorsForBorderOrSeparator(colIdx, hint); colors != nil {
+		if colors := t.getColumnColorsForBorderOrSeparator(hint); colors != nil {
 			return colors
 		}
 	}
@@ -410,7 +411,7 @@ func (t *Table) getColumnColors(colIdx int, hint renderHint) text.Colors {
 	return nil
 }
 
-func (t *Table) getColumnColorsForBorderOrSeparator(colIdx int, hint renderHint) text.Colors {
+func (t *Table) getColumnColorsForBorderOrSeparator(hint renderHint) text.Colors {
 	if t.style.Options.DoNotColorBordersAndSeparators {
 		return text.Colors{} // not nil to force caller to paint with no colors
 	}
@@ -439,12 +440,9 @@ func (t *Table) getColumnSeparator(row rowStr, colIdx int, hint renderHint) stri
 				separator = t.style.Box.BottomSeparator
 			}
 		} else {
-			separator = t.getColumnSeparatorNonBorder(
-				t.shouldMergeCellsHorizontallyAbove(row, colIdx, hint),
-				t.shouldMergeCellsHorizontallyBelow(row, colIdx, hint),
-				colIdx,
-				hint,
-			)
+			sm1 := t.shouldMergeCellsHorizontallyAbove(row, colIdx, hint)
+			sm2 := t.shouldMergeCellsHorizontallyBelow(row, colIdx, hint)
+			separator = t.getColumnSeparatorNonBorder(sm1, sm2, colIdx, hint)
 		}
 	}
 	return separator
@@ -721,7 +719,10 @@ func (t *Table) shouldMergeCellsHorizontallyBelow(row rowStr, colIdx int, hint r
 
 	var rowConfig RowConfig
 	if hint.isSeparatorRow {
-		if hint.isHeaderRow && hint.rowNumber == 0 {
+		if hint.isRegularRow() {
+			rowConfig = t.getRowConfig(renderHint{rowNumber: hint.rowNumber + 1})
+			row = t.getRow(hint.rowNumber, renderHint{})
+		} else if hint.isHeaderRow && hint.rowNumber == 0 {
 			rowConfig = t.getRowConfig(renderHint{isHeaderRow: true, rowNumber: 1})
 			row = t.getRow(0, hint)
 		} else if hint.isHeaderRow && hint.isLastRow {
@@ -733,9 +734,6 @@ func (t *Table) shouldMergeCellsHorizontallyBelow(row rowStr, colIdx int, hint r
 		} else if hint.isFooterRow && hint.rowNumber >= 0 {
 			rowConfig = t.getRowConfig(renderHint{isFooterRow: true, rowNumber: 1})
 			row = t.getRow(hint.rowNumber, renderHint{isFooterRow: true})
-		} else if hint.isRegularRow() {
-			rowConfig = t.getRowConfig(renderHint{rowNumber: hint.rowNumber + 1})
-			row = t.getRow(hint.rowNumber, renderHint{})
 		}
 	}
 
@@ -751,13 +749,13 @@ func (t *Table) shouldMergeCellsVertically(colIdx int, hint renderHint) bool {
 			rowPrev := t.getRow(hint.rowNumber-1, hint)
 			rowNext := t.getRow(hint.rowNumber, hint)
 			if colIdx < len(rowPrev) && colIdx < len(rowNext) {
-				return rowPrev[colIdx] == rowNext[colIdx] || "" == rowNext[colIdx]
+				return rowPrev[colIdx] == rowNext[colIdx]
 			}
 		} else {
 			rowPrev := t.getRow(hint.rowNumber-2, hint)
 			rowCurr := t.getRow(hint.rowNumber-1, hint)
 			if colIdx < len(rowPrev) && colIdx < len(rowCurr) {
-				return rowPrev[colIdx] == rowCurr[colIdx] || "" == rowCurr[colIdx]
+				return rowPrev[colIdx] == rowCurr[colIdx]
 			}
 		}
 	}
