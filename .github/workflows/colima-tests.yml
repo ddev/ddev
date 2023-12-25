@@ -114,7 +114,7 @@ jobs:
       - name: Basic ddev usage
         run: | 
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
-          ddev config --project-type=drupal9 --docroot=web --create-docroot
+          ddev config --project-type=drupal9 --docroot=web
           ddev debug download-images
           ddev poweroff
           docker buildx prune -f -a || true
