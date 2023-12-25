@@ -89,6 +89,7 @@ func New() GlobalConfig {
 		MkcertCARoot:                 readCAROOT(),
 		ProjectList:                  make(map[string]*ProjectInfo),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
+		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
 	}
 
 	return cfg
@@ -254,6 +255,10 @@ func ReadGlobalConfig() error {
 	// Remove dba
 	if nodeps.ArrayContainsString(DdevGlobalConfig.OmitContainersGlobal, "dba") {
 		DdevGlobalConfig.OmitContainersGlobal = nodeps.RemoveItemFromSlice(DdevGlobalConfig.OmitContainersGlobal, "dba")
+	}
+
+	if DdevGlobalConfig.ProjectTldGlobal == "" {
+		DdevGlobalConfig.ProjectTldGlobal = nodeps.DdevDefaultTLD
 	}
 
 	err = ValidateGlobalConfig()
