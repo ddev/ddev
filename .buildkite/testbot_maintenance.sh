@@ -39,9 +39,10 @@ windows)
 linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
-      for item in ddev/ddev-edge/ddev golang mkcert mkdocs postgresql-client; do
+      for item in ddev/ddev-edge/ddev golang libpq mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
       done
+      brew link --force libpq
     fi
     ;;
 
