@@ -38,3 +38,17 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 11. Run `ddev pull pantheon`. DDEV will download the Pantheon database and files and bring them into the local DDEV environment. You should now be able to access the project locally.
 
 12. Optionally use `ddev push pantheon` to push local files and database to Pantheon. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
+
+## Search API Pantheon
+
+Pantheon provides the search_api_pantheon module to set up a connection to a Solr server using environment variables. The Solr server uses a self-signed certification and requires the client to have a certification for binding. To get this working with DDEV, do the following:
+
+1. Convert the Pantheon root CA to .crt format and save to .ddev/web-build/certs.
+
+2. Add this line to .ddev/web-build/Dockerfile:
+```
+ADD certs /usr/local/share/ca-certificates/
+```
+3. Download /certs/binding.pem from Pantheon to .ddev/homeadditions/certs.
+
+4. Search for _getenv_ in search_api_pantheon and set all the environment variables in .ddev/.env using the values from the Pantheon environment.
