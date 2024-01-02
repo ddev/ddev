@@ -21,7 +21,7 @@ if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
 }
 # Make sure using WSL2
 if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
-    throw "Your default distro is not WSL2, please delete it and start over again"
+    throw "Your default distro is not WSL version 2, please delete it and start over again"
 }
 if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
