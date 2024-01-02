@@ -17,6 +17,10 @@ if (-not(wsl -l -v)) {
 if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
     throw "Your installed WSL2 distro does not seem to be Ubuntu. You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Ubuntu."
 }
+# Make sure using WSL2
+if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
+    throw "Your default distro is not WSL2, please delete it and start over again"
+}
 if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }

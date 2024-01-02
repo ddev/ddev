@@ -145,7 +145,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Important Considerations for WSL2 and DDEV
 
-    * WSL2 is supported on Windows 10 and 11.  
+    * You **must** use WSL2, not WSL version 1.
+      Use `wsl.exe -l -v` to see the versions of the distros you are using they should be v2.
+    * WSL2 is supported on Windows 10 and 11.
       All Windows 10/11 editions, including Windows 10 Home support WSL2.
     * WSL2 offers a faster, smoother experience.  
       It’s vastly more performant, and you’re less likely to have obscure Windows problems.
@@ -166,6 +168,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     * Installing WSL2 and installing a distro like Ubuntu.
     * Optionally installing Docker Desktop for Windows and enabling WSL2 integration with the distro (if you're using the Docker Desktop approach).
     * Installing DDEV inside your distro; this is normally done by running one of the two scripts below, but can be done manually step-by-step as well.
+    * Verify that your distro uses WSL version 2 with `wsl.exe -l -v`.
 
     ### WSL2 + Docker CE Inside Install Script
 
@@ -184,6 +187,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.  
           If you have WSL2 but not an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. If this doesn’t work, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
+
+        * Verify that your Ubuntu default distro is WSL v2 using `wsl -l -v`.
 
     2. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
 
