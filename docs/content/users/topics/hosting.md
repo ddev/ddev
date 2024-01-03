@@ -58,8 +58,10 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     # Stop DDEV when Docker shuts down
     # Start with `sudo systemctl start ddev`
     # Enable on boot with `sudo systemctl enable ddev`
-    # Make sure to edit the User= for your user and the
-    # full path to `ddev` on your system.
+    # Make sure to edit the User= for your user, the
+    # WorkingDirectory= ('~' will point it to your user's
+    # home directory) and the full path to `ddev` 
+    # on your system.
     # Optionally give a list of sites instead of --all
     [Unit]
     Description=DDEV sites
@@ -68,6 +70,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     PartOf=docker.service
     [Service]
     User=rfay
+    WorkingDirectory=~
     Type=oneshot
     ExecStart=/usr/local/bin/ddev start --all
     RemainAfterExit=true
