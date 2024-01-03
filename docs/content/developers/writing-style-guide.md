@@ -242,7 +242,7 @@ One-off tips that don’t fit nicely into any of the sections above:
 <!-- textlint-disable -->
 
 - Pluralize “CMS” as “CMSes”, not “CMSs”.
-- Use human readable format in headers, for example in README files.
+- Add a title in README files, in this format: "DDEV Project Name".
 - Use all-caps references for file *types* like JSON, YAML and CSS.
 - Wrap file *extensions* in backticks like `.json`, `.yaml`, and `.css`.
 - Wrap references to files, directories, images and commands in backticks.
