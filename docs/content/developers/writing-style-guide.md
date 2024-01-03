@@ -242,6 +242,7 @@ One-off tips that don’t fit nicely into any of the sections above:
 <!-- textlint-disable -->
 
 - Pluralize “CMS” as “CMSes”, not “CMSs”.
+- Use human readable format in headers, for example in README files.
 - Use all-caps references for file *types* like JSON, YAML and CSS.
 - Wrap file *extensions* in backticks like `.json`, `.yaml`, and `.css`.
 - Wrap references to files, directories, images and commands in backticks.
@@ -255,11 +256,12 @@ One-off tips that don’t fit nicely into any of the sections above:
 | -- | -- |
 | web server | webserver
 | add-on | addon
+| several CMSes | several CMSs, several CMS’s
+| DDEV Drupal Contrib | ddev-drupal-contrib
 | JSON, YAML, CSS | json, Yaml, css
 | `.json`, `.yaml`, `.css`, `~/.ddev` | .json, .yaml, .css, ~/.ddev
 | <kbd>CTRL</kbd> + <kbd>C</kbd> | control-c, control + c, ctrl+c
 | *Menu Item* → *Another Menu Item* → *Setting* | Menu Item>Another Menu Item>Setting<br>Menu Item -> Another Menu Item -> Setting
-| several CMSes | several CMSs, several CMS’s
 | How to Reticulate Splines | How to reticulate splines
 | 1. Run `command`.<br>2. Edit file.<br>3. Restart computer. | 1. `command`<br>2. Edit file.<br>3. Additionally, restart your computer.
 
