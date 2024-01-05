@@ -35,7 +35,7 @@ Environment variables will be automatically added to your `.env` file to simplif
     cd my-craft-project
 
     # Set up the DDEV environment:
-    ddev config --project-type=craftcms --docroot=web
+    ddev config --project-type=craftcms --docroot=web --create-docroot
 
     # Boot the project and install the starter project:
     ddev start
