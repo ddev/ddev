@@ -484,7 +484,16 @@ func (app *DdevApp) GetRelativeWorkingDirectory() string {
 	return app.GetRelativeDirectory(pwd)
 }
 
-func (app *DdevApp) IsCustomCert() bool {
+// HasCustomCert returns true if the project uses a custom certificate
+func (app *DdevApp) HasCustomCert() bool {
 	customCertsPath := app.GetConfigPath("custom_certs")
 	return fileutil.FileExists(filepath.Join(customCertsPath, fmt.Sprintf("%s.crt", app.Name)))
+}
+
+// CanUseHTTPOnly returns true if the project can be accessed via http only
+func (app *DdevApp) CanUseHTTPOnly() bool {
+	return !nodeps.IsGitpod() &&
+		!nodeps.IsCodespaces() &&
+		(globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) &&
+		!app.HasCustomCert()
 }

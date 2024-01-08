@@ -3,8 +3,6 @@ package cmd
 import (
 	"strings"
 
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
@@ -56,7 +54,7 @@ ddev restart --all`,
 
 			util.Success("Restarted %s", app.GetName())
 			httpURLs, urlList, _ := app.GetAllURLs()
-			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app) {
+			if app.CanUseHTTPOnly() {
 				urlList = httpURLs
 			}
 			util.Success("Your project can be reached at %s", strings.Join(urlList, " "))

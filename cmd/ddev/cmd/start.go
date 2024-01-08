@@ -12,7 +12,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/manifoldco/promptui"
@@ -139,7 +138,7 @@ ddev start --all`,
 
 			util.Success("Successfully started %s", project.GetName())
 			httpURLs, httpsURLs, _ := project.GetAllURLs()
-			if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) && !project.IsCustomCert() {
+			if project.CanUseHTTPOnly() {
 				httpsURLs = httpURLs
 			}
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
