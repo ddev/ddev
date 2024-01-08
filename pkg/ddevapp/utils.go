@@ -483,3 +483,8 @@ func (app *DdevApp) GetRelativeWorkingDirectory() string {
 	pwd, _ := os.Getwd()
 	return app.GetRelativeDirectory(pwd)
 }
+
+func (app *DdevApp) IsCustomCert() bool {
+	customCertsPath := app.GetConfigPath("custom_certs")
+	return fileutil.FileExists(filepath.Join(customCertsPath, fmt.Sprintf("%s.crt", app.Name)))
+}
