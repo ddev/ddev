@@ -292,6 +292,13 @@ func WriteGlobalConfig(config GlobalConfig) error {
 		return err
 	}
 
+	// Prepend a warning that comments in the file are not preserved.
+	warning := `
+# WARNING: This file gets automatically re-generated. Any custom comments will
+# NOT be preserved.
+`
+	cfgbytes = append(warning, cfgbytes)
+
 	// Append current image information
 	instructions := `
 # You can turn off usage of the
