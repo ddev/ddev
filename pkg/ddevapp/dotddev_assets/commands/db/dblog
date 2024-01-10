@@ -1,0 +1,46 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Turn on query logging for diagnostic purposes.
+## Usage: dblog on|off|tail
+## Example: "ddev dblog on" or "ddev dblog off" or "ddev dblog tail"
+## DBTypes: mysql,mariadb
+## ExecRaw: true
+
+case "$@" in
+  on)
+    state=1
+    ;;
+  off)
+    state=0
+    ;;
+  tail)
+    state=1
+    previous_state=$(mysql -u root -proot -e "SHOW VARIABLES LIKE 'general_log'\G;" | awk '/Value:/ { print $2 }')
+    trap ctrl_c INT
+    ;;
+  *)
+    echo "Tell us whether you want the query log on or off, or if you want to tail it."
+    echo "Usage: querylog on|off|tail"
+    exit 1
+    ;;
+esac
+
+function ctrl_c() {
+  if [ "$previous_state" = "OFF" ]; then
+    echo "Turning off general log..."
+    mysql -u root -proot -e "SET global general_log = 0"
+  fi
+  echo "Goodbye."
+  exit 0
+}
+
+mysql -u root -proot <<EOX
+SET global general_log = $state;
+SET global log_output = 'file';
+SET global general_log_file = '/tmp/dblog';
+EOX
+
+if [ "$@" = "tail" ]; then
+  tail -f /tmp/dblog
+fi
