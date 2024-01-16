@@ -5,6 +5,7 @@
 ## Description: Explain how to upgrade DDEV
 ## Usage: self-upgrade
 ## Example: "ddev self-upgrade"
+## CanRunGlobally: true
 
 mypath=$(which ddev)
 
