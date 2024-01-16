@@ -149,7 +149,7 @@ Example of `ddev composer create`:
 ```shell
 # Create a new Drupal project in the current directory
 ddev composer create drupal/recommended-project
-````
+```
 
 ## `config`
 
