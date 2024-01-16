@@ -27,6 +27,12 @@ func TestCmdGlobalConfig(t *testing.T) {
 		err := os.Remove(configFile)
 		require.NoError(t, err)
 	}
+	// And no projects file
+	projectsFile := globalconfig.GetProjectListPath()
+	if fileutil.FileExists(projectsFile) {
+		err := os.Remove(projectsFile)
+		require.NoError(t, err)
+	}
 	// We need to make sure that the (corrupted, bogus) global config file is removed
 	// and then read (empty)
 	// nolint: errcheck
@@ -40,6 +46,10 @@ func TestCmdGlobalConfig(t *testing.T) {
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 
 		err = os.Remove(configFile)
+		if err != nil {
+			t.Logf("Unable to remove %v: %v", configFile, err)
+		}
+		err = os.Remove(projectsFile)
 		if err != nil {
 			t.Logf("Unable to remove %v: %v", configFile, err)
 		}

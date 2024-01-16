@@ -33,7 +33,7 @@ func TestCmdList(t *testing.T) {
 		globalconfig.DdevGlobalConfig.SimpleFormatting = false
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})
-	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
+	// This gratuitous ddev start -a repopulates the ~/.ddev/project_list.yaml
 	// project list, which has been damaged by other tests which use
 	// direct app techniques.
 	_, err = exec.RunHostCommand(DdevBin, "start", "-a", "-y")

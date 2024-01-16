@@ -3,6 +3,12 @@ package globalconfig_test
 import (
 	"context"
 	"errors"
+	"net"
+	"os"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -11,11 +17,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net"
-	"os"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func TestGetFreePort(t *testing.T) {
 	for try := 0; try < 5; try++ {
 		port, err := globalconfig.GetFreePort(dockerIP)
 		require.NoError(t, err)
-		assert.NotContains(globalconfig.DdevGlobalConfig.ProjectList["TestGetFreePort"].UsedHostPorts, port)
+		assert.NotContains(globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
 		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, versionconstants.BusyboxImage}

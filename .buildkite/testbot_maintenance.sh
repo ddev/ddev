@@ -4,7 +4,7 @@ set -eu -o pipefail
 
 os=$(go env GOOS)
 
-rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-compose* ~/tmp/ddevtest
+rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/project_list.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-compose* ~/tmp/ddevtest
 
 # Latest git won't let you do much in a non-safe directory
 git config --global --add safe.directory '*' || true
