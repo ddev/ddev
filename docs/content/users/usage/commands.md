@@ -649,7 +649,7 @@ In general, you can run `ddev get` multiple times without doing any damage. Upda
 
 ## `heidisql`
 
-Open [HeidiSQL](https://www.heidisql.com/) with the current project’s database (global shell host container command). This command is only available if `TablePlus.app` is installed as `C:\Program Files\HeidiSQL\Heidisql.exe`.
+Open [HeidiSQL](https://www.heidisql.com/) with the current project’s database (global shell host container command). This command is only available if `Heidisql.exe` is installed as `C:\Program Files\HeidiSQL\Heidisql.exe`.
 
 Example:
 
