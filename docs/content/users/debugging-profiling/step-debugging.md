@@ -80,7 +80,7 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 
 ### Visual Studio Code (VS Code) Debugging Setup
 
-1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
+1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) extension.
 2. Update the project’s `.vscode/launch.json` to add the “Listen for Xdebug” configuration from [this config snippet](../snippets/launch.json). For more on customizing `launch.json`, see the [VS Code docs](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations).
 3. Set a breakpoint in your `index.php`. If it isn’t solid red, restart.
 4. In the menu, choose *Run* → *Start Debugging*. You may have to select “Listen for Xdebug” by the green arrowhead at the top left. The bottom pane of VS Code should now be orange (live) and should say “Listen for Xdebug”.
@@ -88,7 +88,7 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 6. In a browser, visit your project and confirm you hit the breakpoint.
 
 !!!tip "If you’re using VS Code on Windows with WSL2"
-    VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “PHP Debug” and “Remote - WSL”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
+    VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “[PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug)” and “[WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
 
 ## Using Xdebug on a Port Other than the Default 9003
 
