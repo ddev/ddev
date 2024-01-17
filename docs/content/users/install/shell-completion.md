@@ -37,7 +37,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     Otherwise, you can extract the zsh completions file (`ddev_zsh_completion.sh`) from the tar archive of completion scripts included with each release. See [below](https://ddev.readthedocs.io/en/latest/users/install/shell-completion/#tar-archive-of-completion-scripts-for-manual-deployment).
     
-    Oh-My-Zsh may be set up very differently in different places, so you’ll need to put `ddev_bash_completion.sh` where it belongs. `echo $fpath` will show you the places that it’s most likely to belong. To install in `~/.oh-my-zsh/completions` (an obvious choice), you can run `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev`, then `autoload -Uz compinit && compinit```.
+    Oh-My-Zsh may be set up very differently in different places, so you’ll need to put `ddev_bash_completion.sh` where it belongs. `echo $fpath` will show you the places that it’s most likely to belong. To install in `~/.oh-my-zsh/completions` (an obvious choice), you can run `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev`, then `autoload -Uz compinit && compinit`.
 
 === "Fish"
 
@@ -53,7 +53,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     Git Bash completions (`ddev_bash_completion.sh`) are provided in the tar archive of completion scripts included with each release. See [below](https://ddev.readthedocs.io/en/latest/users/install/shell-completion/#tar-archive-of-completion-scripts-for-manual-deployment).
     
-    Completions in Git Bash are sourced from at least the `~/bash_completion.d` directory. You can copy `ddev_bash_completion.sh` to that directory by running `mkdir -p ~/bash_completion.d && cp ddev_bash_completion.sh ~/bash_completion.d/ddev.bash```.
+    Completions in Git Bash are sourced from at least the `~/bash_completion.d` directory. You can copy `ddev_bash_completion.sh` to that directory by running `mkdir -p ~/bash_completion.d && cp ddev_bash_completion.sh ~/bash_completion.d/ddev.bash`.
 
 === "PowerShell"
 
@@ -67,11 +67,9 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
 Although most people will use techniques like Homebrew for installation, a tar archive of shell completion scripts for various shells is available in each release, called `ddev_shell_completion_scripts.<version>.tar.gz`. If you need to manually install, you can download the files and extract them with the following commands, replacing the VERSION number in the first line with your version:
 
-    ```bash
-    VERSION=v1.22.6
+    ```VERSION=v1.22.6
     curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
-    tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
-    ```
+    tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz```
 
 Alternatively, you could download the tar archive using a browser, from a URL such as the following, replacing the version numbers with your version: [https://github.com/ddev/ddev/releases/download/v1.22.6/ddev_shell_completion_scripts.v1.22.6.tar.gz](https://github.com/ddev/ddev/releases/download/v1.22.6/ddev_shell_completion_scripts.v1.22.6.tar.gz).
 
