@@ -67,9 +67,11 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
 Although most people will use techniques like Homebrew for installation, a tar archive of shell completion scripts for various shells is available in each release, called `ddev_shell_completion_scripts.<version>.tar.gz`. If you need to manually install, you can download the files and extract them with the following commands, replacing the VERSION number in the first line with your version:
 
-    ```VERSION=v1.22.6
+    ```
+    VERSION=v1.22.6
     curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
-    tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz```
+    tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
+    ```
 
 Alternatively, you could download the tar archive using a browser, from a URL such as the following, replacing the version numbers with your version: [https://github.com/ddev/ddev/releases/download/v1.22.6/ddev_shell_completion_scripts.v1.22.6.tar.gz](https://github.com/ddev/ddev/releases/download/v1.22.6/ddev_shell_completion_scripts.v1.22.6.tar.gz).
 
