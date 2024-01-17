@@ -1,6 +1,8 @@
 services:
   ddev-router:
     image: {{ .router_image }}
+    # Prevent zombie container
+    init: true
 
     {{ if eq .Router "traefik" }}
     command:
