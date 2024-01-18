@@ -62,6 +62,7 @@ func TestConfigOverrideAction(t *testing.T) {
 	appTypes := map[string]string{
 		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
 		nodeps.AppTypeCakePHP:      nodeps.PHP83,
+		nodeps.AppTypeContao:       nodeps.PHPDefault,
 		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,

@@ -224,7 +224,7 @@ Flags:
 * `--php-version`: PHP version that will be enabled in the web container.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
-* `--project-type`: Provide the project type: `backdrop`, `drupal`, `drupal6`, `drupal7`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
+* `--project-type`: Provide the project type: `backdrop`, `contao`, `drupal`, `drupal6`, `drupal7`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
 * `--update`: Automatically detect and update settings by inspecting the code.
@@ -274,6 +274,17 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration; `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`.
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 * `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+
+## `contao`
+
+Run a [Contao command](https://docs.contao.org/manual/en/cli/) inside the web container (global shell web container command).
+
+Example:
+
+```shell
+# Get a list of all available commands
+ddev contao list
+```
 
 ## `craft`
 

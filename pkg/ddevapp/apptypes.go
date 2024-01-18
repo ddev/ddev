@@ -97,6 +97,13 @@ func init() {
 			postStartAction:      cakephpPostStartAction,
 		},
 
+		nodeps.AppTypeContao: {
+			appTypeDetect:        isContaoApp,
+			appTypeSettingsPaths: setContaoSiteSettingsPaths,
+			configOverrideAction: contaoConfigOverrideAction,
+			postStartAction:      contaoPostStartAction,
+		},
+
 		nodeps.AppTypeCraftCms: {
 			importFilesAction:    craftCmsImportFilesAction,
 			appTypeDetect:        isCraftCmsApp,

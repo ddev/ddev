@@ -71,6 +71,62 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ddev launch
     ```
 
+## Contao
+
+=== "Managed Edition"
+
+New Contao projects can be created from the official [Contao Managed Edition](https://github.com/contao/managed-edition) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
+
+    ```shell
+    # Create a project directory and move into it:
+    mkdir my-contao-project && cd my-contao-project
+
+    # Set up the DDEV environment:
+    ddev config --project-type=contao --docroot=public
+
+    # Start the project:
+    ddev start
+
+    # Install the managed edition:
+    ddev composer create contao/managed-edition
+
+    # Install database content:
+    ddev contao contao:migrate --no-interaction
+
+    # Create admin user:
+    ddev contao contao:user:create
+
+    # Open admin panel:
+    ddev launch contao
+    ```
+
+=== "Demo"
+
+A Contao demo project can be created from the official [Contao Demo](https://github.com/contao/contao-demo) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
+
+    ```shell
+    # Create a project directory and move into it:
+    mkdir my-contao-demo && cd my-contao-project
+
+    # Set up the DDEV environment:
+    ddev config --project-type=contao --docroot=public
+
+    # Start the project:
+    ddev start
+
+    # Install the demo edition:
+    ddev composer create contao/contao-demo
+
+    # Import the database backup:
+    ddev contao contao:backup:restore
+
+    # Finalize the database:
+    ddev contao contao:migrate --no-interaction
+
+    # Open the demo site:
+    ddev launch
+    ```
+
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.

@@ -2,6 +2,8 @@
 
 The [`ddev config`](../usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, set the [`disable_settings_management`](../configuration/config.md#disable_settings_management) config option to `true`.
 
+For **Contao** DDEV settings are added to the `.env.local` file.
+
 For **Craft CMS** DDEV settings are added to the `.env` file.
 
 For **Django 4** DDEV settings are placed in `.ddev/settings/settings.django4.py` and a stanza is added to your `settings.py` that is only invoked in DDEV context.

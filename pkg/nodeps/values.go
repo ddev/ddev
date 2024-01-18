@@ -85,6 +85,7 @@ const (
 	AppTypeNone         = ""
 	AppTypeBackdrop     = "backdrop"
 	AppTypeCakePHP      = "cakephp"
+	AppTypeContao       = "contao"
 	AppTypeCraftCms     = "craftcms"
 	AppTypeDjango4      = "django4"
 	AppTypeDrupal6      = "drupal6"

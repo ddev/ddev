@@ -262,6 +262,17 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
 	}
 
+	// Contao commands should only be available for type contao
+	app.Type = nodeps.AppTypeContao
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"contao"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
 	// Craft CMS commands should only be available for type craftcms
 	app.Type = nodeps.AppTypeCraftCms
 	_ = app.WriteConfig()
