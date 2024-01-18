@@ -62,6 +62,7 @@ func TestPostConfigAction(t *testing.T) {
 
 	appTypes := map[string]string{
 		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
+		nodeps.AppTypeContao:       nodeps.PHPDefault,
 		nodeps.AppTypeCraftCms:     nodeps.PHP81,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHPDefault,

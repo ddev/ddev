@@ -90,6 +90,14 @@ func init() {
 			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeContao: {
+			appTypeDetect:        isContaoApp,
+			appTypeSettingsPaths: setContaoSiteSettingsPaths,
+			configOverrideAction: contaoConfigOverrideAction,
+			postStartAction:      contaoPostStartAction,
+			uploadDirs:           getContaoUploadDirs,
+		},
+
 		nodeps.AppTypeCraftCms: {
 			importFilesAction:    craftCmsImportFilesAction,
 			appTypeDetect:        isCraftCmsApp,

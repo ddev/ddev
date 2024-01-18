@@ -79,6 +79,7 @@ var ValidWebserverTypes = map[string]bool{
 const (
 	AppTypeNone         = ""
 	AppTypeBackdrop     = "backdrop"
+	AppTypeContao       = "contao"
 	AppTypeCraftCms     = "craftcms"
 	AppTypeDjango4      = "django4"
 	AppTypeDrupal6      = "drupal6"

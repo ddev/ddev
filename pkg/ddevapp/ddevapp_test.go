@@ -333,6 +333,16 @@ var (
 			Type:                          nodeps.AppTypeSilverstripe,
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 5.0\">"},
 		},
+		// 18: Contao
+		{
+			Name:                          "TestPkgContao",
+			SourceURL:                     "https://github.com/Morgy93/ddev-test-contao/archive/refs/tags/5.2.tar.gz",
+			ArchiveInternalExtractionPath: "ddev-test-contao-5.2/",
+			DBTarURL:                      "https://github.com/Morgy93/ddev-test-contao/releases/download/5.2/contao_db.sql.tar.gz",
+			Type:                          nodeps.AppTypeContao,
+			Docroot:                       "public",
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Contao Open Source CMS\">"},
+		},
 	}
 
 	FullTestSites = TestSites
@@ -2105,7 +2115,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
 
-		if app.Type != nodeps.AppTypeShopware6 {
+		if app.Type != nodeps.AppTypeShopware6 && app.Type != nodeps.AppTypeContao {
 			assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
 		}
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7"}, app.Type) {
