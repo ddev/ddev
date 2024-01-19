@@ -43,7 +43,7 @@ RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-availab
 RUN phpenmod ${extension}
 ```
 
-A Dockerfile.xlswriter to add `xlswriter` might be:
+A `.ddev/web-build/Dockerfile.xlswriter` to add `xlswriter` might be:
 
 ```dockerfile
 ENV extension=xlswriter
