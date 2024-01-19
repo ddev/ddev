@@ -10,11 +10,72 @@ It’s common to have a requirement for the `web` or `db` images which isn’t b
 You can add extra Debian packages with lines like this in `.ddev/config.yaml`:
 
 ```yaml
-webimage_extra_packages: [php-yaml, php8.2-tidy]
-dbimage_extra_packages: [telnet, netcat]
+webimage_extra_packages: [php${DDEV_PHP_VERSION}-yaml, php${DDEV_PHP_VERSION}-tidy]
+dbimage_extra_packages: [telnet, netcat, sudo]
 ```
 
 Then the additional packages will be built into the containers during [`ddev start`](../usage/commands.md#start).
+
+## Adding PHP Extensions
+
+### PHP Extensions supported by `deb.sury.org`
+
+If a PHP extension is supported by the upstream package management from `deb.sury.org`, you'll be able to add it with minimal effort. Test to see if it's available using `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-<extension>'`, for example, `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-imap'`. If that works, then the extension is supported, and you can add `webimage_extra_packages: [php${DDEV_PHP_VERSION}-<extension>]` to your `.ddev/config.yaml` file.
+
+### PECL PHP Extensions not supported by `deb.sury.org`
+
+!!!tip "Few people need pecl extensions"
+    Most people don't need to install PHP extensions that aren't supported by `deb.sury.org`, so you only need to go down this path if you have very particular needs.
+
+If a PHP extension is not supported by the upstream package management from `deb.sury.org`, you'll  install it via pecl using a `.ddev/web-build/Dockerfile`.  You can search for the extension on [pecl.php.net](https://pecl.php.net/) to find the package name. (This technique can also be used to get newer versions of PHP extensions than are available in the `deb.sury.org` distribution.)
+
+For example, a `.ddev/web-build/Dockerfile.mcrypt` might look like this:
+
+```dockerfile
+ENV extension=mcrypt
+SHELL ["/bin/bash", "-c"]
+# Install the needed development packages
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
+# mcrypt happens to require libmcrypt-dev
+RUN apt install -y libmcrypt-dev
+RUN pecl install ${extension}
+RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini && chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
+RUN phpenmod ${extension}
+```
+
+A Dockerfile.xlswriter to add `xlswriter` might be:
+
+```dockerfile
+ENV extension=xlswriter
+SHELL ["/bin/bash", "-c"]
+# Install the needed development packages
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
+# xlswriter requires libz-dev
+RUN sudo apt install -y libz-dev
+RUN echo | pecl install ${extension}
+RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini && chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
+RUN phpenmod ${extension}
+
+```
+
+A `.ddev/web-build/Dockerfile.xdebug` (overriding the deb.sury.org version) might look like this:
+
+```dockerfile
+# This example installs xdebug from pecl instead of the standard deb.sury.org package
+ENV extension=xdebug
+SHELL ["/bin/bash", "-c"]
+RUN phpdismod xdebug
+# Install the needed development packages
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
+# Remove the standard xdebug provided by deb.sury.org
+RUN apt remove php${DDEV_PHP_VERSION}-xdebug || true
+RUN pecl install ${extension}
+# Use the standard xdebug.ini from source
+ADD https://raw.githubusercontent.com/ddev/ddev/master/containers/ddev-php-base/ddev-php-files/etc/php/8.2/mods-available/xdebug.ini /etc/php/${DDEV_PHP_VERSION}/mods-available
+RUN chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/xdebug.ini
+# ddev xdebug handles enabling module so we don't enable here
+#RUN phpenmod ${extension}
+```
 
 ## Determining What Packages You Need
 
