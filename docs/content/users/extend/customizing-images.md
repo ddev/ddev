@@ -58,7 +58,7 @@ RUN phpenmod ${extension}
 
 ```
 
-A `.ddev/web-build/Dockerfile.xdebug` (overriding the deb.sury.org version) might look like this:
+A `.ddev/web-build/Dockerfile.xdebug` (overriding the `deb.sury.org` version) might look like this:
 
 ```dockerfile
 # This example installs xdebug from pecl instead of the standard deb.sury.org package
