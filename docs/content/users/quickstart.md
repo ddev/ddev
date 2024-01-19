@@ -198,7 +198,7 @@ Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
 
 ```bash
 mkdir my-ibexa-project && cd my-ibexa-project
-ddev config --project-type=php --php-version 8.1 --docroot=public
+ddev config --project-type=php --php-version 8.1 --docroot=public --create-docroot
 ddev config --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
 ddev start
 ddev composer create ibexa/oss-skeleton
