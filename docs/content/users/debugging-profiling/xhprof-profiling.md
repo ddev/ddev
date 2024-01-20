@@ -20,7 +20,7 @@ You can change the contents of the `xhprof_prepend` function in `.ddev/xhprof/xh
 
 For example, you may want to add a link to the profile run to the bottom of the profiled web page. The provided `xhprof_prepend.php` has comments and a sample function to do that, which works with Drupal 7. If you change it, remove the `#ddev-generated` line from the top, and check it in (`git add -f .ddev/xhprof/xhprof_prepend.php`).
 
-Another example: you could exclude memory profiling so there are fewer columns to study. Change `xhprof_enable(XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY);` to `xhprof_enable(XHPROF_FLAGS_CPU);` in `.ddev/xhprof/xhprof_prepend.php` and remove the `#ddev-generated` at the top of the file. See the docs on [xhprof_enable()](https://www.php.net/manual/en/function.xhprof-enable.php).
+Another example: you could exclude memory profiling so there are fewer columns to study. Change `xhprof_enable(XHPROF_FLAGS_MEMORY);` to `xhprof_enable();` in `.ddev/xhprof/xhprof_prepend.php` and remove the `#ddev-generated` at the top of the file. See the docs on [xhprof_enable()](https://www.php.net/manual/en/function.xhprof-enable.php).
 
 ## Information Links
 
