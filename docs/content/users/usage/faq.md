@@ -258,4 +258,4 @@ We love and welcome contributions of knowledge, support, docs, and code:
 
 ### How do financial contributions support DDEV?
 
-Thanks for asking! Contributions made via [GitHub Sponsors](https://github.com/sponsors/rfay) go to the [Localdev Foundation](https://localdev.foundation) and are used for infrastructure and supporting development.
+Thanks for asking! Contributions made via [GitHub Sponsors](https://github.com/sponsors/ddev) go to the [DDEV Foundation](https://ddev.com/foundation) and are used for infrastructure and supporting development.
