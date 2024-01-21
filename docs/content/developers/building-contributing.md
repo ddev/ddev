@@ -82,14 +82,14 @@ rm ~/bin/ddev
 
 ## Open in Gitpod
 
-[Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. In any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pulls/<YOUR-PR>` to open that PR and build it in Gitpod.
+[Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. For any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pull/<YOUR-PR>` to open that PR and build it in Gitpod.
 
-To open and work on DDEV you can use the button below.
+To open and work on DDEV master branch you can use the button below.
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ddev/ddev)
 
 If you want to run a web project, you can check it out into `/workspace/<yourproject>` and use it as usual. The things you’re familiar with work normally, except that `ddev-router` does not run.
 
-A Gitpod dummy project for is provided by default in `/workspace/d9simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d9simple`. Then you can run [`ddev start`](../users/usage/commands.md#start) to work with your own.
+A Gitpod dummy project for is provided by default in `/workspace/d10simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d9simple`. Then you can run [`ddev start`](../users/usage/commands.md#start) to work with your own.
 
 ## Making Changes to DDEV Images
 
