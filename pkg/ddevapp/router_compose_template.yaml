@@ -1,10 +1,10 @@
 services:
   ddev-router:
     image: {{ .router_image }}
-    # Prevent zombie container
-    init: true
 
     {{ if eq .Router "traefik" }}
+    # Prevent zombie container
+    init: true
     command:
       - --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
     user: {{ .UID }}:{{ .GID }}
