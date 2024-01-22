@@ -81,7 +81,7 @@ jobs:
         shell: bash
 
       - name: DDEV test cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: github.ref == 'refs/heads/master' && matrix.name == 'pull-push-test-platforms'
         with:
           path: ~/.ddev/testcache/tarballs
@@ -90,7 +90,7 @@ jobs:
             ddev-test-cache-
 
       - name: DDEV test cache/restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: github.ref != 'refs/heads/master' || matrix.name != 'pull-push-test-platforms'
         with:
           path: ~/.ddev/testcache/tarballs
@@ -108,7 +108,7 @@ jobs:
           echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
 
       - name: Homebrew cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: github.ref == 'refs/heads/master'
         with:
           path: ${{ steps.homebrew-cache.outputs.dir }}
@@ -117,7 +117,7 @@ jobs:
             ${{ runner.os }}-homebrew-cache-
 
       - name: Homebrew cache/restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: github.ref != 'refs/heads/master'
         with:
           path: ${{ steps.homebrew-cache.outputs.dir }}

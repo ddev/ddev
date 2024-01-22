@@ -62,7 +62,7 @@ jobs:
 
 
       - name: save build results to cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
@@ -111,7 +111,7 @@ jobs:
         # After 3.0.5 they were using zstdmt which is not available on Windows
         # See https://github.com/actions/cache/issues/891
         # But trying again with @v3, 2023-02-18
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
@@ -134,7 +134,7 @@ jobs:
           go-version: '>=1.21'
 
       - name: restore build-most results from cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: buildmost
         with:
           path: .gotmp/bin
@@ -160,7 +160,7 @@ jobs:
             curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="${item}"
           done
       - name: Save notarized binaries to cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
@@ -186,7 +186,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Restore build-most builds
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: buildmost
         with:
           path: .gotmp/bin
@@ -198,7 +198,7 @@ jobs:
         run: exit 1
 
       - name: Restore Signed Windows artifacts
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: signedwindows
         with:
           path: .gotmp/bin/windows_amd64
@@ -210,7 +210,7 @@ jobs:
         run: exit 1
 
       - name: Restore Signed Mac artifacts
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: notarizedmac
         with:
           path: .gotmp/bin/darwin*
