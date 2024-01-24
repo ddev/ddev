@@ -45,7 +45,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     `fish` shell completions are automatically installed at `/usr/local/share/fish/vendor_completions.d/ddev_fish_completion.sh` when you install DDEV via Homebrew.
     
-    If you installed `fish` without Homebrew, you can extract the fish completions (`ddev_fish_completion.sh`) from the tar archive of completion scripts included with each release. See [below](https://ddev.readthedocs.io/en/latest/users/install/shell-completion/#tar-archive-of-completion-scripts-for-manual-deployment).
+    If you installed `fish` without Homebrew, you can extract the fish completions (`ddev_fish_completion.sh`) from the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
 
 === "Git Bash"
 
