@@ -22,7 +22,7 @@ web_environment:
 ## Platform.sh Per-Project Configuration
 
 1. Check out the site from Platform.sh and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
-2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` and  `PLATFORM_APP` (optional) variables to your project.
+2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project.
 
     * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
 
@@ -30,7 +30,6 @@ web_environment:
         web_environment:
         - PLATFORM_PROJECT=nf4amudfn23biyourproject
         - PLATFORM_ENVIRONMENT=main
-        - PLATFORM_APP=app (optional)
         ```
 
     * Or with a command from your terminal:
@@ -44,7 +43,22 @@ web_environment:
 5. Optionally use `ddev push platform` to push local files and database to Platform.sh. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
 ### Multiple apps
-It is necessary to specify PLATFORM_APP variable under web_environment if your environment contains more than one app
+
+If your environment contains more than one app, add `PLATFORM_APP` variable to your project:
+
+    * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
+
+        ```yaml
+        web_environment:
+        - ...
+        - PLATFORM_APP=app
+        ```
+
+    * Or with a command from your terminal:
+
+        ```bash
+        ddev config --web-environment-add="PLATFORM_APP=app"
+        ```
 
 ### Managing Multiple Databases
 

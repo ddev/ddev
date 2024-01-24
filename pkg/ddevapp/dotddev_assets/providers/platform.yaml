@@ -16,7 +16,7 @@
 #    web_environment:
 #    - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
 #    ```
-# 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT and PLATFORM_APP (optional) variables to your project `.ddev/config.yaml` or a `.ddev/config.platform.yaml`
+# 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT and optional PLATFORM_APP (only if your environment contains more than one app) variables to your project `.ddev/config.yaml` or a `.ddev/config.platform.yaml`
 #    ```yaml
 #    web_environment:
 #    - PLATFORM_PROJECT=nf4amudfn23biyourproject
