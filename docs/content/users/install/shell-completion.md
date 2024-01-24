@@ -51,7 +51,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     ## Git Bash
 
-    Git Bash completions (`ddev_bash_completion.sh`) are provided in the tar archive of completion scripts included with each release. See [below](https://ddev.readthedocs.io/en/latest/users/install/shell-completion/#tar-archive-of-completion-scripts-for-manual-deployment).
+    Git Bash completions (`ddev_bash_completion.sh`) are provided in the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
     
     Completions in Git Bash are sourced from at least the `~/bash_completion.d` directory. You can copy `ddev_bash_completion.sh` to that directory by running `mkdir -p ~/bash_completion.d && cp ddev_bash_completion.sh ~/bash_completion.d/ddev.bash`.
 
