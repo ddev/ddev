@@ -35,7 +35,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     If you installed zsh using Homebrew, DDEV’s completions should be automatically installed when you install DDEV using `brew install ddev/ddev/ddev`.
 
-    Otherwise, you can extract the zsh completions file (`ddev_zsh_completion.sh`) from the tar archive of completion scripts included with each release. See [below](https://ddev.readthedocs.io/en/latest/users/install/shell-completion/#tar-archive-of-completion-scripts-for-manual-deployment).
+    Otherwise, you can extract the zsh completions file (`ddev_zsh_completion.sh`) from the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
     
     Oh-My-Zsh may be set up very differently in different places, so you’ll need to put `ddev_bash_completion.sh` where it belongs. `echo $fpath` will show you the places that it’s most likely to belong. To install in `~/.oh-my-zsh/completions` (an obvious choice), you can run `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev`, then `autoload -Uz compinit && compinit`.
 
