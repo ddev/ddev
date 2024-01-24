@@ -115,8 +115,11 @@ ddev launch
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev drush uli
-    ddev launch
     ```
+
+    `CTRL/CMD` + Click the one-time link in your terminal to open your site and edit your admin account details.
+
+    Use `ddev launch` for further visits to your site.
 
 === "Drupal 9"
 
@@ -129,8 +132,11 @@ ddev launch
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev drush uli
-    ddev launch
     ```
+    
+    `CTRL/CMD` + Click the one-time link in your terminal to open your site and edit your admin account details.
+
+    Use `ddev launch` for further visits to your site.
 
 === "Drupal 6/7"
 
