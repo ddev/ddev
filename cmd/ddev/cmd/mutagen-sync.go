@@ -9,9 +9,10 @@ import (
 
 // MutagenSyncCmd implements the ddev mutagen sync command
 var MutagenSyncCmd = &cobra.Command{
-	Use:     "sync",
-	Short:   "Explicit sync for Mutagen",
-	Example: `"ddev mutagen sync", "ddev mutagen sync <projectname>"`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "sync",
+	Short:             "Explicit sync for Mutagen",
+	Example:           `"ddev mutagen sync", "ddev mutagen sync <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 		verbose := false

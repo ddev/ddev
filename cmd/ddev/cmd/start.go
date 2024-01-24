@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/amplitude"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/amplitude"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
@@ -22,9 +23,10 @@ var startAll bool
 
 // StartCmd provides the ddev start command
 var StartCmd = &cobra.Command{
-	Use:     "start [projectname ...]",
-	Aliases: []string{"add"},
-	Short:   "Start a DDEV project.",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("inactive", 0),
+	Use:               "start [projectname ...]",
+	Aliases:           []string{"add"},
+	Short:             "Start a DDEV project.",
 	Long: `Start initializes and configures the web server and database containers
 to provide a local development environment. You can run 'ddev start' from a
 project directory to start that project, or you can start stopped projects in
@@ -150,5 +152,13 @@ func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	StartCmd.Flags().BoolP("select", "s", false, "Interactively select a project to start")
+	err := StartCmd.Flags().MarkHidden("select")
+	if err != nil {
+		util.Warning("Unexpected error marking flag as hidden: %v", err)
+	}
+	err = StartCmd.Flags().MarkDeprecated("select", "Use tabbed autocompletion instead.")
+	if err != nil {
+		util.Warning("Unexpected error marking flag as deprecated: %v", err)
+	}
 	RootCmd.AddCommand(StartCmd)
 }

@@ -12,8 +12,9 @@ import (
 
 // DebugRefreshCmd implements the ddev debug refresh command
 var DebugRefreshCmd = &cobra.Command{
-	Use:   "refresh",
-	Short: "Refreshes Docker cache for project",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "refresh",
+	Short:             "Refreshes Docker cache for project",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 

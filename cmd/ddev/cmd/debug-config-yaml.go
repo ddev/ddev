@@ -1,19 +1,21 @@
 package cmd
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"reflect"
-	"strings"
 )
 
 // DebugConfigYamlCmd implements the ddev debug configyaml command
 var DebugConfigYamlCmd = &cobra.Command{
-	Use:     "configyaml [project]",
-	Short:   "Prints the project config.*.yaml usage",
-	Example: "ddev debug configyaml, ddev debug configyaml <projectname>",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "configyaml [project]",
+	Short:             "Prints the project config.*.yaml usage",
+	Example:           "ddev debug configyaml, ddev debug configyaml <projectname>",
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 

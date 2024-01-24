@@ -14,8 +14,9 @@ import (
 )
 
 var CleanCmd = &cobra.Command{
-	Use:   "clean [projectname ...]",
-	Short: "Removes items DDEV has created",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
+	Use:               "clean [projectname ...]",
+	Short:             "Removes items DDEV has created",
 	Long: `Stops all running projects and then removes downloads and snapshots
 for the selected projects. Then clean will remove "ddev/ddev-*" images.
 

@@ -21,9 +21,10 @@ import (
 
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
-	Use:     "describe [projectname]",
-	Aliases: []string{"status", "st", "desc"},
-	Short:   "Get a detailed description of a running DDEV project.",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "describe [projectname]",
+	Aliases:           []string{"status", "st", "desc"},
+	Short:             "Get a detailed description of a running DDEV project.",
 	Long: `Get a detailed description of a running DDEV project. Describe provides basic
 information about a DDEV project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for

@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 var snapshotAll bool
@@ -20,9 +21,10 @@ var snapshotCleanupNoConfirm bool
 
 // DdevSnapshotCommand provides the snapshot command
 var DdevSnapshotCommand = &cobra.Command{
-	Use:   "snapshot [projectname projectname...]",
-	Short: "Create a database snapshot for one or more projects.",
-	Long:  `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev snapshot restore".`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
+	Use:               "snapshot [projectname projectname...]",
+	Short:             "Create a database snapshot for one or more projects.",
+	Long:              `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev snapshot restore".`,
 	Example: `ddev snapshot
 ddev snapshot --name some_descriptive_name
 ddev snapshot --cleanup

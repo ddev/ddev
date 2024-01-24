@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // For single remove only: remove db and related data
@@ -27,9 +28,10 @@ var unlist bool
 
 // DdevStopCmd represents the remove command
 var DdevStopCmd = &cobra.Command{
-	Use:     "stop [projectname ...]",
-	Aliases: []string{"rm", "remove"},
-	Short:   "Stop and remove the containers of a project. Does not lose or harm anything unless you add --remove-data.",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("active", 0),
+	Use:               "stop [projectname ...]",
+	Aliases:           []string{"rm", "remove"},
+	Short:             "Stop and remove the containers of a project. Does not lose or harm anything unless you add --remove-data.",
 	Long: `Stop and remove the containers of a project. You can run 'ddev stop'
 from a project directory to stop/remove that project, or you can stop/remove projects in
 any directory by running 'ddev stop projectname [projectname ...]' or 'ddev stop -a'.
@@ -130,6 +132,14 @@ func init() {
 	DdevStopCmd.Flags().BoolVarP(&createSnapshot, "snapshot", "S", false, "Create database snapshot")
 	DdevStopCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 	DdevStopCmd.Flags().BoolP("select", "s", false, "Interactively select a project to stop")
+	err := StartCmd.Flags().MarkHidden("select")
+	if err != nil {
+		util.Warning("Unexpected error marking flag as hidden: %v", err)
+	}
+	err = StartCmd.Flags().MarkDeprecated("select", "Use tabbed autocompletion instead.")
+	if err != nil {
+		util.Warning("Unexpected error marking flag as deprecated: %v", err)
+	}
 
 	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop and remove all running or container-stopped projects and remove from global projects list")
 	DdevStopCmd.Flags().BoolVarP(&stopSSHAgent, "stop-ssh-agent", "", false, "Stop the ddev-ssh-agent container")

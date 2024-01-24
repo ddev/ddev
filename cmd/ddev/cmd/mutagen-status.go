@@ -11,10 +11,11 @@ import (
 
 // MutagenStatusCmd implements the ddev mutagen status command
 var MutagenStatusCmd = &cobra.Command{
-	Use:     "status",
-	Short:   "Shows Mutagen sync status",
-	Aliases: []string{"st"},
-	Example: `"ddev mutagen status", "ddev mutagen status <projectname>"`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "status",
+	Short:             "Shows Mutagen sync status",
+	Aliases:           []string{"st"},
+	Example:           `"ddev mutagen status", "ddev mutagen status <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 		verbose := false
