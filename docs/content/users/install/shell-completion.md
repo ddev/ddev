@@ -59,7 +59,7 @@ Shells like Bash and zsh need help to do this though, they have to know what the
 
     ## PowerShell
 
-    PowerShell completions (`ddev_powershell_completion.ps1`) are provided in the tar archive of completion scripts included with each release. See [below](https://ddev.readthedocs.io/en/latest/users/install/shell-completion/#tar-archive-of-completion-scripts-for-manual-deployment).
+    PowerShell completions (`ddev_powershell_completion.ps1`) are provided in the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
     
     You can run the `ddev_powershell_completion.ps1` script manually or install it so it will be run whenever PS is opened using the technique described at [Run PowerShell Script When You Open PowerShell](https://superuser.com/questions/886951/run-powershell-script-when-you-open-powershell).
 
