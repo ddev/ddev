@@ -256,6 +256,13 @@ func getDrupalUploadDirs(_ *DdevApp) []string {
 	return uploadDirs
 }
 
+// Drupal10Hooks adds a d10-specific hooks example for post-import-db
+const Drupal10Hooks = `# post-import-db:
+#		- exec: drush sql:sanitize
+#		- exec: drush updatedb
+#		- exec: drush cache:rebuild
+`
+
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
 const Drupal8Hooks = `# post-import-db:
 #   - exec: drush cr
@@ -281,6 +288,11 @@ func getDrupal6Hooks() []byte {
 // getDrupal8Hooks for appending as byte array
 func getDrupal8Hooks() []byte {
 	return []byte(Drupal8Hooks)
+}
+
+// getDrupal10Hooks for appending as byte array
+func getDrupal10Hooks() []byte {
+	return []byte(Drupal10Hooks)
 }
 
 // setDrupalSiteSettingsPaths sets the paths to settings.php/settings.ddev.php
