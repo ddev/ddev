@@ -544,6 +544,7 @@ rfay
 rmi
 rsync
 running
+CanRunGlobally
 runtime
 rw
 s

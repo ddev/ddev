@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: testhostglobal-noproject global
+## Usage: testhostglobal-noproject
+## Example: "ddev testhostglobal-noproject"
+## CanRunGlobally: true
+
+echo "testhostglobal-noproject was executed with args=$@ on host $(hostname)"

@@ -105,7 +105,31 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	out, err := exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	// We need to run some assertions outside of the context of a project first
+	err = os.Chdir(tmpHome)
+	require.NoError(t, err)
+
+	// Check that only global host commands with the XXX annotation display here
+	out, err := exec.RunHostCommand(DdevBin)
+	assert.NoError(err)
+	assert.Contains(out, "testhostglobal-noproject global (global shell host container command)")
+	assert.NotContains(out, "testhostcmd project (shell host container command)")
+	assert.NotContains(out, "testwebcmd project (shell web container command)")
+	assert.NotContains(out, "testhostglobal global (global shell host container command)")
+	assert.NotContains(out, "testwebglobal global (global shell web container command)")
+	assert.NotContains(out, "testhostcmd global")
+	assert.NotContains(out, "testwebcmd global")
+
+	out, err = exec.RunHostCommand(DdevBin, "testhostglobal-noproject", "hostarg1", "hostarg2", "--hostflag1")
+	assert.NoError(err)
+	expectedHost, _ := os.Hostname()
+	assert.Contains(out, fmt.Sprintf("%s was executed with args=hostarg1 hostarg2 --hostflag1 on host %s", "testhostglobal-noproject", expectedHost))
+
+	// The remaining assertions will be performed inside the project dir
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	out, err = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 	require.NoError(t, err, "failed to run ddev debug fix-commands, out='%s', err=%v", out, err)
 	out, err = exec.RunHostCommand(DdevBin)
 	require.NoError(t, err, "failed to run DDEV command, output='%s', err=%v", out, err)
@@ -141,6 +165,7 @@ func TestCustomCommands(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin)
 	assert.NoError(err)
+	assert.Contains(out, "testhostglobal-noproject global (global shell host container command)")
 	assert.Contains(out, "testhostcmd project (shell host container command)")
 	assert.Contains(out, "testwebcmd project (shell web container command)")
 	assert.Contains(out, "testhostglobal global (global shell host container command)")
@@ -151,7 +176,7 @@ func TestCustomCommands(t *testing.T) {
 	// Have to do app.Start() because commands are copied into containers on start
 	err = app.Start()
 	require.NoError(t, err)
-	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
+	for _, c := range []string{"testhostcmd", "testhostglobal", "testhostglobal-noproject", "testwebcmd", "testwebglobal"} {
 		out, err = exec.RunHostCommand(DdevBin, c, "hostarg1", "hostarg2", "--hostflag1")
 		if err != nil {
 			userHome, err := os.UserHomeDir()
@@ -180,7 +205,7 @@ func TestCustomCommands(t *testing.T) {
 	// Test flags are imported from comments
 	c = "testhostcmdflags"
 	out, err = exec.RunHostCommand(DdevBin, c, "--test")
-	expectedHost, _ := os.Hostname()
+	expectedHost, _ = os.Hostname()
 	assert.NoError(err, "Failed to run ddev %s %v", c, "--test")
 	assert.Contains(out, fmt.Sprintf("%s was executed with args=--test on host %s", c, expectedHost))
 

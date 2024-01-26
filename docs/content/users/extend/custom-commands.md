@@ -186,6 +186,21 @@ The following fields can be used for a flag definition:
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
 * `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/main/site/content/completions/bash.md>)
 
+### "CanRunGlobally" Annotation
+
+This annotation is only available for global host commands.
+
+Use `CanRunGlobally: true` if your global host command can be safely run even if the current working directory isn't inside a DDEV project.
+
+This will make your command available to run regardless of what your current working directory is when you run it.
+
+This annotation will have no effect if you are also using one of the following annotations:
+
+* `ProjectTypes`
+* `DBTypes`
+
+Example: `## CanRunGlobally: true`
+
 ### “ProjectTypes” Annotation
 
 If your command should only be visible for a specific project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSes](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
