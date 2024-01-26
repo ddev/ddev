@@ -25,7 +25,7 @@ Another example: you could exclude memory profiling so there are fewer columns t
 ## Information Links
 
 * [php.net xhprof](https://www.php.net/manual/en/book.xhprof.php)
-* [Old facebook xhprof docs](http://web.archive.org/web/20110514095512/http://mirror.facebook.net/facebook/xhprof/doc.html)
+* [Old facebook xhprof docs](https://web.archive.org/web/20110514095512/http://mirror.facebook.net/facebook/xhprof/doc.html)
 * [rfay screencast on xhprof and blackfire.io](https://www.youtube.com/watch?v=6h2QMAtRjTA)
 * [pecl.php.net docs](https://pecl.php.net/package/xhprof)
 * [Upstream GitHub repository `lonngxhinH/xhprof`](https://github.com/longxinH/xhprof)
