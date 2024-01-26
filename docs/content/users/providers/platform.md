@@ -42,6 +42,24 @@ web_environment:
 4. Run `ddev pull platform`. After you agree to the prompt, the current upstream databases and files will be downloaded.
 5. Optionally use `ddev push platform` to push local files and database to Platform.sh. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
+### Managing Multiple Apps
+
+If your environment contains more than one app, add `PLATFORM_APP` variable to your project:
+
+* Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
+
+    ```yaml
+    web_environment:
+    - ...
+    - PLATFORM_APP=app
+    ```
+
+* Or with a command from your terminal:
+
+    ```bash
+    ddev config --web-environment-add="PLATFORM_APP=app"
+    ```
+
 ### Managing Multiple Databases
 
 If your project has only one database, it will automatically be pulled into and pushed from DDEV’s `'db'` database.
