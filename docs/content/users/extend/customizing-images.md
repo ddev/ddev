@@ -27,7 +27,7 @@ If a PHP extension is supported by the upstream package management from `deb.sur
 !!!tip "Few people need pecl extensions"
     Most people don't need to install PHP extensions that aren't supported by `deb.sury.org`, so you only need to go down this path if you have very particular needs.
 
-If a PHP extension is not supported by the upstream package management from `deb.sury.org`, you'll  install it via pecl using a `.ddev/web-build/Dockerfile`.  You can search for the extension on [pecl.php.net](https://pecl.php.net/) to find the package name. (This technique can also be used to get newer versions of PHP extensions than are available in the `deb.sury.org` distribution.)
+If a PHP extension is not supported by the upstream package management from `deb.sury.org`, you'll install it via pecl using a `.ddev/web-build/Dockerfile`. You can search for the extension on [pecl.php.net](https://pecl.php.net/) to find the package name. (This technique can also be used to get newer versions of PHP extensions than are available in the `deb.sury.org` distribution.)
 
 For example, a `.ddev/web-build/Dockerfile.mcrypt` might look like this:
 
