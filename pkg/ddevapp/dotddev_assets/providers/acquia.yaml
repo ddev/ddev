@@ -45,7 +45,7 @@ db_pull_command:
     # just using `acli pull:db ${ACQUIA_ENVIRONMENT_ID}`
     echo "Using ACQUIA_ENVIRONMENT_ID=${ACQUIA_ENVIRONMENT_ID}"
     set -x   # You can enable bash debugging output by uncommenting
-    db_dump=$(acli pull:db ${ACQUIA_ENVIRONMENT_ID} --no-interaction --no-import | tail -2l | xargs)
+    db_dump=$(acli pull:db ${ACQUIA_ENVIRONMENT_ID} --no-interaction --no-import | tail -2l | xargs |  sed 's/^.* //')
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     cp ${db_dump} /var/www/html/.ddev/.downloads/db.sql.gz
 
