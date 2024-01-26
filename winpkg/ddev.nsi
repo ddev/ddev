@@ -64,10 +64,10 @@
 !define PRODUCT_NAME "DDEV"
 !define PRODUCT_NAME_FULL "${PRODUCT_NAME}"
 !define PRODUCT_VERSION "${VERSION}"
-!define PRODUCT_PUBLISHER "Localdev Foundation"
+!define PRODUCT_PUBLISHER "DDEV Foundation"
 
 !define PRODUCT_WEB_SITE "${PRODUCT_NAME} Website"
-!define PRODUCT_WEB_SITE_URL "https://ddev.readthedocs.io"
+!define PRODUCT_WEB_SITE_URL "https://ddev.com"
 
 !define PRODUCT_DOCUMENTATION "${PRODUCT_NAME} Documentation"
 !define PRODUCT_DOCUMENTATION_URL "https://ddev.readthedocs.io"

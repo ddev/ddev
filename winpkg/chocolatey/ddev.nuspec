@@ -10,7 +10,7 @@
     <owners>Randy Fay</owners>
 
     <title>ddev (Install)</title>
-    <authors>Localdev Foundation</authors>
+    <authors>DDEV Foundation</authors>
     <projectUrl>https://github.com/ddev/ddev</projectUrl>
     <licenseUrl>https://github.com/ddev/ddev/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
