@@ -258,9 +258,9 @@ func getDrupalUploadDirs(_ *DdevApp) []string {
 
 // Drupal10Hooks adds a d10-specific hooks example for post-import-db
 const Drupal10Hooks = `# post-import-db:
-#		- exec: drush sql:sanitize
-#		- exec: drush updatedb
-#		- exec: drush cache:rebuild
+#   - exec: drush sql:sanitize
+#   - exec: drush updatedb
+#   - exec: drush cache:rebuild
 `
 
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
