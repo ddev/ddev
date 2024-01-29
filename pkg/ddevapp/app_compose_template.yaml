@@ -80,7 +80,10 @@ services:
       interval: 1s
       retries: 120
       start_period: "{{ .DefaultContainerTimeout }}s"
+      {{ if ge (split "." .DockerVersion)._0 "25" }}
+      # healthcheck.start_interval as feature require Docker Engine v25 or later
       start_interval: 1s
+      {{ end }}
       timeout: 70s
   {{ end }} {{/* end if not .OmitDB */}}
 
@@ -242,7 +245,10 @@ services:
       interval: 1s
       retries: 120
       start_period: "{{ .DefaultContainerTimeout }}s"
+      {{ if ge (split "." .DockerVersion)._0 "25" }}
+      # healthcheck.start_interval as feature require Docker Engine v25 or later
       start_interval: 1s
+      {{ end }}
       timeout: 70s
 
 networks:

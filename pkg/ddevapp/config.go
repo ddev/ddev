@@ -747,6 +747,7 @@ type composeYAMLVars struct {
 	Hostnames                       []string
 	Timezone                        string
 	ComposerVersion                 string
+	DockerVersion                   string
 	Username                        string
 	UID                             string
 	GID                             string
@@ -801,6 +802,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
+	dockerVersion, _ := dockerutil.GetDockerVersion()
+
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
 		Plugin:                    "ddev",
@@ -830,6 +833,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Hostnames:          app.GetHostnames(),
 		Timezone:           app.Timezone,
 		ComposerVersion:    app.ComposerVersion,
+		DockerVersion:      dockerVersion,
 		Username:           username,
 		UID:                uid,
 		GID:                gid,
