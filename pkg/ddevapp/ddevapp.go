@@ -1103,11 +1103,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
 
-	err = PopulateCustomCommandFiles(app)
-	if err != nil {
-		util.Warning("Failed to populate custom command files: %v", err)
-	}
-
 	// The .ddev directory may still need to be populated, especially in tests
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	if err != nil {
@@ -1380,6 +1375,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 	output.UserOut.Printf("Waiting for web/db containers to become ready: %v", dependers)
 	waitErr := app.Wait(dependers)
+
+	err = PopulateGlobalCustomCommandFiles()
+	if err != nil {
+		util.Warning("Failed to populate global custom command files: %v", err)
+	}
 
 	if globalconfig.DdevVerbose {
 		out, err = app.CaptureLogs("web", true, "200")
