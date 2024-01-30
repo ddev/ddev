@@ -114,6 +114,7 @@ services:
       - .:/mnt/ddev_config
       # `ddev-global-cache` gets mounted so we have the CAROOT
       # This is required so that the CA is available for `mkcert` to install
+      # and for custom commands to work
       - ddev-global-cache:/mnt/ddev-global-cache
 ```
 
