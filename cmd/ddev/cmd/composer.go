@@ -3,8 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -21,6 +24,64 @@ the command with 'ddev'.`,
 ddev composer require <package>
 ddev composer outdated --minor-only
 ddev composer create drupal/recommended-project`,
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		app, err := ddevapp.GetActiveApp("")
+		// If there's no active app or the app isn't running, we can't get completions from composer
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Get the host shell, so the composer completion is compatible
+		shell, err := exec.GetHostShell()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Try to get the web service container
+		containerName := ddevapp.GetContainerName(app, "web")
+		container, err := dockerutil.FindContainerByName(containerName)
+		if err != nil || container == nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Prepare the -c and -i arguments for symfony's __complete command
+		current := fmt.Sprintf("%d", len(args)+1)
+		input := []string{}
+		for _, val := range args {
+			input = append(input, "-i"+val)
+		}
+		if toComplete != "" {
+			input = append(input, "-i"+toComplete)
+		}
+
+		// Try to get completion from composer in the container
+		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Dir:     app.GetComposerRoot(true, true),
+			RawCmd:  append([]string{"composer", "_complete", "-S2.6.6", "-n", "-s" + shell, "-c" + current, "-icomposer"}, input...),
+			Tty:     false,
+			// Prevent Composer from debugging when Xdebug is enabled
+			Env: []string{"XDEBUG_MODE=off"},
+		})
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Exclude create-project, which will already be provided in completion by cobra
+		// and isn't supported by ddev anyway
+		completion := []string{}
+		for _, val := range strings.Split(stdout, "\n") {
+			if val != "create-project" {
+				completion = append(completion, val)
+			}
+		}
+
+		return completion, cobra.ShellCompDirectiveNoFileComp
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
