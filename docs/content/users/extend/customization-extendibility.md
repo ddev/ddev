@@ -202,6 +202,8 @@ The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to 
 
 ### nginx Snippets
 
+#### First snippet
+
 To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`.
 
 For example, to make all HTTP URLs redirect to their HTTPS equivalents you might add `.ddev/nginx/redirect.conf` with this stanza:
@@ -212,6 +214,78 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
     }
 ```
 
+After adding a snippet, run `ddev restart` to make it take effect.
+
+#### Second snippet
+
+To route the *.ddev.site URLs to the right node apps, you'll probably want to make new Nginx config files. The default one (.ddev/nginx_full/nginx-site.conf) will route all incoming traffic to /var/www/html and assume a static HTML file or PHP app is there to accept the incoming request. Since node apps tend to run on other ports, we need to proxy those requests to the right ports
+
+.ddev/nginx_full/randomname.conf
+```
+server {
+    root /var/www/html/app;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name my_project.ddev.site;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    listen 80;
+    listen 443 ssl;
+
+    ssl_certificate /etc/ssl/certs/master.crt;
+    ssl_certificate_key /etc/ssl/certs/master.key;
+
+    include /etc/nginx/monitoring.conf;
+
+    error_log /dev/stdout info;
+    access_log /var/log/nginx/access.log;
+
+    include /etc/nginx/common.d/*.conf;
+    include /mnt/ddev_config/nginx/*.conf;
+}
+```
+
+.ddev/nginx_full/randomnamesecond.conf
+
+```
+server {
+    root /var/www/html/api;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name api.my_project.ddev.site;
+
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    listen 80;
+    listen 443 ssl;
+
+    ssl_certificate /etc/ssl/certs/master.crt;
+    ssl_certificate_key /etc/ssl/certs/master.key;
+
+    include /etc/nginx/monitoring.conf;
+
+    error_log /dev/stdout info;
+    access_log /var/log/nginx/access.log;
+
+    include /etc/nginx/common.d/*.conf;
+    include /mnt/ddev_config/nginx/*.conf;
+}
+```
 After adding a snippet, run `ddev restart` to make it take effect.
 
 ## Custom Apache Configuration
