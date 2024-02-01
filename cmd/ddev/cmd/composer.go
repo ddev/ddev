@@ -7,7 +7,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -35,12 +34,6 @@ ddev composer create drupal/recommended-project`,
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		// Get the host shell, so the composer completion is compatible
-		shell, err := exec.GetHostShell()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
 		// Try to get the web service container
 		containerName := ddevapp.GetContainerName(app, "web")
 		container, err := dockerutil.FindContainerByName(containerName)
@@ -62,7 +55,7 @@ ddev composer create drupal/recommended-project`,
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Dir:     app.GetComposerRoot(true, true),
-			RawCmd:  append([]string{"composer", "_complete", "-S2.6.6", "-n", "-s" + shell, "-c" + current, "-icomposer"}, input...),
+			RawCmd:  append([]string{"composer", "_complete", "-S2.6.6", "-n", "-sbash", "-c" + current, "-icomposer"}, input...),
 			Tty:     false,
 			// Prevent Composer from debugging when Xdebug is enabled
 			Env: []string{"XDEBUG_MODE=off"},
@@ -75,6 +68,7 @@ ddev composer create drupal/recommended-project`,
 		// and isn't supported by ddev anyway
 		completion := []string{}
 		for _, val := range strings.Split(stdout, "\n") {
+			val = strings.TrimSpace(val)
 			if val != "create-project" {
 				completion = append(completion, val)
 			}

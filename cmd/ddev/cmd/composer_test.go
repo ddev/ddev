@@ -167,13 +167,6 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 func TestComposerAutocomplete(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Skip if we're not running on bash, because composer only supports bash completion for now
-	hostShell, err := exec.GetHostShell()
-	assert.NoError(err)
-	if hostShell != "bash" {
-		t.Skip("Composer doesn't support autocompletion on " + hostShell + ", so skipping")
-	}
-
 	origDir, err := os.Getwd()
 	assert.NoError(err)
 	err = os.Chdir(TestSites[0].Dir)

@@ -1,10 +1,8 @@
 package exec
 
 import (
-	"errors"
 	"os"
 	"os/exec"
-	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -95,32 +93,4 @@ func RunHostCommandSeparateStreams(command string, args ...string) (string, erro
 	}
 
 	return string(o), err
-}
-
-// GetHostShell gets the name of the shell running on the host
-func GetHostShell() (string, error) {
-	pid := "$$"
-	validShells := []string{"zsh", "fish", "bash"}
-
-	// Attempt to get the shell. Has to be in a loop for tests to pass,
-	// since tests have an extra process between ddev and the shell than regular execution does.
-	for pid != "1" {
-		// Check if the current pid represents the shell
-		comm, err := RunCommand("sh", []string{"-c", "ps -o comm= -p " + pid})
-		if err != nil {
-			return "", err
-		}
-		comm = strings.TrimSpace(comm)
-		if slices.Contains(validShells, comm) {
-			return comm, nil
-		}
-		// Try again for another round
-		pid, err = RunCommand("sh", []string{"-c", "ps -o ppid= -p " + pid})
-		if err != nil {
-			return "", err
-		}
-		pid = strings.TrimSpace(pid)
-	}
-
-	return "", errors.New("couldn't determine host shell")
 }
