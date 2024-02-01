@@ -253,7 +253,7 @@ server {
 }
 ```
 
-.ddev/nginx_full/randomnamesecond.conf
+.ddev/nginx_full/first-random-name.conf
 
 ```
 server {
