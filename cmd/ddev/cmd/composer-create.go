@@ -22,11 +22,9 @@ var composerCreateYesFlag bool
 
 // ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
-	Use: "create [args] [flags]",
-	FParseErrWhitelist: cobra.FParseErrWhitelist{
-		UnknownFlags: true,
-	},
-	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
+	DisableFlagParsing: true,
+	Use:                "create [args] [flags]",
+	Short:              "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the Composer root directory after install.`,
@@ -37,6 +35,7 @@ ddev composer create drupal/recommended-project --no-install
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 `,
+	ValidArgsFunction: getComposerCompletionFunc(true),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// We only want to pass all flags and args to Composer
@@ -225,6 +224,7 @@ var ComposerCreateProjectCmd = &cobra.Command{
 	Use:                "create-project",
 	Short:              "Unsupported, use `ddev composer create` instead",
 	DisableFlagParsing: true,
+	Hidden:             true,
 	Run: func(cmd *cobra.Command, args []string) {
 		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
 for basic project creation or 'ddev ssh' into the web container and execute

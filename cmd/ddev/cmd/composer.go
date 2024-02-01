@@ -23,59 +23,7 @@ the command with 'ddev'.`,
 ddev composer require <package>
 ddev composer outdated --minor-only
 ddev composer create drupal/recommended-project`,
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		app, err := ddevapp.GetActiveApp("")
-		// If there's no active app or the app isn't running, we can't get completions from composer
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		// Try to get the web service container
-		containerName := ddevapp.GetContainerName(app, "web")
-		container, err := dockerutil.FindContainerByName(containerName)
-		if err != nil || container == nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		// Prepare the -c and -i arguments for symfony's __complete command
-		current := fmt.Sprintf("%d", len(args)+1)
-		input := []string{}
-		for _, val := range args {
-			input = append(input, "-i"+val)
-		}
-		if toComplete != "" {
-			input = append(input, "-i"+toComplete)
-		}
-
-		// Try to get completion from composer in the container
-		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Dir:     app.GetComposerRoot(true, true),
-			RawCmd:  append([]string{"composer", "_complete", "-S2.6.6", "-n", "-sbash", "-c" + current, "-icomposer"}, input...),
-			Tty:     false,
-			// Prevent Composer from debugging when Xdebug is enabled
-			Env: []string{"XDEBUG_MODE=off"},
-		})
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		// Exclude create-project, which will already be provided in completion by cobra
-		// and isn't supported by ddev anyway
-		completion := []string{}
-		for _, val := range strings.Split(stdout, "\n") {
-			val = strings.TrimSpace(val)
-			if val != "create-project" {
-				completion = append(completion, val)
-			}
-		}
-
-		return completion, cobra.ShellCompDirectiveNoFileComp
-	},
+	ValidArgsFunction: getComposerCompletionFunc(false),
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -111,4 +59,74 @@ func init() {
 		})
 	}
 	RootCmd.AddCommand(ComposerCmd)
+}
+
+func getComposerCompletionFunc(isCreateCommand bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		app, err := ddevapp.GetActiveApp("")
+		// If there's no active app or the app isn't running, we can't get completions from composer
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Try to get the web service container
+		containerName := ddevapp.GetContainerName(app, "web")
+		container, err := dockerutil.FindContainerByName(containerName)
+		if err != nil || container == nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Prepare the -c argument for symfony's __complete command.
+		// It's the number of arguments, plus 1 for "composer" itself, plus 1 if we're
+		// getting completion for the create command.
+		currentAsInt := len(args)
+		if isCreateCommand {
+			currentAsInt += 2
+		} else {
+			currentAsInt++
+		}
+		current := fmt.Sprintf("%d", currentAsInt)
+		// Prepare the -i arguments for symfony's __complete command.
+		// Each argument already on the command line should be included, as well as
+		// the current item to be completed if there is one.
+		input := []string{}
+		if isCreateCommand {
+			input = append(input, "-icreate-project")
+		}
+		for _, val := range args {
+			input = append(input, "-i"+val)
+		}
+		if toComplete != "" {
+			input = append(input, "-i"+toComplete)
+		}
+
+		// Try to get completion from composer in the container
+		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Dir:     app.GetComposerRoot(true, true),
+			RawCmd:  append([]string{"composer", "_complete", "-S2.6.6", "-n", "-sbash", "-c" + current, "-icomposer"}, input...),
+			Tty:     false,
+			// Prevent Composer from debugging when Xdebug is enabled
+			Env: []string{"XDEBUG_MODE=off"},
+		})
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Exclude create-project, which will already be provided in completion by cobra
+		// and isn't supported by ddev anyway
+		completion := []string{}
+		for _, val := range strings.Split(stdout, "\n") {
+			val = strings.TrimSpace(val)
+			if val != "create-project" {
+				completion = append(completion, val)
+			}
+		}
+
+		return completion, cobra.ShellCompDirectiveNoFileComp
+	}
 }

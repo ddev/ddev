@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/config/types"
@@ -108,4 +109,28 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
+}
+
+func TestComposerCreateAutocomplete(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, err := os.Getwd()
+	assert.NoError(err)
+	err = os.Chdir(TestSites[0].Dir)
+	assert.NoError(err)
+
+	// Pressing tab after `composer completion` should result in the completion "bash"
+	out, err := exec.RunHostCommand(DdevBin, "__complete", "composer", "create", "--")
+	assert.NoError(err)
+	// Completions are terminated with ":4", so just grab the stuff before that
+	completions, _, found := strings.Cut(out, ":")
+	assert.True(found)
+	// We don't need to check all of the possible options - just check that
+	// we're getting some completion suggestions that make sense and not just garbage
+	assert.Contains(completions, "--no-install")
+	assert.Contains(completions, "--no-scripts")
+	assert.Contains(completions, "--keep-vcs")
+
+	err = os.Chdir(origDir)
+	assert.NoError(err)
 }
