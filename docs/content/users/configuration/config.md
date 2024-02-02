@@ -47,7 +47,7 @@ An array of [extra fully-qualified domain names](../extend/additional-hostnames.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` |
+| :octicons-file-directory-16: project | `[]` | &zwnj;
 
 Example: `additional_fqdns: ["example.com", "sub1.example.com"]` would provide HTTP and HTTPS URLs for `example.com` and `sub1.example.com`.
 
@@ -60,7 +60,7 @@ An array of [extra hostnames](../extend/additional-hostnames.md) to be used for 
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` |
+| :octicons-file-directory-16: project | `[]` | &zwnj;
 
 Example: `additional_hostnames: ["somename", "someothername", "*.thirdname"]` would provide HTTP and HTTPS URLs for `somename.ddev.site`, `someothername.ddev.site`, and `one.thirdname.ddev.site` + `two.thirdname.ddev.site`.
 
@@ -80,7 +80,7 @@ The relative path, from the project root, to the directory containing `composer.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | |
+| :octicons-file-directory-16: project | &zwnj; | &zwnj;
 
 ## `composer_version`
 
@@ -104,7 +104,7 @@ Extra Debian packages for the project’s database container.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` |
+| :octicons-file-directory-16: project | `[]` | &zwnj;
 
 Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the database container is built.
 
@@ -186,7 +186,7 @@ DDEV-specific lifecycle [hooks](hooks.md) to be executed.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `` |
+| :octicons-file-directory-16: project | `` | &zwnj;
 
 ## `host_db_port`
 
@@ -194,7 +194,7 @@ Port for binding database server to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | automatic |
+| :octicons-file-directory-16: project | automatic | &zwnj;
 
 Not commonly used. Can be a specific port number for a fixed database port. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
@@ -206,7 +206,7 @@ Specific, persistent HTTPS port for direct binding to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | automatic |
+| :octicons-file-directory-16: project | automatic | &zwnj;
 
 Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
@@ -218,7 +218,7 @@ Specific, persistent Mailpit port for direct binding to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | automatic |
+| :octicons-file-directory-16: project | automatic | &zwnj;
 
 Not commonly used. Can be a specific port number for a fixed Mailpit URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
@@ -228,7 +228,7 @@ Specific, persistent HTTP port for direct binding to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | automatic |
+| :octicons-file-directory-16: project | automatic | &zwnj;
 
 Not commonly used. Can be a specific port number for a fixed HTTP URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
@@ -264,8 +264,8 @@ Reporting interval in hours for [instrumentation reporting](../usage/diagnostics
 
 Internet detection timeout in milliseconds.
 
-| Type | Default            | Usage
-| -- |--------------------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-globe-16: global | `3000` (3 seconds) | Can be any integer.
 
 DDEV must detect whether the internet is working to determine whether to add hostnames to `/etc/hosts`. In rare cases, you may need to increase this value if you have slow but working internet. See [FAQ](../usage/faq.md) and [GitHub issue](https://github.com/ddev/ddev/issues/2409#issuecomment-662448025).
@@ -276,7 +276,7 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `` |
+| :octicons-globe-16: global | `` | &zwnj;
 
 Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
@@ -300,8 +300,8 @@ Port for project’s Mailpit HTTPS URL.
 
 Configure messages like the Tip of the Day.
 
-| Type | Default            | Usage
-| -- |--------------------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-globe-16: global | `ticker_interval:` | hours between ticker messages.
 
 Example: Disable the "Tip of the Day" ticker in `~/.ddev/global_config.yaml`
@@ -332,7 +332,7 @@ Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) w
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `` |
+| :octicons-file-directory-16: project | `` | &zwnj;
 
 Example: `--basic-auth username:pass1234 --domain foo.ngrok-free.app`.
 
@@ -410,8 +410,8 @@ This is typically a global setting. The project-specific value will override glo
 The PHP version the project should use.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-file-directory-16: project | `8.1`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, or `8.3`.
+| -- | -- | --
+| :octicons-file-directory-16: project | `8.1` | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, or `8.3`.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
@@ -429,7 +429,7 @@ Specific docker-compose version for download.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | |
+| :octicons-globe-16: global | &zwnj; | &zwnj;
 
 If set to `v2.8.0`, for example, it will download and use that version instead of the expected version for docker-compose.
 
@@ -440,8 +440,8 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 
 Whether to enable the default [Traefik router](../extend/traefik-router.md#traefik-router) or the legacy "nginx-proxy" router.
 
-| Type | Default   | Usage
-| -- |-----------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (legacy).
 
 May also be set via `ddev config global --router=traefik` or `ddev config global --router=nginx-proxy`.
@@ -509,7 +509,7 @@ Timezone for container and PHP configuration.
 Specify an alternate port for the Traefik (ddev-router) monitor port. This defaults to 10999 and rarely needs to be changed, but can be changed in cases of port conflicts.
 
 | Type | Default | Usage
-| -- |---------| --
+| -- | -- | --
 | :octicons-globe-16: global | `10999` | Can be any unused port below 65535.
 
 ## `type`
@@ -581,7 +581,7 @@ Additional [custom environment variables](../extend/customization-extendibility.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` |
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | &zwnj;
 
 ## `web_extra_daemons`
 
@@ -589,7 +589,7 @@ Additional daemons that should [automatically be started in the web container](.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` |
+| :octicons-file-directory-16: project | `[]` | &zwnj;
 
 ## `web_extra_exposed_ports`
 
@@ -597,14 +597,14 @@ Additional named sets of ports to [expose via `ddev-router`](../extend/customiza
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` |
+| :octicons-file-directory-16: project | `[]` | &zwnj;
 
 ## `webimage`
 
 The Docker image to use for the web server.
 
-| Type | Default                                                               | Usage
-| -- |-----------------------------------------------------------------------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-file-directory-16: project | [`ddev/ddev-webserver`](https://hub.docker.com/r/ddev/ddev-webserver) | Specify your own image based on [ddev/ddev-webserver](https://github.com/ddev/ddev/tree/master/containers/ddev-webserver).
 
 !!!warning "Proceed with caution"
@@ -616,7 +616,7 @@ Extra Debian packages for the project’s web container.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` |
+| :octicons-file-directory-16: project | `[]` | &zwnj;
 
 Example: `webimage_extra_packages: [php-yaml, php-bcmath]` will add the `php-yaml` and `php-bcmath` packages when the web container is built.
 
@@ -642,7 +642,7 @@ Working directories used by [`ddev exec`](../usage/commands.md#exec) and [`ddev 
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | |
+| :octicons-file-directory-16: project | &zwnj; | &zwnj;
 
 Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directories for the `web` and `db` containers.
 
