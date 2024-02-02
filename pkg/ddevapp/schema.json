@@ -218,13 +218,8 @@
       "type": "boolean"
     },
     "nodejs_version": {
-      "description": "Node.js version for the web container’s “system” version.",
-      "type": "string",
-      "enum": [
-        "16",
-        "18",
-        "20"
-      ]
+      "description": "Node.js version for the web container's \"system\" version.",
+      "type": "string"
     },
     "omit_containers": {
       "description": "A list of container types that should not be started when the project is started",
