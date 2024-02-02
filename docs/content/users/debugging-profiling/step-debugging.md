@@ -11,7 +11,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 
 **Key facts:**
 
-* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.  
+* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * Toggle Xdebug on and off easily with `ddev xdebug toggle`.
@@ -81,10 +81,10 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 ### Visual Studio Code (VS Code) Debugging Setup
 
 1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) extension.
-2. Update the project’s `.vscode/launch.json` to add the “Listen for Xdebug” configuration from [this config snippet](../snippets/launch.json). For more on customizing `launch.json`, see the [VS Code docs](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations).
-3. Set a breakpoint in your `index.php`. If it isn’t solid red, restart.
-4. In the menu, choose *Run* → *Start Debugging*. You may have to select “Listen for Xdebug” by the green arrowhead at the top left. The bottom pane of VS Code should now be orange (live) and should say “Listen for Xdebug”.
-5. Enable Xdebug with `ddev xdebug on`.
+2. In the menu, choose *Run* → *Open Configuration* and add the [“Listen for Xdebug” configuration snippet](../snippets/launch.json) to the project’s `.vscode/launch.json`.
+3. In the menu, choose *Terminal* → *Configure tasks* → *Create task.json from template* → *Others* and add the [“Enable Ddev Xdebug” and “Disable Ddev Xdebug” task snippet](../snippets/tasks.json) to the project’s `.vscode/tasks.json`.
+4. Set a breakpoint in your `index.php`. If it isn’t solid red, restart.
+5. In the menu, choose *Run* → *Start Debugging*. You may have to select “Listen for Xdebug” by the green arrowhead at the top left. The bottom pane of VS Code should now be orange (live) and should say “Listen for Xdebug”.
 6. In a browser, visit your project and confirm you hit the breakpoint.
 
 !!!tip "If you’re using VS Code on Windows with WSL2"
