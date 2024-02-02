@@ -35,7 +35,7 @@ Environment variables will be automatically added to your `.env` file to simplif
     cd my-craft-project
 
     # Set up the DDEV environment:
-    ddev config --project-type=craftcms --docroot=web --create-docroot
+    ddev config --project-type=craftcms --docroot=web
 
     # Boot the project and install the starter project:
     ddev start
@@ -109,7 +109,7 @@ ddev launch
     ```bash
     mkdir my-drupal10-site
     cd my-drupal10-site
-    ddev config --project-type=drupal10 --docroot=web --create-docroot
+    ddev config --project-type=drupal10 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project
     ddev composer require drush/drush
@@ -124,7 +124,7 @@ ddev launch
     ```bash
     mkdir my-drupal9-site
     cd my-drupal9-site
-    ddev config --project-type=drupal9 --docroot=web --create-docroot
+    ddev config --project-type=drupal9 --docroot=web
     ddev start
     ddev composer create "drupal/recommended-project:^9"
     ddev composer require drush/drush
@@ -200,7 +200,7 @@ Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
 
 ```bash
 mkdir my-ibexa-project && cd my-ibexa-project
-ddev config --project-type=php --php-version 8.1 --docroot=public --create-docroot
+ddev config --project-type=php --php-version 8.1 --docroot=public
 ddev config --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
 ddev start
 ddev composer create ibexa/oss-skeleton
@@ -222,7 +222,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     mkdir my-laravel-app
     cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+    ddev config --project-type=laravel --docroot=public --php-version=8.1
     ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel -y
     ddev composer install
     ddev exec "php artisan key:generate"
@@ -234,7 +234,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     git clone <your-laravel-repo>
     cd <your-laravel-project>
-    ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+    ddev config --project-type=laravel --docroot=public --php-version=8.1
     ddev start
     ddev composer install
     ddev exec "php artisan key:generate"
@@ -249,7 +249,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     ```bash
     mkdir ddev-magento2 && cd ddev-magento2
-    ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
+    ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --disable-settings-management
     ddev get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
@@ -290,7 +290,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 ## Moodle
 
 ```bash
-ddev config --composer-root=public --docroot=public --create-docroot --webserver-type=apache-fpm --database=mariadb:10.6
+ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm --database=mariadb:10.6
 ddev start
 ddev composer create moodle/moodle -y
 ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
@@ -329,7 +329,7 @@ Though you can set up a Shopware 6 environment many ways, we recommend the follo
 
 ```bash
 mkdir my-shopware6 && cd my-shopware6
-ddev config --project-type=shopware6 --docroot=public --create-docroot
+ddev config --project-type=shopware6 --docroot=public
 ddev composer create shopware/production:^v6.5
 # If it asks `Do you want to include Docker configuration from recipes?`
 # answer `x`, as we're using DDEV for this rather than its recipes.
@@ -351,7 +351,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ```bash
     mkdir my-silverstripe-app
     cd my-silverstripe-app
-    ddev config --project-type=silverstripe --docroot=public --create-docroot
+    ddev config --project-type=silverstripe --docroot=public
     ddev composer create --prefer-dist --no-scripts silverstripe/installer -y
     ddev start
     ddev sake dev/build flush=all
@@ -362,7 +362,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ```bash
     git clone <your-silverstripe-repo>
     cd <your-silverstripe-project>
-    ddev config --project-type=silverstripe --docroot=public --create-docroot
+    ddev config --project-type=silverstripe --docroot=public
     ddev start
     ddev composer install
     ddev sake dev/build flush=all
@@ -388,7 +388,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     mkdir my-statamic-app
     cd my-statamic-app
-    ddev config --project-type=laravel --docroot=public --create-docroot
+    ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist --no-install --no-scripts statamic/statamic
     ddev composer install
     ddev exec "php artisan key:generate"
@@ -399,7 +399,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     git clone <your-statamic-repo>
     cd <your-statamic-project>
-    ddev config --project-type=laravel --docroot=public --create-docroot
+    ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
     ddev exec "php artisan key:generate"
@@ -413,7 +413,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     mkdir my-typo3-site
     cd my-typo3-site
-    ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
+    ddev config --project-type=typo3 --docroot=public --php-version 8.1
     ddev start
     ddev composer create "typo3/cms-base-distribution"
     ddev exec touch public/FIRST_INSTALL
@@ -425,7 +425,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     git clone https://github.com/example/example-site
     cd example-site
-    ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
+    ddev config --project-type=typo3 --docroot=public --php-version 8.1
     ddev composer install
     ddev restart
     ddev exec touch public/FIRST_INSTALL
@@ -470,7 +470,7 @@ There are several easy ways to use DDEV with WordPress:
     ```bash
     mkdir my-wp-bedrock-site
     cd my-wp-bedrock-site
-    ddev config --project-type=wordpress --docroot=web --create-docroot
+    ddev config --project-type=wordpress --docroot=web
     ddev start
     ddev composer create roots/bedrock
     ```
