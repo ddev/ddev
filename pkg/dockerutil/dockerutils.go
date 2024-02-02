@@ -1738,7 +1738,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 // See https://github.com/ddev/ddev/pull/738.. and regression https://github.com/ddev/ddev/issues/1431
 var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
-// DockerVersion is cached version of Docker
+// DockerVersion is cached version of Docker engine
 var DockerVersion = ""
 
 // GetDockerVersion gets the cached or API-sourced version of Docker engine
@@ -1758,6 +1758,29 @@ func GetDockerVersion() (string, error) {
 	DockerVersion = v.Get("Version")
 
 	return DockerVersion, nil
+}
+
+// DockerAPIVersion is cached API version of Docker engine
+// See https://docs.docker.com/engine/api/#api-version-matrix
+var DockerAPIVersion = ""
+
+// GetDockerAPIVersion gets the cached or API-sourced API version of Docker engine
+func GetDockerAPIVersion() (string, error) {
+	if DockerAPIVersion != "" {
+		return DockerAPIVersion, nil
+	}
+	client := GetDockerClient()
+	if client == nil {
+		return "", fmt.Errorf("unable to get Docker API version: Docker client is nil")
+	}
+
+	v, err := client.Version()
+	if err != nil {
+		return "", err
+	}
+	DockerAPIVersion = v.Get("ApiVersion")
+
+	return DockerAPIVersion, nil
 }
 
 // DockerComposeVersionConstraint is the versions allowed for ddev

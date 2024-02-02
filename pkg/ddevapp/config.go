@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -1029,7 +1028,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 		templateVars.DockerIP = "0.0.0.0"
 	}
 
-	t, err := template.New("app_compose_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "app_compose_template.yaml")
+	t, err := template.New("app_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "app_compose_template.yaml")
 	if err != nil {
 		return "", err
 	}

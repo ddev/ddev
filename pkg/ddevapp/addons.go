@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	github2 "github.com/ddev/ddev/pkg/github"
@@ -13,10 +17,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/google/go-github/v52/github"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 const AddonMetadataDir = "addon-metadata"
@@ -97,7 +97,7 @@ func GetInstalledAddonNames(app *DdevApp) []string {
 // ProcessAddonAction takes a stanza from yaml exec section and executes it.
 func ProcessAddonAction(action string, dict map[string]interface{}, bashPath string, verbose bool) error {
 	action = "set -eu -o pipefail\n" + action
-	t, err := template.New("ProcessAddonAction").Funcs(sprig.TxtFuncMap()).Parse(action)
+	t, err := template.New("ProcessAddonAction").Funcs(getTemplateFuncMap()).Parse(action)
 	if err != nil {
 		return fmt.Errorf("could not parse action '%s': %v", action, err)
 	}

@@ -2,18 +2,18 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"text/template"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
-	"text/template"
 )
 
 type TraefikRouting struct {
@@ -186,7 +186,7 @@ func pushGlobalTraefikConfig() error {
 		if err != nil {
 			util.Failed("Failed to create Traefik config file: %v", err)
 		}
-		t, err := template.New("traefik_global_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
+		t, err := template.New("traefik_global_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
 		}
@@ -218,7 +218,7 @@ func pushGlobalTraefikConfig() error {
 		if err != nil {
 			util.Failed("Failed to create Traefik config file: %v", err)
 		}
-		t, err := template.New("traefik_static_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
+		t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
 		}
@@ -366,7 +366,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		if err != nil {
 			return fmt.Errorf("failed to create Traefik config file: %v", err)
 		}
-		t, err := template.New("traefik_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
+		t, err := template.New("traefik_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
 		}
