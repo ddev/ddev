@@ -216,7 +216,7 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
 
 After adding a snippet, run `ddev restart` to make it take effect.
 
-#### Second snippet
+#### Example Nginx Snippet: Using Node.JS Server as Back-End
 
 To route the *.ddev.site URLs to the right node apps, you'll probably want to make new Nginx config files. The default one (.ddev/nginx_full/nginx-site.conf) will route all incoming traffic to /var/www/html and assume a static HTML file or PHP app is there to accept the incoming request. Since node apps tend to run on other ports, we need to proxy those requests to the right ports
 
