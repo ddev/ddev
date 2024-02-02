@@ -194,12 +194,6 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 * You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
-### Multiple Docroots in nginx (Advanced)
-
-It’s easiest to have different web servers in different DDEV projects, and DDEV projects can [easily communicate with each other](../usage/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there’s an API in the same codebase but using different code, or different code for different languages, etc.
-
-The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to do this. You can create as many of these as you want: change the `servername` and the `root` and customize as needed.
-
 ### nginx Snippets
 
 #### Example Nginx Snippet: Redirecting HTTP to HTTPS
@@ -216,7 +210,15 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
 
 After adding a snippet, run `ddev restart` to make it take effect.
 
-#### Example Nginx Snippet: Using Node.js Server as Back-End
+### nginx full
+
+#### Multiple Docroots in nginx (Advanced)
+
+It’s easiest to have different web servers in different DDEV projects, and DDEV projects can [easily communicate with each other](../usage/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there’s an API in the same codebase but using different code, or different code for different languages, etc.
+
+The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to do this. You can create as many of these as you want: change the `servername` and the `root` and customize as needed.
+
+#### Example Nginx_full: Using Node.js Server as Back-End
 
 To route the *.ddev.site URLs to the right node apps, you'll probably want to make new Nginx config files. The default one (`.ddev/nginx_full/nginx-site.conf`) will route all incoming traffic to  `/var/www/html` and assume a static HTML file or PHP app is there to accept the incoming request. Since node apps tend to run on other ports, we need to proxy those requests to the right ports
 
