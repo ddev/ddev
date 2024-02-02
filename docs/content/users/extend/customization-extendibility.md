@@ -196,6 +196,8 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 
 ### nginx Snippets
 
+Snippets can only change settings within the nginx server context.
+
 #### Example Nginx Snippet: Redirecting HTTP to HTTPS
 
 To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`.
