@@ -202,7 +202,7 @@ The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to 
 
 ### nginx Snippets
 
-#### First snippet
+#### Example Nginx Snippet: Redirecting http to https
 
 To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`.
 
