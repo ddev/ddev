@@ -52,7 +52,7 @@ If you’d like to reassure the reader something is easy, illustrate it with a d
 
 | Write This 👍 | Not This ❌
 | -- | --
-| Change your project’s PHP version by either editing `.ddev/config.yaml` to set `php_version: "8.2"`, or by running `ddev config --php-version=8.2`, followed by running `ddev restart`. | It’s easy to change your project’s PHP version! Just edit your project’s `.ddev/config.yaml` to set `php_version: "8.2"`, or run `ddev config --php-version=8.2`, followed by running `ddev restart`. |
+| Change your project’s PHP version by either editing `.ddev/config.yaml` to set `php_version: "8.2"`, or by running `ddev config --php-version=8.2`, followed by running `ddev restart`. | It’s easy to change your project’s PHP version! Just edit your project’s `.ddev/config.yaml` to set `php_version: "8.2"`, or run `ddev config --php-version=8.2`, followed by running `ddev restart`.
 
 <!-- textlint-enable -->
 
@@ -83,10 +83,10 @@ We “run” commands. We don’t “do” them, and the command itself is not a
 
 <!-- textlint-disable -->
 
-| Write This 👍 | Not This ❌ |
-| -- | -- |
-| Run `ddev config` to set up your project. | Do `ddev config` to set up your project.<br>You can `ddev config` to set up your project. |
-| If you get stuck, run `ddev restart`. | If you get stuck, just `ddev restart`. |
+| Write This 👍 | Not This ❌
+| -- | --
+| Run `ddev config` to set up your project. | Do `ddev config` to set up your project.<br>You can `ddev config` to set up your project.
+| If you get stuck, run `ddev restart`. | If you get stuck, just `ddev restart`.
 
 <!-- textlint-enable -->
 
@@ -99,10 +99,10 @@ Write on behalf of the community and not yourself—use “we” and not “I”
 
 <!-- textlint-disable -->
 
-| Write This 👍 | Not This ❌ |
-| -- | -- |
-| We recommend Colima for the best performance. | It is recommended for performance that you use Colima. |
-| Some prefer Redis for runtime caches. | I like using Redis for runtime caches. |
+| Write This 👍 | Not This ❌
+| -- | --
+| We recommend Colima for the best performance. | It is recommended for performance that you use Colima.
+| Some prefer Redis for runtime caches. | I like using Redis for runtime caches.
 
 <!-- textlint-enable -->
 
@@ -119,9 +119,9 @@ It’s easy to get lost in documentation; don’t assume the reader is always fo
 
 <!-- textlint-disable -->
 
-| Write This 👍 | Not This ❌ |
-| -- | -- |
-| 1. In Docker Desktop, go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. From your terminal, run `ddev restart`.<br>3. In your text editor, open `.ddev/config.yaml` and set `php_version: "8.1"`. | 1. Go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. Run `ddev restart`.<br>3. Set `php_version: "8.1"`. |
+| Write This 👍 | Not This ❌
+| -- | --
+| 1. In Docker Desktop, go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. From your terminal, run `ddev restart`.<br>3. In your text editor, open `.ddev/config.yaml` and set `php_version: "8.1"`. | 1. Go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. Run `ddev restart`.<br>3. Set `php_version: "8.1"`.
 | Once you’ve [installed a Docker provider](../users/install/docker-installation.md), you’re ready to install DDEV! | Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker Installation](../users/install/docker-installation.md) page to help sort out the details.
 
 <!-- textlint-enable -->
@@ -130,7 +130,7 @@ It’s easy to get lost in documentation; don’t assume the reader is always fo
 
 The beginning of a page or section should introduce what the rest of the content is about. Try to avoid starting with asides or reminders that get in the way of this initial statement of purpose.
 
-Never tell the reader to “remember” something they may not have been introduced to yet.
+Never tell the reader to “remember” something they may not have been introduced to yet.
 
 ### Use Tips
 
@@ -251,8 +251,8 @@ One-off tips that don’t fit nicely into any of the sections above:
 - Use sequential numbers for numbered lists in the source Markdown, regardless of how they’re eventually rendered.
 - Try to maintain parallel format for list items.
 
-| Write This 👍 | Not This ❌ |
-| -- | -- |
+| Write This 👍 | Not This ❌
+| -- | --
 | web server | webserver
 | add-on | addon
 | JSON, YAML, CSS | json, Yaml, css
