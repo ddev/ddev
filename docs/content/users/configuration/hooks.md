@@ -43,13 +43,13 @@ DDEV currently supports these tasks:
 
 Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a “service” key to the command, specifying to run it on the `db` container or any other container you use.
 
-Example: _Use Drush to clear the Drupal cache and get a user login link after database import_.
+Example: _Use Drush to rebuild all caches and get a user login link after database import_.
 
 ```yaml
 hooks:
   post-import-db:
-    - exec: drush cr
-    - exec: drush uli
+    - exec: drush cache:rebuild
+    - exec: drush user:login
 ```
 
 Example: _Use wp-cli to replace the production URL with development URL in a WordPress project’s database_.
@@ -58,6 +58,14 @@ Example: _Use wp-cli to replace the production URL with development URL in a Wor
 hooks:
   post-import-db:
     - exec: wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.site
+```
+
+Example: _Use Drush to sanitize a database by removing or obfuscating user data_.
+
+```yaml
+hooks:
+  post-import-db:
+    - exec: drush sql:sanitize
 ```
 
 Example: _Add an extra database before `import-db`, executing in `db` container_.
@@ -143,24 +151,22 @@ hooks:
     - exec: "drush cc all"
 ```
 
-## Drupal 8 Example
+## Drupal 10 Example
 
 ```yaml
 hooks:
   post-start:
     # Install Composer dependencies from the web container
     - composer: install
-    # Install Drupal after start if not installed already
-    - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=mysql://db:db@db/db"
     # Generate a one-time login link for the admin account
-    - exec: "drush uli 1"
+    - exec: "drush user:login"
   post-import-db:
-    # Set the site name
-    - exec: "drush config-set system.site name MyDevSite"
-    # Enable the environment indicator module
-    - exec: "drush en -y environment_indicator"
-    # Clear the cache
-    - exec: "drush cr"
+    # Sanitize the database
+    - exec: "drush sql:sanitize"
+    # Apply any database updates
+    - exec: "drush updatedb"
+    # Rebuild all caches
+    - exec: "drush cache:rebuild"
 ```
 
 ## TYPO3 Example

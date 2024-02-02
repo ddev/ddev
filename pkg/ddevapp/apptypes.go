@@ -145,7 +145,7 @@ func init() {
 		nodeps.AppTypeDrupal9: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal8Hooks,
+			hookDefaultComments:        getDrupal10Hooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
 			appTypeDetect:              isDrupal9App,
 			postStartAction:            drupalPostStartAction,
@@ -156,7 +156,7 @@ func init() {
 		nodeps.AppTypeDrupal10: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal8Hooks,
+			hookDefaultComments:        getDrupal10Hooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
 			appTypeDetect:              isDrupal10App,
 			configOverrideAction:       drupal10ConfigOverrideAction,
