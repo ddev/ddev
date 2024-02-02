@@ -202,7 +202,7 @@ The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to 
 
 ### nginx Snippets
 
-#### Example Nginx Snippet: Redirecting http to https
+#### Example Nginx Snippet: Redirecting HTTP to HTTPS
 
 To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`.
 
@@ -216,11 +216,12 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
 
 After adding a snippet, run `ddev restart` to make it take effect.
 
-#### Example Nginx Snippet: Using Node.JS Server as Back-End
+#### Example Nginx Snippet: Using Node.js Server as Back-End
 
-To route the *.ddev.site URLs to the right node apps, you'll probably want to make new Nginx config files. The default one (.ddev/nginx_full/nginx-site.conf) will route all incoming traffic to /var/www/html and assume a static HTML file or PHP app is there to accept the incoming request. Since node apps tend to run on other ports, we need to proxy those requests to the right ports
+To route the *.ddev.site URLs to the right node apps, you'll probably want to make new Nginx config files. The default one (`.ddev/nginx_full/nginx-site.conf`) will route all incoming traffic to  `/var/www/html` and assume a static HTML file or PHP app is there to accept the incoming request. Since node apps tend to run on other ports, we need to proxy those requests to the right ports
 
-.ddev/nginx_full/original-random-name.conf
+.ddev/nginx_full/random-name.conf
+
 ```
 server {
     root /var/www/html/app;
@@ -253,7 +254,7 @@ server {
 }
 ```
 
-.ddev/nginx_full/first-random-name.conf
+.ddev/nginx_full/api-random-name.conf
 
 ```
 server {
@@ -286,6 +287,7 @@ server {
     include /mnt/ddev_config/nginx/*.conf;
 }
 ```
+
 After adding a snippet, run `ddev restart` to make it take effect.
 
 ## Custom Apache Configuration
