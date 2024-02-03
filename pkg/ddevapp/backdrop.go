@@ -154,8 +154,7 @@ func getBackdropHooks() []byte {
 func setBackdropSiteSettingsPaths(app *DdevApp) {
 	settings := NewBackdropSettings(app)
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsLocal)
+	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsLocal)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
 }
 
