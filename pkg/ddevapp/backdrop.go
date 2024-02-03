@@ -17,18 +17,19 @@ import (
 
 // BackdropSettings holds database connection details for Backdrop.
 type BackdropSettings struct {
-	DatabaseName     string
-	DatabaseUsername string
-	DatabasePassword string
-	DatabaseHost     string
-	DatabaseDriver   string
-	DatabasePort     string
-	HashSalt         string
-	Signature        string
-	SiteSettings     string
-	SiteSettingsDdev string
-	DockerIP         string
-	DBPublishedPort  int
+	DatabaseName      string
+	DatabaseUsername  string
+	DatabasePassword  string
+	DatabaseHost      string
+	DatabaseDriver    string
+	DatabasePort      string
+	HashSalt          string
+	Signature         string
+	SiteSettings      string
+	SiteSettingsLocal string
+	SiteSettingsDdev  string
+	DockerIP          string
+	DBPublishedPort   int
 }
 
 // NewBackdropSettings produces a BackdropSettings object with default values.
@@ -37,24 +38,32 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 	dbPublishedPort, _ := app.GetPublishedPort("db")
 
 	return &BackdropSettings{
-		DatabaseName:     "db",
-		DatabaseUsername: "db",
-		DatabasePassword: "db",
-		DatabaseHost:     "ddev-" + app.Name + "-db",
-		DatabaseDriver:   "mysql",
-		DatabasePort:     GetExposedPort(app, "db"),
-		HashSalt:         util.HashSalt(app.Name),
-		Signature:        nodeps.DdevFileSignature,
-		SiteSettings:     "settings.php",
-		SiteSettingsDdev: "settings.ddev.php",
-		DockerIP:         dockerIP,
-		DBPublishedPort:  dbPublishedPort,
+		DatabaseName:      "db",
+		DatabaseUsername:  "db",
+		DatabasePassword:  "db",
+		DatabaseHost:      "ddev-" + app.Name + "-db",
+		DatabaseDriver:    "mysql",
+		DatabasePort:      GetExposedPort(app, "db"),
+		HashSalt:          util.HashSalt(app.Name),
+		Signature:         nodeps.DdevFileSignature,
+		SiteSettings:      "settings.php",
+		SiteSettingsLocal: "settings.local.php",
+		SiteSettingsDdev:  "settings.ddev.php",
+		DockerIP:          dockerIP,
+		DBPublishedPort:   dbPublishedPort,
 	}
 }
 
-// createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
-// If a settings.php file already exists, it will be modified to ensure that it includes
-// settings.ddev.php, which contains ddev-specific configuration.
+// createBackdropSettingsFile manages creation and modification of settings.local.php and settings.ddev.php.
+// Unlike Drupal, Backdrop by default has a section in its settings.php file to include a settings.local.php
+// file if one exists. Also, the settings.local.php file is git-ignored, so it is preferable to make any
+// modifications there rather than in the settings.php file directly.
+// The goal is to have settings.php load settings.local.php (default Backdrop behavior), and then in turn
+// settings.local.php to load settings.ddev.php.
+// If a settings.local.php file already exists, it will be modified to ensure that it includes
+// settings.ddev.php (which contains ddev-specific configuration).
+// If a settings.local.php is not present, then a default one will be created, and it will only include the
+// lines necessary to load settings.ddev.php.
 func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	settings := NewBackdropSettings(app)
 
@@ -146,6 +155,7 @@ func setBackdropSiteSettingsPaths(app *DdevApp) {
 	settings := NewBackdropSettings(app)
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
+	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsLocal)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
 }
 
