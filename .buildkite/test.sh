@@ -34,7 +34,8 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       ~/.rd/bin/rdctl start
       for i in {1..120}; do
-        if docker context use rancher-desktop >/dev/null 2>&1 ; then
+        docker context ls
+        if docker context use rancher-desktop ; then
           break
         fi
         echo "$(date): Waiting for rancher-desktop context to be available"
