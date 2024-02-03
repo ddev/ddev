@@ -36,7 +36,7 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 * [`ddev npm`](../usage/commands.md#npm) and [`ddev yarn`](../usage/commands.md#yarn) provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
 * You can run Node.js daemons using [`web_extra_daemons`](#running-extra-daemons-in-the-web-container).
 * You can expose Node.js ports via `ddev-router` by using [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router).
-* You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec nodejs <script>`.
+* You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec node <script>`.
 
 !!!tip "Please share your techniques!"
     There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md#additional-service-configurations-and-add-ons-for-ddev), [Stack Overflow](https://stackoverflow.com/tags/ddev), and [ddev-contrib](https://github.com/ddev/ddev-contrib).

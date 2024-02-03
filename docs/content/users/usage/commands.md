@@ -956,7 +956,7 @@ ddev npm update
 
 ## `nvm`
 
-Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command).
+Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command). (Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.)
 
 Example:
 
