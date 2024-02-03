@@ -4,12 +4,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Ddev: Enable Xdebug",
+            "label": "DDEV: Enable Xdebug",
             "type": "shell",
             "command": "ddev xdebug on"
         },
         {
-            "label": "Ddev: Disable Xdebug",
+            "label": "DDEV: Disable Xdebug",
             "type": "shell",
             "command": "ddev xdebug off"
         }

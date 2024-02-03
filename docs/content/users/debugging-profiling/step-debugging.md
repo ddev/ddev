@@ -82,7 +82,7 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 
 1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) extension.
 2. In the menu, choose *Run* → *Open Configuration* and add the [“Listen for Xdebug” configuration snippet](../snippets/launch.json) to the project’s `.vscode/launch.json`.
-3. In the menu, choose *Terminal* → *Configure tasks* → *Create task.json from template* → *Others* and add the [“Enable Ddev Xdebug” and “Disable Ddev Xdebug” task snippet](../snippets/tasks.json) to the project’s `.vscode/tasks.json`.
+3. In the menu, choose *Terminal* → *Configure tasks* → *Create task.json from template* → *Others* and add the [“DDEV: Enable Xdebug” and “DDEV: Disable Xdebug” task snippet](../snippets/tasks.json) to the project’s `.vscode/tasks.json`.
 4. Set a breakpoint in your `index.php`. If it isn’t solid red, restart.
 5. In the menu, choose *Run* → *Start Debugging*. You may have to select “Listen for Xdebug” by the green arrowhead at the top left. The bottom pane of VS Code should now be orange (live) and should say “Listen for Xdebug”.
 6. In a browser, visit your project and confirm you hit the breakpoint.

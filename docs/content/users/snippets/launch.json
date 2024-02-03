@@ -12,8 +12,8 @@
             "pathMappings": {
                 "/var/www/html": "${workspaceFolder}"
             },
-            "preLaunchTask": "Ddev: Enable Xdebug",
-            "postDebugTask": "Ddev: Disable Xdebug"
+            "preLaunchTask": "DDEV: Enable Xdebug",
+            "postDebugTask": "DDEV: Disable Xdebug"
         }
     ]
 }
