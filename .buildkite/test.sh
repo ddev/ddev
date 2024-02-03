@@ -34,6 +34,8 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       ~/.rd/bin/rdctl start
       for i in {1..120}; do
+        id -a
+        ls -l ~/.docker/contexts/meta
         docker context ls
         if docker context use rancher-desktop ; then
           break
