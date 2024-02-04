@@ -20,9 +20,11 @@ import (
 
 // ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
-	DisableFlagParsing: true,
-	Use:                "create [args] [flags]",
-	Short:              "Executes 'composer create-project' within the web container with the arguments and flags provided",
+	Use: "create [args] [flags]",
+	FParseErrWhitelist: cobra.FParseErrWhitelist{
+		UnknownFlags: true,
+	},
+	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the Composer root directory after install.`,
