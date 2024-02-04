@@ -35,8 +35,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 ddev composer create --preserve-flags --no-interaction psr/log
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
-	Run: func(_ *cobra.Command, _ []string) {
-		yesFlag, _ := cmd.Flags().GetBool("yes")
+	Run: func(cmd *cobra.Command, args []string) {
 		preserveFlags, _ := cmd.Flags().GetBool("preserve-flags")
 
 		// We only want to pass all flags and args to Composer
@@ -96,7 +95,6 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
-
 
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
