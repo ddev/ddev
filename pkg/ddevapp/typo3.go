@@ -165,22 +165,6 @@ func isTypo3App(app *DdevApp) bool {
 	return false
 }
 
-func typo3ConfigOverrideAction(app *DdevApp) error {
-	composerManifest, _ := composer.NewManifest(filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json"))
-	docroot := "public"
-	if composerManifest != nil {
-		docroot = composerManifest.GetKeyValue("extra.typo3/cms.web-dir", docroot)
-	}
-
-	app.Docroot = docroot
-	/*
-		app.PHPVersion = nodeps.PHP81
-		app.Database = DatabaseDesc{nodeps.MySQL, nodeps.MySQL80}
-	*/
-
-	return nil
-}
-
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
 // The TYPO3 import-files workflow is currently identical to the Drupal workflow.
 func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
