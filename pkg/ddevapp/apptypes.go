@@ -197,7 +197,7 @@ func init() {
 		},
 
 		nodeps.AppTypePHP: {
-			postStartAction: phpPostStartAction,
+			postStartAction: nil,
 		},
 
 		nodeps.AppTypePython: {
