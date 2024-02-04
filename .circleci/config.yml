@@ -521,7 +521,6 @@ workflows:
     - lx_arm64_fpm_test:
         filters:
           branches:
-            only: master
             ignore:
               - gh-pages
 #    - lx_arm64_container_test
