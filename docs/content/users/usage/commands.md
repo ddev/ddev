@@ -1298,7 +1298,6 @@ Start a DDEV project.
 Flags:
 
 * `--all`, `-a`: Start all projects.
-* `--select`, `-s`: Interactively select a project to start.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
 Example:
@@ -1325,7 +1324,6 @@ Flags:
 * `--all`, `-a`: Stop and remove all running or container-stopped projects and remove from global projects list.
 * `--omit-snapshot`, `-O`: Omit/skip database snapshot.
 * `--remove-data`, `-R`: Remove stored project data (MySQL, logs, etc.).
-* `--select`, `-s`: Interactively select a project to stop.
 * `--snapshot`, `-S`: Create database snapshot.
 * `--stop-ssh-agent`: Stop the `ddev-ssh-agent` container.
 * `--unlist`, `-U`: Remove the project from global project list, so it won’t appear in [`ddev list`](#list) until started again.

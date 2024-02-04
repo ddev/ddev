@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
@@ -15,9 +16,10 @@ var restartAll bool
 
 // RestartCmd rebuilds an apps settings
 var RestartCmd = &cobra.Command{
-	Use:   "restart [projects]",
-	Short: "Restart a project or several projects.",
-	Long:  `Stops named projects and then starts them back up again.`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
+	Use:               "restart [projects]",
+	Short:             "Restart a project or several projects.",
+	Long:              `Stops named projects and then starts them back up again.`,
 	Example: `ddev restart
 ddev restart <project1> <project2>
 ddev restart --all`,

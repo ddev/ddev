@@ -1,18 +1,20 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 // MutagenResetCmd implements the ddev mutagen reset command
 var MutagenResetCmd = &cobra.Command{
-	Use:     "reset",
-	Short:   "Reset Mutagen for project",
-	Long:    "Stops project, removes the Mutagen Docker volume",
-	Example: `"ddev mutagen reset", "ddev mutagen reset <projectname>"`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "reset",
+	Short:             "Reset Mutagen for project",
+	Long:              "Stops project, removes the Mutagen Docker volume",
+	Example:           `"ddev mutagen reset", "ddev mutagen reset <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 		if len(args) > 1 {

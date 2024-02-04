@@ -12,9 +12,10 @@ import (
 
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
-	Use:   "share [project]",
-	Short: "Share project on the internet via ngrok.",
-	Long:  `Requires an account on ngrok.com, use the "ngrok config add-authtoken <token>" command to set up ngrok. Any ngrok flag can be added in the "ngrok_args" section of .ddev/config.yaml or via --ngrok-args.`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
+	Use:               "share [project]",
+	Short:             "Share project on the internet via ngrok.",
+	Long:              `Requires an account on ngrok.com, use the "ngrok config add-authtoken <token>" command to set up ngrok. Any ngrok flag can be added in the "ngrok_args" section of .ddev/config.yaml or via --ngrok-args.`,
 	Example: `ddev share
 ddev share --ngrok-args "--basic-auth username:pass1234"
 ddev share --ngrok-args "--domain foo.ngrok-free.app"

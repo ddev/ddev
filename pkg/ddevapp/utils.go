@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"text/template"
@@ -19,6 +20,7 @@ import (
 	"github.com/docker/docker/api/types/versions"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/spf13/cobra"
 )
 
 // GetActiveProjects returns an array of DDEV projects
@@ -415,6 +417,52 @@ func ExtractProjectNames(apps []*DdevApp) []string {
 	}
 
 	return names
+}
+
+// GetProjectNamesFunc returns a function for autocompleting project names
+// for command arguments.
+// If status is "inactive" or "active", only names of inactive or active
+// projects respectively are returned.
+// If status is "all", all project names are returned.
+// If numArgs is 0, completion will be provided for infinite arguments,
+// otherwise it will only be provided for the numArgs number of arguments.
+func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// Don't provide completions if the user keeps hitting space after
+		// exhausting all of the valid arguments.
+		if numArgs > 0 && len(args)+1 > numArgs {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Get all of the projects we're interested in for this completion function.
+		var apps []*DdevApp
+		var err error
+		if status == "inactive" {
+			apps, err = GetInactiveProjects()
+		} else if status == "active" {
+			apps, err = GetProjects(true)
+		} else if status == "all" {
+			apps, err = GetProjects(false)
+		} else {
+			// This is an error state - but we just return nothing
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		// Return nothing if we have nothing, or return all of the project names.
+		// Note that if there's nothing to return, we don't let cobra pick completions
+		// from the files in the cwd.
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Don't show arguments that are already written on the command line
+		var projectNames []string
+		for _, name := range ExtractProjectNames(apps) {
+			if !slices.Contains(args, name) {
+				projectNames = append(projectNames, name)
+			}
+		}
+		return projectNames, cobra.ShellCompDirectiveNoFileComp
+	}
 }
 
 // GetRelativeDirectory returns the directory relative to project root

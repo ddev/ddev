@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -13,9 +14,10 @@ var (
 
 // DdevLogsCmd contains the "ddev logs" command
 var DdevLogsCmd = &cobra.Command{
-	Use:   "logs [projectname]",
-	Short: "Get the logs from your running services.",
-	Long:  `Uses 'docker logs' to display stdout from the running services.`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("active", 1),
+	Use:               "logs [projectname]",
+	Short:             "Get the logs from your running services.",
+	Long:              `Uses 'docker logs' to display stdout from the running services.`,
 	Example: `ddev logs
 ddev logs -f
 ddev logs -s db

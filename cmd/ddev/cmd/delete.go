@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -15,9 +16,10 @@ var deleteAll bool
 
 // DeleteCmd provides the delete command
 var DeleteCmd = &cobra.Command{
-	Use:   "delete [projectname ...]",
-	Short: "Remove all project information (including database) for an existing project",
-	Long:  `Removes all DDEV project information (including database) for an existing project, but does not touch the project codebase or the codebase's .ddev folder.'.`,
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
+	Use:               "delete [projectname ...]",
+	Short:             "Remove all project information (including database) for an existing project",
+	Long:              `Removes all DDEV project information (including database) for an existing project, but does not touch the project codebase or the codebase's .ddev folder.'.`,
 	Example: `ddev delete
 ddev delete proj1 proj2 proj3
 ddev delete --omit-snapshot proj1
