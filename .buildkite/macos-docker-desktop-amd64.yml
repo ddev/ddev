@@ -7,6 +7,7 @@
       - "os=macos"
       - "docker-desktop=true"
       - "architecture=amd64"
+    branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
