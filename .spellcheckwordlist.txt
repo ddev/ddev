@@ -586,6 +586,7 @@ sshfs
 ssl
 stable
 start
+starterkit
 stcp
 stdin
 stdout
