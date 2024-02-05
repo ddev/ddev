@@ -5,4 +5,4 @@
 ## Usage: mailpit
 ## Example: "ddev mailpit"
 
-ddev launch -m
+ddev launch -s $DDEV_MAILPIT_HTTPS_PORT -p $DDEV_MAILPIT_HTTP_PORT

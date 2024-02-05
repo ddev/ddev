@@ -1,0 +1,31 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Helper function to launch a browser to the project URL based on the port.
+## It has 3 main uses:
+##
+## - "ddev port 3000": Open the site on port 3000.
+## - "ddev port -s 3000": Open the site, preferring a secure port.
+## - "ddev port -p 3000": Open the site, preferring an insecure (-p) port.
+
+HTTP_PORT=$1
+HTTPS_PORT=$1
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+  -p | --http_port)
+    # Set the default HTTP port.
+    HTTP_PORT="$2"
+    shift
+    ;;
+  -s | --https_port)
+    # Set the default HTTPS port.
+    HTTPS_PORT="$2"
+    shift
+    ;;
+  --) shift ;;
+  esac
+  shift
+done
+
+ddev launch -s $HTTPS_PORT -p $HTTP_PORT
