@@ -5,17 +5,21 @@
 ## Usage: launch_port
 ## Example: "launch_port"
 
-HTTP_PORT=80
-HTTPS_PORT=430
-
 while [ $# -gt 0 ]; do
   case "$1" in
   -p | --http_port)
+    # Set the default HTTP port.
     HTTP_PORT="$2"
     shift
     ;;
   -s | --https_port)
+    # Set the default HTTPS port.
     HTTPS_PORT="$2"
+    shift
+    ;;
+  -u | --url)
+    # Set the full target URL
+    FULLURL="$2"
     shift
     ;;
   --) shift ;;
@@ -23,18 +27,26 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-FULLURL=${DDEV_PRIMARY_URL}
-HTTPS=""
-if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
+# Generate the full URL for the browser. This will include port.
+generate_fullurl() {
+  FULLURL=${DDEV_PRIMARY_URL}
+  HTTPS=""
+  if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
 
-if [[ ! -z "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then
-  FULLURL="${FULLURL/-${DDEV_HOST_WEBSERVER_PORT}/-${HTTP_PORT}}"
-else
-  if [ "${HTTPS}" = "" ]; then
-    FULLURL="${FULLURL%:[0-9]*}:${HTTP_PORT}"
+  if [[ ! -z "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then
+    FULLURL="${FULLURL/-${DDEV_HOST_WEBSERVER_PORT}/-${HTTP_PORT}}"
   else
-    FULLURL="${FULLURL%:[0-9]*}:${HTTPS_PORT}"
+    if [ "${HTTPS}" = "" ]; then
+      FULLURL="${FULLURL%:[0-9]*}:${HTTP_PORT}"
+    else
+      FULLURL="${FULLURL%:[0-9]*}:${HTTPS_PORT}"
+    fi
   fi
+}
+
+# If $FULLURL was not passsed, we will generate it based off $DDEV_PRIMARY_URL.
+if [ -z "$FULLURL" ]; then
+  generate_fullurl
 fi
 
 if [ -n "${1:-}" ]; then

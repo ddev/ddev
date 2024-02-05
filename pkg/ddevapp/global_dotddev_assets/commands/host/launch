@@ -45,31 +45,4 @@ while :; do
      shift
  done
 
-if [ -n "${1:-}" ] ; then
-  if [[ ${1::1} != "/" ]] ; then
-    FULLURL="${FULLURL}/";
-  fi
-
-  FULLURL="${FULLURL}${1}";
-fi
-
-if [ ! -z ${DDEV_DEBUG:-} ]; then
-    printf "FULLURL $FULLURL\n" && exit 0
-fi
-
-case $OSTYPE in
-  linux-gnu)
-    if [[ ! -z "${GITPOD_INSTANCE_ID}" ]]; then
-        gp preview ${FULLURL}
-    else
-        xdg-open ${FULLURL}
-    fi
-    ;;
-  "darwin"*)
-    open ${FULLURL}
-    ;;
-  "win*"* | "msys"*)
-    start ${FULLURL}
-    ;;
-esac
-
+ddev launch_port -u $FULLURL
