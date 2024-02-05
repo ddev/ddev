@@ -15,7 +15,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20240104_redundant_chown" // Note that this can be overridden by make
+var WebTag = "20240205_update_debsuryorg_key" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
