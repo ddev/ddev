@@ -31,6 +31,10 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# Use the router default ports if not already set
+[ -z "$HTTP_PORT" ] && HTTP_PORT=$DDEV_ROUTER_HTTP_PORT
+[ -z "$HTTPS_PORT" ] && HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
+
 # Generate the full URL for the browser. This will include port.
 generate_fullurl() {
   FULLURL=${DDEV_PRIMARY_URL}
