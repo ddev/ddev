@@ -182,23 +182,17 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 ## Custom nginx Configuration
 
+There are two ways to customize nginx configuration:
+* (preferred) Customize the entire `.ddev/nginx_full/nginx-site.conf`
+* (legacy) Add a short stanza or "snippet" that gets automatically included into `nginx-site.conf`
+
+### Changing `.ddev/nginx_full/nginx-site.conf`
+
 When you run [`ddev restart`](../usage/commands.md#restart) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`. (For updates without restart, see [Troubleshooting nginx Configuration](#troubleshooting-nginx-configuration).)
 
 You can also have more than one config file in the `.ddev/nginx_full` directory, and each will be loaded when DDEV starts. This can be used for [serving multiple docroots](#multiple-docroots-in-nginx-advanced) and other techniques.
 
-### Troubleshooting nginx Configuration
-
-* Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
-* The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
-* You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
-* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
-* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
-
-### nginx Snippets
-
-Snippets can only change settings within the nginx server context.
-
-#### Example Nginx Snippet: Redirecting HTTP to HTTPS
+### Adding nginx Snippets
 
 To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`.
 
@@ -212,9 +206,17 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
 
 After adding a snippet, run `ddev restart` to make it take effect.
 
-### nginx full
+nginx snippets are added into the `server` stanza of your `nginx_site.conf` via the line `include /mnt/ddev_config/nginx/*.conf;`
 
-#### Multiple Docroots in nginx (Advanced)
+### Troubleshooting nginx Configuration
+
+* Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
+* The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
+* You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
+* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
+* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
+
+#### Example: Multiple Docroots in nginx (Advanced)
 
 It’s easiest to have different web servers in different DDEV projects, and DDEV projects can [easily communicate with each other](../usage/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there’s an API in the same codebase but using different code, or different code for different languages, etc.
 
