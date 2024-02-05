@@ -933,7 +933,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -s /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
 	}
 
 	// Add supervisord config for WebExtraDaemons
