@@ -183,6 +183,7 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 ## Custom nginx Configuration
 
 There are two ways to customize nginx configuration:
+
 * (preferred) Customize the entire `.ddev/nginx_full/nginx-site.conf`
 * (legacy) Add a short stanza or "snippet" that gets automatically included into `nginx-site.conf`
 
