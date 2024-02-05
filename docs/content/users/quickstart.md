@@ -9,9 +9,9 @@ Before proceeding, make sure your installation of DDEV is up to date. In a new a
 To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
 
 ```bash
-git clone https://github.com/example/example-site
-cd example-site
-ddev config
+git clone https://github.com/backdrop/backdrop my-backdrop-site
+cd my-backdrop-site
+ddev config --project-type=backdrop
 ddev start
 ddev launch
 ```
