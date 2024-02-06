@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/config/types"
@@ -161,4 +162,36 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 		assert.Contains(out, "Generating autoload files")
 		assert.False(fileutil.FileExists(filepath.Join(tmpDir, composerRoot, "vendor/sebastian")))
 	}
+}
+
+func TestComposerAutocomplete(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Change to the directory for the project to test.
+	// We don't really care what the project is, they should
+	// all have composer installed in the web container.
+	origDir, err := os.Getwd()
+	assert.NoError(err)
+	err = os.Chdir(TestSites[0].Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Make sure the sites exist and are running
+	err = addSites()
+	assert.NoError(err)
+
+	// Pressing tab after `composer completion` should result in the completion "bash"
+	out, err := exec.RunHostCommand(DdevBin, "__complete", "composer", "completion", "")
+	assert.NoError(err)
+	// Completions are terminated with ":4", so just grab the stuff before that
+	completions, _, found := strings.Cut(out, ":")
+	assert.True(found)
+	assert.Equal(strings.TrimSpace(completions), "bash")
+
+	err = os.Chdir(origDir)
+	assert.NoError(err)
 }
