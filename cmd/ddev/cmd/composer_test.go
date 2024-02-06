@@ -167,9 +167,21 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 func TestComposerAutocomplete(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Change to the directory for the project to test.
+	// We don't really care what the project is, they should
+	// all have composer installed in the web container.
 	origDir, err := os.Getwd()
 	assert.NoError(err)
 	err = os.Chdir(TestSites[0].Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Make sure the sites exist and are running
+	err = addSites()
 	assert.NoError(err)
 
 	// Pressing tab after `composer completion` should result in the completion "bash"
