@@ -8,13 +8,44 @@ Before proceeding, make sure your installation of DDEV is up to date. In a new a
 
 To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
 
+=== "New projects"
+
 ```bash
+# Create a project directory and move into it:
 git clone https://github.com/backdrop/backdrop my-backdrop-site
 cd my-backdrop-site
+
+# Set up the DDEV environment:
 ddev config --project-type=backdrop
+
+# Boot the project and install the starter project:
 ddev start
+
+# Launch the website and step through the initial setup
 ddev launch
 ```
+
+=== "Existing projects"
+
+    You can start using DDEV with an existing project, too—but make sure you have a database backup handy!
+
+
+    ```bash
+    # Clone an existing repository (or navigate to a local project directory):
+    git clone https://github.com/example/example-site example-site
+    cd example-site
+
+    # Set up the DDEV environment:
+    ddev config --project-type=backdrop
+
+    # Boot the project and install Composer packages (if required):
+    ddev start
+    ddev composer install
+
+    # Import a database backup and open the site in your browser:
+    ddev import-db --file=/path/to/db.sql.gz
+    ddev launch
+    ```
 
 ## Craft CMS
 
