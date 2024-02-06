@@ -268,8 +268,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     You can start using DDEV with an existing project as well:
 
     ```bash
-    # Clone an existing repository (or navigate to a local project directory):
-    git clone https://github.com/example/example-site my-kirby-project
+    # Navigate to a existing project directory (or clone/download an existing project):
     cd my-kirby-project
 
     # Set up the DDEV environment
@@ -284,15 +283,46 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
 === "Public folder setup"
 
-    If you use Kirby with a [public folder setup](https://getkirby.com/docs/guide/configuration#custom-folder-setup__public-folder-setup), the configuration is slightly different:
+    When possible, we recommend a [public folder setup](https://getkirby.com/docs/guide/configuration#custom-folder-setup__public-folder-setup) to move all files that need not be publicly accessible out of the doc root for enhanced security.
 
     ```bash
-    # Navigate to your local project directory
+    # Clone a Starterkit into a new folder
+    git clone https://github.com/getkirby/starterkit my-kirby-project
+    
+    # Navigate into the new folder
     cd my-kirby-project
+    
+    # Set up the DDEV environment with the docroot flag, this will create a public folder inside your project folder
+    ddev config --docroot=public create-docroot --php-version=8.2 --omit-containers=db
 
-    # Set up the DDEV environment with docroot public (change as required)
-    ddev config --docroot=public --php-version=8.2 --omit-containers=db
+    # Mpve the `assets` folder and the `index.php` into the `public` folder.
+     mv assets index.php public
 
+    # Open public/index.php, using your favorite editor
+    nano public/index.php
+    ```
+    Copy the following code into the file:
+
+    ```php
+    <?php
+
+    require __DIR__ . '/../kirby/bootstrap.php';
+
+    use Kirby\Cms\App as Kirby;
+
+    $kirby = new Kirby([
+        'roots' => [
+            'index'    => __DIR__,
+            'content'  => __DIR__ . '/../content',
+            'site'     => __DIR__ . '/../site',
+        ]
+    ]);
+
+    echo $kirby->render();
+    ```
+    With these changes saved:
+
+    ```bash
     # Spin up the project
     ddev start
 
