@@ -284,7 +284,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
 === "Public folder setup"
 
-    If you use Kirby with a [public folder setup](docs/guide/configuration#custom-folder-setup__public-folder-setup), the configuration is slightly different:
+    If you use Kirby with a [public folder setup](https://getkirby.com/docs/guide/configuration#custom-folder-setup__public-folder-setup), the configuration is slightly different:
 
     ```bash
     # Navigate to your local project directory
