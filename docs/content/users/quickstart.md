@@ -247,18 +247,18 @@ ddev launch
     ddev exec bin/gpm install admin -y
     ```
 
- !!!tip "How to update?"
-     Upgrade Grave core:
+!!!tip "How to update?"
+    Upgrade Grave core:
 
-     ```bash
-     ddev exec bin/gpm selfupgrade -f
-     ```
+    ```bash
+    ddev exec bin/gpm selfupgrade -f
+    ```
 
-     Update plugins and themes:
+    Update plugins and themes:
 
-     ```bash
-     ddev exec bin/gpm update -f
-     ```
+    ```bash
+    ddev exec bin/gpm update -f
+    ```
 
 Visit the [Grav Documentation](https://learn.getgrav.org/17) for more information about Grav in general and visit [Local Development with DDEV](https://learn.getgrav.org/17/webservers-hosting/local-development-with-ddev) for more details about the usage of Grav with DDEV.
 
