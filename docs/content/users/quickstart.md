@@ -260,7 +260,7 @@ ddev launch
      ddev exec bin/gpm update -f
      ```
 
-Visit the [Grav Documentation](https://learn.getgrav.org/17 for more information.
+Visit the [Grav Documentation](https://learn.getgrav.org/17 for more information about Grav in general and visit [Local Development with DDEV](https://learn.getgrav.org/17/webservers-hosting/local-development-with-ddev) for more details about the usage of Grav with DDEV.
 
 
 ## Ibexa DXP
