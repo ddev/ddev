@@ -293,9 +293,9 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     cd my-kirby-project
     
     # Set up the DDEV environment with the docroot flag, this will create a public folder inside your project folder
-    ddev config --docroot=public create-docroot --php-version=8.2 --omit-containers=db
+    ddev config --docroot=public --php-version=8.2 --omit-containers=db
 
-    # Mpve the `assets` folder and the `index.php` into the `public` folder.
+    # Move the `assets` folder and the `index.php` file into the `public` folder.
      mv assets index.php public
 
     # Open public/index.php, using your favorite editor
