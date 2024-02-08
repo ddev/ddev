@@ -39,23 +39,27 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
-1. Do not set up `buildkite-agent` on the Windows side, or disable it.
-2. Edit Ubuntu's `/etc/wsl.conf` to contain:
+1. The Ubuntu distro should be set up with the user `buildkite-agent`
+2. Do not set up `buildkite-agent` on the Windows side, or disable it.
+3. Edit Ubuntu's `/etc/wsl.conf` to contain:
 
     ```
     [boot]
     systemd=true
     ```
 
-3. Update WSL2 to WSL2 Preview from Microsoft Store and `wsl --shutdown` and then restart.
 4. `wsl --update`
 5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 6. As normal user, run `.github/workflows/linux-setup.sh`.
-7. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
-    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
+7. Configure brew in PATH with:`export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
+
+    ```
+   echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
+   source ~/.bashrc
+   ```
 
 8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+9. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
 10. `git config --global --add safe.directory '*'`
 11. Install basics in WSL2:
 
@@ -72,29 +76,21 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     ```
 
 12. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
-
-13. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
-
-    ```bash
-        #!/bin/bash
-        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-        set -e
-    ```
-
-14. Verify that `buildkite-agent` is running.
-15. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
-16. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc` And then do the same as `buildkite-agent` user
-18. `sudo chmod -R ug+w /home/linuxbrew`
-19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
-20. Run `ngrok config add-authtoken <token>` with token for free account.
-21. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
-22. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
-23. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
-24. Add `buildkite-agent` to `sudo` group in `/etc/groups`
-25. Give `buildkite-agent` a password with `sudo passwd buildkite-agent`
-26. As `buildkite-agent` user `mkcert -install`
+13. Verify that `buildkite-agent` is running.
+14. Install icinga2, `sudo apt install -y icinga2`
+15. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the "Agent" tab it provides a script to configure the agent.
+16. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
+17. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
+18. `echo "capath=/etc/ssl/certs/" >>~/.curlrc` And then do the same as `buildkite-agent` user
+19. `sudo chmod -R ug+w /home/linuxbrew`
+20. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
+21. Run `ngrok config add-authtoken <token>` with token for free account.
+22. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
+23. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
+24. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`j
+25. Add `buildkite-agent` to `sudo` group in `/etc/groups`
+26. Give `buildkite-agent` a password with `sudo passwd buildkite-agent`
+27. As `buildkite-agent` user `mkcert -install`
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
@@ -139,7 +135,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
 13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok`.
-14. Run `ngrok config add-authtoken <token>` with token for free account from 1Password.
+14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
 17. If OrbStack will be deployed, install it from [orbstack.dev](https://orbstack.dev).
