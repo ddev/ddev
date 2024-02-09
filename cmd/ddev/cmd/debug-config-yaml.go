@@ -16,7 +16,7 @@ var DebugConfigYamlCmd = &cobra.Command{
 	Use:               "configyaml [project]",
 	Short:             "Prints the project config.*.yaml usage",
 	Example:           "ddev debug configyaml, ddev debug configyaml <projectname>",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 
 		if len(args) > 1 {

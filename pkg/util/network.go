@@ -88,7 +88,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 	client := &http.Client{
 		Timeout: o.Timeout * time.Second,
 	}
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
 		return errors.New("received http redirect")
 	}
 

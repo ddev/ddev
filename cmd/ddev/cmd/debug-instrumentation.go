@@ -9,7 +9,7 @@ import (
 var DebugInstrumentationCmd = &cobra.Command{
 	Use:   "instrumentation [command]",
 	Short: "A collection of debugging commands for instrumentation",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
 	},

@@ -12,7 +12,7 @@ import (
 var DebugMessageConditionsCmd = &cobra.Command{
 	Use:   "message-conditions",
 	Short: "Show message conditions of this version of ddev",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		conditions := remoteconfig.ListConditions()
 
 		t := table.NewWriter()

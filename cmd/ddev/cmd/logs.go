@@ -22,7 +22,7 @@ var DdevLogsCmd = &cobra.Command{
 ddev logs -f
 ddev logs -s db
 ddev logs -s db [projectname]`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev logs' or 'ddev logs [projectname]'")
 		}

@@ -15,7 +15,7 @@ var MutagenResetCmd = &cobra.Command{
 	Short:             "Reset Mutagen for project",
 	Long:              "Stops project, removes the Mutagen Docker volume",
 	Example:           `"ddev mutagen reset", "ddev mutagen reset <projectname>"`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 		if len(args) > 1 {
 			util.Failed("This command only takes one optional argument: project-name")

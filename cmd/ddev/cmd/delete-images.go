@@ -25,7 +25,7 @@ ddev delete images -y
 ddev delete images --all`,
 
 	Args: cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 
 		// If true, --yes, we don't stop and prompt before deletion
 		deleteImagesNocConfirm, _ := cmd.Flags().GetBool("yes")

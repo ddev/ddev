@@ -11,7 +11,7 @@ var AuthCmd = &cobra.Command{
 	Use:     "auth [command]",
 	Short:   "A collection of authentication commands",
 	Example: `ddev auth ssh`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
 	},
@@ -25,7 +25,7 @@ func init() {
 		Use:    "pantheon",
 		Short:  "ddev auth pantheon is no longer needed, see docs",
 		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			output.UserOut.Print("`ddev auth pantheon` is no longer needed, see docs")
 		},
 	})

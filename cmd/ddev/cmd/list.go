@@ -18,7 +18,7 @@ ddev list --active-only
 ddev list -A
 ddev list --type=drupal8
 ddev list -t drupal8`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ddevapp.List(listCommandSettings)
 	},
 }

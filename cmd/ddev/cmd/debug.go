@@ -14,7 +14,7 @@ var DebugCmd = &cobra.Command{
 ddev debug mutagen sync list
 ddev d mutagen sync list
 ddev d capabilities`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
 	},
