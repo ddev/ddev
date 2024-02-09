@@ -5,7 +5,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 ## General Troubleshooting Strategies
 
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
-* Please use the current stable version of DDEV and of your Docker provider before going to far or asking for support.
+* Please use the current stable version of DDEV and of your Docker provider before going too far or asking for support.
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
