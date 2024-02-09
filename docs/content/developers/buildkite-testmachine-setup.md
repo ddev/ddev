@@ -51,12 +51,12 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 4. `wsl --update`
 5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 6. As normal user, run `.github/workflows/linux-setup.sh`.
-7. Configure brew in PATH with:`export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
+7. Configure brew in PATH with:
 
     ```
-   echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
-   source ~/.bashrc
-   ```
+    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
+    source ~/.bashrc
+    ```
 
 8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
 9. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
