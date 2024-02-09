@@ -197,7 +197,7 @@ func init() {
 		},
 
 		nodeps.AppTypePHP: {
-			postStartAction: phpPostStartAction,
+			postStartAction: nil,
 		},
 
 		nodeps.AppTypePython: {
@@ -253,27 +253,29 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// Drupal and WordPress love to change settings files to be unwriteable.
 	// Chmod them to something we can work with in the event that they already
 	// exist.
-	chmodTargets := []string{filepath.Dir(app.SiteSettingsPath), app.SiteDdevSettingsFile}
-	for _, fp := range chmodTargets {
-		fileInfo, err := os.Stat(fp)
-		if err != nil {
-			// We're not doing anything about this error other than warning,
-			// and will have to deal with the same check in settingsCreator.
-			if !os.IsNotExist(err) {
-				util.Warning("Unable to ensure write permissions: %v", err)
+	if app.SiteSettingsPath != "" {
+		chmodTargets := []string{filepath.Dir(app.SiteSettingsPath), app.SiteDdevSettingsFile}
+		for _, fp := range chmodTargets {
+			fileInfo, err := os.Stat(fp)
+			if err != nil {
+				// We're not doing anything about this error other than warning,
+				// and will have to deal with the same check in settingsCreator.
+				if !os.IsNotExist(err) {
+					util.Warning("Unable to ensure write permissions: %v", err)
+				}
+
+				continue
 			}
 
-			continue
-		}
+			perms := 0644
+			if fileInfo.IsDir() {
+				perms = 0755
+			}
 
-		perms := 0644
-		if fileInfo.IsDir() {
-			perms = 0755
-		}
-
-		err = os.Chmod(fp, os.FileMode(perms))
-		if err != nil {
-			return "", fmt.Errorf("could not change permissions on file %s to make it writeable: %v", fp, err)
+			err = os.Chmod(fp, os.FileMode(perms))
+			if err != nil {
+				return "", fmt.Errorf("could not change permissions on file %s to make it writeable: %v", fp, err)
+			}
 		}
 	}
 

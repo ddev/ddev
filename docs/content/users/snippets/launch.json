@@ -1,4 +1,6 @@
 {
+    // See https://code.visualstudio.com/docs/editor/debugging#_launch-configurations
+    // for the documentation about the launch.json format
     "version": "0.2.0",
     "configurations": [
         {
@@ -9,7 +11,9 @@
             "port": 9003,
             "pathMappings": {
                 "/var/www/html": "${workspaceFolder}"
-            }
+            },
+            "preLaunchTask": "DDEV: Enable Xdebug",
+            "postDebugTask": "DDEV: Disable Xdebug"
         }
     ]
 }
