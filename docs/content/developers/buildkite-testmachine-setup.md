@@ -71,7 +71,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
     sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
-    sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev gnupg icinga2 nagios-plugins lsb-release make mariadb-client
+    sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev etckeeper gnupg icinga2 nagios-plugins lsb-release make mariadb-client
     sudo snap install ngrok
     ```
 
@@ -102,7 +102,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     sudo mkdir -p /etc/apt/keyrings
     sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo apt update && sudo apt install -y docker-ce docker-ce-cli etckeeper containerd.io docker-compose-plugin
     sudo usermod -aG docker $USER
     ```
 
@@ -124,7 +124,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 1. Icinga Director web UI, configure the host on `newmonitor.thefays.us`, normally making a copy of an existing identical item.
 2. Deploy the new host using Icinga Director.
-3. On the WSL2 Ubuntu instance, install needed packages: `sudo apt update && sudo apt install -y icinga2 monitoring-plugins-contrib nagios-plugins`
+3. On the WSL2 Ubuntu instance, install needed packages: `sudo apt update && sudo apt install -y etckeeper icinga2 monitoring-plugins-contrib nagios-plugins`
 4. Add `nagios` to the `docker` group in `/etc/group`.
 5. `sudo icinga2 node wizard` to configure the agent, see [docs](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#agentsatellite-setup-on-linux)
 6. Restart `sudo systemctl restart icinga2`
