@@ -315,7 +315,7 @@ func init() {
 		Use:    "pantheon",
 		Short:  "ddev config pantheon is no longer needed, see docs",
 		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			output.UserOut.Print("`ddev config pantheon` is no longer needed, see docs")
 		},
 	})

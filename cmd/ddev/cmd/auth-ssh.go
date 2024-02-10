@@ -22,7 +22,7 @@ var AuthSSHCommand = &cobra.Command{
 	Short:   "Add SSH key authentication to the ddev-ssh-auth container",
 	Long:    `Use this command to provide the password to your SSH key to the ddev-ssh-agent container, where it can be used by other containers. Normal usage is "ddev auth ssh", or if your key is not in ~/.ssh, ddev auth ssh --ssh-key-path=/some/path/.ssh"`,
 	Example: `ddev auth ssh`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var err error
 		if len(args) > 0 {
 			util.Failed("This command takes no arguments.")

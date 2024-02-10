@@ -297,7 +297,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 		windowsBashPath = util.FindBashPath()
 	}
 
-	return func(cmd *cobra.Command, cobraArgs []string) {
+	return func(_ *cobra.Command, _ []string) {
 		if app != nil {
 			status, _ := app.SiteStatus()
 			app.DockerEnv()
@@ -335,7 +335,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 	if s[0:1] == "." {
 		s = s[1:]
 	}
-	return func(cmd *cobra.Command, args []string) {
+	return func(_ *cobra.Command, _ []string) {
 		status, _ := app.SiteStatus()
 		if status != ddevapp.SiteRunning {
 			err := app.Start()

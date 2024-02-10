@@ -22,7 +22,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 	Use:     "nginx-proxy-router-nginx-config",
 	Short:   "Obsolete: Prints the nginx config in the legacy `nginx-proxy` router",
 	Example: "ddev debug nginx-proxy-router-nginx-config",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to debug router-config : %v", err)

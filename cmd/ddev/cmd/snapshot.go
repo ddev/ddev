@@ -31,7 +31,7 @@ ddev snapshot --cleanup
 ddev snapshot --cleanup -y
 ddev snapshot --list
 ddev snapshot --all`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		apps, err := getRequestedProjects(args, snapshotAll)
 		if err != nil {
 			util.Failed("Unable to get project(s) %v: %v", args, err)
