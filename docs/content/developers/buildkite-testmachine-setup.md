@@ -25,7 +25,6 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
     ```bash
     @echo off
-    set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
     set DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
     ```
 
@@ -113,8 +112,8 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
     ```
         #!/bin/bash
-        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
         export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
+        export CAROOT=/mnt/c/Users/testbot/AppData/Local/mkcert
         set -e
     ```
 
@@ -165,12 +164,11 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * `build-path="~/tmp/buildkite-agent/builds"`
 24. The `buildkite-agent/hooks/environment` file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
-    ```bash
-    #!/bin/bash
-    export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-    export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-    set -e
-    ```
+       ```
+       #!/bin/bash
+       export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
+       set -e
+       ```
 
 25. Run `brew services start buildkite-agent`.
 26. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
