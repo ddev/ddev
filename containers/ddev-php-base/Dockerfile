@@ -77,6 +77,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     msmtp \
     nginx \
     nodejs \
+    npm \
     php-uploadprogress \
     postgresql-client \
     sqlite3
