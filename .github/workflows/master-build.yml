@@ -172,6 +172,14 @@ jobs:
     env:
       DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
       CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+      # For goreleaser
+      GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+      GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+      FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
+      FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
+      AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
 
     steps:
       # The upload-artifacts section often fails. This may give us a recovery technique
@@ -222,22 +230,24 @@ jobs:
         run: exit 1
 
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
+
+      # Actual release
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v5
         if: startsWith( github.ref, 'refs/tags/v1')
         with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser-pro
           version: latest
           args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
-          AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
+
+      # HEAD release, if we don't have a `v` tag
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v5
+        if: !startsWith( github.ref, 'refs/tags/v1')
+        with:
+          distribution: goreleaser-pro
+          version: latest
+          args: release --clean --nightly
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
