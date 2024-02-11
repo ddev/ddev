@@ -1,4 +1,8 @@
 ##### BUILDS ######
+nightly:
+  publish_release: true
+  keep_single_release: true
+
 builds:
 - id: ddev
   main: ./cmd/ddev
