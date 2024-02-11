@@ -6,6 +6,7 @@
 ## Example: "ddev blackfire" (default is "on"), "ddev blackfire off", "ddev blackfire on", "ddev blackfire status"
 ## ExecRaw: false
 ## Flags: []
+## AutocompleteTerms: ["start","stop","on","off","enable","disable","status"]
 
 function enable {
   if [ -z ${BLACKFIRE_SERVER_ID} ] || [ -z ${BLACKFIRE_SERVER_TOKEN} ]; then

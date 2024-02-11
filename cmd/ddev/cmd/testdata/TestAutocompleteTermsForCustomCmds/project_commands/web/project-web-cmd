@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: project-web-cmd
+## Usage: project-web-cmd
+## Example: "ddev project-web-cmd"
+## AutocompleteTerms: ["project-web-one", "suggest two", "three"]
+
+echo "this test doesn't need to be executed - just check the autocompletion."

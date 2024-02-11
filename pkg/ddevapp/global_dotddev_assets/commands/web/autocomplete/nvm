@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#ddev-generated
+# set env variables required for nvm's bash completion script
+COMP_WORDS=("$@")
+COMP_CWORD=$(($# - 1))
+# run the actual script
+__nvm
+# output the result (which was stored in COMPREPLY) as a new-line delimited string
+printf "%s\n" "${COMPREPLY[@]}"

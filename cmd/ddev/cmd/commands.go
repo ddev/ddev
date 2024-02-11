@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -146,6 +147,13 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 		}
 
+		autocompleteTerms := []string{}
+		if val, ok := directives["AutocompleteTerms"]; ok {
+			if err = json.Unmarshal([]byte(val), &autocompleteTerms); err != nil {
+				util.Warning("Error '%s', command '%s' contains an invalid autocomplete args definition '%s', skipping adding terms", err, commandName, val)
+			}
+		}
+
 		// Init and import flags
 		var flags Flags
 		flags.Init(commandName, onHostFullPath)
@@ -235,6 +243,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			FParseErrWhitelist: cobra.FParseErrWhitelist{
 				UnknownFlags: true,
 			},
+			ValidArgs: autocompleteTerms,
 		}
 
 		// Add flags to command
@@ -252,10 +261,32 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
+		autocompletePathOnHost := filepath.Join(serviceDirOnHost, "autocomplete", commandName)
 		if service == "host" {
 			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
+			if fileutil.FileExists(autocompletePathOnHost) {
+				// Make sure autocomplete script can be executed
+				_ = os.Chmod(autocompletePathOnHost, 0755)
+				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
+					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
+					continue
+				}
+				// Add autocomplete script
+				commandToAdd.ValidArgsFunction = makeHostCompletionFunc(autocompletePathOnHost, commandToAdd)
+			}
 		} else {
 			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
+			if fileutil.FileExists(autocompletePathOnHost) {
+				// Make sure autocomplete script can be executed
+				_ = os.Chmod(autocompletePathOnHost, 0755)
+				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
+					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
+					continue
+				}
+				// Add autocomplete script
+				autocompletePathInContainer := path.Join("/mnt/ddev_config", filepath.Base(filepath.Dir(serviceDirOnHost)), service, "autocomplete", commandName)
+				commandToAdd.ValidArgsFunction = makeContainerCompletionFunc(autocompletePathInContainer, service, app, commandToAdd)
+			}
 		}
 
 		if disableFlags {
@@ -288,6 +319,56 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		commandsAdded[commandName] = 1
 	}
 	return nil
+}
+
+func makeHostCompletionFunc(autocompletePathOnHost string, commandToAdd *cobra.Command) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// Add quotes to an empty item, so it gets passed as an empty string to the script
+		if toComplete == "" {
+			toComplete = "''"
+		}
+		args = append(args, toComplete)
+		args = append([]string{commandToAdd.Name()}, args...)
+
+		result, err := exec.RunCommand(autocompletePathOnHost, args)
+		if err != nil {
+			cobra.CompDebugln("error: "+err.Error(), true)
+			return nil, cobra.ShellCompDirectiveDefault
+		}
+
+		// Turn result (which was separated by line breaks) into an array and return it to cobra to deal with
+		return strings.Split(strings.TrimSpace(result), "\n"), cobra.ShellCompDirectiveDefault
+	}
+}
+
+func makeContainerCompletionFunc(autocompletePathInContainer string, service string, app *ddevapp.DdevApp, commandToAdd *cobra.Command) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// Add quotes to an empty item, so it gets passed as an empty string to the script
+		if toComplete == "" {
+			toComplete = "''"
+		}
+		args = append(args, toComplete)
+		compWords := commandToAdd.Name() + " " + strings.Join(args, " ")
+
+		// Prepare docker exec command
+		opts := &ddevapp.ExecOpts{
+			Cmd:       autocompletePathInContainer + " " + compWords,
+			Service:   service,
+			Dir:       app.GetWorkingDir(service, ""),
+			Tty:       false,
+			NoCapture: false,
+		}
+
+		// Execute completion in docker container
+		result, stderr, err := app.Exec(opts)
+		if err != nil {
+			cobra.CompDebugln("error: "+stderr+","+err.Error(), true)
+			return nil, cobra.ShellCompDirectiveDefault
+		}
+
+		// Turn result (which was separated by line breaks) into an array and return it to cobra to deal with
+		return strings.Split(strings.TrimSpace(result), "\n"), cobra.ShellCompDirectiveDefault
+	}
 }
 
 // makeHostCmd creates a command which will run on the host
