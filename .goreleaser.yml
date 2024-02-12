@@ -1,6 +1,14 @@
 ##### BUILDS ######
+nightly:
+  publish_release: true
+  keep_single_release: true
+  tag_name: head
+  name_template: '{{ incpatch .Version }}-{{ .ShortCommit }}-head'
+
 builds:
 - id: ddev
+  main: ./cmd/ddev
+
   # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
   builder: prebuilt
   goos:
@@ -121,7 +129,6 @@ builds:
 ###### Archives ######
 archives:
 - id: ddev
-  rlcp: true
   builds:
   - ddev
   - mkcert
@@ -140,14 +147,12 @@ archives:
   allow_different_binary_count: true
 
 - id: completions-tarball
-  rlcp: true
   builds:
   - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-installer
-  rlcp: true
   builds:
   - ddev-windows-installer
   format: binary
@@ -168,7 +173,7 @@ brews:
 - name: ddev
   ids:
   - ddev
-  tap:
+  repository:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
@@ -206,7 +211,7 @@ brews:
 - name: ddev
   ids:
   - ddev
-  tap:
+  repository:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
