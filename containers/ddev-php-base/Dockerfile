@@ -1,6 +1,6 @@
 ### ---------------------------base--------------------------------------
 ### Build the base Debian image that will be used in every other image
-FROM debian:bullseye-slim as base
+FROM debian:bookworm-slim as base
 
 RUN ls -l $(which dpkg-split) && ls -l $(which dpkg-deb)
 RUN for item in dpkg-split dpkg-deb; do \
@@ -77,6 +77,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     msmtp \
     nginx \
     nodejs \
+    npm \
     php-uploadprogress \
     postgresql-client \
     sqlite3
@@ -126,7 +127,6 @@ RUN curl --fail -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.c
 RUN url="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
-RUN	update-alternatives --set php /usr/bin/php${DDEV_PHP_VERSION}
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
 RUN mkdir -p /run/php && chown -R www-data:www-data /run
 
