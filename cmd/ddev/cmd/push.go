@@ -26,7 +26,7 @@ ddev push acquia --skip-db -y
 ddev push platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
 `,
 	Args: cobra.ExactArgs(1),
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 }
@@ -99,7 +99,7 @@ func init() {
 ddev push %s -y
 ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 			Args: cobra.ExactArgs(0),
-			Run: func(cmd *cobra.Command, args []string) {
+			Run: func(cmd *cobra.Command, _ []string) {
 				app, err := ddevapp.GetActiveApp("")
 				if err != nil {
 					util.Failed("push failed: %v", err)

@@ -16,7 +16,7 @@ var DebugComposeConfigCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "compose-config [project]",
 	Short:             "Prints the docker-compose configuration of the current project",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 
 		if len(args) > 1 {

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: project-host-cmd
+## Usage: project-host-cmd
+## Example: "ddev project-host-cmd"
+## AutocompleteTerms: ["project-host-one", "suggest two", "three"]
+
+echo "this test doesn't need to be executed - just check the autocompletion."

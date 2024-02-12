@@ -26,7 +26,7 @@ ddev delete --omit-snapshot proj1
 ddev delete --omit-snapshot --yes proj1 proj2
 ddev delete -Oy
 ddev delete --all`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if noConfirm && deleteAll {
 			util.Failed("Sorry, it's not possible to use flags --all and --yes together")
 		}

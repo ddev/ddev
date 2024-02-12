@@ -17,7 +17,7 @@ var DebugMigrateDatabase = &cobra.Command{
 	Example: `ddev debug migrate-database mysql:8.0
 ddev debug migrate-database mariadb:10.7`,
 	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Can't find active project: %v", err)

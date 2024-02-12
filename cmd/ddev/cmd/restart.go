@@ -23,7 +23,7 @@ var RestartCmd = &cobra.Command{
 	Example: `ddev restart
 ddev restart <project1> <project2>
 ddev restart --all`,
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {

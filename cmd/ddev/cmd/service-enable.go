@@ -15,7 +15,7 @@ var ServiceEnable = &cobra.Command{
 	Short:   "Enable a 3rd party service",
 	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev get" to obtain a service not already on your system.`, disabledServicesDir),
 	Example: `ddev service enable solr`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) < 1 {
 			util.Failed("You must specify a service to enable")
 		}

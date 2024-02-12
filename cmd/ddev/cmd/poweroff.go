@@ -13,7 +13,7 @@ var PoweroffCommand = &cobra.Command{
 	Example: `ddev poweroff`,
 	Args:    cobra.NoArgs,
 	Aliases: []string{"powerdown"},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ddevapp.PowerOff()
 	},
 }

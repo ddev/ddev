@@ -12,7 +12,7 @@ var DdevRestoreSnapshotCommand = &cobra.Command{
 	Use:    "restore-snapshot [snapshot_name]",
 	Short:  "Restore a project's database to the provided snapshot version.",
 	Long:   "Please use \"snapshot restore\" command",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		util.Failed("Please use \"ddev snapshot restore\".")
 		os.Exit(1)
 	},

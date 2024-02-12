@@ -34,7 +34,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 	Example: `ddev start
 ddev start <project1> <project2>
 ddev start --all`,
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(_ *cobra.Command, _ []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {

@@ -26,7 +26,7 @@ ddev hostname --remove-inactive
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
 to allow DDEV to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 
 		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
 		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag && !removeInactiveFlag && runtime.GOOS != "windows" {

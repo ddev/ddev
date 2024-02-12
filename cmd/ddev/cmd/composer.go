@@ -24,7 +24,7 @@ ddev composer require <package>
 ddev composer outdated --minor-only
 ddev composer create drupal/recommended-project`,
 	ValidArgsFunction: getComposerCompletionFunc(false),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
@@ -62,7 +62,7 @@ func init() {
 }
 
 func getComposerCompletionFunc(isCreateCommand bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		app, err := ddevapp.GetActiveApp("")
 		// If there's no active app or the app isn't running, we can't get completions from composer
 		if err != nil {

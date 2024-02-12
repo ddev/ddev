@@ -15,7 +15,7 @@ var ServiceDisable = &cobra.Command{
 	Short:   "disable a 3rd party service",
 	Long:    fmt.Sprintf(`disable a 3rd party service. The docker-compose.*.yaml will be moved from .ddev into .ddev/%s.`, disabledServicesDir),
 	Example: `ddev service disable solr`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) < 1 {
 			util.Failed("You must specify a service to disable")
 		}

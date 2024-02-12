@@ -9,7 +9,7 @@ import (
 var ServiceCmd = &cobra.Command{
 	Use:   "service [command]",
 	Short: "Add or remove, enable or disable extra services",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
 	},

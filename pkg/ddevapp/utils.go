@@ -427,7 +427,7 @@ func ExtractProjectNames(apps []*DdevApp) []string {
 // If numArgs is 0, completion will be provided for infinite arguments,
 // otherwise it will only be provided for the numArgs number of arguments.
 func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		// Don't provide completions if the user keeps hitting space after
 		// exhausting all of the valid arguments.
 		if numArgs > 0 && len(args)+1 > numArgs {

@@ -7,7 +7,7 @@
 ## Usage: tableplus
 ## Example: "ddev tableplus"
 ## OSTypes: darwin,wsl2
-## HostBinaryExists: /Applications/TablePlus.app,/mnt/c/Program Files/TablePlus/TablePlus.exe
+## HostBinaryExists: /Applications/TablePlus.app,/Applications/Setapp/TablePlus.app,/mnt/c/Program Files/TablePlus/TablePlus.exe
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
@@ -26,7 +26,11 @@ case $OSTYPE in
     "/mnt/c/Program Files/TablePlus/TablePlus.exe" $query >/dev/null &
     ;;
   "darwin"*)
-    set -x
-    open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
+    set -eu -o pipefail
+    if [ -d "/Applications/Setapp/TablePlus.app" ]; then
+        open "$query" -a "/Applications/Setapp/TablePlus.app/Contents/MacOS/TablePlus"
+    else
+        open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
+    fi
     ;;
 esac

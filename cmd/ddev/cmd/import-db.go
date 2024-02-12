@@ -42,7 +42,7 @@ func NewImportDBCmd() *cobra.Command {
 			$ ddev import-db my-project < db.sql
 			$ gzip -dc db.sql.gz | ddev import-db
 		`),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(_ *cobra.Command, _ []string) {
 			dockerutil.EnsureDdevNetwork()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

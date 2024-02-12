@@ -16,7 +16,7 @@ var MutagenLogsCmd = &cobra.Command{
 	Use:     "logs",
 	Short:   "Show Mutagen logs for debugging",
 	Example: `"ddev mutagen logs"`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 
 		ddevapp.StopMutagenDaemon()
 		_ = os.Setenv("MUTAGEN_LOG_LEVEL", "trace")

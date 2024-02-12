@@ -10,7 +10,7 @@ import (
 var DebugInstrumentationCleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: "Removes usage statistics from the local cache",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		amplitude.Clean()
 
 		util.Success("Usage statistics deleted.")

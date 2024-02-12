@@ -100,7 +100,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			}
 		}
 	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+	PersistentPostRun: func(cmd *cobra.Command, _ []string) {
 		if instrumentationApp == nil {
 			app, err := ddevapp.GetActiveApp("")
 			if err == nil {

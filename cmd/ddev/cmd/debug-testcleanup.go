@@ -13,7 +13,7 @@ var DebugTestCleanupCmd = &cobra.Command{
 	Use:     "testcleanup",
 	Short:   "Removes diagnostic projects prefixed with 'tryddevproject-'",
 	Example: "ddev debug testcleanup",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
 		}

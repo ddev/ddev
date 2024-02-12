@@ -25,7 +25,7 @@ func NewExportDBCmd() *cobra.Command {
 			$ ddev export-db my-project --gzip=false --file=/tmp/my_project.sql
 		`),
 		Args: cobra.RangeArgs(0, 1),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(_ *cobra.Command, _ []string) {
 			dockerutil.EnsureDdevNetwork()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

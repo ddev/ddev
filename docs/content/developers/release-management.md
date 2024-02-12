@@ -6,15 +6,15 @@ search:
 
 ## Release process and tools
 
-* [Goreleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). Goreleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
-* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the goreleaser actions and provides the needed secrets.
+* [GoReleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). GoReleaser Pro is a licensed product that requires separate installation and a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
+* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the GoReleaser actions and provides the needed secrets.
 
 ## GitHub Actions Required Secrets
 
 ### How to add new people to these accounts
 
-* AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @cweagans, who can add co-maintainers.
-* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at (login required) `https://community.chocolatey.org/packages/ddev/1.22.1/ManagePackageOwners`; they could then create tokens to push it.
+* AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @rfay, who can add co-maintainers.
+* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at (login required) `https://community.chocolatey.org/packages/ddev/ManagePackageOwners`; they could then create tokens to push it.
 * GitHub requires write access to this repository, either via permissions on the repository or on the org.
 * Apple signing and notarization requires access to the DDEV Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
 * Windows signing is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
@@ -28,17 +28,21 @@ The following “Repository secret” environment variables must be added to <ht
 
 * `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`.
 * `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
+* `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
+* `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
 * `AUR_SSH_PRIVATE_KEY`: Private ssh key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
-* `DDEV_GITHUB_TOKEN`: GitHub token that gives access to create releases and push to the Homebrew repositories.
+* `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
+* `DDEV_MAIN_REPO_ORGNAME`: The organization to be used for testing, normally `ddev` but it may be `ddev-test` for the test organization.
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
-* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
-* `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
-* `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
+* `GORELEASER_KEY`: License key for GoReleaser Pro.
+* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev-test/homebrew-ddev-edge`.
+* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev/homebrew-ddev-edge`.
+* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`. (This will be obsolete in DDEV v1.23.)
 
 ## Creating a Release
 
@@ -200,3 +204,37 @@ The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and
 * The `pkg.ddev.com` domain name is set up as a custom alias for our package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
 * The `pkg.ddev.com` `CNAME` is managed in CloudFlare because `ddev.com` is managed there.
 * The fury.io tokens are in DDEV’s shared 1Password account.
+
+## Testing Release Creation
+
+When significant changes are made to the `.goreleaser.yml` or related configuration, it's important to be able to test without actually deploying to `ddev/ddev/releases` of course. We have two ways to test the configuration; we can run `goreleaser` manually for simpler tests, or run a full release on `ddev-test/ddev` where needed.
+
+### Running `goreleaser` manually
+
+This approach is great for seeing what artifacts get created, without deploying them.
+
+Prerequisites:
+
+* GoReleaser Pro must be installed
+* `export GORELEASER_KEY=<key>`
+
+```bash
+export GITHUB_REPOSITORY_OWNER=ddev-test
+git tag <tagname> # Try to include context like PR number, for example v1.22.8-PR5824
+make windows_amd64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
+goreleaser release --prepare --nightly --clean
+```
+
+This will create all the artifacts that would have been pushed in the `dist` directory. You can copy Linux packages from there to test them manually, download the built tarballs for use elsewhere, install Homebrew package manually, for example:
+
+```bash
+brew install ./dist/homebrew/Formula/ddev.rb
+```
+
+### Creating a test release on `ddev-test/ddev`
+
+[ddev-test/ddev](https://github.com/ddev-test/ddev) is now set up for actual release testing. It has all or most of the environment variables set up already. It also acts against `ddev-test/homebrew-ddev` and `ddev-test/homebrew-ddev-edge` so you can test Homebrew publishing.
+
+1. Create a branch on `ddev-test/ddev`.
+2. Using the web UI, create a release using that branch as base. The release tag must start with `v1.`. Where possible, please use a release tag that includes context about the PR you are working against, like `v1.28.8-PR2022FixStuff`, and include in the release notes a link to the issue. The tag must be a valid Semantic Version tag, so don't use underscores, etc.
+3. Test out the resulting artifacts that get published or deployed.

@@ -12,7 +12,7 @@ var MutagenMonitorCmd = &cobra.Command{
 	Use:               "monitor",
 	Short:             "Monitor Mutagen status",
 	Example:           `"ddev mutagen monitor", "ddev mutagen monitor <projectname>"`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 		if len(args) > 1 {
 			util.Failed("This command only takes one optional argument: project-name")

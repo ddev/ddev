@@ -36,7 +36,7 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 
 		// We only want to pass all flags and args to Composer
 		// cobra does not seem to allow direct access to everything predictably
@@ -225,7 +225,7 @@ var ComposerCreateProjectCmd = &cobra.Command{
 	Short:              "Unsupported, use `ddev composer create` instead",
 	DisableFlagParsing: true,
 	Hidden:             true,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
 for basic project creation or 'ddev ssh' into the web container and execute
 'composer create-project' directly.`)

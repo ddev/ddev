@@ -11,7 +11,7 @@ import (
 var DebugCapabilitiesCmd = &cobra.Command{
 	Use:   "capabilities",
 	Short: "Show capabilities of this version of DDEV",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		capabilities := []string{
 			"multiple-dockerfiles",
 			"interactive-project-selection",

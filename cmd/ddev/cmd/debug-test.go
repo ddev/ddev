@@ -16,7 +16,7 @@ var DebugTestCmdCmd = &cobra.Command{
 	Use:     "test",
 	Short:   "Run diagnostics on DDEV using the embedded test_ddev.sh script",
 	Example: "ddev debug test",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
 		}

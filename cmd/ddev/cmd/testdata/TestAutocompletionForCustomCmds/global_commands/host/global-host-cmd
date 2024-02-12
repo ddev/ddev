@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: global-host-cmd
+## Usage: global-host-cmd
+## Example: "ddev global-host-cmd"
+
+echo "this test doesn't need to be executed - just check the autocompletion."

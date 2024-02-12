@@ -15,7 +15,7 @@ var DebugRefreshCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "refresh",
 	Short:             "Refreshes Docker cache for project",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 
 		if len(args) > 1 {

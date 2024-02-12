@@ -11,7 +11,7 @@ import (
 var DebugInstrumentationFlushCmd = &cobra.Command{
 	Use:   "flush",
 	Short: "Transmits usage statistics from the local cache",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		if amplitude.IsDisabled() {
 			util.Warning("Instrumentation is currently disabled.")
 

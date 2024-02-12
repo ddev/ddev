@@ -16,7 +16,7 @@ var DebugDownloadImagesCmd = &cobra.Command{
 	Use:     "download-images",
 	Short:   "Download all images required by DDEV",
 	Example: "ddev debug download-images",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
 		}
