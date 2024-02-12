@@ -2,7 +2,7 @@
 
 Most people like to have shell completion on the command line. In other words, when you're typing a command, you can hit `<TAB>` and the shell will show you what the options are. For example, if you type `ddev <TAB>`, you'll see all the possible commands. `ddev debug <TAB>` will show you the options for the command. And `ddev list -<TAB>` will show you all the flags available for [`ddev list`](../usage/commands.md#list).
 
-Shells like Bash and zsh need help to do this though, they have to know what the options are. DDEV provides the necessary hint scripts, and if you use Homebrew, they get installed automatically. But if you use oh-my-zsh, for example, you may have to manually install the hint script.
+Shells like Bash and Zsh need help to do this though, they have to know what the options are. DDEV provides the necessary hint scripts, and if you use Homebrew, they get installed automatically.
 
 
 ## macOS Bash + Homebrew
@@ -20,7 +20,7 @@ Link completions by running `brew completions link`.
 
 When you install DDEV via Homebrew, each new release will automatically get a refreshed completions script.
 
-## MacOS Zsh + Homebrew
+## macOS Zsh + Homebrew
 
 To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/site-functions` has to be added to the FPATH. There are two scenarios:
 
@@ -37,9 +37,9 @@ To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/sit
     fi
     ```
 
-    Note that the sourcing of the FPATH has to happen before Zsh's completion facility is initialized with `compinit`.
+    Note that the sourcing of the FPATH has to happen before the Zsh completion index is initialized with `compinit`.
 
-=== "macOS Zsh with Oh-My-Zsh"
+=== "macOS Zsh with Oh My Zsh"
 
     Oh-My-Zsh is calling `compinit` for you when `oh-my-zsh.sh` is sourced. Instead of adding the block that was necessary for `Plain macOS Zsh` place the following line right before `oh-my-zsh.sh` is sourced:
 
@@ -53,13 +53,13 @@ To avoid any potential caching issue forcibly rebuild the `.zcompdump` file, whi
 rm -f ~/.zcompdump; compinit
 ```
 
-In case you run into any `zsh compinit: insecure directories` warnings simply run:
+In case you run into any `zsh compinit: insecure directories` warnings, simply run:
 
 ```bash
 chmod -R go-w "$(brew --prefix)/share"
 ```
 
-Otherwise, you can extract the zsh completions file (`ddev_zsh_completion.sh`) from the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
+Otherwise, you can extract the Zsh completions file (`ddev_zsh_completion.sh`) from the tar archive of completion scripts included with each release. Read more in the [tar archive of completion scripts for manual deployment](#tar-archive-of-completion-scripts-for-manual-deployment) section.
 
 
 ## Bash/Zsh/Fish on Linux
