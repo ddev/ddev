@@ -537,14 +537,14 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 
 // GetGlobalDdevDir returns the global configuration directory, which varies by OS.
 func GetGlobalDdevDir() string {
-	// Check for legacy directory.
+	// Check for $HOME/.ddev for backwards compatibility.
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		logrus.Fatal("Could not get home directory for current user. Is it set?")
 	}
 	ddevDir := filepath.Join(userHome, ".ddev")
 
-	// If legacy directory doesn't exist, create new one.
+	// Create new configuration directory.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
 		userConfigDir, err := os.UserConfigDir()
 		if err != nil {
