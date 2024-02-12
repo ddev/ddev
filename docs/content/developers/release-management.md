@@ -237,5 +237,5 @@ brew install ./dist/homebrew/Formula/ddev.rb
 [ddev-test/ddev](https://github.com/ddev-test/ddev) is now set up for actual release testing. It has all or most of the environment variables set up already. It also acts against `ddev-test/homebrew-ddev` and `ddev-test/homebrew-ddev-edge` so you can test Homebrew publishing.
 
 1. Create a branch on `ddev-test/ddev`.
-2. Using the web UI, create a release using that branch as base. The release tag must start with `v1.`. Where possible, please use a release tag that includes context about the PR you are working against, like `v1.28.8-PR2022FixStuff`, and include in the release notes a link to the issue.
+2. Using the web UI, create a release using that branch as base. The release tag must start with `v1.`. Where possible, please use a release tag that includes context about the PR you are working against, like `v1.28.8-PR2022FixStuff`, and include in the release notes a link to the issue. The tag must be a valid Semantic Version tag, so don't use underscores, etc.
 3. Test out the resulting artifacts that get published or deployed.
