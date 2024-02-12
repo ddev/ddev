@@ -129,7 +129,6 @@ builds:
 ###### Archives ######
 archives:
 - id: ddev
-  rlcp: true
   builds:
   - ddev
   - mkcert
@@ -148,14 +147,12 @@ archives:
   allow_different_binary_count: true
 
 - id: completions-tarball
-  rlcp: true
   builds:
   - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-installer
-  rlcp: true
   builds:
   - ddev-windows-installer
   format: binary
@@ -176,7 +173,7 @@ brews:
 - name: ddev
   ids:
   - ddev
-  tap:
+  repository:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
@@ -214,7 +211,7 @@ brews:
 - name: ddev
   ids:
   - ddev
-  tap:
+  repository:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
