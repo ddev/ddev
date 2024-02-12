@@ -6,15 +6,15 @@ search:
 
 ## Release process and tools
 
-* [Goreleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). Goreleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
-* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the goreleaser actions and provides the needed secrets.
+* [GoReleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). GoReleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
+* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the GoReleaser actions and provides the needed secrets.
 
 ## GitHub Actions Required Secrets
 
 ### How to add new people to these accounts
 
-* AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @cweagans, who can add co-maintainers.
-* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at (login required) `https://community.chocolatey.org/packages/ddev/1.22.1/ManagePackageOwners`; they could then create tokens to push it.
+* AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @rfay, who can add co-maintainers.
+* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at (login required) `https://community.chocolatey.org/packages/ddev/ManagePackageOwners`; they could then create tokens to push it.
 * GitHub requires write access to this repository, either via permissions on the repository or on the org.
 * Apple signing and notarization requires access to the DDEV Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
 * Windows signing is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
@@ -28,17 +28,18 @@ The following “Repository secret” environment variables must be added to <ht
 
 * `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`.
 * `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
+* `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
+* `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
 * `AUR_SSH_PRIVATE_KEY`: Private ssh key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
-* `DDEV_GITHUB_TOKEN`: GitHub token that gives access to create releases and push to the Homebrew repositories.
+* `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
-* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
-* `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
-* `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
+* `GORELEASER_KEY`: License key for GoReleaser Pro.
+* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`.
 
 ## Creating a Release
 
