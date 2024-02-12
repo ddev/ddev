@@ -87,7 +87,7 @@ $(TARGETS): mkcert $(GOFILES)
 
 $(GOTMP)/bin/completions.tar.gz: build
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
-	tar -C $(GOTMP)/bin/completions -cf $(GOTMP)/bin/completions.tar.gz .
+	tar -C $(GOTMP)/bin/completions -czf $(GOTMP)/bin/completions.tar.gz .
 
 mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert
 
