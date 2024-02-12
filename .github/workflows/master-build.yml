@@ -243,7 +243,7 @@ jobs:
       # HEAD release, if we don't have a `v` tag
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v5
-        if: !startsWith( github.ref, 'refs/tags/v1')
+        if: startsWith( github.ref, 'refs/tags/v1') != true
         with:
           distribution: goreleaser-pro
           version: latest
