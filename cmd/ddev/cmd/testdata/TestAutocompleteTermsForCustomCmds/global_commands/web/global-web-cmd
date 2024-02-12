@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: global-web-cmd
+## Usage: global-web-cmd
+## Example: "ddev global-web-cmd"
+## AutocompleteTerms: ["global-web-one", "suggest two", "three"]
+
+echo "this test doesn't need to be executed - just check the autocompletion."

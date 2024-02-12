@@ -27,43 +27,14 @@ func TestCustomCommands(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
-	origHome, err := os.UserHomeDir()
-	require.NoError(t, err)
-
-	// Before changing HOME, make sure that Mutagen is already running if we are using it,
-	// so we don't accidentally start it in the wrong directory
-	err = globalconfig.ReadGlobalConfig()
-	require.NoError(t, err)
-	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
-		require.NoError(t, err, "unable to run Mutagen daemon start, out='%s', err=%v", out, err)
-	}
-
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
-
 	site := TestSites[0]
-	err = os.Chdir(site.Dir)
+	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	// Must be stopped before changing homedir or Mutagen will lose track
-	// of sessions which are also tracked in the homedir.
-	err = app.Stop(true, false)
-	require.NoError(t, err)
-
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
-
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("USERPROFILE", tmpHome)
-	t.Setenv("DDEV_DEBUG", "")
-
-	// Make sure we have the .ddev/bin dir we need
-	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
+	tmpHome, origHome, err := makeTempHomeDir(app, t)
 	require.NoError(t, err)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
@@ -525,5 +496,50 @@ func TestNpmYarnCommands(t *testing.T) {
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
 	}
+}
 
+// makeTempHomeDir makes a temporary home directory named for the test being executed.
+// Don't forget to run `ddevapp.StopMutagenDaemon()` and `os.RemoveAll(tmpHome)` in the
+// test's cleanup function.
+func makeTempHomeDir(app *ddevapp.DdevApp, t *testing.T) (string, string, error) {
+	// Before changing HOME, make sure that Mutagen is already running if we are using it,
+	// so we don't accidentally start it in the wrong directory
+	err := globalconfig.ReadGlobalConfig()
+	if err != nil {
+		return "", "", err
+	}
+	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		if err != nil {
+			return "", "", fmt.Errorf("unable to run Mutagen daemon start, out='%s', err=%v", out, err)
+		}
+	}
+
+	// Must be stopped before changing homedir or Mutagen will lose track
+	// of sessions which are also tracked in the homedir.
+	err = app.Stop(true, false)
+	if err != nil {
+		return "", "", err
+	}
+
+	origHome, err := os.UserHomeDir()
+	require.NoError(t, err)
+	if runtime.GOOS == "windows" {
+		origHome = os.Getenv("USERPROFILE")
+	}
+
+	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
+
+	// Change the homedir temporarily
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome)
+	t.Setenv("DDEV_DEBUG", "")
+
+	// Make sure we have the .ddev/bin dir we need
+	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
+	if err != nil {
+		return "", "", err
+	}
+
+	return tmpHome, origHome, nil
 }

@@ -65,6 +65,24 @@ Changes to the command files in the global `.ddev` directory need a `ddev start`
 
 There are many examples of [global](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `~/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
 
+## Command Line Completion
+
+If your custom command has a set of pre-determined valid arguments it can accept, you can use the [`AutocompleteTerms`](#autocompleteterms-annotation).
+
+For dynamic completion, you can create a separate script with the same name in a directory named `autocomplete`.
+For example, if your command is in `~/.ddev/commands/web/my-command`, your autocompletion script will be in `~/.ddev/commands/web/autocomplete/my-command`.
+
+When you press tab on the command line after your command, the associated autocomplete script will be executed. The current command line (starting with the name of your command) will be passed into the completion script as arguments. If there is a space at the end of the command line, an empty argument will be included.
+
+For example:
+
+* `ddev my-command <tab>` will pass `my-command` and an empty argument into the autocomplete script.
+* `ddev my-command som<tab>` will pass `my-command`, and `som` into the autocomplete script.
+
+The autocomplete script should echo the valid arguments as a string separated by line breaks. You don't need to filter the arguments by the last argument string (e.g. if the last argument is `som`, you don't need to filter out any arguments that don't start with `som`). That will be handled for you before the result is given to your shell as completion suggestions.
+
+The web container's [`nvm` autocomplete script](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web/autocomplete/nvm) shows how this can be used to forward completion requests to a relevant script in the container.
+
 ## Environment Variables Provided
 
 A number of environment variables are provided to these command scripts. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
@@ -185,6 +203,14 @@ The following fields can be used for a flag definition:
 * `DefValue`: default value for usage message
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
 * `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/main/site/content/completions/bash.md>)
+
+### `AutocompleteTerms` Annotation
+
+If your command accepts specific arguments, and you know ahead of time what those arguments are, you can use this annotation to provide those arguments for autocompletion.
+
+Usage: `## AutocompleteTerms: [<list-of-valid-arguments>]`
+
+Example: `## AutocompleteTerms: ["enable","disable","toggle","status"]`
 
 ### "CanRunGlobally" Annotation
 

@@ -6,6 +6,7 @@
 ## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status"
 ## Execraw: false
 ## Flags: []
+## AutocompleteTerms: ["on","off","enable","disable","toggle","status"]
 
 if [ $# -eq 0 ] ; then
   enable_xdebug

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+ARGS=("$@")
+# prepend host name to args
+ARGS=( "$(hostname)" "${ARGS[@]}" )
+# print out all args, starting with the host name
+printf "%s\n" "${ARGS[@]}"
