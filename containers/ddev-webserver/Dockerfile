@@ -213,7 +213,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     locales-all \
     nano \
     ncurses-bin \
-    netcat-traditional\
+    netcat-traditional \
     openssh-client \
     patch \
     rsync \
