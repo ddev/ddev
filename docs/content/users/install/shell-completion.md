@@ -23,7 +23,7 @@ When you install DDEV via Homebrew, each new release will automatically get a re
 
 To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/site-functions` has to be added to the FPATH. There are two scenarios:
 
-=== "Plain macOS Zsh"
+=== "macOS Zsh"
 
     Add the following block to your `~/.zshrc` file:
 
