@@ -15,7 +15,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20231024_peter-neumann-dev_nodejs_v20_lts" // Note that this can be overridden by make
+var WebTag = "20240213_php_8.2_default" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
