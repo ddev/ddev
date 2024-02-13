@@ -4,7 +4,7 @@ Most people like to have shell completion on the command line. In other words, w
 
 Shells like Bash and Zsh need help to do this though, they have to know what the options are. DDEV provides the necessary hint scripts, and if you use Homebrew, they get installed automatically.
 
-## macOS Bash + Homebrew
+## macOS Bash with Homebrew
 
 The easiest way to use Bash completion on macOS is install it with Homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which **may vary on your system**. Add the following line to your `~/.bash_profile` file:
 
