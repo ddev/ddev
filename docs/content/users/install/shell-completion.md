@@ -6,14 +6,14 @@ Shells like Bash and Zsh need help to do this though, they have to know what the
 
 ## macOS Bash with Homebrew
 
-The easiest way to use Bash completion on macOS is install it with Homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which **may vary on your system**. Add the following line to your `~/.bash_profile` file:
+The easiest way to use Bash completion on macOS is install it with Homebrew ([docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-bash)). `brew install bash-completion`. When you install it though, it will warn you with something like this, which **may vary on your system**. Add the following line to your `~/.bash_profile` file (or if that doesn't exist, to your `~/.profile`:
 
 ```
 [[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
 ```
 
 !!!note "Bash profile"
-    You must add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately.
+    You must add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately in your current terminal window.
 
 Link completions by running `brew completions link`.
 
