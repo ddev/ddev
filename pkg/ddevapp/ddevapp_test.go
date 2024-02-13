@@ -973,8 +973,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting Xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.2 get Xdebug 3.0+
-		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82}, app.PHPVersion) {
+		// PHP 7.2 through 8.3 get Xdebug 3.0+
+		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82, nodeps.PHP83}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		} else {
