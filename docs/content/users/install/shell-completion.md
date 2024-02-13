@@ -57,6 +57,7 @@ In case you run into any `zsh compinit: insecure directories` warnings, run:
 ```bash
 chmod -R go-w "$(brew --prefix)/share"
 ```
+
 ## macOS Fish with Homebrew
 
 `fish` shell completions are automatically installed at `/usr/local/share/fish/vendor_completions.d/ddev_fish_completion.sh` when you install DDEV via Homebrew.
