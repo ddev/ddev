@@ -58,8 +58,6 @@ In case you run into any `zsh compinit: insecure directories` warnings, run:
 chmod -R go-w "$(brew --prefix)/share"
 ```
 
-Otherwise, you can extract the Zsh completions file (`ddev_zsh_completion.sh`) from the tar archive of completion scripts included with each release. Read more in the [tar archive of completion scripts for manual deployment](#tar-archive-of-completion-scripts-for-manual-deployment) section.
-
 ## Bash/Zsh/Fish on Linux
 
 On Debian and Yum based systems, if you installed DDEV using `apt install ddev`, the `bash`, `zsh`, and `fish` completions should be automatically installed at `/usr/share/bash-completion/completions/ddev`, `/usr/share/zsh/vendor-completions/_ddev` and `/usr/share/fish/completions/ddev.fish` respectively, and the `bash` completions should be automatically installed at `/usr/share/bash-completion/completions/bash`.
