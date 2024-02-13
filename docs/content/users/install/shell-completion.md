@@ -40,7 +40,7 @@ To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/sit
 
 === "macOS Zsh with Oh My Zsh"
 
-    Oh-My-Zsh is calling `compinit` for you when `oh-my-zsh.sh` is sourced (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh)). Instead of adding the block that was necessary for  simple `macOS Zsh` place the following line right before `oh-my-zsh.sh` is sourced:
+    Oh My Zsh is calling `compinit` for you when `oh-my-zsh.sh` is sourced (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh)). Instead of adding the block that was necessary for `macOS Zsh` place the following line right before the `oh-my-zsh.sh` file is sourced in your `~/.zshrc` file:
 
     ```bash
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
