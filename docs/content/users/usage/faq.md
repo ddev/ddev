@@ -186,7 +186,7 @@ $ which -a ddev
 /usr/bin/ddev
 ```
 
-You can check each binary version by its full path (`/usr/bin/ddev version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew.
+You can check each binary version by its full path (`/usr/bin/ddev version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew: `brew uninstall ddev`.
 
 ### How can I back up or restore all project databases?
 
