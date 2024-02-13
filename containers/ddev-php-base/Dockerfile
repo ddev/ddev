@@ -77,14 +77,11 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     msmtp \
     nginx \
     nodejs \
-    npm \
-    php-uploadprogress \
     postgresql-client \
     sqlite3
 
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
-RUN chmod 777 /var/lib/php/sessions
 RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # The number of permutations of php packages available on each architecture because
@@ -129,7 +126,7 @@ ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
 RUN mkdir -p /run/php && chown -R www-data:www-data /run
-
+RUN chmod 777 /var/lib/php/sessions
 #END ddev-php-base
 
 ### ---------------------------ddev-php-prod--------------------------------------
