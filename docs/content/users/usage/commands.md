@@ -1121,7 +1121,7 @@ Common commands:
 
 ## `self-upgrade`
 
-Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation. Must be executed from the project context.
+Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation.
 
 Example:
 
