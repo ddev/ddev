@@ -1,10 +1,4 @@
 ##### BUILDS ######
-nightly:
-  publish_release: true
-  keep_single_release: true
-  tag_name: head
-  name_template: '{{ incpatch .Version }}-{{ .ShortCommit }}-head'
-
 builds:
 - id: ddev
   main: ./cmd/ddev
@@ -253,6 +247,9 @@ nfpms:
   homepage: https://github.com/ddev/ddev
   description: |
     Open-source local web development tool
+  builds:
+  - ddev
+  - mkcert
   formats:
   - deb
   - rpm
