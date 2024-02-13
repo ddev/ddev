@@ -54,10 +54,10 @@ ARG BUILDPLATFORM
 
 SHELL ["/bin/bash", "-c"]
 
-RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
-    apt-key add /tmp/nginx_signing.key && \
-    rm /tmp/nginx_signing.key && \
-    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
+RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+        | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
 
 RUN curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
