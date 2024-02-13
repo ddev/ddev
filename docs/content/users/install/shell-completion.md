@@ -63,7 +63,7 @@ chmod -R go-w "$(brew --prefix)/share"
 
 If you installed `fish` without Homebrew, you can extract the fish completions (`ddev_fish_completion.sh`) from the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
 
-## Bash/Zsh/Fish on Linux
+## Bash/Zsh/Fish on Linux including WSL2
 
 On Debian and Yum based systems, if you installed DDEV using `apt install ddev`, the `bash`, `zsh`, and `fish` completions should be automatically installed at `/usr/share/bash-completion/completions/ddev`, `/usr/share/zsh/vendor-completions/_ddev` and `/usr/share/fish/completions/ddev.fish` respectively, and the `bash` completions should be automatically installed at `/usr/share/bash-completion/completions/bash`.
 
