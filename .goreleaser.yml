@@ -247,6 +247,9 @@ nfpms:
   homepage: https://github.com/ddev/ddev
   description: |
     Open-source local web development tool
+  builds:
+  - ddev
+  - mkcert
   formats:
   - deb
   - rpm
