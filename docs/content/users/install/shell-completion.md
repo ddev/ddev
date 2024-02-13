@@ -19,13 +19,13 @@ Link completions by running `brew completions link`.
 
 When you install DDEV via Homebrew, each new release will automatically get a refreshed completions script.
 
-## macOS Zsh + Homebrew
+## macOS Zsh with Homebrew
 
 To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/site-functions` has to be added to the FPATH. There are two scenarios:
 
 === "macOS Zsh"
 
-    Add the following block to your `~/.zshrc` file:
+    Add the following block to your `~/.zshrc` file (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh)):
 
     ```bash
     if type brew &>/dev/null
@@ -46,13 +46,13 @@ To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/sit
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
     ```
 
-To avoid any potential caching issue forcibly rebuild the `.zcompdump` file, which is the index for Zsh completions:
+To avoid any potential caching issue remove and rebuild the `.zcompdump` file, which is the index for Zsh completions:
 
 ```bash
 rm -f ~/.zcompdump; compinit
 ```
 
-In case you run into any `zsh compinit: insecure directories` warnings, simply run:
+In case you run into any `zsh compinit: insecure directories` warnings, run:
 
 ```bash
 chmod -R go-w "$(brew --prefix)/share"
