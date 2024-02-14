@@ -6,18 +6,59 @@ Shells like Bash and Zsh need help to do this though, they have to know what the
 
 ## macOS Bash with Homebrew
 
-The easiest way to use Bash completion on macOS is install it with Homebrew ([docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-bash)). `brew install bash-completion`. When you install it though, it will warn you with something like this, which **may vary on your system**. Add the following line to your `~/.bash_profile` file (or if that doesn't exist, to your `~/.profile`:
+To make Homebrew completions available in Bash the Homebrew-managed path, either `etc/profile.d` or `etc/bash_completion.de` has to be sourced.
 
+=== "macOS Bash"
+
+     Add the following block to your `~/.bashprofile` or if it doesn't exist to your `~/.profile` file (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-bash)):
+
+    ```bash
+    if type brew &>/dev/null
+    then
+      HOMEBREW_PREFIX="$(brew --prefix)"
+      if [[ -r "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh" ]]
+      then
+        source "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh"
+      else
+        for COMPLETION in "${HOMEBREW_PREFIX}/etc/bash_completion.d/"*
+        do
+          [[ -r "${COMPLETION}" ]] && source "${COMPLETION}"
+        done
+      fi
+    fi
+    ```
+
+=== "macOS Bash with Bash Completion"
+
+    If you install the bash-completion formula no addition to your bashprofile are necessary, the formula will source the completion initialisation script automatically (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-bash)):
+
+    === "With macOS Bash <= 3.x"
+
+        ```bash
+        brew install bash-completion
+        ```
+
+    === "With macOS Bash >= 4.x"
+
+        ```bash
+        brew install bash-completion@2
+        ```
+
+Then make sure that completions are linked by running:
+
+```bash
+brew completions link
 ```
-[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
+Finally reload your shell with:
+
+```bash
+source ~/.bash_profile
 ```
+If it doesn't exist:
 
-!!!note "Bash profile"
-    You must add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately in your current terminal window.
-
-Link completions by running `brew completions link`.
-
-When you install DDEV via Homebrew, each new release will automatically get a refreshed completions script.
+```bash
+source ~/.profile
+```
 
 ## macOS Zsh with Homebrew
 
