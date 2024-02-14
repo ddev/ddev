@@ -30,7 +30,7 @@ To make Homebrew completions available in Bash the Homebrew-managed path, either
 
 === "macOS Bash with Bash Completion"
 
-    If you install the bash-completion formula no addition to your bashprofile are necessary, the formula will source the completion initialisation script automatically (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-bash)):
+    If you install the bash-completion formula no additions to your Bash profile file are necessary, the formula will source the completion initialisation script automatically (see [docs](https://docs.brew.sh/Shell-Completion#configuring-completions-in-bash)):
 
     === "With macOS Bash <= 3.x"
 
