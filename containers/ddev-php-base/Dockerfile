@@ -42,7 +42,7 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV YQ_VERSION=v4.30.5
 ENV DRUSH_VERSION=8.4.12
-ENV NODE_VERSION=18
+ENV NODE_VERSION=20
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_PROCESS_TIMEOUT 2000
@@ -54,10 +54,10 @@ ARG BUILDPLATFORM
 
 SHELL ["/bin/bash", "-c"]
 
-RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
-    apt-key add /tmp/nginx_signing.key && \
-    rm /tmp/nginx_signing.key && \
-    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
+RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+        | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
 
 RUN curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
@@ -77,14 +77,11 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     msmtp \
     nginx \
     nodejs \
-    npm \
-    php-uploadprogress \
     postgresql-client \
     sqlite3
 
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
-RUN chmod 777 /var/lib/php/sessions
 RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # The number of permutations of php packages available on each architecture because
@@ -129,7 +126,7 @@ ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
 RUN mkdir -p /run/php && chown -R www-data:www-data /run
-
+RUN chmod 777 /var/lib/php/sessions
 #END ddev-php-base
 
 ### ---------------------------ddev-php-prod--------------------------------------
