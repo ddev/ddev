@@ -246,6 +246,10 @@ docker rmi -f $(docker images -q)
 
 You should then be able to start your DDEV machine.
 
+## `ddev --version` shows an old version
+
+If you have installed the latest version of DDEV, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)
+
 ## Trouble Building Dockerfiles
 
 The additional `.ddev/web-build/Dockerfile` capability in DDEV is wonderful, but it can be hard to figure out what to put in there.

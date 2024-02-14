@@ -176,6 +176,18 @@ If you’re using Homebrew, first run `brew unlink ddev` to get rid of the versi
 3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.5`.
 4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
+### Why do I have an old DDEV?
+
+You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, and then install it again with `apt`:
+
+```bash
+$ which -a ddev
+/home/linuxbrew/.linuxbrew/bin/ddev
+/usr/bin/ddev
+```
+
+You can check each binary version by its full path (`/usr/bin/ddev --version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew: `brew uninstall ddev`.
+
 ### How can I back up or restore all project databases?
 
 You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects displayed in `ddev list`; any projects not shown there will need to be started so they’re be registered in `ddev list`.
