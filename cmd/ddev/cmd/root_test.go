@@ -296,7 +296,8 @@ func TestLegacyGlobalDdevDir(t *testing.T) {
 	t.Setenv("HOME", tmpHomeDir)
 	t.Setenv("USERPROFILE", tmpHomeDir)
 
-	os.MkdirAll(filepath.Join(tmpHomeDir, ".ddev"), 0755)
+	err = os.MkdirAll(filepath.Join(tmpHomeDir, ".ddev"), 0755)
+	assert.NoError(err)
 
 	// Make sure that the $XDG_CONFIG_HOME/ddev doesn't exist before we run ddev.
 	_, err = os.Stat(filepath.Join(tmpHomeDir, "Library", "Application Support", "ddev"))
