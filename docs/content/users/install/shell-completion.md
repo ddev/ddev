@@ -113,9 +113,23 @@ chmod -R go-w "$(brew --prefix)/share"
 
 ## macOS Fish with Homebrew
 
-`fish` shell completions are automatically installed at `/usr/local/share/fish/vendor_completions.d/ddev_fish_completion.sh` when you install DDEV via Homebrew.
+Fish shell completions are automatically installed at `/usr/local/share/fish/vendor_completions.d/ddev_fish_completion.sh` when you install DDEV via Homebrew. Just make sure that completions are linked by running:
 
-If you installed `fish` without Homebrew, you can extract the fish completions (`ddev_fish_completion.sh`) from the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
+```bash
+brew completions link
+```
+
+If you have installed Fish with Homebrew no additional configuration is necessary. If you got Fish from somewhere else, add the following block to your `~/.config/fish/config.fish`:
+
+```bash
+if test -d (brew --prefix)"/share/fish/completions"
+    set -p fish_complete_path (brew --prefix)/share/fish/completions
+end
+
+if test -d (brew --prefix)"/share/fish/vendor_completions.d"
+    set -p fish_complete_path (brew --prefix)/share/fish/vendor_completions.d
+end
+```
 
 ## Bash/Zsh/Fish on Linux including WSL2
 
