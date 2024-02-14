@@ -24,7 +24,7 @@ var DBImg = "ddev/ddev-dbserver"
 var BaseDBTag = "v1.22.7"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.22.7"
-const TraefikRouterImage = "ddev/ddev-traefik-router:v1.22.7"
+const TraefikRouterImage = "ddev/ddev-traefik-router:20240213_traefik_2.11"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
