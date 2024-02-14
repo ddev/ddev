@@ -137,7 +137,7 @@ On Debian and Yum based systems, if you installed DDEV using `apt install ddev`,
 
 Otherwise, you can download the completion files for manual installation as described [below](#tar-archive-of-completion-scripts-for-manual-deployment). Every Linux distro requires a different manual installation technique. On Debian/Ubuntu, you could deploy the `ddev_bash_completion.sh` script where it needs to be by running `sudo mkdir -p /usr/share/bash-completion/completions && sudo cp ddev_bash_completion.sh /usr/share/bash-completion/completions/ddev`.
 
-## Git Bash
+## Git Bash on Microsoft Windows
 
 Git Bash completions (`ddev_bash_completion.sh`) are provided in the tar archive of completion scripts included with each release. See [below](#tar-archive-of-completion-scripts-for-manual-deployment).
 
