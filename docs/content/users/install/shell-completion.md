@@ -87,6 +87,18 @@ To make Homebrew completions available in Zsh the Homebrew-managed path `zsh/sit
     FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
     ```
 
+First reload your shell with:
+
+```bash
+source ~/.zshrc
+```
+
+Then make sure that completions are linked by running:
+
+```bash
+brew completions link
+```
+
 To avoid any potential caching issue remove and rebuild the `.zcompdump` file, which is the index for Zsh completions:
 
 ```bash
