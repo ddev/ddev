@@ -1386,7 +1386,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
@@ -1608,7 +1608,7 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
+		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`,
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
