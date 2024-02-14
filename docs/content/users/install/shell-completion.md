@@ -49,11 +49,13 @@ Then make sure that completions are linked by running:
 ```bash
 brew completions link
 ```
+
 Finally reload your shell with:
 
 ```bash
 source ~/.bash_profile
 ```
+
 If it doesn't exist:
 
 ```bash
