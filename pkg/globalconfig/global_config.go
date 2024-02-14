@@ -417,7 +417,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Decide whether 'ddev start' should be interrupted by a failing hook
 
 # traefik_monitor_port: 10999
-# Change this only if you're having conflicts with some 
+# Change this only if you're having conflicts with some
 # service that needs port 10999
 
 # wsl2_no_windows_hosts_mgt: false
