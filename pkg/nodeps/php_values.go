@@ -15,7 +15,7 @@ const (
 )
 
 // PHPDefault is the default PHP version, overridden by $DDEV_PHP_VERSION
-const PHPDefault = PHP81
+const PHPDefault = PHP82
 
 // ValidPHPVersions should be updated whenever PHP versions are added or removed, and should
 // be used to ensure user-supplied values are valid.
