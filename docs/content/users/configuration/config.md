@@ -21,12 +21,12 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 === "config.yaml"
 
     ```yaml
-    php_version: "8.1"
+    php_version: "8.3"
     ```
 === "`ddev config`"
 
     ```shell
-    ddev config --php-version 8.1
+    ddev config --php-version 8.3
     ```
 
     Run `ddev help config` to see all the available config arguments.
@@ -94,9 +94,9 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 
 The type and version of the database engine the project should use.
 
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | MariaDB 10.4 | Can be MariaDB 5.5–10.8 or 10.11, MySQL 5.5–8.0, or PostgreSQL 9–15.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats.
+| Type | Default       | Usage
+| -- |---------------| --
+| :octicons-file-directory-16: project | MariaDB 10.11 | Can be MariaDB 5.5–10.8 or 10.11, MySQL 5.5–8.0, or PostgreSQL 9–15.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats.
 
 ## `dbimage_extra_packages`
 
@@ -410,8 +410,8 @@ This is typically a global setting. The project-specific value will override glo
 The PHP version the project should use.
 
 | Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `8.1` | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, or `8.3`.
+| -- |---------| --
+| :octicons-file-directory-16: project | `8.2`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, or `8.3`.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
