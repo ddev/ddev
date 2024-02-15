@@ -67,7 +67,7 @@ var DebugDockercheckCmd = &cobra.Command{
 			}
 		}
 
-		client := dockerutil.GetDockerClient()
+		_, client := dockerutil.GetDockerClient()
 		if client == nil {
 			util.Failed("Unable to get Docker client")
 		}

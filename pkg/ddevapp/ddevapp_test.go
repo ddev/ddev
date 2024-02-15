@@ -19,7 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	dockerImages "github.com/ddev/ddev/pkg/docker"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -29,7 +29,9 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerVolume "github.com/docker/docker/api/types/volume"
+	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
@@ -491,8 +493,8 @@ func TestDdevStart(t *testing.T) {
 	})
 
 	// Make sure the -built Docker image exists before stop
-	webBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
-	dbBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
+	webBuilt := ddevImages.GetWebImage() + "-" + site.Name + "-built"
+	dbBuilt := ddevImages.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)
@@ -2738,11 +2740,12 @@ func TestDdevExec(t *testing.T) {
 	assert.Contains(stderr, "this: not found")
 
 	// Now kill the busybox service and make sure that responses to app.Exec are correct
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 	bbc, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, "busybox"))
 	require.NoError(t, err)
 	require.NotEmpty(t, bbc)
-	err = client.StopContainer(bbc.ID, 2)
+	timeout := 2
+	err = client.ContainerStop(ctx, bbc.ID, dockerContainer.StopOptions{Timeout: &timeout})
 	assert.NoError(err)
 
 	simpleOpts := ddevapp.ExecOpts{
@@ -2753,7 +2756,7 @@ func TestDdevExec(t *testing.T) {
 	require.Error(t, err, "stdout='%s', stderr='%s'", stdout, stderr)
 	require.True(t, strings.Contains(err.Error(), "not currently running") || strings.Contains(err.Error(), "is not running") || strings.Contains(err.Error(), "state=exited"), "stdout='%s', stderr='%s'", stdout, stderr)
 
-	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: bbc.ID, Force: true})
+	err = client.ContainerRemove(ctx, bbc.ID, dockerContainer.RemoveOptions{Force: true})
 	assert.NoError(err)
 	_, _, err = app.Exec(&simpleOpts)
 	assert.Error(err)
@@ -3032,14 +3035,14 @@ func TestRouterPortsCheck(t *testing.T) {
 	// This is done with Docker so that we don't have to use explicit sudo
 	// The ddev-webserver healthcheck should make sure that we have a legitimate occupation
 	// of the port by the time it comes up.
-	portBinding := map[docker.Port][]docker.PortBinding{
+	portBinding := map[nat.Port][]nat.PortBinding{
 		"80/tcp": {
 			{HostPort: "80"},
 			{HostPort: "443"},
 		},
 	}
 
-	containerID, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
+	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
 
 	if err != nil {
 		t.Fatalf("Failed to run Docker command to occupy port 80/443, err=%v output=%v", err, out)
@@ -3111,10 +3114,10 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	}
 
 	// Ensure there are no volumes associated with this project
-	client := dockerutil.GetDockerClient()
-	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
+	ctx, client := dockerutil.GetDockerClient()
+	volumes, err := client.VolumeList(ctx, dockerVolume.ListOptions{})
 	assert.NoError(err)
-	for _, volume := range volumes {
+	for _, volume := range volumes.Volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 

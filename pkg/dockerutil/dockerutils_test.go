@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	dockerImages "github.com/ddev/ddev/pkg/docker"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -19,7 +19,10 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerFilters "github.com/docker/docker/api/types/filters"
+	dockerVolume "github.com/docker/docker/api/types/volume"
+	"github.com/docker/go-connections/nat"
 	logOutput "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,13 +48,13 @@ func testMain(m *testing.M) int {
 	}
 
 	// Prep Docker container for Docker util tests
-	imageExists, err := dockerutil.ImageExistsLocally(dockerImages.GetWebImage())
+	imageExists, err := dockerutil.ImageExistsLocally(ddevImages.GetWebImage())
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", dockerImages.GetWebImage(), err)
+		logOutput.Errorf("Failed to check for local image %s: %v", ddevImages.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
-		err := dockerutil.Pull(dockerImages.GetWebImage())
+		err := dockerutil.Pull(ddevImages.GetWebImage())
 		if err != nil {
 			logOutput.Errorf("Failed to pull test image: %v", err)
 			return 7
@@ -100,14 +103,14 @@ func testMain(m *testing.M) int {
 
 // Start container for tests; returns containerID, error
 func startTestContainer() (string, error) {
-	portBinding := map[docker.Port][]docker.PortBinding{
+	portBinding := map[nat.Port][]nat.PortBinding{
 		"80/tcp": {
 			{HostPort: "8889"},
 		},
 		"8025/tcp": {
 			{HostPort: "8890"},
 		}}
-	containerID, _, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), testContainerName, nil, nil, []string{
+	containerID, _, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), testContainerName, nil, nil, []string{
 		"HOTDOG=superior-to-corndog",
 		"POTATO=future-fry",
 		"DDEV_WEBSERVER_TYPE=nginx-fpm",
@@ -122,7 +125,7 @@ func startTestContainer() (string, error) {
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
 	assert := asrt.New(t)
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
 	labels := map[string]string{
 		"com.ddev.site-name": testContainerName,
@@ -158,7 +161,8 @@ func TestGetContainerHealth(t *testing.T) {
 	assert.Equal(status, "healthy", "container should be healthy; log=%v", log)
 
 	// Now break the container and make sure it's unhealthy
-	err = client.StopContainer(container.ID, 10)
+	timeout := 10
+	err = client.ContainerStop(ctx, container.ID, dockerContainer.StopOptions{Timeout: &timeout})
 	assert.NoError(err)
 
 	status, log = dockerutil.GetContainerHealth(container)
@@ -492,16 +496,13 @@ func TestGetExposedContainerPorts(t *testing.T) {
 // TestDockerExec() checks docker.Exec()
 func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
 	id, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil, nil)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
-		err = client.RemoveContainer(docker.RemoveContainerOptions{
-			ID:    id,
-			Force: true,
-		})
+		err = client.ContainerRemove(ctx, id, dockerContainer.RemoveOptions{Force: true})
 		assert.NoError(err)
 	})
 
@@ -533,7 +534,7 @@ func TestCreateVolume(t *testing.T) {
 // TestRemoveVolume makes sure we can remove a volume successfully
 func TestRemoveVolume(t *testing.T) {
 	assert := asrt.New(t)
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
 	testVolume := "junker999"
 	spareVolume := "someVolumeThatCanNeverExit"
@@ -551,19 +552,19 @@ func TestRemoveVolume(t *testing.T) {
 		"device": ":" + dockerutil.MassageWindowsNFSMount(source)}, nil)
 	assert.NoError(err)
 
-	volumes, err := client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})
+	volumes, err := client.VolumeList(ctx, dockerVolume.ListOptions{Filters: dockerFilters.NewArgs(dockerFilters.KeyValuePair{Key: "name", Value: testVolume})})
 	assert.NoError(err)
-	require.Len(t, volumes, 1)
-	assert.Equal(testVolume, volumes[0].Name)
+	require.Len(t, volumes.Volumes, 1)
+	assert.Equal(testVolume, volumes.Volumes[0].Name)
 
 	require.NotNil(t, volume)
 	assert.Equal(testVolume, volume.Name)
 	err = dockerutil.RemoveVolume(testVolume)
 	assert.NoError(err)
 
-	volumes, err = client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})
+	volumes, err = client.VolumeList(ctx, dockerVolume.ListOptions{Filters: dockerFilters.NewArgs(dockerFilters.KeyValuePair{Key: "name", Value: testVolume})})
 	assert.NoError(err)
-	assert.Empty(volumes)
+	assert.Empty(volumes.Volumes)
 
 	// Make sure spareVolume doesn't exist, then make sure removal
 	// of nonexistent volume doesn't result in error
