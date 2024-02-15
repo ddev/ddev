@@ -40,56 +40,42 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent`
 2. Do not set up `buildkite-agent` on the Windows side, or disable it.
-3. Edit Ubuntu's `/etc/wsl.conf` to contain:
-
-    ```
-    [boot]
-    systemd=true
-    ```
-
-4. `wsl --update`
-5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
-6. As normal user, run `.github/workflows/linux-setup.sh`.
-7. Configure brew in PATH with:
+3. `wsl --update`
+4. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
+5. Install DDEV using the standard WSL2 Docker Desktop installation.
+6. Configure brew in PATH with:
 
     ```
     echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
     source ~/.bashrc
     ```
 
-8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-9. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
-10. `git config --global --add safe.directory '*'`
-11. Install basics in WSL2:
+7. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+8. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
+9. `git config --global --add safe.directory '*'`
+10. Install basics in WSL2:
 
     ```bash
     curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
     echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
     # Update package information and install DDEV
-    sudo apt update && sudo apt install -y ddev
+    sudo apt update && sudo apt install -y build-essential ddev icinga2 mariadb-client
+    brew install docker-compose golang 
 
     sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
     sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev etckeeper gnupg icinga2 nagios-plugins lsb-release make mariadb-client
     sudo snap install ngrok
+    sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent
     ```
 
-12. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
-13. Verify that `buildkite-agent` is running.
-14. Install icinga2, `sudo apt install -y icinga2`
-15. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the "Agent" tab it provides a script to configure the agent.
-16. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
-17. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-18. `echo "capath=/etc/ssl/certs/" >>~/.curlrc` And then do the same as `buildkite-agent` user
-19. `sudo chmod -R ug+w /home/linuxbrew`
-20. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
-21. Run `ngrok config add-authtoken <token>` with token for free account.
-22. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
-23. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
-24. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`j
-25. Add `buildkite-agent` to `sudo` group in `/etc/groups`
-26. Give `buildkite-agent` a password with `sudo passwd buildkite-agent`
-27. As `buildkite-agent` user `mkcert -install`
+11. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
+12. Verify that `buildkite-agent` is running.
+13. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the "Agent" tab it provides a script to configure the agent.
+14. Windows Terminal should be installed. Set "Ubuntu" as the default and have it start on Windows startup.
+15. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+16. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+17. Run `ngrok config add-authtoken <token>` with token for free account.
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
