@@ -444,7 +444,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     mkdir my-typo3-site
     cd my-typo3-site
-    ddev config --project-type=typo3 --docroot=public --php-version 8.1
+    ddev config --project-type=typo3 --docroot=public --php-version 8.3
     ddev start
     ddev composer create "typo3/cms-base-distribution"
     ddev exec touch public/FIRST_INSTALL
@@ -456,7 +456,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     git clone https://github.com/example/example-site
     cd example-site
-    ddev config --project-type=typo3 --docroot=public --php-version 8.1
+    ddev config --project-type=typo3 --docroot=public --php-version 8.3
     ddev composer install
     ddev restart
     ddev exec touch public/FIRST_INSTALL
