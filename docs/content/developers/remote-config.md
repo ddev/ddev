@@ -24,7 +24,9 @@ user cannot influence them.
 
 `infos` and `warnings` (yellow and red) can be specified like this:
 
-```yaml
+```json
+{
+  "messages": {
     "notifications": {
       "interval": 20,
       "infos": [
@@ -35,6 +37,8 @@ user cannot influence them.
       ],
       "warnings": []
     }
+  }
+}
 ```
 
 ### Ticker
@@ -60,15 +64,15 @@ be found in the [Masterminds SemVer repository](https://github.com/Masterminds/s
 
 ## Testing
 
-To test, create a pull request on your fork or the main repo.
+To test, create a pull request on your fork or the main repository.
 
 1. Run `prettier -c remote-config.jsonc` to make sure prettier will not complain. Run `prettier -w remote-config.jsonc` to get it to update the file.
-2. For the fork is `rfay` and branch `20240215_note_about_key_exp` add configuration to your `~/.ddev/global_config.yaml`:
+2. For the fork `rfay` and branch `20240215_note_about_key_exp`, add configuration to your `~/.ddev/global_config.yaml`:
 
     ```yaml
-   remote_config:
-    update_interval: 1
-    remote:
+    remote_config:
+      update_interval: 1
+      remote:
         owner: rfay
         repo: remote-config
         ref: 20240215_note_about_key_exp
