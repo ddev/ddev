@@ -107,7 +107,8 @@ fi
 #  sleep 10
 #fi
 
-docker volume rm ddev-global-cache >/dev/null 2>&1 || true
+# We don't want any docker volumes to be existing and changing behavior
+docker volume prune -a -f >/dev/null 2>&1 || true
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
