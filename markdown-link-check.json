@@ -44,6 +44,12 @@
     },
     {
       "pattern": "^https://analytics.amplitude.com"
+    },
+    {
+      "pattern": "^https://stackoverflow.com/questions/tagged/ddev"
+    },
+    {
+      "pattern": "https://packages.debian.org/stable/"
     }
   ],
   "httpHeaders": [
