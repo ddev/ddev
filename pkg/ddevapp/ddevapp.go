@@ -722,10 +722,13 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 				util.Warning("mysqladmin command failed: %v", err)
 			}
 			stdout = strings.Trim(stdout, "\r\n\t ")
-			newRowsImported, err := strconv.Atoi(stdout)
-			if err != nil {
-				util.Warning("Error converting '%s' to int", stdout)
-				break
+			newRowsImported := 0
+			if stdout != "" {
+				newRowsImported, err = strconv.Atoi(stdout)
+				if err != nil {
+					util.Warning("Error converting '%s' to int", stdout)
+					break
+				}
 			}
 			// See if mysqld is still importing. If it is, sleep and try again
 			if newRowsImported == rowsImported {
