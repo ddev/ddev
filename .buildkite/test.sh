@@ -6,6 +6,9 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
 
+export DOCKER_SCAN_SUGGEST=false
+export DOCKER_SCOUT_SUGGEST=false
+
 # On macOS, we can have several different docker providers, allow testing all
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
