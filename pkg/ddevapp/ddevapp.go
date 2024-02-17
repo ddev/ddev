@@ -709,36 +709,6 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		return fmt.Errorf("failed to import database: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
-	// Wait for import to really complete
-	if app.Database.Type != nodeps.Postgres {
-		rowsImported := 0
-		for i := 0; i < 10; i++ {
-
-			stdout, _, err := app.Exec(&ExecOpts{
-				Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
-				Service: "db",
-			})
-			if err != nil {
-				util.Warning("mysqladmin command failed: %v", err)
-			}
-			stdout = strings.Trim(stdout, "\r\n\t ")
-			newRowsImported := 0
-			if stdout != "" {
-				newRowsImported, err = strconv.Atoi(stdout)
-				if err != nil {
-					util.Warning("Error converting '%s' to int", stdout)
-					break
-				}
-			}
-			// See if mysqld is still importing. If it is, sleep and try again
-			if newRowsImported == rowsImported {
-				break
-			}
-			rowsImported = newRowsImported
-			time.Sleep(time.Millisecond * 500)
-		}
-	}
-
 	_, err = app.CreateSettingsFile()
 	if err != nil {
 		util.Warning("A custom settings file exists for your application, so DDEV did not generate one.")
