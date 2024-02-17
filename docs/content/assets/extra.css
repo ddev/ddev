@@ -122,3 +122,13 @@ dt {
     mask-position: center;
     -webkit-mask-position: center;
 }
+
+[data-md-component="announce"]:has(.md-typeset) {
+    a {
+        color: #02a8e2;
+    }
+
+    a:hover {
+        color: white;
+    }
+}
