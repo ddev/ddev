@@ -20,6 +20,27 @@ disabled (interval=0). Supported message types are `infos` and `warnings` where
 Messages will be shown as configured in the `remote-config` repository and the
 user cannot influence them.
 
+### Infos
+
+`infos` and `warnings` (yellow and red) can be specified like this:
+
+```json
+{
+  "messages": {
+    "notifications": {
+      "interval": 20,
+      "infos": [
+        {
+          "message": "This is a message to users of DDEV before v1.22.7",
+          "versions": "<=v1.22.6"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
+```
+
 ### Ticker
 
 Messages rotate, with one shown to the user every `interval` as long as it’s not
@@ -43,5 +64,22 @@ be found in the [Masterminds SemVer repository](https://github.com/Masterminds/s
 
 ## Testing
 
-While running tests a GitHub token maybe required to avoid rate limits and can
-be provided with the `DDEV_GITHUB_TOKEN` environment variable.
+To test, create a pull request on your fork or the main repository.
+
+1. Run `prettier -c remote-config.jsonc` to make sure prettier will not complain. Run `prettier -w remote-config.jsonc` to get it to update the file.
+2. For the fork `rfay` and branch `20240215_note_about_key_exp`, add configuration to your `~/.ddev/global_config.yaml`:
+
+    ```yaml
+    remote_config:
+      update_interval: 1
+      remote:
+        owner: rfay
+        repo: remote-config
+        ref: 20240215_note_about_key_exp
+        filepath: remote-config.jsonc
+    ```
+
+3. `rm ~/.ddev/.state.yaml ~/.ddev/.remote-config`
+4. `DDEV_VERBOSE=true ddev start <project>`
+
+Watch for failure to download or failure to parse the remote configuration.
