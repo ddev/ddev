@@ -1678,7 +1678,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		startErr := app.Start()
 		if startErr != nil {
-			logs := app.Logs("db", false, false, "100")
+			logs, _ := app.CaptureLogs("db", false, "50")
 			assert.NoError(startErr, "failed to start %s:%s, dblogs=\n=========\n%s\n=========\n", dbType, dbVersion, logs)
 			err = app.Stop(true, false)
 			assert.NoError(err)
