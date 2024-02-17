@@ -1678,6 +1678,11 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		startErr := app.Start()
 		if startErr != nil {
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `ls -lR /var/lib/mysql`,
+			})
+			t.Logf("status of /var/lib/mysql; err=%v, stdout=%s\nstderr=%s", err, stdout, stderr)
 			logs, _ := app.CaptureLogs("db", false, "50")
 			assert.NoError(startErr, "failed to start %s:%s, dblogs=\n=========\n%s\n=========\n", dbType, dbVersion, logs)
 			err = app.Stop(true, false)
