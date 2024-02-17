@@ -666,7 +666,7 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 
 ## `xdebug_ide_location`
 
-Adjust Xdebug listen location for WSL2 or in-container. This is used very rarely, please don't change it unless you really know why.
+Adjust Xdebug listen location for WSL2 or in-container. This is used very rarely. Ask for help in one of our [support channels](../support.md) before changing it unless you understand its use completely.
 
 | Type | Default | Usage
 | -- | -- | --
