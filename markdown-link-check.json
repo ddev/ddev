@@ -46,10 +46,10 @@
       "pattern": "^https://analytics.amplitude.com"
     },
     {
-      "pattern": "^https://stackoverflow.com/questions/tagged/ddev"
+      "pattern": "^https://(meta.stackoverflow|stackoverflow|superuser).com/"
     },
     {
-      "pattern": "https://packages.debian.org/stable/"
+      "pattern": "^https://packages.debian.org/stable/"
     }
   ],
   "httpHeaders": [
