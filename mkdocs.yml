@@ -48,7 +48,6 @@ theme:
     primary: indigo
     accent: indigo
   features:
-  - announce.dismiss
   - content.action.edit
   - content.code.copy
 #  - content.tabs.link
@@ -96,7 +95,7 @@ extra:
   generator: false
   analytics:
     provider: plausible
-  version: latest
+  version: notlatest
 # Extensions
 markdown_extensions:
 - abbr

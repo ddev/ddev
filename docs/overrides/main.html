@@ -5,12 +5,12 @@
   <meta name="google-site-verification" content="uFpolYSfqt2_75ubmaMBdPrmc9LjnEkhZUhSF0ejXWg" />
 {% endblock %}
 
-{% if config.extra.version == "latest" %}
-  {% block announce %}
-    {{ super() }}
-    You’re viewing the latest unreleased version.
-    <a href="https://ddev.readthedocs.io/en/stable/">
-        <strong>Released docs</strong>
-    </a>
-  {% endblock %}
-{% endif %}
+{% block announce %}
+  {% if config.extra.version == "latest" %}
+        {{ super() }}
+        You’re viewing the latest unreleased version.
+        <a href="https://ddev.readthedocs.io/en/stable/">
+          <strong>Released docs</strong>
+        </a>
+  {% endif %}
+{% endblock %}
