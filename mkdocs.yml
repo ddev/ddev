@@ -95,7 +95,7 @@ extra:
   generator: false
   analytics:
     provider: plausible
-  version: notlatest
+  version: latest
 # Extensions
 markdown_extensions:
 - abbr
