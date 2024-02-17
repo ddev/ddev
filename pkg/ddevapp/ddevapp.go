@@ -15,7 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
-	dockerImages "github.com/ddev/ddev/pkg/docker"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -24,7 +24,9 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerTypes "github.com/docker/docker/api/types"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
 	"golang.org/x/term"
@@ -179,7 +181,7 @@ func (app *DdevApp) Init(basePath string) error {
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContainers, error) {
+func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Container, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
@@ -285,7 +287,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		shortName := strings.Replace(serviceName, fmt.Sprintf("ddev-%s-", app.Name), "", 1)
 
 		c, err := dockerutil.InspectContainer(serviceName)
-		if err != nil || c == nil {
+		if err != nil {
 			util.Warning("Could not get container info for %s", serviceName)
 			continue
 		}
@@ -303,7 +305,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		var hostPorts []string
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
-				hostPorts = append(hostPorts, strconv.FormatInt(pv.PublicPort, 10))
+				hostPorts = append(hostPorts, strconv.FormatInt(int64(pv.PublicPort), 10))
 			}
 		}
 		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
@@ -361,11 +363,11 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	return app.GetPublishedPortForPrivatePort(serviceName, int64(exposedPortInt))
+	return app.GetPublishedPortForPrivatePort(serviceName, uint16(exposedPortInt))
 }
 
 // GetPublishedPortForPrivatePort returns the host-exposed public port of a container for a given private port.
-func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePort int64) (publicPort int, err error) {
+func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePort uint16) (publicPort int, err error) {
 	container, err := app.FindContainerByType(serviceName)
 	if err != nil || container == nil {
 		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
@@ -1014,7 +1016,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 
 // GetDBImage uses the available version info
 func (app *DdevApp) GetDBImage() string {
-	dbImage := dockerImages.GetDBImage(app.Database.Type, app.Database.Version)
+	dbImage := ddevImages.GetDBImage(app.Database.Type, app.Database.Version)
 	return dbImage
 }
 
@@ -1194,7 +1196,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// TODO: We shouldn't be chowning /var/lib/mysql if PostgreSQL?
 	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
-	_, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
+	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
@@ -1204,7 +1206,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
 		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
-		_, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
 		}
@@ -1512,7 +1514,7 @@ func (app *DdevApp) PullContainerImages() error {
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image and busybox for housekeeping.
 func PullBaseContainerImages() error {
-	images := []string{dockerImages.GetWebImage(), versionconstants.BusyboxImage}
+	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage}
 	images = append(images, FindNotOmittedImages(nil)...)
 
 	for _, i := range images {
@@ -1553,8 +1555,8 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 func FindNotOmittedImages(app *DdevApp) []string {
 	var images []string
 	containerImageMap := map[string]func() string{
-		SSHAuthName:       dockerImages.GetSSHAuthImage,
-		RouterProjectName: dockerImages.GetRouterImage,
+		SSHAuthName:       ddevImages.GetSSHAuthImage,
+		RouterProjectName: ddevImages.GetRouterImage,
 	}
 
 	for containerName, getImage := range containerImageMap {
@@ -1931,9 +1933,9 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
-	var container *docker.APIContainers
+	var container *dockerTypes.Container
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
@@ -1949,23 +1951,27 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 		return nil
 	}
 
-	logOpts := docker.LogsOptions{
-		Container:    container.ID,
-		Stdout:       true,
-		Stderr:       true,
-		OutputStream: output.UserOut.Out,
-		ErrorStream:  output.UserOut.Out,
-		Follow:       follow,
-		Timestamps:   timestamps,
+	logOpts := dockerContainer.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     follow,
+		Timestamps: timestamps,
 	}
 
 	if tailLines != "" {
 		logOpts.Tail = tailLines
 	}
 
-	err = client.Logs(logOpts)
+	rc, err := client.ContainerLogs(ctx, container.ID, logOpts)
 	if err != nil {
 		return err
+	}
+	defer rc.Close()
+
+	// Copy logs to user output
+	_, err = stdcopy.StdCopy(output.UserOut.Out, output.UserOut.Out, rc)
+	if err != nil {
+		return fmt.Errorf("failed to copy container logs: %v", err)
 	}
 
 	return nil
@@ -1974,9 +1980,9 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
-	var container *docker.APIContainers
+	var container *dockerTypes.Container
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
@@ -1992,28 +1998,30 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 		return "", nil
 	}
 
-	var out bytes.Buffer
-
-	logOpts := docker.LogsOptions{
-		Container:    container.ID,
-		Stdout:       true,
-		Stderr:       true,
-		OutputStream: &out,
-		ErrorStream:  &out,
-		Follow:       false,
-		Timestamps:   timestamps,
+	var stdout bytes.Buffer
+	logOpts := dockerContainer.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     false,
+		Timestamps: timestamps,
 	}
 
 	if tailLines != "" {
 		logOpts.Tail = tailLines
 	}
 
-	err = client.Logs(logOpts)
+	rc, err := client.ContainerLogs(ctx, container.ID, logOpts)
 	if err != nil {
 		return "", err
 	}
+	defer rc.Close()
 
-	return out.String(), nil
+	_, err = stdcopy.StdCopy(&stdout, &stdout, rc)
+	if err != nil {
+		return "", fmt.Errorf("failed to copy container logs: %v", err)
+	}
+
+	return stdout.String(), nil
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
@@ -2504,7 +2512,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	if removeData {
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
@@ -2563,7 +2571,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
 		_ = dockerutil.RemoveImage(dbBuilt)
 
-		webBuilt := dockerImages.GetWebImage() + "-" + app.Name + "-built"
+		webBuilt := ddevImages.GetWebImage() + "-" + app.Name + "-built"
 		_ = dockerutil.RemoveImage(webBuilt)
 		util.Success("Project %s was deleted. Your code and configuration are unchanged.", app.Name)
 	}
@@ -2953,7 +2961,7 @@ func GetContainerName(app *DdevApp, service string) string {
 }
 
 // GetContainer returns the container struct of the app service name provided.
-func GetContainer(app *DdevApp, service string) (*docker.APIContainers, error) {
+func GetContainer(app *DdevApp, service string) (*dockerTypes.Container, error) {
 	name := GetContainerName(app, service)
 	container, err := dockerutil.FindContainerByName(name)
 	if err != nil || container == nil {

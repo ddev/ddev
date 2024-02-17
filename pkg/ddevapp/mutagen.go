@@ -25,7 +25,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
 )
 
@@ -676,15 +675,13 @@ func (app *DdevApp) GenerateMutagenYml() error {
 
 // IsMutagenVolumeMounted checks to see if the Mutagen volume is mounted
 func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 	container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
 	// If there is no web container found, the volume is not mounted
 	if err != nil || container == nil {
 		return false, nil
 	}
-	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
-		ID: container.ID,
-	})
+	inspect, err := client.ContainerInspect(ctx, container.ID)
 	if err != nil {
 		return false, err
 	}
@@ -739,7 +736,7 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	var mutagenSyncLabelErr error
 	var configFileHashLabelErr error
 
-	volumeExists = !(volumeLabelErr != nil && errors.Is(docker.ErrNoSuchVolume, volumeLabelErr))
+	volumeExists = !(volumeLabelErr != nil && dockerutil.IsErrNotFound(volumeLabelErr))
 	calculatedConfigFileHash, err := GetMutagenConfigFileHash(app)
 	if err != nil {
 		util.Warning("Unable to calculate Mutagen config file hash: %v", err)

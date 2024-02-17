@@ -11,13 +11,13 @@ import (
 	"strings"
 	"text/template"
 
-	dockerImages "github.com/ddev/ddev/pkg/docker"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerTypes "github.com/docker/docker/api/types"
 )
 
 // RouterProjectName is the "machine name" of the router docker-compose
@@ -55,7 +55,7 @@ func StopRouterIfNoContainers() error {
 	if !containersRunning {
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
-			if _, ok := err.(*docker.NoSuchContainer); !ok {
+			if ok := dockerutil.IsErrNotFound(err); !ok {
 				return err
 			}
 		}
@@ -141,7 +141,7 @@ func generateRouterCompose() (string, error) {
 		"Username":                   username,
 		"UID":                        uid,
 		"GID":                        gid,
-		"router_image":               dockerImages.GetRouterImage(),
+		"router_image":               ddevImages.GetRouterImage(),
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"dockerIP":                   dockerIP,
@@ -193,7 +193,7 @@ func generateRouterCompose() (string, error) {
 
 // FindDdevRouter uses FindContainerByLabels to get our router container and
 // return it.
-func FindDdevRouter() (*docker.APIContainers, error) {
+func FindDdevRouter() (*dockerTypes.Container, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
 	}
