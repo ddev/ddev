@@ -118,7 +118,7 @@ Here are basic steps to take to sort out any difficulty:
     * If disabling the firewall fixes the problem, re-enable the firewall and add an exception for port 9003. Your firewall will have a way to do this; on Debian/Ubuntu run `sudo ufw allow 9003`.
 * Delete existing PhpStorm "servers" in settings, or recreate VS Code’s `launch.json` file exactly as shown in the instructions here.
 * Remember the standard Xdebug port is port 9003, and that's what all instructions here use. In the past some IDEs used port 9000.
-* If your `~/.ddev/global_config.yaml` has `xdebug_ide_location` set, remove that to begin with except for [very unusal situations](../configuration/config.md#xdebugidelocation). You can set it to the default value with `ddev config global --xdebug-ide-location=""`.
+* If your `~/.ddev/global_config.yaml` has `xdebug_ide_location` set, remove that to begin with except for [very unusual situations](../configuration/config.md#xdebugidelocation). You can set it to the default value with `ddev config global --xdebug-ide-location=""`.
 * Reboot your computer.
 * If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`. (This is unusual.)
 * Temporarily disable any *firewall* or *VPN* if you’re having trouble. Xdebug is a network protocol, and the PHP process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
