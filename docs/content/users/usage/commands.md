@@ -49,14 +49,16 @@ Flags:
 
 Global Flags:
   -j, --json-output   If true, user-oriented output will be in JSON format.
+      --project string   The name of a project to run the command against. Include this flag before the command name. The command will run as though your working directory was inside that project.
 ```
 
 ## Global Flags
 
-Two flags are available for every command:
+Three flags are available for every command:
 
 * `--help` or `-h`: Outputs more information about a command rather than executing it.
 * `--json-output` or `-j`: Format user-oriented output in JSON.
+* `--project`: The name of a project to run the command against. Include this flag before the command name. The command will run as though your working directory was inside that project.
 
 ---
 
