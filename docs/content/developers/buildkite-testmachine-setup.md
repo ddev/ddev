@@ -39,8 +39,8 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent`
-2. Do not set up `buildkite-agent` on the Windows side, or disable it.
-3. `wsl --update`
+2. `buildkite-agent` should have home directory `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
+3. `wsl.exe --update`
 4. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 5. Install DDEV using the standard WSL2 Docker Desktop installation.
 6. Configure brew in PATH with:
@@ -65,6 +65,8 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
     sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev etckeeper gnupg icinga2 nagios-plugins lsb-release make mariadb-client
+    (mkcert -uninstall || true); rm -rf $(mkcert -CAROOT) || true; mkcert -install
+    sudo snap install --classic go
     sudo snap install ngrok
     sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent
     ```
