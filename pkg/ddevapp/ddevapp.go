@@ -1428,7 +1428,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if waitErr != nil {
-		util.Failed("Failed waiting for web/db containers to become ready: %v", err)
+		util.Failed("Failed waiting for web/db containers to become ready: %v", waitErr)
 	}
 
 	// WebExtraDaemons have to be started after Mutagen sync is done, because so often
