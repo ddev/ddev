@@ -39,21 +39,39 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent`
-2. Do not set up `buildkite-agent` on the Windows side, or disable it.
-3. `wsl --update`
-4. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
-5. Install DDEV using the standard WSL2 Docker Desktop installation.
-6. Configure brew in PATH with:
+2. `buildkite-agent` should have home directory `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
+3. Configure buildkite agent in /etc/buildkite-agent:
+    * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
+    * token="xxx"
+    * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
+
+    ```
+        #!/bin/bash
+        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
+        set -e
+    ```
+
+4. `wsl.exe --update`
+5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
+6. Install DDEV using the standard WSL2 Docker Desktop installation.
+7. Delete the CAROOT and WSLENV environment variables from administrative PowerShell:
+
+    ```powershell
+    [Environment]::SetEnvironmentVariable("CAROOT", $null, "Machine")
+    [Environment]::SetEnvironmentVariable("WSLENV", $null, "Machine")
+    ```
+
+8. Configure brew in PATH with:
 
     ```
     echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
     source ~/.bashrc
     ```
 
-7. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-8. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
-9. `git config --global --add safe.directory '*'`
-10. Install basics in WSL2:
+9. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+10. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
+11. `git config --global --add safe.directory '*'`
+12. Install basics in WSL2:
 
     ```bash
     curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
@@ -65,22 +83,23 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
     sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev etckeeper gnupg icinga2 nagios-plugins lsb-release make mariadb-client
+    (mkcert -uninstall || true); rm -rf $(mkcert -CAROOT) || true; mkcert -install
+    sudo snap install --classic go
     sudo snap install ngrok
     sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent
     ```
 
-11. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
-12. Verify that `buildkite-agent` is running.
-13. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the "Agent" tab it provides a script to configure the agent.
-14. Windows Terminal should be installed. Set "Ubuntu" as the default and have it start on Windows startup.
-15. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
-16. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
-17. Run `ngrok config add-authtoken <token>` with token for free account.
+13. Verify that `buildkite-agent` is running.
+14. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the "Agent" tab it provides a script to configure the agent.
+15. Windows Terminal should be installed. Set "Ubuntu" as the default and have it start on Windows startup.
+16. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+17. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+18. Run `ngrok config add-authtoken <token>` with token for free account.
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
 1. Uninstall Docker Desktop.
-2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop has added in `C:\Windows\system32\drivers\etc\hosts`.
+2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop might have added in `C:\Windows\system32\drivers\etc\hosts`.
 3. Install Docker and basics in WSL2:
 
     ```bash
@@ -91,19 +110,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     sudo usermod -aG docker $USER
     ```
 
-4. Configure buildkite agent in /etc/buildkite-agent:
-    * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
-    * token="xxx"
-    * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
-
-    ```
-        #!/bin/bash
-        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-        export CAROOT=/mnt/c/Users/testbot/AppData/Local/mkcert
-        set -e
-    ```
-
-5. Run `.buildkite/sanetestbot.sh`
+4. Run `.buildkite/sanetestbot.sh`
 
 ## Icinga2 monitoring setup for WSL2 instances
 
