@@ -2511,7 +2511,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/projectInfo/hosts entry if we need to.
 	if removeData {
-		if !app.IsMutagenEnabled() {
+		if app.IsMutagenEnabled() {
 			err = TerminateMutagenSync(app)
 			if err != nil {
 				util.Warning("Unable to terminate Mutagen session %s: %v", MutagenSyncName(app.Name), err)
