@@ -50,6 +50,9 @@
     },
     {
       "pattern": "^https://packages.debian.org/stable/"
+    },
+    {
+      "pattern": "^https://community.chocolatey.org"
     }
   ],
   "httpHeaders": [
