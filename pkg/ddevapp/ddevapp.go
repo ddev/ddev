@@ -2472,9 +2472,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = SyncAndPauseMutagenSession(app)
-	if err != nil {
-		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
+	if app.IsMutagenEnabled() {
+		err = SyncAndPauseMutagenSession(app)
+		if err != nil {
+			util.Warning("Unable to SyncAndPauseMutagenSession: %v", err)
+		}
 	}
 
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() && status == SiteRunning {
@@ -2509,11 +2511,12 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/projectInfo/hosts entry if we need to.
 	if removeData {
-		err = TerminateMutagenSync(app)
-		if err != nil {
-			util.Warning("Unable to terminate Mutagen session %s: %v", MutagenSyncName(app.Name), err)
+		if !app.IsMutagenEnabled() {
+			err = TerminateMutagenSync(app)
+			if err != nil {
+				util.Warning("Unable to terminate Mutagen session %s: %v", MutagenSyncName(app.Name), err)
+			}
 		}
-
 		// Remove .ddev/settings if it exists
 		if fileutil.FileExists(app.GetConfigPath("settings")) {
 			err = os.RemoveAll(app.GetConfigPath("settings"))
