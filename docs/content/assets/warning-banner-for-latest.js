@@ -11,9 +11,9 @@ function load_warning_banner_for_latest() {
             <div id="warning-banner-for-latest" data-md-color-scheme="default" style="display: none;">
                 <aside class="md-banner md-banner--warning">
                     <div class="md-banner__inner md-grid md-typeset">
-                        You’re viewing the latest unreleased version.
+                        You're viewing documentation for an unreleased version of DDEV.
                         <a href="${currentUrl.replace(/\/latest\//, '/stable/')}">
-                            <strong>Click here to go to stable.</strong>
+                            <strong>Click here to see the stable documentation.</strong>
                         </a>
                     </div>
                 </aside>
