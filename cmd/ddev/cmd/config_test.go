@@ -476,7 +476,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	origDir, _ := os.Getwd()
 	versionsToTest := nodeps.GetValidDatabaseVersions()
 	if os.Getenv("GOTEST_SHORT") != "" {
-		versionsToTest = []string{"mariadb:10.3", "mysql:5.7"}
+		versionsToTest = []string{"mariadb:10.11", "mysql:8.0"}
 	}
 
 	// Create a temporary directory and switch to it.
