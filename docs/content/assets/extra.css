@@ -2,6 +2,12 @@
 :root {
     /* #4051b5 (indigo primary) in decimal RGB */
     --custom-bg-color: rgba(64, 81, 181, .1);
+    --custom-header-color: var(--md-primary-fg-color);
+}
+
+/* dark color scheme overrides */
+[data-md-color-scheme="slate"] {
+    --custom-header-color: var(--md-primary-fg-color--light);
 }
 
 /* table does not need a scrollbar, see https://github.com/ddev/ddev/pull/3290#issuecomment-942888867
@@ -38,7 +44,7 @@ dt {
 .md-typeset h6 {
     font-weight: 700;
     margin-bottom: .5em;
-    color: var(--md-primary-fg-color);
+    color: var(--custom-header-color);
 }
 
 .md-content {
@@ -82,13 +88,13 @@ dt {
 
 /* blockquote */
 [dir=ltr] .md-typeset blockquote {
-    border-left-color: var(--md-primary-fg-color);
+    border-left-color: var(--custom-header-color);
     background: var(--custom-bg-color);
     padding: .6rem 1rem;
 }
 
 [dir=ltr] .md-typeset blockquote strong {
-    color: var(--md-primary-fg-color);
+    color: var(--custom-header-color);
 }
 
 [dir=ltr] .md-typeset blockquote p:first-child {
