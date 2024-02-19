@@ -45,6 +45,8 @@ theme:
     toggle:
       icon: material/brightness-4
       name: Switch to system preference
+    primary: indigo
+    accent: indigo
   features:
   - content.action.edit
   - content.code.copy
