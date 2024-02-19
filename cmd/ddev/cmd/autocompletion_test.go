@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -209,6 +210,9 @@ func TestAutocompletionForDescribeCmd(t *testing.T) {
 
 // TestAutocompletionForCustomCmds checks custom autocompletion for custom host and container commands
 func TestAutocompletionForCustomCmds(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because untested on Windows")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
