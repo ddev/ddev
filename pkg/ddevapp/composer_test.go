@@ -103,9 +103,6 @@ func TestComposerVersion(t *testing.T) {
 
 	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
-	app.Name = t.Name()
-	err = app.WriteConfig()
-	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -115,6 +112,11 @@ func TestComposerVersion(t *testing.T) {
 		// Mutagen can compete with removal, so go ahead and ignore result
 		_ = os.RemoveAll(testDir)
 	})
+
+	_ = app.Stop(true, false)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
 	// Make sure base version (default) is Composer v2
 	err = app.Start()
