@@ -139,6 +139,8 @@ func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, n
 
 var DockerHost string
 var DockerContext string
+var DockerCtx context.Context
+var DockerClient *dockerClient.Client
 
 // GetDockerClient returns a Docker client respecting the current Docker context
 // but DOCKER_HOST gets priority
@@ -159,14 +161,19 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 		util.Debug("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
 		_ = os.Setenv("DOCKER_HOST", DockerHost)
 	}
-	ctx := context.Background()
-	client, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
-	if err != nil {
-		output.UserOut.Warnf("Could not get Docker client. Is Docker running? Error: %v", err)
-		// Use os.Exit instead of util.Failed() to avoid import cycle with util.
-		os.Exit(100)
+	if DockerClient == nil {
+		DockerCtx = context.Background()
+		DockerClient, err = dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
+		if err != nil {
+			output.UserOut.Warnf("Could not get Docker client. Is Docker running? Error: %v", err)
+			// Use os.Exit instead of util.Failed() to avoid import cycle with util.
+			os.Exit(100)
+		}
 	}
-	return ctx, client
+
+	defer DockerClient.Close()
+
+	return DockerCtx, DockerClient
 }
 
 // GetDockerContext returns the currently set Docker context, host, and error
