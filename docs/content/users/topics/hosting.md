@@ -63,7 +63,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     # Optionally give a list of sites instead of --all
     [Unit]
     Description=DDEV sites
-    After=network.target
+    After=multi-user.target
     Requires=docker.service
     PartOf=docker.service
     [Service]
