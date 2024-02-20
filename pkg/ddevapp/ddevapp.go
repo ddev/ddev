@@ -251,9 +251,10 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["dbname"] = "db"
 			dbinfo["host"] = "db"
 			dbPublicPort, err := app.GetPublishedPort("db")
-			util.CheckErr(err)
+			if err != nil {
+				util.Warning("failed to GetPublishedPort(db): %v", err)
+			}
 			dbinfo["dbPort"] = GetExposedPort(app, "db")
-			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = nodeps.MariaDB // default
 			dbinfo["database_type"] = app.Database.Type
