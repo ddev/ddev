@@ -10,6 +10,7 @@ This section covers day-to-day DDEV usage, reference material, and common suppor
 - [Managing Projects](managing-projects.md)
 - [Troubleshooting](troubleshooting.md)
 - [Using DDEV Offline](offline.md)
+- [Upgrading DDEV](../install/ddev-upgrade.md)
 
 ## Reference
 
