@@ -56,7 +56,7 @@ When using this zero-configuration option:
 
 #### PhpStorm "Run/Debug Configuration" Debugging
 
-PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require more setup but may be easier and more flexible for some people.
+PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/run-debug-configuration.html) require more setup but may be easier and more flexible for some people.
 
 1. Under the *Run* menu select *Edit configurations*.
 2. Click the *+* in the upper left and choose *PHP Web Page* to create a configuration.
