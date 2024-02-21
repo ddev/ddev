@@ -1723,25 +1723,25 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 // for examples defining version constraints.
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/ddev/ddev/pull/738.. and regression https://github.com/ddev/ddev/issues/1431
+// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
 var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
-// DockerVersion is cached version of Docker engine
+// DockerVersion is cached version of Docker provider engine
 var DockerVersion = ""
 
-// GetDockerVersion gets the cached or API-sourced version of Docker engine
+// GetDockerVersion gets the cached or API-sourced version of Docker provider engine
 func GetDockerVersion() (string, error) {
 	if DockerVersion != "" {
 		return DockerVersion, nil
 	}
 	ctx, client := GetDockerClient()
 	if client == nil {
-		return "", fmt.Errorf("unable to get Docker version: Docker client is nil")
+		return "", fmt.Errorf("unable to get Docker provider engine version: Docker client is nil")
 	}
 
 	serverVersion, err := client.ServerVersion(ctx)
 	if err != nil {
-		return "", fmt.Errorf("unable to get Docker version: %v", err)
+		return "", fmt.Errorf("unable to get Docker provider engine version: %v", err)
 	}
 
 	DockerVersion = serverVersion.Version
@@ -1749,23 +1749,23 @@ func GetDockerVersion() (string, error) {
 	return DockerVersion, nil
 }
 
-// DockerAPIVersion is cached API version of Docker engine
+// DockerAPIVersion is cached API version of Docker provider engine
 // See https://docs.docker.com/engine/api/#api-version-matrix
 var DockerAPIVersion = ""
 
-// GetDockerAPIVersion gets the cached or API-sourced API version of Docker engine
+// GetDockerAPIVersion gets the cached or API-sourced API version of Docker provider engine
 func GetDockerAPIVersion() (string, error) {
 	if DockerAPIVersion != "" {
 		return DockerAPIVersion, nil
 	}
 	ctx, client := GetDockerClient()
 	if client == nil {
-		return "", fmt.Errorf("unable to get Docker API version: Docker client is nil")
+		return "", fmt.Errorf("unable to get Docker provider engine API version: Docker client is nil")
 	}
 
 	serverVersion, err := client.ServerVersion(ctx)
 	if err != nil {
-		return "", fmt.Errorf("unable to get Docker API version: %v", err)
+		return "", fmt.Errorf("unable to get Docker provider engine API version: %v", err)
 	}
 
 	DockerAPIVersion = serverVersion.APIVersion
@@ -1776,7 +1776,7 @@ func GetDockerAPIVersion() (string, error) {
 // DockerComposeVersionConstraint is the versions allowed for ddev
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/ddev/ddev/pull/738.. and regression https://github.com/ddev/ddev/issues/1431
+// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
 var DockerComposeVersionConstraint = ">= 2.5.1"
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version
