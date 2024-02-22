@@ -179,7 +179,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 1. `brew install colima`
 2. `colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1`
 3. `colima stop`
-4. `colima start vz --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1`
+4. `colima start vz --cpu 4 --memory 6 --disk 60 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1`
 5. `colima stop vz`
 
 Then the Buildkite agent must be configured with tags `colima=true` and `colima_vz=true`.
