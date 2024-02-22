@@ -63,7 +63,7 @@ func TestExtraPortExpose(t *testing.T) {
 	for i, p := range portsToTest {
 		url := fmt.Sprintf("%s:%s/testfile.html", app.GetPrimaryURL(), p)
 		out, resp, err := testcommon.GetLocalHTTPResponse(t, url)
-		assert.NoError(err, "failed to get hit url %s, out=%s, resp=%v err=%v", url, out, resp, err)
-		assert.Contains(out, fmt.Sprintf("this is test%d", i+1))
+		require.NoError(t, err, "failed to get hit url %s, out=%s, resp=%v err=%v", url, out, resp, err)
+		require.Contains(t, out, fmt.Sprintf("this is test%d", i+1))
 	}
 }
