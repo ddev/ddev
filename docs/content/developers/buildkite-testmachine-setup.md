@@ -183,3 +183,11 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 5. `colima stop vz`
 
 Then the Buildkite agent must be configured with tags `colima=true` and `colima_vz=true`.
+
+## Additional Lima macOS setup
+
+1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount="~/:rw" --memory=6 --cpus=4 --disk=100 template://docker`
+2. `limactl start lima-vz`
+3. `docker context use lima-lima-vz`
+
+Then the Buildkite agent must be configured with tags `lima=true`.
