@@ -9,5 +9,6 @@ mkdir -p ${NFS_PROJECT_DIR} || true && cd ${NFS_PROJECT_DIR}
 
 ddev config --auto
 ddev debug nfsmount
+ddev delete -Oy
 
 echo "nfsd seems to be set up ok"
