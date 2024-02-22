@@ -31,17 +31,20 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     "docker-desktop")
       orb stop &
       ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
       open -a Docker &
       docker context use desktop-linux
       ;;
     "orbstack")
       ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
       killall com.docker.backend || true
       orb start &
       docker context use orbstack
       ;;
     "rancher-desktop")
       killall com.docker.backend || true
+      colima stop || true
       orb stop &
       ~/.rd/bin/rdctl start
       for i in {1..120}; do
