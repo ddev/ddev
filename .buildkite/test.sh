@@ -48,7 +48,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       killall com.docker.backend || true
       limactl start lima-vz
-      docker context use lima-vz
+      docker context use lima-lima-vz
       ;;
 
     "docker-desktop")
