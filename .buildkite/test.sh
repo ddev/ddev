@@ -44,11 +44,10 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     "lima")
       ~/.rd/bin/rdctl shutdown || true
       colima stop || true
-      limactl stop lima-vz || true
+      colima stop vz || true
       orb stop &
       killall com.docker.backend || true
-      colima stop vz || true
-      lima start lima-vz
+      limactl start lima-vz
       docker context use lima-vz
       ;;
 
