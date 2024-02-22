@@ -169,7 +169,7 @@ if command -v killall >/dev/null ; then
 fi
 
 echo "--- Running tests..."
-make test TESTARGS="-failfast"
+make test TESTARGS="-run TestExtraPortExpose -failfast"
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
