@@ -1,25 +1,21 @@
 package cmd
 
 import (
-	"strconv"
-	"testing"
-
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
-
+	"fmt"
 	"os"
 	"path/filepath"
-
+	"strconv"
 	"strings"
-
-	"fmt"
+	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -229,6 +225,11 @@ func TestConfigSetValues(t *testing.T) {
 
 	out, err := exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
+
+	// The second run of the config should not change the unspecified options,
+	// using the auto option here should not change the config at all
+	out, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	assert.NoError(err, "error running ddev config --auto: %s", out)
 
 	configFile := filepath.Join(tmpDir, ".ddev", "config.yaml")
 	configContents, err := os.ReadFile(configFile)
