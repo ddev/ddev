@@ -1,0 +1,17 @@
+  - command: ".buildkite/test.sh"
+    plugins:
+      - docker-login#v2.1.0:
+          password-env: DOCKERHUB_PULL_PASSWORD
+    agents:
+      - "os=macos"
+      - "colima=true"
+      - "architecture=arm64"
+    #branches: "master"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DDEV_TEST_SHARE_CMD: "false"
+      DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "colima"
+    parallelism: 1

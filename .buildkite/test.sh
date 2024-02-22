@@ -20,6 +20,14 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   echo "original docker context situation:"
   docker context ls
   case ${DOCKER_TYPE} in
+    "colima")
+      ~/.rd/bin/rdctl shutdown || true
+      orb stop &
+      killall com.docker.backend || true
+      colima start
+      docker context use colima
+      ;;
+
     "docker-desktop")
       orb stop &
       ~/.rd/bin/rdctl shutdown || true
