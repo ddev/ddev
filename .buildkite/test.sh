@@ -21,10 +21,19 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   docker context ls
   case ${DOCKER_TYPE} in
     "colima")
+      colima stop vz || true
       ~/.rd/bin/rdctl shutdown || true
       orb stop &
       killall com.docker.backend || true
       colima start
+      docker context use colima
+      ;;
+    "colima_vz")
+      ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
+      orb stop &
+      killall com.docker.backend || true
+      colima start vz
       docker context use colima
       ;;
 
@@ -32,12 +41,14 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       ~/.rd/bin/rdctl shutdown || true
       colima stop || true
+      colima stop vz || true
       open -a Docker &
       docker context use desktop-linux
       ;;
     "orbstack")
       ~/.rd/bin/rdctl shutdown || true
       colima stop || true
+      colima stop vz || true
       killall com.docker.backend || true
       orb start &
       docker context use orbstack
@@ -45,6 +56,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     "rancher-desktop")
       killall com.docker.backend || true
       colima stop || true
+      colima stop vz || true
       orb stop &
       ~/.rd/bin/rdctl start
       for i in {1..120}; do
