@@ -26,6 +26,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       killall com.docker.backend || true
       colima start
+      colima restart
       docker context use colima
       ;;
     "colima_vz")
@@ -34,7 +35,8 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       orb stop &
       killall com.docker.backend || true
       colima start vz
-      docker context use colima
+      colima restart vz
+      docker context use colima-vz
       ;;
 
     "docker-desktop")
