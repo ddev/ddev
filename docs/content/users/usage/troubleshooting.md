@@ -246,6 +246,41 @@ docker rmi -f $(docker images -q)
 
 You should then be able to start your DDEV machine.
 
+## `ddev start` Fails with "could not find an available, non-overlapping IPv4 address pool among the defaults to assign to the network"
+
+This typically happens on a Linux installation like Ubuntu with many ddev projects where you have installed Docker manually rather than using
+something like Docker Desktop. Pruning the network generally solves this problem, but it does mean already existing non-running ddev projects
+will need a `ddev restart`. To prune the network run:
+```
+docker network prune
+```
+
+If you encounter this problem often you can add to your `/etc/docker/daemon.json`:
+
+```
+{
+  ...
+  "default-address-pools": [
+    {"base": "172.17.0.0/16", "size": 24}
+  ]
+  ...
+}
+```
+If the file does not exist, it can be created and set to:
+```
+{
+  "default-address-pools": [
+    {"base": "172.17.0.0/16", "size": 24}
+  ]
+}
+```
+To have the changes take effect you need to reload the configuration and restart docker (which will stop any running ddev projects). You can do this
+as follows:
+```
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
 ## `ddev --version` shows an old version
 
 If you have installed the latest version of DDEV, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)
