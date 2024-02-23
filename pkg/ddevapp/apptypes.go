@@ -90,6 +90,12 @@ func init() {
 			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeCakePHP: {
+			appTypeDetect:        isCakephpApp,
+			configOverrideAction: cakephpConfigOverrideAction,
+			postStartAction:      cakephpPostStartAction,
+		},
+
 		nodeps.AppTypeCraftCms: {
 			importFilesAction:    craftCmsImportFilesAction,
 			appTypeDetect:        isCraftCmsApp,

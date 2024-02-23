@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run cake CLI inside the web container
+## Usage: cake [subcommand] [flags] [args]
+## Example: "ddev cake bake" or "ddev cake cache clear_all"
+## ProjectTypes: cakephp
+## ExecRaw: true
+
+php ./bin/cake.php "$@"
+

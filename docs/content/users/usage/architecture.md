@@ -112,7 +112,7 @@ There’s only one global `.ddev` directory, which lives in your home directory:
 : This is where DDEV stores private executable binaries it needs, like `mutagen` and `docker-compose`.
 
 `commands` directory
-: Directory for storing DDEV commands that should be available in containers, like `npm`, `artisan`, and `drush` for example. These are organized in subdirectories named for where they’ll be used: `db`, `host`, and `web`. You can add your own [custom commands](../extend/custom-commands.md) here.
+: Directory for storing DDEV commands that should be available in containers, like `npm`, `artisan`, `cake` and `drush` for example. These are organized in subdirectories named for where they’ll be used: `db`, `host`, and `web`. You can add your own [custom commands](../extend/custom-commands.md) here.
 
 `homeadditions` directory
 : Like the per-project `homeadditions` directory, files you add here will automatically be copied into the web container’s home directory. Files from the _global_ homeadditions directory will be copied into **every** web container’s home directory.

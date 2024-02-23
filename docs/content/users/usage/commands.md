@@ -109,6 +109,15 @@ ddev blackfire off
     * `on`: `start`, `enable`, `true`
     * `off`: `stop`, `disable`, `false`
 
+## `cake`
+
+Run the `cake` command; available only in projects of type `cakephp`, and only available if `cake.php` is in bin folder.
+
+```shell
+# Show all cake subcommands
+ddev cake
+```
+
 ## `clean`
 
 Removes items DDEV has created. (See [Uninstalling DDEV](../usage/uninstall.md).)

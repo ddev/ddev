@@ -334,6 +334,22 @@ var (
 			Type:                          nodeps.AppTypeSilverstripe,
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 5.0\">"},
 		},
+		// 18: CakePHP
+		{
+			Name:                          "TestPkgCakePHP",
+			SourceURL:                     "https://github.com/ddev/test-cakephp/archive/refs/tags/5.0.1.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-cakephp-5.0.1.1/",
+			FilesTarballURL:               "",
+			FilesZipballURL:               "",
+			DBTarURL:                      "https://github.com/ddev/test-cakephp/releases/download/5.0.1.1/db.sql.tar.gz",
+			DBZipURL:                      "",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeCakePHP,
+			Docroot:                       "webroot",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/static/page.html", Expect: "This is a static page"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "CakePHP is able to connect to the database"},
+			FilesImageURI:                 "/img/cake.logo.svg",
+		},
 	}
 
 	FullTestSites = TestSites
