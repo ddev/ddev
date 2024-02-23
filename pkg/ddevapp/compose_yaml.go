@@ -36,6 +36,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 		return err
 	}
 	util.Debug("yaml-corruption: %s sha1: %s", app.DockerComposeYAMLPath(), hex.EncodeToString(dockerComposeBaseHash.Sum(nil)))
+	util.Debug("%s", rendered)
 
 	_, err = f.WriteString(rendered)
 	if err != nil {
