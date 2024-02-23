@@ -664,7 +664,12 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 	go func() {
 		for inOut.Scan() {
-			chanOut <- inOut.Bytes()
+			// Bytes() underlying array may be overwritten by the next call to Scan().
+			// Copy it to a new allocation to prevent corruption.
+			token := inOut.Bytes()
+			duplicate := make([]byte, len(token))
+			copy(duplicate, token)
+			chanOut <- duplicate
 		}
 		close(stopOut)
 	}()
