@@ -50,7 +50,8 @@ func TestDebugMigrateDatabase(t *testing.T) {
 		Cmd:     `mysql -N -e 'SELECT VERSION();'`,
 	})
 	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(out, nodeps.MariaDB104))
+	// It should have our default version
+	require.True(t, strings.HasPrefix(out, nodeps.MariaDBDefaultVersion))
 
 	// Import a database so we have something to work with
 	err = app.ImportDB(filepath.Join(origDir, "testdata", t.Name(), "users.sql"), "", false, false, "")

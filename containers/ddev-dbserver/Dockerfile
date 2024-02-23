@@ -30,7 +30,7 @@ RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 
 # and remove it here
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 
-RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" curl gnupg2 less lsb-release pv tzdata vim wget >/dev/null
+RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
 
 # If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
 # Use http when connecting. This currently only affects MariaDB 5.5

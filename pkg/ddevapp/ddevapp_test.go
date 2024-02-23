@@ -1386,7 +1386,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
@@ -1608,7 +1608,7 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
+		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`,
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
@@ -1623,7 +1623,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:10", "postgres:14", "mariadb:10.3", "mariadb:10.4", "mariadb:10.11", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:14", "mariadb:10.4", "mariadb:10.11", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1678,7 +1678,13 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		startErr := app.Start()
 		if startErr != nil {
-			assert.NoError(startErr, "failed to start %s:%s", dbType, dbVersion)
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `ls -lR /var/lib/mysql`,
+			})
+			t.Logf("status of /var/lib/mysql; err=%v, stdout=%s\nstderr=%s", err, stdout, stderr)
+			logs, _ := app.CaptureLogs("db", false, "50")
+			assert.NoError(startErr, "failed to start %s:%s, dblogs=\n=========\n%s\n=========\n", dbType, dbVersion, logs)
 			err = app.Stop(true, false)
 			assert.NoError(err)
 			t.Errorf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)

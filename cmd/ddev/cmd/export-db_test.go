@@ -128,7 +128,8 @@ func TestCmdExportDB(t *testing.T) {
 	assert.NoError(err, "export-db failure output=%s", string(byteout))
 	assert.Contains(string(byteout), fmt.Sprintf("Wrote database dump from project '%s' database '%s' to file %s in plain text format", site.Name, "nondefault", outputFile))
 	assert.FileExists(outputFile)
-	assert.True(fileutil.FgrepStringInFile(outputFile, "INSERT INTO `nondefault_table` VALUES (0,'13751eca-19cf-41c2-90d4-9363f3a07c45','en'),"))
+	assert.True(fileutil.FgrepStringInFile(outputFile, "INSERT INTO `nondefault_table` VALUES"))
+	assert.True(fileutil.FgrepStringInFile(outputFile, "(0,'13751eca-19cf-41c2-90d4-9363f3a07c45','en'),"))
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",

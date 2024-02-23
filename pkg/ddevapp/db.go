@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// GetExistingDBType returns type/version like mariadb:10.4 or postgres:13 or "" if no existing volume
+// GetExistingDBType returns type/version like mariadb:10.11 or postgres:13 or "" if no existing volume
 // This has to make a Docker container run so is fairly costly.
 func (app *DdevApp) GetExistingDBType() (string, error) {
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "GetExistingDBType-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "( test -f /var/tmp/mysql/db_mariadb_version.txt && cat /var/tmp/mysql/db_mariadb_version.txt ) || ( test -f /var/tmp/postgres/PG_VERSION && cat /var/tmp/postgres/PG_VERSION) || true"}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/tmp/mysql", app.GetPostgresVolumeName() + ":/var/tmp/postgres"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)

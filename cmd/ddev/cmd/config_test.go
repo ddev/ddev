@@ -476,19 +476,19 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	origDir, _ := os.Getwd()
 	versionsToTest := nodeps.GetValidDatabaseVersions()
 	if os.Getenv("GOTEST_SHORT") != "" {
-		versionsToTest = []string{"mariadb:10.3", "mysql:5.7"}
+		versionsToTest = []string{"mariadb:10.11", "mysql:8.0", "postgres:16"}
 	}
 
 	// Create a temporary directory and switch to it.
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	err := os.Chdir(tmpDir)
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(testDir)
 	require.NoError(t, err)
 
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	assert.NoError(err)
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", t.Name())
-	assert.NoError(err, "Failed running ddev config --auto: %s", out)
+	assert.NoError(err, "Failed running ddev config --project-name: %s", out)
 
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
@@ -501,7 +501,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_ = os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(testDir)
 	})
 
 	_, err = app.ReadConfig(false)
@@ -509,32 +509,28 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	assert.Equal(nodeps.MariaDB, app.Database.Type)
 	assert.Equal(nodeps.MariaDBDefaultVersion, app.Database.Version)
 
-	err = app.Start()
-	assert.NoError(err)
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
 	// Verify behavior with no existing config.yaml. It should
 	// add a database into the config and nothing else
 	for _, dbTypeVersion := range versionsToTest {
+		_ = app.Stop(true, false)
 		parts := strings.Split(dbTypeVersion, ":")
-		err = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+		err = os.RemoveAll(filepath.Join(testDir, ".ddev"))
 		assert.NoError(err)
-		out, err := exec.RunHostCommand(DdevBin, "config", "--database", dbTypeVersion)
-		assert.NoError(err, "Failed to run ddev config --database %s: %s", dbTypeVersion, out)
+		out, err := exec.RunHostCommand(DdevBin, "config", "--database="+dbTypeVersion, "--project-name="+t.Name())
+		require.NoError(t, err, "Failed to run ddev config --database %s: %s", dbTypeVersion, out)
 		assert.Contains(out, "You may now run 'ddev start'")
 
 		// First test the bare explicit values found in the config.yaml,
 		// without the NewApp adjustments
 		app := &ddevapp.DdevApp{}
 		assert.NoError(err)
-		err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+		err = app.LoadConfigYamlFile(filepath.Join(testDir, ".ddev", "config.yaml"))
 		assert.NoError(err)
 		assert.Equal(parts[0], app.Database.Type)
 		assert.Equal(parts[1], app.Database.Version)
 
 		// Now use NewApp() to load, so that we get the full logic of that function.
-		app, err = ddevapp.NewApp(tmpDir, false)
+		app, err = ddevapp.NewApp(testDir, false)
 		assert.NoError(err)
 		t.Cleanup(func() {
 			err = app.Stop(true, false)

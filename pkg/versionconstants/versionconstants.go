@@ -21,7 +21,7 @@ var WebTag = "20240213_php_8.2_default" // Note that this can be overridden by m
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.22.7"
+var BaseDBTag = "20240213_mariadb_1011_default"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.22.7"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20240213_traefik_2.11"
