@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -96,7 +95,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			}
 
 			if updateNeeded {
-				output.UserOut.Printf(util.ColorizeText(fmt.Sprintf("\n\nUpgraded DDEV %s is available!\nPlease visit %s to get the upgrade.\nFor upgrade help see %s\n\n", updateVersion, updateURL, updateDocURL), "green"))
+				util.Warning("\nUpgraded DDEV %s is available!\nPlease visit %s\nto get the upgrade.\nFor upgrade help see\n%s\n", updateVersion, updateURL, updateDocURL)
 			}
 		}
 	},
