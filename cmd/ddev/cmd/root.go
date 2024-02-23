@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	updateInterval     = time.Hour * 24 * 7 // One week interval between updates
+	updateInterval     = time.Hour * 4 // Four-hour interval between updates
 	serviceType        string
-	updateDocURL       = "https://ddev.readthedocs.io/en/stable/users/install/"
+	updateDocURL       = "https://ddev.readthedocs.io/en/stable/users/install/ddev-upgrade/"
 	instrumentationApp *ddevapp.DdevApp
 )
 
