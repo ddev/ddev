@@ -683,7 +683,8 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 	go func() {
 		for inOut.Scan() {
-			chanOut <- inOut.Bytes()
+			t := inOut.Bytes()
+			chanOut <- t
 		}
 		close(stopOut)
 	}()
