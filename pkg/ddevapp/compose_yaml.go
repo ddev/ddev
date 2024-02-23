@@ -1,9 +1,12 @@
 package ddevapp
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"gopkg.in/yaml.v3"
+	"io"
 	"os"
 	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
@@ -27,6 +30,13 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+
+	dockerComposeBaseHash := sha1.New()
+	if _, err := io.WriteString(dockerComposeBaseHash, rendered); err != nil {
+		return err
+	}
+	util.Debug("yaml-corruption: %s sha1: %s", app.DockerComposeYAMLPath(), hex.EncodeToString(dockerComposeBaseHash.Sum(nil)))
+
 	_, err = f.WriteString(rendered)
 	if err != nil {
 		return err
@@ -36,6 +46,12 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+
+	util.Debug("yaml-corruption: Running docker compose -f <files> config on the following files:")
+	for _, value := range files {
+		util.Warning("%s", value)
+	}
+
 	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
 		Action:       []string{"config"},
@@ -44,7 +60,14 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 		return err
 	}
 
+	util.Debug("yaml-corruption: The fullContents variable:")
+	util.Debug("%s", fullContents)
+
 	app.ComposeYaml, err = fixupComposeYaml(fullContents, app)
+
+	util.Debug("yaml-corruption: The app.ComposeYaml variable after calling fixupComposeYaml():")
+	util.Debug("%v", app.ComposeYaml)
+
 	if err != nil {
 		return err
 	}
@@ -58,10 +81,14 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 			util.Warning("Error closing %s: %v", fullHandle.Name(), err)
 		}
 	}()
+
 	fullContentsBytes, err := yaml.Marshal(app.ComposeYaml)
 	if err != nil {
 		return err
 	}
+
+	util.Debug("yaml-corruption: The fullContentsBytes variable after yaml.Marshal:")
+	util.Debug("%s", fullContentsBytes)
 
 	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
@@ -79,6 +106,9 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
+
+	util.Debug("yaml-corruption: The tempMap after yaml.Unmarshal:")
+	util.Debug("%v", tempMap)
 
 	// Find any services that have bind-mount to AppRoot and make them relative
 	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm

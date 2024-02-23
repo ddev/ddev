@@ -1033,6 +1033,9 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 		return "", err
 	}
 
+	util.Debug("yaml-corruption: All .docker-compose-base.yaml template variables:")
+	util.Debug("%+v", templateVars)
+
 	err = t.Execute(&doc, templateVars)
 	return doc.String(), err
 }
