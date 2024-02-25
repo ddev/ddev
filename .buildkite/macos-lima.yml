@@ -1,3 +1,7 @@
+ # macOS Lima on arm64 with VZ/Virtiofs
+ # Experimental, not yet enabled
+ # See https://buildkite.com/ddev/macos-lima/settings/repository
+
   - command: ".buildkite/test.sh"
     plugins:
       - docker-login#v2.1.0:

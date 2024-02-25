@@ -1,3 +1,7 @@
+# Rancher Desktop on macOS arm64
+# See https://buildkite.com/ddev/macos-rancher-desktop/settings/repository
+# Runs on ddev/ddev only, not on PRs
+
   - command: ".buildkite/test.sh"
     plugins:
       - docker-login#v2.1.0:
