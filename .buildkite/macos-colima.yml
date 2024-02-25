@@ -1,5 +1,5 @@
-# Docker Desktop on macOS arm64
-# See https://buildkite.com/ddev/ddev-macos-arm64-mutagen/settings/repository
+# Colima with qemu and sshfs
+# See https://buildkite.com/ddev/macos-colima/settings/repository
 # Runs on master and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
@@ -9,14 +9,13 @@
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
-      - "docker-desktop=true"
+      - "colima=true"
       - "architecture=arm64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
-      DDEV_TEST_SHARE_CMD: "true"
-      DDEV_RUN_GET_TESTS: "true"
-      DOCKER_TYPE: "docker-desktop"
-
+      DDEV_TEST_SHARE_CMD: "false"
+      DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "colima"
     parallelism: 1

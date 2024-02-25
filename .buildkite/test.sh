@@ -20,20 +20,60 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   echo "original docker context situation:"
   docker context ls
   case ${DOCKER_TYPE} in
+    "colima")
+      colima stop vz || true
+      limactl stop lima-vz || true
+      ~/.rd/bin/rdctl shutdown || true
+      orb stop &
+      killall com.docker.backend || true
+      colima start
+      colima restart
+      docker context use colima
+      ;;
+    "colima_vz")
+      ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
+      limactl stop lima-vz || true
+      orb stop &
+      killall com.docker.backend || true
+      colima start vz
+      colima restart vz
+      docker context use colima-vz
+      ;;
+
+    "lima")
+      ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
+      colima stop vz || true
+      orb stop &
+      killall com.docker.backend || true
+      limactl start lima-vz
+      docker context use lima-lima-vz
+      ;;
+
     "docker-desktop")
       orb stop &
       ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
+      limactl stop lima-vz || true
+      colima stop vz || true
       open -a Docker &
       docker context use desktop-linux
       ;;
     "orbstack")
       ~/.rd/bin/rdctl shutdown || true
+      colima stop || true
+      colima stop vz || true
+      limactl stop lima-vz || true
       killall com.docker.backend || true
       orb start &
       docker context use orbstack
       ;;
     "rancher-desktop")
       killall com.docker.backend || true
+      colima stop || true
+      limactl stop lima-vz || true
+      colima stop vz || true
       orb stop &
       ~/.rd/bin/rdctl start
       for i in {1..120}; do

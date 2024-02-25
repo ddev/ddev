@@ -1,3 +1,8 @@
+# WSL2 using Docker Desktop
+# See https://buildkite.com/ddev/wsl2-docker-desktop/settings/repository
+# Runs on master only because DD is pretty flaky, so we can't keep up with
+# restarts on PRs
+
   - command: ".buildkite/test.sh"
     plugins:
       - docker-login#v2.1.0:

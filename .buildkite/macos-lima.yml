@@ -1,6 +1,6 @@
-# Docker Desktop on macOS arm64
-# See https://buildkite.com/ddev/ddev-macos-arm64-mutagen/settings/repository
-# Runs on master and PRs, including forked PRs
+ # macOS Lima on arm64 with VZ/Virtiofs
+ # Experimental, not yet enabled
+ # See https://buildkite.com/ddev/macos-lima/settings/repository
 
   - command: ".buildkite/test.sh"
     plugins:
@@ -9,14 +9,14 @@
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
-      - "docker-desktop=true"
+      - "lima=true"
       - "architecture=arm64"
+    branches: "none"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
-      DDEV_TEST_SHARE_CMD: "true"
-      DDEV_RUN_GET_TESTS: "true"
-      DOCKER_TYPE: "docker-desktop"
-
+      DDEV_TEST_SHARE_CMD: "false"
+      DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "lima"
     parallelism: 1

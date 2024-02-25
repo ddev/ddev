@@ -51,8 +51,8 @@ if command -v ddev >/dev/null && version_gt ${MIN_DDEV_VERSION} ${CURRENT_DDEV_V
   exit 4
 fi
 
-# Skip nfs check on linux, as we won't run nfs there
-if [ ${OSTYPE%%-gnu} != "linux" ]; then
+# Skip nfs check on linux/lima, as we won't run nfs there
+if [ ${OSTYPE%%-gnu} != "linux" ] && [ ${DOCKER_TYPE:-nothing} != "lima" ]; then
   $(dirname $0)/nfstest.sh
 fi
 
