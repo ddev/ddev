@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -12,6 +14,10 @@ import (
 
 // sshDirArg allows a configurable container destination directory.
 var sshDirArg string
+
+// cwdArg: If true, --cwd, try to cd into the equivalent of $CWD, inside
+// the guest.
+var cwdArg bool
 
 // DdevSSHCmd represents the SSH command.
 var DdevSSHCmd = &cobra.Command{
@@ -40,11 +46,32 @@ ddev ssh -d /var/www/html`,
 		if !nodeps.ArrayContainsString([]string{"web", "db", "solr"}, serviceType) {
 			shell = "sh"
 		}
-		err = app.ExecWithTty(&ddevapp.ExecOpts{
-			Service: serviceType,
-			Cmd:     shell + " -l",
-			Dir:     sshDirArg,
-		})
+
+		if cwdArg && serviceType != "web" {
+			err = errors.New("The --cwd option can only be used with service type \"web\"")
+		}
+
+		if cwdArg && sshDirArg == "" {
+			guestWorkingDir := app.GetWorkingDir(serviceType, "")
+			hostWorkingDir, err := os.Getwd()
+
+			if err == nil {
+				relPath, err := filepath.Rel(app.GetAbsDocroot(false), hostWorkingDir)
+
+				if err == nil {
+					sshDirArg = filepath.Join(guestWorkingDir, app.GetDocroot(), relPath)
+				}
+			}
+		}
+
+		if err == nil {
+			err = app.ExecWithTty(&ddevapp.ExecOpts{
+				Service: serviceType,
+				Cmd:     shell + " -l",
+				Dir:     sshDirArg,
+			})
+		}
+
 		if err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exiterr.ExitCode())
@@ -57,5 +84,6 @@ ddev ssh -d /var/www/html`,
 func init() {
 	DdevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	DdevSSHCmd.Flags().StringVarP(&sshDirArg, "dir", "d", "", "Defines the destination directory within the container")
+	DdevSSHCmd.Flags().BoolVarP(&cwdArg, "cwd", "c", false, "Jump to the equivalent directory of the current working one, inside the guest")
 	RootCmd.AddCommand(DdevSSHCmd)
 }

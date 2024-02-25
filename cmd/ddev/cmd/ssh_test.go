@@ -67,4 +67,10 @@ func TestCmdSSH(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("/var/www/html\n", out)
 
+	err = os.Mkdir("docroot", 0750)
+	err = os.Mkdir("docroot/subdir", 0750)
+	err = os.Chdir("docroot/subdir")
+	out, err = exec.RunHostCommand(b, "-c", fmt.Sprintf("echo pwd | %s ssh --cwd", DdevBin))
+	assert.NoError(err)
+	assert.Equal("/var/www/html/docroot/subdir\n", out)
 }
