@@ -106,16 +106,16 @@ echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER
 echo
 case ${DOCKER_TYPE:-none} in
   "docker-desktop")
-    echo "docker-desktop=$(scripts/docker-desktop-version.sh)"
+    echo "docker-desktop for mac version=$(scripts/docker-desktop-version.sh)"
     ;;
   "colima*")
-    echo "colima=$(colima version)"
+    echo "colima version=$(colima version)"
     ;;
   "orbstack")
-    echo "orbstack=$(orb --version)"
+    echo "orbstack version=$(orbctl version)"
     ;;
   "rancher-desktop")
-    echo "rancher-desktop=$(~/.rd/bin/rdctl --version)"
+    echo "rancher-desktop=$(~/.rd/bin/rdctl version)"
     ;;
   "wsl2dockerinside")
     echo "Running wsl2dockerinside"
