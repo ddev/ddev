@@ -579,7 +579,6 @@ solr
 somefile
 sql
 sqlite
-sqlsrv
 src
 ssh
 sshd
