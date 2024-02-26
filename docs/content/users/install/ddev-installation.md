@@ -270,7 +270,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Traditional Windows
 
-    If you must use traditional Windows without WSL2, you’ll probably want to enable [Mutagen](performance/#system-requirements) for the best performance.
+    If you must use traditional Windows without WSL2, you’ll probably want to enable [Mutagen](performance.md/#system-requirements) for the best performance.
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
     * Each [DDEV release](https://github.com/ddev/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
