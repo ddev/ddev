@@ -936,6 +936,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
 	}
 
+	// Some installed packages can change the permissions of /run/php
+	// First seen in Debian 12 Bookworm
+	// See https://github.com/ddev/ddev/issues/5898
+	extraWebContent = extraWebContent + "\nRUN chmod 777 /run/php"
+
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string
 	for _, appStart := range app.WebExtraDaemons {
