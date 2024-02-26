@@ -60,6 +60,6 @@ Through add-ons, additional database types are also supported.
 The following official add-ons are available:
 
 - [`ddev/ddev-mongo`](https://github.com/ddev/ddev-mongo)
-- [ddev/ddev-sqlsrv](https://github.com/ddev/ddev-sqlsrv)
+- [`ddev/ddev-sqlsrv`](https://github.com/ddev/ddev-sqlsrv)
 
 Use `ddev get --list --all` to see a list of all add-ons, including additional community-supported database types.
