@@ -58,8 +58,6 @@ Environment variables will be automatically added to your `.env` file to simplif
 
 === "New projects"
 
-    New Craft CMS projects can be created from the official [starter project](https://github.com/craftcms/craft) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
-
     ```bash
     # Create a project directory and move into it:
     mkdir my-craft-project
@@ -70,10 +68,7 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     # Boot the project and install the starter project:
     ddev start
-    ddev composer create -y --no-scripts craftcms/craft
-
-    # Run the Craft installer:
-    ddev craft install
+    ddev composer create -y craftcms/craft
     ddev launch
     ```
 
@@ -198,7 +193,7 @@ ddev launch
     ```bash
     mkdir my-ee && cd my-ee
     unzip /path/to/ee-zipfile.zip
-    ddev config # Accept the defaults
+    ddev config --auto
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
     ```
@@ -240,6 +235,8 @@ ddev php bin/console ibexa:graphql:generate-schema
 ddev launch
 ```
 
+In the web browser, log into your account using `admin` and `publish`.
+
 Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
 
 ## Laravel
@@ -254,9 +251,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     mkdir my-laravel-app
     cd my-laravel-app
     ddev config --project-type=laravel --docroot=public --php-version=8.1
-    ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel -y
-    ddev composer install
-    ddev exec "php artisan key:generate"
+    ddev composer create --prefer-dist laravel/laravel -y
     ddev launch
     ```
 
@@ -268,7 +263,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev config --project-type=laravel --docroot=public --php-version=8.1
     ddev start
     ddev composer install
-    ddev exec "php artisan key:generate"
+    ddev php artisan key:generate
     ddev launch
     ```
 
@@ -383,9 +378,10 @@ Use a new or existing Composer project, or clone a Git repository.
     mkdir my-silverstripe-app
     cd my-silverstripe-app
     ddev config --project-type=silverstripe --docroot=public
-    ddev composer create --prefer-dist --no-scripts silverstripe/installer -y
+    ddev composer create --prefer-dist silverstripe/installer -y
     ddev start
     ddev sake dev/build flush=all
+    ddev launch /admin
     ```
 
 === "Git Clone"
@@ -420,10 +416,9 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     mkdir my-statamic-app
     cd my-statamic-app
     ddev config --project-type=laravel --docroot=public
-    ddev composer create --prefer-dist --no-install --no-scripts statamic/statamic
-    ddev composer install
-    ddev exec "php artisan key:generate"
-    ddev launch
+    ddev composer create --prefer-dist statamic/statamic
+    ddev php please make:user
+    ddev launch /cp
     ```
 === "Git Clone"
 
