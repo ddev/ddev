@@ -89,7 +89,7 @@ if [ ${OSTYPE%%-*} = "linux" ]; then
 fi
 
 # Make sure docker is working
-echo "Waiting for docker to come up: $(date)"
+echo "Waiting for docker provider to come up: $(date)"
 date && ${TIMEOUT_CMD} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
   echo "Waiting for docker to come up: $(date)"
@@ -100,27 +100,29 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker=$(docker version) ddev version=$(ddev --version | awk '{print $3}'))"
+
+case ${DOCKER_TYPE:-none} in
+  "docker-desktop")
+    echo "docker-desktop=$(scripts/docker-desktop-version.sh)"
+    ;;
+  "colima*")
+    echo "colima=$(colima version)"
+    ;;
+  "orbstack")
+    echo "orbstack=$(orb --version)"
+    ;;
+  "rancher-desktop")
+    echo "rancher-desktop=$(~/.rd/bin/rdctl --version)"
+    ;;
+  *)
+    echo "$DOCKER_TYPE not found"
+esac
 
 ddev version
 
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
-
-set -x
-
-# Broken docker context list from https://github.com/docker/for-win/issues/13180
-# When this is solved this can be removed.
-# The only place we care about non-default context is macOS Colima
-if ! docker context list >/dev/null; then
-  rm -rf ~/.docker/contexts && docker context list >/dev/null
-fi
-
-# If this is a PR and the diff doesn't have code, skip it
-if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
-  echo "Skipping build since no code changes found"
-  exit 0
-fi
 
 # We can skip builds with commit message of [skip buildkite]
 if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]] || [[ $BUILDKITE_MESSAGE == *"[skip ci]"* ]]; then
@@ -128,12 +130,13 @@ if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]] || [[ $BUILDKITE_MESSAGE == 
   exit 0
 fi
 
-# On macOS, restart docker to avoid bugs where containers can't be deleted
-#if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
-#  killall Docker || true
-#  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
-#  sleep 10
-#fi
+# If this is a PR and the diff doesn't have code, skip it
+if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
+  echo "Skipping buildkite build since no code changes found"
+  exit 0
+fi
+
+set -x
 
 # We don't want any docker volumes to be existing and changing behavior
 docker volume prune -a -f >/dev/null 2>&1 || true
