@@ -57,7 +57,7 @@ Since the existing binary database may not be compatible with changes to your co
 ## Other databases types
 
 Through add-ons, additional database types are also supported.
-The following official addons are available:
+The following official add-ons are available:
 
 - [ddev/ddev-mongo](https://github.com/ddev/ddev-mongo)
 - [ddev/ddev-sqlsrv](https://github.com/ddev/ddev-sqlsrv)
