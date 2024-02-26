@@ -10,7 +10,6 @@ extra_javascript:
 - 'assets/jquery-3.5.1.min.js'
 #- 'assets/extra.js'
 - 'assets/temp-fix-header-links-in-tabs.js'
-- 'assets/warning-banner-for-latest.js'
 extra_css:
 - 'assets/extra.css'
 site_author: DDEV Foundation
@@ -96,6 +95,7 @@ extra:
   generator: false
   analytics:
     provider: plausible
+  version: !ENV [READTHEDOCS_VERSION_NAME, 'stable']
 
 # Extensions
 markdown_extensions:
