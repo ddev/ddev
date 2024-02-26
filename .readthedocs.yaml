@@ -12,6 +12,10 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+  # build.commands is used to make !ENV syntax work in mkdocs.yml
+  commands:
+    - pip install -r docs/mkdocs-pip-requirements
+    - mkdocs build --site-dir $READTHEDOCS_OUTPUT/html
 
 python:
   install:

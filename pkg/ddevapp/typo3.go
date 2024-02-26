@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/composer"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -210,12 +211,17 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 	return nil
 }
 
-// isTypo3v12OrHigher returns true if the TYPO3 version is 12 or higher. The
-// proper detection will fail if the vendor folder location is changed in the
-// composer.json.
+// isTypo3v12OrHigher returns true if the TYPO3 version is 12 or higher.
 func isTypo3v12OrHigher(app *DdevApp) bool {
-	versionFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "vendor", "typo3", "cms-core", "Classes", "Information", "Typo3Version.php")
+	composerManifest, _ := composer.NewManifest(filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json"))
+	vendorDir := "vendor"
+	if composerManifest != nil {
+		vendorDir = composerManifest.GetVendorDir()
+	}
+
+	versionFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, vendorDir, "typo3", "cms-core", "Classes", "Information", "Typo3Version.php")
 	versionFile, err := fileutil.ReadFileIntoString(versionFilePath)
+
 	// Typo3Version class exists since v10.3.0. Before v11.5.0 the core was always
 	// installed into the folder public/typo3 so we can early return if the file
 	// is not found in the vendor folder.

@@ -4,3 +4,22 @@
   {{ super() }}
   <meta name="google-site-verification" content="uFpolYSfqt2_75ubmaMBdPrmc9LjnEkhZUhSF0ejXWg" />
 {% endblock %}
+
+{% block header %}
+  {% if config.extra.version != "stable" %}
+    <div data-md-color-scheme="default" data-md-component="outdated">
+      <aside class="md-banner md-banner--warning">
+        <div class="md-banner__inner md-grid md-typeset">
+          You're viewing documentation for an unreleased version of DDEV.
+          <a id="stable-docs-link" href="https://ddev.readthedocs.io/en/stable/">
+            <strong>Click here to see the stable documentation.</strong>
+          </a>
+          <script>
+            document.getElementById('stable-docs-link').href = `https://ddev.readthedocs.io/${new URL(window.location.href).pathname.replace(/\/en\/[^/]+/, 'en/stable')}`;
+          </script>
+        </div>
+      </aside>
+    </div>
+  {% endif %}
+  {{ super() }}
+{% endblock %}

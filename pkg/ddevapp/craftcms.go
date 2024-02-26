@@ -146,19 +146,6 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	// If composer.json.default exists, rename it to composer.json
-	composerDefaultFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json.default")
-	if fileutil.FileExists(composerDefaultFilePath) {
-		composerFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json")
-		util.Warning("Renaming composer.json.default to composer.json")
-		err = os.Rename(composerDefaultFilePath, composerFilePath)
-		if err != nil {
-			util.Error("Error renaming composer.json.default to composer.json")
-
-			return err
-		}
-	}
-
 	return nil
 }
 
