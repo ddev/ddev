@@ -53,3 +53,13 @@ Since the existing binary database may not be compatible with changes to your co
 - If you change the database type or version in an existing project, the existing database will not be compatible with your change, so you’ll want to use [`ddev export-db`](../usage/commands.md#export-db) to save a dump first.
 - When you change database type, destroy the existing database using [`ddev delete --omit-snapshot`](../usage/commands.md#delete) before changing, then after [`ddev start`](../usage/commands.md#start) use [`ddev import-db`](../usage/commands.md#import-db) to import the dump you saved.
 - Snapshots are always per database type and database version. So if you have snapshots from MariaDB 10.2 and you switch to MariaDB 10.5, don’t expect to be able to restore the old snapshot.
+
+## Other databases types
+
+Through addons, additional database types are also supported.
+The following official addons are available:
+
+- [ddev/ddev-mongo](https://github.com/ddev/ddev-mongo)
+- [ddev/ddev-sqlsrv](https://github.com/ddev/ddev-sqlsrv)
+
+Use `ddev get --list --all` to see a list of all addons, including additional community-supported database types.
