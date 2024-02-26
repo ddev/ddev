@@ -18,7 +18,7 @@ To add a new project type:
     * `apptypeSettingsPaths` returns the paths for the main settings file and the extra settings file that DDEV may create (like settings.ddev.php for Drupal).
     * `appTypeDetect` is a function that determines whether the project is of the type you’re implementing.
     * `postImportDBAction` can do something after db import. I don’t see it implemented anywhere.
-    * `configOverrideAction` can change default config for your project type. For example, magento2 now requires `php8.1`, so a `configOverrideAction` can change the php version.
+    * `configOverrideAction` can change default config for your project type. For example, your CMS may require `php8.3`, so a `configOverrideAction` can change the php version.
     * `postConfigAction` gives a chance to do something at the end of config, but it doesn’t seem to be used anywhere.
     * `postStartAction` adds actions at the end of [`ddev start`](../users/usage/commands.md#start). You'll see several implementations of this, for things like creating needed default directories, or setting permissions on files, etc.
     * `importFilesAction` defines how [`ddev import-files`](../users/usage/commands.md#import-files) works for this project type.

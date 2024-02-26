@@ -32,7 +32,7 @@ additional services like Mailpit. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>'.`,
 	Example: "ddev describe\nddev describe <projectname>\nddev status\nddev st",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
 		}

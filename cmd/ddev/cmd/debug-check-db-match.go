@@ -10,7 +10,7 @@ import (
 var DebugCheckDBMatch = &cobra.Command{
 	Use:   "check-db-match",
 	Short: "Verify that the database in the ddev-db server matches the configured type/version",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Can't find active project: %v", err)

@@ -4,7 +4,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/fsouza/go-dockerclient"
 )
 
 func PowerOff() {
@@ -29,11 +28,8 @@ func PowerOff() {
 	}
 
 	// Any straggling containers that have label "com.ddev.site-name" should be removed.
-	client := dockerutil.GetDockerClient()
-	containers, err := client.ListContainers(docker.ListContainersOptions{
-		All:     true,
-		Filters: map[string][]string{"label": {"com.ddev.site-name"}},
-	})
+	containers, err := dockerutil.FindContainersByLabels(map[string]string{"label": "com.ddev.site-name"})
+
 	if err == nil {
 		for _, c := range containers {
 			err = dockerutil.RemoveContainer(c.ID)

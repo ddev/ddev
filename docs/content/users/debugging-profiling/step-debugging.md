@@ -56,7 +56,7 @@ When using this zero-configuration option:
 
 #### PhpStorm "Run/Debug Configuration" Debugging
 
-PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require more setup but may be easier and more flexible for some people.
+PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/run-debug-configuration.html) require more setup but may be easier and more flexible for some people.
 
 1. Under the *Run* menu select *Edit configurations*.
 2. Click the *+* in the upper left and choose *PHP Web Page* to create a configuration.
@@ -117,9 +117,10 @@ Here are basic steps to take to sort out any difficulty:
     * Temporarily disable your firewall. On Windows/WSL this is typically Windows Defender; on macOS you'll find it in settings; on Debian/Ubuntu it's typically `ufw` so `sudo ufw disable`.
     * If disabling the firewall fixes the problem, re-enable the firewall and add an exception for port 9003. Your firewall will have a way to do this; on Debian/Ubuntu run `sudo ufw allow 9003`.
 * Delete existing PhpStorm "servers" in settings, or recreate VS Code’s `launch.json` file exactly as shown in the instructions here.
-* Remember the port in play is port 9003.
+* Remember the standard Xdebug port is port 9003, and that's what all instructions here use. In the past some IDEs used port 9000.
+* If your `~/.ddev/global_config.yaml` has `xdebug_ide_location` set, remove that to begin with except for [very unusual situations](../configuration/config.md#xdebugidelocation). You can set it to the default value with `ddev config global --xdebug-ide-location=""`.
 * Reboot your computer.
-* If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`.
+* If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`. (This is unusual.)
 * Temporarily disable any *firewall* or *VPN* if you’re having trouble. Xdebug is a network protocol, and the PHP process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
 * Confirm that DDEV’s [`xdebug_ide_location`](../configuration/config.md#xdebugidelocation) config setting is set properly, which in most cases should be set to an empty string. Check both your project's `.ddev/config.yaml` and DDEV’s global `~/.ddev/global_config.yaml`.
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.

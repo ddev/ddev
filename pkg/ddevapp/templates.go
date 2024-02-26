@@ -13,7 +13,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "8.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3"
+# php_version: "8.2"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3"
 
 # You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to DDEV's' behavior,
@@ -23,7 +23,7 @@ const ConfigInstructions = `
 
 # database:
 #   type: <dbtype> # mysql, mariadb, postgres
-#   version: <version> # database version, like "10.4" or "8.0"
+#   version: <version> # database version, like "10.11" or "8.0"
 #   MariaDB versions can be 5.5-10.8 and 10.11, MySQL versions can be 5.5-8.0
 #   PostgreSQL versions can be 9-16.
 
@@ -64,7 +64,7 @@ const ConfigInstructions = `
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
 # To reinstall Composer after the image was built, run "ddev debug refresh".
 
-# nodejs_version: "18"
+# nodejs_version: "20"
 # change from the default system Node.js version to any other version.
 # Numeric version numbers can be complete (i.e. 18.15.0) or
 # incomplete (18, 17.2, 16). 'lts' and 'latest' can be used as well along with

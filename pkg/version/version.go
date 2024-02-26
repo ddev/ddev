@@ -1,6 +1,7 @@
 package version
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"runtime"
@@ -12,7 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerClient "github.com/fsouza/go-dockerclient"
+	dockerClient "github.com/docker/docker/client"
 )
 
 // IMPORTANT: These versions are overridden by version ldflags specifications VERSION_VARIABLES in the Makefile
@@ -50,13 +51,14 @@ func GetVersionInfo() map[string]string {
 
 // GetDockerPlatform gets the platform used for Docker engine
 func GetDockerPlatform() (string, error) {
+	ctx := context.Background()
 	var client *dockerClient.Client
 	var err error
-	if client, err = dockerClient.NewClientFromEnv(); err != nil {
+	if client, err = dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation()); err != nil {
 		return "", err
 	}
 
-	info, err := client.Info()
+	info, err := client.Info(ctx)
 	if err != nil {
 		return "", err
 	}

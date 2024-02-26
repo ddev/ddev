@@ -105,6 +105,7 @@ jobs:
           brew install colima
           colima version
           colima start --cpu 3 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
+          colima restart
 
       - name: Build ddev
         run: | 

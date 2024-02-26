@@ -1,10 +1,11 @@
 package exec
 
 import (
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/globalconfig"
 
 	"github.com/ddev/ddev/pkg/output"
 	log "github.com/sirupsen/logrus"

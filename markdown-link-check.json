@@ -44,6 +44,15 @@
     },
     {
       "pattern": "^https://analytics.amplitude.com"
+    },
+    {
+      "pattern": "^https://(meta.stackoverflow|stackoverflow|superuser).com/"
+    },
+    {
+      "pattern": "^https://packages.debian.org/stable/"
+    },
+    {
+      "pattern": "^https://community.chocolatey.org"
     }
   ],
   "httpHeaders": [

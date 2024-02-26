@@ -460,8 +460,8 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
+		t.Skip("Skipping on Mac M1 and Colima, lots of network connections failed")
 	}
 
 	assert := asrt.New(t)
@@ -753,8 +753,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
 func TestPHPOverrides(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
+		t.Skip("Skipping on Apple Silicon and Colima to ignore problems with 'connection reset by peer or connection refused'")
 	}
 
 	assert := asrt.New(t)

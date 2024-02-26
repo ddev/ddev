@@ -23,7 +23,7 @@ ddev debug mutagen daemon stop
 ddev debug mutagen
 ddev d mutagen sync list
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		mutagenPath := globalconfig.GetMutagenPath()
 		_, err := os.Stat(mutagenPath)
 		if err != nil {

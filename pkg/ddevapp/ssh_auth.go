@@ -3,15 +3,16 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/fsouza/go-dockerclient"
 	"os"
 	"path"
 	"path/filepath"
 	"text/template"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	dockerTypes "github.com/docker/docker/api/types"
 )
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
@@ -79,7 +80,7 @@ func RemoveSSHAgentContainer() error {
 	// Stop the container if it exists
 	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer)
 	if err != nil {
-		if _, ok := err.(*docker.NoSuchContainer); !ok {
+		if ok := dockerutil.IsErrNotFound(err); !ok {
 			return err
 		}
 	}
@@ -150,7 +151,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 // findDdevSSHAuth uses FindContainerByLabels to get our sshAuth container and
 // return it (or nil if it doesn't exist yet)
-func findDdevSSHAuth() (*docker.APIContainers, error) {
+func findDdevSSHAuth() (*dockerTypes.Container, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
 	}

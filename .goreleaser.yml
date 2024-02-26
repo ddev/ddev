@@ -1,6 +1,8 @@
 ##### BUILDS ######
 builds:
 - id: ddev
+  main: ./cmd/ddev
+
   # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
   builder: prebuilt
   goos:
@@ -121,7 +123,6 @@ builds:
 ###### Archives ######
 archives:
 - id: ddev
-  rlcp: true
   builds:
   - ddev
   - mkcert
@@ -140,14 +141,12 @@ archives:
   allow_different_binary_count: true
 
 - id: completions-tarball
-  rlcp: true
   builds:
   - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-installer
-  rlcp: true
   builds:
   - ddev-windows-installer
   format: binary
@@ -168,7 +167,7 @@ brews:
 - name: ddev
   ids:
   - ddev
-  tap:
+  repository:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
@@ -191,12 +190,12 @@ brews:
         system "make", "build", "completions"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "ddev"
+        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
 
@@ -206,7 +205,7 @@ brews:
 - name: ddev
   ids:
   - ddev
-  tap:
+  repository:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
@@ -229,18 +228,18 @@ brews:
         system "make", "build", "completions"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "ddev"
+        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
 
   test: |
     system "#{bin}/ddev --version"
-    
+
 
 nfpms:
 - maintainer: Randy Fay
@@ -248,6 +247,9 @@ nfpms:
   homepage: https://github.com/ddev/ddev
   description: |
     Open-source local web development tool
+  builds:
+  - ddev
+  - mkcert
   formats:
   - deb
   - rpm
@@ -307,7 +309,7 @@ aurs:
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
-    
+
     # completions
     mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
     mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
@@ -345,7 +347,7 @@ aurs:
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
-    
+
     # completions
     mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
     mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"

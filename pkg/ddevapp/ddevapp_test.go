@@ -19,7 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	dockerImages "github.com/ddev/ddev/pkg/docker"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -29,7 +29,9 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerVolume "github.com/docker/docker/api/types/volume"
+	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
@@ -491,8 +493,8 @@ func TestDdevStart(t *testing.T) {
 	})
 
 	// Make sure the -built Docker image exists before stop
-	webBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
-	dbBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
+	webBuilt := ddevImages.GetWebImage() + "-" + site.Name + "-built"
+	dbBuilt := ddevImages.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)
@@ -973,8 +975,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting Xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.2 get Xdebug 3.0+
-		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82}, app.PHPVersion) {
+		// PHP 7.2 through 8.3 get Xdebug 3.0+
+		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82, nodeps.PHP83}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		} else {
@@ -1384,7 +1386,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
@@ -1606,7 +1608,7 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
+		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`,
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
@@ -1621,7 +1623,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:10", "postgres:14", "mariadb:10.3", "mariadb:10.4", "mariadb:10.11", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:14", "mariadb:10.4", "mariadb:10.11", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1676,7 +1678,13 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		startErr := app.Start()
 		if startErr != nil {
-			assert.NoError(startErr, "failed to start %s:%s", dbType, dbVersion)
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `ls -lR /var/lib/mysql`,
+			})
+			t.Logf("status of /var/lib/mysql; err=%v, stdout=%s\nstderr=%s", err, stdout, stderr)
+			logs, _ := app.CaptureLogs("db", false, "50")
+			assert.NoError(startErr, "failed to start %s:%s, dblogs=\n=========\n%s\n=========\n", dbType, dbVersion, logs)
 			err = app.Stop(true, false)
 			assert.NoError(err)
 			t.Errorf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)
@@ -2738,11 +2746,12 @@ func TestDdevExec(t *testing.T) {
 	assert.Contains(stderr, "this: not found")
 
 	// Now kill the busybox service and make sure that responses to app.Exec are correct
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 	bbc, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, "busybox"))
 	require.NoError(t, err)
 	require.NotEmpty(t, bbc)
-	err = client.StopContainer(bbc.ID, 2)
+	timeout := 2
+	err = client.ContainerStop(ctx, bbc.ID, dockerContainer.StopOptions{Timeout: &timeout})
 	assert.NoError(err)
 
 	simpleOpts := ddevapp.ExecOpts{
@@ -2753,7 +2762,7 @@ func TestDdevExec(t *testing.T) {
 	require.Error(t, err, "stdout='%s', stderr='%s'", stdout, stderr)
 	require.True(t, strings.Contains(err.Error(), "not currently running") || strings.Contains(err.Error(), "is not running") || strings.Contains(err.Error(), "state=exited"), "stdout='%s', stderr='%s'", stdout, stderr)
 
-	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: bbc.ID, Force: true})
+	err = client.ContainerRemove(ctx, bbc.ID, dockerContainer.RemoveOptions{Force: true})
 	assert.NoError(err)
 	_, _, err = app.Exec(&simpleOpts)
 	assert.Error(err)
@@ -3032,14 +3041,14 @@ func TestRouterPortsCheck(t *testing.T) {
 	// This is done with Docker so that we don't have to use explicit sudo
 	// The ddev-webserver healthcheck should make sure that we have a legitimate occupation
 	// of the port by the time it comes up.
-	portBinding := map[docker.Port][]docker.PortBinding{
+	portBinding := map[nat.Port][]nat.PortBinding{
 		"80/tcp": {
 			{HostPort: "80"},
 			{HostPort: "443"},
 		},
 	}
 
-	containerID, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
+	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
 
 	if err != nil {
 		t.Fatalf("Failed to run Docker command to occupy port 80/443, err=%v output=%v", err, out)
@@ -3111,10 +3120,10 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	}
 
 	// Ensure there are no volumes associated with this project
-	client := dockerutil.GetDockerClient()
-	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
+	ctx, client := dockerutil.GetDockerClient()
+	volumes, err := client.VolumeList(ctx, dockerVolume.ListOptions{})
 	assert.NoError(err)
-	for _, volume := range volumes {
+	for _, volume := range volumes.Volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 

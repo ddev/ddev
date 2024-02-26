@@ -25,7 +25,6 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
     ```bash
     @echo off
-    set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
     set DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
     ```
 
@@ -39,92 +38,91 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
-1. Do not set up `buildkite-agent` on the Windows side, or disable it.
-2. Edit Ubuntu's `/etc/wsl.conf` to contain:
-
-    ```
-    [boot]
-    systemd=true
-    ```
-
-3. Update WSL2 to WSL2 Preview from Microsoft Store and `wsl --shutdown` and then restart.
-4. `wsl --update`
-5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
-6. As normal user, run `.github/workflows/linux-setup.sh`.
-7. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
-    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
-
-8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-10. `git config --global --add safe.directory '*'`
-11. Install basics in WSL2:
-
-    ```bash
-    curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
-    echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
-    # Update package information and install DDEV
-    sudo apt update && sudo apt install -y ddev
-
-    sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
-    sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev gnupg lsb-release make mariadb-client
-    sudo snap install ngrok
-    ```
-
-12. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
-
-13. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
-
-    ```bash
-        #!/bin/bash
-        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-        set -e
-    ```
-
-14. Verify that `buildkite-agent` is running.
-15. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
-16. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc` And then do the same as `buildkite-agent` user
-18. `sudo chmod -R ug+w /home/linuxbrew`
-19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
-20. Run `ngrok config add-authtoken <token>` with token for free account.
-21. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
-22. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
-23. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
-24. Add `buildkite-agent` to `sudo` group in `/etc/groups`
-25. Give `buildkite-agent` a password with `sudo passwd buildkite-agent`
-26. As `buildkite-agent` user `mkcert -install`
-
-## Additional Windows Setup for WSL2+Docker-Inside Testing
-
-1. Uninstall Docker Desktop.
-2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop has added in `C:\Windows\system32\drivers\etc\hosts`.
-3. Install Docker and basics in WSL2:
-
-    ```bash
-    sudo mkdir -p /etc/apt/keyrings
-    sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    sudo usermod -aG docker $USER
-    ```
-
-4. Configure buildkite agent in /etc/buildkite-agent:
+1. The Ubuntu distro should be set up with the user `buildkite-agent`
+2. `buildkite-agent` should have home directory `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
+3. Configure buildkite agent in /etc/buildkite-agent:
     * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
     * token="xxx"
     * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
 
     ```
         #!/bin/bash
-        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
         export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
         set -e
     ```
 
-5. Run `.buildkite/sanetestbot.sh`
+4. `wsl.exe --update`
+5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
+6. Install DDEV using the standard WSL2 Docker Desktop installation.
+7. Delete the CAROOT and WSLENV environment variables from administrative PowerShell:
 
-## macOS Test Agent Setup (Intel and Apple Silicon)
+    ```powershell
+    [Environment]::SetEnvironmentVariable("CAROOT", $null, "Machine")
+    [Environment]::SetEnvironmentVariable("WSLENV", $null, "Machine")
+    ```
+
+8. Configure brew in PATH with:
+
+    ```
+    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
+    source ~/.bashrc
+    ```
+
+9. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+10. Manually run `testbot_maintenance.sh`, `.buildkite/testbot_maintenance.sh`.
+11. `git config --global --add safe.directory '*'`
+12. Install basics in WSL2:
+
+    ```bash
+    curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
+    echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
+    # Update package information and install DDEV
+    sudo apt update && sudo apt install -y build-essential ddev icinga2 mariadb-client
+    brew install docker-compose golang 
+
+    sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
+    sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev etckeeper gnupg icinga2 nagios-plugins lsb-release make mariadb-client
+    (mkcert -uninstall || true); rm -rf $(mkcert -CAROOT) || true; mkcert -install
+    sudo snap install --classic go
+    sudo snap install ngrok
+    sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent
+    ```
+
+13. Verify that `buildkite-agent` is running.
+14. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the "Agent" tab it provides a script to configure the agent.
+15. Windows Terminal should be installed. Set "Ubuntu" as the default and have it start on Windows startup.
+16. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+17. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+18. Run `ngrok config add-authtoken <token>` with token for free account.
+
+## Additional Windows Setup for WSL2+Docker-Inside Testing
+
+1. Uninstall Docker Desktop.
+2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop might have added in `C:\Windows\system32\drivers\etc\hosts`.
+3. Install Docker and basics in WSL2:
+
+    ```bash
+    sudo mkdir -p /etc/apt/keyrings
+    sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt update && sudo apt install -y docker-ce docker-ce-cli etckeeper containerd.io docker-compose-plugin
+    sudo usermod -aG docker $USER
+    ```
+
+4. Run `.buildkite/sanetestbot.sh`
+
+## Icinga2 monitoring setup for WSL2 instances
+
+1. Icinga Director web UI, configure the host on `newmonitor.thefays.us`, normally making a copy of an existing identical item.
+2. Deploy the new host using Icinga Director.
+3. On the WSL2 Ubuntu instance, install needed packages: `sudo apt update && sudo apt install -y etckeeper icinga2 monitoring-plugins-contrib nagios-plugins`
+4. Add `nagios` to the `docker` group in `/etc/group`.
+5. `sudo icinga2 node wizard` to configure the agent, see [docs](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#agentsatellite-setup-on-linux)
+6. Restart `sudo systemctl restart icinga2`
+7. Hope that it can all work sometime.
+
+## macOS Docker Desktop Test Agent Setup (Intel and Apple Silicon)
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.
@@ -139,7 +137,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
 13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok`.
-14. Run `ngrok config add-authtoken <token>` with token for free account from 1Password.
+14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
 17. If OrbStack will be deployed, install it from [orbstack.dev](https://orbstack.dev).
@@ -159,12 +157,11 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * `build-path="~/tmp/buildkite-agent/builds"`
 24. The `buildkite-agent/hooks/environment` file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
 
-    ```bash
-    #!/bin/bash
-    export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-    export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-    set -e
-    ```
+       ```
+       #!/bin/bash
+       export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
+       set -e
+       ```
 
 25. Run `brew services start buildkite-agent`.
 26. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
@@ -176,3 +173,21 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     ```bash
     PATH=$PATH:/usr/local/bin:/opt/homebrew/bin
     ```
+
+## Additional Colima macOS setup
+
+1. `brew install colima`
+2. `colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1`
+3. `colima stop`
+4. `colima start vz --cpu 4 --memory 6 --disk 60 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1`
+5. `colima stop vz`
+
+Then the Buildkite agent must be configured with tags `colima=true` and `colima_vz=true`.
+
+## Additional Lima macOS setup (not yet working)
+
+1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount="~/:w" --memory=6 --cpus=4 --disk=100 template://docker`
+2. `limactl start lima-vz`
+3. `docker context use lima-lima-vz`
+
+Then the Buildkite agent must be configured with tags `lima=true`.

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: project-host-cmd
+## Usage: project-host-cmd
+## Example: "ddev project-host-cmd"
+
+echo "this test doesn't need to be executed - just check the autocompletion."

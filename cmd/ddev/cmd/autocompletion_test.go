@@ -1,10 +1,15 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -201,6 +206,155 @@ func TestAutocompletionForDescribeCmd(t *testing.T) {
 	assert.NoError(err)
 	filteredOut = getTestingSitesFromOutput(out)
 	assert.Empty(filteredOut)
+}
+
+// TestAutocompletionForCustomCmds checks custom autocompletion for custom host and container commands
+func TestAutocompletionForCustomCmds(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because untested on Windows")
+	}
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp("", false)
+	assert.NoError(err)
+
+	tmpHome, _, err := makeTempHomeDir(app, t)
+	require.NoError(t, err)
+
+	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		// Stop the Mutagen daemon running in the bogus homedir
+		ddevapp.StopMutagenDaemon()
+		_ = os.RemoveAll(tmpHome)
+		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
+	})
+	err = app.Start()
+	require.NoError(t, err)
+
+	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
+	// It's changed via $HOME for the DDEV subprocess
+	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
+	assert.NoError(err)
+
+	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+	projectCommandsDir := app.GetConfigPath("commands")
+	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
+
+	// Remove existing commands
+	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
+	assert.NoError(err)
+	err = os.RemoveAll(projectCommandsDir)
+	assert.NoError(err)
+	err = os.RemoveAll(projectGlobalCommandsCopy)
+	assert.NoError(err)
+	// Copy project and global commands into project
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
+	assert.NoError(err)
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
+	require.NoError(t, err)
+	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+
+	// Must sync our added commands before using them.
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
+	// Check completion results are as expected for each command
+	for _, cmd := range []string{"global-host-cmd", "global-web-cmd", "project-host-cmd", "project-web-cmd"} {
+		out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, "anArg")
+		assert.NoError(err)
+		expectedHost, _ := os.Hostname()
+		if !strings.Contains(cmd, "host") {
+			expectedHost = site.Name + "-web"
+		}
+		// We're not testing the internals of cobra's completion so we don't want to assert the exact output,
+		// just check that the suggestions we expect are included in the output.
+		assert.Contains(out, expectedHost)
+		assert.Contains(out, cmd)
+		assert.Contains(out, "anArg")
+	}
+}
+
+// TestAutocompleteTermsForCustomCmds tests the AutocompleteTerms annotation for custom host and container commands
+func TestAutocompleteTermsForCustomCmds(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp("", false)
+	assert.NoError(err)
+
+	tmpHome, _, err := makeTempHomeDir(app, t)
+	require.NoError(t, err)
+
+	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		// Stop the Mutagen daemon running in the bogus homedir
+		ddevapp.StopMutagenDaemon()
+		_ = os.RemoveAll(tmpHome)
+		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
+	})
+	err = app.Start()
+	require.NoError(t, err)
+
+	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
+	// It's changed via $HOME for the DDEV subprocess
+	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
+	assert.NoError(err)
+
+	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+	projectCommandsDir := app.GetConfigPath("commands")
+	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
+
+	// Remove existing commands
+	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
+	assert.NoError(err)
+	err = os.RemoveAll(projectCommandsDir)
+	assert.NoError(err)
+	err = os.RemoveAll(projectGlobalCommandsCopy)
+	assert.NoError(err)
+	// Copy project and global commands into project
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
+	assert.NoError(err)
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
+	require.NoError(t, err)
+	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+
+	// Must sync our added commands before using them.
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
+	// Check completion results are as expected for each command
+	for _, cmd := range []string{"global-host-cmd", "global-web-cmd", "project-host-cmd", "project-web-cmd"} {
+		out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, "")
+		assert.NoError(err)
+		// We're not testing the internals of cobra's completion so we don't want to assert the exact output,
+		// just check that the suggestions we expect are included in the output.
+		assert.Contains(out, strings.Replace(cmd, "cmd", "one", 1))
+		assert.Contains(out, "suggest two")
+		assert.Contains(out, "three")
+	}
 }
 
 // getTestingSitesFromOutput() finds only the ddev list items that

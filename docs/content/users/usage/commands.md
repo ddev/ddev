@@ -180,7 +180,7 @@ Flags:
 * `--composer-root`: Overrides the default Composer root directory for the web service.
 * `--composer-root-default`: Unsets a web service Composer root directory override.
 * `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"1"`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
-* `--database`: Specify the database type:version to use. Defaults to `mariadb:10.4`.
+* `--database`: Specify the database type:version to use. Defaults to `mariadb:10.11`.
 * `--db-image`: Sets the db container image.
 * `--db-image-default`: Sets the default db container image for this DDEV version.
 * `--db-working-dir`: Overrides the default working directory for the db service.
@@ -956,13 +956,13 @@ ddev npm update
 
 ## `nvm`
 
-Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command).
+Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command). (Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.)
 
 Example:
 
 ```shell
-# Use `nvm` to switch to Node.js v18
-ddev nvm install 18
+# Use `nvm` to switch to Node.js v20
+ddev nvm install 20
 ```
 
 ## `php`
@@ -1121,7 +1121,7 @@ Common commands:
 
 ## `self-upgrade`
 
-Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation. Must be executed from the project context.
+Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation.
 
 Example:
 

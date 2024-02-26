@@ -14,7 +14,7 @@ var DdevSnapshotRestoreCommand = &cobra.Command{
 	Short: "Restore a project's database to the provided snapshot version.",
 	Long: `Uses mariabackup command to restore a project database to a particular snapshot from the .ddev/db_snapshots folder.
 Example: "ddev snapshot restore d8git_20180717203845"`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var snapshotName string
 
 		app, err := ddevapp.GetActiveApp("")

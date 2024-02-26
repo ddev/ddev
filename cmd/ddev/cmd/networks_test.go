@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerTypes "github.com/docker/docker/api/types"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ import (
 func TestNetworkDuplicates(t *testing.T) {
 	assert := asrt.New(t)
 
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
 	// Create two networks with the same name
 	networkName := "ddev-" + t.Name() + "_default"
@@ -25,7 +25,7 @@ func TestNetworkDuplicates(t *testing.T) {
 		err := dockerutil.RemoveNetwork(networkName)
 		assert.NoError(err)
 
-		networks, err := client.ListNetworks()
+		networks, err := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
 		assert.NoError(err)
 
 		// Ensure the network is not in the list
@@ -35,35 +35,28 @@ func TestNetworkDuplicates(t *testing.T) {
 	})
 
 	labels := map[string]string{"com.ddev.platform": "ddev"}
-	netOptions := docker.CreateNetworkOptions{
-		Name:     networkName,
+	netOptions := dockerTypes.NetworkCreate{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   labels,
 	}
 
 	// Create the first network
-	_, err := client.CreateNetwork(netOptions)
+	_, err := client.NetworkCreate(ctx, networkName, netOptions)
 	assert.NoError(err)
 
 	// Create a second network with the same name
-	_, errDuplicate := client.CreateNetwork(netOptions)
+	_, errDuplicate := client.NetworkCreate(ctx, networkName, netOptions)
 
-	errVersion := dockerutil.CheckDockerVersion(">= 25.0.0-alpha1")
+	// Go library docker/docker/client v25+ throws an error,
+	// no matter what version of Docker is installed
+	assert.Error(errDuplicate)
 
-	if errVersion == nil {
-		// Duplicate cannot be created with Docker >= 25.x.x
-		assert.Error(errDuplicate)
-	} else {
-		// Duplicate can be created with Docker < 25.x.x
-		assert.NoError(errDuplicate)
-	}
-
-	// The duplicate network is removed here
-	err = dockerutil.EnsureNetwork(client, networkName, netOptions)
+	// Check if the network is created
+	err = dockerutil.EnsureNetwork(ctx, client, networkName, netOptions)
 	assert.NoError(err)
 
 	// This check would fail if there is a network duplicate
-	_, err = client.NetworkInfo(networkName)
+	_, err = client.NetworkInspect(ctx, networkName, dockerTypes.NetworkInspectOptions{})
 	assert.NoError(err)
 }

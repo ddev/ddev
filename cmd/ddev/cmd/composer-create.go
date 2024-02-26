@@ -8,25 +8,21 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/composer"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/mattn/go-isatty"
-
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
-var composerCreateYesFlag bool
-
 // ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
-	Use: "create [args] [flags]",
-	FParseErrWhitelist: cobra.FParseErrWhitelist{
-		UnknownFlags: true,
-	},
-	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
+	DisableFlagParsing: true,
+	Use:                "create [args] [flags]",
+	Short:              "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the Composer root directory after install.`,
@@ -36,8 +32,11 @@ ddev composer create "typo3/cms-base-distribution:^10"
 ddev composer create drupal/recommended-project --no-install
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev composer create --prefer-dist --no-interaction --no-dev psr/log
+ddev composer create --preserve-flags --no-interaction psr/log
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	ValidArgsFunction: getComposerCompletionFunc(true),
+	Run: func(cmd *cobra.Command, _ []string) {
+		preserveFlags, _ := cmd.Flags().GetBool("preserve-flags")
 
 		// We only want to pass all flags and args to Composer
 		// cobra does not seem to allow direct access to everything predictably
@@ -46,7 +45,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			osargs = os.Args[3:]
 			osargs = nodeps.RemoveItemFromSlice(osargs, "--yes")
 			osargs = nodeps.RemoveItemFromSlice(osargs, "-y")
+			osargs = nodeps.RemoveItemFromSlice(osargs, "--preserve-flags")
 		}
+
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
@@ -57,7 +58,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		if status != ddevapp.SiteRunning {
 			err = app.Start()
 			if err != nil {
-				util.Failed("Failed to start app %s to run create-project: %v", app.Name, err)
+				util.Failed("failed to start app %s to run create-project: %v", app.Name, err)
 			}
 		}
 
@@ -99,12 +100,24 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
+		// Add some args to avoid troubles while cloning as long as
+		// --preserve-flags is not set.
+		createArgs := osargs
+
+		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
+			createArgs = append(createArgs, "--no-plugins")
+		}
+
+		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-scripts") {
+			createArgs = append(createArgs, "--no-scripts")
+		}
+
 		// Remember if --no-install was provided by the user
-		noInstallPresent := nodeps.ArrayContainsString(osargs, "--no-install")
+		noInstallPresent := nodeps.ArrayContainsString(createArgs, "--no-install")
 		if !noInstallPresent {
 			// Add the --no-install option by default to avoid issues with
 			// rsyncing many files afterwards to the project root.
-			osargs = append(osargs, "--no-install")
+			createArgs = append(createArgs, "--no-install")
 		}
 
 		// Build container Composer command
@@ -112,7 +125,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			"composer",
 			"create-project",
 		}
-		composerCmd = append(composerCmd, osargs...)
+		composerCmd = append(composerCmd, createArgs...)
 		composerCmd = append(composerCmd, containerInstallPath)
 
 		output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
@@ -122,12 +135,17 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			Dir:     "/var/www/html",
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		})
+
 		if err != nil {
-			util.Failed("Failed to create project:%v, stderr=%v", err, stderr)
+			util.Failed("failed to create project: %v\nstderr=%v", err, stderr)
 		}
 
 		if len(stdout) > 0 {
-			fmt.Println(strings.TrimSpace(stdout))
+			output.UserOut.Println(stdout)
+		}
+
+		if len(stderr) > 0 {
+			output.UserErr.Println(stderr)
 		}
 
 		output.UserOut.Printf("Moving install to Composer root")
@@ -143,7 +161,42 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		})
 
 		if err != nil {
-			util.Failed("Failed to create project: %v", err)
+			util.Failed("failed to create project: %v", err)
+		}
+
+		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+
+		if !preserveFlags && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
+			// Try to run post-root-package-install.
+			composerCmd = []string{
+				"composer",
+				"run-script",
+				"post-root-package-install",
+			}
+
+			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+
+			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Dir:     app.GetComposerRoot(true, false),
+				RawCmd:  composerCmd,
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+
+			if len(stdout) > 0 {
+				output.UserOut.Println(stdout)
+			}
+
+			if len(stderr) > 0 {
+				output.UserErr.Println(stderr)
+			}
+		}
+
+		// Do a spare restart, which will create any needed settings files
+		// and also restart mutagen
+		err = app.Restart()
+		if err != nil {
+			util.Warning("failed to restart project after composer create: %v", err)
 		}
 
 		// If --no-install was not provided by the user, call composer install
@@ -189,23 +242,57 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				}
 			}
 
-			// Run command
+			// Run install command.
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
-			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+
+			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				RawCmd:  composerCmd,
 				Dir:     app.GetComposerRoot(true, false),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
+
 			if err != nil {
-				util.Failed("Failed to install project:%v, stderr=%v", err, stderr)
+				util.Failed("failed to install project: %v\nstderr=%v", err, stderr)
 			}
 
 			if len(stdout) > 0 {
-				fmt.Println(strings.TrimSpace(stdout))
+				output.UserOut.Println(stdout)
+			}
+
+			if len(stderr) > 0 {
+				output.UserErr.Println(stderr)
+			}
+
+			// Reload composer.json if it has changed in the meantime.
+			composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+
+			if !preserveFlags && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
+				// Try to run post-create-project-cmd.
+				composerCmd = []string{
+					"composer",
+					"run-script",
+					"post-create-project-cmd",
+				}
+
+				output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+
+				stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
+					Service: "web",
+					Dir:     app.GetComposerRoot(true, false),
+					RawCmd:  composerCmd,
+					Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+				})
+
+				if len(stdout) > 0 {
+					output.UserOut.Println(stdout)
+				}
+
+				if len(stderr) > 0 {
+					output.UserErr.Println(stderr)
+				}
 			}
 		}
-
 		// Do a spare restart, which will create any needed settings files
 		// and also restart Mutagen
 		err = app.Restart()
@@ -225,7 +312,8 @@ var ComposerCreateProjectCmd = &cobra.Command{
 	Use:                "create-project",
 	Short:              "Unsupported, use `ddev composer create` instead",
 	DisableFlagParsing: true,
-	Run: func(cmd *cobra.Command, args []string) {
+	Hidden:             true,
+	Run: func(_ *cobra.Command, _ []string) {
 		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
 for basic project creation or 'ddev ssh' into the web container and execute
 'composer create-project' directly.`)
@@ -233,7 +321,8 @@ for basic project creation or 'ddev ssh' into the web container and execute
 }
 
 func init() {
-	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
+	ComposerCreateCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
+	ComposerCreateCmd.Flags().Bool("preserve-flags", false, "Do not append `--no-plugins` and `--no-scripts` flags")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }

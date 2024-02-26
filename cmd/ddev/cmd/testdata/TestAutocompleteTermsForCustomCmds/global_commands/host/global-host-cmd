@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: global-host-cmd
+## Usage: global-host-cmd
+## Example: "ddev global-host-cmd"
+## AutocompleteTerms: ["global-host-one", "suggest two", "three"]
+
+echo "this test doesn't need to be executed - just check the autocompletion."

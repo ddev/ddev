@@ -19,7 +19,7 @@ var DebugDockercheckCmd = &cobra.Command{
 	Use:     "dockercheck",
 	Short:   "Diagnose DDEV Docker/Colima setup",
 	Example: "ddev debug dockercheck",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
 		}
@@ -67,7 +67,7 @@ var DebugDockercheckCmd = &cobra.Command{
 			}
 		}
 
-		client := dockerutil.GetDockerClient()
+		_, client := dockerutil.GetDockerClient()
 		if client == nil {
 			util.Failed("Unable to get Docker client")
 		}

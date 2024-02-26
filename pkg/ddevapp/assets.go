@@ -2,10 +2,10 @@ package ddevapp
 
 import (
 	"embed"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
 // The bundled assets for the project .ddev directory are in directory dotddev_assets
@@ -36,6 +36,12 @@ var bundledAssets embed.FS
 // directory's assets (if it's a project) and then later (when called with appName) update
 // the actual project's assets.
 func PopulateExamplesCommandsHomeadditions(appName string) error {
+
+	err := fileutil.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
+	if err != nil {
+		return err
+	}
+
 	app, err := GetActiveApp(appName)
 	// If we have an error from GetActiveApp, it means we're not in a project directory
 	// That is not an error. It means we can not do this work, so return nil.
@@ -44,10 +50,6 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 	}
 
 	err = fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
-	if err != nil {
-		return err
-	}
-	err = fileutil.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
 	if err != nil {
 		return err
 	}

@@ -40,11 +40,11 @@ func NewImportFileCmd() *cobra.Command {
 			ddev import-files --source=.tarballs/files.tar.xz --target=../private
 			ddev import-files --source=.tarballs/files.tar.gz --target=sites/default/files
 		`),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(_ *cobra.Command, _ []string) {
 			dockerutil.EnsureDdevNetwork()
 		},
 		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			app, err := ddevapp.GetActiveApp("")
 			if err != nil {
 				return fmt.Errorf("unable to get project: %v", err)

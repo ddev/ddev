@@ -17,8 +17,8 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types/versions"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerVersions "github.com/docker/docker/api/types/versions"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 )
@@ -96,7 +96,7 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml
 // has been deleted.
 func Cleanup(app *DdevApp) error {
-	client := dockerutil.GetDockerClient()
+	ctx, client := dockerutil.GetDockerClient()
 
 	// Find all containers which match the current site name.
 	labels := map[string]string{
@@ -125,13 +125,12 @@ func Cleanup(app *DdevApp) error {
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-		removeOpts := docker.RemoveContainerOptions{
-			ID:            containers[i].ID,
+		removeOpts := dockerContainer.RemoveOptions{
 			RemoveVolumes: true,
 			Force:         true,
 		}
 		output.UserOut.Printf("Removing container: %s", containerName)
-		if err = client.RemoveContainer(removeOpts); err != nil {
+		if err = client.ContainerRemove(ctx, containers[i].ID, removeOpts); err != nil {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
@@ -203,7 +202,7 @@ func templateCanUse(feature string) bool {
 		if err != nil {
 			return false
 		}
-		return versions.GreaterThanOrEqualTo(dockerAPIVersion, "1.44")
+		return dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, "1.44")
 	}
 	return false
 }
@@ -427,7 +426,7 @@ func ExtractProjectNames(apps []*DdevApp) []string {
 // If numArgs is 0, completion will be provided for infinite arguments,
 // otherwise it will only be provided for the numArgs number of arguments.
 func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		// Don't provide completions if the user keeps hitting space after
 		// exhausting all of the valid arguments.
 		if numArgs > 0 && len(args)+1 > numArgs {

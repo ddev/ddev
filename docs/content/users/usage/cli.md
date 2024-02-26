@@ -33,7 +33,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 
 ## Node.js, npm, nvm, and Yarn
 
-`nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../usage/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../usage/commands.md#yarn) command.
+`node`, `nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../usage/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../usage/commands.md#yarn) command. (Note that since `nodejs_version` configuration can now specify any `node` version, including patch versions, it's preferred to using the less robust `ddev nvm` way of specifying the `node` version.)
 
 ## More Bundled Tools
 

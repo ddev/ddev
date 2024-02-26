@@ -1,0 +1,22 @@
+ # macOS Lima on arm64 with VZ/Virtiofs
+ # Experimental, not yet enabled
+ # See https://buildkite.com/ddev/macos-lima/settings/repository
+
+  - command: ".buildkite/test.sh"
+    plugins:
+      - docker-login#v2.1.0:
+          username: druddockerpullaccount
+          password-env: DOCKERHUB_PULL_PASSWORD
+    agents:
+      - "os=macos"
+      - "lima=true"
+      - "architecture=arm64"
+    branches: "none"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DDEV_TEST_SHARE_CMD: "false"
+      DDEV_RUN_GET_TESTS: "false"
+      DOCKER_TYPE: "lima"
+    parallelism: 1

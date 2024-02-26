@@ -6,6 +6,7 @@
 ## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof status"
 ## ExecRaw: false
 ## Flags: []
+## AutocompleteTerms: ["on","off","enable","disable","status"]
 
 if [ $# -eq 0 ]; then
   enable_xhprof

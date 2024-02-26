@@ -11,7 +11,7 @@ import (
 var DebugFixCommandsCmd = &cobra.Command{
 	Use:   "fix-commands",
 	Short: "Fix up custom/shell commands without running ddev start",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Can't find active project: %v", err)

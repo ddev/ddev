@@ -1,3 +1,7 @@
+# Orbstack on macOS arm64
+# See https://buildkite.com/ddev/macos-orbstack/settings/repository
+# Runs on master and PRs, including forked PRs
+
   - command: ".buildkite/test.sh"
     plugins:
       - docker-login#v2.1.0:
@@ -7,7 +11,7 @@
       - "os=macos"
       - "orbstack=true"
       - "architecture=arm64"
-    #branches: "master"
+#    branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

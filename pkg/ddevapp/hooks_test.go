@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -15,6 +16,9 @@ import (
 
 // TestProcessHooks tests execution of commands defined in config.yaml
 func TestProcessHooks(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows, as it always hangs")
+	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]

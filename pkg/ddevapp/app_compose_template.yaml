@@ -253,7 +253,6 @@ networks:
   ddev_default:
     name: ddev_default
     external: true
-  {{/* the default project network is created programmatically, see EnsureProjectNetwork() */}}
   default:
     name: ${COMPOSE_PROJECT_NAME}_default
     {{ if .IsGitpod }}{{/* see https://github.com/ddev/ddev/issues/3766 */}}

@@ -1,3 +1,5 @@
+# Not currently used. This would build and run containers on Windows.
+
   - command: ".buildkite/test_containers.cmd"
     plugins:
       - docker-login#v2.1.0:
@@ -9,4 +11,5 @@
       - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
+      DOCKER_TYPE: dockerforwindows
     parallelism: 1

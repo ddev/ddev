@@ -1,4 +1,4 @@
-FROM traefik:2.10
+FROM traefik:2.11
 
 ENV TRAEFIK_MONITOR_PORT=10999
 RUN apk add bash curl htop vim

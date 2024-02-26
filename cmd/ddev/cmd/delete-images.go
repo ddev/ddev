@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	dockerImages "github.com/ddev/ddev/pkg/docker"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	docker "github.com/fsouza/go-dockerclient"
+	dockerTypes "github.com/docker/docker/api/types"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +25,7 @@ ddev delete images -y
 ddev delete images --all`,
 
 	Args: cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 
 		// If true, --yes, we don't stop and prompt before deletion
 		deleteImagesNocConfirm, _ := cmd.Flags().GetBool("yes")
@@ -56,9 +56,8 @@ func init() {
 
 // deleteDdevImages removes Docker images prefixed with DDEV-
 func deleteDdevImages(deleteAll bool) error {
-
-	client := dockerutil.GetDockerClient()
-	images, err := client.ListImages(docker.ListImagesOptions{
+	ctx, client := dockerutil.GetDockerClient()
+	images, err := client.ImageList(ctx, dockerTypes.ImageListOptions{
 		All: true,
 	})
 	if err != nil {
@@ -96,11 +95,11 @@ func deleteDdevImages(deleteAll bool) error {
 		return images[i].RepoTags[0] > images[j].RepoTags[0]
 	})
 
-	webimg := dockerImages.GetWebImage()
-	routerimage := dockerImages.GetRouterImage()
-	sshimage := dockerImages.GetSSHAuthImage()
+	webimg := ddevImages.GetWebImage()
+	routerimage := ddevImages.GetRouterImage()
+	sshimage := ddevImages.GetSSHAuthImage()
 
-	nameAry := strings.Split(dockerImages.GetDBImage(nodeps.MariaDB, ""), ":")
+	nameAry := strings.Split(ddevImages.GetDBImage(nodeps.MariaDB, ""), ":")
 	keepDBImageTag := "notagfound"
 	if len(nameAry) > 1 {
 		keepDBImageTag = nameAry[1]
@@ -129,7 +128,7 @@ func deleteDdevImages(deleteAll bool) error {
 			}
 			// TODO: Verify the functionality here. May not work since GetRouterImage() returns full image spec
 			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, dockerImages.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
+			if strings.HasPrefix(tag, ddevImages.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

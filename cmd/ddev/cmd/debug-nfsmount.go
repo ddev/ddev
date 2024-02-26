@@ -22,7 +22,7 @@ var DebugNFSMountCmd = &cobra.Command{
 	Use:     "nfsmount",
 	Short:   "Checks to see if nfs mounting works for current project",
 	Example: "ddev debug nfsmount",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		testVolume := "testnfsmount"
 		containerName := "testnfscontainer"
 
