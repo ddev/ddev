@@ -125,8 +125,10 @@ case ${DOCKER_TYPE:-none} in
     ;;
   "dockerforwindows")
     echo "Running wsl2-docker-desktop"
+    ;;
   *)
     echo "$DOCKER_TYPE not found"
+    ;;
 esac
 
 echo "Docker version:"
