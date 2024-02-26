@@ -100,8 +100,10 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker=$(docker version) ddev version=$(ddev --version | awk '{print $3}'))"
+echo
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
 
+echo
 case ${DOCKER_TYPE:-none} in
   "docker-desktop")
     echo "docker-desktop=$(scripts/docker-desktop-version.sh)"
@@ -119,7 +121,10 @@ case ${DOCKER_TYPE:-none} in
     echo "$DOCKER_TYPE not found"
 esac
 
+docker version
+echo
 ddev version
+echo
 
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
