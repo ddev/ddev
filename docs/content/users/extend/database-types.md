@@ -56,10 +56,10 @@ Since the existing binary database may not be compatible with changes to your co
 
 ## Other databases types
 
-Through addons, additional database types are also supported.
+Through add-ons, additional database types are also supported.
 The following official addons are available:
 
 - [ddev/ddev-mongo](https://github.com/ddev/ddev-mongo)
 - [ddev/ddev-sqlsrv](https://github.com/ddev/ddev-sqlsrv)
 
-Use `ddev get --list --all` to see a list of all addons, including additional community-supported database types.
+Use `ddev get --list --all` to see a list of all add-ons, including additional community-supported database types.
