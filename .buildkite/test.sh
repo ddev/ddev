@@ -5,7 +5,7 @@ set -eu -o pipefail
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-# GOTEST_SHORT=12 means drupal0
+# GOTEST_SHORT=12 means drupal10
 export GOTEST_SHORT=12
 
 export DOCKER_SCAN_SUGGEST=false
@@ -22,12 +22,12 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     ~/.rd/bin/rdctl shutdown || true
     docker context use default
     # Leave orbstack running as the most likely to be reliable
-    orb start &
+    command -v orb &>/dev/null && orb start &
     true
   }
   trap cleanup EXIT
 
-    # Start with a predictable setup orbstack running
+  # Start with a predictable setup orbstack running
   cleanup
 
   echo "starting docker context situation:"
