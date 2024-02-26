@@ -81,7 +81,7 @@ $(TARGETS): mkcert $(GOFILES)
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=0 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	go build -race -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
