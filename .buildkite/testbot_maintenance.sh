@@ -48,7 +48,8 @@ linux)
 
 esac
 
-(yes | ddev delete images >/dev/null) || true
+echo "Deleting unused images with ddev delete images"
+ddev delete images -y || true
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null 2>&1 || true
