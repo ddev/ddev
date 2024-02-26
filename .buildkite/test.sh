@@ -52,7 +52,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
 
     "docker-desktop")
-      open -a Docker &
+      open -a /Applications/Docker.app &
       docker context use desktop-linux
       ;;
 
