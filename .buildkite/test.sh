@@ -15,7 +15,7 @@ export DOCKER_SCOUT_SUGGEST=false
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
-    command -v orb 2>/dev/null && echo "Stopping orbstack" && (orb stop || true)
+    command -v orb 2>/dev/null && echo "Stopping orbstack" && (orb stop &)
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
     command -v colima 2>/dev/null && echo "Stopping colima" && (colima stop || true)
     command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop vz || true)
