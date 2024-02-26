@@ -72,13 +72,26 @@ windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 completions: $(GOTMP)/bin/completions.tar.gz
 
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
+TARGETS=$(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): mkcert $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=0 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
+	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
+	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
+	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
+	@echo $(VERSION) >VERSION.txt
+
+LINUX_AMD64_TARGETS=$(GOTMP)/bin/linux_amd64/ddev
+$(LINUX_AMD64_TARGETS): mkcert $(GOFILES)
+	@echo "building $@ from $(SRC_AND_UNDER)";
+	@#echo "LDFLAGS=$(LDFLAGS)";
+	@rm -f $@
+	@export TARGET=$(word 3, $(subst /, ,$@)) && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=1 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	go build -race -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
