@@ -41,6 +41,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   case ${DOCKER_TYPE:=none} in
     "colima")
       colima start
+      # Colima seems to end up working better with less failures if we restart after starting
       colima restart
       docker context use colima
       ;;
@@ -92,7 +93,7 @@ fi
 echo "Waiting for docker provider to come up: $(date)"
 date && ${TIMEOUT_CMD} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
-  echo "Waiting for docker to come up: $(date)"
+  echo "Waiting: $(date)"
 done'
 echo "Testing again to make sure docker came up: $(date)"
 if ! docker ps >/dev/null 2>&1 ; then
