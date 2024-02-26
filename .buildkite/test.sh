@@ -1,10 +1,12 @@
 #!/bin/bash
 # This script is used to build ddev/ddev using buildkite
 
+set -eu -o pipefail
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-# GOTEST_SHORT=8 means drupal9
-export GOTEST_SHORT=8
+# GOTEST_SHORT=12 means drupal0
+export GOTEST_SHORT=12
 
 export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
@@ -12,69 +14,54 @@ export DOCKER_SCOUT_SUGGEST=false
 # On macOS, we can have several different docker providers, allow testing all
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
-#      docker context use default
+    orb stop &
+    killall com.docker.backend || true
+    colima stop || true
+    colima stop vz || true
+    limactl stop lima-vz || true
+    ~/.rd/bin/rdctl shutdown || true
+    docker context use default
+    # Leave orbstack running as the most likely to be reliable
+    orb start &
     true
   }
   trap cleanup EXIT
 
-  echo "original docker context situation:"
+    # Start with a predictable setup orbstack running
+  cleanup
+
+  echo "starting docker context situation:"
   docker context ls
+
+  # Now start the docker provider we want
   case ${DOCKER_TYPE} in
     "colima")
-      colima stop vz || true
-      limactl stop lima-vz || true
-      ~/.rd/bin/rdctl shutdown || true
-      orb stop &
-      killall com.docker.backend || true
       colima start
       colima restart
       docker context use colima
       ;;
     "colima_vz")
-      ~/.rd/bin/rdctl shutdown || true
-      colima stop || true
-      limactl stop lima-vz || true
-      orb stop &
-      killall com.docker.backend || true
       colima start vz
       colima restart vz
       docker context use colima-vz
       ;;
 
     "lima")
-      ~/.rd/bin/rdctl shutdown || true
-      colima stop || true
-      colima stop vz || true
-      orb stop &
-      killall com.docker.backend || true
       limactl start lima-vz
       docker context use lima-lima-vz
       ;;
 
     "docker-desktop")
-      orb stop &
-      ~/.rd/bin/rdctl shutdown || true
-      colima stop || true
-      limactl stop lima-vz || true
-      colima stop vz || true
       open -a Docker &
       docker context use desktop-linux
       ;;
+
     "orbstack")
-      ~/.rd/bin/rdctl shutdown || true
-      colima stop || true
-      colima stop vz || true
-      limactl stop lima-vz || true
-      killall com.docker.backend || true
       orb start &
       docker context use orbstack
       ;;
+
     "rancher-desktop")
-      killall com.docker.backend || true
-      colima stop || true
-      limactl stop lima-vz || true
-      colima stop vz || true
-      orb stop &
       ~/.rd/bin/rdctl start
       for i in {1..120}; do
         if docker context use rancher-desktop >/dev/null 2>&1 ; then
@@ -99,7 +86,7 @@ fi
 
 # Make sure docker is working
 echo "Waiting for docker to come up: $(date)"
-date && ${TIMEOUT_CMD} 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
+date && ${TIMEOUT_CMD} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
   echo "Waiting for docker to come up: $(date)"
 done'
@@ -116,9 +103,6 @@ ddev version
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 
-set -o errexit
-set -o pipefail
-set -o nounset
 set -x
 
 # Broken docker context list from https://github.com/docker/for-win/issues/13180
