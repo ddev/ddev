@@ -9,7 +9,7 @@ The following database types are supported out of the box:
 - Postgres 9-16
 
 The default database type is MariaDB, and the default version is currently 10.4.
-(New LTS versions of each of these are typically added soon after release. The very old versions are kept for compatibility with older projects.)
+New LTS versions of each of these are typically added soon after release. The very old versions are kept for compatibility with older projects.
 
 You could set these using the [`ddev config`](../usage/commands.md#config) command like this:
 
