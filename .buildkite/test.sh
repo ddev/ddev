@@ -117,12 +117,21 @@ case ${DOCKER_TYPE:-none} in
   "rancher-desktop")
     echo "rancher-desktop=$(~/.rd/bin/rdctl --version)"
     ;;
+  "wsl2dockerinside")
+    echo "Running wsl2dockerinside"
+    ;;
+  "dockerforwindows")
+    echo "Running Windows docker desktop for windows"
+    ;;
+  "dockerforwindows")
+    echo "Running wsl2-docker-desktop"
   *)
     echo "$DOCKER_TYPE not found"
 esac
 
+echo "Docker version:"
 docker version
-echo
+echo "ddev version"
 ddev version
 echo
 

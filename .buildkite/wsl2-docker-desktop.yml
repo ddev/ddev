@@ -18,5 +18,5 @@
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_SHARE_CMD: "true"
-      DOCKER_TYPE: "dockerforwindows"
+      DOCKER_TYPE: "wsl2-docker-desktop"
     parallelism: 1
