@@ -2,7 +2,7 @@
 
 DDEV supports many versions of the MariaDB, MySQL, and PostgreSQL database servers.
 
-The following database types are supported out of the box:
+The following database types are currently supported:
 
 - MariaDB 5.5-10.8 and 10.11
 - MySQL 5.5-8.0
