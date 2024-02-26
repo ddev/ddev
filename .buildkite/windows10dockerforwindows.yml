@@ -14,4 +14,5 @@
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_NFSMOUNT: false
+      DOCKER_TYPE: dockerforwindows
     parallelism: 1
