@@ -26,7 +26,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     if command -v orb 2>/dev/null ; then
       echo "Starting orbstack" && (orb start &)
     else
-      open -a /Applications/Docker.app
+      open -a Docker
     fi
   }
   trap cleanup EXIT
@@ -57,7 +57,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
 
     "docker-desktop")
-      open -a /Applications/Docker.app &
+      open -a Docker
       docker context use desktop-linux
       ;;
 
@@ -102,7 +102,7 @@ if ! docker ps >/dev/null 2>&1 ; then
 fi
 
 echo
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
 
 echo
 case ${DOCKER_TYPE:-none} in
