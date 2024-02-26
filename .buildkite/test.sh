@@ -34,7 +34,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   docker context ls
 
   # Now start the docker provider we want
-  case ${DOCKER_TYPE} in
+  case ${DOCKER_TYPE:=none} in
     "colima")
       colima start
       colima restart
