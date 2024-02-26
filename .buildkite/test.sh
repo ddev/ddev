@@ -12,22 +12,26 @@ export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
 
 # On macOS, we can have several different docker providers, allow testing all
+# In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
-    orb stop &
-    killall com.docker.backend || true
-    colima stop || true
-    colima stop vz || true
-    limactl stop lima-vz || true
-    ~/.rd/bin/rdctl shutdown || true
+    command -v orb 2>/dev/null && echo "Stopping orbstack" && (orb stop || true)
+    if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
+    command -v colima 2>/dev/null && echo "Stopping colima" && (colima stop || true)
+    command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop vz || true)
+    command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop lima-vz || true)
+    if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
     docker context use default
-    # Leave orbstack running as the most likely to be reliable
-    command -v orb &>/dev/null && orb start &
-    true
+    # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
+    if command -v orb 2>/dev/null ; then
+      echo "Starting orbstack" && orb start
+    else
+      open -a /Applications/Docker.app
+    fi
   }
   trap cleanup EXIT
 
-  # Start with a predictable setup orbstack running
+  # Start with a predictable docker provider running
   cleanup
 
   echo "starting docker context situation:"
