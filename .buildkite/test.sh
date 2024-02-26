@@ -109,9 +109,13 @@ case ${DOCKER_TYPE:-none} in
   "docker-desktop")
     echo "docker-desktop for mac version=$(scripts/docker-desktop-version.sh)"
     ;;
-  "colima*")
+  "colima")
     echo "colima version=$(colima version)"
     ;;
+  "colima_vz")
+    echo "colima version=$(colima version)"
+    ;;
+
   "orbstack")
     echo "orbstack version=$(orbctl version)"
     ;;
