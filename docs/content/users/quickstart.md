@@ -281,55 +281,6 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     ddev launch
     ```
 
-=== "Public folder setup"
-
-    When possible, we recommend a [public folder setup](https://getkirby.com/docs/guide/configuration#custom-folder-setup__public-folder-setup) to move all files that need not be publicly accessible out of the doc root for enhanced security.
-
-    ```bash
-    # Clone a Starterkit into a new folder
-    git clone https://github.com/getkirby/starterkit my-kirby-project
-    
-    # Navigate into the new folder
-    cd my-kirby-project
-    
-    # Set up the DDEV environment with the docroot flag, this will create a public folder inside your project folder
-    ddev config --docroot=public --php-version=8.2 --omit-containers=db
-
-    # Move the `assets` folder and the `index.php` file into the `public` folder.
-     mv assets index.php public
-
-    # Open public/index.php, using your favorite editor
-    nano public/index.php
-    ```
-    Copy the following code into the file:
-
-    ```php
-    <?php
-
-    require __DIR__ . '/../kirby/bootstrap.php';
-
-    use Kirby\Cms\App as Kirby;
-
-    $kirby = new Kirby([
-        'roots' => [
-            'index'    => __DIR__,
-            'content'  => __DIR__ . '/../content',
-            'site'     => __DIR__ . '/../site',
-        ]
-    ]);
-
-    echo $kirby->render();
-    ```
-    With these changes saved:
-
-    ```bash
-    # Spin up the project
-    ddev start
-
-    # Open the site in your browser
-    ddev launch
-    ```
-
 !!!tip "Installing Kirby"
     Read more about developing your Kirby project with DDEV in our [extensive DDEV guide](https://getkirby.com/docs/cookbook/setup/ddev).
 
