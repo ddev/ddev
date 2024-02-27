@@ -126,7 +126,7 @@ Here are basic steps to take to sort out any difficulty:
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
 * You can also use `ddev xdebug toggle` to easily toggle Xdebug on and off.
 * Set a breakpoint at the first executable line of your `index.php`.
-* Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
+* Tell your IDE to start listening. (PhpStorm: click the bug-listen button, VS Code: run the debugger.)
 * Use `curl` or a browser to create a web request. For example, `curl https://d10.ddev.site` or run `ddev exec curl localhost`.
 * `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If not, follow the instructions above about disabling firewall and adding an exception for port 9003.
 * In PhpStorm, disable the “listen for connections” button so it won’t listen. Or exit PhpStorm. With another IDE like VS Code, stop the debugger from listening.
