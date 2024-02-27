@@ -2,7 +2,14 @@
 
 DDEV supports many versions of the MariaDB, MySQL, and PostgreSQL database servers.
 
-The default database type is MariaDB, and the default version is currently 10.11, but you can use MariaDB versions 5.5-10.8 and 10.11, MySQL 5.5-8.0, and Postgres 9-16. (New LTS versions of each of these are typically added soon after release. The very old versions are kept for compatibility with older projects.)
+The following database types are currently supported:
+
+- MariaDB 5.5-10.8 and 10.11
+- MySQL 5.5-8.0
+- Postgres 9-16
+
+The default database type is MariaDB, and the default version is currently 10.11.
+New LTS versions of each of these are typically added soon after they are released. The very old versions are kept for compatibility with older projects.
 
 You could set these using the [`ddev config`](../usage/commands.md#config) command like this:
 
@@ -46,3 +53,13 @@ Since the existing binary database may not be compatible with changes to your co
 - If you change the database type or version in an existing project, the existing database will not be compatible with your change, so you’ll want to use [`ddev export-db`](../usage/commands.md#export-db) to save a dump first.
 - When you change database type, destroy the existing database using [`ddev delete --omit-snapshot`](../usage/commands.md#delete) before changing, then after [`ddev start`](../usage/commands.md#start) use [`ddev import-db`](../usage/commands.md#import-db) to import the dump you saved.
 - Snapshots are always per database type and database version. So if you have snapshots from MariaDB 10.2 and you switch to MariaDB 10.5, don’t expect to be able to restore the old snapshot.
+
+## Other databases types
+
+Through add-ons, additional database types are also supported.
+The following official add-ons are available:
+
+- [`ddev/ddev-mongo`](https://github.com/ddev/ddev-mongo)
+- [`ddev/ddev-sqlsrv`](https://github.com/ddev/ddev-sqlsrv)
+
+Use `ddev get --list --all` to see a list of all add-ons, including additional community-supported database types.
