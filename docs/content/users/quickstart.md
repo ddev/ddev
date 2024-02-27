@@ -242,9 +242,10 @@ ddev launch
     git clone -b master https://github.com/getgrav/grav.git .
     ddev config --php-version=8.2 --omit-containers=db
     ddev start
-    ddev composer install --no-dev -o
+    ddev composer install
     ddev exec bin/grav install
     ddev exec bin/gpm install admin -y
+    ddev launch
     ```
 
 !!!tip "How to update?"
