@@ -984,7 +984,9 @@ func TestExtraPackages(t *testing.T) {
 	require.NoError(t, err)
 
 	addedDBPackage := "sudo"
-	addedWebPackage := "tmux"
+	// php-gmp is flaky on Debian 12 Bookworm,
+	// we can test it https://github.com/ddev/ddev/issues/5898
+	addedWebPackage := "php" + app.PHPVersion + "-" + "gmp"
 
 	// Test db container to make sure no sudo in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
