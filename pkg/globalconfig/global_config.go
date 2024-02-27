@@ -335,8 +335,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #   - "mutagen": enables Mutagen.
 #   - "nfs":     enables NFS.
 #
-# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
-# and https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs.
+# See https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen
+# and https://ddev.readthedocs.io/en/stable/users/install/performance/#nfs.
 
 # You can set the global project_tld. This way any project will use this tld. If not
 # set the local project_tld is used, or the default of DDEV.
@@ -792,7 +792,7 @@ func IsInternetActive() bool {
 	active := err == nil && ctx.Err() == nil
 	if os.Getenv("DDEV_DEBUG") != "" {
 		if active == false {
-			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/basics/faq/ for info.")
+			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/usage/faq/ for info.")
 		}
 		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)
 	}

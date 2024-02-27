@@ -8,7 +8,7 @@ const ConfigInstructions = `
 #   http://projectname.ddev.site and https://projectname.ddev.site
 
 # type: <projecttype>  # backdrop, craftcms, django4, drupal6/7/8/9/10, laravel, magento, magento2, php, python, shopware6, silverstripe, typo3, wordpress
-# See https://ddev.readthedocs.io/en/latest/users/quickstart/ for more
+# See https://ddev.readthedocs.io/en/stable/users/quickstart/ for more
 # information on the different project types
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
@@ -130,8 +130,8 @@ const ConfigInstructions = `
 #   - "mutagen": enables Mutagen for this project.
 #   - "nfs":     enables NFS for this project.
 #
-# See https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs
-# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
+# See https://ddev.readthedocs.io/en/stable/users/install/performance/#nfs
+# See https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
