@@ -15,7 +15,8 @@ export DOCKER_SCOUT_SUGGEST=false
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
-    command -v orb 2>/dev/null && echo "Stopping orbstack" && (orb stop &)
+    command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
+    sleep 3 # Since we backgrounded orb stop, make sure it completes
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
     command -v colima 2>/dev/null && echo "Stopping colima" && (colima stop || true)
     command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop vz || true)
@@ -24,10 +25,11 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     docker context use default
     # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
     if command -v orb 2>/dev/null ; then
-      echo "Starting orbstack" && (orb start &)
+      echo "Starting orbstack" && (nohup orb start &)
     else
       open -a Docker
     fi
+    sleep 5
   }
   trap cleanup EXIT
 
@@ -62,7 +64,8 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
 
     "orbstack")
-      orb start &
+      nohup orb start &
+      sleep 3
       docker context use orbstack
       ;;
 
@@ -102,7 +105,7 @@ if ! docker ps >/dev/null 2>&1 ; then
 fi
 
 echo
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} for OS=${OSTYPE:-unknown} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT:-notset} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
 
 echo
 case ${DOCKER_TYPE:-none} in
@@ -128,7 +131,7 @@ case ${DOCKER_TYPE:-none} in
   "dockerforwindows")
     echo "Running Windows docker desktop for windows"
     ;;
-  "dockerforwindows")
+  "wsl2-docker-desktop")
     echo "Running wsl2-docker-desktop"
     ;;
   *)
