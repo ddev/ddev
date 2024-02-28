@@ -21,7 +21,7 @@ var WebTag = "20240305_stasadev_remove_kill_supervisor" // Note that this can be
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20240213_mariadb_1011_default"
+var BaseDBTag = "20231216_bitnami_base_for_mysql"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.22.7"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20240213_traefik_2.11"
