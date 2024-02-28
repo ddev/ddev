@@ -20,13 +20,13 @@ These environments can be extended, version controlled, and shared, so you can t
     * macOS Big Sur (11) or higher, [mostly](./users/usage/faq.md#can-i-run-ddev-on-an-older-mac)
     * RAM: 8GB
     * Storage: 256GB
-    * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+    * [OrbStack](https://orbstack.dev/) or [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io/)
 
     **Next steps:**
 
     *You’ll need a Docker provider on your system before you can install DDEV.*
     
-    1. Install Colima or Docker Desktop with [recommended settings](users/install/docker-installation.md#macos).
+    1. Install Docker with [recommended settings](users/install/docker-installation.md#macos).
     2. Install [DDEV for macOS](users/install/ddev-installation.md#macos).
     3. Launch your [first project](users/project.md) and start developing. 🚀
 
