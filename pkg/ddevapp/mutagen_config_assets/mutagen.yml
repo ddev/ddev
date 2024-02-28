@@ -3,8 +3,8 @@
 # and add your own configuration. If you override it you will
 # probably want to check it in.
 # Please do `ddev mutagen reset` after changing the file.
-# See ddev mutagen docs at
-# https://ddev.readthedocs.io/en/latest/users/install/performance/
+# See DDEV Mutagen docs at
+# https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen
 # For detailed information about mutagen configuration options, see
 # https://mutagen.io/documentation/introduction/configuration
 sync:
