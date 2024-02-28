@@ -424,7 +424,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	switch {
 	case app.Type != nodeps.AppTypeNone && projectTypeArg == "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
 		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
-		fallthrough
+		break
 	default:
 		if projectTypeArg == "" {
 			projectTypeArg = detectedApptype
