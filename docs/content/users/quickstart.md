@@ -282,6 +282,51 @@ In the web browser, log into your account using `admin` and `publish`.
 
 Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
 
+## Kirby CMS
+
+Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
+
+=== "New projects"
+
+    Create a new Kirby CMS project from the official [Starterkit](https://github.com/getkirby/starterkit) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
+
+    ```bash
+    # Create a new project directory and navigate into it
+    mkdir my-kirby-project
+    cd my-kirby-project
+
+    # Set up the DDEV environment
+    ddev config --php-version=8.2 --omit-containers=db
+
+    # Spin up the project and install the Kirby Starterkit
+    ddev start
+    ddev composer create getkirby/starterkit
+
+    # Open the site in your browser
+    ddev launch
+    ```
+
+=== "Existing projects"
+
+    You can start using DDEV with an existing project as well:
+
+    ```bash
+    # Navigate to a existing project directory (or clone/download an existing project):
+    cd my-kirby-project
+
+    # Set up the DDEV environment
+    ddev config --php-version=8.2 --omit-containers=db
+
+    # Spin up the project
+    ddev start
+
+    # Open the site in your browser
+    ddev launch
+    ```
+
+!!!tip "Installing Kirby"
+    Read more about developing your Kirby project with DDEV in our [extensive DDEV guide](https://getkirby.com/docs/cookbook/setup/ddev).
+
 ## Laravel
 
 Use a new or existing Composer project, or clone a Git repository.
