@@ -220,6 +220,49 @@ ddev launch
 
     When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
 
+## Grav
+
+=== "Composer"
+
+    ```bash
+    mkdir grav
+    cd grav
+    ddev config --php-version=8.2 --omit-containers=db
+    ddev start
+    ddev composer create getgrav/grav
+    ddev exec bin/gpm install admin -y
+    ddev launch
+    ```
+
+=== "Git Clone"
+
+    ```bash
+    mkdir grav
+    cd grav
+    git clone -b master https://github.com/getgrav/grav.git .
+    ddev config --php-version=8.2 --omit-containers=db
+    ddev start
+    ddev composer install
+    ddev exec bin/grav install
+    ddev exec bin/gpm install admin -y
+    ddev launch
+    ```
+
+!!!tip "How to update?"
+    Upgrade Grave core:
+
+    ```bash
+    ddev exec bin/gpm selfupgrade -f
+    ```
+
+    Update plugins and themes:
+
+    ```bash
+    ddev exec bin/gpm update -f
+    ```
+
+Visit the [Grav Documentation](https://learn.getgrav.org/17) for more information about Grav in general and visit [Local Development with DDEV](https://learn.getgrav.org/17/webservers-hosting/local-development-with-ddev) for more details about the usage of Grav with DDEV.
+
 ## Ibexa DXP
 
 Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
