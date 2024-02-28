@@ -428,7 +428,7 @@ ddev config --docroot=public
 ddev start
 ddev composer create pimcore/skeleton
 ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
-ddev launch
+ddev launch /admin
 ```
 
 ## Python/Flask (Experimental)
