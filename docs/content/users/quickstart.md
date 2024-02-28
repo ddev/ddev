@@ -418,6 +418,19 @@ Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_
 !!!tip
     Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
 
+## Pimcore
+
+Using the [Pimcore skeleton](https://github.com/pimcore/skeleton) repository:
+
+``` bash
+mkdir my-pimcore && cd my-pimcore
+ddev config --docroot=public
+ddev start
+ddev composer create pimcore/skeleton
+ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
+ddev launch
+```
+
 ## Python/Flask (Experimental)
 
 ```bash
