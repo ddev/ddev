@@ -17,7 +17,7 @@ var WebTag = "v1.24.1" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.1"
+var BaseDBTag = "20231216_bitnami_base_for_mysql"
 
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.1"
 
