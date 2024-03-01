@@ -15,7 +15,7 @@ export DOCKER_SCOUT_SUGGEST=false
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
-    command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
+    command -v orb 2>/dev/null && echo "Stopping orbstack" && orb stop
     sleep 3 # Since we backgrounded orb stop, make sure it completes
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
     command -v colima 2>/dev/null && echo "Stopping colima" && (colima stop || true)
@@ -25,7 +25,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     docker context use default
     # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
     if command -v orb 2>/dev/null ; then
-      echo "Starting orbstack" && (nohup orb start &)
+      echo "Starting orbstack" && orb start
     else
       open -a Docker
     fi
@@ -64,7 +64,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
 
     "orbstack")
-      nohup orb start &
+      orb start
       sleep 3
       docker context use orbstack
       ;;
