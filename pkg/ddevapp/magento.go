@@ -165,8 +165,10 @@ func magentoConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// Latest magento2 requires php8.1
+// Magento2 2.4.6 requires php8.1/2 and MariaDB 10.6
+// https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html
 func magento2ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP81
+	app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB106}
 	return nil
 }
