@@ -109,6 +109,7 @@ PHIVE
 PHP
 PHPUnit
 PID
+Pimcore
 PWD
 PartOf
 PathMaps
