@@ -171,6 +171,10 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
 		}
+		err = app.WriteConfig()
+		if err != nil {
+			util.Failed("Failed to write config: %v", err)
+		}
 	} else {
 		err = handleMainConfigArgs(cmd, args, app)
 		if err != nil {
@@ -182,11 +186,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 				util.Failed("failed to handle per-provider extra flags: %v", err)
 			}
 		}
-	}
-
-	err = app.WriteConfig()
-	if err != nil {
-		util.Failed("Failed to write config: %v", err)
 	}
 
 	_, err = app.CreateSettingsFile()
