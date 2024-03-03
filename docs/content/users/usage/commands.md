@@ -271,7 +271,7 @@ ddev craft up
 
 ## `dbeaver`
 
-Open [DBeaver](https://dbeaver.io/) with the current project’s database (global shell host container command). This command is only available if `DBeaver.app` is installed as `/Applications/DBeaver.app` for macOS, and if `dbeaver` (or another binary like `dbeaver-ce`) available inside `/usr/bin` for Linux (Flatpak and snap support included).
+Open [DBeaver](https://dbeaver.io/) with the current project’s database (global shell host container command). This command is only available if `DBeaver.app` is installed as `/Applications/DBeaver.app` for macOS, if `dbeaver.exe` is installed as `C:/Program Files/dbeaver/dbeaver.exe` for WSL2, and if `dbeaver` (or another binary like `dbeaver-ce`) available inside `/usr/bin` for Linux (Flatpak and snap support included).
 
 Example:
 
