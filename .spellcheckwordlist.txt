@@ -59,6 +59,7 @@ Flags
 Flatpak
 FQDNs
 Fritzbox
+GitLab
 GUI
 GUIs
 Get
