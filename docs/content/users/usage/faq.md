@@ -1,7 +1,8 @@
 ---
 search:
-boost: 1.0
+  boost: 2
 ---
+
 # FAQ
 
 Frequently-asked questions organized into high-level functionality, investigating issues, daily usage, and connecting with our community.
@@ -54,7 +55,7 @@ Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/8972
 
 ### Do I need to install PHP, Composer, nginx, or Node.js/npm on my workstation?
 
-No. These tools live inside DDEV’s Docker containers, so you only need to [install Docker](../install/docker-installation.md) and [install DDEV](../install/ddev-installation.md). This is especially handy for Windows users where there’s more friction getting these things installed.
+No. Tools like PHP, Composer, nginx, and Node.js/npm live inside DDEV’s Docker containers, so you only need to [install Docker](../install/docker-installation.md) and [install DDEV](../install/ddev-installation.md).
 
 For most users we recommend that you do *not* install PHP or composer on your workstation, so you get in the habit of using `ddev composer`, which will use the configured composer and PHP versions for your project, which can be different for each project. See [DDEV and Composer](developer-tools.md#ddev-and-composer).
 

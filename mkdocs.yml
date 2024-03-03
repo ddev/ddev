@@ -197,10 +197,9 @@ nav:
           - users/debugging-profiling/xdebug-profiling.md
   - 'Hosting & Deployment':
     - users/topics/index.md
-    - 'Beyond Local':
-      - users/topics/sharing.md
-      - users/topics/hosting.md
-      - users/topics/remote-docker.md
+    - users/topics/sharing.md
+    - users/topics/hosting.md
+    - users/topics/remote-docker.md
     - 'Hosting Provider Integrations':
       - users/providers/index.md
       - 'Acquia': users/providers/acquia.md
