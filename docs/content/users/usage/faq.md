@@ -13,7 +13,7 @@ Frequently-asked questions organized into high-level functionality, investigatin
 
 DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11 Pro/Enterprise and Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine). DDEV works the same on each of these platforms since the important work is done inside identical Docker containers. This means that a team using diverse environments can share everything just fine.
 
-### Does DDEV change my code?
+### Does DDEV change or deploy my code?
 
 You are responsible for your code and its deployment. DDEV does not alter it (or fix any bugs in it). DDEV *does* add DDEV-specific settings for some CMSes if [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
 
