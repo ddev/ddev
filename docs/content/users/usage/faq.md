@@ -15,7 +15,7 @@ DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11
 
 ### Does DDEV change my code?
 
-You are responsible for your code and its deployment. DDEV does not alter it (or fix any bugs in it). DDEV *does* add DDEV-specific settings for some CMSs if [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
+You are responsible for your code and its deployment. DDEV does not alter it (or fix any bugs in it). DDEV *does* add DDEV-specific settings for some CMSes if [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
 
 ### Where is my database stored in my DDEV project?
 
