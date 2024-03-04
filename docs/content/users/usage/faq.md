@@ -19,7 +19,7 @@ You are responsible for your code and its deployment. DDEV does not alter any co
 
 ### Where is my database stored in my DDEV project?
 
-The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [#How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
+The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
 
 ### What Docker providers can I use?
 
