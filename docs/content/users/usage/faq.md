@@ -1,3 +1,8 @@
+---
+search:
+  boost: 2
+---
+
 # FAQ
 
 Frequently-asked questions organized into high-level functionality, investigating issues, daily usage, and connecting with our community.
@@ -6,21 +11,29 @@ Frequently-asked questions organized into high-level functionality, investigatin
 
 ### What operating systems will DDEV work with?
 
-DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise and Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine) and Windows 10/11’s WSL2. DDEV works the same on each of these platforms since the important work is done inside identical Docker containers.
+DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11 Pro/Enterprise and Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine). DDEV works the same on each of these platforms since the important work is done inside identical Docker containers. This means that a team using diverse environments can share everything just fine.
 
-### Are there alternate Docker providers I can use?
+### Does DDEV change or deploy my code?
 
-Many users report good results with alternate Docker providers.
+You are responsible for your code and its deployment. DDEV does not alter any code or fix any bugs in it. DDEV *does* add DDEV-specific settings for some CMSes if the [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
 
-| Docker Provider            | Support Level                                                              |
-|----------------------------|----------------------------------------------------------------------------|
-| OrbStack (macOS)           | officially tested and supported on macOS                                   |
-| Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon            |
-| Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows            |
-| Colima (macOS)             | officially tested and supported                                            |
-| Colima (Linux)             | reported working in DDEV v1.22.2+, but poor solution compared to docker-ce |
-| docker-ce (Linux/WSL2)     | Officially supported with automated tests on WSL2/Ubuntu                   |
-| Rancher Desktop (macOS)    | officially tested and supported on macOS                                   |
+### Where is my database stored in my DDEV project?
+
+The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [#How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
+
+### What Docker providers can I use?
+
+We have automated testing and support for a staggering range of Docker providers.
+
+| Docker Provider            | Support Level                                                            |
+|----------------------------|--------------------------------------------------------------------------|
+| OrbStack (macOS)           | officially tested and supported on macOS                                 |
+| Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon          |
+| Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows          |
+| Colima (macOS)             | officially tested and supported                                          |
+| Colima (Linux)             | reported working in DDEV v1.22+, but poor solution compared to docker-ce |
+| docker-ce (Linux/WSL2)     | Officially supported with automated tests on WSL2/Ubuntu                 |
+| Rancher Desktop (macOS)    | officially tested and supported on macOS                                 |
 
 * Docker Desktop for Linux does *not* work with DDEV because it mounts all files into the container owned as root.
 * Rancher Desktop for Windows does not work with DDEV.
@@ -42,7 +55,9 @@ Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/8972
 
 ### Do I need to install PHP, Composer, nginx, or Node.js/npm on my workstation?
 
-No. These tools live inside DDEV’s Docker containers, so you only need to [install Docker](../install/docker-installation.md) and [install DDEV](../install/ddev-installation.md). This is especially handy for Windows users where there’s more friction getting these things installed.
+No. Tools like PHP, Composer, nginx, and Node.js/npm live inside DDEV’s Docker containers, so you only need to [install Docker](../install/docker-installation.md) and [install DDEV](../install/ddev-installation.md).
+
+For most users we recommend that you do *not* install PHP or composer on your workstation, so you get in the habit of using `ddev composer`, which will use the configured composer and PHP versions for your project, which can be different for each project. See [DDEV and Composer](developer-tools.md#ddev-and-composer).
 
 ### Do I lose data when I run `ddev poweroff`, `ddev stop`, or `ddev restart`?
 

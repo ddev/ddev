@@ -196,12 +196,12 @@ nav:
           - users/debugging-profiling/xhprof-profiling.md
           - users/debugging-profiling/xdebug-profiling.md
   - 'Hosting & Deployment':
-    - users/providers/index.md
-    - 'Beyond Local':
-      - users/topics/sharing.md
-      - users/topics/hosting.md
-      - users/topics/remote-docker.md
+    - users/topics/index.md
+    - users/topics/sharing.md
+    - users/topics/hosting.md
+    - users/topics/remote-docker.md
     - 'Hosting Provider Integrations':
+      - users/providers/index.md
       - 'Acquia': users/providers/acquia.md
       - 'Lagoon': users/providers/lagoon.md
       - 'Pantheon': users/providers/pantheon.md
