@@ -11,7 +11,7 @@ Frequently-asked questions organized into high-level functionality, investigatin
 
 ### What operating systems will DDEV work with?
 
-DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11 Pro/Enterprise and Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine). DDEV works the same on each of these platforms since the important work is done inside identical Docker containers. This means that a team using diverse environments can share everything just fine.
+DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11 Pro/Enterprise and Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine). DDEV works the same on each of these platforms since the important work is done inside identical Docker containers. This means that a team using diverse environments can share everything without trouble.
 
 ### Does DDEV change or deploy my code?
 
