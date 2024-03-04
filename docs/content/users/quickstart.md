@@ -364,7 +364,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     SITENAME=ddev-magento2
     mkdir -p ${SITENAME} && cd ${SITENAME}
-    ddev config --project-type=magento2 --php-version=8.1 --database=mariadb:10.6 --docroot=pub --disable-settings-management
+    ddev config --project-type=magento2 --php-version=8.1 --database=mariadb:10.6 --docroot=pub --disable-settings-management --upload-dirs=media
     ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
     ddev get ddev/ddev-elasticsearch
     ddev start
