@@ -164,7 +164,7 @@ mkdocs:
 # see https://www.mkdocs.org/user-guide/installation/
 # But it will also work using docker.
 mkdocs-serve:
-	$(shell if command -v mkdocsx >/dev/null ; then \
+	$(shell if command -v mkdocs >/dev/null ; then \
 			mkdocs serve; \
 		else \
 			TAG=1.5.2; \
