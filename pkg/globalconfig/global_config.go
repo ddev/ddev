@@ -500,12 +500,11 @@ func ReadProjectList() error {
 			}
 
 			// Write an empty file - we have no known projects
-			err := os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
-			// Whether there's an error or nil here we want to return
-			return err
-		} else {
-			return err
+			err = os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
 		}
+
+		// Whether there's an error or nil here we want to return
+		return err
 	}
 
 	source, err := os.ReadFile(globalProjectsFile)
