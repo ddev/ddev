@@ -47,7 +47,6 @@ Dump
 DXP
 Enable
 EndeavourOS
-ExecRaw
 ExecStart
 ExecStop
 Execute
@@ -260,7 +259,6 @@ dbimage
 dbname
 dbpass
 dbserver
-DBTypes
 dbuser
 ddev
 ddev's
@@ -352,12 +350,10 @@ help
 homeadditions
 homebrew
 host
-HostBinaryExists
 hostenv
 hostfile
 hostname
 hostnames
-HostWorkingDir
 htaccess
 html
 http
@@ -471,7 +467,6 @@ one
 oneshot
 or
 oriented
-OSTypes
 output
 pause
 pdfreactor
@@ -512,7 +507,6 @@ projdir
 project
 projectname
 projects
-ProjectTypes
 proot
 proto
 provided
@@ -544,7 +538,6 @@ rfay
 rmi
 rsync
 running
-CanRunGlobally
 runtime
 rw
 s
