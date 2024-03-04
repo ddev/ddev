@@ -164,16 +164,11 @@ mkdocs:
 # see https://www.mkdocs.org/user-guide/installation/
 # But it will also work using docker.
 mkdocs-serve:
-	$(shell if command -v mkdocs >/dev/null ; then \
-			mkdocs serve; \
-		else \
-			TAG=1.5.2; \
-			set -x; \
-			if [ $(BUILD_ARCH) = 'arm64' ]; then TAG="arm64v8-$${TAG}"; fi; \
-			docker run -it --rm -v "${PWD}:/docs" -p 8000:8000 -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs:$${TAG}; \
-			set +x; \
-		fi \
-	)
+	if command -v mkdocs >/dev/null ; then \
+  		mkdocs serve; \
+	else \
+		docker run -it --rm -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs:1.2.3; \
+	fi
 
 # Install markdown-link-check locally with "npm install -g markdown-link-check"
 markdown-link-check:
