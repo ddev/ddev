@@ -10,20 +10,20 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 
 === "New projects"
 
-```bash
-# Create a project directory and move into it:
-git clone https://github.com/backdrop/backdrop my-backdrop-site
-cd my-backdrop-site
-
-# Set up the DDEV environment:
-ddev config --project-type=backdrop
-
-# Boot the project and install the starter project:
-ddev start
-
-# Launch the website and step through the initial setup
-ddev launch
-```
+    ```bash
+    # Create a project directory and move into it:
+    git clone https://github.com/backdrop/backdrop my-backdrop-site
+    cd my-backdrop-site
+    
+    # Set up the DDEV environment:
+    ddev config --project-type=backdrop
+    
+    # Boot the project and install the starter project:
+    ddev start
+    
+    # Launch the website and step through the initial setup
+    ddev launch
+    ```
 
 === "Existing projects"
 
