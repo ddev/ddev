@@ -135,7 +135,7 @@ Useful variables for container scripts are:
 
 Custom commands support various annotations in the header for providing additional information to the user.
 
-### “Description” Annotation
+### `Description` Annotation
 
 `Description` should briefly describe the command in its help message.
 
@@ -143,7 +143,7 @@ Usage: `## Description: <command-description>`
 
 Example: `## Description: my great custom command`
 
-### “Usage” Annotation
+### `Usage` Annotation
 
 `Usage` should explain how to use the command in its help message.
 
@@ -151,7 +151,7 @@ Usage: `## Usage: <command-usage>`
 
 Example: `## Usage: commandname [flags] [args]`
 
-### “Example” Annotation
+### `Example` Annotation
 
 `Example` should demonstrate how the command might be used. Use `\n` to force a line break.
 
@@ -159,7 +159,7 @@ Usage: `## Example: <command-example>`
 
 Example: `## Example: commandname\ncommandname -h`
 
-### “Flags” Annotation
+### `Flags` Annotation
 
 `Flags` should explain any available flags, including their shorthand when relevant, for the help message. It has to be encoded according the following definition:
 
@@ -212,7 +212,7 @@ Usage: `## AutocompleteTerms: [<list-of-valid-arguments>]`
 
 Example: `## AutocompleteTerms: ["enable","disable","toggle","status"]`
 
-### "CanRunGlobally" Annotation
+### `CanRunGlobally` Annotation
 
 This annotation is only available for global host commands.
 
@@ -227,7 +227,7 @@ This annotation will have no effect if you are also using one of the following a
 
 Example: `## CanRunGlobally: true`
 
-### “ProjectTypes” Annotation
+### `ProjectTypes` Annotation
 
 If your command should only be visible for a specific project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSes](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
 
@@ -235,7 +235,7 @@ Usage: `## ProjectTypes: <list-of-project-types>`
 
 Example: `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
 
-### “OSTypes” Annotation (Host Commands Only)
+### `OSTypes` Annotation (Host Commands Only)
 
 If your host command should only run on one or more operating systems, add the `OSTypes` annotation. Multiple types are separated by a comma. Valid types are:
 
@@ -247,7 +247,7 @@ Usage: `## OSTypes: <list-of-os-types>`
 
 Example: `## OSTypes: darwin,linux`
 
-### “HostBinaryExists” Annotation (Host Commands Only)
+### `HostBinaryExists` Annotation (Host Commands Only)
 
 If your host command should only run if a particular file exists, add the `HostBinaryExists` annotation.
 
@@ -255,7 +255,7 @@ Usage: `## HostBinaryExists: <path/to/file>`
 
 Example: `## HostBinaryExists: /Applications/Sequel ace.app`
 
-### “DBTypes” Annotation
+### `DBTypes` Annotation
 
 If your command should only be available for a particular database type, add the `DBTypes` annotation. Multiple types are separated by a comma. Valid types the available database types.
 
@@ -263,13 +263,13 @@ Usage: `## DBTypes: <type>`
 
 Example: `## DBTypes: postgres`
 
-### “HostWorkingDir” Annotation (Container Commands Only)
+### `HostWorkingDir` Annotation (Container Commands Only)
 
 If your container command should run from the directory you are running the command in the host, add the `HostWorkingDir` annotation.
 
 Example: `## HostWorkingDir: true`
 
-### "ExecRaw" Annotation (Container Commands Only)
+### `ExecRaw` Annotation (Container Commands Only)
 
 Use `ExecRaw: true` to pass command arguments directly to the container as-is.
 
