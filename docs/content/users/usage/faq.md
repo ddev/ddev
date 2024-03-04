@@ -15,11 +15,11 @@ DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11
 
 ### Does DDEV change or deploy my code?
 
-You are responsible for your code and its deployment. DDEV does not alter it (or fix any bugs in it). DDEV *does* add DDEV-specific settings for some CMSes if [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
+You are responsible for your code and its deployment. DDEV does not alter any code or fix any bugs in it. DDEV *does* add DDEV-specific settings for some CMSes if the [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
 
 ### Where is my database stored in my DDEV project?
 
-The MariaDB, MySQL, or PostgreSQL database in your project lives in a Docker volume, which means it does not live in your DDEV project, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [#How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
+The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [#How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
 
 ### What Docker providers can I use?
 
