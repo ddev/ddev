@@ -363,7 +363,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     ```bash
     mkdir ddev-magento2 && cd ddev-magento2
-    ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --disable-settings-management
+    ddev config --project-type=magento2 --php-version=8.1 --database=mariadb:10.6 --docroot=pub --disable-settings-management
     ddev get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
