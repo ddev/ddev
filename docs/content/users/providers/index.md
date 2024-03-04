@@ -2,7 +2,7 @@
 
 DDEV offers hosting provider integration and sample integrations for [Pantheon](https://pantheon.io), [Platform.sh](https://platform.sh) and [Acquia](https://www.acquia.com) hosting, along with other examples.
 
-Hosting provider integration allows connecting with your upstream hosting. `ddev pull <provider>` downloads and `ddev push <provider>` uploads the **database** and the **user-generated files** to an upstream provider. It does *not* push (deploy) or pull your code. Your code should be under version control in for example Git. 
+Hosting provider integration allows connecting with your upstream hosting. `ddev pull <provider>` downloads and `ddev push <provider>` uploads the **database** and the **user-generated files** to an upstream provider. It does *not* push (deploy) or pull your code. Your code should be under version control in for example Git.
 
 DDEV provides ready-to-go integrations for Platform.sh, Acquia, and Lagoon in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
 
