@@ -370,7 +370,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev start
     ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
-    echo "/auth.json" >.ddev/homeadditions/.gitignore
+    echo "/auth.json" >.ddev/homeadditions/.composer/.gitignore
 
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url="https://${SITENAME}.ddev.site/" --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=Password123 --language=en_US
