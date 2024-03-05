@@ -368,7 +368,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
     ddev get ddev/ddev-elasticsearch
     ddev start
-    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition --no-dev -y
+    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
     echo "/auth.json" >.ddev/homeadditions/.composer/.gitignore
 
@@ -383,9 +383,9 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     Change the admin name and related information as needed.
 
-    The admin login URL is specified by `frontName` in app/etc/env.php.
+    The admin login URL is specified by `frontName` in `app/etc/env.php`.
 
-    You may want to add the [Magento 2 Sample Data](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/next-steps/sample-data/composer-packages.html) with
+    You may want to add the [Magento 2 Sample Data](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/next-steps/sample-data/composer-packages.html) with:
 
     ```
     ddev magento sampledata:deploy
