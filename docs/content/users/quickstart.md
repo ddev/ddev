@@ -338,7 +338,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     mkdir my-laravel-app
     cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --php-version=8.1
+    ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist laravel/laravel -y
     ddev launch
     ```
