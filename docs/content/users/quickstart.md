@@ -610,7 +610,7 @@ There are several easy ways to use DDEV with WordPress:
     ddev composer create roots/bedrock
     ```
 
-    Update the `.env` file in the project root for Bedrock’s WordPress configuration convention:
+    Rename the file `.env.example` to `.env` in the project root and make the following adjustments:
 
     ```
     DB_NAME=db
