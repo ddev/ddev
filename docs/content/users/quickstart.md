@@ -487,8 +487,8 @@ Use a new or existing Composer project, or clone a Git repository.
     mkdir my-silverstripe-app
     cd my-silverstripe-app
     ddev config --project-type=silverstripe --docroot=public
-    ddev composer create --prefer-dist silverstripe/installer -y
     ddev start
+    ddev composer create --prefer-dist silverstripe/installer -y
     ddev sake dev/build flush=all
     ddev launch /admin
     ```
