@@ -145,21 +145,6 @@ ddev launch
     ddev launch
     ```
 
-=== "Drupal 9"
-
-    ```bash
-    mkdir my-drupal9-site
-    cd my-drupal9-site
-    ddev config --project-type=drupal9 --docroot=web
-    ddev start
-    ddev composer create "drupal/recommended-project:^9"
-    ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
-    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
-    ddev drush uli
-    ddev launch
-    ```
-
 === "Drupal 6/7"
 
     ```bash
