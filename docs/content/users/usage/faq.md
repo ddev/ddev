@@ -32,7 +32,7 @@ We have automated testing and support for a staggering range of Docker providers
 | Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows          |
 | Colima (macOS)             | officially tested and supported                                          |
 | Colima (Linux)             | reported working in DDEV v1.22+, but poor solution compared to docker-ce |
-| docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu                 |
+| Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu                 |
 | Rancher Desktop (macOS)    | officially tested and supported on macOS                                 |
 
 * Docker Desktop for Linux does *not* work with DDEV because it mounts all files into the container owned as root.
