@@ -4,8 +4,8 @@
 ## Description: Run DBeaver against current db
 ## Usage: dbeaver
 ## Example: "ddev dbeaver [db] [user]"
-## OSTypes: darwin,linux
-## HostBinaryExists: /Applications/DBeaver.app,/usr/bin/dbeaver,/usr/bin/dbeaver-ce,/usr/bin/dbeaver-le,/usr/bin/dbeaver-ue,/usr/bin/dbeaver-ee,/var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity,/snap/bin/dbeaver-ce
+## OSTypes: darwin,linux,wsl2
+## HostBinaryExists: /mnt/c/Program Files/dbeaver/dbeaver.exe,/Applications/DBeaver.app,/usr/bin/dbeaver,/usr/bin/dbeaver-ce,/usr/bin/dbeaver-le,/usr/bin/dbeaver-ue,/usr/bin/dbeaver-ee,/var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity,/snap/bin/dbeaver-ce
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
@@ -31,11 +31,12 @@ case $OSTYPE in
       /usr/bin/dbeaver{,-ce,-le,-ue,-ee}
       /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity
       /snap/bin/dbeaver-ce
+      '/mnt/c/Program Files/dbeaver/dbeaver.exe'
     )
     for binary in "${BINARIES[@]}"; do
       if [ -x "$binary" ]; then
         echo "Launching $binary"
-        $binary -con "$CONNECTION" &> /dev/null & disown
+        "$binary" -con "$CONNECTION" &> /dev/null & disown
         exit 0
       fi
     done
