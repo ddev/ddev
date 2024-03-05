@@ -385,7 +385,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     The admin login URL is specified by `frontName` in app/etc/env.php.
 
-    You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with
+    You may want to add the [Magento 2 Sample Data](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/next-steps/sample-data/composer-packages.html) with
 
     ```
     ddev magento sampledata:deploy
