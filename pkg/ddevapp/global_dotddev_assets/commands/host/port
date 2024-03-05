@@ -2,23 +2,22 @@
 
 ## #ddev-generated
 ## Description: Helper function to launch a browser to the project URL based on the port.
-## It has 3 main uses:
-##
-## - "ddev port 3000": Open the site on port 3000.
-## - "ddev port -s 3000": Open the site, preferring a secure port.
-## - "ddev port -p 3000": Open the site, preferring an insecure (-p) port.
+## Usage: port [number] [-p|--https-port number] [-P|--http-port number]
+## Example: "ddev port 3000" (prefer HTTPS) or "ddev port -p 3000" (prefer HTTPS) or "ddev port -P 3000" (prefer HTTP)
+## Flags: [{"Name":"http-port","Shorthand":"P","Usage":"ddev launch -P 3000 for HTTP port, has priority over the port argument"}, {"Name":"https-port","Shorthand":"p","Usage":"ddev launch -p 3000 for HTTPS port, has priority over the --http-port flag"}]
 
-HTTP_PORT=$1
-HTTPS_PORT=$1
+HTTP_PORT=
+HTTPS_PORT=
+HTTPS_PORT_AS_DEFAULT=$1
 
 while [ $# -gt 0 ]; do
   case "$1" in
-  -p | --http_port)
+  -P | --http-port)
     # Set the default HTTP port.
     HTTP_PORT="$2"
     shift
     ;;
-  -s | --https_port)
+  -p | --https-port)
     # Set the default HTTPS port.
     HTTPS_PORT="$2"
     shift
@@ -28,4 +27,12 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-ddev launch -s $HTTPS_PORT -p $HTTP_PORT
+if [ -n "$HTTP_PORT" ] && [ -z "$HTTPS_PORT" ]; then
+  ddev launch --http-port $HTTP_PORT
+elif [ -z "$HTTP_PORT" ] && [ -n "$HTTPS_PORT" ]; then
+  ddev launch --https-port $HTTPS_PORT
+elif [ -n "$HTTP_PORT" ] && [ -n "$HTTPS_PORT" ]; then
+  ddev launch --http-port $HTTP_PORT --https-port $HTTPS_PORT
+else
+  ddev launch --https-port $HTTPS_PORT_AS_DEFAULT
+fi

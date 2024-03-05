@@ -4,21 +4,29 @@
 ## Description: Launch a browser with the current site
 ## Usage: launch [path] [-m|--mailpit]
 ## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for Mailpit "ddev launch -m"
-## Flags: [{"Name":"url","Shorthand":"u","Usage":"ddev launch -u https://ddev.com"}, {"Name":"http_port","Shorthand":"p","Usage":"ddev launch -p 3000"}, {"Name":"https_port","Shorthand":"s","Usage":"ddev launch -s 3000"}, {"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the mailpit UI"}]
+## Flags: [{"Name":"url","Shorthand":"u","Usage":"ddev launch -u https://ddev.com"}, {"Name":"http-port","Shorthand":"P","Usage":"ddev launch -P 3000 for HTTP port"}, {"Name":"https-port","Shorthand":"p","Usage":"ddev launch -p 3000 for HTTPS port, has priority over the --http-port flag"}, {"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the Mailpit UI"}]
+
+HTTPS=true
 
 while [ $# -gt 0 ]; do
   case "$1" in
   -m | --mailpit)
     ddev mailpit && exit 0
     ;;
-  -p | --http_port)
+  -P | --http-port)
     # Set the default HTTP port.
-    HTTP_PORT="$2"
+    if [[ $2 =~ ^[0-9]+$ ]]; then
+      HTTP_PORT="$2"
+    fi
+    HTTPS=false
     shift
     ;;
-  -s | --https_port)
+  -p | --https-port)
     # Set the default HTTPS port.
-    HTTPS_PORT="$2"
+    if [[ $2 =~ ^[0-9]+$ ]]; then
+      HTTPS_PORT="$2"
+    fi
+    HTTPS=true
     shift
     ;;
   -u | --url)
@@ -34,25 +42,26 @@ done
 # Use the router default ports if not already set
 [ -z "$HTTP_PORT" ] && HTTP_PORT=$DDEV_ROUTER_HTTP_PORT
 [ -z "$HTTPS_PORT" ] && HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
+# Use HTTP when HTTPS is not available (override --https-port behavior)
+if [ ${DDEV_PRIMARY_URL%://*} = "http" ]; then HTTPS=false; fi
 
 # Generate the full URL for the browser. This will include port.
 generate_fullurl() {
   FULLURL=${DDEV_PRIMARY_URL}
-  HTTPS=""
-  if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
 
-  if [[ ! -z "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then
+  if [[ -n "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then
     FULLURL="${FULLURL/-${DDEV_HOST_WEBSERVER_PORT}/-${HTTP_PORT}}"
   else
-    if [ "${HTTPS}" = "" ]; then
-      FULLURL="${FULLURL%:[0-9]*}:${HTTP_PORT}"
+    FULLURL_NO_SCHEME=$(echo "${FULLURL}" | sed -e 's/https\?:\/\///')
+    if [ "${HTTPS}" = "false" ]; then
+      FULLURL="http://${FULLURL_NO_SCHEME%:[0-9]*}:${HTTP_PORT}"
     else
-      FULLURL="${FULLURL%:[0-9]*}:${HTTPS_PORT}"
+      FULLURL="https://${FULLURL_NO_SCHEME%:[0-9]*}:${HTTPS_PORT}"
     fi
   fi
 }
 
-# If $FULLURL was not passsed, we will generate it based off $DDEV_PRIMARY_URL.
+# If $FULLURL was not passed, we will generate it based off $DDEV_PRIMARY_URL.
 if [ -z "$FULLURL" ]; then
   generate_fullurl
 fi
@@ -73,7 +82,7 @@ fi
 # Launch a browser based on the detected OS
 case $OSTYPE in
   linux-gnu)
-    if [[ ! -z "${GITPOD_INSTANCE_ID}" ]]; then
+    if [[ -n "${GITPOD_INSTANCE_ID}" ]]; then
         gp preview ${FULLURL}
     else
         xdg-open ${FULLURL}
