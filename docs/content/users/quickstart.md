@@ -404,7 +404,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 ## Moodle
 
 ```bash
-ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm --database=mariadb:10.6
+ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
 ddev start
 ddev composer create moodle/moodle -y
 ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
