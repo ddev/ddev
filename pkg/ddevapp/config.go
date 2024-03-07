@@ -948,10 +948,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		supervisorConf := fmt.Sprintf(`
 [program:%s]
 group=webextradaemons
-command=bash -c "%s || sleep 2"
+command=bash -c "%s; exit_code=$?; if [ $exit_code -ne 0 ]; then sleep 2; fi; exit $exit_code"
 directory=%s
 autostart=false
 autorestart=true
+startsecs=3 # Must stay up 3 sec, because "sleep 2" in case of fail
 startretries=15
 stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0

@@ -79,11 +79,13 @@ web_extra_daemons:
     directory: /var/www/html
 ```
 
+!!!tip "How to view the results of a daemon start attempt?"
+    See [`ddev logs`](../usage/commands.md#logs) or `docker logs ddev-<project>-web`.
+
 * `directory` should be the absolute path inside the container to the directory where the daemon should run.
 * `command` is best as a simple binary with its arguments, but Bash features like `cd` or `&&` work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
 * `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
 * Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
-* To see the results of the attempt to start your daemon, see [`ddev logs`](../usage/commands.md#logs) or `docker logs ddev-<project>-web`.
 
 ## Exposing Extra Ports via `ddev-router`
 
