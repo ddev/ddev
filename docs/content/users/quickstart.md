@@ -145,21 +145,6 @@ ddev launch
     ddev launch
     ```
 
-=== "Drupal 9"
-
-    ```bash
-    mkdir my-drupal9-site
-    cd my-drupal9-site
-    ddev config --project-type=drupal9 --docroot=web
-    ddev start
-    ddev composer create "drupal/recommended-project:^9"
-    ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
-    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
-    ddev drush uli
-    ddev launch
-    ```
-
 === "Drupal 6/7"
 
     ```bash
@@ -338,7 +323,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     mkdir my-laravel-app
     cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --php-version=8.1
+    ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist laravel/laravel -y
     ddev launch
     ```
@@ -404,7 +389,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 ## Moodle
 
 ```bash
-ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm --database=mariadb:10.6
+ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
 ddev start
 ddev composer create moodle/moodle -y
 ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
@@ -487,8 +472,8 @@ Use a new or existing Composer project, or clone a Git repository.
     mkdir my-silverstripe-app
     cd my-silverstripe-app
     ddev config --project-type=silverstripe --docroot=public
-    ddev composer create --prefer-dist silverstripe/installer -y
     ddev start
+    ddev composer create --prefer-dist silverstripe/installer -y
     ddev sake dev/build flush=all
     ddev launch /admin
     ```
@@ -610,7 +595,7 @@ There are several easy ways to use DDEV with WordPress:
     ddev composer create roots/bedrock
     ```
 
-    Update the `.env` file in the project root for Bedrock’s WordPress configuration convention:
+    Rename the file `.env.example` to `.env` in the project root and make the following adjustments:
 
     ```
     DB_NAME=db
