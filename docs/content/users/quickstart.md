@@ -10,20 +10,20 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 
 === "New projects"
 
-```bash
-# Create a project directory and move into it:
-git clone https://github.com/backdrop/backdrop my-backdrop-site
-cd my-backdrop-site
-
-# Set up the DDEV environment:
-ddev config --project-type=backdrop
-
-# Boot the project and install the starter project:
-ddev start
-
-# Launch the website and step through the initial setup
-ddev launch
-```
+    ```bash
+    # Create a project directory and move into it:
+    git clone https://github.com/backdrop/backdrop my-backdrop-site
+    cd my-backdrop-site
+    
+    # Set up the DDEV environment:
+    ddev config --project-type=backdrop
+    
+    # Boot the project and install the starter project:
+    ddev start
+    
+    # Launch the website and step through the initial setup
+    ddev launch
+    ```
 
 === "Existing projects"
 
@@ -344,29 +344,40 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
 === "Magento 2"
 
-    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public and private keys.
+    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
+
+    Note that you can install the Adobe/Magento composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again. See [In-Container Home Directory and Shell Configuration](../extend/in-container-configuration).
 
     ```bash
-    mkdir ddev-magento2 && cd ddev-magento2
-    ddev config --project-type=magento2 --php-version=8.1 --database=mariadb:10.6 --docroot=pub --disable-settings-management
+    SITENAME=ddev-magento2
+    mkdir -p ${SITENAME} && cd ${SITENAME}
+    ddev config --project-type=magento2 --php-version=8.2 --database=mariadb:10.6 --docroot=pub --disable-settings-management --upload-dirs=media
+    ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
     ddev get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
+    echo "/auth.json" >.ddev/homeadditions/.composer/.gitignore
 
     # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=Password123 --language=en_US
+    ddev magento setup:install --base-url="https://${SITENAME}.ddev.site/" --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=Password123 --language=en_US
 
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
+    ddev launch
     ```
 
-    Change the admin name and related information is needed.
+    Change the admin name and related information as needed.
 
-    You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
+    The admin login URL is specified by `frontName` in `app/etc/env.php`.
 
-    Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
+    You may want to add the [Magento 2 Sample Data](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/next-steps/sample-data/composer-packages.html) with:
+
+    ```
+    ddev magento sampledata:deploy
+    ddev magento setup:upgrade
+    ```
 
 === "OpenMage/Magento 1"
 
