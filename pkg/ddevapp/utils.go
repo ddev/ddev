@@ -483,3 +483,33 @@ func (app *DdevApp) GetRelativeWorkingDirectory() string {
 	pwd, _ := os.Getwd()
 	return app.GetRelativeDirectory(pwd)
 }
+
+// HasCustomCert returns true if the project uses a custom certificate
+func (app *DdevApp) HasCustomCert() bool {
+	customCertsPath := app.GetConfigPath("custom_certs")
+	certFileName := fmt.Sprintf("%s.crt", app.Name)
+	if !globalconfig.DdevGlobalConfig.IsTraefikRouter() {
+		certFileName = fmt.Sprintf("%s.crt", app.GetHostname())
+	}
+	return fileutil.FileExists(filepath.Join(customCertsPath, certFileName))
+}
+
+// CanUseHTTPOnly returns true if the project can be accessed via http only
+func (app *DdevApp) CanUseHTTPOnly() bool {
+	switch {
+	// Gitpod and Codespaces have their own router with TLS termination
+	case nodeps.IsGitpod() || nodeps.IsCodespaces():
+		return true
+	// If we have no router, then no https otherwise
+	case IsRouterDisabled(app):
+		return true
+	// If a custom cert, we can do https, so false
+	case app.HasCustomCert():
+		return false
+	// If no mkcert installed, no https
+	case globalconfig.GetCAROOT() == "":
+		return true
+	}
+	// Default case is OK to use https
+	return false
+}

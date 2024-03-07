@@ -8,8 +8,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,7 +54,7 @@ func TestExtraPortExpose(t *testing.T) {
 
 	// Careful with portsToTest because https ports won't work on GitHub Actions Colima tests (although they work fine on normal Mac)
 	portsToTest := []string{"3000", "4000"}
-	if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app)) {
+	if app.CanUseHTTPOnly() {
 		portsToTest = []string{"2999", "3999"}
 	}
 
