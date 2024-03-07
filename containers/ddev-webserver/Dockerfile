@@ -50,8 +50,8 @@ FROM ddev-webserver-base as ddev-webserver-dev-base
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 
-RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
-RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]
@@ -195,8 +195,8 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 ARG TARGETPLATFORM
 
-RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
-RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]
