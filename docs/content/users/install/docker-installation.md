@@ -10,6 +10,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     * [OrbStack](#orbstack)
     * [Colima](#colima)
+    * [Lima](#lima)
     * [Docker Desktop](#docker-desktop-for-mac)
     * [Rancher Desktop](#rancher-desktop)
 
@@ -35,8 +36,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
 
-    When your computer restarts, you’ll need to `colima start` again. If you prefer to start Colima automatically on reboot, use `brew services start colima` in Colima version 0.6+ to configure auto-start.
-
     !!!tip "Colima disk allocation"
         In Colima versions starting with 0.5.4 you can increase—but not decrease—the disk allocation by editing `~/.colima/default/colima.yaml` to change the `disk` setting to a higher value. For example, `disk: 200` will increase allocation to 200 gigabytes. Then `colima restart` will result in the new disk allocation.
 
@@ -46,6 +45,27 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     !!!warning "Colima can only work in your home directory unless you do further configuration"
         By default, Colima only mounts your home directory, so it’s easiest to use it in a subdirectory there. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/fc948f8f055600986f87e29e3e632daf56ac8774/embedded/defaults/colima.yaml#L130-L143).
 
+    ### Lima
+
+    [Lima](https://github.com/lima-vm/lima) is a free and open-source project supported by the [Cloud Native Computing Foundation](https://cncf.io/).
+
+    1. Install Lima with `brew install lima`.
+    2. Install the `docker` client if you don't already have it with `brew install docker`.
+    3. Create a default Lima setup with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
+    ```
+    limactl create --vm-type=vz --mount-type=virtiofs --mount-writable --memory=6 --cpus=4 --disk=100 template://docker
+    docker context create lima-default --docker "host=unix://$HOME/.lima/default/sock/docker.sock"
+    docker context use lima-default
+    ```
+    After the initial run above, you can use `limactl start`.  Run `limactl list` to see configured setup.
+
+    When your computer restarts, you’ll need to `limactl start` again.
+
+    !!!warning "Docker contexts let the Docker client point at the right Docker server"
+        The Docker provider you're using is selected with `docker context`. You can see the available contexts with `docker context ls` and the currently selected one with `docker context show`. With the setup above you'll want `docker context use lima-default`.
+
+    !!!warning "Lima only mounts filesystems in your home directory unless you do further configuration"
+        The default configuration shown here can mount only subdirectories of your home directory. If your project is not in your home directory, you must add additional mounts, as described in [mounts example](https://github.com/lima-vm/lima/blob/a98743ee8d47b935cc94bf30f073d22bc0d97b5a/examples/docker.yaml#L25-L28).
 
     ### Docker Desktop for Mac
 
