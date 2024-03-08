@@ -11,7 +11,7 @@
       - "os=macos"
       - "lima=true"
       - "architecture=arm64"
-    branches: "none"
+#    branches: "none"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
