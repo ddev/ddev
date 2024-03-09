@@ -25,7 +25,8 @@ services:
       {{ if .NoBindMounts }}
       - ddev-config:/mnt/ddev_config
       - snapshots:/mnt/snapshots
-      {{ else }} {{/* if .NoBindMounts */}}
+      {{ else }} {{/* if (not) .NoBindMounts */}}
+      # On db container ddev_config is mounted rw so we can create snapshots
       - .:/mnt/ddev_config
       - ./db_snapshots:/mnt/snapshots
       {{ end }} {{/* end if .NoBindMounts */}}
