@@ -76,7 +76,7 @@ func TestMailpit(t *testing.T) {
 	resp, err := testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
 	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	// Colima tests on github don't respect https
-	if !dockerutil.IsColima() {
+	if !dockerutil.IsColima() && !dockerutil.IsLima() {
 		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
 		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	}
@@ -118,7 +118,7 @@ func TestMailpit(t *testing.T) {
 	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
 	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	// Colima tests on GitHub don't respect https
-	if !dockerutil.IsColima() {
+	if !dockerutil.IsColima() && !dockerutil.IsLima() {
 		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
 		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	}
@@ -156,7 +156,7 @@ func TestMailpit(t *testing.T) {
 	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
 	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	// Colima tests on github don't respect https
-	if !dockerutil.IsColima() {
+	if !dockerutil.IsColima() && !dockerutil.IsLima() {
 		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
 		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
 	}

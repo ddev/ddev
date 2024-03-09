@@ -873,8 +873,8 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
-	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
-		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
+	if (dockerutil.IsColima() || dockerutil.IsLima()) && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
+		t.Skip("Skipping on Lima/Colima because this test doesn't work although manual testing works")
 	}
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
@@ -2057,8 +2057,8 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() {
-		t.Skip("Skipping on Windows and Colima as this is tested adequately elsewhere")
+	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Windows/Lima/Colima as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -3544,8 +3544,8 @@ func TestPHPWebserverType(t *testing.T) {
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on mac M1/Colima to ignore problems with 'connection reset by peer'")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on mac Apple Silicon/Lima/Colima to ignore problems with 'connection reset by peer'")
 	}
 
 	assert := asrt.New(t)
@@ -3677,7 +3677,7 @@ func TestCaptureLogs(t *testing.T) {
 // Tests using both app-specific performance_mode: nfs and etc
 func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on WSL2/Colima")
+		t.Skip("Skipping on WSL2/Lima/Colima")
 	}
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen/nobindmounts enabled")
@@ -3818,8 +3818,8 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
-	if dockerutil.IsColima() {
-		t.Skip("Skipping test on Colima because of constant port problems")
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping test on Lima/Colima because of constant port problems")
 	}
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()

@@ -460,8 +460,8 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on Mac M1 and Colima, lots of network connections failed")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Apple Silicon/Lima/Colima, lots of network connections failed")
 	}
 
 	assert := asrt.New(t)
@@ -753,8 +753,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
 func TestPHPOverrides(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on Apple Silicon and Colima to ignore problems with 'connection reset by peer or connection refused'")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Apple Silicon/Lima/Colima to ignore problems with 'connection reset by peer or connection refused'")
 	}
 
 	assert := asrt.New(t)
@@ -1088,8 +1088,8 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on Mac M1 and Colima, lots of network connections failed")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Apple Silicon/Lima/Colima, lots of network connections failed")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
