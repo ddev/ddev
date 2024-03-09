@@ -51,7 +51,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     1. Install Lima with `brew install lima`.
     2. Install the `docker` client if you don't already have it with `brew install docker`.
-    3. Create a default Lima setup with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
+    3. Create a 100GB VM in Lima with 4 CPUs, 6GB memory, and Cloudflare DNS. Adjust to your own needs:
     ```
     limactl create --vm-type=vz --mount-type=virtiofs --mount-writable --memory=6 --cpus=4 --disk=100 template://docker
     docker context create lima-default --docker "host=unix://$HOME/.lima/default/sock/docker.sock"
