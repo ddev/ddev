@@ -1768,8 +1768,10 @@ func TestDdevAllDatabases(t *testing.T) {
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
 		fullSnapshotName, err := app.Snapshot(snapshotName)
 		if err != nil {
-			assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
-			continue
+			dumpDir := fmt.Sprintf("~/%s-broken-%s", t.Name(), util.RandString(5))
+			_, _ = exec.RunHostCommand(`bash`, `-c`, fmt.Sprintf("cp -r %s %s", app.AppRoot, dumpDir))
+			t.Logf("project was in %s, copying to %s", app.AppRoot, dumpDir)
+			t.Fatalf("could not create snapshot %s for %s: %v output=%v, saved approot=%s", snapshotName, dbTypeVersion, err, fullSnapshotName, dumpDir)
 		}
 
 		snapshotPath, err := ddevapp.GetSnapshotFileFromName(fullSnapshotName, app)
