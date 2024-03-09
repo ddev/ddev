@@ -1617,6 +1617,9 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Lima/Colima")
+	}
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
