@@ -32,7 +32,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     ```
     colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
     ```
-    (On macOS versions before Ventura, use `colima start --cpu 4 --memory 6 --disk 100 --mount-type=sshfs --dns=1.1.1.1` as the other options are not supported on older macOS versions.)
+    (On macOS versions before Ventura, use `colima start --cpu 4 --memory 6 --disk 100 --mount-type=sshfs --dns=1.1.1.1` as the `--vm-type` option are not supported for older macOS versions.)
 
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
 
@@ -43,7 +43,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         Colima activates its own Docker context to prevent conflicts with Docker Desktop. If you run `docker context ls`, you’ll see a list of available contexts where the currently-active one is indicated with a `*`—which will be `colima` after you’ve started it. You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can run Docker Desktop and Colima at the same time, but be mindful of which context you’re pointing at!
 
     !!!warning "Colima can only work in your home directory unless you do further configuration"
-        By default, Colima only mounts your home directory, so it’s easiest to use it in a subdirectory there. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/main/embedded/defaults/colima.yaml#L160-L173).
+        By default, Colima only works with DDEV projects in your home directory. You need to have your projects somewhere in your hoome directory for DDEV to work unless you do additional configuration. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/main/embedded/defaults/colima.yaml#L160-L173).
 
     ### Lima
 
@@ -65,7 +65,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         The Docker provider you're using is selected with `docker context`. You can see the available contexts with `docker context ls` and the currently selected one with `docker context show`. With the setup above you'll want `docker context use lima-default`.
 
     !!!warning "Lima only mounts filesystems in your home directory unless you do further configuration"
-        The default configuration shown here can mount only subdirectories of your home directory. If your project is not in your home directory, you must add additional mounts, as described in [mounts example](https://github.com/lima-vm/lima/blob/e9423da6b7c60083aaa455a0c6ecb5c729edfe1f/examples/docker.yaml#L25-L28).
+        By default, Lima only works with DDEV projects in your home directory. You must have your projects somewhere in your hoome directory for DDEV to work unless you do additional configuration. If your project is not in your home directory, you must add additional mounts, as described in [mounts example](https://github.com/lima-vm/lima/blob/e9423da6b7c60083aaa455a0c6ecb5c729edfe1f/examples/docker.yaml#L25-L28).
 
     ### Docker Desktop for Mac
 
