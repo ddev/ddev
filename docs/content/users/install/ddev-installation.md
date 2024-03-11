@@ -141,7 +141,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     2. **Commercial, often problematic:** [Using WSL2 with Docker Desktop](#wsl2-docker-desktop-install-script)
     3. **Old school:** [Installing directly on traditional Windows](#traditional-windows) with an installer
 
-    **We strongly recommend using WSL2.** While its Linux experience may be new for some Windows users, it’s worth the performance benefit and common experience of working with Ubuntu and Bash.
+    **We strongly recommend using WSL2 for your Windows DDEV development environment.** While its Linux experience may be new for some Windows users, it’s worth the performance benefit and common experience of working with Ubuntu and Bash.
 
     ### Important Considerations for WSL2 and DDEV
 
@@ -204,7 +204,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### WSL2 + Docker Desktop Install Script
 
-    WSL2 with Docker Desktop is a less-favored choice because Docker Desktop is often buggy and lightly supported, and has many features not required for use with DDEV. It is also not free software (although smaller organizations can use it free of charge) and it is not open-source.
+    WSL2 with Docker Desktop is a less-favored choice because Docker Desktop may be lightly supported, and has many features not required for use with DDEV that do not add particular value. It is also not free software (although smaller organizations can use it free of charge) and it is not open-source.
     
     The script here prepares your default WSL2 Ubuntu distro for use with Docker Desktop, and you can run the script multiple times without breaking anything.
 
