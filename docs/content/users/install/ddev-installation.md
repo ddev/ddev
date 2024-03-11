@@ -137,9 +137,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can install DDEV on Windows three ways:
 
-    1. [Using WSL2 with Docker inside](#wsl2-docker-ce-inside-install-script)
-    2. [Using WSL2 with Docker Desktop](#wsl2-docker-desktop-install-script)
-    3. [Installing directly on traditional Windows](#traditional-windows) with an installer
+    1. **Most reliable, free, open-source:** [Using WSL2 with Docker inside](#wsl2-docker-ce-inside-install-script)
+    2. **Commercial, often problematic:** [Using WSL2 with Docker Desktop](#wsl2-docker-desktop-install-script)
+    3. **Old school:** [Installing directly on traditional Windows](#traditional-windows) with an installer
 
     **We strongly recommend using WSL2.** While its Linux experience may be new for some Windows users, it’s worth the performance benefit and common experience of working with Ubuntu and Bash.
 
@@ -172,7 +172,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### WSL2 + Docker CE Inside Install Script
 
-    This prepares your default WSL2 Ubuntu distro and doesn’t require Docker Desktop, and you can run the script multiple times without breaking anything.
+    This technique is our favorite, as it uses the most reliable WSL2 Docker provider (`docker-ce`), which is also free and open-source. 
+    
+    This script prepares your default WSL2 Ubuntu distro and doesn’t require Docker Desktop, and you can run the script multiple times without breaking anything.
         
     In all cases:
 
@@ -202,7 +204,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### WSL2 + Docker Desktop Install Script
 
-    This prepares your default WSL2 Ubuntu distro for use with Docker Desktop, and you can run the script multiple times without breaking anything.
+    WSL2 with Docker Desktop is a less-favored choice because Docker Desktop is often buggy and lightly supported, and has many features not required for use with DDEV. It is also not free software (although smaller organizations can use it free of charge) and it is not open-source.
+    
+    The script here prepares your default WSL2 Ubuntu distro for use with Docker Desktop, and you can run the script multiple times without breaking anything.
 
     In all cases:
 
@@ -270,7 +274,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Traditional Windows
 
-    If you must use traditional Windows without WSL2, you’ll probably want to enable [Mutagen](performance.md/#system-requirements) for the best performance.
+    If you must use traditional Windows, then Docker Desktop is your only choice of a Docker provider. DDEV is supported in this configuration but it's not as performant as the WSL2 options.
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
     * Each [DDEV release](https://github.com/ddev/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
