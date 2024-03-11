@@ -149,7 +149,7 @@ export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 
 # We can skip builds with commit message of [skip buildkite]
-if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]] || [[ $BUILDKITE_MESSAGE == *"[skip ci]"* ]]; then
+if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]]; then
   echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
   exit 0
 fi

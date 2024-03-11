@@ -107,8 +107,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping on Windows as it always seems to fail starting 2023-04")
 	}
-	if dockerutil.IsColima() {
-		t.Skip("Skipping on Colima")
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Lima/Colima")
 	}
 	// We have to get globalconfig read so CA is known and installed.
 	err := globalconfig.ReadGlobalConfig()
