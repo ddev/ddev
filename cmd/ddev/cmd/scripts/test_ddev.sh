@@ -32,7 +32,11 @@ function docker_desktop_version {
 
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
+
 echo "======= Existing project config ========="
+if [[ ${PWD} != ${HOME}* ]]; then
+  printf "\n\nWARNING: Project should be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
+fi
 ddev debug configyaml | grep -v web_environment
 
 PROJECT_DIR=../${PROJECT_NAME}
