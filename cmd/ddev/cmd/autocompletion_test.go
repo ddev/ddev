@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -288,6 +289,9 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 
 // TestAutocompleteTermsForCustomCmds tests the AutocompleteTerms annotation for custom host and container commands
 func TestAutocompleteTermsForCustomCmds(t *testing.T) {
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Colima/Lima")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()

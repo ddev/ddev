@@ -33,6 +33,7 @@ var conditionDefinitions = map[string]conditionDefinition{}
 func init() {
 	AddCondition("Disabled", "Permanently disables the message", func() bool { return false })
 	AddCondition("Colima", "Running on Colima", dockerutil.IsColima)
+	AddCondition("Lima", "Running on Lima", dockerutil.IsLima)
 	AddCondition("DockerDesktop", "Running on Docker Desktop", dockerutil.IsDockerDesktop)
 	AddCondition("WSL2", "Running on WSL2", nodeps.IsWSL2)
 }

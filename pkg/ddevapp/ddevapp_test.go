@@ -873,8 +873,8 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
-	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
-		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
+	if (dockerutil.IsColima() || dockerutil.IsLima()) && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
+		t.Skip("Skipping on Lima/Colima because this test doesn't work although manual testing works")
 	}
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
@@ -1617,6 +1617,9 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Lima/Colima")
+	}
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
@@ -1624,7 +1627,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:14", "mariadb:10.4", "mariadb:10.11", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:14", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1768,8 +1771,10 @@ func TestDdevAllDatabases(t *testing.T) {
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
 		fullSnapshotName, err := app.Snapshot(snapshotName)
 		if err != nil {
-			assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
-			continue
+			dumpDir := fmt.Sprintf("~/%s-broken-%s", t.Name(), util.RandString(5))
+			_, _ = exec.RunHostCommand(`bash`, `-c`, fmt.Sprintf("cp -r %s %s", app.AppRoot, dumpDir))
+			t.Logf("project was in %s, copying to %s", app.AppRoot, dumpDir)
+			t.Fatalf("could not create snapshot %s for %s: %v output=%v, saved approot=%s", snapshotName, dbTypeVersion, err, fullSnapshotName, dumpDir)
 		}
 
 		snapshotPath, err := ddevapp.GetSnapshotFileFromName(fullSnapshotName, app)
@@ -2055,8 +2060,8 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() {
-		t.Skip("Skipping on Windows and Colima as this is tested adequately elsewhere")
+	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Windows/Lima/Colima as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -3049,7 +3054,7 @@ func TestRouterPortsCheck(t *testing.T) {
 		},
 	}
 
-	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
+	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, nil, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
 
 	if err != nil {
 		t.Fatalf("Failed to run Docker command to occupy port 80/443, err=%v output=%v", err, out)
@@ -3542,8 +3547,8 @@ func TestPHPWebserverType(t *testing.T) {
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() {
-		t.Skip("Skipping on mac M1/Colima to ignore problems with 'connection reset by peer'")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on mac Apple Silicon/Lima/Colima to ignore problems with 'connection reset by peer'")
 	}
 
 	assert := asrt.New(t)
@@ -3674,8 +3679,8 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific performance_mode: nfs and etc
 func TestNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() {
-		t.Skip("Skipping on WSL2/Colima")
+	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on WSL2/Lima/Colima")
 	}
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen/nobindmounts enabled")
@@ -3816,8 +3821,8 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
-	if dockerutil.IsColima() {
-		t.Skip("Skipping test on Colima because of constant port problems")
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping test on Lima/Colima because of constant port problems")
 	}
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()

@@ -69,6 +69,8 @@ func GetDockerPlatform() (string, error) {
 		platform = "docker-desktop"
 	case strings.HasPrefix(info.Name, "colima"):
 		platform = "colima"
+	case strings.HasPrefix(info.Name, "lima"):
+		platform = "lima"
 	case platform == "OrbStack":
 		platform = "orbstack"
 	case strings.HasPrefix(platform, "Rancher Desktop") || strings.Contains(info.Name, "rancher-desktop"):
