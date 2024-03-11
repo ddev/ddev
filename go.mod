@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/amplitude/analytics-go v1.0.1
 	github.com/cheggaaa/pb v1.0.29
+	github.com/compose-spec/compose-go/v2 v2.0.0-rc.8.0.20240228111658-a0507e98fe60
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v25.0.3+incompatible
 	github.com/docker/go-connections v0.5.0
@@ -62,6 +63,7 @@ require (
 	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/term v0.5.0 // indirect
@@ -74,6 +76,9 @@ require (
 	github.com/segmentio/backo-go v1.0.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
+	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
+	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
+	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.48.0 // indirect
 	go.opentelemetry.io/otel v1.23.0 // indirect
@@ -82,13 +87,13 @@ require (
 	go.opentelemetry.io/otel/sdk v1.22.0 // indirect
 	go.opentelemetry.io/otel/trace v1.23.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gotest.tools/v3 v3.4.0 // indirect
 )
 
 go 1.21

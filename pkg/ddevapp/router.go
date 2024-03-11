@@ -176,10 +176,7 @@ func generateRouterCompose() (string, error) {
 		return "", err
 	}
 	files := append([]string{RouterComposeYAMLPath()}, userFiles...)
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: files,
-		Action:       []string{"config"},
-	})
+	fullContents, err := dockerutil.PrepareConfigYAML(files)
 	if err != nil {
 		return "", err
 	}

@@ -75,6 +75,25 @@ github.com/cloudflare/circl/math/mlsbset
 github.com/cloudflare/circl/sign
 github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
+# github.com/compose-spec/compose-go/v2 v2.0.0-rc.8.0.20240228111658-a0507e98fe60
+## explicit; go 1.21
+github.com/compose-spec/compose-go/v2/cli
+github.com/compose-spec/compose-go/v2/consts
+github.com/compose-spec/compose-go/v2/dotenv
+github.com/compose-spec/compose-go/v2/errdefs
+github.com/compose-spec/compose-go/v2/format
+github.com/compose-spec/compose-go/v2/graph
+github.com/compose-spec/compose-go/v2/interpolation
+github.com/compose-spec/compose-go/v2/loader
+github.com/compose-spec/compose-go/v2/override
+github.com/compose-spec/compose-go/v2/paths
+github.com/compose-spec/compose-go/v2/schema
+github.com/compose-spec/compose-go/v2/template
+github.com/compose-spec/compose-go/v2/transform
+github.com/compose-spec/compose-go/v2/tree
+github.com/compose-spec/compose-go/v2/types
+github.com/compose-spec/compose-go/v2/utils
+github.com/compose-spec/compose-go/v2/validation
 # github.com/containerd/log v0.1.0
 ## explicit; go 1.20
 # github.com/davecgh/go-spew v1.1.1
@@ -186,6 +205,9 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.15
 ## explicit; go 1.9
 github.com/mattn/go-runewidth
+# github.com/mattn/go-shellwords v1.0.12
+## explicit; go 1.13
+github.com/mattn/go-shellwords
 # github.com/mitchellh/copystructure v1.2.0
 ## explicit; go 1.15
 github.com/mitchellh/copystructure
@@ -255,6 +277,15 @@ github.com/ulikunitz/xz/lzma
 # github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
 ## explicit; go 1.17
 github.com/withfig/autocomplete-tools/integrations/cobra
+# github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f
+## explicit
+github.com/xeipuuv/gojsonpointer
+# github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415
+## explicit
+github.com/xeipuuv/gojsonreference
+# github.com/xeipuuv/gojsonschema v1.2.0
+## explicit
+github.com/xeipuuv/gojsonschema
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 ## explicit
 github.com/xtgo/uuid
@@ -297,6 +328,11 @@ golang.org/x/crypto/hkdf
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/sha3
+# golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
+## explicit; go 1.20
+golang.org/x/exp/constraints
+golang.org/x/exp/maps
+golang.org/x/exp/slices
 # golang.org/x/mod v0.15.0
 ## explicit; go 1.18
 golang.org/x/mod/semver
@@ -391,8 +427,6 @@ gopkg.in/segmentio/analytics-go.v3
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# gotest.tools/v3 v3.4.0
-## explicit; go 1.13
 # muzzammil.xyz/jsonc v1.0.0
 ## explicit
 muzzammil.xyz/jsonc

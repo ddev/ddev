@@ -292,6 +292,32 @@ func TestComposeCmd(t *testing.T) {
 	assert.Error(err)
 }
 
+// TestComposeGo tests execution of github.com/compose-spec/compose-go/v2/cli library.
+func TestComposeGo(t *testing.T) {
+	assert := asrt.New(t)
+
+	composeFiles := []string{filepath.Join("testdata", "docker-compose.yml")}
+
+	stdout, err := dockerutil.PrepareConfigYAML(composeFiles)
+	assert.NoError(err)
+	assert.Contains(stdout, "web")
+	assert.Contains(stdout, "db")
+	//assert.Contains(stderr, "Defaulting to a blank string")
+
+	composeFiles = append(composeFiles, filepath.Join("testdata", "docker-compose.override.yml"))
+
+	stdout, err = dockerutil.PrepareConfigYAML(composeFiles)
+	assert.NoError(err)
+	assert.Contains(stdout, "web")
+	assert.Contains(stdout, "db")
+	assert.Contains(stdout, "foo")
+	//assert.Contains(stderr, "Defaulting to a blank string")
+
+	composeFiles = []string{"invalid.yml"}
+	_, err = dockerutil.PrepareConfigYAML(composeFiles)
+	assert.Error(err)
+}
+
 // TestComposeWithStreams tests execution of docker-compose commands with streams
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
