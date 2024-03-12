@@ -46,7 +46,7 @@ type ComposeCmdOpts struct {
 	ComposeFiles []string
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
-	RealTime     bool // Print stdout as it happens
+	PrintStdout  bool // Print stdout as it happens
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
@@ -622,8 +622,12 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	}
 
 	proc := exec.Command(path, arg...)
-	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
+
+	stdoutPipe, err := proc.StdoutPipe()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to proc.StdoutPipe(): %v", err)
+	}
 
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {
@@ -634,6 +638,22 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
 	}
 
+	if cmd.PrintStdout {
+		outScanner := bufio.NewScanner(stdoutPipe)
+		go func() {
+			for outScanner.Scan() {
+				line := outScanner.Text()
+				stdout.WriteString(line + "\n")
+				output.UserOut.Println(line)
+			}
+		}()
+	} else {
+		outScanner := bufio.NewScanner(stdoutPipe)
+		for outScanner.Scan() {
+			line := outScanner.Text()
+			stdout.WriteString(line + "\n")
+		}
+	}
 	in := bufio.NewScanner(stderrPipe)
 
 	// Ignore chatty things from docker-compose like:

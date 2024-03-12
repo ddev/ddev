@@ -49,7 +49,7 @@ var DebugRefreshCmd = &cobra.Command{
 		_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       []string{"build", "--no-cache"},
-			RealTime:     true,
+			PrintStdout:  true,
 		})
 		if err != nil {
 			util.Failed("Failed to execute docker-compose -f %s build --no-cache: %v; stderr=\n%s\n\n", err, stderr)
