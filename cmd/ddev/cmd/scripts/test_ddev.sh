@@ -32,7 +32,11 @@ function docker_desktop_version {
 
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
+
 echo "======= Existing project config ========="
+if [[ ${PWD} != ${HOME}* ]]; then
+  printf "\n\nWARNING: Project should be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
+fi
 ddev debug configyaml | grep -v web_environment
 
 PROJECT_DIR=../${PROJECT_NAME}
@@ -60,13 +64,13 @@ if [ ${OSTYPE%-*} != "linux" ]; then
 fi
 echo "docker version: " && docker version
 echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}"
-echo "======= Mutagen Info ========="
-if [ -f ~/.ddev/bin/mutagen ]; then
-  echo "Mutagen is installed in ddev, version=$(~/.ddev/bin/mutagen version)"
-  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync list -l
-fi
 
 echo "======= Docker Info ========="
+
+if command -v colima >/dev/null 2>&1; then echo "colima: $(colima --version)"; fi
+if command -v limactl >/dev/null 2>&1; then echo "lima: $(lima --version)"; fi
+if command -v orb >/dev/null 2>&1; then echo "orbstack: $(orb version)"; fi
+if [ -f ~/.rd/bin/rdctl ]; then echo "rancher desktop: $(~/.rd/bin/rdctl version)"; fi
 
 if ddev debug dockercheck -h| grep dockercheck >/dev/null; then
   ddev debug dockercheck 2>/dev/null
