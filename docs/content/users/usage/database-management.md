@@ -45,7 +45,7 @@ Snapshots can be named for easier reference later on. For example, [`ddev snapsh
 
 Use the [`ddev snapshot restore`](../usage/commands.md#snapshot-restore) command to interactively choose among snapshots, or append `--latest` to restore the most recent snapshot: `ddev snapshot restore --latest`.
 
-Snapshot are stored as simple gzipped files in the project's `.ddev/db_snapshots` directory, and any or all snapshots can be removed there when you want to save disk space or have no further use for them.
+Snapshots are stored as simple gzipped files in the project's `.ddev/db_snapshots` directory, and any or all snapshots can be removed with the `ddev snapshot --cleanup` command or by manually deleting the files when you want to save disk space or have no further use for them.
 
 ## Database Clients
 
