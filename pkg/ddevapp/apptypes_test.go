@@ -1,16 +1,16 @@
 package ddevapp_test
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
-
-	"bufio"
-	"fmt"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -68,7 +68,7 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeDrupal8:      nodeps.PHP74,
 		nodeps.AppTypeDrupal9:      nodeps.PHPDefault,
 		nodeps.AppTypeDrupal10:     nodeps.PHP81,
-		nodeps.AppTypeLaravel:      nodeps.PHP81,
+		nodeps.AppTypeLaravel:      nodeps.PHP82,
 		nodeps.AppTypeMagento:      nodeps.PHP74,
 		nodeps.AppTypeMagento2:     nodeps.PHP81,
 		nodeps.AppTypeWordPress:    nodeps.PHPDefault,

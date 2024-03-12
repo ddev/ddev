@@ -2,10 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/joho/godotenv"
 	"regexp"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/joho/godotenv"
 )
 
 // ReadProjectEnvFile reads the .env in the project root into a envText and envMap
@@ -25,9 +26,9 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 	for k, v := range envMap {
 		// If the item is already in envText, use regex to replace it
 		// otherwise, append it to the envText.
-		exp := regexp.MustCompile(fmt.Sprintf(`((^|[\r\n]+)%s)=(.*)`, k))
+		exp := regexp.MustCompile(fmt.Sprintf(`(^|[\r\n]+)#*\s*(%s)=(.*)`, k))
 		if exp.MatchString(envText) {
-			envText = exp.ReplaceAllString(envText, fmt.Sprintf(`$1="%s"`, v))
+			envText = exp.ReplaceAllString(envText, fmt.Sprintf(`$1$2="%s"`, v))
 		} else {
 			envText = strings.TrimSuffix(envText, "\n")
 			envText = fmt.Sprintf("%s\n%s=%s\n", envText, k, v)

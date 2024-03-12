@@ -2,11 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -43,7 +44,7 @@ func laravelPostStartAction(app *DdevApp) error {
 		}
 	}
 	port := "3306"
-	dbConnection := "mysql"
+	dbConnection := "mariadb"
 	if app.Database.Type == nodeps.Postgres {
 		dbConnection = "pgsql"
 		port = "5432"
@@ -67,8 +68,8 @@ func laravelPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// laravelConfigOverrideAction overrides php_version for Laravel, requires PHP8.1
+// laravelConfigOverrideAction overrides php_version for Laravel, requires PHP8.2
 func laravelConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
+	app.PHPVersion = nodeps.PHP82
 	return nil
 }
