@@ -130,6 +130,7 @@ Silverstripe
 Snapshotting
 Solr
 SomeExternalDrive
+SQLite
 Starts
 Statamic
 Support
@@ -574,7 +575,6 @@ socio
 solr
 somefile
 sql
-SQLite
 src
 ssh
 sshd
