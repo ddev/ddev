@@ -324,7 +324,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     mkdir my-laravel-app
     cd my-laravel-app
     ddev config --project-type=laravel --docroot=public --php-version=8.2
-    ddev composer create --prefer-dist laravel/laravel -y
+    ddev composer create --prefer-dist laravel/laravel:^11
     ddev launch
     ```
 
@@ -340,8 +340,8 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev launch
     ```
 
-!!!tip "How to use SQLite database for Laravel?"
-    DDEV sets a default MariaDB database to better represent a production environment.
+!!!tip "Want to use a SQLite database for Laravel?"
+    DDEV defaults to using a MariaDB database to better represent a production environment.
 
     To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
     ```bash
