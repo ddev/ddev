@@ -340,6 +340,14 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev launch
     ```
 
+!!!tip "How to use SQLite database for Laravel?"
+    DDEV sets a default MariaDB database to better represent a production environment.
+
+    To select the [Laravel defaults](https://laravel.com/docs/releases#application-defaults) for SQLite, use this command for `ddev config`:
+    ```bash
+    ddev config --project-type=laravel --docroot=public --php-version=8.2 --omit-containers=db --disable-settings-management=true
+    ```
+
 ## Magento
 
 === "Magento 2"

@@ -574,7 +574,7 @@ socio
 solr
 somefile
 sql
-sqlite
+SQLite
 src
 ssh
 sshd
