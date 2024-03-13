@@ -634,7 +634,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
 	}
 
-	in := bufio.NewScanner(stderrPipe)
+	stderrOutput := bufio.NewScanner(stderrPipe)
 
 	// Ignore chatty things from docker-compose like:
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
@@ -646,8 +646,8 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
 	}
 
-	for in.Scan() {
-		line := in.Text()
+	for stderrOutput.Scan() {
+		line := stderrOutput.Text()
 		if len(stderr) > 0 {
 			stderr = stderr + "\n"
 		}
