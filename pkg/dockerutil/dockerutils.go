@@ -645,6 +645,20 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
 	}
 
+	done := make(chan bool)
+	if cmd.Progress {
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				default:
+					fmt.Printf(".")
+					time.Sleep(1 * time.Second)
+				}
+			}
+		}()
+	}
 	for stderrOutput.Scan() {
 		line := stderrOutput.Text()
 		if len(stderr) > 0 {
@@ -661,6 +675,10 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	}
 
 	err = proc.Wait()
+	if cmd.Progress {
+		done <- true
+	}
+
 	if err != nil {
 		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
 	}
