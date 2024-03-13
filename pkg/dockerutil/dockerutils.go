@@ -46,7 +46,6 @@ type ComposeCmdOpts struct {
 	ComposeFiles []string
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
-	RealTime     bool // Print stdout as it happens
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
