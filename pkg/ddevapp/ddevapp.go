@@ -1254,7 +1254,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Action:       []string{"--progress=" + progress, "build"},
 		Progress:     true,
-		PrintStdout:  globalconfig.DdevDebug,
 	})
 	if err != nil {
 		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
