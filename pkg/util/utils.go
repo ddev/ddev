@@ -83,6 +83,23 @@ func Verbose(format string, a ...interface{}) {
 	}
 }
 
+// ShowDots displays dots one per second until the channel
+// passed to gets true
+func ShowDots(chan bool) {
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				fmt.Printf(".")
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}()
+}
+
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
 func FormatPlural(count int, single string, plural string) string {
 	if count == 1 {

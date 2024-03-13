@@ -647,17 +647,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 	done := make(chan bool)
 	if cmd.Progress {
-		go func() {
-			for {
-				select {
-				case <-done:
-					return
-				default:
-					fmt.Printf(".")
-					time.Sleep(1 * time.Second)
-				}
-			}
-		}()
+		util.ShowDots(done)
 	}
 	for stderrOutput.Scan() {
 		line := stderrOutput.Text()
