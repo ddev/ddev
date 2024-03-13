@@ -45,7 +45,9 @@ func laravelPostStartAction(app *DdevApp) error {
 	}
 	port := "3306"
 	dbConnection := "mariadb"
-	if app.Database.Type == nodeps.Postgres {
+	if app.Database.Type == nodeps.MySQL {
+		dbConnection = "mysql"
+	} else if app.Database.Type == nodeps.Postgres {
 		dbConnection = "pgsql"
 		port = "5432"
 	}
