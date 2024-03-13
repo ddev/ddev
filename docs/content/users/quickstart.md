@@ -178,7 +178,7 @@ ddev launch
     ```bash
     mkdir my-ee && cd my-ee
     unzip /path/to/ee-zipfile.zip
-    ddev config --auto
+    ddev config --database=mysql:8.0
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
     ```
