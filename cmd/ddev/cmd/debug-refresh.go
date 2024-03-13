@@ -50,7 +50,7 @@ var DebugRefreshCmd = &cobra.Command{
 		output.UserOut.Printf("Rebuilding project images...")
 		buildDurationStart := util.ElapsedDuration(time.Now())
 		composeRenderedPath := app.DockerComposeFullRenderedYAMLPath()
-		util.Debug("Executing %s -f %s build web --no-cache", composeBinaryPath, composeRenderedPath)
+		util.Success("Rebuilding web image with `%s -f %s build web --no-cache`", composeBinaryPath, composeRenderedPath)
 
 		err = exec2.RunInteractiveCommand(composeBinaryPath, []string{"-f", composeRenderedPath, "build", "web", "--no-cache"})
 		if err != nil {

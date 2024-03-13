@@ -645,9 +645,9 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
 	}
 
-	done := make(chan bool)
+	var done chan bool
 	if cmd.Progress {
-		util.ShowDots(done)
+		done = util.ShowDots()
 	}
 	for stderrOutput.Scan() {
 		line := stderrOutput.Text()

@@ -83,9 +83,8 @@ func Verbose(format string, a ...interface{}) {
 	}
 }
 
-// ShowDots displays dots one per second until the channel
-// passed to gets true
-func ShowDots(chan bool) {
+// ShowDots displays dots one per second until done gets true
+func ShowDots() chan bool {
 	done := make(chan bool)
 	go func() {
 		for {
@@ -98,6 +97,7 @@ func ShowDots(chan bool) {
 			}
 		}
 	}()
+	return done
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
