@@ -8,14 +8,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
-
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestApptypeDetection does a simple test of various filesystem setups to make
