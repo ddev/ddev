@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	osexec "os/exec"
 	"os/user"
 	"runtime"
@@ -92,7 +93,7 @@ func ShowDots() chan bool {
 			case <-done:
 				return
 			default:
-				fmt.Printf(".")
+				_, _ = fmt.Fprintf(os.Stderr, ".")
 				time.Sleep(1 * time.Second)
 			}
 		}
