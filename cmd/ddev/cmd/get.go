@@ -34,7 +34,7 @@ var Get = &cobra.Command{
 	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official DDEV add-ons. To list installed add-ons, 'ddev get --installed', to remove an add-on 'ddev get --remove <add-on>'.`,
 	Example: `ddev get ddev/ddev-redis
 ddev get ddev/ddev-redis --version v1.0.4
-ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
+ddev get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
 ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
 ddev get --list

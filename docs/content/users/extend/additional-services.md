@@ -15,40 +15,52 @@ For example,
 
 ```
 →  ddev get --list
-┌──────────────────────────────────────┬───────────────────────────────────────────────────┐
-│ ADD-ON                               │ DESCRIPTION                                       │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-adminer                    │ Adminer service for DDEV*                         │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-beanstalkd                 │ Beanstalkd for DDEV*                              │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-browsersync                │ Auto-refresh HTTPS page on changes with DDEV*     │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-cron                       │ Schedule commands to execute within DDEV*         │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-drupal9-solr               │ Drupal 9 Apache Solr installation for DDEV*       │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                    │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-memcached                  │ Install Memcached as an extra service in DDEV*    │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-mongo                      │ MongoDB add-on for DDEV*                          │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-pdfreactor                 │ PDFreactor service for DDEV*                      │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-platformsh                 │ Add integration with Platform.sh hosting service* │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-proxy-support              │ Support HTTP/HTTPS proxies with DDEV*             │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-redis                      │ Redis service for DDEV*                           │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-redis-commander            │ Redis Commander for use with DDEV Redis service*  │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-selenium-standalone-chrome │ A DDEV service for running standalone Chrome*     │
-├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ ddev/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*            │
-└──────────────────────────────────────┴───────────────────────────────────────────────────┘
-Add-ons marked with '*' are official, maintained DDEV add-ons.
+┌──────────────────────────────────────┬────────────────────────────────────────────────────┐
+│ ADD-ON                               │ DESCRIPTION                                        │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-adminer                    │ Adminer service for DDEV*                          │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-beanstalkd                 │ Beanstalkd for DDEV*                               │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-browsersync                │ Auto-refresh HTTPS page on changes with DDEV*      │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-cron                       │ Schedule commands to execute within DDEV*          │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-drupal-contrib             │ DDEV integration for developing Drupal contrib     │
+│                                      │ projects*                                          │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-drupal-solr                │ Drupal Apache Solr installation for DDEV (please   │
+│                                      │ consider ddev/ddev-solr first)*                    │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                     │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-memcached                  │ Install Memcached as an extra service in DDEV*     │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-mongo                      │ MongoDB add-on for DDEV*                           │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-pdfreactor                 │ PDFreactor service for DDEV*                       │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-phpmyadmin                 │ phpMyAdmin Add-on For DDEV*                        │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-platformsh                 │ Add integration with Platform.sh hosting service*  │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-proxy-support              │ Support HTTP/HTTPS proxies with DDEV*              │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-redis                      │ Redis service for DDEV*                            │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-redis-7                    │ Redis 7 service for DDEV*                          │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-redis-commander            │ Redis Commander for use with DDEV Redis service*   │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-selenium-standalone-chrome │ A DDEV service for running standalone Chrome*      │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-solr                       │ Solr service for DDEV*                             │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-sqlsrv                     │ MS SQL server add-on for DDEV*                     │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*             │
+└──────────────────────────────────────┴────────────────────────────────────────────────────┘
+20 repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.
 ```
 
 !!!tip
@@ -57,7 +69,7 @@ Add-ons marked with '*' are official, maintained DDEV add-ons.
 Officially-supported add-ons:
 
 * [Adminer](https://github.com/ddev/ddev-adminer): `ddev get ddev/ddev-adminer`.
-* [Apache Solr for Drupal 9](https://github.com/ddev/ddev-drupal9-solr): `ddev get ddev/ddev-drupal9-solr`.
+* [Apache Solr for Drupal](https://github.com/ddev/ddev-drupal-solr): `ddev get ddev/ddev-drupal-solr`.
 * [Beanstalkd](https://github.com/ddev/ddev-beanstalkd): `ddev get ddev/ddev-beanstalkd`.
 * [Browsersync](https://github.com/ddev/ddev-browsersync): `ddev get ddev/ddev-browsersync`.
 * [cron](https://github.com/ddev/ddev-cron): `ddev get ddev/ddev-cron`.
