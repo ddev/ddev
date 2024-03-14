@@ -184,11 +184,11 @@ var (
 		// 9: laravel
 		{
 			Name:                          "TestPkgLaravel",
-			SourceURL:                     "https://github.com/ddev/test-laravel/archive/refs/tags/11.0.1.1.tar.gz",
-			ArchiveInternalExtractionPath: "test-laravel-11.0.1.1/",
+			SourceURL:                     "https://github.com/ddev/test-laravel/archive/refs/tags/11.0.2.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-laravel-11.0.2.1/",
 			FilesTarballURL:               "",
 			FilesZipballURL:               "",
-			DBTarURL:                      "https://github.com/ddev/test-laravel/releases/download/11.0.1.1/db.sql.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/test-laravel/releases/download/11.0.2.1/db.sql.tar.gz",
 			DBZipURL:                      "",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeLaravel,
