@@ -33,6 +33,9 @@ var DdevVerbose = (os.Getenv("DDEV_VERBOSE") == "true")
 
 var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELocationWSL2, ""}
 
+// GoroutineCount for tests
+var GoroutineCount = 0
+
 // IsValidXdebugIDELocation limits the choices for XdebugIDELocation
 func IsValidXdebugIDELocation(loc string) bool {
 	switch {

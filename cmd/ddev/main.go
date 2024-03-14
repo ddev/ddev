@@ -1,14 +1,34 @@
 package main
 
 import (
-	"os"
-
+	"bytes"
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
+	"os"
+	"runtime"
+	"runtime/pprof"
 )
 
 func main() {
+
+	defer func() {
+		globalconfig.GoroutineCount = runtime.NumGoroutine()
+		if globalconfig.DdevDebug {
+
+			if globalconfig.DdevVerbose {
+				buf := new(bytes.Buffer)
+
+				// Lookup "goroutine" profile
+				p := pprof.Lookup("goroutine")
+				// Write it to stderr
+				_ = p.WriteTo(buf, 2)
+				util.Verbose(buf.String())
+			}
+		}
+		util.Debug("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
+	}()
 	defer util.TimeTrack()()
 
 	// Initialization is currently done before via init() func somewhere while
@@ -25,4 +45,5 @@ func main() {
 	}
 
 	cmd.Execute()
+
 }
