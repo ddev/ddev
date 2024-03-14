@@ -1,7 +1,9 @@
 package util
 
 import (
+	"bytes"
 	"runtime"
+	"runtime/pprof"
 	"strconv"
 	"time"
 
@@ -75,4 +77,24 @@ func timeTrack(name *string) func() {
 	return func() {
 		logrus.Print("PERF: exit " + *name + " at " + time.Now().Format("15:04:05.000000000") + " after " + strconv.FormatInt(time.Since(start).Milliseconds(), 10) + "ms")
 	}
+}
+
+// CheckGoroutines() updates the number of goroutines
+// and optionally outputs the list of them on verbose.
+// Use with `defer util.CheckGoroutines()`
+func CheckGoroutines() {
+	globalconfig.GoroutineCount = runtime.NumGoroutine()
+	if globalconfig.DdevDebug {
+
+		if globalconfig.DdevVerbose {
+			buf := new(bytes.Buffer)
+
+			// Lookup "goroutine" profile
+			p := pprof.Lookup("goroutine")
+			// Write it to stderr
+			_ = p.WriteTo(buf, 2)
+			Verbose(buf.String())
+		}
+	}
+	Debug("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
 }
