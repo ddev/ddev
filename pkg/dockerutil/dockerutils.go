@@ -380,7 +380,16 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 		select {
 		case <-timeoutChan.C:
 			_ = timeoutChan.Stop()
-			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v", durationWait, labels, status)
+			desc := ""
+			container, err := FindContainerByLabels(labels)
+			if err == nil && container != nil {
+				health, _ := GetContainerHealth(container)
+				if health != "healthy" {
+					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+				}
+			}
+			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v, detail=%s ", durationWait, labels, status, desc)
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
@@ -393,14 +402,11 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			case "healthy":
 				return logOutput, nil
 			case "unhealthy":
-				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("container %s is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
 			case "exited":
-				service := container.Labels["com.docker.compose.service"]
-				suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
-				if service == "ddev-router" || service == "ddev-ssh-agent" {
-					suggestedCommand = fmt.Sprintf("docker logs %s", service)
-				}
-				return logOutput, fmt.Errorf("container exited, please use '%s' to find out why it failed", suggestedCommand)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("container %s exited, please use %s to find out why it failed", name, suggestedCommand)
 			}
 		}
 	}
@@ -430,8 +436,8 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				for _, container := range containers {
 					health, _ := GetContainerHealth(&container)
 					if health != "healthy" {
-						n := strings.TrimPrefix(container.Names[0], "/")
-						desc = desc + fmt.Sprintf(" %s:%s - more info with `docker inspect --format \"{{json .State.Health }}\" %s`", n, health, n)
+						name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+						desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
 					}
 				}
 			}
@@ -450,14 +456,11 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				case "healthy":
 					continue
 				case "unhealthy":
-					return fmt.Errorf("container %s is unhealthy: %s", container.Names[0], logOutput)
+					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+					return fmt.Errorf("container %s is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
 				case "exited":
-					service := container.Labels["com.docker.compose.service"]
-					suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
-					if service == "ddev-router" || service == "ddev-ssh-agent" {
-						suggestedCommand = fmt.Sprintf("docker logs %s", service)
-					}
-					return fmt.Errorf("container '%s' exited, please use '%s' to find out why it failed", service, suggestedCommand)
+					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+					return fmt.Errorf("container %s exited, please use %s to find out why it failed", name, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -489,7 +492,18 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	for {
 		select {
 		case <-timeoutChan:
-			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+			desc := ""
+			containers, err := FindContainersByLabels(labels)
+			if err == nil && containers != nil {
+				for _, container := range containers {
+					health, _ := GetContainerHealth(&container)
+					if health != "healthy" {
+						name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+						desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+					}
+				}
+			}
+			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
@@ -502,10 +516,11 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 			case status == "healthy" && expectedLog == logOutput:
 				return logOutput, nil
 			case status == "unhealthy":
-				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("container %s is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
 			case status == "exited":
-				service := container.Labels["com.docker.compose.service"]
-				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("container %s exited, please use %s to find out why it failed", name, suggestedCommand)
 			}
 		}
 	}
@@ -513,6 +528,27 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	// We should never get here.
 	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
+}
+
+// getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
+func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (string, string) {
+	suggestedCommand := ""
+	service := container.Labels["com.docker.compose.service"]
+	if service != "" && service != "ddev-router" && service != "ddev-ssh-agent" {
+		suggestedCommand = suggestedCommand + fmt.Sprintf("'ddev logs -s %s' and ", service)
+	}
+	name := strings.TrimPrefix(container.Names[0], "/")
+	if name != "" {
+		suggestedCommand = suggestedCommand + fmt.Sprintf("'docker logs %s' and 'docker inspect --format \"{{ json .State.Health }}\" %s'", name, name)
+	}
+	// Should never happen, but added just in case
+	if name == "" {
+		name = "unknown"
+	}
+	if suggestedCommand == "" {
+		suggestedCommand = "'ddev logs' and 'docker logs CONTAINER' (find CONTAINER with 'docker ps') and 'docker inspect --format \"{{ json .State.Health }}\" CONTAINER'"
+	}
+	return name, suggestedCommand
 }
 
 // ContainerName returns the container's human-readable name.
