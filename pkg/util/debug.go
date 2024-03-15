@@ -96,6 +96,6 @@ func CheckGoroutines() {
 			_ = p.WriteTo(buf, 2)
 			Verbose(buf.String())
 		}
+		output.UserOut.Printf("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
 	}
-	output.UserOut.Printf("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
 }
