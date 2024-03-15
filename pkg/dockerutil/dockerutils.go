@@ -403,10 +403,10 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return logOutput, nil
 			case "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("container %s is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
 			case "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("container %s exited, please use %s to find out why it failed", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited, please use %s to find out why it failed", name, suggestedCommand)
 			}
 		}
 	}
@@ -457,10 +457,10 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					continue
 				case "unhealthy":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("container %s is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
+					return fmt.Errorf("%s container is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
 				case "exited":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("container %s exited, please use %s to find out why it failed", name, suggestedCommand)
+					return fmt.Errorf("%s container exited, please use %s to find out why it failed", name, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -517,10 +517,10 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 				return logOutput, nil
 			case status == "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("container %s is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
 			case status == "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("container %s exited, please use %s to find out why it failed", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited, please use %s to find out why it failed", name, suggestedCommand)
 			}
 		}
 	}
