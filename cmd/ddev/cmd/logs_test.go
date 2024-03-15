@@ -30,9 +30,9 @@ func TestLogsNoConfig(t *testing.T) {
 
 // TestCmdLogs tests that the ddev logs functionality is working.
 func TestCmdLogs(t *testing.T) {
-	//if nodeps.IsAppleSilicon() {
-	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	//}
+	// Gather reporting about goroutines at exit
+	_ = os.Setenv("DDEV_GOROUTINES", "true")
+
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -66,6 +66,7 @@ func TestCmdLogs(t *testing.T) {
 
 	out, err := exec.RunHostCommand(DdevBin, "logs")
 	require.NoError(t, err)
+	testcommon.CheckGoroutineOutput(t, out)
 	assert.Contains(string(out), "Server started")
 	assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", site.Name, string(out))
 }

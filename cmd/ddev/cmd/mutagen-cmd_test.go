@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"os"
 	"runtime"
 	"strings"
@@ -19,6 +20,8 @@ import (
 // TestCmdMutagen tests `ddev mutagen` config and subcommands
 func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
+	// Gather reporting about goroutines at exit
+	_ = os.Setenv("DDEV_GOROUTINES", "true")
 
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because Mutagen on by default")
@@ -63,8 +66,9 @@ func TestCmdMutagen(t *testing.T) {
 	require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 	// Turn Mutagen off globally
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
+	out, err := exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
 	assert.NoError(err)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
@@ -88,17 +92,21 @@ func TestCmdMutagen(t *testing.T) {
 	// Now test subcommands. Wait a bit for Mutagen to get completely done, with transition problems sorted out
 	err = app.StartAndWait(10)
 	require.NoError(t, err)
-	out, err := exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
+	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
+	testcommon.CheckGoroutineOutput(t, out)
+
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "expected Mutagen: ok. Full output: %s", out)
 	assert.Contains(out, "Mutagen: ok")
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")
+	testcommon.CheckGoroutineOutput(t, out)
 
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "reset")
 	assert.NoError(err)
 	assert.Contains(out, fmt.Sprintf("Removed Docker volume %s", ddevapp.GetMutagenVolumeName(app)))
+	testcommon.CheckGoroutineOutput(t, out)
 
 	status, statusDesc := app.SiteStatus()
 	assert.Equal("stopped", status)
@@ -107,9 +115,11 @@ func TestCmdMutagen(t *testing.T) {
 	assert.NoError(err)
 	_, err = exec.RunHostCommand(DdevBin, "mutagen", "sync")
 	assert.NoError(err)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	err = app.Stop(true, false)
 	require.NoError(t, err)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	// Turn Mutagen off again
 	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode-reset")
