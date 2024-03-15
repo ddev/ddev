@@ -33,51 +33,33 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 	if services, ok := app.ComposeYaml["services"]; ok {
 		for serviceName, s := range services.(map[string]interface{}) {
 			service := s.(map[string]interface{})
-			var envMap map[string]interface{}
-			if envInterface, ok := service["environment"]; ok {
-				switch env := envInterface.(type) {
-				// Backward compatibility for older docker-compose
-				case map[string]interface{}:
-					envMap = env
-				// The config structure changed in docker-compose v2.24.7
-				// See https://github.com/docker/compose/issues/11589
-				case []interface{}:
-					envMap = make(map[string]interface{})
-					for _, val := range env {
-						if str, ok := val.(string); ok {
-							parts := strings.SplitN(str, "=", 2)
-							if len(parts) == 2 {
-								envMap[parts[0]] = parts[1]
-							}
-						}
+			if env, ok := service["environment"].(map[string]interface{}); ok {
+				var virtualHost string
+				var ok bool
+				if virtualHost, ok = env["VIRTUAL_HOST"].(string); ok {
+					util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
+				}
+				if virtualHost == "" {
+					continue
+				}
+				hostnames := strings.Split(virtualHost, ",")
+				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok && httpExpose != "" {
+					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
+					routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
+					if err != nil {
+						return nil, err
 					}
+					table = append(table, routeEntries...)
 				}
-			}
-			var virtualHost string
-			var ok bool
-			if virtualHost, ok = envMap["VIRTUAL_HOST"].(string); ok {
-				util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
-			}
-			if virtualHost == "" {
-				continue
-			}
-			hostnames := strings.Split(virtualHost, ",")
-			if httpExpose, ok := envMap["HTTP_EXPOSE"].(string); ok && httpExpose != "" {
-				util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
-				routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
-				if err != nil {
-					return nil, err
-				}
-				table = append(table, routeEntries...)
-			}
 
-			if httpsExpose, ok := envMap["HTTPS_EXPOSE"].(string); ok && httpsExpose != "" {
-				util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
-				routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
-				if err != nil {
-					return nil, err
+				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok && httpsExpose != "" {
+					util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
+					routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
+					if err != nil {
+						return nil, err
+					}
+					table = append(table, routeEntries...)
 				}
-				table = append(table, routeEntries...)
 			}
 		}
 	}

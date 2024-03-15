@@ -43,4 +43,4 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.17.2"
 
-const RequiredDockerComposeVersionDefault = "v2.24.7"
+const RequiredDockerComposeVersionDefault = "v2.25.0"
