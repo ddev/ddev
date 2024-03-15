@@ -323,8 +323,8 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     mkdir my-laravel-app
     cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public
-    ddev composer create --prefer-dist laravel/laravel -y
+    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    ddev composer create --prefer-dist laravel/laravel:^11
     ddev launch
     ```
 
@@ -333,11 +333,19 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     git clone <your-laravel-repo>
     cd <your-laravel-project>
-    ddev config --project-type=laravel --docroot=public --php-version=8.1
+    ddev config --project-type=laravel --docroot=public --php-version=8.2
     ddev start
     ddev composer install
     ddev php artisan key:generate
     ddev launch
+    ```
+
+!!!tip "Want to use a SQLite database for Laravel?"
+    DDEV defaults to using a MariaDB database to better represent a production environment.
+
+    To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
+    ```bash
+    ddev config --project-type=laravel --docroot=public --php-version=8.2 --omit-containers=db --disable-settings-management=true
     ```
 
 ## Magento
@@ -346,7 +354,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
 
-    Note that you can install the Adobe/Magento composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again. See [In-Container Home Directory and Shell Configuration](../extend/in-container-configuration).
+    Note that you can install the Adobe/Magento composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md).
 
     ```bash
     SITENAME=ddev-magento2
