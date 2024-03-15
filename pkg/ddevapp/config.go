@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -33,6 +34,7 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
 func init() {
+	var err error
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
@@ -48,6 +50,12 @@ func init() {
 	}
 	if os.Getenv("DDEV_TEST_USE_NGINX_PROXY_ROUTER") == "true" {
 		nodeps.UseNginxProxyRouter = true
+	}
+	if g := os.Getenv("DDEV_TEST_GOROUTINE_LIMIT"); g != "" {
+		nodeps.GoroutineLimit, err = strconv.Atoi(g)
+		if err != nil {
+			util.Failed("DDEV_TEST_GOROUTINE_LIMIT must be empty or numeric value, not '%v'", g)
+		}
 	}
 }
 

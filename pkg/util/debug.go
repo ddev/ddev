@@ -2,6 +2,8 @@ package util
 
 import (
 	"bytes"
+	"github.com/ddev/ddev/pkg/output"
+	"os"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -84,8 +86,7 @@ func timeTrack(name *string) func() {
 // Use with `defer util.CheckGoroutines()`
 func CheckGoroutines() {
 	globalconfig.GoroutineCount = runtime.NumGoroutine()
-	if globalconfig.DdevDebug {
-
+	if os.Getenv("DDEV_GOROUTINES") != "" {
 		if globalconfig.DdevVerbose {
 			buf := new(bytes.Buffer)
 
@@ -96,5 +97,5 @@ func CheckGoroutines() {
 			Verbose(buf.String())
 		}
 	}
-	Debug("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
+	output.UserOut.Printf("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
 }

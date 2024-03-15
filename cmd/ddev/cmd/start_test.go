@@ -19,6 +19,8 @@ import (
 func TestCmdStart(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Gather reporting about goroutines at exit
+	_ = os.Setenv("DDEV_GOROUTINES", "true")
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)
@@ -30,6 +32,7 @@ func TestCmdStart(t *testing.T) {
 	// Ensure all sites are started after ddev start --all.
 	out, err := exec.RunCommand(DdevBin, []string{"start", "--all", "-y"})
 	assert.NoError(err, "ddev start --all should succeed but failed, err: %v, output: %s", err, out)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	// Confirm all sites are running.
 	apps := ddevapp.GetActiveProjects()
@@ -40,8 +43,9 @@ func TestCmdStart(t *testing.T) {
 	}
 
 	// Stop all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	out, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	// Build start command startMultipleArgs
 	startMultipleArgs := []string{"start", "-y"}
@@ -52,6 +56,7 @@ func TestCmdStart(t *testing.T) {
 	// Start multiple projects in one command
 	out, err = exec.RunCommand(DdevBin, startMultipleArgs)
 	assert.NoError(err, "ddev start with multiple project names should have succeeded, but failed, err: %v, output %s", err, out)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	// Confirm all sites are running
 	for _, app := range apps {
