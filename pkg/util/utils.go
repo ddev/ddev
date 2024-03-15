@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	osexec "os/exec"
 	"os/user"
 	"runtime"
@@ -81,6 +82,23 @@ func Verbose(format string, a ...interface{}) {
 		s := fmt.Sprintf(format, a...)
 		output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.999"), s)
 	}
+}
+
+// ShowDots displays dots one per second until done gets true
+func ShowDots() chan bool {
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			default:
+				_, _ = fmt.Fprintf(os.Stderr, ".")
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}()
+	return done
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
