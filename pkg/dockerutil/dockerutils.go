@@ -493,14 +493,12 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 		select {
 		case <-timeoutChan:
 			desc := ""
-			containers, err := FindContainersByLabels(labels)
-			if err == nil && containers != nil {
-				for _, container := range containers {
-					health, _ := GetContainerHealth(&container)
-					if health != "healthy" {
-						name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-						desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
-					}
+			container, err := FindContainerByLabels(labels)
+			if err == nil && container != nil {
+				health, _ := GetContainerHealth(container)
+				if health != "healthy" {
+					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
 				}
 			}
 			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
