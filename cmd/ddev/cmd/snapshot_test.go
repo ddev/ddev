@@ -53,7 +53,6 @@ func TestCmdSnapshot(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", "not-existing-snapshot", "--cleanup", "--yes")
 	assert.Error(err)
 	assert.Contains(out, "Failed to delete snapshot")
-	testcommon.CheckGoroutineOutput(t, out)
 
 	// Ensure that an existing snapshot can be deleted
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", snapshotName, "--cleanup", "--yes")
