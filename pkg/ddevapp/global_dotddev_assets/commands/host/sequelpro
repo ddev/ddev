@@ -11,6 +11,9 @@
 if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
+  # run this script again with the updated environment
+  DDEV_PROJECT_STATUS=running ddev "$(basename "$0")" "$@"
+  exit $?
 fi
 tmpdir=$(mktemp -d -t sequelpro-XXXXXXXXXX)
 templatepath="$tmpdir/sequelpro.spf"
@@ -79,4 +82,3 @@ cat >$templatepath <<END
 END
 
 open  "${templatepath}"
-

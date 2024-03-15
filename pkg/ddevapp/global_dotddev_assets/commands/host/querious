@@ -12,8 +12,10 @@
 if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
+  # run this script again with the updated environment
+  DDEV_PROJECT_STATUS=running ddev "$(basename "$0")" "$@"
+  exit $?
 fi
 DATABASE="${1:-db}"
 
 open "querious://connect/new?host=127.0.0.1&user=db&password=db&use-compression=false&database=${DATABASE}&port=${DDEV_HOST_DB_PORT}"
-
