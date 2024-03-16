@@ -104,29 +104,6 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Get Homebrew Cache Directory
-        id: homebrew-cache
-        run: |
-          echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
-
-      - name: Homebrew cache
-        uses: actions/cache@v4
-        if: github.ref == 'refs/heads/master'
-        with:
-          path: ${{ steps.homebrew-cache.outputs.dir }}
-          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-cache-
-
-      - name: Homebrew cache/restore
-        uses: actions/cache/restore@v4
-        if: github.ref != 'refs/heads/master'
-        with:
-          path: ${{ steps.homebrew-cache.outputs.dir }}
-          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-cache-
-
       - name: Remove unnecessary items on disk
         run: sudo rm -rf /usr/local/lib/android && df -h .
 
