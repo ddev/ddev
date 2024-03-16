@@ -818,7 +818,9 @@ func TestPHPOverrides(t *testing.T) {
 
 // TestPHPConfig checks some key PHP configuration items
 func TestPHPConfig(t *testing.T) {
-
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("skipping on Lima/Colima because of unpredictable behavior, unable to connect")
+	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
