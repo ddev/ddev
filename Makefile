@@ -10,6 +10,8 @@ GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -type f)
+GORACE = "halt_on_error=1"
+CGO_ENABLED = 0
 .PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 setup
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
@@ -77,11 +79,11 @@ $(TARGETS): mkcert $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=0 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
+	export TARGET=$(word 3, $(subst /, ,$@)) && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $(BUILDARGS) -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
