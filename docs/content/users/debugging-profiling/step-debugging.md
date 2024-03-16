@@ -88,7 +88,7 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 6. In a browser, visit your project and confirm you hit the breakpoint.
 
 !!!tip "If you’re using VS Code on Windows with WSL2"
-    VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “[PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug)” and “[WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
+    It's important that VS Code is launched within WSL2. There are 2 methods to do this: from the command line and from VS Code. For the first method, open a WSL2 terminal (e.g. the default distro Ubuntu), `cd` to the root of your project, then run `code .`. Refer to the [Microsoft doc](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode) for more inforation. VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “[PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug)” and “[WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
 
 ## Using Xdebug on a Port Other than the Default 9003
 
