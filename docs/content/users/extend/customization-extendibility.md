@@ -49,7 +49,10 @@ There are several ways to run processes inside the `web` container.
 2. Run them with a `post-start` [hook](../configuration/hooks.md).
 3. Run them automatically using `web_extra_daemons`.
 
-### Running Extra Daemons with `post-start` Hook
+!!!tip "Daemons requiring network access should bind to `0.0.0.0`, not to `localhost` or `127.0.0.1`"
+    Many examples on the internet show starting daemons starting up and binding to `127.0.0.1` or `localhost`. Those examples are assuming that network consumers are on the same network interface, but with a DDEV-based solution the network server is essentially on a different computer from the host computer (workstation). If the host computer needs to have connectivity, then bind to `0.0.0.0` (meaning "all network interfaces") rather than `127.0.0.1` or `localhost` (which means only allow access from the local network). A ReactPHP example would be `$socket = new React\Socket\SocketServer('0.0.0.0:3000');` instead of `$socket = new React\Socket\SocketServer('127.0.0.1:8080');`. (To expose your daemon to the workstation and browser, see [Exposing Extra Ports via `ddev-router`](#exposing-extra-ports-via-ddev-router).)
+
+### Running Extra Daemons with a `post-start` Hook
 
 Daemons can be run with a `post-start` `exec` hook or automatically started using `supervisord`.
 
