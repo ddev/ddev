@@ -61,17 +61,18 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
+      CGO_ENABLED: 0
+      DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
       DDEV_NONINTERACTIVE: "true"
-      GOTEST_SHORT: "12" # 8 is drupal10; means in TestFullSiteSetup we only use drupal10
+      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
+      DDEV_SKIP_NODEJS_TEST: "true"
+      GOTEST_SHORT: "12" # 12 is drupal10; means in TestFullSiteSetup we only use drupal10
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
       DDEV_TEST_USE_NGINX_PROXY_ROUTER: ${{ matrix.nginx-proxy-router }}
       MAKE_TARGET: "test"
       TESTARGS: "-failfast"
-      DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
-      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
-      DDEV_SKIP_NODEJS_TEST: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -136,8 +137,10 @@ jobs:
       - name: Override environment variables for race detection
         run: |
           echo "BUILDARGS=-race" >> $GITHUB_ENV
-          echo "TESTARGS=-race" >> $GITHUB_ENV
+          echo "TESTARGS=-failfast -race" >> $GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "DDEV_TEST_USE_MUTAGEN=true" >>$GITHUB_ENV
+        if: ${{ matrix.webserver == 'race-detection' }}
 
       - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
