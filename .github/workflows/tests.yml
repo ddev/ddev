@@ -53,6 +53,8 @@ jobs:
             router: "nginx-proxy"
           - name: "pull-push-test-platforms"
             pull-push-test-platforms: true
+          - name: "race-detection"
+            race-detection: true
 
       fail-fast: false
 
@@ -153,6 +155,12 @@ jobs:
         run: |
           echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
         if: ${{ matrix.webserver == 'nginx-fpm' }}
+
+      - name: Override environment variables for race detection
+        run: |
+          echo "BUILDARGS=-race" >> $GITHUB_ENV
+          echo "TESTARGS=-race" >> $GITHUB_ENV
+          echo "DDEV_TEST_USE_MUTAGEN=true" >>$GITHUB_ENV
 
       - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
