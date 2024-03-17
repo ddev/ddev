@@ -140,9 +140,9 @@ jobs:
           echo "TESTARGS=-failfast -race" >> $GITHUB_ENV
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "DDEV_TEST_USE_MUTAGEN=true" >>$GITHUB_ENV
-        if: ${{ matrix.webserver == 'race-detection' }}
+        if: ${{ matrix.race-detection }}
 
-      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
+      - run: echo "BUILDARGS=${BUILDARGS} TESTARGS=${TESTARGS} CGO_ENABLED=${CGO_ENABLED} DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -151,7 +151,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: DDEV tests
-        run: make TESTARGS="${TESTARGS}" ${MAKE_TARGET}
+        run: make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
       - name: Clean up Homebrew
         continue-on-error: true

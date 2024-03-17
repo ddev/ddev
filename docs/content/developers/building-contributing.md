@@ -252,10 +252,13 @@ Then run `ddev` commands as usual, and the data will be sent to Amplitude.
 
 Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
 
+You can add additional `go build` args with `make BUILDARGS=<something>`, for example, `make BUILDARGS=-race`.
+
 Build/test/check static analysis with:
 
 ```
 make # Builds on current os/architecture
+make BUILDARGS=-race
 make linux_amd64
 make linux_arm64
 make darwin_amd64
@@ -268,7 +271,9 @@ make staticrequired
 
 ## Testing
 
-Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name.
+Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name. This is also easy to do in Visual Studio Code.
+
+To test with race detection, `make test TESTARGS="-race"` for example.
 
 To see which DDEV commands the tests are executing, set the environment variable `DDEV_DEBUG=true`.
 
