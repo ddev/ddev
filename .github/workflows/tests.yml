@@ -151,7 +151,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: DDEV tests
-        run: make TESTARGS="${TESTARGS}" ${MAKE_TARGET}
+        run: make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
       - name: Clean up Homebrew
         continue-on-error: true
