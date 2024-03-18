@@ -67,6 +67,10 @@ var SimpleFormatting = false
 // FailOnHookFailDefault is the default value for app.FailOnHookFail
 var FailOnHookFailDefault = false
 
+// GoroutineLimit is the number of goroutines allowed at exit in parts of some tests
+// Can be overridden by setting DDEV_TEST_GOROUTINE_LIMIT=<somenumber>
+var GoroutineLimit = 10
+
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{

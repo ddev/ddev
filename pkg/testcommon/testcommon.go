@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,7 +13,9 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"testing"
 	"time"
 
@@ -425,6 +429,19 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v, body=%v: %v", rawurl, resp, body, err)
 	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	return resp, err
+}
+
+// CheckgoroutineOutput makes sure that goroutines
+// aren't beyond specified level
+func CheckGoroutineOutput(t *testing.T, out string) {
+	goroutineLimit := nodeps.GoroutineLimit
+	// regex to find "goroutines=4 at exit of main()"
+	re := regexp.MustCompile(`goroutines=(\d+) at exit of main\(\)`)
+	matches := re.FindAllStringSubmatch(out, -1)
+	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=")
+	num, err := strconv.Atoi(matches[0][1])
+	require.NoError(t, err, "can't convert %s to number: %v", matches[0][1])
+	require.LessOrEqual(t, num, goroutineLimit, "number of goroutines=%v, higher than limit=%d", num, goroutineLimit)
 }
 
 // PortPair is for tests to use naming portsets for tests

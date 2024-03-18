@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -12,6 +13,8 @@ import (
 // TestCmdSnapshot runs `ddev snapshot` on the test apps
 func TestCmdSnapshot(t *testing.T) {
 	assert := asrt.New(t)
+	// Gather reporting about goroutines at exit
+	_ = os.Setenv("DDEV_GOROUTINES", "true")
 
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
@@ -32,14 +35,17 @@ func TestCmdSnapshot(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
+	out, err := exec.RunHostCommand(DdevBin, "snapshot", "--cleanup", "--yes")
+	testcommon.CheckGoroutineOutput(t, out)
 
 	snapshotName := "test-snapshot"
 	// Ensure that there are no snapshots available before we create one
-	_, err = exec.RunHostCommand(DdevBin, "snapshot", "--cleanup", "--yes")
+	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--cleanup", "--yes")
 	assert.NoError(err)
+	testcommon.CheckGoroutineOutput(t, out)
 
 	// Ensure that a snapshot can be created
-	out, err := exec.RunHostCommand(DdevBin, "snapshot", "--name", snapshotName)
+	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", snapshotName)
 	assert.NoError(err)
 	require.Contains(t, out, "Created database snapshot "+snapshotName)
 
@@ -52,4 +58,5 @@ func TestCmdSnapshot(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", snapshotName, "--cleanup", "--yes")
 	assert.NoError(err, "failed to delete snapshot %s: %s", snapshotName, out)
 	assert.Contains(out, "Deleted database snapshot '"+snapshotName)
+	testcommon.CheckGoroutineOutput(t, out)
 }
