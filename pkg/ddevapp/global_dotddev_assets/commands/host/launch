@@ -50,7 +50,11 @@ if [ -n "${1:-}" ] ; then
     FULLURL="${FULLURL}/";
   fi
 
-  FULLURL="${FULLURL}${1}";
+  if [[ $1 =~ ^https?:// ]]; then
+    FULLURL="${1}";
+  else
+    FULLURL="${FULLURL}${1}";
+  fi
 fi
 
 if [ ! -z ${DDEV_DEBUG:-} ]; then
@@ -72,4 +76,3 @@ case $OSTYPE in
     start ${FULLURL}
     ;;
 esac
-
