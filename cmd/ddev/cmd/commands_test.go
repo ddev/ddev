@@ -330,10 +330,14 @@ func TestLaunchCommand(t *testing.T) {
 	desc, err := app.Describe(false)
 	require.NoError(t, err)
 	cases := map[string]string{
-		"":                       app.GetPrimaryURL(),
-		"-m":                     desc["mailpit_https_url"].(string),
-		"/test":                  app.GetPrimaryURL() + "/test",
-		"https://www.google.com": "https://www.google.com",
+		"":                             app.GetPrimaryURL(),
+		"-m":                           desc["mailpit_https_url"].(string),
+		"test":                         app.GetPrimaryURL() + "/test",
+		"test/file":                    app.GetPrimaryURL() + "/test/file",
+		"/test":                        app.GetPrimaryURL() + "/test",
+		app.GetPrimaryURL() + "/test":  app.GetPrimaryURL() + "/test",
+		"http://example.com":           "http://example.com",
+		"https://example.com:443/test": "https://example.com:443/test",
 	}
 	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
 		cases["-m"] = desc["mailpit_url"].(string)
