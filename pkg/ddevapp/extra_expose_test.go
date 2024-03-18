@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +17,9 @@ import (
 // TestExtraPortExpose tests exposing additional ports with web_extra_exposed_ports.
 // It also tests web_extra_daemons
 func TestExtraPortExpose(t *testing.T) {
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("skipping on Lima/Colima because of unpredictable behavior, unable to connect")
+	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]
