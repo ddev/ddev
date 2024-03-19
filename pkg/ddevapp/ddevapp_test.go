@@ -350,6 +350,20 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "CakePHP is able to connect to the database"},
 			FilesImageURI:                 "/img/cake.logo.svg",
 		},
+		// 19: drupal11
+		{
+			Name:                          "TestPkgDrupal11",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-11.x-dev.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-11.x-dev/",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal,
+			Docroot:                       "",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
+			FilesImageURI:                 "/sites/default/files/2022-07/Logo.png",
+		},
 	}
 
 	FullTestSites = TestSites

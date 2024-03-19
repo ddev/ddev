@@ -315,30 +315,10 @@ func getDrupalVersion(app *DdevApp) (string, error) {
 	return v, err
 }
 
-// isDrupal8App returns true if the app is drupal8
-func isDrupal8App(app *DdevApp) bool {
-	v, err := getDrupalVersion(app)
-	util.Success("got v=%v err=%v", v, err)
-	isD8, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '8`)
-	if err == nil && isD8 {
-		return true
-	}
-	return false
-}
-
-// isDrupal9App returns true if the app is drupal9
-func isDrupal9App(app *DdevApp) bool {
-	isD9, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '9`)
-	if err == nil && isD9 {
-		return true
-	}
-	return false
-}
-
 // isDrupalApp returns true if the app is drupal
 func isDrupalApp(app *DdevApp) bool {
 	v, err := getDrupalVersion(app)
-	if err != nil && v != "" {
+	if err == nil && v != "" {
 		return true
 	}
 	return false
@@ -367,10 +347,11 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	}
 	switch v {
 	case "8":
-
 		app.PHPVersion = nodeps.PHP74
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB103}
 	case "9":
 		app.PHPVersion = nodeps.PHP82
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB103}
 	case "10":
 		app.PHPVersion = nodeps.PHP83
 	case "11":
