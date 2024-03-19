@@ -49,7 +49,9 @@ jobs:
               return acc;
             }, 'Download the artifacts for this pull request:\n');
 
-            body += `\n\n See [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr)`;
+            body += `\n\n See [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr)` + `.`;
+
+            body += `\n\n You can also [test this PR on Gitpod](https://gitpod.io/?autostart=true#https://github.com/${{context.repo_name}}/pull/${{ github.event.pull_request.number }}` + `.`;
 
             // insert or update a bot comment
             async function upsertComment(owner, repo, issue_number, purpose, body) {
