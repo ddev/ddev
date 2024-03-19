@@ -137,36 +137,12 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
-		nodeps.AppTypeDrupal8: {
+		nodeps.AppTypeDrupal: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal8Hooks,
+			hookDefaultComments:        getDrupalHooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupal8App,
-			configOverrideAction:       drupalConfigOverrideAction,
-			postStartAction:            drupal8PostStartAction,
-			importFilesAction:          drupalImportFilesAction,
-			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
-		},
-
-		nodeps.AppTypeDrupal9: {
-			settingsCreator:            createDrupalSettingsPHP,
-			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal10Hooks,
-			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupal9App,
-			configOverrideAction:       drupalConfigOverrideAction,
-			postStartAction:            drupalPostStartAction,
-			importFilesAction:          drupalImportFilesAction,
-			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
-		},
-
-		nodeps.AppTypeDrupal10: {
-			settingsCreator:            createDrupalSettingsPHP,
-			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal10Hooks,
-			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupal10App,
+			appTypeDetect:              isDrupalApp,
 			configOverrideAction:       drupalConfigOverrideAction,
 			postStartAction:            drupalPostStartAction,
 			importFilesAction:          drupalImportFilesAction,

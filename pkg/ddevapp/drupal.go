@@ -256,17 +256,11 @@ func getDrupalUploadDirs(_ *DdevApp) []string {
 	return uploadDirs
 }
 
-// Drupal10Hooks adds a d10-specific hooks example for post-import-db
-const Drupal10Hooks = `# post-import-db:
+// DrupalHooks adds d8+-specific hooks example for post-import-db
+const DrupalHooks = `# post-import-db:
 #   - exec: drush sql:sanitize
 #   - exec: drush updatedb
 #   - exec: drush cache:rebuild
-`
-
-// Drupal8Hooks adds a d8-specific hooks example for post-import-db
-const Drupal8Hooks = `# post-import-db:
-#   - exec: drush cr
-#   - exec: drush updb
 `
 
 // Drupal7Hooks adds a d7-specific hooks example for post-import-db
@@ -285,14 +279,9 @@ func getDrupal6Hooks() []byte {
 	return []byte(Drupal7Hooks)
 }
 
-// getDrupal8Hooks for appending as byte array
-func getDrupal8Hooks() []byte {
-	return []byte(Drupal8Hooks)
-}
-
-// getDrupal10Hooks for appending as byte array
-func getDrupal10Hooks() []byte {
-	return []byte(Drupal10Hooks)
+// getDrupalHooks for appending as byte array
+func getDrupalHooks() []byte {
+	return []byte(DrupalHooks)
 }
 
 // setDrupalSiteSettingsPaths sets the paths to settings.php/settings.ddev.php
@@ -346,19 +335,10 @@ func isDrupal9App(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal10App returns true if the app is drupal10
-func isDrupal10App(app *DdevApp) bool {
-	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '10`)
-	if err == nil && isD10 {
-		return true
-	}
-	return false
-}
-
-// isDrupal11App returns true if the app is drupal11
-func isDrupal11App(app *DdevApp) bool {
-	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '11`)
-	if err == nil && isD10 {
+// isDrupalApp returns true if the app is drupal
+func isDrupalApp(app *DdevApp) bool {
+	v, err := getDrupalVersion(app)
+	if err != nil && v != "" {
 		return true
 	}
 	return false
@@ -418,7 +398,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 }
 
 func drupalPostStartAction(app *DdevApp) error {
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupal9App(app) || isDrupal10App(app)) {
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupalApp(app)) {
 		err := app.Wait([]string{nodeps.DBContainer})
 		if err != nil {
 			return err

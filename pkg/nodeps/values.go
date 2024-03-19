@@ -92,6 +92,7 @@ const (
 	AppTypeDrupal8      = "drupal8"
 	AppTypeDrupal9      = "drupal9"
 	AppTypeDrupal10     = "drupal10"
+	AppTypeDrupal       = "drupal"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"
 	AppTypeMagento      = "magento"
