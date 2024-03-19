@@ -1750,7 +1750,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Validate contents
 		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
 		assert.NoError(err)
-		stringFound, err := fileutil.GrepStringInFile("tmp/users1.sql", "CREATE TABLE.*users")
+		stringFound, _, err := fileutil.GrepStringInFile("tmp/users1.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -1767,7 +1767,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Validate contents
-		stringFound, err = fileutil.GrepStringInFile("tmp/users2.sql", "CREATE TABLE.*users")
+		stringFound, _, err = fileutil.GrepStringInFile("tmp/users2.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 

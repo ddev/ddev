@@ -186,16 +186,16 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 
 // GrepStringInFile is a small hammer for looking for a regex in a file.
 // It should only be used against very modest sized files, as the entire file is read
-// into a string.
-func GrepStringInFile(fullPath string, needle string) (bool, error) {
+// into a string. Returns found, matches, error
+func GrepStringInFile(fullPath string, needle string) (bool, []string, error) {
 	fullFileBytes, err := os.ReadFile(fullPath)
 	if err != nil {
-		return false, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
+		return false, nil, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
 	}
 	fullFileString := string(fullFileBytes)
 	re := regexp.MustCompile(needle)
 	matches := re.FindStringSubmatch(fullFileString)
-	return len(matches) > 0, nil
+	return len(matches) > 0, matches, nil
 }
 
 // ListFilesInDir returns an array of files or directories found in a directory

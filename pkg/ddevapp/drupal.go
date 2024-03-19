@@ -312,8 +312,24 @@ func isDrupal7App(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal8App returns true if the app is of type drupal8
+// getDrupalVersion finds the drupal8+ version so it can be used
+// for setting requirements.
+// It can only work if there is configured Drupal8+ code
+func getDrupalVersion(app *DdevApp) (string, error) {
+	f := filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php")
+	hasVersion, matches, err := fileutil.GrepStringInFile(f, `const VERSION = '([0-9]+)`)
+	util.Success("hasVersion=%v matchText=%v err=%v", hasVersion, matches, err)
+	v := ""
+	if hasVersion {
+		v = matches[1]
+	}
+	return v, err
+}
+
+// isDrupal8App returns true if the app is drupal8
 func isDrupal8App(app *DdevApp) bool {
+	v, err := getDrupalVersion(app)
+	util.Success("got v=%v err=%v", v, err)
 	isD8, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '8`)
 	if err == nil && isD8 {
 		return true
@@ -321,7 +337,7 @@ func isDrupal8App(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal9App returns true if the app is of type drupal9
+// isDrupal9App returns true if the app is drupal9
 func isDrupal9App(app *DdevApp) bool {
 	isD9, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '9`)
 	if err == nil && isD9 {
@@ -330,9 +346,18 @@ func isDrupal9App(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal10App returns true if the app is of type drupal10
+// isDrupal10App returns true if the app is drupal10
 func isDrupal10App(app *DdevApp) bool {
 	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '10`)
+	if err == nil && isD10 {
+		return true
+	}
+	return false
+}
+
+// isDrupal11App returns true if the app is drupal11
+func isDrupal11App(app *DdevApp) bool {
+	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '11`)
 	if err == nil && isD10 {
 		return true
 	}
@@ -354,20 +379,23 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-func drupal8ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP74
-	return nil
-}
+func drupalConfigOverrideAction(app *DdevApp) error {
+	v, err := getDrupalVersion(app)
+	if err != nil || v == "" {
+		util.Warning("Unable to detect Drupal version, continuing")
+		return nil
+	}
+	switch v {
+	case "8":
 
-// drupal0ConfigOverrideAction overrides php_version for D10, requires PHP8.0
-//func drupal9ConfigOverrideAction(app *DdevApp) error {
-//	app.PHPVersion = nodeps.PHP80
-//	return nil
-//}
-
-// drupal10ConfigOverrideAction overrides php_version for D10, requires PHP8.0
-func drupal10ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
+		app.PHPVersion = nodeps.PHP74
+	case "9":
+		app.PHPVersion = nodeps.PHP82
+	case "10":
+		app.PHPVersion = nodeps.PHP83
+	case "11":
+		app.PHPVersion = nodeps.PHP83
+	}
 	return nil
 }
 
