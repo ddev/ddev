@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"go/version"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -942,6 +943,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
+		comp := version.Compare(app.NodeJSVersion, "16.0-alpha1")
+		util.Success("comp=%v", comp)
+		c, _ := semver.NewConstraint(">=16")
+		v, _ := semver.NewVersion(app.NodeJSVersion)
+		if !c.Check(v) {
+			extraWebContent = extraWebContent + fmt.Sprintf("\nRUN hash -r && corepack disable && npm install yarn")
+		}
 	}
 
 	// Some installed packages can change the permissions of /run/php
