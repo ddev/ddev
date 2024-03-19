@@ -103,6 +103,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary project URL
 * `DDEV_PROJECT`: Project name, like `d8composer`
+* `DDEV_PROJECT_STATUS`: Project status determined from the `web` and `db` services health, like `starting`, `running`, `stopped`, `paused`, or another status returned from Docker, including `healthy`, `unhealthy`, `exited`, `restarting` 
 * `DDEV_PROJECT_TYPE`: `drupal8`, `typo3`, `backdrop`, `wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
