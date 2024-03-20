@@ -353,16 +353,16 @@ var (
 		// 19: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-11.x-dev.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-11.x-dev/",
-			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
-			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.x-dev.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.x-dev.1/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
-			FilesImageURI:                 "/sites/default/files/2022-07/Logo.png",
+			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
 	}
 
