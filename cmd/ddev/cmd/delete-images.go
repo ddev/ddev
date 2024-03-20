@@ -11,7 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerTypes "github.com/docker/docker/api/types"
+	dockerImage "github.com/docker/docker/api/types/image"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +57,7 @@ func init() {
 // deleteDdevImages removes Docker images prefixed with DDEV-
 func deleteDdevImages(deleteAll bool) error {
 	ctx, client := dockerutil.GetDockerClient()
-	images, err := client.ImageList(ctx, dockerTypes.ImageListOptions{
+	images, err := client.ImageList(ctx, dockerImage.ListOptions{
 		All: true,
 	})
 	if err != nil {
