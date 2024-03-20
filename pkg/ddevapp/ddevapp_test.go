@@ -3307,7 +3307,7 @@ func TestHttpsRedirection(t *testing.T) {
 		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
-	types := ddevapp.GetValidAppTypes()
+	types := ddevapp.GetValidAppTypesWithoutAliases()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
 		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}

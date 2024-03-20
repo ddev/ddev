@@ -28,7 +28,7 @@ func TestComposerCreateCmd(t *testing.T) {
 	origDir, err := os.Getwd()
 	assert.NoError(err)
 
-	types := ddevapp.GetValidAppTypes()
+	types := ddevapp.GetValidAppTypesWithoutAliases()
 	if os.Getenv("GOTEST_SHORT") != "" {
 		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
 	}
