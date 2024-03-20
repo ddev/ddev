@@ -336,10 +336,15 @@ func isDrupal6App(app *DdevApp) bool {
 	return false
 }
 
-// drupal6ConfigOverrideAction overrides php_version for D6, since it is incompatible
-// with php7+
+// drupal6ConfigOverrideAction overrides php_version for D6
 func drupal6ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP56
+	return nil
+}
+
+// drupal7ConfigOverrideAction overrides php_version for D7
+func drupal7ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP74
 	return nil
 }
 
