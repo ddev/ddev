@@ -130,6 +130,7 @@ func init() {
 			uploadDirs:                 getDrupalUploadDirs,
 			hookDefaultComments:        getDrupal7Hooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal7App,
 			configOverrideAction:       drupal7ConfigOverrideAction,
 			postStartAction:            drupal7PostStartAction,
 			importFilesAction:          drupalImportFilesAction,
