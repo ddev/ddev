@@ -159,14 +159,16 @@ ddev launch
 
 ## Drupal
 
-=== "Drupal 10"
+=== "Drupal 8+"
 
     ```bash
-    mkdir my-drupal10-site
-    cd my-drupal10-site
-    ddev config --project-type=drupal10 --docroot=web
+    mkdir my-drupal-site
+    cd my-drupal-site
+    ddev config --project-type=drupal --docroot=web
     ddev start
-    ddev composer create drupal/recommended-project
+    ddev composer create drupal/recommended-project:^10
+    # For Drupal9: ddev composer create drupal/recommended-project:^9
+    # For Drupal 11: ddev composer create drupal/recommended-project:^11.x-dev
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
