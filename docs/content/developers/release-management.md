@@ -42,7 +42,6 @@ The following “Repository secret” environment variables must be added to <ht
 * `GORELEASER_KEY`: License key for GoReleaser Pro.
 * `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev-test/homebrew-ddev-edge`.
 * `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev/homebrew-ddev-edge`.
-* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`. (This will be obsolete in DDEV v1.23.)
 
 ## Creating a Release
 

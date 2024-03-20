@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
 
-	// We don't want the tests reporting to Segment.
+	// We don't want the tests reporting telemetry.
 	_ = os.Setenv("DDEV_NO_INSTRUMENTATION", "true")
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 

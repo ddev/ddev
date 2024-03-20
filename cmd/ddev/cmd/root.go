@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
-	"gopkg.in/segmentio/analytics-go.v3"
 )
 
 var (
@@ -99,7 +98,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 			}
 		}
 	},
-	PersistentPostRun: func(cmd *cobra.Command, _ []string) {
+	PersistentPostRun: func(_ *cobra.Command, _ []string) {
 		if instrumentationApp == nil {
 			app, err := ddevapp.GetActiveApp("")
 			if err == nil {
@@ -112,47 +111,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 		if instrumentationApp != nil && !output.JSONOutput {
 			instrumentationApp.TrackProject()
 		}
-
-		// TODO: Remove when we decide to stop reporting to Segment.
-		// All code to "end TODO remove once Amplitude" will be removed
-		// Do not report these commands
-		ignores := map[string]bool{"describe": true, "auth": true, "blackfire": false, "clean": true, "composer": true, "debug": true, "delete": true, "drush": true, "exec": true, "export-db": true, "get": true, "help": true, "hostname": true, "import-db": true, "import-files": true, "list": true, "logs": true, "mutagen": true, "mysql": true, "npm": true, "nvm": true, "php": true, "poweroff": true, "pull": true, "push": true, "service": true, "share": true, "snapshot": true, "ssh": true, "stop": true, "version": true, "xdebug": true, "xhprof": true, "yarn": true}
-
-		if _, ok := ignores[cmd.CalledAs()]; ok {
-			return
-		}
-
-		// All this nonsense is to capture the official usage we used for this command.
-		// Unfortunately cobra doesn't seem to provide this easily.
-		// We use the first word of Use: to get it.
-		cmdCopy := cmd
-		var fullCommand = make([]string, 0)
-		fullCommand = append(fullCommand, util.GetFirstWord(cmdCopy.Use))
-		for cmdCopy.HasParent() {
-			fullCommand = append(fullCommand, util.GetFirstWord(cmdCopy.Parent().Use))
-			cmdCopy = cmdCopy.Parent()
-		}
-		for i := 0; i < len(fullCommand)/2; i++ {
-			j := len(fullCommand) - i - 1
-			fullCommand[i], fullCommand[j] = fullCommand[j], fullCommand[i]
-		}
-
-		event := ""
-		if len(fullCommand) > 1 {
-			event = fullCommand[1]
-		}
-
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && versionconstants.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
-			defer util.TimeTrackC("Instrumentation")()
-
-			// If instrumentationApp has been set, provide the tags, otherwise no app tags
-			if instrumentationApp != nil {
-				instrumentationApp.SetInstrumentationAppTags()
-			}
-			ddevapp.SetInstrumentationBaseTags()
-			ddevapp.SendInstrumentationEvents(event)
-		}
-		// End TODO remove once Amplitude has verified with an alpha release.
 	},
 }
 
@@ -205,17 +163,6 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 		allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
-			client, _ := analytics.NewWithConfig(versionconstants.SegmentKey, analytics.Config{
-				Logger: &ddevapp.SegmentNoopLogger{},
-			})
-			defer func() {
-				_ = client.Close()
-			}()
-
-			err := ddevapp.SegmentUser(client, ddevapp.GetInstrumentationUser())
-			if err != nil {
-				output.UserOut.Debugf("error in SegmentUser: %v", err)
-			}
 		}
 	}
 	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
