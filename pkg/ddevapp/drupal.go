@@ -344,7 +344,7 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 
 // drupal7ConfigOverrideAction overrides php_version for D7
 func drupal7ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP74
+	app.PHPVersion = nodeps.PHP82
 	return nil
 }
 
