@@ -175,7 +175,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 	drupalVersion, err := getDrupalVersion(app)
 	if err != nil || drupalVersion == "" {
 		// todo: Reconsider this logic for default version
-		drupalVersion = "11"
+		drupalVersion = "10"
 	}
 	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", "drupal"+drupalVersion, "settings.ddev.php"))
 	if err != nil {
@@ -310,6 +310,14 @@ func isDrupal7App(app *DdevApp) bool {
 // for setting requirements.
 // It can only work if there is configured Drupal8+ code
 func getDrupalVersion(app *DdevApp) (string, error) {
+	// For drupal6/7 we use the apptype provided as version
+	switch app.Type {
+	case nodeps.AppTypeDrupal6:
+		return "6", nil
+	case nodeps.AppTypeDrupal7:
+		return "7", nil
+	}
+	// Otherwise figure out the version from existing code
 	f := filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php")
 	hasVersion, matches, err := fileutil.GrepStringInFile(f, `const VERSION = '([0-9]+)`)
 	v := ""
