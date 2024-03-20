@@ -137,7 +137,7 @@ func GetValidPHPVersions() []string {
 	for p := range ValidPHPVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
