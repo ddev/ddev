@@ -172,7 +172,12 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 		}
 	}
 
-	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", app.Type, "settings.ddev.php"))
+	drupalVersion, err := getDrupalVersion(app)
+	if err != nil || drupalVersion == "" {
+		// todo: Reconsider this logic for default version
+		drupalVersion = "11"
+	}
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", "drupal"+drupalVersion, "settings.ddev.php"))
 	if err != nil {
 		return err
 	}
