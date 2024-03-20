@@ -364,24 +364,6 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
-// useful permissions settings on sites/default.
-func drupal8PostStartAction(app *DdevApp) error {
-	// Return early because we aren't expected to manage settings.
-	if app.DisableSettingsManagement {
-		return nil
-	}
-	if err := createDrupal8SyncDir(app); err != nil {
-		return err
-	}
-
-	//nolint: revive
-	if err := drupalEnsureWritePerms(app); err != nil {
-		return err
-	}
-	return nil
-}
-
 func drupalPostStartAction(app *DdevApp) error {
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupalApp(app)) {
 		err := app.Wait([]string{nodeps.DBContainer})
