@@ -1,6 +1,7 @@
 package nodeps
 
 import (
+	"github.com/maruel/natural"
 	"sort"
 
 	"github.com/ddev/ddev/pkg/config/types"
@@ -197,7 +198,7 @@ func GetValidMariaDBVersions() []string {
 	for p := range ValidMariaDBVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
@@ -218,7 +219,7 @@ func GetValidMySQLVersions() []string {
 	for p := range ValidMySQLVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
@@ -229,7 +230,7 @@ func GetValidPostgresVersions() []string {
 	for p := range ValidPostgresVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
