@@ -178,6 +178,9 @@ github.com/magefile/mage/sh
 github.com/manifoldco/promptui
 github.com/manifoldco/promptui/list
 github.com/manifoldco/promptui/screenbuf
+# github.com/maruel/natural v1.1.1
+## explicit; go 1.21
+github.com/maruel/natural
 # github.com/mattn/go-colorable v0.1.13
 ## explicit; go 1.15
 # github.com/mattn/go-isatty v0.0.20
