@@ -359,9 +359,9 @@ var (
 			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal,
-			Docroot:                       "",
+			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
 	}
