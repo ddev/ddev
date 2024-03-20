@@ -216,8 +216,11 @@ func init() {
 			importFilesAction:    wordpressImportFilesAction,
 		},
 	}
+
+	drupalAlias := appTypeMatrix[nodeps.AppTypeDrupal]
+	drupalAlias.appTypeDetect = nil
 	for _, alias := range []string{nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10} {
-		appTypeMatrix[alias] = appTypeMatrix[nodeps.AppTypeDrupal]
+		appTypeMatrix[alias] = drupalAlias
 	}
 }
 
@@ -363,9 +366,9 @@ func (app *DdevApp) SetApptypeSettingsPaths() {
 // DetectAppType calls each apptype's detector until it finds a match,
 // or returns 'php' as a last resort.
 func (app *DdevApp) DetectAppType() string {
-	for appName, appFuncs := range appTypeMatrix {
+	for appTypeName, appFuncs := range appTypeMatrix {
 		if appFuncs.appTypeDetect != nil && appFuncs.appTypeDetect(app) {
-			return appName
+			return appTypeName
 		}
 	}
 

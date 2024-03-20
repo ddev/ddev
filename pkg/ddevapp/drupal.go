@@ -307,7 +307,6 @@ func isDrupal7App(app *DdevApp) bool {
 func getDrupalVersion(app *DdevApp) (string, error) {
 	f := filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php")
 	hasVersion, matches, err := fileutil.GrepStringInFile(f, `const VERSION = '([0-9]+)`)
-	util.Success("hasVersion=%v matchText=%v err=%v", hasVersion, matches, err)
 	v := ""
 	if hasVersion {
 		v = matches[1]
