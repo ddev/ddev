@@ -948,7 +948,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	c, _ := semver.NewConstraint(">=18")
 	v, _ := semver.NewVersion(app.NodeJSVersion)
 	if c.Check(v) {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN corepack enable")
+		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
 
 	// Some installed packages can change the permissions of /run/php
