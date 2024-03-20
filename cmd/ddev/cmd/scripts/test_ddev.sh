@@ -30,6 +30,7 @@ function docker_desktop_version {
   fi
 }
 
+printf "===first arg is $1\n===\n\n"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
 
@@ -85,7 +86,8 @@ cat <<END >web/index.php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s\n", \$mysqli->host_info);
-  print "ddev is working. You will want to delete this project with 'ddev delete -Oy ${PROJECT_NAME}'\n";
+  print "ddev is working. You will want to delete this project with 'ddev debug testcleanup'\n";
+  printf("The output file for Discord or issue queue is in\n%s\n", "$1");
 END
 trap cleanup EXIT
 

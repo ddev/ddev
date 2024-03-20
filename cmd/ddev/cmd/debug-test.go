@@ -23,18 +23,18 @@ var DebugTestCmdCmd = &cobra.Command{
 			util.Failed("This command takes no additional arguments")
 		}
 		tmpDir := os.TempDir()
-		outputFile := filepath.Join(tmpDir, "ddev-debug-test.txt")
+		outputFilename := filepath.Join(tmpDir, "ddev-debug-test.txt")
 		bashPath := util.FindBashPath()
 		err := fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir)
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
 		p := dockerutil.MassageWindowsHostMountpoint(tmpDir)
-		c := []string{"-c", path.Join(p, "test_ddev.sh")}
+		c := []string{"-c", path.Join(p, "test_ddev.sh"), outputFilename}
 		util.Success("Running %s %v", bashPath, c)
 
 		// Create a new file to capture output
-		f, err := os.Create(outputFile)
+		f, err := os.Create(outputFilename)
 		if err != nil {
 			util.Failed("Failed to create output file: %v", err)
 		}
@@ -44,7 +44,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		mw := io.MultiWriter(os.Stdout, f)
 
 		err = exec.RunInteractiveCommandWithOutput(bashPath, c, mw)
-		util.Success("Output file is in '%s', please provide it for support", outputFile)
+		util.Success("Output file written to:\n%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename)
 		if err != nil {
 			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", err)
 		}
