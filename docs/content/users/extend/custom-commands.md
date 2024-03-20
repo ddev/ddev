@@ -234,7 +234,7 @@ If your command should only be visible for a specific project type, `ProjectType
 
 Usage: `## ProjectTypes: <list-of-project-types>`
 
-Example: `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
+Example: `## ProjectTypes: drupal7,drupal,backdrop`
 
 ### `OSTypes` Annotation (Host Commands Only)
 
