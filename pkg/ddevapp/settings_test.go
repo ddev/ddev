@@ -97,7 +97,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal8", "drupal9", "drupal10", "backdrop"}, site.Type) {
+		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal8", "drupal9", "drupal10", "drupal", "backdrop"}, site.Type) {
 			continue
 		}
 		err := app.Init(site.Dir)
