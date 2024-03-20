@@ -330,8 +330,14 @@ func TestLaunchCommand(t *testing.T) {
 	desc, err := app.Describe(false)
 	require.NoError(t, err)
 	cases := map[string]string{
-		"":   app.GetPrimaryURL(),
-		"-m": desc["mailpit_https_url"].(string),
+		"":                             app.GetPrimaryURL(),
+		"-m":                           desc["mailpit_https_url"].(string),
+		"test":                         app.GetPrimaryURL() + "/test",
+		"test/file":                    app.GetPrimaryURL() + "/test/file",
+		"/test":                        app.GetPrimaryURL() + "/test",
+		app.GetPrimaryURL() + "/test":  app.GetPrimaryURL() + "/test",
+		"http://example.com":           "http://example.com",
+		"https://example.com:443/test": "https://example.com:443/test",
 	}
 	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
 		cases["-m"] = desc["mailpit_url"].(string)
@@ -342,7 +348,7 @@ func TestLaunchCommand(t *testing.T) {
 		out, err := exec.RunHostCommand("bash", "-c", c)
 		out = strings.Trim(out, "\r\n")
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
-		assert.Contains(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
+		assert.Equal(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}
 }
 

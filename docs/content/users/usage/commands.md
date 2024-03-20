@@ -766,6 +766,12 @@ ddev launch --mailpit
 
 # Open your project’s base URL appended with `temp/phpinfo.php`
 ddev launch temp/phpinfo.php
+
+# Open the full URL (any website) in the default browser
+ddev launch https://your.ddev.site
+
+# Open your project’s base URL using a specific port
+ddev launch $DDEV_PRIMARY_URL:3000
 ```
 
 ## `list`
