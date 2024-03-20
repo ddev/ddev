@@ -7,7 +7,7 @@ require (
 	github.com/amplitude/analytics-go v1.0.1
 	github.com/cheggaaa/pb v1.0.29
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/docker/docker v25.0.3+incompatible
+	github.com/docker/docker v25.0.5+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v52 v52.0.0
