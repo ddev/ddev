@@ -67,8 +67,8 @@ echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}"
 
 echo "======= Docker Info ========="
 
-if command -v colima >/dev/null 2>&1; then echo "colima: $(colima --version)"; fi
-if command -v limactl >/dev/null 2>&1; then echo "lima: $(lima --version)"; fi
+if command -v colima >/dev/null 2>&1; then echo "colima: $(colima --version && colima status)"; fi
+if command -v limactl >/dev/null 2>&1; then echo "lima: $(limactl --version && limactl list)"; fi
 if command -v orb >/dev/null 2>&1; then echo "orbstack: $(orb version)"; fi
 if [ -f ~/.rd/bin/rdctl ]; then echo "rancher desktop: $(~/.rd/bin/rdctl version)"; fi
 
