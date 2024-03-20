@@ -6,11 +6,15 @@
 ## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php" or "ddev launch https://your.ddev.site" or "ddev launch $DDEV_PRIMARY_URL:3000", for Mailpit "ddev launch -m"
 ## Flags: [{"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the mailpit UI"}]
 
-if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
+if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
-  # run this script again with the updated environment
-  DDEV_PROJECT_STATUS=running ddev "$(basename "$0")" "$@"
+  start_exit_code=$?
+  if [ $start_exit_code -ne 0 ]; then
+    exit $start_exit_code
+  fi
+  # run this script again, as the environment is updated after "ddev start"
+  no_recursion=true ddev "$(basename "$0")" "$@"
   exit $?
 fi
 FULLURL=${DDEV_PRIMARY_URL}

@@ -7,11 +7,15 @@
 ## OSTypes: darwin,linux,wsl2
 ## HostBinaryExists: /mnt/c/Program Files/dbeaver/dbeaver.exe,/Applications/DBeaver.app,/usr/bin/dbeaver,/usr/bin/dbeaver-ce,/usr/bin/dbeaver-le,/usr/bin/dbeaver-ue,/usr/bin/dbeaver-ee,/var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity,/snap/bin/dbeaver-ce
 
-if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
+if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
-  # run this script again with the updated environment
-  DDEV_PROJECT_STATUS=running ddev "$(basename "$0")" "$@"
+  start_exit_code=$?
+  if [ $start_exit_code -ne 0 ]; then
+    exit $start_exit_code
+  fi
+  # run this script again, as the environment is updated after "ddev start"
+  no_recursion=true ddev "$(basename "$0")" "$@"
   exit $?
 fi
 
