@@ -362,7 +362,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		app.PHPVersion = nodeps.PHP82
 		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB103}
 	case "10":
-		app.PHPVersion = nodeps.PHP83
+		app.PHPVersion = nodeps.PHPDefault
 	case "11":
 		app.PHPVersion = nodeps.PHP83
 	}
