@@ -132,6 +132,7 @@ jobs:
       - name: Override environment variables for plain nginx
         run: |
           echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
+          echo "TESTARGS=" >> $GITHUB_ENV
         if: ${{ matrix.webserver == 'nginx-fpm' }}
 
       - name: Override environment variables for race detection
