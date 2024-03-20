@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -59,6 +60,23 @@ func RunInteractiveCommand(command string, args []string) error {
 	if err != nil {
 		return err
 	}
+	err = cmd.Wait()
+	return err
+}
+
+// RunInteractiveCommandWithOutput writes to the host and
+// also to the passed io.Writer
+func RunInteractiveCommandWithOutput(command string, args []string, output io.Writer) error {
+	cmd := HostCommand(command, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = output
+	cmd.Stderr = output
+
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
 	err = cmd.Wait()
 	return err
 }

@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"io"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -21,6 +23,7 @@ var DebugTestCmdCmd = &cobra.Command{
 			util.Failed("This command takes no additional arguments")
 		}
 		tmpDir := os.TempDir()
+		outputFile := filepath.Join(tmpDir, "ddev-debug-test.txt")
 		bashPath := util.FindBashPath()
 		err := fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir)
 		if err != nil {
@@ -29,7 +32,19 @@ var DebugTestCmdCmd = &cobra.Command{
 		p := dockerutil.MassageWindowsHostMountpoint(tmpDir)
 		c := []string{"-c", path.Join(p, "test_ddev.sh")}
 		util.Success("Running %s %v", bashPath, c)
-		err = exec.RunInteractiveCommand(bashPath, c)
+
+		// Create a new file to capture output
+		f, err := os.Create(outputFile)
+		if err != nil {
+			util.Failed("Failed to create output file: %v", err)
+		}
+		defer f.Close()
+
+		// Use MultiWriter to write to both file and stdout
+		mw := io.MultiWriter(os.Stdout, f)
+
+		err = exec.RunInteractiveCommandWithOutput(bashPath, c, mw)
+		util.Success("Output file is in '%s', please provide it for support", outputFile)
 		if err != nil {
 			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", err)
 		}
