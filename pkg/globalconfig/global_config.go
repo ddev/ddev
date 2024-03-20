@@ -42,39 +42,39 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
-	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
+	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
+	DisableHTTP2                     bool                        `yaml:"disable_http2"`
+	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
 	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
-	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
 	InstrumentationUser              string                      `yaml:"instrumentation_user,omitempty"`
+	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
 	LastStartedVersion               string                      `yaml:"last_started_version"`
-	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
-	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
 	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email"`
-	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
-	WebEnvironment                   []string                    `yaml:"web_environment"`
-	DisableHTTP2                     bool                        `yaml:"disable_http2"`
-	TableStyle                       string                      `yaml:"table_style"`
-	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
-	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
-	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
+	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
-	ProjectTldGlobal                 string                      `yaml:"project_tld"`
-	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
+	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
+	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
+	ProjectTldGlobal                 string                      `yaml:"project_tld"`
+	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
+	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
 	Router                           string                      `yaml:"router"`
-	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
-	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
+	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
 	RouterMailpitHTTPPort            string                      `yaml:"mailpit_http_port,omitempty"`
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
-	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
-	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
+	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
+	TableStyle                       string                      `yaml:"table_style"`
+	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
+	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
+	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
+	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
+	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
+	WebEnvironment                   []string                    `yaml:"web_environment"`
+	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
 	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`
 }
 
