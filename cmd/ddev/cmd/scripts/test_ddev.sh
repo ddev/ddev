@@ -42,7 +42,21 @@ header "Existing project config"
 if [[ ${PWD} != ${HOME}* ]]; then
   printf "\n\nWARNING: Project should be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
 fi
+
 ddev debug configyaml | grep -v web_environment
+
+header "mutagen situation"
+
+echo "looking for #ddev-generated in mutagen.yml in project ${PWD}"
+if [ -f .ddev/mutagen/mutagen.yml ]; then
+  if grep '#ddev-generated' .ddev/mutagen/mutagen.yml; then
+    echo "unmodified #ddev-generated found in .ddev/mutagen/mutagen.yml"
+  else
+    echo "MODIFIED .ddev/mutagen/mutagen.yml found"
+  fi
+else
+  echo ".ddev/mutagen/mutagen.yml not found"
+fi
 
 PROJECT_DIR=../${PROJECT_NAME}
 header "Creating dummy project named  ${PROJECT_NAME} in ${PROJECT_DIR}"
