@@ -87,7 +87,7 @@ cat <<END >web/index.php
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s\n", \$mysqli->host_info);
   print "ddev is working. You will want to delete this project with 'ddev debug testcleanup'\n";
-  printf("The output file for Discord or issue queue is in\n%s\n", "$1");
+  printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\n%s<br />\n", "$1", "$1", "$1");
 END
 trap cleanup EXIT
 

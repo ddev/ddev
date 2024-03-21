@@ -30,7 +30,7 @@ var DebugTestCmdCmd = &cobra.Command{
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
 		p := dockerutil.MassageWindowsHostMountpoint(tmpDir)
-		c := []string{"-c", path.Join(p, "test_ddev.sh"), outputFilename}
+		c := []string{"-c", path.Join(p, "test_ddev.sh") + " " + outputFilename}
 		util.Success("Running %s %v", bashPath, c)
 
 		// Create a new file to capture output
