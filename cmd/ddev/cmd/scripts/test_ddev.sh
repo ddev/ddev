@@ -15,6 +15,10 @@ function cleanup {
   printf "\nPlease run cleanup after debugging with 'ddev debug testcleanup'\n"
 }
 
+function header {
+  printf "\n\n======== $1 ========\n"
+}
+
 function docker_desktop_version {
   MACOS_INFO_PATH=/Applications/Docker.app/Contents/Info.plist
 
@@ -30,18 +34,18 @@ function docker_desktop_version {
   fi
 }
 
-printf "===first arg is $1\n===\n\n"
+header "Output file will be in $1"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
 
-echo "======= Existing project config ========="
+header "Existing project config"
 if [[ ${PWD} != ${HOME}* ]]; then
   printf "\n\nWARNING: Project should be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
 fi
 ddev debug configyaml | grep -v web_environment
 
 PROJECT_DIR=../${PROJECT_NAME}
-echo "======= Creating dummy project named  ${PROJECT_NAME} in ${PROJECT_DIR} ========="
+header "Creating dummy project named  ${PROJECT_NAME} in ${PROJECT_DIR}"
 
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
@@ -49,35 +53,60 @@ cd "${PROJECT_DIR}" || exit 3
 ddev config --project-type=php --docroot=web >/dev/null 2>&1  || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 set +eu
 
-echo -n "OS Information: " && uname -a
+header "OS Information"
+uname -a
 command -v sw_vers >/dev/null && sw_vers
 
-echo "User information: $(id -a)"
-echo "DDEV version: $(ddev version)"
-echo "PROXY settings: HTTP_PROXY='${HTTP_PROXY:-}' HTTPS_PROXY='${HTTPS_PROXY:-}' http_proxy='${http_proxy:-}' NO_PROXY='${NO_PROXY:-}'"
+header "User information"
+id -a
 
-echo "======= DDEV global info ========="
+header "ddev version"
+ddev version
+docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."docker-platform"' 2>/dev/null)
+
+header "proxy settings"
+ HTTP_PROXY='${HTTP_PROXY:-}'
+ HTTPS_PROXY='${HTTPS_PROXY:-}'
+ http_proxy='${http_proxy:-}'
+ NO_PROXY='${NO_PROXY:-}'
+
+header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
-printf "\n======= DOCKER info =========\n"
-echo -n "docker location: " && ls -l "$(which docker)"
-if [ ${OSTYPE%-*} != "linux" ]; then
+
+header "DOCKER provider info"
+echo -n "docker client location: " && ls -l "$(which docker)"
+printf "Docker provider: ${docker_platform}\n"
+if [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
+  printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
+fi
+
+if [ ${OSTYPE%-*} != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
 echo "docker version: " && docker version
 echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}"
 
-echo "======= Docker Info ========="
-
-if command -v colima >/dev/null 2>&1; then echo "colima: $(colima --version && colima status)"; fi
-if command -v limactl >/dev/null 2>&1; then echo "lima: $(limactl --version && limactl list)"; fi
-if command -v orb >/dev/null 2>&1; then echo "orbstack: $(orb version)"; fi
-if [ -f ~/.rd/bin/rdctl ]; then echo "rancher desktop: $(~/.rd/bin/rdctl version)"; fi
+case $docker_platform in
+colima)
+  colima --version && colima status
+  ;;
+lima)
+  limactl --version && limactl list
+  ;;
+orbstack)
+  orb version
+  ;;
+rancher-desktop)
+  ~/.rd/bin/rdctl version
+  ;;
+esac
 
 if ddev debug dockercheck -h| grep dockercheck >/dev/null; then
   ddev debug dockercheck 2>/dev/null
 fi
 
-echo "Docker disk space:" && docker run --rm busybox:stable df -h // && echo
+printf "Docker disk space:" && docker run --rm busybox:stable df -h //
+
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 
@@ -107,7 +136,7 @@ ddev start -y || ( \
   ddev logs | tail -20l && \
   printf "============= contents of /mnt/ddev_config  =========\n" && \
   docker exec -it ddev-d9-db ls -l /mnt/ddev_config && \
-  printf "Start failed. Please provide this output in a new gist at gist.github.com\n" && \
+  printf "Start failed.\n" && \
   exit 1 )
 
 echo "======== Curl of site from inside container:"

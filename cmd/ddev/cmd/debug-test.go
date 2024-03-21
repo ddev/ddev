@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"io"
 	"os"
 	"path"
@@ -40,13 +41,21 @@ var DebugTestCmdCmd = &cobra.Command{
 		}
 		defer f.Close()
 
+		activeApps := ddevapp.GetActiveProjects()
+		util.Success("Doing ddev poweroff but will restart projects at completion")
+		ddevapp.PowerOff()
+
 		// Use MultiWriter to write to both file and stdout
 		mw := io.MultiWriter(os.Stdout, f)
 
-		err = exec.RunInteractiveCommandWithOutput(bashPath, c, mw)
+		testErr := exec.RunInteractiveCommandWithOutput(bashPath, c, mw)
+		util.Success("Restarting previously-running DDEV projects")
+		for _, app := range activeApps {
+			_ = app.Start()
+		}
 		util.Success("Output file written to:\n%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename)
-		if err != nil {
-			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", err)
+		if testErr != nil {
+			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", testErr)
 		}
 	},
 }
