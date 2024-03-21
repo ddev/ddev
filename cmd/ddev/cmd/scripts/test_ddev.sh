@@ -67,16 +67,18 @@ router_http_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilitie
 router_https_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_https_port"' 2>/dev/null)
 
 header "proxy settings"
+echo "
  HTTP_PROXY='${HTTP_PROXY:-}'
  HTTPS_PROXY='${HTTPS_PROXY:-}'
  http_proxy='${http_proxy:-}'
  NO_PROXY='${NO_PROXY:-}'
+ "
 
 header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
-echo -n "docker client location: " && ls -l "$(which docker)"
+echo -n "docker client location: " && ls -l "$(which docker)" && echo
 printf "Docker provider: ${docker_platform}\n"
 if [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
