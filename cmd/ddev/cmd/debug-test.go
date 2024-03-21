@@ -41,6 +41,8 @@ var DebugTestCmdCmd = &cobra.Command{
 		}
 		defer f.Close()
 
+		util.Success("Resulting output will be written to:\n%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename)
+
 		activeApps := ddevapp.GetActiveProjects()
 		if len(activeApps) > 0 {
 			y := util.Confirm("OK to stop running projects? This does no harm, and they will be restarted")
