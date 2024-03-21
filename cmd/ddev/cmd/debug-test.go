@@ -42,6 +42,13 @@ var DebugTestCmdCmd = &cobra.Command{
 		defer f.Close()
 
 		activeApps := ddevapp.GetActiveProjects()
+		if len(activeApps) > 0 {
+			y := util.Confirm("OK to stop running projects? This does no harm, and they will be restarted")
+			if !y {
+				util.Warning("Exiting, no permission given to poweroff")
+				os.Exit(3)
+			}
+		}
 		util.Success("Doing ddev poweroff but will restart projects at completion")
 		ddevapp.PowerOff()
 
