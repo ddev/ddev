@@ -330,14 +330,20 @@ func TestLaunchCommand(t *testing.T) {
 	desc, err := app.Describe(false)
 	require.NoError(t, err)
 	cases := map[string]string{
-		"":                             app.GetPrimaryURL(),
-		"-m":                           desc["mailpit_https_url"].(string),
-		"test":                         app.GetPrimaryURL() + "/test",
-		"test/file":                    app.GetPrimaryURL() + "/test/file",
-		"/test":                        app.GetPrimaryURL() + "/test",
-		app.GetPrimaryURL() + "/test":  app.GetPrimaryURL() + "/test",
-		"http://example.com":           "http://example.com",
-		"https://example.com:443/test": "https://example.com:443/test",
+		"":                                 app.GetPrimaryURL(),
+		"-m":                               desc["mailpit_https_url"].(string),
+		"path":                             app.GetPrimaryURL() + "/path",
+		"nested/path":                      app.GetPrimaryURL() + "/nested/path",
+		"/path-with-slash":                 app.GetPrimaryURL() + "/path-with-slash",
+		app.GetPrimaryURL() + "/full-path": app.GetPrimaryURL() + "/full-path",
+		"http://example.com":               "http://example.com",
+		"https://example.com:443/test":     "https://example.com:443/test",
+	}
+	if runtime.GOOS == "windows" {
+		// Git-Bash converts single forward slashes to a Windows path
+		// Escape it with a second slash, see https://stackoverflow.com/q/58677021
+		cases["//path-with-slash"] = app.GetPrimaryURL() + "/path-with-slash"
+		delete(cases, "/path-with-slash")
 	}
 	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
 		cases["-m"] = desc["mailpit_url"].(string)
