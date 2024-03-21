@@ -41,7 +41,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		}
 		defer f.Close()
 
-		util.Success("Resulting output will be written to:\n%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename)
+		util.Success("Resulting output will be written to:\n%s\nfile://%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename, outputFilename)
 
 		activeApps := ddevapp.GetActiveProjects()
 		if len(activeApps) > 0 {
@@ -62,7 +62,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		for _, app := range activeApps {
 			_ = app.Start()
 		}
-		util.Success("Output file written to:\n%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename)
+		util.Success("Output file written to:\n%s\nfile://%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename, outputFilename)
 		if testErr != nil {
 			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", testErr)
 		}

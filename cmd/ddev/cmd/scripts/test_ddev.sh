@@ -63,8 +63,8 @@ id -a
 header "ddev version"
 ddev version
 docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."docker-platform"' 2>/dev/null)
-router_http_port=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_http_port"' 2>/dev/null)
-router_https_port=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_https_port"' 2>/dev/null)
+router_http_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_http_port"' 2>/dev/null)
+router_https_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_https_port"' 2>/dev/null)
 
 header "proxy settings"
  HTTP_PROXY='${HTTP_PROXY:-}'
@@ -117,7 +117,7 @@ cat <<END >web/index.php
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s\n", \$mysqli->host_info);
   print "ddev is working. You will want to delete this project with 'ddev debug testcleanup'\n";
-  printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\n%s<br />\n", "$1", "$1", "$1");
+  printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 trap cleanup EXIT
 
