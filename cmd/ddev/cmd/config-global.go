@@ -276,14 +276,13 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 			valMap[tag] = fmt.Sprintf("%v", fieldValue)
 			keys = append(keys, tag)
 		}
-		sort.Strings(keys)
-		if !output.JSONOutput {
-			for _, label := range keys {
-				output.UserOut.Printf("%s=%v", label, valMap[label])
-			}
-		}
 	}
-	if output.JSONOutput {
+	sort.Strings(keys)
+	if !output.JSONOutput {
+		for _, label := range keys {
+			output.UserOut.Printf("%s=%v", label, valMap[label])
+		}
+	} else {
 		output.UserOut.WithField("raw", valMap).Println("")
 	}
 }

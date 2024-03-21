@@ -63,6 +63,8 @@ id -a
 header "ddev version"
 ddev version
 docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."docker-platform"' 2>/dev/null)
+router_http_port=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_http_port"' 2>/dev/null)
+router_https_port=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_https_port"' 2>/dev/null)
 
 header "proxy settings"
  HTTP_PROXY='${HTTP_PROXY:-}'
@@ -84,7 +86,7 @@ if [ ${OSTYPE%-*} != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; the
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
 echo "docker version: " && docker version
-echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}"
+printf "\nDOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}\n"
 
 case $docker_platform in
 colima)
@@ -142,14 +144,14 @@ DDEV_DEBUG=true ddev start -y || ( \
 header "Curl of site from inside container"
 ddev exec curl --fail -I http://127.0.0.1
 
-header "curl -I of http://${PROJECT_NAME}.ddev.site from outside"
-curl --fail -I http://${PROJECT_NAME}.ddev.site
+header "curl -I of http://${PROJECT_NAME}.ddev.site:${router_http_port} from outside"
+curl --fail -I http://${PROJECT_NAME}.ddev.site:${router_http_port}
 
-header "Full curl of http://${PROJECT_NAME}.ddev.site from outside"
-curl http://${PROJECT_NAME}.ddev.site
+header "Full curl of http://${PROJECT_NAME}.ddev.site:${router_http_port} from outside"
+curl http://${PROJECT_NAME}.ddev.site:${router_http_port}
 
-header "Full curl of https://${PROJECT_NAME}.ddev.site from outside"
-curl https://${PROJECT_NAME}.ddev.site
+header "Full curl of https://${PROJECT_NAME}.ddev.site:${router_https_port} from outside"
+curl https://${PROJECT_NAME}.ddev.site:${router_https_port}
 
 header "Project ownership on host"
 ls -ld ${PROJECT_DIR}
