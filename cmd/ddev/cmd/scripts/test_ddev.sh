@@ -113,12 +113,20 @@ printf "Docker disk space:" && docker run --rm busybox:stable df -h //
 header "Existing docker containers"
 docker ps -a
 
+header "mkcert information"
+
+mkcert -CAROOT
+ls -l "$(mkcert -CAROOT)"
+
+header "ping attempt on ddev.site"
+ping -c 1 dkdkd.ddev.site
+
 cat <<END >web/index.php
 <?php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
-  printf("Success accessing database... %s\n", \$mysqli->host_info);
-  print "ddev is working. You will want to delete this project with 'ddev debug testcleanup'\n";
+  printf("Success accessing database... %s<br />\n", \$mysqli->host_info);
+  print "ddev is working. You will want to delete this project with 'ddev debug testcleanup'<br />\n";
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 trap cleanup EXIT
