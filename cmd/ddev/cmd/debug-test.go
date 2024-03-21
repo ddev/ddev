@@ -56,7 +56,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		mw := io.MultiWriter(os.Stdout, f)
 
 		testErr := exec.RunInteractiveCommandWithOutput(bashPath, c, mw)
-		util.Success("Restarting previously-running DDEV projects")
+		util.Success("\n\n==== Restarting previously-running DDEV projects====")
 		for _, app := range activeApps {
 			_ = app.Start()
 		}

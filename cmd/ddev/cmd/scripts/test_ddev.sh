@@ -50,7 +50,7 @@ header "Creating dummy project named  ${PROJECT_NAME} in ${PROJECT_DIR}"
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
-ddev config --project-type=php --docroot=web >/dev/null 2>&1  || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+ddev config --project-type=php --docroot=web --disable-upload-dirs-warning >/dev/null 2>&1  || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 set +eu
 
 header "OS Information"
@@ -106,9 +106,8 @@ if ddev debug dockercheck -h| grep dockercheck >/dev/null; then
 fi
 
 printf "Docker disk space:" && docker run --rm busybox:stable df -h //
-
-ddev poweroff
-echo "Existing docker containers: " && docker ps -a
+header "Existing docker containers"
+docker ps -a
 
 cat <<END >web/index.php
 <?php
@@ -120,7 +119,8 @@ cat <<END >web/index.php
 END
 trap cleanup EXIT
 
-ddev start -y || ( \
+header "Project startup"
+DDEV_DEBUG=true ddev start -y || ( \
   set +x && \
   ddev list && \
   ddev describe && \
@@ -139,34 +139,26 @@ ddev start -y || ( \
   printf "Start failed.\n" && \
   exit 1 )
 
-echo "======== Curl of site from inside container:"
+header "Curl of site from inside container"
 ddev exec curl --fail -I http://127.0.0.1
 
-echo "======== curl -I of http://${PROJECT_NAME}.ddev.site from outside:"
+header "curl -I of http://${PROJECT_NAME}.ddev.site from outside"
 curl --fail -I http://${PROJECT_NAME}.ddev.site
-if [ $? -ne 0 ]; then
-  set +x
-  echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
-  exit 1
-fi
-echo "======== full curl of http://${PROJECT_NAME}.ddev.site from outside:"
+
+header "Full curl of http://${PROJECT_NAME}.ddev.site from outside"
 curl http://${PROJECT_NAME}.ddev.site
 
-echo "======== Project ownership on host:"
-ls -ld ${PROJECT_DIR}
-echo "======== Project ownership in container:"
-ddev exec ls -ld /var/www/html
-echo "======== In-container filesystem:"
-ddev exec df -T /var/www/html
-echo "======== curl again of ${PROJECT_NAME} from host:"
-curl --fail http://${PROJECT_NAME}.ddev.site
-if [ $? -ne 0 ]; then
-  set +x
-  echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
-  exit 1
-fi
+header "Full curl of https://${PROJECT_NAME}.ddev.site from outside"
+curl https://${PROJECT_NAME}.ddev.site
 
-echo "Thanks for running the diagnostic. It was successful."
-echo "Please provide the output of this script in a new gist at gist.github.com"
+header "Project ownership on host"
+ls -ld ${PROJECT_DIR}
+header "Project ownership in container"
+ddev exec ls -ld /var/www/html
+header "In-container filesystem"
+ddev exec df -T /var/www/html
+
+header 'Thanks for running the diagnostic!'
 echo "Running ddev launch in 5 seconds" && sleep 5
 ddev launch
+ddev stop
