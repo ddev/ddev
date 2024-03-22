@@ -27,19 +27,20 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
+    brew upgrade
     for item in ddev/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
-        brew upgrade $item || brew install $item || true
+        brew install $item || true
     done
     brew link --force libpq
     ;;
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
     ;;
-# linux is currently WSL2
+# linux is currently WSL2 only
 linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
-      for item in libpq mkcert mkdocs; do
+      for item in libpq mkdocs; do
         brew upgrade $item || brew install $item || true
       done
       brew link --force libpq
