@@ -10,7 +10,7 @@ It’s common to have a requirement for the `web` or `db` images which isn’t b
 You can add extra Debian packages with lines like this in `.ddev/config.yaml`:
 
 ```yaml
-webimage_extra_packages: [php${DDEV_PHP_VERSION}-yaml, php${DDEV_PHP_VERSION}-tidy]
+webimage_extra_packages: ["php${DDEV_PHP_VERSION}-yaml", "php${DDEV_PHP_VERSION}-tidy"]
 dbimage_extra_packages: [telnet, netcat, sudo]
 ```
 
@@ -20,7 +20,7 @@ Then the additional packages will be built into the containers during [`ddev sta
 
 ### PHP Extensions supported by `deb.sury.org`
 
-If a PHP extension is supported by the upstream package management from `deb.sury.org`, you'll be able to add it with minimal effort. Test to see if it's available using `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-<extension>'`, for example, `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-imap'`. If that works, then the extension is supported, and you can add `webimage_extra_packages: [php${DDEV_PHP_VERSION}-<extension>]` to your `.ddev/config.yaml` file.
+If a PHP extension is supported by the upstream package management from `deb.sury.org`, you'll be able to add it with minimal effort. Test to see if it's available using `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-<extension>'`, for example, `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-imap'`. If that works, then the extension is supported, and you can add `webimage_extra_packages: ["php${DDEV_PHP_VERSION}-<extension>"]` to your `.ddev/config.yaml` file.
 
 ### PECL PHP Extensions not supported by `deb.sury.org`
 
