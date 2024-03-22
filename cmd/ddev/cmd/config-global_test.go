@@ -140,7 +140,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 
 	// Test that variables can be appended to the web environment
 	args = []string{"config", "global", `--web-environment-add="FOO=bar"`}
-	out, err = exec.RunCommand(DdevBin, args)
+	_, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
 
 	// Test that NFS can be enabled
