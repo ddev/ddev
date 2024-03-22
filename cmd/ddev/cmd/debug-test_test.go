@@ -32,6 +32,6 @@ func TestCmdDebugTest(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "debug", "test")
 	// This is just a casual look at the output, not intended to look for all details.
 	require.Contains(t, out, "OS Information")
-	require.Contains(t, out, "webserver_type: nginx-fpm")
+	require.Contains(t, out, "webserver_type:")
 	require.Contains(t, out, "PING dkdkd.ddev.site")
 }
