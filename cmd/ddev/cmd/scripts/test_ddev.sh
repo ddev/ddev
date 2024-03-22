@@ -129,13 +129,16 @@ printf "Docker disk space:" && docker run --rm busybox:stable df -h //
 header "Existing docker containers"
 docker ps -a
 
-header "mkcert information"
+if command -v mkcert >/dev/null; then
+  header "mkcert information"
+  mkcert -CAROOT
+  ls -l "$(mkcert -CAROOT)"
+fi
 
-mkcert -CAROOT
-ls -l "$(mkcert -CAROOT)"
-
-header "ping attempt on ddev.site"
-ping -c 1 dkdkd.ddev.site
+if command -v ping >/dev/null; then
+  header "ping attempt on ddev.site"
+  ping -c 1 dkdkd.ddev.site
+fi
 
 cat <<END >web/index.php
 <?php
@@ -191,7 +194,9 @@ ddev exec df -T /var/www/html
 
 header 'Thanks for running the diagnostic!'
 echo "Running ddev launch in 3 seconds" && sleep 3
+echo "Running ddev launch"
 ddev launch
 # Launch may take some time on some systems
+echo "Waiting 10 seconds to run ddev stop --unlist"
 sleep 10
 ddev stop --unlist
