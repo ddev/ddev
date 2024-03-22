@@ -30,9 +30,9 @@ We have automated testing and support for a staggering range of Docker providers
 | OrbStack (macOS)           | officially tested and supported on macOS                                 |
 | Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon          |
 | Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows          |
-| Colima (macOS)             | officially tested and supported                                          |
+| Colima (macOS)             | officially tested and supported, no longer recommended                   |
 | Colima (Linux)             | reported working in DDEV v1.22+, but poor solution compared to docker-ce |
-| Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu                 |
+| Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu. Recommended.   |
 | Rancher Desktop (macOS)    | officially tested and supported on macOS                                 |
 
 * Docker Desktop for Linux does *not* work with DDEV because it mounts all files into the container owned as root.
