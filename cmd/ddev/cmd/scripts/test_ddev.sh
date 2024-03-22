@@ -59,12 +59,12 @@ else
 fi
 
 PROJECT_DIR=../${PROJECT_NAME}
-header "Creating dummy project named  ${PROJECT_NAME} in ${PROJECT_DIR}"
+header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
 
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
-ddev config --project-type=php --docroot=web --disable-upload-dirs-warning >/dev/null 2>&1  || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+ddev config --project-type=php --docroot=web --disable-upload-dirs-warning --host-db-port=60001 --host-https-port=60002 --host-webserver-port=60003 --mailpit-http-port=60004 --mailpit-https-port=60005 >/dev/null 2>&1  || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 set +eu
 
 header "OS Information"
@@ -77,8 +77,8 @@ id -a
 header "ddev version"
 ddev version
 docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."docker-platform"' 2>/dev/null)
-router_http_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_http_port"' 2>/dev/null)
-router_https_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router_https_port"' 2>/dev/null)
+router_http_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router-http-port"' 2>/dev/null)
+router_https_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router-https-port"' 2>/dev/null)
 
 header "proxy settings"
 echo "
