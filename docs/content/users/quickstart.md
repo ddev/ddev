@@ -159,7 +159,8 @@ ddev launch
 
 ## Drupal
 
-=== "Drupal 8+"
+=== "Drupal"
+    For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is just "drupal".
 
     ```bash
     mkdir my-drupal-site
