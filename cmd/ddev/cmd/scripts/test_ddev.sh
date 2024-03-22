@@ -185,6 +185,8 @@ header "In-container filesystem"
 ddev exec df -T /var/www/html
 
 header 'Thanks for running the diagnostic!'
-echo "Running ddev launch in 5 seconds" && sleep 5
+echo "Running ddev launch in 3 seconds" && sleep 3
 ddev launch
+# Launch may take some time on some systems
+sleep 10
 ddev stop
