@@ -11,10 +11,6 @@
 
 PROJECT_NAME=tryddevproject-${RANDOM}
 
-function cleanup {
-  printf "\nPlease run cleanup after debugging with 'ddev debug testcleanup'\n"
-}
-
 function header {
   printf "\n\n======== $1 ========\n"
 }
@@ -145,10 +141,9 @@ cat <<END >web/index.php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s<br />\n", \$mysqli->host_info);
-  print "ddev is working. You will want to delete this project with 'ddev debug testcleanup'<br />\n";
+  print "ddev is working.<br />\n";
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
-trap cleanup EXIT
 
 header "Project startup"
 DDEV_DEBUG=true ddev start -y || ( \
@@ -199,4 +194,5 @@ ddev launch
 # Launch may take some time on some systems
 echo "Waiting 10 seconds to run ddev stop --unlist"
 sleep 10
+echo "running ddev stop --unlist"
 ddev stop --unlist
