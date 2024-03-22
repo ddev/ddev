@@ -273,8 +273,9 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		//name := typeOfVal.Field(i).Name
 		fieldValue := v.Field(i).Interface()
 		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" {
-			valMap[tag] = fmt.Sprintf("%v", fieldValue)
-			keys = append(keys, tag)
+			tagWithDashes := strings.Replace(tag, "_", "-", -1)
+			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
+			keys = append(keys, tagWithDashes)
 		}
 	}
 	sort.Strings(keys)
