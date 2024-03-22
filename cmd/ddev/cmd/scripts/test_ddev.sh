@@ -40,7 +40,7 @@ if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an e
 
 header "Existing project config"
 if [[ ${PWD} != ${HOME}* ]]; then
-  printf "\n\nWARNING: Project should be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
+  printf "\n\nWARNING: Project should most often be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
 fi
 
 ddev debug configyaml | grep -v web_environment
@@ -64,7 +64,9 @@ header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
-ddev config --project-type=php --docroot=web --disable-upload-dirs-warning --host-db-port=60001 --host-https-port=60002 --host-webserver-port=60003 --mailpit-http-port=60004 --mailpit-https-port=60005 >/dev/null 2>&1  || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+ddev config --project-type=php --docroot=web --disable-upload-dirs-warning --host-db-port=60001 --host-https-port=60002 --host-webserver-port=60003 || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+printf "\nhost_mailpit_port: 60004\n" >.ddev/config.local.yaml
+
 set +eu
 
 header "OS Information"
@@ -165,17 +167,20 @@ DDEV_DEBUG=true ddev start -y || ( \
   printf "Start failed.\n" && \
   exit 1 )
 
+http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpURLs[0]' 2>/dev/null)
+https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpsURLs[0]' 2>/dev/null)
+
 header "Curl of site from inside container"
 ddev exec curl --fail -I http://127.0.0.1
 
-header "curl -I of http://${PROJECT_NAME}.ddev.site:${router_http_port} from outside"
-curl --fail -I http://${PROJECT_NAME}.ddev.site:${router_http_port}
+header "curl -I of ${http_url} from outside"
+curl --fail -I "${http_url}"
 
-header "Full curl of http://${PROJECT_NAME}.ddev.site:${router_http_port} from outside"
-curl http://${PROJECT_NAME}.ddev.site:${router_http_port}
+header "Full curl of ${http_url} from outside"
+curl "${http_url}"
 
-header "Full curl of https://${PROJECT_NAME}.ddev.site:${router_https_port} from outside"
-curl https://${PROJECT_NAME}.ddev.site:${router_https_port}
+header "Full curl of ${https_url} from outside"
+curl "${https_url}"
 
 header "Project ownership on host"
 ls -ld ${PROJECT_DIR}
@@ -189,4 +194,4 @@ echo "Running ddev launch in 3 seconds" && sleep 3
 ddev launch
 # Launch may take some time on some systems
 sleep 10
-ddev stop
+ddev stop --unlist
