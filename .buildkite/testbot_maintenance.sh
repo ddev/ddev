@@ -27,6 +27,7 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
+    brew pin buildkite-agent
     brew upgrade
     for item in ddev/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
         brew install $item || true
