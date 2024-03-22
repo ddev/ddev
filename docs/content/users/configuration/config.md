@@ -532,7 +532,7 @@ The DDEV-specific project type.
 
 The `php` and `python` types don’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 
-The legacy `drupal8`, `drupal9`, and `drupal10` project types can also be specified, but if you just use `drupal` DDEV will autodetect the type and use the recommended settings.
+The former DDEV project types `drupal8`, `drupal9`, and `drupal10` can still be manually specified; by using `drupal` instead, DDEV will autodetect the correct type and its corresponding settings.
 
 ## `upload_dirs`
 
