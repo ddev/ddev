@@ -181,11 +181,11 @@ header "Full curl of ${https_url} from outside"
 curl "${https_url}"
 
 header "Project ownership on host"
-ls -ld ${PROJECT_DIR}
+ls -ld "${PROJECT_DIR}"
 header "Project ownership in container"
-ddev exec ls -ld /var/www/html
+ddev exec ls -ld //var/www/html
 header "In-container filesystem"
-ddev exec df -T /var/www/html
+ddev exec df -T //var/www/html
 
 header 'Thanks for running the diagnostic!'
 echo "Running ddev launch in 3 seconds" && sleep 3

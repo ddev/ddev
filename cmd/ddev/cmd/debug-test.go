@@ -25,6 +25,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		}
 		tmpDir := os.TempDir()
 		outputFilename := filepath.Join(tmpDir, "ddev-debug-test.txt")
+		outputFilename = filepath.ToSlash(outputFilename)
 		bashPath := util.FindBashPath()
 		err := fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir)
 		if err != nil {
