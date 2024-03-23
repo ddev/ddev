@@ -32,6 +32,7 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
+	dockerImage "github.com/docker/docker/api/types/image"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
@@ -1324,7 +1325,7 @@ func RemoveImage(tag string) error {
 	ctx, client := GetDockerClient()
 	_, _, err := client.ImageInspectWithRaw(ctx, tag)
 	if err == nil {
-		_, err = client.ImageRemove(ctx, tag, dockerTypes.ImageRemoveOptions{Force: true})
+		_, err = client.ImageRemove(ctx, tag, dockerImage.RemoveOptions{Force: true})
 
 		if err == nil {
 			util.Debug("Deleted Docker image %s", tag)
