@@ -531,10 +531,6 @@ func (app *DdevApp) ValidateConfig() error {
 		}
 	}
 
-	// if app.Database.Type == nodeps.Postgres && (nodeps.ArrayContainsString([]string{"wordpress", "magento", "magento2"}, app.Type)) {
-	//	return fmt.Errorf("the %s project has a project type %s that does not support PostgreSQL database", app.Name, app.Type)
-	// }
-
 	return nil
 }
 

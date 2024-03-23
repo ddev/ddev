@@ -10,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/maruel/natural"
 	"github.com/pkg/errors"
 )
 
@@ -485,7 +486,7 @@ func GetValidAppTypes() []string {
 	keys := make([]string, 0, len(appTypeMatrix))
 	for k := range appTypeMatrix {
 		keys = append(keys, k)
-		sort.Strings(keys)
+		sort.Sort(natural.StringSlice(keys))
 	}
 	return keys
 }
