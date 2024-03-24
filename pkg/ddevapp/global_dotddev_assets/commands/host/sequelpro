@@ -8,9 +8,16 @@
 ## HostBinaryExists: /Applications/Sequel Pro.app
 ## DBTypes: mysql,mariadb
 
-if [ "${DDEV_PROJECT_STATUS}" != "running" ]; then
+if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
   ddev start
+  start_exit_code=$?
+  if [ $start_exit_code -ne 0 ]; then
+    exit $start_exit_code
+  fi
+  # run this script again, as the environment is updated after "ddev start"
+  no_recursion=true ddev "$(basename "$0")" "$@"
+  exit $?
 fi
 tmpdir=$(mktemp -d -t sequelpro-XXXXXXXXXX)
 templatepath="$tmpdir/sequelpro.spf"
@@ -79,4 +86,3 @@ cat >$templatepath <<END
 END
 
 open  "${templatepath}"
-
