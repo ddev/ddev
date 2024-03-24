@@ -84,11 +84,21 @@ The relative path, from the project root, to the directory containing `composer.
 
 ## `composer_version`
 
-Composer version for the web container and the [`ddev composer`](../usage/commands.md#composer) command.
+Composer version for the web container and the [`ddev composer`](../usage/commands.md#composer) command._
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
+
+## `corepack_enable`
+
+Whether to `corepack enable` on Node.js configuration.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
+
+When `true`, `corepack_enable` will be executed, making latest `yarn` and `pnpm` package managers available.
 
 ## `database`
 

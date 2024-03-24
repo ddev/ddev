@@ -1447,7 +1447,10 @@ ddev xhprof off
 Run [`yarn` commands](https://yarnpkg.com/cli) inside the web container in the root of the project (global shell host container command).
 
 !!!tip
-    Use `--cwd` for another directory.
+    Use `--cwd` for another directory, or you can change directories to the desired directory and `ddev yarn` will act on the same relative directory inside the container.
+
+!!!tip
+    If you want latest yarn versions, set `corepack_enable: true` in `.ddev/config.yaml` or `ddev config --corepack-enable`
 
 Example:
 
@@ -1458,6 +1461,14 @@ ddev yarn install
 # Use Yarn to add the Lerna package
 ddev yarn add lerna
 
+# Use yarn in a relative directory
+cd web/core && ddev yarn add lerna
+
 # Use Yarn to add the Lerna package from the `web/core` directory
 ddev yarn --cwd web/core add lerna
+
+# Use latest yarn or specified yarn
+ddev config --corepack-enabled && ddev restart
+ddev yarn set version stable
+ddev -yarn --version
 ```

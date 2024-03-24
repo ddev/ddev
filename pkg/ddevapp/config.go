@@ -939,7 +939,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
 	}
-	if app.CorepackEnabled && app.NodeJSVersion >= "18" {
+	if app.CorepackEnable && app.NodeJSVersion >= "18" {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
 

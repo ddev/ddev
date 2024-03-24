@@ -73,6 +73,9 @@ const ConfigInstructions = `
 # Note that you can continue using 'ddev nvm' or nvm inside the web container
 # to change the project's installed node version if you need to.
 
+# corepack_enable: false
+# Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
+
 # additional_hostnames:
 #  - somename
 #  - someothername
