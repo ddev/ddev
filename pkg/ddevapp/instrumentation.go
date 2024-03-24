@@ -11,20 +11,12 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/denisbrodbeck/machineid"
-	"gopkg.in/segmentio/analytics-go.v3"
 )
 
 var hashedHostID string
-
-// SegmentNoopLogger defines a no-op logger to prevent Segment log messages from being emitted
-type SegmentNoopLogger struct{}
-
-func (n *SegmentNoopLogger) Logf(_ string, _ ...interface{})   {}
-func (n *SegmentNoopLogger) Errorf(_ string, _ ...interface{}) {}
 
 // ReportableEvents is the list of events that we choose to report specifically.
 // Excludes non-ddev custom commands.
@@ -36,7 +28,7 @@ func GetInstrumentationUser() string {
 	return hashedHostID
 }
 
-// SetInstrumentationBaseTags sets the basic always-used tags for Segment
+// SetInstrumentationBaseTags sets the basic always-used tags for telemetry
 func SetInstrumentationBaseTags() {
 	// defer util.TimeTrack()()
 
@@ -64,7 +56,7 @@ func SetInstrumentationBaseTags() {
 	}
 }
 
-// SetInstrumentationAppTags creates app-specific tags for Segment
+// SetInstrumentationAppTags creates app-specific tags for telemetry
 func (app *DdevApp) SetInstrumentationAppTags() {
 	// defer util.TimeTrack()()
 
@@ -79,68 +71,6 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 		nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 	}
 	nodeps.InstrumentationTags["ProjectID"] = app.ProtectedID()
-}
-
-// SegmentUser does the enqueue of the Identify action, identifying the user
-// Here we use the hashed hostid as the user id
-func SegmentUser(client analytics.Client, hashedID string) error {
-	timezone, _ := time.Now().In(time.Local).Zone()
-	lang := os.Getenv("LANG")
-	err := client.Enqueue(analytics.Identify{
-		UserId:  hashedID,
-		Context: &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: versionconstants.DdevVersion}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
-		Traits:  analytics.Traits{"instrumentation_user": globalconfig.DdevGlobalConfig.InstrumentationUser},
-	})
-
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// SegmentEvent provides the event and traits that go with it.
-func SegmentEvent(client analytics.Client, hashedID string, event string) error {
-	if _, ok := ReportableEvents[event]; !ok {
-		// There's no need to waste people's time on custom commands.
-		return nil
-	}
-	properties := analytics.NewProperties()
-
-	for key, val := range nodeps.InstrumentationTags {
-		if val != "" {
-			properties = properties.Set(key, val)
-		}
-	}
-	timezone, _ := time.Now().In(time.Local).Zone()
-	lang := os.Getenv("LANG")
-	err := client.Enqueue(analytics.Track{
-		UserId:     hashedID,
-		Event:      event,
-		Properties: properties,
-		Context:    &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: versionconstants.DdevVersion}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
-	})
-
-	return err
-}
-
-// SendInstrumentationEvents does the actual send to segment
-func SendInstrumentationEvents(event string) {
-	// defer util.TimeTrack()()
-
-	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
-		client, _ := analytics.NewWithConfig(versionconstants.SegmentKey, analytics.Config{
-			Logger: &SegmentNoopLogger{},
-		})
-
-		err := SegmentEvent(client, GetInstrumentationUser(), event)
-		if err != nil {
-			output.UserOut.Debugf("error sending event to segment: %v", err)
-		}
-		err = client.Close()
-		if err != nil {
-			output.UserOut.Debugf("segment analytics client.close() failed: %v", err)
-		}
-	}
 }
 
 func init() {

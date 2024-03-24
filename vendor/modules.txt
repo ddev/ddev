@@ -53,8 +53,6 @@ github.com/amplitude/analytics-go/amplitude/types
 # github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 ## explicit; go 1.13
 github.com/asaskevich/govalidator
-# github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-## explicit
 # github.com/cheggaaa/pb v1.0.29
 ## explicit; go 1.12
 github.com/cheggaaa/pb
@@ -228,9 +226,6 @@ github.com/pmezard/go-difflib/difflib
 github.com/rivo/uniseg
 # github.com/rogpeppe/go-internal v1.11.0
 ## explicit; go 1.19
-# github.com/segmentio/backo-go v1.0.1
-## explicit; go 1.13
-github.com/segmentio/backo-go
 # github.com/shopspring/decimal v1.3.1
 ## explicit; go 1.13
 github.com/shopspring/decimal
@@ -260,9 +255,6 @@ github.com/ulikunitz/xz/lzma
 # github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
 ## explicit; go 1.17
 github.com/withfig/autocomplete-tools/integrations/cobra
-# github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
-## explicit
-github.com/xtgo/uuid
 # go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0
 ## explicit; go 1.20
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
@@ -393,9 +385,6 @@ google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/gofeaturespb
 # gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 ## explicit; go 1.11
-# gopkg.in/segmentio/analytics-go.v3 v3.1.0
-## explicit
-gopkg.in/segmentio/analytics-go.v3
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3

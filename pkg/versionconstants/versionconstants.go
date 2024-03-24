@@ -3,10 +3,6 @@ package versionconstants
 // DdevVersion is the current version of DDEV, by default the Git committish (should be current Git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
-// SegmentKey is the ddev-specific key for Segment service
-// Compiled with link-time variables
-var SegmentKey = ""
-
 // AmplitudeAPIKey is the ddev-specific key for Amplitude service
 // Compiled with link-time variables
 var AmplitudeAPIKey = ""
