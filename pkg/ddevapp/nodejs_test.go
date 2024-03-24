@@ -117,7 +117,7 @@ func TestCorepackEnable(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Contains(t, out, "corepack")
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: `yarn set version stable`,
 	})
 	require.NoError(t, err)
