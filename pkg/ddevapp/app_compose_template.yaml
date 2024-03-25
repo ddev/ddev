@@ -170,6 +170,7 @@ services:
     {{ end }}
     environment:
     - COLUMNS
+    - COREPACK_HOME=/mnt/ddev-global-cache/corepack
     - DOCROOT=${DDEV_DOCROOT}
     - DDEV_COMPOSER_ROOT
     - DDEV_DATABASE

@@ -939,6 +939,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
 	}
+	if app.CorepackEnable {
+		extraWebContent = extraWebContent + "\nRUN corepack enable"
+	}
 
 	// Some installed packages can change the permissions of /run/php
 	// First seen in Debian 12 Bookworm

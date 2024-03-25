@@ -72,3 +72,59 @@ func TestNodeJSVersions(t *testing.T) {
 	assert.Contains(out, "v8.17")
 
 }
+
+// TestCorepackEnable tests behavior of corepack_enable
+func TestCorepackEnable(t *testing.T) {
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(site.Dir)
+
+	runTime := util.TimeTrackC(t.Name())
+
+	testcommon.ClearDockerEnv()
+	app, err := ddevapp.NewApp(site.Dir, true)
+	assert.NoError(err)
+	t.Cleanup(func() {
+		runTime()
+		_ = os.Chdir(origDir)
+		_ = app.Restart()
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	app.CorepackEnable = false
+	err = app.Start()
+	require.NoError(t, err)
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: `ls -l /usr/bin/yarn`,
+	})
+	require.NoError(t, err)
+	require.NotContains(t, out, "corepack")
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `yarn --version`,
+	})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "1."))
+
+	app.CorepackEnable = true
+	err = app.Start()
+	require.NoError(t, err)
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `ls -l /usr/bin/yarn`,
+	})
+	require.NoError(t, err)
+	require.Contains(t, out, "corepack")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `yarn set version stable`,
+	})
+	require.NoError(t, err)
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `yarn --version`,
+	})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "4."))
+}

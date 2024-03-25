@@ -308,6 +308,7 @@ func init() {
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that DDEV waits for all containers to become ready on start`)
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
+	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -645,6 +646,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("disable-upload-dirs-warning").Changed {
 		app.DisableUploadDirsWarning, _ = cmd.Flags().GetBool("disable-upload-dirs-warning")
+	}
+
+	if cmd.Flag("corepack-enable").Changed {
+		app.CorepackEnable, _ = cmd.Flags().GetBool("corepack-enable")
 	}
 
 	if webserverTypeArg != "" {
