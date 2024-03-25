@@ -30,6 +30,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 * `ddev magento` (Magento2 only) gives access to the `magento` CLI.
 * [`ddev craft`](../usage/commands.md#craft) (Craft CMS only) gives access to the `craft` CLI.
 * [`ddev yarn`](../usage/commands.md#yarn) and [`ddev npm`](../usage/commands.md#npm) give direct access to the `yarn` and `npm` CLIs.
+* `ddev cake` (CakePHP only) gives direct access to the CakePHP `cake` CLI.
 
 ## Node.js, npm, nvm, and Yarn
 

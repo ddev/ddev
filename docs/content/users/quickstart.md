@@ -47,6 +47,35 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
     ddev launch
     ```
 
+## CakePHP
+
+Use a new or existing Composer project, or clone a Git repository.
+
+The CakePHP project type can be used with any CakePHP project >= 3.x, but it has been fully tested with CakePHP 5.x. DDEV automatically creates the `.env` file with the database information, email transport configuration and a random salt. If `.env` file already exists, `.env.ddev` will be created so you can take any variable and put into your `.env` file.
+
+=== "Composer"
+
+    ```bash
+    mkdir my-cakephp-app
+    cd my-cakephp-app
+    ddev config --project-type=cakephp --docroot=webroot
+    ddev composer create --prefer-dist cakephp/app:~5.0
+    ddev cake
+    ddev launch
+    ```
+
+=== "Git Clone"
+
+    ```bash
+    git clone <your-cakephp-repo>
+    cd <your-cakephp-project>
+    ddev config --project-type=cakephp --docroot=webroot
+    ddev start
+    ddev composer install
+    ddev cake
+    ddev launch
+    ```
+
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.

@@ -214,7 +214,7 @@ func TestCustomCommands(t *testing.T) {
 	app.Type = origAppType
 
 	// The various CMS commands should not be available here
-	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms", "wp"} {
+	for _, c := range []string{"artisan", "cake", "drush", "magento", "typo3", "typo3cms", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
@@ -272,6 +272,17 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 	for _, c := range []string{"craft"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
+	// CakePHP commands should only be available for type cakephp
+	app.Type = nodeps.AppTypeCakePHP
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"cake"} {
 		_, err = exec.RunHostCommand(DdevBin, "help", c)
 		assert.NoError(err)
 	}
