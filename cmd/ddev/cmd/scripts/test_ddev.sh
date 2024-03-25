@@ -35,6 +35,9 @@ if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an e
 
 
 header "Existing project config"
+
+which -a ddev
+
 if [[ ${PWD} != ${HOME}* ]]; then
   printf "\n\nWARNING: Project should most often be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
 fi
@@ -127,6 +130,7 @@ docker ps -a
 
 if command -v mkcert >/dev/null; then
   header "mkcert information"
+  which -a mkcert
   mkcert -CAROOT
   ls -l "$(mkcert -CAROOT)"
 fi
