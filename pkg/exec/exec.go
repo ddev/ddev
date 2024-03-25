@@ -1,8 +1,11 @@
 package exec
 
 import (
+	"bufio"
+	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -63,6 +66,33 @@ func RunInteractiveCommand(command string, args []string) error {
 	return err
 }
 
+// RunInteractiveCommandWithOutput writes to the host and
+// also to the passed io.Writer
+func RunInteractiveCommandWithOutput(command string, args []string, output io.Writer) error {
+	cmd := HostCommand(command, args...)
+	cmd.Stdin = os.Stdin
+
+	pr, pw := io.Pipe()
+	defer func() {
+		_ = pr.Close()
+	}()
+	cmd.Stdout = pw
+	cmd.Stderr = pw
+
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		_ = CleanAndCopy(output, pr)
+		_ = pr.Close()
+	}()
+
+	err = cmd.Wait()
+	return err
+}
+
 // RunHostCommand executes a command on the host and returns the
 // combined stdout/stderr results and error
 func RunHostCommand(command string, args ...string) (string, error) {
@@ -93,4 +123,25 @@ func RunHostCommandSeparateStreams(command string, args ...string) (string, erro
 	}
 
 	return string(o), err
+}
+
+// CleanAndCopy removes control characters from output
+func CleanAndCopy(dst io.Writer, src io.Reader) error {
+	scanner := bufio.NewScanner(src)
+	// This regex matches ANSI escape codes that are used for terminal text formatting such as color changes.
+	// \x1b is the ESC character, which starts the escape sequence.
+	// [^m]* matches any character that is not 'm', multiple times. 'm' is the final character in the sequence.
+	// This effectively matches any escape sequence starting with ESC and ending with 'm'.
+	re := regexp.MustCompile(`\x1b[^m]*m`)
+	for scanner.Scan() {
+		cleanString := re.ReplaceAllString(scanner.Text(), "")
+		_, err := io.WriteString(dst, cleanString+"\n")
+		if err != nil {
+			return err
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	return nil
 }

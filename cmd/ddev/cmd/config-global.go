@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -259,33 +260,32 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 			util.Failed("Failed to write global config: %v", err)
 		}
 	}
-	output.UserOut.Println("Global configuration:")
-	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
-	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
-	output.UserOut.Printf("web-environment=[%s]", strings.Join(globalconfig.DdevGlobalConfig.WebEnvironment, ","))
-	output.UserOut.Printf("%s=%v", configTypes.FlagPerformanceModeName, globalconfig.DdevGlobalConfig.GetPerformanceMode())
 
-	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
-	output.UserOut.Printf("internet-detection-timeout-ms=%v", globalconfig.DdevGlobalConfig.InternetDetectionTimeout)
-	output.UserOut.Printf("disable-http2=%v", globalconfig.DdevGlobalConfig.DisableHTTP2)
-	output.UserOut.Printf("use-letsencrypt=%v", globalconfig.DdevGlobalConfig.UseLetsEncrypt)
-	output.UserOut.Printf("letsencrypt-email=%v", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
-	output.UserOut.Printf("table-style=%v", globalconfig.DdevGlobalConfig.TableStyle)
-	output.UserOut.Printf("simple-formatting=%v", globalconfig.DdevGlobalConfig.SimpleFormatting)
-	output.UserOut.Printf("use-hardened-images=%v", globalconfig.DdevGlobalConfig.UseHardenedImages)
-	output.UserOut.Printf("fail-on-hook-fail=%v", globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
-	output.UserOut.Printf("required-docker-compose-version=%v", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion)
-	output.UserOut.Printf("use-docker-compose-from-path=%v", globalconfig.DdevGlobalConfig.UseDockerComposeFromPath)
-	output.UserOut.Printf("project-tld=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
-	output.UserOut.Printf("xdebug-ide-location=%v", globalconfig.DdevGlobalConfig.XdebugIDELocation)
-	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
-	output.UserOut.Printf("router=%v", globalconfig.DdevGlobalConfig.Router)
-	output.UserOut.Printf("wsl2-no-windows-hosts-mgt=%v", globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt)
-	output.UserOut.Printf("router-http-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPPort)
-	output.UserOut.Printf("router-https-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
-	output.UserOut.Printf("mailpit-http-port=%v", globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort)
-	output.UserOut.Printf("mailpit-https-port=%v", globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort)
-	output.UserOut.Printf("traefik-monitor-port=%v", globalconfig.DdevGlobalConfig.TraefikMonitorPort)
+	v := reflect.ValueOf(globalconfig.DdevGlobalConfig)
+	typeOfVal := v.Type()
+
+	keys := make([]string, 0, v.NumField())
+	valMap := map[string]string{}
+	for i := 0; i < v.NumField(); i++ {
+		tag := typeOfVal.Field(i).Tag.Get("yaml")
+		parts := strings.Split(tag, ",")
+		tag = parts[0]
+		//name := typeOfVal.Field(i).Name
+		fieldValue := v.Field(i).Interface()
+		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" {
+			tagWithDashes := strings.Replace(tag, "_", "-", -1)
+			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
+			keys = append(keys, tagWithDashes)
+		}
+	}
+	sort.Strings(keys)
+	if !output.JSONOutput {
+		for _, label := range keys {
+			output.UserOut.Printf("%s=%v", label, valMap[label])
+		}
+	} else {
+		output.UserOut.WithField("raw", valMap).Println("")
+	}
 }
 
 func init() {
