@@ -36,7 +36,9 @@ if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an e
 
 header "Existing project config"
 
+echo "ddev installation alternate locations:"
 which -a ddev
+echo
 
 if [[ ${PWD} != ${HOME}* ]]; then
   printf "\n\nWARNING: Project should most often be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
@@ -93,7 +95,12 @@ header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
-echo -n "docker client location: " && ls -l "$(which docker)" && echo
+printf "docker client location: $(which docker)\n\n"
+
+echo "docker client alternate locations:"
+which -a docker
+echo
+
 printf "Docker provider: ${docker_platform}\n"
 if [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
