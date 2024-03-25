@@ -93,7 +93,7 @@ header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
-echo -n "docker client location: " && ls -l "$(which -a docker)" && echo
+echo -n "docker client location: " && ls -l "$(which docker)" && echo
 printf "Docker provider: ${docker_platform}\n"
 if [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
