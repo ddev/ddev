@@ -260,6 +260,32 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 			util.Failed("Failed to write global config: %v", err)
 		}
 	}
+
+	v := reflect.ValueOf(globalconfig.DdevGlobalConfig)
+	typeOfVal := v.Type()
+
+	keys := make([]string, 0, v.NumField())
+	valMap := map[string]string{}
+	for i := 0; i < v.NumField(); i++ {
+		tag := typeOfVal.Field(i).Tag.Get("yaml")
+		parts := strings.Split(tag, ",")
+		tag = parts[0]
+		//name := typeOfVal.Field(i).Name
+		fieldValue := v.Field(i).Interface()
+		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" {
+			tagWithDashes := strings.Replace(tag, "_", "-", -1)
+			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
+			keys = append(keys, tagWithDashes)
+		}
+	}
+	sort.Strings(keys)
+	if !output.JSONOutput {
+		for _, label := range keys {
+			output.UserOut.Printf("%s=%v", label, valMap[label])
+		}
+	} else {
+		output.UserOut.WithField("raw", valMap).Println("")
+	}
 }
 
 func init() {
