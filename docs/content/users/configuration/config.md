@@ -84,7 +84,7 @@ The relative path, from the project root, to the directory containing `composer.
 
 ## `composer_version`
 
-Composer version for the web container and the [`ddev composer`](../usage/commands.md#composer) command._
+Composer version for the web container and the [`ddev composer`](../usage/commands.md#composer) command.
 
 | Type | Default | Usage
 | -- | -- | --
