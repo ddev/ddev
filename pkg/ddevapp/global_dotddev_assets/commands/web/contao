@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run Contao command inside the web container
+## Usage: contao [flags] [args]
+## Example: "ddev contao contao:user:create" or "ddev contao contao:backup:create" (seehttps://docs.contao.org/manual/en/cli/)
+## ProjectTypes: contao,php
+## ExecRaw: true
+
+if [[ ${DDEV_PROJECT_TYPE} != "contao" ]]; then
+        echo "The contao command is only available in the contao project type. You can update this in your project's config file, followed by restarting the DDEV project."
+        exit 1
+fi
+
+CONTAO_BIN="vendor/bin/contao-console"
+
+if [[ ! -f ${CONTAO_BIN} ]]; then
+        echo "${CONTAO_BIN} does not exist in your project root directory."
+        echo "Please verify that you installed contao in your project directory."
+        exit 1
+fi
+
+php vendor/bin/contao-console "$@"

@@ -47,6 +47,35 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
     ddev launch
     ```
 
+## Contao
+
+=== "Composer"
+
+New Contao projects can be created from the official [managed edition](https://github.com/contao/managed-edition) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
+
+    ```shell
+    # Create a project directory and move into it:
+    mkdir my-contao-project && cd $_
+
+    # Set up the DDEV environment:
+    ddev config --project-type=contao --docroot=public
+
+    # Start the project:
+    ddev start
+
+    # Install the managed edition:
+    ddev composer create -y contao/managed-edition
+
+    # Install database content:
+    ddev contao contao:migrate --with-deletes --no-interaction
+
+    # Create admin user:
+    ddev contao contao:user:create
+
+    # Open admin panel:
+    ddev launch contao
+    ```
+
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.

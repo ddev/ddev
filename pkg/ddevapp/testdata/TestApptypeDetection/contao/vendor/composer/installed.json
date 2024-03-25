@@ -1,0 +1,35 @@
+{
+    "packages": [
+        {
+            "name": "contao/core-bundle",
+            "version": "5.2.8",
+            "license": [
+                "LGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Leo Feyer",
+                    "homepage": "https://github.com/leofeyer"
+                },
+                {
+                    "name": "Contao Community",
+                    "homepage": "https://contao.org/contributors"
+                }
+            ],
+            "description": "Contao Open Source CMS",
+            "homepage": "https://contao.org",
+            "support": {
+                "docs": "https://docs.contao.org",
+                "forum": "https://community.contao.org",
+                "issues": "https://github.com/contao/contao/issues",
+                "source": "https://github.com/contao/core-bundle"
+            },
+            "funding": [
+                {
+                    "url": "https://to.contao.org/donate",
+                    "type": "other"
+                }
+            ]
+        }
+    ]
+}
