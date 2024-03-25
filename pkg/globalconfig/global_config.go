@@ -419,7 +419,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Decide whether 'ddev start' should be interrupted by a failing hook
 
 # traefik_monitor_port: 10999
-# Change this only if you're having conflicts with some 
+# Change this only if you're having conflicts with some
 # service that needs port 10999
 
 # wsl2_no_windows_hosts_mgt: false
@@ -537,25 +537,33 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns ~/.ddev, the global caching directory
+// GetGlobalDdevDir returns the global configuration directory, which varies by OS.
 func GetGlobalDdevDir() string {
+	// Check for $HOME/.ddev for backwards compatibility.
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		logrus.Fatal("Could not get home directory for current user. Is it set?")
 	}
 	ddevDir := filepath.Join(userHome, ".ddev")
 
-	// Create the directory if it is not already present.
+	// Create new configuration directory.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
-		// If they happen to be running as root/sudo, we won't create the directory
-		// but act like we did. This should only happen for ddev hostname, which
-		// doesn't need config or access to this dir anyway.
-		if os.Geteuid() == 0 {
-			return ddevDir
-		}
-		err = os.MkdirAll(ddevDir, 0755)
+		userConfigDir, err := os.UserConfigDir()
 		if err != nil {
-			logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
+			logrus.Fatal("Could not get config directory for current user. Is it set?")
+		}
+		ddevDir = filepath.Join(userConfigDir, "ddev")
+		if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
+			// If they happen to be running as root/sudo, we won't create the directory
+			// but act like we did. This should only happen for ddev hostname, which
+			// doesn't need config or access to this dir anyway.
+			if os.Geteuid() == 0 {
+				return ddevDir
+			}
+			err = os.MkdirAll(ddevDir, 0755)
+			if err != nil {
+				logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
+			}
 		}
 	}
 	// config.yaml is not allowed in ~/.ddev, can only result in disaster
