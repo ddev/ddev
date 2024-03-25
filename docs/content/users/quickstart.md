@@ -165,10 +165,9 @@ ddev launch
     ```bash
     mkdir my-drupal-site
     cd my-drupal-site
-    ddev config --project-type=drupal --docroot=web
+    ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^10
-    # For Drupal9: ddev composer create drupal/recommended-project:^9
     # For Drupal 11: ddev composer create drupal/recommended-project:^11.x-dev
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
@@ -176,6 +175,11 @@ ddev launch
     ddev drush uli
     ddev launch
     ```
+
+    Note that you need to make minor adjustments for obsolete Drupal versions. For example, for Drupal 9:
+    # ddev config --project-type=drupal --php-version=8.1 --docroot=web
+    # ddev composer create drupal/recommended-project:^9
+
 
 === "Drupal 6/7"
 
