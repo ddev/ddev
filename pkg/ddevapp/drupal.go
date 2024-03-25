@@ -373,6 +373,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		app.PHPVersion = nodeps.PHPDefault
 	case "11":
 		app.PHPVersion = nodeps.PHP83
+		app.CorepackEnable = true
 	}
 	return nil
 }
