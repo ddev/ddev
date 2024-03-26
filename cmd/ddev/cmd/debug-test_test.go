@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
@@ -18,8 +19,6 @@ func TestCmdDebugTest(t *testing.T) {
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
 
-	//app, err := ddevapp.NewApp(site.Dir, true)
-
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
@@ -33,5 +32,7 @@ func TestCmdDebugTest(t *testing.T) {
 	// This is just a casual look at the output, not intended to look for all details.
 	require.Contains(t, out, "OS Information")
 	require.Contains(t, out, "webserver_type:")
-	require.Contains(t, out, "PING dkdkd.ddev.site")
+	if runtime.GOOS != "windows" {
+		require.Contains(t, out, "PING dkdkd.ddev.site")
+	}
 }
