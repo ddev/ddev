@@ -413,7 +413,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	if projectTypeArg != "" && !ddevapp.IsValidAppType(projectTypeArg) {
-		validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
+		validAppTypes := strings.Join(ddevapp.GetValidAppTypesWithoutAliases(), ", ")
 		util.Failed("Apptype must be one of %s", validAppTypes)
 	}
 

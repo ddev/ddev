@@ -24,8 +24,7 @@ type settingsLocations struct {
 var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	nodeps.AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	nodeps.AppTypeDrupal9:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal:   {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
@@ -38,8 +37,7 @@ func TestWriteSettings(t *testing.T) {
 		nodeps.AppTypeBackdrop:  "settings.ddev.php",
 		nodeps.AppTypeDrupal6:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal7:   "sites/default/settings.ddev.php",
-		nodeps.AppTypeDrupal8:   "sites/default/settings.ddev.php",
-		nodeps.AppTypeDrupal9:   "sites/default/settings.ddev.php",
+		nodeps.AppTypeDrupal:    "sites/default/settings.ddev.php",
 		nodeps.AppTypeWordPress: "wp-config-ddev.php",
 		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
@@ -99,7 +97,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal8", "drupal9", "drupal10", "backdrop"}, site.Type) {
+		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal8", "drupal9", "drupal10", "drupal", "backdrop"}, site.Type) {
 			continue
 		}
 		err := app.Init(site.Dir)
@@ -294,7 +292,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 // different between two project names
 // Requires a drupal/backdrop project
 func TestDrupalBackdropConsistentHash(t *testing.T) {
-	projectTypes := []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10, nodeps.AppTypeBackdrop}
+	projectTypes := []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal, nodeps.AppTypeBackdrop}
 	for _, projectType := range projectTypes {
 		// Make a spare directory for the first project
 		firstProjectDir := testcommon.CreateTmpDir(t.Name() + "-firstproject")

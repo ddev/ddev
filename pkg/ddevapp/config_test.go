@@ -115,7 +115,7 @@ func TestDisasterConfig(t *testing.T) {
 
 }
 
-// TestAllowedAppType tests the IsAllowedAppType function.
+// TestAllowedAppType tests the IsValidAppType function.
 func TestAllowedAppTypes(t *testing.T) {
 	assert := asrt.New(t)
 	for _, v := range ddevapp.GetValidAppTypes() {
@@ -194,7 +194,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	})
 
 	app.Name = util.RandString(32)
-	app.Type = ddevapp.GetValidAppTypes()[0]
+	app.Type = ddevapp.GetValidAppTypesWithoutAliases()[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()
@@ -226,10 +226,9 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"magentophpversion":  {nodeps.AppTypeMagento, nodeps.PHP74},
-		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal9phpversion":  {nodeps.AppTypeDrupal9, nodeps.PHPDefault},
-		"drupal10phpversion": {nodeps.AppTypeDrupal10, nodeps.PHP81},
+		"magentophpversion": {nodeps.AppTypeMagento, nodeps.PHP74},
+		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP82},
+		"drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {

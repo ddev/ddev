@@ -131,42 +131,20 @@ func init() {
 			hookDefaultComments:        getDrupal7Hooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
 			appTypeDetect:              isDrupal7App,
+			configOverrideAction:       drupal7ConfigOverrideAction,
 			postStartAction:            drupal7PostStartAction,
 			importFilesAction:          drupalImportFilesAction,
 			defaultWorkingDirMap:       docrootWorkingDir,
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
-		nodeps.AppTypeDrupal8: {
+		nodeps.AppTypeDrupal: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal8Hooks,
+			hookDefaultComments:        getDrupalHooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupal8App,
-			configOverrideAction:       drupal8ConfigOverrideAction,
-			postStartAction:            drupal8PostStartAction,
-			importFilesAction:          drupalImportFilesAction,
-			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
-		},
-
-		nodeps.AppTypeDrupal9: {
-			settingsCreator:            createDrupalSettingsPHP,
-			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal10Hooks,
-			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupal9App,
-			postStartAction:            drupalPostStartAction,
-			importFilesAction:          drupalImportFilesAction,
-			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
-		},
-
-		nodeps.AppTypeDrupal10: {
-			settingsCreator:            createDrupalSettingsPHP,
-			uploadDirs:                 getDrupalUploadDirs,
-			hookDefaultComments:        getDrupal10Hooks,
-			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupal10App,
-			configOverrideAction:       drupal10ConfigOverrideAction,
+			appTypeDetect:              isDrupalApp,
+			configOverrideAction:       drupalConfigOverrideAction,
 			postStartAction:            drupalPostStartAction,
 			importFilesAction:          drupalImportFilesAction,
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
@@ -238,6 +216,12 @@ func init() {
 			appTypeDetect:        isWordpressApp,
 			importFilesAction:    wordpressImportFilesAction,
 		},
+	}
+
+	drupalAlias := appTypeMatrix[nodeps.AppTypeDrupal]
+	drupalAlias.appTypeDetect = nil
+	for _, alias := range []string{nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10} {
+		appTypeMatrix[alias] = drupalAlias
 	}
 }
 
@@ -383,9 +367,9 @@ func (app *DdevApp) SetApptypeSettingsPaths() {
 // DetectAppType calls each apptype's detector until it finds a match,
 // or returns 'php' as a last resort.
 func (app *DdevApp) DetectAppType() string {
-	for appName, appFuncs := range appTypeMatrix {
+	for appTypeName, appFuncs := range appTypeMatrix {
 		if appFuncs.appTypeDetect != nil && appFuncs.appTypeDetect(app) {
-			return appName
+			return appTypeName
 		}
 	}
 
@@ -494,5 +478,19 @@ func GetValidAppTypes() []string {
 		keys = append(keys, k)
 		sort.Sort(natural.StringSlice(keys))
 	}
+	return keys
+}
+
+// GetValidAppTypesWithoutAliases returns the valid apptype keys from the appTypeMatrix without aliases like
+// drupal8/9/10
+func GetValidAppTypesWithoutAliases() []string {
+	keys := make([]string, 0, len(appTypeMatrix))
+	for k := range appTypeMatrix {
+		if k == nodeps.AppTypeDrupal8 || k == nodeps.AppTypeDrupal9 || k == nodeps.AppTypeDrupal10 {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	return keys
 }

@@ -22,7 +22,7 @@ import (
 func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	appTypes := ddevapp.GetValidAppTypes()
+	appTypes := ddevapp.GetValidAppTypesWithoutAliases()
 	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
 		if t != nodeps.AppTypePHP {
@@ -53,9 +53,9 @@ func TestApptypeDetection(t *testing.T) {
 	}
 }
 
-// TestPostConfigAction tests that the post-config action is properly applied, but only if the
+// TestConfigOverrideAction tests that the ConfigOverride action is properly applied, but only if the
 // config is not included in the config.yaml.
-func TestPostConfigAction(t *testing.T) {
+func TestConfigOverrideAction(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
@@ -64,10 +64,8 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeCakePHP:      nodeps.PHP83,
 		nodeps.AppTypeCraftCms:     nodeps.PHP81,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
-		nodeps.AppTypeDrupal7:      nodeps.PHPDefault,
-		nodeps.AppTypeDrupal8:      nodeps.PHP74,
-		nodeps.AppTypeDrupal9:      nodeps.PHPDefault,
-		nodeps.AppTypeDrupal10:     nodeps.PHP81,
+		nodeps.AppTypeDrupal7:      nodeps.PHP82,
+		nodeps.AppTypeDrupal:       nodeps.PHPDefault,
 		nodeps.AppTypeLaravel:      nodeps.PHP82,
 		nodeps.AppTypeMagento:      nodeps.PHP74,
 		nodeps.AppTypeMagento2:     nodeps.PHP81,

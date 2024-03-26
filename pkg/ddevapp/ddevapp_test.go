@@ -64,7 +64,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
 			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.zip",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal8,
+			Type:                          nodeps.AppTypeDrupal,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "Vegan chocolate and nut brownies"},
@@ -175,7 +175,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
 			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami.sql.zip",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal9,
+			Type:                          nodeps.AppTypeDrupal,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
@@ -234,7 +234,7 @@ var (
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal10,
+			Type:                          nodeps.AppTypeDrupal,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
@@ -349,6 +349,20 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/static/page.html", Expect: "This is a static page"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "CakePHP is able to connect to the database"},
 			FilesImageURI:                 "/img/cake.logo.svg",
+		},
+		// 19: drupal11
+		{
+			Name:                          "TestPkgDrupal11",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.x-dev.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.x-dev.1/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/db.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal,
+			Docroot:                       "web",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
+			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
 	}
 
@@ -1422,7 +1436,7 @@ func TestDdevImportDB(t *testing.T) {
 			drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
 			assert.NoError(err)
 			assert.True(drupalHashSalt)
-		case nodeps.AppTypeDrupal9:
+		case nodeps.AppTypeDrupal:
 			settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
 			assert.NoError(err)
 			assert.True(settingsHashSalt)
@@ -1750,7 +1764,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Validate contents
 		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
 		assert.NoError(err)
-		stringFound, err := fileutil.GrepStringInFile("tmp/users1.sql", "CREATE TABLE.*users")
+		stringFound, _, err := fileutil.GrepStringInFile("tmp/users1.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -1767,7 +1781,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Validate contents
-		stringFound, err = fileutil.GrepStringInFile("tmp/users2.sql", "CREATE TABLE.*users")
+		stringFound, _, err = fileutil.GrepStringInFile("tmp/users2.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -2501,9 +2515,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeCraftCms:     {"files"},
 		nodeps.AppTypeDrupal6:      {"sites/default/files"},
 		nodeps.AppTypeDrupal7:      {"sites/default/files"},
-		nodeps.AppTypeDrupal8:      {"sites/default/files"},
-		nodeps.AppTypeDrupal9:      {"sites/default/files"},
-		nodeps.AppTypeDrupal10:     {"sites/default/files"},
+		nodeps.AppTypeDrupal:       {"sites/default/files"},
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
@@ -3295,10 +3307,10 @@ func TestHttpsRedirection(t *testing.T) {
 		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
-	types := ddevapp.GetValidAppTypes()
+	types := ddevapp.GetValidAppTypesWithoutAliases()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal10}
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range types {

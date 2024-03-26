@@ -91,7 +91,7 @@ func TestAcquiaPull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal10
+	app.Type = nodeps.AppTypeDrupal
 
 	_ = app.Stop(true, false)
 	err = app.WriteConfig()

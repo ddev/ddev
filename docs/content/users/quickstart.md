@@ -81,7 +81,7 @@ The CakePHP project type can be used with any CakePHP project >= 3.x, but it has
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
 !!!tip "Compatibility with Craft CMS 3"
-    The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
+    The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3 or earlier, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
 
 Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
 
@@ -159,19 +159,30 @@ ddev launch
 
 ## Drupal
 
-=== "Drupal 10"
+=== "Drupal"
+    For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is "drupal".
 
     ```bash
-    mkdir my-drupal10-site
-    cd my-drupal10-site
-    ddev config --project-type=drupal10 --docroot=web
+    mkdir my-drupal-site
+    cd my-drupal-site
+    ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
-    ddev composer create drupal/recommended-project
+    ddev composer create drupal/recommended-project:^10
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
     ddev drush uli
     ddev launch
+
+    # For Drupal 11:
+    # ddev config --project-type=drupal --php-version=8.3 --docroot=web --corepack-enable
+    # ddev composer create drupal/recommended-project:^11.x-dev
+
+
+    Note that you need to make minor adjustments for obsolete Drupal versions.
+    For example, Drupal 9:
+    # ddev config --project-type=drupal --php-version=8.1 --docroot=web
+    # ddev composer create drupal/recommended-project:^9
     ```
 
 === "Drupal 6/7"

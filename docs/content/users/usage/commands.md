@@ -173,8 +173,8 @@ Example:
 # Start interactive project configuration
 ddev config
 
-# Configure a Drupal 8 project with a `web` document root
-ddev config --docroot=web --project-type=drupal8
+# Configure a Drupal project with a `web` document root
+ddev config --docroot=web --project-type=drupal
 
 # Switch the project’s default `nginx-fpm` to `apache-fpm`
 ddev config --webserver-type=apache-fpm
@@ -217,7 +217,7 @@ Flags:
 * `--php-version`: PHP version that will be enabled in the web container.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
-* `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
+* `--project-type`: Provide the project type: `backdrop`, `drupal`, `drupal6`, `drupal7`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
 * `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
@@ -530,7 +530,7 @@ ddev describe my-project
 
 ## `drush`
 
-Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal8` and higher, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
+Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal`, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
 
 ```shell
 # Show drush status/configuration
@@ -794,7 +794,7 @@ Flags:
 * `--active-only`, `-A`: If set, only currently active projects will be displayed.
 * `--continuous`: If set, project information will be emitted until the command is stopped.
 * `--continuous-sleep-interval`, `-I`: Time in seconds between `ddev list --continuous` output lists. (default `1`)
-* `--type`, `-t`: Show only projects of this type (e.g. `drupal8`, `wordpress`, `php`).
+* `--type`, `-t`: Show only projects of this type (e.g. `drupal`, `wordpress`, `php`).
 * `--wrap-table`, `-W`: Display table with wrapped text if required.
 
 Example:
