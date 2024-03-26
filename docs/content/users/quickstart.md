@@ -168,18 +168,22 @@ ddev launch
     ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^10
-    # For Drupal 11: ddev composer create drupal/recommended-project:^11.x-dev
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
     ddev drush uli
     ddev launch
-    ```
 
-    Note that you need to make minor adjustments for obsolete Drupal versions. For example, for Drupal 9:
+    # For Drupal 11:
+    # ddev config --project-type=drupal --php-version=8.3 --docroot=web --corepack-enable
+    # ddev composer create drupal/recommended-project:^11.x-dev
+
+
+    Note that you need to make minor adjustments for obsolete Drupal versions.
+    For example, Drupal 9:
     # ddev config --project-type=drupal --php-version=8.1 --docroot=web
     # ddev composer create drupal/recommended-project:^9
-
+    ```
 
 === "Drupal 6/7"
 
