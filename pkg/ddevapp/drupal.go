@@ -356,6 +356,7 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
+// drupalConfigOverrideAction selects proper versions for
 func drupalConfigOverrideAction(app *DdevApp) error {
 	v, err := getDrupalVersion(app)
 	if err != nil || v == "" {
@@ -365,12 +366,12 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	switch v {
 	case "8":
 		app.PHPVersion = nodeps.PHP74
-		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB103}
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
 	case "9":
-		app.PHPVersion = nodeps.PHP82
-		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB103}
+		app.PHPVersion = nodeps.PHP81
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
 	case "10":
-		app.PHPVersion = nodeps.PHPDefault
+		app.PHPVersion = nodeps.PHP83
 	case "11":
 		app.PHPVersion = nodeps.PHP83
 		app.CorepackEnable = true
