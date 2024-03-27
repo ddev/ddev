@@ -331,6 +331,7 @@ func TestLaunchCommand(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
+	primaryURLWithoutPort := app.GetPrimaryURL()
 	// This only tests the https port changes, but that might be enough
 	app.RouterHTTPSPort = "8443"
 	err = app.WriteConfig()
@@ -347,6 +348,7 @@ func TestLaunchCommand(t *testing.T) {
 		"nested/path":                      app.GetPrimaryURL() + "/nested/path",
 		"/path-with-slash":                 app.GetPrimaryURL() + "/path-with-slash",
 		app.GetPrimaryURL() + "/full-path": app.GetPrimaryURL() + "/full-path",
+		":3000":                            primaryURLWithoutPort + ":3000",
 		"http://example.com":               "http://example.com",
 		"https://example.com:443/test":     "https://example.com:443/test",
 	}

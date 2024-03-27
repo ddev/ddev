@@ -780,7 +780,7 @@ ddev launch temp/phpinfo.php
 ddev launch https://your.ddev.site
 
 # Open your project’s base URL using a specific port
-ddev launch $DDEV_PRIMARY_URL:3000
+ddev launch :3000
 ```
 
 ## `list`
