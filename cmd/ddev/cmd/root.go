@@ -123,14 +123,17 @@ func Execute() {
 }
 
 func init() {
-
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
-
-	output.LogSetUp()
+	// This copy of the "project" flag is only for help and completion. The functional flag is added and parsed in `a.go`
+	RootCmd.PersistentFlags().String("project", "", "The name of a project to run the command against. Include this flag before the command name. The command will run as though your working directory was inside that project.")
+	err := RootCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
+	if err != nil {
+		output.UserOut.Warn("Couldn't register completion function for --project flag")
+	}
 
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
-	_, err := dockerutil.GetDockerVersion()
+	_, err = dockerutil.GetDockerVersion()
 	// ddev --version may be called without Docker available.
 	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
 		util.Failed("Could not connect to a Docker provider. Please start or install a Docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/stable/users/install/docker-installation/")
