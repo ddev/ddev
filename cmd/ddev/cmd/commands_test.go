@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	osexec "os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -53,8 +54,8 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 		_ = os.RemoveAll(tmpHome)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 	})
+	// We must start the app before copying commands, so they don't get copied over
 	err = app.Start()
 	require.NoError(t, err)
 
@@ -67,8 +68,6 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	projectCommandsDir := app.GetConfigPath("commands")
-	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
-	_ = os.RemoveAll(projectGlobalCommandsCopy)
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
 
@@ -122,8 +121,6 @@ func TestCustomCommands(t *testing.T) {
 
 	err = os.RemoveAll(projectCommandsDir)
 	assert.NoError(err)
-	err = os.RemoveAll(projectGlobalCommandsCopy)
-	assert.NoError(err)
 
 	// Now copy a project commands and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
@@ -156,7 +153,7 @@ func TestCustomCommands(t *testing.T) {
 			homeEnv := os.Getenv("HOME")
 			t.Errorf("userHome=%s, globalDdevDir=%s, homeEnv=%s", userHome, globalDdevDir, homeEnv)
 			t.Errorf("Failed to run ddev %s: %v, home=%s output=%s", c, err, userHome, out)
-			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "comamnds")
+			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "commands")
 			assert.NoError(err)
 			t.Errorf("Commands dir: %s", out)
 		}
@@ -287,10 +284,14 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Make sure that the non-command stuff we installed has been copied into projectGlobalCommandsCopy
-	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "host/heidisql", "host/mysqlworkbench.example", "host/phpstorm.example", "host/README.txt", "host/sequelace", "host/sequelpro", "host/tableplus", "host/dbeaver", "host/querious", "web/README.txt"} {
-		assert.FileExists(filepath.Join(projectGlobalCommandsCopy, f))
+	// Make sure that the non-command stuff we installed has been copied into /mnt/ddev-global-cache
+	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
+	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "web/README.txt"} {
+		filePathInVolume := path.Join(commandDirInVolume, f)
+		out, err = exec.RunHostCommand(DdevBin, "exec", "[ -f "+filePathInVolume+" ] && exit 0 || exit 1")
+		assert.NoError(err, filePathInVolume+" does not exist, output=%s", out)
 	}
+
 	// Make sure that the non-command stuff we installed is in project commands dir
 	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
@@ -305,7 +306,6 @@ func TestCustomCommands(t *testing.T) {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		assert.False(fileutil.FileExists(cmdPath), "file %s exists but it should not", cmdPath)
 	}
-
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
@@ -396,7 +396,7 @@ func TestMysqlCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	// This populates the project's
-	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	_, err = exec.RunHostCommand("ddev")
 	assert.NoError(err)
@@ -439,7 +439,7 @@ func TestPsqlCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	// This populates the project's
-	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	_, err = exec.RunHostCommand("ddev")
 	assert.NoError(err)

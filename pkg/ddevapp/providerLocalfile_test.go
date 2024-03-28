@@ -47,7 +47,7 @@ func TestLocalfilePull(t *testing.T) {
 	require.NoError(t, err)
 
 	// This not only shows us the version but also populates the project's
-	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	out, err := exec.RunHostCommand("ddev", "--version")
 	assert.NoError(err)
