@@ -4033,16 +4033,44 @@ func TestPortSpecifications(t *testing.T) {
 	require.NotEmpty(t, globalconfig.DdevProjectList[conflictApp.Name].UsedHostPorts)
 }
 
-// TestDdevGetProjects exercises GetProjects()
+// TestGetProjects exercises GetProjects()
 // It's only here for profiling at this point
-func TestDdevGetProjects(t *testing.T) {
+func TestGetProjects(t *testing.T) {
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()
 
 	apps, err := ddevapp.GetProjects(false)
 	assert.NoError(err)
 	_ = apps
+}
 
+// TestGetProjectsMissingApp exercises GetProjects() with a missing project from filesystem
+func TestGetProjectsMissingApp(t *testing.T) {
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	badApp, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = badApp.Stop(true, false)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = badApp.Start()
+	require.NoError(t, err)
+	// Make sure the new badApp is listed
+	l, err := ddevapp.GetProjects(false)
+	require.NoError(t, err)
+	m := ddevapp.AppSliceToMap(l)
+	require.NotEmptyf(t, m[badApp.Name], "app not found when it should be")
+	// Remove the badApp from the filesystem and verify
+	// that it is no longer listed
+	err = badApp.Stop(false, false)
+	require.NoError(t, err)
+	_ = os.RemoveAll(badApp.AppRoot)
+	l, err = ddevapp.GetProjects(false)
+	require.NoError(t, err)
+	m = ddevapp.AppSliceToMap(l)
+	require.Emptyf(t, m[badApp.Name], "map should no longer have badapp")
 }
 
 // TestCustomCerts makes sure that added custom certificates are respected and used
