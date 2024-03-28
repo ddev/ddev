@@ -764,6 +764,13 @@ Flags:
 
 * `--mailpit`, `-m`: Open Mailpit.
 
+!!!tip "How to disable HTTP redirect to HTTPS?"
+    Recommendations for:
+
+    * [Google Chrome](https://stackoverflow.com/q/73875589)
+    * [Mozilla Firefox](https://stackoverflow.com/q/30532471)
+    * [Safari](https://stackoverflow.com/q/46394682)
+
 Example:
 
 ```shell

@@ -72,6 +72,11 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
+if [[ "${FULLURL}" =~ ^http:// ]]; then
+  echo "HTTP may redirect to HTTPS in your browser"
+  echo "See https://ddev.readthedocs.io/en/stable/users/usage/commands/#launch"
+fi
+
 if [ ! -z ${DDEV_DEBUG:-} ]; then
     printf "FULLURL $FULLURL\n" && exit 0
 fi
