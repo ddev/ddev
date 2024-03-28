@@ -51,6 +51,8 @@ An array of [extra fully-qualified domain names](../extend/additional-hostnames.
 
 Example: `additional_fqdns: ["example.com", "sub1.example.com"]` would provide HTTP and HTTPS URLs for `example.com` and `sub1.example.com`.
 
+See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
+
 !!!warning
     Take care with `additional_fqdns`; it adds items to your `/etc/hosts` file which can cause confusion.
 
@@ -64,7 +66,9 @@ An array of [extra hostnames](../extend/additional-hostnames.md) to be used for 
 
 Example: `additional_hostnames: ["somename", "someothername", "*.thirdname"]` would provide HTTP and HTTPS URLs for `somename.ddev.site`, `someothername.ddev.site`, and `one.thirdname.ddev.site` + `two.thirdname.ddev.site`.
 
-The wildcard (`*`) setting only works if you’re using DNS to resolve hostnames (default) and connected to the internet.
+The wildcard (`*.<whatever>`) setting only works if you’re [using DNS to resolve hostnames (default)](#use_dns_when_possible) and connected to the internet and using `ddev.site` as your [`project_tld`](#project_tld).
+
+See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
 ## `bind_all_interfaces`
 
@@ -427,11 +431,13 @@ You can only specify the major version (`7.3`), not a minor version (`7.3.2`), f
 
 ## `project_tld`
 
-Default TLD to be used for a project’s domains, or globally for all project domains.
+Default Top-Level-Domain (`TLD`) to be used for a project’s domains, or globally for all project domains. This defaults to `ddev.site` and it's easiest to work with DDEV using the default setting.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project<br>:octicons-globe-16: global | `ddev.site` | Can be changed to any TLD you’d prefer.
+
+See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
 ## `required_docker_compose_version`
 

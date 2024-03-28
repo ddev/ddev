@@ -138,9 +138,7 @@ func init() {
 
 	// Populate custom/script commands so they're visible.
 	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
-	if os.Geteuid() == 0 {
-		util.Warning("Not populating custom commands or hostadditions because running with root privileges")
-	} else {
+	if os.Geteuid() != 0 {
 		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)

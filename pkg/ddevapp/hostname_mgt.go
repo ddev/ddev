@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"github.com/ddev/ddev/pkg/ddevhosts"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -87,7 +88,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 
 		// If we're able to resolve the hostname via DNS or otherwise we
 		// don't have to worry about this. This will allow resolution
-		// of *.ddev.site for example
+		// of <whatever>.ddev.site for example
 		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
 			// If they have provided "*.<name>" then look up the suffix
 			checkName := strings.TrimPrefix(name, "*.")
@@ -110,13 +111,16 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			util.Warning("Unable to open hosts file: %v", err)
 			continue
 		}
-		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
-
-		out, err := escalateToAddHostEntry(name, dockerIP)
-		if err != nil {
-			return err
+		if !govalidator.IsDNSName(name) {
+			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://ddev.readthedocs.io/en/stable/users/configuration/config/#additional_hostnames", name)
+		} else {
+			util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
+			out, err := escalateToAddHostEntry(name, dockerIP)
+			if err != nil {
+				return err
+			}
+			util.Success(out)
 		}
-		util.Success(out)
 	}
 
 	return nil
@@ -248,7 +252,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		c = []string{"sudo.exe"}
 	}
 	c = append(c, args...)
-	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nYou may be required to enter your password for sudo or allow escalation. DDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))
+	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nThis is normally to add unresolvable hostnames to the hosts file.\nYou may be required to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
 	return out, err
