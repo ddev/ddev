@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"github.com/ddev/ddev/pkg/ddevhosts"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -110,8 +111,8 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			util.Warning("Unable to open hosts file: %v", err)
 			continue
 		}
-		if strings.Contains(name, `*`) {
-			util.Warning("DDEV cannot add unresolvable wildcard hostnames like `%s` to your hosts file", name)
+		if !govalidator.IsDNSName(name) {
+			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://ddev.readthedocs.io/en/stable/users/configuration/config/#additional_hostnames.", name)
 		} else {
 			util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
 			out, err := escalateToAddHostEntry(name, dockerIP)
