@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -33,6 +32,8 @@ var (
 	DdevGlobalConfig GlobalConfig
 	// DdevProjectList is the list of all existing DDEV projects
 	DdevProjectList map[string]*ProjectInfo
+	// Old versions of DDEV stored the project list in the global config.
+	ddevLegacyGlobalConfig LegacyGlobalConfig
 )
 
 type ProjectInfo struct {
@@ -75,7 +76,14 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
 	WebEnvironment                   []string                    `yaml:"web_environment"`
 	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
-	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`
+}
+
+// Old versions of DDEV stored the project list in the global config.
+// For ease of upgrade, we need to be able to extract that data and move it to
+// the new project_list.yaml
+// In a future release, remove this.
+type LegacyGlobalConfig struct {
+	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // New() returns a default GlobalConfig
@@ -93,7 +101,6 @@ func New() GlobalConfig {
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
 		Router:                       types.RouterTypeDefault,
 		MkcertCARoot:                 readCAROOT(),
-		ProjectList:                  make(map[string]*ProjectInfo),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
 	}
@@ -105,6 +112,9 @@ func New() GlobalConfig {
 func EnsureGlobalConfig() {
 	DdevGlobalConfig = New()
 	DdevProjectList = make(map[string]*ProjectInfo)
+	ddevLegacyGlobalConfig = LegacyGlobalConfig{
+		ProjectList: nil,
+	}
 	err := ReadGlobalConfig()
 	if err != nil {
 		output.UserErr.Fatalf("unable to read global config: %v", err)
@@ -234,6 +244,12 @@ func ReadGlobalConfig() error {
 
 	// ReadConfig config values from file.
 	err = yaml.Unmarshal(source, &DdevGlobalConfig)
+	if err != nil {
+		return err
+	}
+
+	// Get the legacy project list if there is one
+	err = yaml.Unmarshal(source, &ddevLegacyGlobalConfig)
 	if err != nil {
 		return err
 	}
@@ -475,14 +491,20 @@ func ReadProjectList() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			// write an empty file
-			err := os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
-			if err != nil {
+			// If someone upgrades from an earlier version, the global config may hold the project list.
+			if ddevLegacyGlobalConfig.ProjectList != nil && len(ddevLegacyGlobalConfig.ProjectList) > 0 {
+				DdevProjectList = ddevLegacyGlobalConfig.ProjectList
+				err := WriteProjectList(DdevProjectList)
+				// Whether there's an error or nil here we want to return
 				return err
 			}
-		} else {
-			return err
+
+			// Write an empty file - we have no known projects
+			err = os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
 		}
+
+		// Whether there's an error or nil here we want to return
+		return err
 	}
 
 	source, err := os.ReadFile(globalProjectsFile)
@@ -496,32 +518,11 @@ func ReadProjectList() error {
 		return err
 	}
 
-	// For backwards compatability we're keeping the project_list in global config
-	// in sync with the list in project_list.yaml. If someone upgrades from an earlier
-	// version the global config will have correct content that isn't in projects.yaml.
-	// For now, treat global config as the source of truth when the two lists differ.
-	if !reflect.DeepEqual(DdevGlobalConfig.ProjectList, DdevProjectList) {
-		DdevProjectList = DdevGlobalConfig.ProjectList
-		err := WriteProjectList(DdevProjectList)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
 // WriteProjectList writes the global projects list into ~/.ddev.
 func WriteProjectList(projects map[string]*ProjectInfo) error {
-	// Write to global config for backwards compatability.
-	// This allows devs to downgrade to an earlier version without
-	// worrying about copying project info into their global config file.
-	DdevGlobalConfig.ProjectList = projects
-	err := WriteGlobalConfig(DdevGlobalConfig)
-	if err != nil {
-		return err
-	}
-
 	// Prepare projects file content
 	projectsBytes, err := yaml.Marshal(projects)
 	if err != nil {

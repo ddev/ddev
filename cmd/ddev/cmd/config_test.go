@@ -514,6 +514,8 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	// add a database into the config and nothing else
 	for _, dbTypeVersion := range versionsToTest {
 		_ = app.Stop(true, false)
+		_, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		assert.NoError(err)
 		parts := strings.Split(dbTypeVersion, ":")
 		err = os.RemoveAll(filepath.Join(testDir, ".ddev"))
 		assert.NoError(err)
