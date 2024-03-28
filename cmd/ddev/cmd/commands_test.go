@@ -292,8 +292,6 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, filePathInVolume+" does not exist, output=%s", out)
 	}
 
-	}
-
 	// Make sure that the non-command stuff we installed is in project commands dir
 	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
