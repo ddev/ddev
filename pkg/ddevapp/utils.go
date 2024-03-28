@@ -363,7 +363,15 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 		app, err := NewApp(info.AppRoot, true)
 		if err != nil {
-			util.Warning("Unable to create project at project root '%s': %v", info.AppRoot, err)
+			if os.IsNotExist(err) {
+				util.Warning("The project '%s' no longer exists in the filesystem, removing it from registry", info.AppRoot)
+				err = globalconfig.RemoveProjectInfo(name)
+				if err != nil {
+					util.Warning("unable to RemoveProjectInfo(%s): %v", name, err)
+				}
+			} else {
+				util.Warning("Something went wrong with %s: %v", info.AppRoot, err)
+			}
 			continue
 		}
 
@@ -512,4 +520,13 @@ func (app *DdevApp) CanUseHTTPOnly() bool {
 	}
 	// Default case is OK to use https
 	return false
+}
+
+// Turn a slice of *DdevApp into a map keyed by name
+func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
+	nameMap := make(map[string]*DdevApp)
+	for _, app := range appList {
+		nameMap[app.Name] = app
+	}
+	return nameMap
 }
