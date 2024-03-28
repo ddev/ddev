@@ -55,13 +55,20 @@ while :; do
 if [ -n "${1:-}" ]; then
   if [[ $1 =~ ^https?:// ]]; then
     # full url
-    FULLURL="${1}";
+    FULLURL="${1}"
   elif [[ $1 =~ ^: ]]; then
     # specific port
-    FULLURL="${FULLURL%:[0-9]*}${1}";
+    FULLURL="${FULLURL%:[0-9]*}${1}"
+    # check if the port is running on https or http
+    port=$(docker run -i --rm ddev/ddev-utilities sh -c "echo '${1}' | grep -o ':[0-9]\+' | awk -F':' '{print \$2}'" 2>/dev/null)
+    if [[ "${port}" != "" ]] && ddev status -j | docker run -i --rm ddev/ddev-utilities sh -c "jq -r '.raw' | grep -w ${port} | grep -q https" 2>/dev/null; then
+      FULLURL="${FULLURL/http:/https:}"
+    elif [[ "${port}" != "" ]] && ddev status -j | docker run -i --rm ddev/ddev-utilities sh -c "jq -r '.raw' | grep -w ${port} | grep -q http" 2>/dev/null; then
+      FULLURL="${FULLURL/https:/http:}"
+    fi
   else
     # relative path
-    FULLURL="${FULLURL%/}/${1#/}";
+    FULLURL="${FULLURL%/}/${1#/}"
   fi
 fi
 
