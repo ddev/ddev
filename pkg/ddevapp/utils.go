@@ -363,7 +363,15 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 		app, err := NewApp(info.AppRoot, true)
 		if err != nil {
-			util.Warning("Unable to create project at project root '%s': %v", info.AppRoot, err)
+			if os.IsNotExist(err) {
+				util.Warning("The project '%s' no longer exists in the filesystem, removing it from registry", info.AppRoot)
+				err = globalconfig.RemoveProjectInfo(name)
+				if err != nil {
+					util.Warning("unable to RemoveProjectInfo(%s): %v", name, err)
+				}
+			} else {
+				util.Warning("Something went wrong with %s: %v", info.AppRoot, err)
+			}
 			continue
 		}
 
