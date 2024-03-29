@@ -2,7 +2,6 @@ package util
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -356,7 +355,7 @@ func SliceToUniqueSlice(inSlice *[]string) []string {
 // FilesToReadableOutput generates a printable list of files in a readable way
 func FilesToReadableOutput(slice []string) (response string, err error) {
 	if len(slice) == 0 {
-		return "", errors.New("empty slice")
+		return "", fmt.Errorf("empty slice")
 	}
 	return "[\n\t" + strings.Join(slice, ", \n\t") + "\n]", nil
 }
