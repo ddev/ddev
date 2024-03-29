@@ -366,3 +366,13 @@ furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
   secret_name: "FURY_TOKEN"
   skip: '{{ ne .Prerelease "" }}'
+
+
+dockerhubs:
+  -
+    username: "{{ .Env.DOCKERHUB_USERNAME }}"
+    secret_name: "{{ .Env.DOCKERHUB_TOKEN }}"
+    description: DDEV's ddev-webserver image
+    full_description:
+      from_file:
+        path: ./containers/ddev-webserver/README.md

@@ -231,6 +231,8 @@ jobs:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
           AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts

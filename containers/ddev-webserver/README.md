@@ -1,7 +1,7 @@
 # Docker ddev-webserver
 
 ## Overview
-Docker container image for DDEV's ddev-webserver container.
+DDEV's ddev-webserver image.
 
 This container image is part of DDEV, and is not typically used stand-alone.
 
