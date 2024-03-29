@@ -903,9 +903,9 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
-	if (dockerutil.IsColima() || dockerutil.IsLima()) && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
-		t.Skip("Skipping on Lima/Colima because this test doesn't work although manual testing works")
-	}
+	//if (dockerutil.IsColima() || dockerutil.IsLima()) && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
+	//	t.Skip("Skipping on Lima/Colima because this test doesn't work although manual testing works")
+	//}
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
@@ -3707,7 +3707,7 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific performance_mode: nfs and etc
 func TestNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() {
+	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsOrbstack() {
 		t.Skip("Skipping on WSL2/Lima/Colima")
 	}
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
