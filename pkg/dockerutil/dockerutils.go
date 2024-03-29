@@ -1253,6 +1253,11 @@ func GetNFSServerAddr() (string, error) {
 	nfsAddr := "host.docker.internal"
 
 	switch {
+	case IsColima():
+		// Lima specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		nfsAddr = "192.168.5.2"
+
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	// However, NFS will never be used on Gitpod.
 	case nodeps.IsGitpod():
