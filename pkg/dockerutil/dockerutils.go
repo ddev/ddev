@@ -1592,7 +1592,7 @@ func IsOrbstack() bool {
 	ctx, client := GetDockerClient()
 	info, err := client.Info(ctx)
 	if err != nil {
-		util.Warning("IsLima(): Unable to get Docker info, err=%v", err)
+		util.Warning("IsOrbstack(): Unable to get Docker info, err=%v", err)
 		return false
 	}
 	if strings.HasPrefix(info.Name, "orbstack") {
