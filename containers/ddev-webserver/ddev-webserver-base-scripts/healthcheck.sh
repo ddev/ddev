@@ -20,6 +20,14 @@ if [ -f /tmp/healthy ]; then
     sleep ${sleeptime}
 fi
 
+# Shutdown the supervisor if one of the critical processes is in the FATAL state
+for service in php-fpm nginx apache2 gunicorn; do
+  if supervisorctl status "${service}" 2>/dev/null | grep -q FATAL; then
+    printf "%s:FATAL " "${service}"
+    supervisorctl shutdown
+  fi
+done
+
 phpstatus="false"
 htmlaccess="false"
 gunicornstatus="false"
@@ -29,12 +37,12 @@ if ls /var/www/html >/dev/null; then
     htmlaccess="true"
     printf "/var/www/html:OK "
 else
-    printf "/var/www/html:FAILED"
+    printf "/var/www/html:FAILED "
 fi
 
 if curl --fail -s 127.0.0.1:8025 >/dev/null; then
     mailpit="true"
-    printf "mailpit:OK " ;
+    printf "mailpit:OK "
 else
     printf "mailpit:FAILED "
 fi
@@ -46,7 +54,7 @@ if [ "${DDEV_WEBSERVER_TYPE#*-}" = "gunicorn" ]; then
   phpstatus="true"
   if pkill -0 gunicorn; then
     gunicornstatus="true"
-    printf "gunicorn:OK"
+    printf "gunicorn:OK "
   else
     printf "gunicorn:FAILED "
   fi
@@ -70,5 +78,3 @@ fi
 rm -f /tmp/healthy
 
 exit 1
-
-
