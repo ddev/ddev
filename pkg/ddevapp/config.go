@@ -614,7 +614,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
 		util.CheckErr(err)
 		if len(nginxFiles) > 0 {
-			util.Warning("Using nginx snippets: %v", nginxFiles)
+			printableFiles, _ := util.FilesToReadableOutput(nginxFiles)
+			util.Warning("Using nginx snippets: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -624,7 +625,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
-			util.Warning("Using custom MySQL configuration: %v", mysqlFiles)
+			printableFiles, _ := util.FilesToReadableOutput(mysqlFiles)
+			util.Warning("Using custom MySQL configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -634,7 +636,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		phpFiles, err := filepath.Glob(phpPath + "/*.ini")
 		util.CheckErr(err)
 		if len(phpFiles) > 0 {
-			util.Warning("Using custom PHP configuration: %v", phpFiles)
+			printableFiles, _ := util.FilesToReadableOutput(phpFiles)
+			util.Warning("Using custom PHP configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -644,7 +647,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		entrypointFiles, err := filepath.Glob(webEntrypointPath + "/*.sh")
 		util.CheckErr(err)
 		if len(entrypointFiles) > 0 {
-			util.Warning("Using custom web-entrypoint.d configuration: %v", entrypointFiles)
+			printableFiles, _ := util.FilesToReadableOutput(entrypointFiles)
+			util.Warning("Using custom web-entrypoint.d configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
