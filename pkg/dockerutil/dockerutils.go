@@ -1587,6 +1587,20 @@ func IsLima() bool {
 	return false
 }
 
+// IsOrbstack detects if running on Orbstack
+func IsOrbstack() bool {
+	ctx, client := GetDockerClient()
+	info, err := client.Info(ctx)
+	if err != nil {
+		util.Warning("IsLima(): Unable to get Docker info, err=%v", err)
+		return false
+	}
+	if strings.HasPrefix(info.Name, "orbstack") {
+		return true
+	}
+	return false
+}
+
 // CopyIntoContainer copies a path (file or directory) into a specified container and location
 func CopyIntoContainer(srcPath string, containerName string, dstPath string, exclusion string) error {
 	startTime := time.Now()

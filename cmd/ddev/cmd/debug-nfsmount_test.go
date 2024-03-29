@@ -16,7 +16,7 @@ import (
 // TestDebugNFSMount tries out the `ddev debug nfsmount` command.
 // It requires nfsd running of course.
 func TestDebugNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() {
+	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsOrbstack() {
 		t.Skip("Skipping on WSL2/Lima/Colima since NFS is not used there")
 	}
 	assert := asrt.New(t)
