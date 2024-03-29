@@ -368,7 +368,7 @@ furies:
   skip: '{{ ne .Prerelease "" }}'
 
 
-dockerhub:
+dockerhubs:
   - images:
       - ddevhq/ddev-webserver
     username: "{{ .Env.DOCKERHUB_USERNAME }}"
