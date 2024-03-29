@@ -179,3 +179,22 @@ func TestSliceToUniqueSlice(t *testing.T) {
 		assert.Equal(testBedExpectations[i], res)
 	}
 }
+
+// TestFilesToReadableOutput tests FilesToReadableOutput
+func TestFilesToReadableOutput(t *testing.T) {
+	assert := asrt.New(t)
+
+	testSource := []string{
+		"file1.conf",
+		"file2.conf",
+	}
+	expectation := `[
+	file1.conf,
+	file2.conf
+]`
+	res, _ := util.FilesToReadableOutput(testSource)
+	assert.Equal(expectation, res)
+
+	_, err := util.FilesToReadableOutput([]string{})
+	assert.EqualErrorf(err, "empty slice", "Expected error when passing an empty slice")
+}

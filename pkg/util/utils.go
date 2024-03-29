@@ -357,5 +357,5 @@ func FilesToReadableOutput(slice []string) (response string, err error) {
 	if len(slice) == 0 {
 		return "", fmt.Errorf("empty slice")
 	}
-	return "[\n\t" + strings.Join(slice, ", \n\t") + "\n]", nil
+	return "[\n\t" + strings.Join(slice, ",\n\t") + "\n]", nil
 }
