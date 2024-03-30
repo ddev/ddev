@@ -371,7 +371,7 @@ furies:
 dockerhub:
   - images:
       - ddevhq/ddev-webserver
-    username: "{{ .Env.DOCKERHUB_USERNAME }}"
+    username: "ddevmachinepush"
     secret_name: DOCKERHUB_TOKEN
     description: DDEV's ddev-webserver image
     full_description:
