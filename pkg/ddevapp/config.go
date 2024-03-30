@@ -325,6 +325,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 
 // ReadConfig reads project configuration from the config.yaml file
 // It does not attempt to set default values; that's NewApp's job.
+// returns the list of config files read
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 	// Load base .ddev/config.yaml - original config

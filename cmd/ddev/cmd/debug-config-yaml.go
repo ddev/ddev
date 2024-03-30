@@ -31,6 +31,12 @@ var DebugConfigYamlCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to get active project: %v", err)
 		}
+		// Get fresh version of app so we don't recreate it
+		app, err = ddevapp.NewApp(app.AppRoot, false)
+		if err != nil {
+			util.Failed("NewApp() failed: %v", err)
+		}
+
 		configFiles, err := app.ReadConfig(true)
 		if err != nil {
 			util.Error("failed reading config for project %s: %v", app.Name, err)
