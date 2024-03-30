@@ -9,6 +9,12 @@ on:
   release:
     types: [ created ]
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
 
 env:
   BUILDKIT_PROGRESS: plain
@@ -168,13 +174,11 @@ jobs:
       CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
     steps:
-      # The upload-artifacts section often fails. This may give us a recovery technique
       - name: Setup tmate session
-        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 45
         with:
           limit-access-to-actor: true
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - uses: actions/checkout@v4
         with:
