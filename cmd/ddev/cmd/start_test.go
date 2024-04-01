@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"github.com/stretchr/testify/require"
-	"path/filepath"
-	"runtime"
 	"testing"
 
 	"os"
@@ -11,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -64,49 +61,4 @@ func TestCmdStart(t *testing.T) {
 		assert.Equal(ddevapp.SiteRunning, status, "All sites should be running, but project=%s status=%s statusDesc=%s", app.GetName(), status, statusDesc)
 		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
-}
-
-// TestCmdStartMissingProjectDirectory ensures the `ddev start` command returns the expected help text when
-// a project's directory no longer exists.
-func TestCmdStartMissingProjectDirectory(t *testing.T) {
-	var err error
-	var out string
-
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping because unreliable on Windows")
-	}
-
-	assert := asrt.New(t)
-
-	projDir, _ := os.Getwd()
-
-	projectName := util.RandString(6)
-
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
-
-	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
-	assert.NoError(err)
-
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
-
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
-	assert.NoError(err)
-
-	_, err = exec.RunCommand(DdevBin, []string{"stop"})
-	assert.NoError(err)
-
-	err = os.Chdir(projDir)
-	assert.NoError(err)
-
-	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
-	err = os.Rename(tmpDir, copyDir)
-	assert.NoError(err)
-
-	out, err = exec.RunCommand(DdevBin, []string{"start", "-y", projectName})
-
-	assert.Error(err, "Expected an error when starting project with no project directory")
-	assert.Contains(out, "ddev can no longer find your project files")
 }

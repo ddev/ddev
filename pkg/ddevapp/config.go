@@ -76,8 +76,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
 	}
 
-	if !fileutil.FileExists(app.AppRoot) {
-		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
+	if _, err := os.Stat(app.AppRoot); err != nil {
+		return app, err
 	}
 
 	app.ConfigPath = app.GetConfigPath("config.yaml")

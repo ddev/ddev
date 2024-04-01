@@ -2869,51 +2869,6 @@ func TestDdevLogs(t *testing.T) {
 	switchDir()
 }
 
-// TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or DDEV configs.
-func TestDdevStopMissingDirectory(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping because unreliable on Windows")
-	}
-
-	assert := asrt.New(t)
-
-	site := TestSites[0]
-	testcommon.ClearDockerEnv()
-	app := &ddevapp.DdevApp{}
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-
-	startErr := app.StartAndWait(0)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	if startErr != nil {
-		logs, health, err := ddevapp.GetErrLogsFromApp(app, startErr)
-		assert.NoError(err)
-		t.Fatalf("app.StartAndWait failed err=%v health=\n%s\n\nlogs from broken container: \n=======\n%s\n========\n", startErr, health, logs)
-	}
-
-	tempPath := testcommon.CreateTmpDir("site-copy")
-	siteCopyDest := filepath.Join(tempPath, "site")
-	defer removeAllErrCheck(tempPath, assert)
-
-	_ = app.Stop(false, false)
-
-	// Move the site directory to a temp location to mimic a missing directory.
-	err = os.Rename(site.Dir, siteCopyDest)
-	assert.NoError(err)
-
-	//nolint: errcheck
-	defer os.Rename(siteCopyDest, site.Dir)
-
-	// ddev stop (in cmd) actually does the check for missing project files,
-	// so we imitate that here.
-	err = ddevapp.CheckForMissingProjectFiles(app)
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "If you would like to continue using DDEV to manage this project please restore your files to that directory.")
-	}
-}
-
 // TestDdevDescribe tests that the describe command works properly on a running
 // and also a stopped project.
 func TestDdevDescribe(t *testing.T) {
@@ -2968,44 +2923,6 @@ func TestDdevDescribe(t *testing.T) {
 	err = os.Remove("hello-pre-describe-" + app.Name)
 	assert.NoError(err)
 	err = os.Remove("hello-post-describe-" + app.Name)
-	assert.NoError(err)
-}
-
-// TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or DDEV configs.
-func TestDdevDescribeMissingDirectory(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping because unreliable on Windows")
-	}
-
-	assert := asrt.New(t)
-	site := TestSites[0]
-	tempPath := testcommon.CreateTmpDir("site-copy")
-	siteCopyDest := filepath.Join(tempPath, "site")
-	defer removeAllErrCheck(tempPath, assert)
-
-	app := &ddevapp.DdevApp{}
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-	startErr := app.StartAndWait(0)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	if startErr != nil {
-		logs, health, err := ddevapp.GetErrLogsFromApp(app, startErr)
-		assert.NoError(err)
-		t.Fatalf("app.StartAndWait failed err=%v health:\n%s\nlogs from broken container: \n=======\n%s\n========\n", startErr, health, logs)
-	}
-	// Move the site directory to a temp location to mimic a missing directory.
-	err = app.Stop(false, false)
-	assert.NoError(err)
-	err = os.Rename(site.Dir, siteCopyDest)
-	assert.NoError(err)
-
-	desc, err := app.Describe(false)
-	assert.NoError(err)
-	assert.Equal(ddevapp.SiteDirMissing, desc["status"])
-	assert.Contains(desc["status_desc"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
-	// Move the site directory back to its original location.
-	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
 }
 
@@ -4033,16 +3950,44 @@ func TestPortSpecifications(t *testing.T) {
 	require.NotEmpty(t, globalconfig.DdevProjectList[conflictApp.Name].UsedHostPorts)
 }
 
-// TestDdevGetProjects exercises GetProjects()
+// TestGetProjects exercises GetProjects()
 // It's only here for profiling at this point
-func TestDdevGetProjects(t *testing.T) {
+func TestGetProjects(t *testing.T) {
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()
 
 	apps, err := ddevapp.GetProjects(false)
 	assert.NoError(err)
 	_ = apps
+}
 
+// TestGetProjectsMissingApp exercises GetProjects() with a missing project from filesystem
+func TestGetProjectsMissingApp(t *testing.T) {
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	badApp, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = badApp.Stop(true, false)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = badApp.Start()
+	require.NoError(t, err)
+	// Make sure the new badApp is listed
+	l, err := ddevapp.GetProjects(false)
+	require.NoError(t, err)
+	m := ddevapp.AppSliceToMap(l)
+	require.NotEmptyf(t, m[badApp.Name], "app not found when it should be")
+	// Remove the badApp from the filesystem and verify
+	// that it is no longer listed
+	err = badApp.Stop(false, false)
+	require.NoError(t, err)
+	_ = os.RemoveAll(badApp.AppRoot)
+	l, err = ddevapp.GetProjects(false)
+	require.NoError(t, err)
+	m = ddevapp.AppSliceToMap(l)
+	require.Emptyf(t, m[badApp.Name], "map should no longer have badapp")
 }
 
 // TestCustomCerts makes sure that added custom certificates are respected and used
