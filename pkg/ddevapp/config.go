@@ -76,8 +76,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
 	}
 
-	if !fileutil.FileExists(app.AppRoot) {
-		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
+	if _, err := os.Stat(app.AppRoot); err != nil {
+		return app, err
 	}
 
 	app.ConfigPath = app.GetConfigPath("config.yaml")
@@ -481,7 +481,7 @@ func (app *DdevApp) ValidateConfig() error {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
 		if hn == nodeps.DdevDefaultTLD {
-			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
+			return fmt.Errorf("wildcarding the full hostname\nor using 'ddev.site' as FQDN for the project %s is not allowed\nbecause other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("the %s project has an invalid hostname: '%s', see https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)

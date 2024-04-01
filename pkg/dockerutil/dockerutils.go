@@ -1206,6 +1206,12 @@ func GetHostDockerInternalIP() (string, error) {
 		hostDockerInternal = "127.0.0.1"
 		util.Debug("host.docker.internal=%s because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationContainer)
 
+	case IsColima():
+		// Lima specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		hostDockerInternal = "192.168.5.2"
+		util.Debug("host.docker.internal=%s because running on Colima", hostDockerInternal)
+
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
 		util.Debug("host.docker.internal='%s' because on Gitpod", hostDockerInternal)
@@ -1253,6 +1259,11 @@ func GetNFSServerAddr() (string, error) {
 	nfsAddr := "host.docker.internal"
 
 	switch {
+	case IsColima():
+		// Lima specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		nfsAddr = "192.168.5.2"
+
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	// However, NFS will never be used on Gitpod.
 	case nodeps.IsGitpod():
@@ -1582,6 +1593,20 @@ func IsLima() bool {
 		return false
 	}
 	if strings.HasPrefix(info.Name, "lima") {
+		return true
+	}
+	return false
+}
+
+// IsOrbstack detects if running on Orbstack
+func IsOrbstack() bool {
+	ctx, client := GetDockerClient()
+	info, err := client.Info(ctx)
+	if err != nil {
+		util.Warning("IsOrbstack(): Unable to get Docker info, err=%v", err)
+		return false
+	}
+	if strings.HasPrefix(info.Name, "orbstack") {
 		return true
 	}
 	return false

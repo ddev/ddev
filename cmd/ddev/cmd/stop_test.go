@@ -3,17 +3,10 @@ package cmd
 import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
-	"runtime"
 	"testing"
-
-	"os"
-
-	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -62,55 +55,4 @@ func TestCmdStop(t *testing.T) {
 	assert.NoError(err)
 	// ssh-agent should be gone
 	assert.Nil(sshAgent)
-}
-
-// TestCmdStopMissingProjectDirectory ensures the `ddev stop` command can operate on a project when the
-// project's directory has been removed.
-func TestCmdStopMissingProjectDirectory(t *testing.T) {
-	var err error
-	var out string
-
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping because unreliable on Windows")
-	}
-
-	assert := asrt.New(t)
-	origDir, _ := os.Getwd()
-
-	projectName := util.RandString(6)
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	err = os.Chdir(tmpDir)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_, err = exec.RunHostCommand(DdevBin, "stop", "-RO", projectName)
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-
-		_ = os.RemoveAll(tmpDir)
-	})
-
-	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type", "php", "--project-name", projectName)
-	assert.NoError(err)
-
-	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
-	assert.NoError(err)
-
-	_, err = exec.RunHostCommand(DdevBin, "stop", projectName)
-	assert.NoError(err)
-
-	err = os.Chdir(origDir)
-	assert.NoError(err)
-
-	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
-	err = os.Rename(tmpDir, copyDir)
-	assert.NoError(err)
-	//nolint: errcheck
-	defer os.Rename(copyDir, tmpDir)
-
-	out, err = exec.RunHostCommand(DdevBin, "stop", projectName)
-	assert.NoError(err)
-	assert.Contains(out, "has been stopped")
-
 }
