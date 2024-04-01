@@ -180,8 +180,8 @@ func TestSliceToUniqueSlice(t *testing.T) {
 	}
 }
 
-// TestFilesToReadableOutput tests FilesToReadableOutput
-func TestFilesToReadableOutput(t *testing.T) {
+// TestArrayToReadableOutput tests ArrayToReadableOutput
+func TestArrayToReadableOutput(t *testing.T) {
 	assert := asrt.New(t)
 
 	testSource := []string{
@@ -189,12 +189,12 @@ func TestFilesToReadableOutput(t *testing.T) {
 		"file2.conf",
 	}
 	expectation := `[
-	file1.conf,
+	file1.conf
 	file2.conf
 ]`
-	res, _ := util.FilesToReadableOutput(testSource)
+	res, _ := util.ArrayToReadableOutput(testSource)
 	assert.Equal(expectation, res)
 
-	_, err := util.FilesToReadableOutput([]string{})
+	_, err := util.ArrayToReadableOutput([]string{})
 	assert.EqualErrorf(err, "empty slice", "Expected error when passing an empty slice")
 }
