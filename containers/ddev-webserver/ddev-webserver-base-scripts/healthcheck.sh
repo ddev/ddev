@@ -21,7 +21,7 @@ if [ -f /tmp/healthy ]; then
 fi
 
 # Shutdown the supervisor if one of the critical processes is in the FATAL state
-for service in php-fpm nginx apache2 gunicorn; do
+for service in php-fpm nginx apache2; do
   if supervisorctl status "${service}" 2>/dev/null | grep -q FATAL; then
     printf "%s:FATAL " "${service}"
     supervisorctl shutdown
