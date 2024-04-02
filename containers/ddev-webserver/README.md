@@ -1,4 +1,4 @@
-# Docker ddev-webserver
+# ddev-webserver Docker image
 
 ## Overview
 DDEV's ddev-webserver image.
