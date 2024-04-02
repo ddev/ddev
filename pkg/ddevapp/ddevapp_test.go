@@ -3972,6 +3972,15 @@ func TestGetProjectsMissingApp(t *testing.T) {
 		_ = os.RemoveAll(tmpDir)
 	})
 
+	err = badApp.WriteConfig()
+	require.NoError(t, err)
+	// This would normally have been done early in root.go's init()
+	// but we can do it early here. sshfs is pretty slow
+	// so colima with sshfs or rancher desktop with sshfs might fail
+	// on /mnt/ddev_config
+	err = ddevapp.PopulateExamplesCommandsHomeadditions(badApp.Name)
+	require.NoError(t, err)
+
 	err = badApp.Start()
 	require.NoError(t, err)
 	// Make sure the new badApp is listed
