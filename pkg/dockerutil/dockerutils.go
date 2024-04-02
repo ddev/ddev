@@ -531,22 +531,23 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 
 // getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
 func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (string, string) {
-	suggestedCommand := ""
+	suggestedCommands := []string{}
 	service := container.Labels["com.docker.compose.service"]
 	if service != "" && service != "ddev-router" && service != "ddev-ssh-agent" {
-		suggestedCommand = suggestedCommand + fmt.Sprintf("'ddev logs -s %s' and ", service)
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("ddev logs -s %s", service))
 	}
 	name := strings.TrimPrefix(container.Names[0], "/")
 	if name != "" {
-		suggestedCommand = suggestedCommand + fmt.Sprintf("'docker logs %s' and 'docker inspect --format \"{{ json .State.Health }}\" %s'", name, name)
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s", name))
 	}
 	// Should never happen, but added just in case
 	if name == "" {
 		name = "unknown"
 	}
-	if suggestedCommand == "" {
-		suggestedCommand = "'ddev logs' and 'docker logs CONTAINER' (find CONTAINER with 'docker ps') and 'docker inspect --format \"{{ json .State.Health }}\" CONTAINER'"
+	if len(suggestedCommands) == 0 {
+		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER")
 	}
+	suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
 	return name, suggestedCommand
 }
 
