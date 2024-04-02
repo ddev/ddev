@@ -12,7 +12,6 @@
       - "colima=true"
       - "colima_vz=true"
       - "architecture=arm64"
-    #branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
