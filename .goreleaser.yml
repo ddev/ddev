@@ -395,6 +395,16 @@ dockerhub:
         path: ./containers/ddev-dbserver/README.md
 
 
+  #ddev-gitpod-base
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-gitpod-base'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: Gitpod integration for DDEV
+    full_description:
+      from_file:
+        path: ./.gitpod/images/README.md
+
   #ddev-nginx-proxy-router
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-nginx-proxy-router'
