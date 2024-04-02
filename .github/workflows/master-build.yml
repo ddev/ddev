@@ -224,7 +224,7 @@ jobs:
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v5
-        if: startsWith(github.ref, 'refs/tags/v1') || github.event_name == 'workflow_dispatch'
+        if: startsWith( github.ref, 'refs/tags/v1')
         with:
           distribution: goreleaser-pro
           version: nightly
