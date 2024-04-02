@@ -1,6 +1,7 @@
 # ddev-{{ CONTAINER NAME }} docker image
 
 ## Overview
+
 Docker container image for DDEV's {{ CONTAINER NAME }} container.
 
 This container image is part of DDEV, and not typically used stand-alone.
@@ -23,23 +24,28 @@ To run the container by itself:
 ```bash
 {{ INSTRUCTIONS GO HERE }}
 example: docker run -it --rm ddev/ddev-webserver:v1.22.7 bash
-
 ```
+
 ## Source:
+
 [CONTAINER NAME](https://github.com/ddev/ddev/tree/master/containers/ddev-{{ CONTAINER NAME }})
 
 ## Maintained by:
+
 The [DDEV Docker Maintainers](https://github.com/ddev)
 
 ## Where to get help:
+
 * [DDEV Community Discord](https://discord.gg/5wjP76mBJD)
 * [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev)
 
 ## Where to file issues:
+
 https://github.com/ddev/ddev/issues
 
 ## Documentation:
-* https://ddev.readthedocs.io/en/stable/users/support/
+
+* https://ddev.readthedocs.io/
 * https://ddev.com/
 
 ## What is DDEV?

@@ -370,6 +370,16 @@ furies:
 
 dockerhub:
   - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-php-base'
+      - '{{ .Env.DOCKER_ORG }}/ddev-php-prod'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-php-base image, base image for ddev-webserver
+    full_description:
+      from_file:
+        path: ./containers/ddev-php-base/README.md
+
+  - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-webserver'
       - '{{ .Env.DOCKER_ORG }}/ddev-webserver-prod'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
@@ -386,3 +396,25 @@ dockerhub:
     full_description:
       from_file:
         path: ./containers/ddev-ssh-agent/README.md
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-5.5'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.0'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.1'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.2'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.3'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.4'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.5'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.6'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.7'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.8'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.11'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.5'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.6'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.7'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.0'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-dbserver image
+    full_description:
+      from_file:
+        path: ./containers/ddev-dbserver/README.md
