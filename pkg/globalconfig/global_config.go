@@ -691,12 +691,9 @@ func RemoveProjectInfo(projectName string) error {
 	_, ok := DdevProjectList[projectName]
 	if ok {
 		delete(DdevProjectList, projectName)
-		err := WriteProjectList(DdevProjectList)
-		if err != nil {
-			return err
-		}
 	}
-	return nil
+	err := WriteProjectList(DdevProjectList)
+	return err
 }
 
 // GetGlobalProjectList returns the global project list map
