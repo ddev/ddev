@@ -467,6 +467,16 @@ dockerhub:
       from_file:
         path: ./containers/ddev-traefik-router/README.md
 
+  #ddev-utilities
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-utilities'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: Utility provider for jq, base64, etc
+    full_description:
+      from_url:
+        url: https://github.com/ddev/ddev-utilities/raw/main/README.md
+
   #ddev-webserver
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-webserver'
