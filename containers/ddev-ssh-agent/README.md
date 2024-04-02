@@ -1,9 +1,60 @@
-# ddev-ssh-agent
+# ddev-ssh-agent Docker Image
 
 originally forked from <https://github.com/nardeas/docker-ssh-agent>
 at `fb6822d0003d1c0a795e183f5d257c2540fa74a4`.
 
-# Docker SSH Agent
+## Overview
+Docker container image for DDEV's ddev-ssh-agent container.
+
+This container image is part of DDEV, and not typically used stand-alone.
+
+### Features
+
+Provides an ssh-agent inside the docker network.
+
+## Instructions
+
+Use [DDEV](https://ddev.readthedocs.io)
+
+### Building and pushing to Docker Hub
+
+See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
+
+
+## Source:
+[ddev-ssh-agent](https://github.com/ddev/ddev/tree/master/containers/ddev-ssh-agent)
+
+## Maintained by:
+The [DDEV Docker Maintainers](https://github.com/ddev)
+
+## Where to get help:
+* [DDEV Community Discord](https://discord.gg/5wjP76mBJD)
+* [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev)
+
+## Where to file issues:
+https://github.com/ddev/ddev/issues
+
+## Documentation:
+* https://ddev.readthedocs.io/en/stable/users/support/
+* https://ddev.com/
+
+## What is DDEV?
+
+[DDEV](https://github.com/ddev/ddev) is an open source tool for launching local web development environments in minutes. It supports PHP, Node.js, and Python (experimental).
+
+These environments can be extended, version controlled, and shared, so you can take advantage of a Docker workflow without Docker experience or bespoke configuration. Projects can be changed, powered down, or removed as easily as they’re started.
+
+## License
+
+View [license information](https://github.com/ddev/ddev/blob/master/LICENSE) for the software contained in this image.
+
+As with all Docker images, these likely also contain other software which may be under other licenses (such as Bash, etc from the base distribution, along with any direct or indirect dependencies of the primary software being contained).
+
+As for any pre-built image usage, it is the image user's responsibility to ensure that any use of this image complies with any relevant licenses for all software contained within.
+
+
+
+# Original copy from nardeas/ssh-agent
 
 [![Pulls](https://img.shields.io/docker/pulls/nardeas/ssh-agent.svg)](https://img.shields.io/docker/pulls/nardeas/ssh-agent.svg?style=flat-square)
 [![Size](https://images.microbadger.com/badges/image/nardeas/ssh-agent.svg)](https://microbadger.com/images/nardeas/ssh-agent "Get your own image badge on microbadger.com")

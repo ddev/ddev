@@ -370,10 +370,18 @@ furies:
 
 dockerhub:
   - images:
-      - ddevhq/ddev-webserver
-    username: "ddevmachinepush"
+      - '{{ .Env.DOCKER_ORG }}/ddev-webserver'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-webserver image
     full_description:
       from_file:
         path: ./containers/ddev-webserver/README.md
+  - images:
+    - '{{ .Env.DOCKER_ORG }}/ddev-ssh-agent'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-ssh-agent image
+    full_description:
+      from_file:
+        path: ./containers/ddev-ssh-agent/README.md
