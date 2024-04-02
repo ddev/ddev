@@ -405,6 +405,16 @@ dockerhub:
       from_file:
         path: ./.gitpod/images/README.md
 
+  #ddev-mysql == mysql-arm64-images
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-mysql'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: ARM64 base images for ddev-mysql
+    full_description:
+      from_url:
+        url: https://github.com/ddev/mysql-arm64-images/raw/main/README.md
+
   #ddev-nginx-proxy-router
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-nginx-proxy-router'
