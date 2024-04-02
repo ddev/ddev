@@ -26,7 +26,7 @@ example: docker run -it --rm ddev/ddev-webserver:v1.22.7 bash
 
 ## Source:
 
-[https://github.com/ddev/ddev/tree/master/containers/ddev-{{ CONTAINER NAME }}](https://github.com/ddev/ddev/tree/master/containers/ddev-{{ CONTAINER NAME }})
+[https://github.com/ddev/ddev/tree/master/containers/ddev-test-ssh-server](https://github.com/ddev/ddev/tree/master/containers/test-ssh-server)
 
 ## Maintained by:
 

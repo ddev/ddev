@@ -1,4 +1,4 @@
-# ddev-{{ CONTAINER NAME }} docker image
+# ddev-nginx-proxy-router docker image
 
 ## Overview
 
