@@ -106,7 +106,10 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
 
 `global_config.yaml`
-: This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md) along with an important `project_info` key that lets DDEV keep track of the projects you’ve added.
+: This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md).
+
+`project_list.yaml`
+: This YAML file defines your project list that lets DDEV keep track of the projects you’ve added.
 
 `bin` directory
 : This is where DDEV stores private executable binaries it needs, like `mutagen` and `docker-compose`.

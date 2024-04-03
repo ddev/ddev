@@ -168,14 +168,6 @@
       },
       "uniqueItems": true
     },
-    "project_info": {
-      "description": "List of all projects DDEV currently knows about. DDEV manages this list when using `config` and `delete` commands.",
-      "type": "array",
-      "items": {
-        "type": "array"
-      },
-      "uniqueItems": true
-    },
     "performance_mode": {
       "description": "Defines the performance optimization mode to be used. Currently Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",

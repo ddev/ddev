@@ -2517,10 +2517,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 		app.RemoveGlobalProjectInfo()
-		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		if err != nil {
-			util.Warning("Could not WriteGlobalConfig: %v", err)
-		}
 
 		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
 		if globalconfig.DdevGlobalConfig.NoBindMounts {

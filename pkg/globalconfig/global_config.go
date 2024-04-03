@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -75,10 +74,10 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
 	WebEnvironment                   []string                    `yaml:"web_environment"`
 	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
-	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`
+	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info,omitempty"`
 }
 
-// New() returns a default GlobalConfig
+// New returns a default GlobalConfig
 func New() GlobalConfig {
 
 	cfg := GlobalConfig{
@@ -93,7 +92,6 @@ func New() GlobalConfig {
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
 		Router:                       types.RouterTypeDefault,
 		MkcertCARoot:                 readCAROOT(),
-		ProjectList:                  make(map[string]*ProjectInfo),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
 	}
@@ -475,14 +473,26 @@ func ReadProjectList() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			// write an empty file
-			err := os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
-			if err != nil {
+			// If someone upgrades from an earlier version, the global config may hold the project list.
+			if DdevGlobalConfig.ProjectList != nil && len(DdevGlobalConfig.ProjectList) > 0 {
+				DdevProjectList = DdevGlobalConfig.ProjectList
+				err := WriteProjectList(DdevProjectList)
+				if err != nil {
+					return err
+				}
+				// Clean up deprecated project list
+				DdevGlobalConfig.ProjectList = nil
+				err = WriteGlobalConfig(DdevGlobalConfig)
+				// Whether there's an error or nil here we want to return
 				return err
 			}
-		} else {
-			return err
+
+			// Write an empty file - we have no known projects
+			err = os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
 		}
+
+		// Whether there's an error or nil here we want to return
+		return err
 	}
 
 	source, err := os.ReadFile(globalProjectsFile)
@@ -496,16 +506,13 @@ func ReadProjectList() error {
 		return err
 	}
 
-	// For backwards compatability we're keeping the project_list in global config
-	// in sync with the list in project_list.yaml. If someone upgrades from an earlier
-	// version the global config will have correct content that isn't in projects.yaml.
-	// For now, treat global config as the source of truth when the two lists differ.
-	if !reflect.DeepEqual(DdevGlobalConfig.ProjectList, DdevProjectList) {
-		DdevProjectList = DdevGlobalConfig.ProjectList
-		err := WriteProjectList(DdevProjectList)
-		if err != nil {
-			return err
-		}
+	// Clean up the deprecated DdevGlobalConfig.ProjectList if it not nil,
+	// but only if the new one DdevProjectList is not nil (for safe migration).
+	if DdevGlobalConfig.ProjectList != nil && DdevProjectList != nil {
+		DdevGlobalConfig.ProjectList = nil
+		err := WriteGlobalConfig(DdevGlobalConfig)
+		// Whether there's an error or nil here we want to return
+		return err
 	}
 
 	return nil
@@ -513,15 +520,6 @@ func ReadProjectList() error {
 
 // WriteProjectList writes the global projects list into ~/.ddev.
 func WriteProjectList(projects map[string]*ProjectInfo) error {
-	// Write to global config for backwards compatability.
-	// This allows devs to downgrade to an earlier version without
-	// worrying about copying project info into their global config file.
-	DdevGlobalConfig.ProjectList = projects
-	err := WriteGlobalConfig(DdevGlobalConfig)
-	if err != nil {
-		return err
-	}
-
 	// Prepare projects file content
 	projectsBytes, err := yaml.Marshal(projects)
 	if err != nil {
@@ -693,12 +691,9 @@ func RemoveProjectInfo(projectName string) error {
 	_, ok := DdevProjectList[projectName]
 	if ok {
 		delete(DdevProjectList, projectName)
-		err := WriteProjectList(DdevProjectList)
-		if err != nil {
-			return err
-		}
 	}
-	return nil
+	err := WriteProjectList(DdevProjectList)
+	return err
 }
 
 // GetGlobalProjectList returns the global project list map
