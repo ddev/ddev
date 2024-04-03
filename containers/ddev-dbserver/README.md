@@ -24,7 +24,7 @@ See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-managem
 To run the container by itself:
 
 ```bash
-docker run -it --rm --entrypoint=bash ddev/ddev-webserver:v1.22.7 bash
+docker run -it --rm --entrypoint=bash ddev/ddev-db-server-<mariadb|mysql>-<version>:<tag>
 ```
 
 ## Source:

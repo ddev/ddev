@@ -20,7 +20,7 @@ See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-managem
 To run the container by itself:
 
 ```bash
-example: docker run -it --rm ddev/test-ssh-server:v1.22.2 bash
+docker run -it --rm ddev/test-ssh-server:<tag> bash
 ```
 
 ## Source:

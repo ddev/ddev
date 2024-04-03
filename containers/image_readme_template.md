@@ -23,7 +23,7 @@ To run the container by itself:
 
 ```bash
 {{ INSTRUCTIONS GO HERE }}
-example: docker run -it --rm ddev/ddev-webserver:v1.22.7 bash
+docker run -it --rm ddev/ddev-{{ CONTAINER NAME }}:<tag> bash
 ```
 
 ## Source:

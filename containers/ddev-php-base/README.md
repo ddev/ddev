@@ -23,7 +23,7 @@ See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-managem
 To run the container by itself:
 
 ```bash
-docker run -it --rm ddev/php-base:v1.22.7 bash
+docker run -it --rm ddev/php-base:<tag> bash
 ```
 
 ## Source:
