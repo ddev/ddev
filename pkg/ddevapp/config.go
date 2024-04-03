@@ -76,8 +76,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
 	}
 
-	if !fileutil.FileExists(app.AppRoot) {
-		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
+	if _, err := os.Stat(app.AppRoot); err != nil {
+		return app, err
 	}
 
 	app.ConfigPath = app.GetConfigPath("config.yaml")
@@ -325,6 +325,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 
 // ReadConfig reads project configuration from the config.yaml file
 // It does not attempt to set default values; that's NewApp's job.
+// returns the list of config files read
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 	// Load base .ddev/config.yaml - original config
@@ -481,7 +482,7 @@ func (app *DdevApp) ValidateConfig() error {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
 		if hn == nodeps.DdevDefaultTLD {
-			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
+			return fmt.Errorf("wildcarding the full hostname\nor using 'ddev.site' as FQDN for the project %s is not allowed\nbecause other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("the %s project has an invalid hostname: '%s', see https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)
@@ -614,7 +615,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
 		util.CheckErr(err)
 		if len(nginxFiles) > 0 {
-			util.Warning("Using nginx snippets: %v", nginxFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(nginxFiles)
+			util.Warning("Using nginx snippets: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -624,7 +626,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
-			util.Warning("Using custom MySQL configuration: %v", mysqlFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(mysqlFiles)
+			util.Warning("Using custom MySQL configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -634,7 +637,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		phpFiles, err := filepath.Glob(phpPath + "/*.ini")
 		util.CheckErr(err)
 		if len(phpFiles) > 0 {
-			util.Warning("Using custom PHP configuration: %v", phpFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(phpFiles)
+			util.Warning("Using custom PHP configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -644,7 +648,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		entrypointFiles, err := filepath.Glob(webEntrypointPath + "/*.sh")
 		util.CheckErr(err)
 		if len(entrypointFiles) > 0 {
-			util.Warning("Using custom web-entrypoint.d configuration: %v", entrypointFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(entrypointFiles)
+			util.Warning("Using custom web-entrypoint.d configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}

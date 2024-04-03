@@ -351,3 +351,11 @@ func SliceToUniqueSlice(inSlice *[]string) []string {
 	}
 	return newSlice
 }
+
+// ArrayToReadableOutput generates a printable list of files in a readable way
+func ArrayToReadableOutput(slice []string) (response string, err error) {
+	if len(slice) == 0 {
+		return "", fmt.Errorf("empty slice")
+	}
+	return "[\n\t" + strings.Join(slice, "\n\t") + "\n]", nil
+}

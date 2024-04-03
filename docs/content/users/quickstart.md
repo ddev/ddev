@@ -49,9 +49,11 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 
 ## CakePHP
 
-Use a new or existing Composer project, or clone a Git repository.
+You can start a new [CakePHP](https://cakephp.org) project or configure an existing one.
 
-The CakePHP project type can be used with any CakePHP project >= 3.x, but it has been fully tested with CakePHP 5.x. DDEV automatically creates the `.env` file with the database information, email transport configuration and a random salt. If `.env` file already exists, `.env.ddev` will be created so you can take any variable and put into your `.env` file.
+The CakePHP project type can be used with any CakePHP project >= 3.x, but it has been fully tested with CakePHP 5.x. DDEV automatically creates the `.env` file with the database information, email transport configuration and a random salt. If `.env` file already exists, `.env.ddev` will be created, so you can take any variable and put it into your `.env` file.
+
+Please note that you will need to change the PHP version to 7.4 to be able to work with CakePHP 3.x.
 
 === "Composer"
 

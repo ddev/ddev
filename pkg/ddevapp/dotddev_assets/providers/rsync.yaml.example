@@ -31,7 +31,7 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    rsync -az "${dburl}" /var/www/html/.ddev/.downloads
+    rsync -az "${dburl}" /var/www/html/.ddev/.downloads/db.sql.gz
   service: web
 
 files_pull_command:

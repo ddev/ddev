@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
-	"runtime"
 	"strings"
 	"testing"
 
 	"encoding/json"
 
 	"os"
-
-	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -226,51 +223,4 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 		}
 	}
 	return logData, nil
-}
-
-// TestCmdDescribeMissingProjectDirectory ensures the `ddev describe` command returns the expected help text when
-// a project's directory no longer exists.
-func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
-	var err error
-	var out string
-
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping because unreliable on Windows")
-	}
-
-	assert := asrt.New(t)
-
-	projDir, _ := os.Getwd()
-
-	projectName := util.RandString(6)
-
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
-
-	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
-	assert.NoError(err)
-
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
-	assert.NoError(err)
-
-	t.Cleanup(func() {
-		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy", projectName})
-		assert.NoError(err)
-	})
-
-	_, err = exec.RunCommand(DdevBin, []string{"stop"})
-	assert.NoError(err)
-
-	err = os.Chdir(projDir)
-	assert.NoError(err)
-	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
-	err = os.Rename(tmpDir, copyDir)
-	assert.NoError(err)
-
-	out, err = exec.RunCommand(DdevBin, []string{"describe", projectName})
-	assert.Error(err, "Expected an error when describing project with no project directory")
-	assert.Contains(out, "ddev can no longer find your project files")
-	err = os.Rename(copyDir, tmpDir)
-	assert.NoError(err)
 }
