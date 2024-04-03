@@ -1,18 +1,12 @@
-# ddev-nginx-proxy-router docker image
+# ddev/test-ssh-server docker image
 
 ## Overview
 
-ddev/ddev-nginx-proxy-router deprecated image was based on the [jwilder/nginx-proxy](https://github.com/jwilder/nginx-proxy) project and contains overrides to the nginx config template specific to [DDEV](https://github.com/ddev/ddev). If you are looking for a generalized Docker router solution, you'll probably want to use traefik instead.
-
-Previously this project was also named `drud/nginx-proxy`, but has been renamed to `ddev/docker.ddev-nginx-proxy-router`.
-
-In DDEV v1.20+ this router is deprecated, replaced by the new traefik router.
-
-This container image was part of DDEV, and not typically used stand-alone.
+This image is used only for automated testing and should not be used for other purposes.
 
 ### Features
 
-Nginx reverse proxy
+* openssh-server
 
 ## Instructions
 
@@ -26,12 +20,12 @@ See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-managem
 To run the container by itself:
 
 ```bash
-docker run -it --rm ddev/ddev-nginx-proxy-router:<tag> bash
+docker run -it --rm ddev/test-ssh-server:<tag> bash
 ```
 
 ## Source:
 
-[https://github.com/ddev/ddev/tree/master/containers/ddev-nginx-proxy-router](https://github.com/ddev/ddev/tree/master/containers/ddev-nginx-proxy-router)
+[https://github.com/ddev/ddev/tree/master/containers/test-ssh-server](https://github.com/ddev/ddev/tree/master/containers/test-ssh-server)
 
 ## Maintained by:
 

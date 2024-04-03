@@ -1,35 +1,30 @@
-# ddev-dbserver docker image
+# arch-aur-builder docker image
 
 ## Overview
 
-Docker container image for DDEV's ddev-dbserver container. This same code is used to build all of the MariaDB and MySQL images.
-
-This container image is part of DDEV, and not typically used stand-alone.
-
-### Features
-
-* MariaDB 5.5 though current stable
-* MySQL 5.5 through current stable
-* Backup facilities like xtrabackup and mariabackup.
+This obsolete image was once used for pushing DDEV releases to AUR. It is no longer used, as we use goreleaser now.
 
 ## Instructions
 
-Use [DDEV](https://ddev.readthedocs.io)
-
-### Building and pushing to Docker Hub
-
-See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
-
-### Running
-To run the container by itself:
+This can be pushed with
 
 ```bash
-docker run -it --rm --entrypoint=bash ddev/ddev-db-server-<mariadb|mysql>-<version>:<tag>
+cat aur-checker-Dockerfile | docker buildx build  --push --platform linux/amd64 -t "ddev/arch-aur-builder:latest" -
 ```
+`
+- Edit PKGBUILD to change the version and hash or anything else
+- Then run it with
+
+```bash
+# docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/tmp/ddev-bin ddev/arch-aur-builder bash -c "makepkg --printsrcinfo > .SRCINFO && makepkg -s"
+```
+
+- Then `git add -u` and commit and push
+
 
 ## Source:
 
-[https://github.com/ddev/ddev/tree/master/containers/ddev-dbserver](https://github.com/ddev/ddev/tree/master/containers/ddev-dbserver)
+[https://github.com/ddev/ddev/tree/master/.circleci/aur-checker-Dockerfile](https://github.com/ddev/ddev/tree/master/.circleci/aur-checker-Dockerfile)
 
 ## Maintained by:
 

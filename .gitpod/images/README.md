@@ -1,37 +1,34 @@
-# ddev-nginx-proxy-router docker image
+# ddev-gitpod-base docker image
 
 ## Overview
 
-ddev/ddev-nginx-proxy-router deprecated image was based on the [jwilder/nginx-proxy](https://github.com/jwilder/nginx-proxy) project and contains overrides to the nginx config template specific to [DDEV](https://github.com/ddev/ddev). If you are looking for a generalized Docker router solution, you'll probably want to use traefik instead.
+ddev/ddev-gitpod-base is a base image for Gitpod integration with [DDEV](https://github.com/ddev/ddev). 
 
-Previously this project was also named `drud/nginx-proxy`, but has been renamed to `ddev/docker.ddev-nginx-proxy-router`.
-
-In DDEV v1.20+ this router is deprecated, replaced by the new traefik router.
-
-This container image was part of DDEV, and not typically used stand-alone.
+Details about how it is used are in https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#gitpod
 
 ### Features
 
-Nginx reverse proxy
+All the packages you expect to find to use DDEV on gitpod.
 
 ## Instructions
 
-Use [DDEV](https://ddev.readthedocs.io)
+Use [DDEV on Gitpod](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#gitpod)
 
 ### Building and pushing to Docker Hub
 
-See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
+Use [push.sh](https://github.com/ddev/ddev/blob/master/.gitpod/images/push.sh)
 
 ### Running
+
 To run the container by itself:
 
 ```bash
-docker run -it --rm ddev/ddev-nginx-proxy-router:<tag> bash
+docker run -it --rm ddev/ddev-gitpod-base:<tag> bash
 ```
 
 ## Source:
 
-[https://github.com/ddev/ddev/tree/master/containers/ddev-nginx-proxy-router](https://github.com/ddev/ddev/tree/master/containers/ddev-nginx-proxy-router)
+[https://github.com/ddev/ddev/blob/master/.gitpod/images/Dockerfile](https://github.com/ddev/ddev/blob/master/.gitpod/images/Dockerfile)
 
 ## Maintained by:
 
