@@ -538,14 +538,14 @@ func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (strin
 	}
 	name := strings.TrimPrefix(container.Names[0], "/")
 	if name != "" {
-		suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s | docker run -i ddev/ddev-utilities jq -r", name))
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s | docker run -i --rm ddev/ddev-utilities jq -r", name))
 	}
 	// Should never happen, but added just in case
 	if name == "" {
 		name = "unknown"
 	}
 	if len(suggestedCommands) == 0 {
-		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER | docker run -i ddev/ddev-utilities jq -r")
+		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER | docker run -i --rm ddev/ddev-utilities jq -r")
 	}
 	suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
 	return name, suggestedCommand
