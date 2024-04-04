@@ -404,10 +404,10 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return logOutput, nil
 			case "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
 			case "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container exited, please use %s to find out why it failed", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
 			}
 		}
 	}
@@ -458,10 +458,10 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					continue
 				case "unhealthy":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("%s container is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
+					return fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
 				case "exited":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("%s container exited, please use %s to find out why it failed", name, suggestedCommand)
+					return fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -516,10 +516,10 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 				return logOutput, nil
 			case status == "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container is unhealthy: %s, please use %s to find out why it failed", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
 			case status == "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container exited, please use %s to find out why it failed", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
 			}
 		}
 	}
@@ -531,22 +531,23 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 
 // getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
 func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (string, string) {
-	suggestedCommand := ""
+	suggestedCommands := []string{}
 	service := container.Labels["com.docker.compose.service"]
 	if service != "" && service != "ddev-router" && service != "ddev-ssh-agent" {
-		suggestedCommand = suggestedCommand + fmt.Sprintf("'ddev logs -s %s' and ", service)
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("ddev logs -s %s", service))
 	}
 	name := strings.TrimPrefix(container.Names[0], "/")
 	if name != "" {
-		suggestedCommand = suggestedCommand + fmt.Sprintf("'docker logs %s' and 'docker inspect --format \"{{ json .State.Health }}\" %s'", name, name)
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s | docker run -i --rm ddev/ddev-utilities jq -r", name))
 	}
 	// Should never happen, but added just in case
 	if name == "" {
 		name = "unknown"
 	}
-	if suggestedCommand == "" {
-		suggestedCommand = "'ddev logs' and 'docker logs CONTAINER' (find CONTAINER with 'docker ps') and 'docker inspect --format \"{{ json .State.Health }}\" CONTAINER'"
+	if len(suggestedCommands) == 0 {
+		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER | docker run -i --rm ddev/ddev-utilities jq -r")
 	}
+	suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
 	return name, suggestedCommand
 }
 
