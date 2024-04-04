@@ -230,6 +230,7 @@ jobs:
           version: latest
           args: release --clean
         env:
+          CGO_ENABLED: 0
           DOCKER_ORG: ddev
           GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
