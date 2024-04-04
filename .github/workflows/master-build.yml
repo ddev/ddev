@@ -221,6 +221,9 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
+      - name: "Verify that cgo_enabled is 0 in Linux binary"
+        run: .gotmp/bin/linux_amd64/ddev version | grep "^cgo_enabled *0$"
+
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v5

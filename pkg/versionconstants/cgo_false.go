@@ -2,4 +2,4 @@
 
 package versionconstants
 
-const CGOEnabled = false
+const CGOEnabled = 0

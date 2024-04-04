@@ -25,7 +25,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo := make(map[string]string)
 
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
-	versionInfo["cgo_enabled"] = strconv.FormatBool(versionconstants.CGOEnabled)
+	versionInfo["cgo_enabled"] = strconv.FormatInt(versionconstants.CGOEnabled, 10)
 	versionInfo["web"] = docker.GetWebImage()
 	versionInfo["db"] = docker.GetDBImage(nodeps.MariaDB, "")
 	versionInfo["router"] = docker.GetRouterImage()
