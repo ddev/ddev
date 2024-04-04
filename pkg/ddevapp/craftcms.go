@@ -150,7 +150,6 @@ func craftCmsPostStartAction(app *DdevApp) error {
 }
 
 func craftCmsConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
 	app.Database = DatabaseDesc{nodeps.MySQL, nodeps.MySQL80}
 	return nil
 }
