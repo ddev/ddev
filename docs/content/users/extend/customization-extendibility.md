@@ -342,7 +342,7 @@ In these case you can create a `.ddev/web-build/<daemonname>.conf` with configur
 command=/var/www/html/path/to/daemon
 directory=/var/www/html/
 autorestart=true
-startretries=10
+startretries=3
 stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true
