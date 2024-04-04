@@ -152,7 +152,13 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: DDEV tests
-        run: make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
+        run: |
+          make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
+          cgo=$(.gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev version 2>/dev/null | awk '/cgo_enabled/ { print $2 }')
+          if [ "${CGO_ENABLED}" != "${cgo}" ]; then
+            echo "CGO_ENABLED=${CGO_ENABLED} but built cgo=${cgo}" && exit 5
+          fi
+          make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
       - name: Clean up Homebrew
         continue-on-error: true

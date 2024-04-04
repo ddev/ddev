@@ -221,6 +221,12 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
+      - name: "Verify that cgo_enabled is 0 in Linux binary"
+        run: |
+          .gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev version
+          cgo=$(".gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev" version 2>/dev/null | awk '/cgo_enabled/ {print $2}')
+          if [ "${cgo}" != "0" ]; then echo "CGO_ENABLED=${cgo} but it must be 0 in released binary" && exit 10; fi
+
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v5
@@ -230,6 +236,7 @@ jobs:
           version: latest
           args: release --clean
         env:
+          CGO_ENABLED: 0
           DOCKER_ORG: ddev
           GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}

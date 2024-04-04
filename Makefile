@@ -80,7 +80,7 @@ $(TARGETS): mkcert $(GOFILES)
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
+	export CGO_ENABLED=$(CGO_ENABLED) GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $(BUILDARGS) -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
