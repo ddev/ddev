@@ -155,7 +155,7 @@ jobs:
         run: |
           make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
           cgo=$(.gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev version 2>/dev/null | awk '/cgo_enabled/ { print $2 }')
-          if [ "${CGO_ENABLED}" != "${cgo} ]; then
+          if [ "${CGO_ENABLED}" != "${cgo}" ]; then
             echo "CGO_ENABLED=${CGO_ENABLED} but built cgo=${cgo}" && exit 5
           fi
           make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
