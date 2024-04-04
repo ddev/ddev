@@ -545,7 +545,7 @@ func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (strin
 		name = "unknown"
 	}
 	if len(suggestedCommands) == 0 {
-		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER")
+		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER | jq -r")
 	}
 	suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
 	return name, suggestedCommand
