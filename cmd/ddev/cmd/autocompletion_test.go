@@ -239,7 +239,6 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 		ddevapp.StopMutagenDaemon()
 		_ = os.RemoveAll(tmpHome)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 	})
 	err = app.Start()
 	require.NoError(t, err)
@@ -251,14 +250,11 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 
 	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
 	projectCommandsDir := app.GetConfigPath("commands")
-	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
 
 	// Remove existing commands
 	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
 	assert.NoError(err)
 	err = os.RemoveAll(projectCommandsDir)
-	assert.NoError(err)
-	err = os.RemoveAll(projectGlobalCommandsCopy)
 	assert.NoError(err)
 	// Copy project and global commands into project
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
@@ -317,7 +313,6 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 		ddevapp.StopMutagenDaemon()
 		_ = os.RemoveAll(tmpHome)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 	})
 	err = app.Start()
 	require.NoError(t, err)
@@ -329,14 +324,11 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 
 	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
 	projectCommandsDir := app.GetConfigPath("commands")
-	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
 
 	// Remove existing commands
 	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
 	assert.NoError(err)
 	err = os.RemoveAll(projectCommandsDir)
-	assert.NoError(err)
-	err = os.RemoveAll(projectGlobalCommandsCopy)
 	assert.NoError(err)
 	// Copy project and global commands into project
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
