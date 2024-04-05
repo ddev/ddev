@@ -126,6 +126,9 @@ var (
 
 	// ddevVersionConstraint sets a ddev version constraint to validate the ddev against
 	ddevVersionConstraint string
+
+	// update tries to update the configured php version with auto-detection.
+	update string
 )
 
 var providerName = nodeps.ProviderDefault
@@ -309,6 +312,7 @@ func init() {
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
 	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
+	ConfigCommand.Flags().Bool("update", true, `Do 'update' to auto-detect the right settings`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -366,6 +370,38 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 			output.UserOut.WithField("raw", rawResult).Print(friendlyMsg)
 			return nil
 		}
+	}
+
+	if cmd.Flag("update").Changed {
+		friendlyMsg := fmt.Sprintf("Update flag detected")
+		output.UserOut.Print(friendlyMsg)
+
+		detectedApptype := app.DetectAppType()
+		detectedApptypeMsg := fmt.Sprintf("Detected %s", detectedApptype)
+		output.UserOut.Print(detectedApptypeMsg)
+
+		err = app.ConfigFileOverrideAction()
+		if err != nil {
+			util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
+		}
+
+		// Ensure the configuration passes validation before writing config file.
+		if err := app.ValidateConfig(); err != nil {
+			return fmt.Errorf("failed to validate config: %v", err)
+		}
+
+		// If the database already exists in volume and is not of this type, then throw an error
+		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+			if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
+				return fmt.Errorf("unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, dbType, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/stable/users/extend/database-types/")
+			}
+		}
+
+		if err := app.WriteConfig(); err != nil {
+			return fmt.Errorf("could not write DDEV config file %s: %v", app.ConfigPath, err)
+		}
+
+		return nil
 	}
 
 	// Let them know if we're replacing the config.yaml
