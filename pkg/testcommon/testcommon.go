@@ -138,7 +138,7 @@ func (site *TestSite) Prepare() error {
 			},
 		}
 	}
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	util.CheckErr(err)
 
 	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0777)
