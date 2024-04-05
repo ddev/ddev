@@ -17,6 +17,10 @@ DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11
 
 You are responsible for your code and its deployment. DDEV does not alter any code or fix any bugs in it. DDEV *does* add DDEV-specific settings for some CMSes if the [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
 
+### Why do I have to type `ddev` in front of so many commands?
+
+When you use `ddev composer` or `ddev drush` or `ddev npm` or `ddev yarn` it's so you can execute the command inside the web container, where it is the exact tool in the exact environment where your project lives. It's possible to do a `composer install` (without `ddev` in front) on your project, but in many cases you won't have the same PHP version on your host computer as your project is configured to use, and perhaps you'll have a different version of `composer` as well. This can lead to workarounds like having to use `composer --ignore-platform-reqs` or even incompatibilities introduced into your project. With tools like `ddev composer` you can have many projects running at the same time, with many different configurations, but when you use the tool inside the container, you get the exact configuration for the project you're configuring. (You can run any tool inside the web container with `ddev exec`, but many of them like `ddev composer` have two-word shortcuts.)
+
 ### Where is my database stored in my DDEV project?
 
 The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
@@ -46,12 +50,6 @@ There are many Docker providers on DDEV’s supported platforms. For example, on
 2. Stop the Docker provider you're moving from. For example, exit Docker Desktop.
 3. Start the Docker provider you're moving to.
 4. Start projects and restore their databases. For example, you could run `ddev snapshot restore --latest` to load a snapshot taken in step one.
-
-### Can I run DDEV on an older Mac?
-
-Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
-
-Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
 
 ### Do I need to install PHP, Composer, nginx, or Node.js/npm on my workstation?
 
@@ -114,6 +112,12 @@ Yes, as long as they’re configured with different ports. It doesn’t matter w
 It’s probably easiest, however, to shut down one before using the other.
 
 For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then run [`ddev poweroff`](../usage/commands.md#poweroff) before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. The [troubleshooting](troubleshooting.md) section goes into more detail about identifying and resolving port conflicts.
+
+### Can I run DDEV on an older Mac?
+
+Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
+
+Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
 
 ## Performance & Troubleshooting
 
