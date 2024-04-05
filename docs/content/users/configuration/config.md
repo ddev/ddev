@@ -544,7 +544,7 @@ The former DDEV project types `drupal8`, `drupal9`, and `drupal10` can still be 
 
 Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`. Can be outside the docroot but must be within the project directory e.g. `../private`. Some CMSes and frameworks have default `upload_dirs`, like Drupal's `sites/default/files`; `upload_dirs` will override the defaults, so if you want Drupal to use both `sites/default/files` and `../private` you would list both, `upload_dirs: ["sites/default/files", "../private"]`. `upload_dirs` is used for targeting `ddev import-files` and also, when Mutagen is enabled, to bind-mount those directories so their contents does not need to be synced into Mutagen.
 
-If you do not have directories of static assets of this type, or they're small and you don't care about them, you can disable the warning `You have Mutagen enabled and your 'php' project type doesn't have `upload_dirs` set.` by setting [disable_upload_dirs_warning](#disable_upload_dirs_warning) with `ddev config --disable-upload-dirs-warning`. 
+If you do not have directories of static assets of this type, or they are small and you don't care about them, you can disable the warning `You have Mutagen enabled and your 'php' project type doesn't have upload_dirs set.` by setting [disable_upload_dirs_warning](#disable_upload_dirs_warning) with `ddev config --disable-upload-dirs-warning`.
 
 | Type | Default | Usage
 | -- | -- | --
