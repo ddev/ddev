@@ -394,7 +394,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		output.UserOut.Print(detectedVersionMsg)
 
 		// For the POC we need ConfigFileOverrideAction to omit app.ConfigExists() check
-		err = app.ConfigFileOverrideAction()
+		err = app.ConfigFileOverrideAction(true)
 
 		apptypeMsg := fmt.Sprintf("Apptype is %s", app.Type)
 		output.UserOut.Print(apptypeMsg)
@@ -508,7 +508,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	// App overrides are done after app type is detected, but
 	// before user-defined flags are set.
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	if err != nil {
 		util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
 	}

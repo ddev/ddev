@@ -417,7 +417,7 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	if err != nil {
 		return err
 	}
