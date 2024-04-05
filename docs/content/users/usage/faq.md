@@ -162,7 +162,7 @@ RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
 
 ### My browser redirects `http` URLs to `https`
 
-Several browsers want you to use `https`, so will automatically redirect you to the `https` version of a site. This may not be what you want, and when it redirects it may break things. For example, the Apache SOLR web UI often doesn't work with `https`, and when it redirects it can break things.
+Several browsers want you to use `https`, so they will automatically redirect you to the `https` version of a site. This may not be what you want, and things may break on redirect. For example, the Apache SOLR web UI often doesn't work with `https`, and when it redirects it things might break.
 
 To solve this for your browser, see:
 
@@ -174,7 +174,7 @@ To solve this for your browser, see:
 
 When you update DDEV you'll see it pull a `ddev-webserver` image which is almost half a gigabyte compressed, and this can be an inconvenient thing to wait for when you're doing an upgrade, especially if you have a slow internet connection.
 
-The reason that `ddev-webserver` is so big is that it's built for you, for local development. It's big to let you switch PHP versions or switch between `nginx` and `apache` web servers with a simple `ddev restart`, rather than a build process. It's big to let you have Xdebug there with a simple `ddev xdebug on`. It has many, many features and tools that make it easy for you as a developer, but that one would not include in a production image.
+The reason that `ddev-webserver` is so big is that it's built for your daily requirements for a local development environment. It lets you switch PHP versions or switch between `nginx` and `apache` web servers with a simple `ddev restart`, rather than a lengthy build process. It lets you use Xdebug with a simple `ddev xdebug on`. It has many, many features and tools that make it easy for you as a developer, but that one would not include in a production image.
 
 ## Workflow
 
