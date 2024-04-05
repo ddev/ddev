@@ -160,15 +160,18 @@ func setMagento2SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "..", "app", "etc", "env.php")
 }
 
-func magentoConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP74
-	return nil
-}
+// magentoConfigOverrideAction is not currently required
+// as OpenMage allows PHP up to 8.3
+// See https://github.com/OpenMage/magento-lts#requirements
+//func magentoConfigOverrideAction(app *DdevApp) error {
+//	app.PHPVersion = nodeps.PHP74
+//	return nil
+//}
 
 // Magento2 2.4.6 requires php8.1/2 and MariaDB 10.6
 // https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html
 func magento2ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
+	app.PHPVersion = nodeps.PHP82
 	app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB106}
 	return nil
 }

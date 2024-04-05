@@ -151,9 +151,8 @@ func init() {
 		},
 
 		nodeps.AppTypeLaravel: {
-			appTypeDetect:        isLaravelApp,
-			postStartAction:      laravelPostStartAction,
-			configOverrideAction: laravelConfigOverrideAction,
+			appTypeDetect:   isLaravelApp,
+			postStartAction: laravelPostStartAction,
 		},
 
 		nodeps.AppTypeSilverstripe: {
@@ -168,7 +167,6 @@ func init() {
 			uploadDirs:           getMagentoUploadDirs,
 			appTypeSettingsPaths: setMagentoSiteSettingsPaths,
 			appTypeDetect:        isMagentoApp,
-			configOverrideAction: magentoConfigOverrideAction,
 			importFilesAction:    magentoImportFilesAction,
 		},
 
