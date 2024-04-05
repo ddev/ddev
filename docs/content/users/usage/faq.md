@@ -17,6 +17,10 @@ DDEV works nearly anywhere Docker will run, including macOS, WSL2, Windows 10/11
 
 You are responsible for your code and its deployment. DDEV does not alter any code or fix any bugs in it. DDEV *does* add DDEV-specific settings for some CMSes if the [settings management](cms-settings.md) is enabled. These items are excluded by `.gitignore` so they won't affect a deployed project, but in most cases they would do no harm if deployed, because they check to see if they're running in DDEV context.
 
+### Why do I have to type `ddev` in front of so many commands?
+
+When you are using commands like `ddev composer`, `ddev drush`, `ddev npm`, or `ddev yarn`, you are telling DDEV to execute that very command inside the web container. That is where the exact tool for the exact environment required by your project lives. It's possible to execute `composer install` without  prepending `ddev` in your project folder, but often you won't have the same PHP version on your host computer as your project is configured to use inside the container, or perhaps you'll have a different version of `composer` even. This can lead into workarounds like having to use `composer --ignore-platform-reqs` or even introducing incompatibilities  into your project. With tools like `ddev composer` you are able to run several projects at the same time, each with different configurations, but when you use the tool inside the container, you get the exact configuration for the project you've configured. You can run any tool inside the web container with `ddev exec`, but many commands like `ddev composer` have two-word shortcuts.
+
 ### Where is my database stored in my DDEV project?
 
 The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
@@ -46,12 +50,6 @@ There are many Docker providers on DDEV’s supported platforms. For example, on
 2. Stop the Docker provider you're moving from. For example, exit Docker Desktop.
 3. Start the Docker provider you're moving to.
 4. Start projects and restore their databases. For example, you could run `ddev snapshot restore --latest` to load a snapshot taken in step one.
-
-### Can I run DDEV on an older Mac?
-
-Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
-
-Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
 
 ### Do I need to install PHP, Composer, nginx, or Node.js/npm on my workstation?
 
@@ -115,6 +113,12 @@ It’s probably easiest, however, to shut down one before using the other.
 
 For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then run [`ddev poweroff`](../usage/commands.md#poweroff) before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. The [troubleshooting](troubleshooting.md) section goes into more detail about identifying and resolving port conflicts.
 
+### Can I run DDEV on an older Mac?
+
+Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
+
+Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
+
 ## Performance & Troubleshooting
 
 ### How can I get the best performance?
@@ -159,6 +163,22 @@ RewriteCond %{REQUEST_SCHEME} ^http$ [NC,OR]
 RewriteCond %{HTTPS} off
 RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
 ```
+
+### My browser redirects `http` URLs to `https`
+
+Several browsers want you to use `https`, so they will automatically redirect you to the `https` version of a site. This may not be what you want, and things may break on redirect. For example, the Apache SOLR web UI often doesn't work with `https`, and when it redirects it things might break.
+
+To solve this for your browser, see:
+
+* [Google Chrome](https://stackoverflow.com/q/73875589)
+* [Mozilla Firefox](https://stackoverflow.com/q/30532471)
+* [Safari](https://stackoverflow.com/q/46394682)
+
+### Why is `ddev-webserver` such a huge Docker image?
+
+When you update DDEV you'll see it pull a `ddev-webserver` image which is almost half a gigabyte compressed, and this can be an inconvenient thing to wait for when you're doing an upgrade, especially if you have a slow internet connection.
+
+The reason that `ddev-webserver` is so big is that it's built for your daily requirements for a local development environment. It lets you switch PHP versions or switch between `nginx` and `apache` web servers with a simple `ddev restart`, rather than a lengthy build process. It lets you use Xdebug with a simple `ddev xdebug on`. It has many, many features and tools that make it easy for you as a developer, but that one would not include in a production image.
 
 ## Workflow
 
@@ -214,6 +234,8 @@ See [Sharing Your Project](../topics/sharing.md).
 ### How do I make DDEV match my production environment?
 
 You can change the major PHP version and choose between nginx+fpm (default) and Apache+fpm and choose the MariaDB/MySQL/PostgreSQL version add [extra services like Solr and Memcached](../extend/additional-services.md). You won’t be able to make every detail match your production server, but with database server type and version, PHP version and web server type you’ll be close.
+
+The [lightly maintained rfay/ddev-php-patch-build add-on](https://github.com/rfay/ddev-php-patch-build) may allow you to use a specific PHP patch version.
 
 ### How do I completely destroy a project?
 
