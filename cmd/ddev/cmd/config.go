@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/fileutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -378,8 +377,21 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		output.UserOut.Print(friendlyMsg)
 
 		detectedApptype := app.DetectAppType()
-		detectedApptypeMsg := fmt.Sprintf("Detected %s", detectedApptype)
+		detectedApptypeMsg := fmt.Sprintf("Detected apptype %s", detectedApptype)
 		output.UserOut.Print(detectedApptypeMsg)
+
+		phpVersionMsg := fmt.Sprintf("Current php version: %s", app.PHPVersion)
+		output.UserOut.Print(phpVersionMsg)
+
+		corePackEnableMsg := fmt.Sprintf("Current corepack value: %v", app.CorepackEnable)
+		output.UserOut.Print(corePackEnableMsg)
+
+		dbVersionMsg := fmt.Sprintf("Current database value: %v", app.Database)
+		output.UserOut.Print(dbVersionMsg)
+
+		drupalVersion, _ := ddevapp.GetDrupalVersion(app)
+		detectedVersionMsg := fmt.Sprintf("Detected Drupal %s", drupalVersion)
+		output.UserOut.Print(detectedVersionMsg)
 
 		// For the POC we need ConfigFileOverrideAction to omit app.ConfigExists() check
 		err = app.ConfigFileOverrideAction()
@@ -388,24 +400,20 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		output.UserOut.Print(apptypeMsg)
 
 		if app.Type == nodeps.AppTypeDrupal {
-			// I can't call getDrupalVersion from drupal.go here?
-			f := filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php")
-			hasVersion, matches, _ := fileutil.GrepStringInFile(f, `const VERSION = '([0-9]+)`)
-			drupalVersion := ""
-			if hasVersion {
-				drupalVersion = matches[1]
-			}
-			if len(drupalVersion) > 0 {
-				detectedVersionMsg := fmt.Sprintf("Detected Drupal %s", drupalVersion)
-				output.UserOut.Print(detectedVersionMsg)
-			}
+			drupalVersion, _ := ddevapp.GetDrupalVersion(app)
+
+			detectedVersionMsg := fmt.Sprintf("Detected Drupal %s", drupalVersion)
+			output.UserOut.Print(detectedVersionMsg)
 		}
 
-		phpVersionMsg := fmt.Sprintf("New php version: %s", app.PHPVersion)
+		phpVersionMsg = fmt.Sprintf("New php version: %s", app.PHPVersion)
 		output.UserOut.Print(phpVersionMsg)
 
-		corePackEnableMsg := fmt.Sprintf("New corepack value: %v", app.CorepackEnable)
+		corePackEnableMsg = fmt.Sprintf("New corepack value: %v", app.CorepackEnable)
 		output.UserOut.Print(corePackEnableMsg)
+
+		dbVersionMsg = fmt.Sprintf("New database value: %v", app.Database)
+		output.UserOut.Print(dbVersionMsg)
 
 		if err != nil {
 			util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
