@@ -162,7 +162,7 @@ RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
 
 ### On the Chrome browser, my `http` URLs are redirected to `https`
 
-Chrome by default wants you to use `https`, so will automatically redirect you to the `https` version of a site. This may not be what you want, and when it redirects it may break things. For example, the Apache SOLR web UI often doesn't work with `https`, and when it redirects it can break things. You can change the behavior of your Chrome browser by disabling the HSTS behavior at chrome settings `chrome://net-internals/#hsts`, see [Stack Overflow answer](https://superuser.com/a/881431/75275).
+Chrome by default wants you to use `https`, so will automatically redirect you to the `https` version of a site. This may not be what you want, and when it redirects it may break things. For example, the Apache SOLR web UI often doesn't work with `https`, and when it redirects it can break things. You can change the behavior of your Chrome browser by disabling the HSTS behavior at Chrome settings `chrome://net-internals/#hsts`, see [Stack Overflow answer](https://superuser.com/a/881431/75275).
 
 ### Why is `ddev-webserver` such a huge Docker image?
 
