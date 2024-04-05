@@ -34,10 +34,17 @@
 
   <!-- Warning banner -->
   {% if config.extra.version != "stable" %}
-    <!-- remove the shadow, as it looks strange with a warning banner next to it -->
     <style>
+      /* remove the shadow, as it looks strange with a warning banner next to it */
       .md-header--shadow {
         box-shadow: unset;
+      }
+      /* fix the scroll margin for links with anchors */
+      /* see https://github.com/squidfunk/mkdocs-material/blob/master/src/templates/assets/stylesheets/main/extensions/markdown/_toc.scss */
+      .md-typeset {
+        :target {
+          --md-scroll-margin: 6rem;
+        }
       }
     </style>
     <div data-md-color-scheme="default" data-md-component="outdated">
