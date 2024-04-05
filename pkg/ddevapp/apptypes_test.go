@@ -124,7 +124,6 @@ func TestConfigOverrideActionOnExistingConfig(t *testing.T) {
 		nodeps.AppTypeCakePHP: nodeps.PHP83,
 		nodeps.AppTypeDrupal6: nodeps.PHP56,
 		nodeps.AppTypeDrupal7: nodeps.PHP82,
-		nodeps.AppTypeLaravel: nodeps.PHP82,
 		// For AppTypeDrupal we can't guess a version without a working installation.
 	}
 
