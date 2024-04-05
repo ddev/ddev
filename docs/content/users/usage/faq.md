@@ -166,7 +166,7 @@ Chrome by default wants you to use `https`, so will automatically redirect you t
 
 ### Why is `ddev-webserver` such a huge Docker image?
 
-When you update DDEV you'll see it pull a `ddev-webserver` image which is almost half a gigabyte compressed, and this can be an inconvenient thing to wait for when you're doing an upgrade, especially if you have slower internet.
+When you update DDEV you'll see it pull a `ddev-webserver` image which is almost half a gigabyte compressed, and this can be an inconvenient thing to wait for when you're doing an upgrade, especially if you have a slow internet connection.
 
 The reason that `ddev-webserver` is so big is that it's built for you, for local development. It's big to let you switch PHP versions or switch between webserver types with a simple `ddev restart`, rather than a build process. It's big to let you have Xdebug there with a simple `ddev xdebug on`. It has many, many features and tools that make it easy for you as a developer, but that one would not include in a production image.
 
