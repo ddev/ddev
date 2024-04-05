@@ -386,7 +386,7 @@ func (app *DdevApp) PostImportDBAction() error {
 }
 
 // ConfigFileOverrideAction gives a chance for an apptype to override any element
-// of config.yaml that it needs to (on initial creation, but not after that)
+// of config.yaml that it needs to
 func (app *DdevApp) ConfigFileOverrideAction(overrideExistingConfig bool) error {
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.configOverrideAction != nil && (overrideExistingConfig || !app.ConfigExists()) {
 		return appFuncs.configOverrideAction(app)
