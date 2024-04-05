@@ -431,7 +431,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		// apptype was not passed, but we found an app of a different type
 		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
 	}
-	if updateArg {
+	if updateArg || cmd.Flag("auto").Changed {
 		if projectTypeArg == "" {
 			projectTypeArg = detectedApptype
 		}
@@ -442,7 +442,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	// App overrides are done after app type is detected, but
 	// before user-defined flags are set.
-	err = app.ConfigFileOverrideAction(updateArg)
+	err = app.ConfigFileOverrideAction(updateArg || cmd.Flag("auto").Changed)
 	if err != nil {
 		util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
 	}
