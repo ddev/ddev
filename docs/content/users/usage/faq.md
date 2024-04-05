@@ -160,6 +160,16 @@ RewriteCond %{HTTPS} off
 RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
 ```
 
+### On the Chrome browser, my `http` URLs are redirected to `https`
+
+Chrome by default wants you to use `https`, so will automatically redirect you to the `https` version of a site. This may not be what you want, and when it redirects it may break things. For example, the Apache SOLR web UI often doesn't work with `https`, and when it redirects it can break things. You can change the behavior of your Chrome browser by disabling the HSTS behavior at chrome settings `chrome://net-internals/#hsts`, see [Stack Overflow answer](https://superuser.com/a/881431/75275).
+
+### Why is `ddev-webserver` such a huge Docker image?
+
+When you update DDEV you'll see it pull a `ddev-webserver` image which is almost half a gigabyte compressed, and this can be an inconvenient thing to wait for when you're doing an upgrade, especially if you have slower internet.
+
+The reason that `ddev-webserver` is so big is that it's built for you, for local development. It's big to let you switch PHP versions or switch between webserver types with a simple `ddev restart`, rather than a build process. It's big to let you have Xdebug there with a simple `ddev xdebug on`. It has many, many features and tools that make it easy for you as a developer, but that one would not include in a production image.
+
 ## Workflow
 
 ### How can I update/upgrade DDEV?
@@ -214,6 +224,8 @@ See [Sharing Your Project](../topics/sharing.md).
 ### How do I make DDEV match my production environment?
 
 You can change the major PHP version and choose between nginx+fpm (default) and Apache+fpm and choose the MariaDB/MySQL/PostgreSQL version add [extra services like Solr and Memcached](../extend/additional-services.md). You won’t be able to make every detail match your production server, but with database server type and version, PHP version and web server type you’ll be close.
+
+The [lightly maintained rfay/ddev-php-patch-build add-on](https://github.com/rfay/ddev-php-patch-build) may allow you to use a specific PHP patch version.
 
 ### How do I completely destroy a project?
 
