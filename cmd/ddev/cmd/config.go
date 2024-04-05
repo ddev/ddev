@@ -128,7 +128,7 @@ var (
 	ddevVersionConstraint string
 
 	// update tries to update the configured php version with auto-detection.
-	update string
+	updateArg bool
 )
 
 var providerName = nodeps.ProviderDefault
@@ -312,7 +312,7 @@ func init() {
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
 	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
-	ConfigCommand.Flags().Bool("update", true, `Do 'update' to auto-detect the right settings`)
+	ConfigCommand.Flags().BoolVar(&updateArg, "update", false, `Do 'update' to auto-detect the right settings`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -372,7 +372,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 	}
 
-	if cmd.Flag("update").Changed {
+	if updateArg {
 		friendlyMsg := fmt.Sprintf("Update flag detected")
 		output.UserOut.Print(friendlyMsg)
 
