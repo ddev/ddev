@@ -71,6 +71,7 @@ Gzipped
 HOWTO
 HeidiSQL
 Homebrew
+HSTS
 Ibexa
 IDE
 IDE's
