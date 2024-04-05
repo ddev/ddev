@@ -37,6 +37,8 @@ The following “Repository secret” environment variables must be added to <ht
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MAIN_REPO_ORGNAME`: The organization to be used for testing, normally `ddev` but it may be `ddev-test` for the test organization.
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
+* `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
+* `DOCKERHUB_TOKEN`: Token for pushing to `hub.docker.com`. or updating image descriptions.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
 * `GORELEASER_KEY`: License key for GoReleaser Pro.
