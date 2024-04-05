@@ -1,3 +1,7 @@
+---
+search:
+  boost: 2
+---
 # Custom Commands
 
 Custom commands can easily be added to DDEV, to be executed on the host or in containers.
