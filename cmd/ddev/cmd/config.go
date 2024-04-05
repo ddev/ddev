@@ -395,12 +395,17 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 		// For the POC we need ConfigFileOverrideAction to omit app.ConfigExists() check
 		err = app.ConfigFileOverrideAction(true)
+		if err != nil {
+			util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
+		}
 
 		apptypeMsg := fmt.Sprintf("Apptype is %s", app.Type)
 		output.UserOut.Print(apptypeMsg)
 
 		if app.Type == nodeps.AppTypeDrupal {
 			drupalVersion, _ := ddevapp.GetDrupalVersion(app)
+
+			// @todo Take this chance to update project if it's drupal8,drupal9,drupal10 => drupal?
 
 			detectedVersionMsg := fmt.Sprintf("Detected Drupal %s", drupalVersion)
 			output.UserOut.Print(detectedVersionMsg)
@@ -415,16 +420,14 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		dbVersionMsg = fmt.Sprintf("New database value: %v", app.Database)
 		output.UserOut.Print(dbVersionMsg)
 
-		if err != nil {
-			util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
-		}
-
 		// Ensure the configuration passes validation before writing config file.
 		if err := app.ValidateConfig(); err != nil {
 			return fmt.Errorf("failed to validate config: %v", err)
 		}
 
 		// If the database already exists in volume and is not of this type, then throw an error
+		// @todo There's a high chance that we never want to change the db.
+		// @todo We might want to provide instructions for migrating it if the current db and the proposed one don't match.
 		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 			if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
 				return fmt.Errorf("unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, dbType, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/stable/users/extend/database-types/")
