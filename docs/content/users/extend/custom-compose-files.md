@@ -50,9 +50,9 @@ To better understand how DDEV parses your custom docker-compose files, run `ddev
 
 ## Conventions for Defining Additional Services
 
-When defining additional services for your project, we recommended following these conventions to ensure DDEV handles your service the same way DDEV handles default services.
+When defining additional services for your project, we recommend following these conventions to ensure DDEV handles your service the same way DDEV handles default services.
 
-* The container name should be `ddev-${DDEV_SITENAME}-<servicename>`. This ensures the auto-generated [traefik routing configuration](./traefik-router.md#project-traefik-configuration) matches your custom service.
+* The container name should be `ddev-${DDEV_SITENAME}-<servicename>`. This ensures the auto-generated [Traefik routing configuration](./traefik-router.md#project-traefik-configuration) matches your custom service.
 * Provide containers with required labels:
 
     ```yaml
