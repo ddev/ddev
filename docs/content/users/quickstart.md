@@ -627,6 +627,17 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ddev launch
     ```
 
+=== "Git Clone"
+
+    ```bash
+    git clone <your-symfony-repo>
+    cd <your-symfony-repo>
+    ddev config --docroot=public --php-version=8.3
+    ddev start
+    ddev composer install
+    ddev launch
+    ```
+
 ## TYPO3
 
 === "Composer"
