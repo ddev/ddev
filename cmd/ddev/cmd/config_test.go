@@ -155,8 +155,8 @@ func TestConfigSetValues(t *testing.T) {
 	projectName := t.Name()
 	projectType := nodeps.AppTypeTYPO3
 	phpVersion := nodeps.PHP71
-	httpPort := "81"
-	httpsPort := "444"
+	routerHttpPort := "81"
+	routerHttpsPort := "444"
 	hostDBPort := "60001"
 	hostWebserverPort := "60002"
 	hostHTTPSPort := "60003"
@@ -196,8 +196,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--php-version", phpVersion,
 		"--composer-root", composerRoot,
 		"--composer-version", composerVersion,
-		"--http-port", httpPort,
-		"--https-port", httpsPort,
+		"--router-http-port", routerHttpPort,
+		"--routerhttps-port", routerHttpsPort,
 		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
 		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
@@ -223,6 +223,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--disable-upload-dirs-warning",
 	}
 
+	t.Logf("command=\n%s", strings.Join(args, " "))
 	out, err := exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
 
@@ -248,8 +249,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(phpVersion, app.PHPVersion)
 	assert.Equal(composerRoot, app.ComposerRoot)
 	assert.Equal(composerVersion, app.ComposerVersion)
-	assert.Equal(httpPort, app.RouterHTTPPort)
-	assert.Equal(httpsPort, app.RouterHTTPSPort)
+	assert.Equal(routerHttpPort, app.RouterHTTPPort)
+	assert.Equal(routerHttpsPort, app.RouterHTTPSPort)
 	assert.Equal(hostWebserverPort, app.HostWebserverPort)
 	assert.Equal(hostDBPort, app.HostDBPort)
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
