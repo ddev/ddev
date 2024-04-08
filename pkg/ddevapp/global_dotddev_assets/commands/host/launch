@@ -3,7 +3,7 @@
 ## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Launch a browser with the current site
 ## Usage: launch [path] [-m|--mailpit]
-## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php" or "ddev launch https://your.ddev.site" or "ddev launch $DDEV_PRIMARY_URL:3000", for Mailpit "ddev launch -m"
+## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php" or "ddev launch https://your.ddev.site" or "ddev launch :3000", for Mailpit "ddev launch -m"
 ## Flags: [{"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the mailpit UI"}]
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
@@ -52,16 +52,29 @@ while :; do
      shift
  done
 
-if [ -n "${1:-}" ] ; then
-  if [[ ${1::1} != "/" ]] ; then
-    FULLURL="${FULLURL}/";
-  fi
-
+if [ -n "${1:-}" ]; then
   if [[ $1 =~ ^https?:// ]]; then
-    FULLURL="${1}";
+    # full url
+    FULLURL="${1}"
+  elif [[ $1 =~ ^: ]]; then
+    # specific port
+    FULLURL="${FULLURL%:[0-9]*}${1}"
+    # check if the port is running on https or http
+    port=$(docker run -i --rm ddev/ddev-utilities sh -c "echo '${1}' | grep -o ':[0-9]\+' | awk -F':' '{print \$2}'" 2>/dev/null)
+    if [[ "${port}" != "" ]] && ddev describe -j | docker run -i --rm ddev/ddev-utilities sh -c "jq -r '.raw' | grep -w ${port} | grep -q https" 2>/dev/null; then
+      FULLURL="${FULLURL/http:/https:}"
+    elif [[ "${port}" != "" ]] && ddev describe -j | docker run -i --rm ddev/ddev-utilities sh -c "jq -r '.raw' | grep -w ${port} | grep -q http" 2>/dev/null; then
+      FULLURL="${FULLURL/https:/http:}"
+    fi
   else
-    FULLURL="${FULLURL}${1}";
+    # relative path
+    FULLURL="${FULLURL%/}/${1#/}"
   fi
+fi
+
+if [[ "${FULLURL}" =~ ^http:// ]]; then
+  echo "HTTP may redirect to HTTPS in your browser"
+  echo "See https://ddev.readthedocs.io/en/stable/users/usage/commands/#launch"
 fi
 
 if [ ! -z ${DDEV_DEBUG:-} ]; then

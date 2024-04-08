@@ -331,8 +331,11 @@ func TestLaunchCommand(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
-	// This only tests the https port changes, but that might be enough
+	primaryURLWithoutPort := app.GetPrimaryURL()
+	app.RouterHTTPPort = "8080"
 	app.RouterHTTPSPort = "8443"
+	app.MailpitHTTPPort = "18025"
+	app.MailpitHTTPSPort = "18026"
 	err = app.WriteConfig()
 	assert.NoError(err)
 	err = app.Start()
@@ -349,6 +352,15 @@ func TestLaunchCommand(t *testing.T) {
 		app.GetPrimaryURL() + "/full-path": app.GetPrimaryURL() + "/full-path",
 		"http://example.com":               "http://example.com",
 		"https://example.com:443/test":     "https://example.com:443/test",
+		":8080":                            desc["httpurl"].(string),
+		":8080/http-port-path":             desc["httpurl"].(string) + "/http-port-path",
+		":8443":                            desc["httpsurl"].(string),
+		":8443/https-port-path":            desc["httpsurl"].(string) + "/https-port-path",
+		":18025":                           "http://" + app.GetHostname() + ":18025",
+		":18026":                           "https://" + app.GetHostname() + ":18026",
+		// if it is impossible to determine the http/https scheme, the default site protocol should be used
+		":3000":                     primaryURLWithoutPort + ":3000",
+		":3000/with-default-scheme": "https://" + app.GetHostname() + ":3000/with-default-scheme",
 	}
 	if runtime.GOOS == "windows" {
 		// Git-Bash converts single forward slashes to a Windows path
@@ -356,8 +368,9 @@ func TestLaunchCommand(t *testing.T) {
 		cases["//path-with-slash"] = app.GetPrimaryURL() + "/path-with-slash"
 		delete(cases, "/path-with-slash")
 	}
-	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+	if app.CanUseHTTPOnly() {
 		cases["-m"] = desc["mailpit_url"].(string)
+		cases[":3000/with-default-scheme"] = "http://" + app.GetHostname() + ":3000/with-default-scheme"
 	}
 	for partialCommand, expect := range cases {
 		// Try with the base URL, simplest case
