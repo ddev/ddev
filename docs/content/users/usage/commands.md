@@ -971,14 +971,32 @@ ddev npm update
 
 ## `nvm`
 
-Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command). (Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.)
+Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command).
+
+!!!tip
+    Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.
 
 Example:
 
 ```shell
 # Use `nvm` to switch to Node.js v20
 ddev nvm install 20
+
+# Check the installed Node.js version
+ddev nvm current
+
+# Reset Node.js to `nodejs_version`
+ddev nvm alias default system
+
+# Switch between two installed Node.js versions
+ddev nvm install 20
+ddev nvm install 18
+ddev nvm alias default 20
+ddev nvm alias default 18
 ```
+
+!!!warning "`nvm use` works only inside the web container after `ddev ssh`"
+    Use `ddev nvm alias default <version>` instead.
 
 ## `php`
 
