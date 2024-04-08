@@ -643,6 +643,7 @@ There are many ways to install Symfony, here are a few of them based on the [Sym
     Then:
 
     ```bash
+    mkdir my-symfony && cd my-symfony
     ddev config --docroot=public
     ddev restart
     ddev exec symfony check:requirements
