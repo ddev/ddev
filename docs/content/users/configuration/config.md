@@ -114,7 +114,7 @@ The type and version of the database engine the project should use.
 
 ## `dbimage_extra_packages`
 
-Extra Debian packages for the project’s database container.
+Extra Debian packages for the project’s database container. (This is rarely used.)
 
 | Type | Default | Usage
 | -- | -- | --
@@ -124,9 +124,13 @@ Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the
 
 ## `ddev_version_constraint`
 
-You can configure a [DDEV version constraint](https://github.com/Masterminds/semver#checking-version-constraints) that will be validated against the running DDEV executable and prevent any command from running if it doesn't match.
+You can configure a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent `ddev start` from running if it doesn't validate. For example:
 
-This will only work with DDEV versions above v1.22.4; older versions will ignore this setting.
+```yaml
+ddev_version_constraint: '>=v1.23.0-alpha1'
+```
+
+This is only supported with DDEV versions above v1.22.4; older DDEV versions will ignore this setting.
 
 | Type | Default | Usage
 | -- | -- | --
