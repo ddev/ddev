@@ -618,6 +618,8 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 
 There are many ways to install Symfony, here are a few of them based on the [Symfony docs](https://symfony.com/doc/current/setup.html).
 
+If your project uses a database you'll want to set the [DB connection string](https://symfony.com/doc/current/doctrine.html#configuring-the-database) in the `.env`. If using the default MariaDB configuration, you'll want `DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=10.11"`. If you're using a different database type or version, see `ddev describe` for the type and version.
+
 === "Composer"
 
     ```bash
