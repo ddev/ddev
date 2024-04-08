@@ -36,6 +36,9 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker"], err = dockerutil.GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("Failed to GetDockerVersion(): %v", err)
 	}
+	if versionInfo["docker-api"], err = dockerutil.GetDockerAPIVersion(); err != nil {
+		versionInfo["docker-api"] = fmt.Sprintf("Failed to GetDockerAPIVersion(): %v", err)
+	}
 	if versionInfo["docker-platform"], err = GetDockerPlatform(); err != nil {
 		versionInfo["docker-platform"] = fmt.Sprintf("Failed to GetDockerPlatform(): %v", err)
 	}
