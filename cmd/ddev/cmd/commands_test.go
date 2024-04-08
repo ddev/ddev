@@ -246,7 +246,7 @@ func TestCustomCommands(t *testing.T) {
 	_, _ = exec.RunHostCommand(DdevBin)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
-	for _, c := range []string{"artisan"} {
+	for _, c := range []string{"artisan", "pint"} {
 		_, err = exec.RunHostCommand(DdevBin, "help", c)
 		assert.NoError(err)
 	}
