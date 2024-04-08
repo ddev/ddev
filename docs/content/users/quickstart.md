@@ -616,6 +616,8 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 
 ## Symfony
 
+There are many ways to install Symfony, here are a few of them based on the [Symfony docs](https://symfony.com/doc/current/setup.html).
+
 === "Composer"
 
     ```bash
@@ -624,6 +626,28 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ddev composer create symfony/skeleton:"7.0.*"
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
+    ddev launch
+    ```
+
+=== "Symfony CLI"
+
+    In a future release the Symfony CLI will be provided by default in `ddev-webserver`, but for now it needs to be configured.
+
+    * Create a `.ddev/web-build/Dockerfile.symfony-cli` with the contents:
+
+    ```bash
+    RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+    RUN sudo apt install -y symfony-cli
+    ```
+
+    Then:
+
+    ```bash
+    ddev config --docroot=public
+    ddev restart
+    ddev exec symfony check:requirements
+    ddev exec symfony new temp --version="7.0.*" --webapp
+    ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
     ddev launch
     ```
 
