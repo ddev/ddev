@@ -1,13 +1,14 @@
 package version
 
 import (
+	"os"
+	"runtime"
+	"testing"
+
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
-	"os"
-	"runtime"
-	"testing"
 
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -34,8 +35,8 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Contains(v["db"], nodeps.MariaDBDefaultVersion)
 	assert.Equal(runtime.GOOS, v["os"])
 	assert.Equal(versionconstants.BUILDINFO, v["build info"])
+	assert.NotEmpty(v["docker"])
+	assert.NotEmpty(v["docker-api"])
 	assert.NotEmpty(v["docker-compose"])
 	assert.NotEmpty(v["docker-platform"])
-
-	assert.NotEmpty(v["docker"])
 }
