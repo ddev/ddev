@@ -3,10 +3,6 @@
  # See https://buildkite.com/ddev/macos-lima/settings/repository
 
   - command: ".buildkite/test.sh"
-    plugins:
-      - docker-login#v2.1.0:
-          username: druddockerpullaccount
-          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
       - "lima=true"

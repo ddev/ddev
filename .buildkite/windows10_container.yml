@@ -1,10 +1,6 @@
 # Not currently used. This would build and run containers on Windows.
 
   - command: ".buildkite/test_containers.cmd"
-    plugins:
-      - docker-login#v2.1.0:
-          username: druddockerpullaccount
-          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=windows"
       - "dockertype=dockerforwindows"
