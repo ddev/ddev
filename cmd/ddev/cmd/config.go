@@ -424,10 +424,21 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 	}
 
+	doUpdate, _ := cmd.Flags().GetBool("update")
 	switch {
+	case doUpdate:
+		if projectTypeArg == "" {
+			projectTypeArg = detectedApptype
+		}
+
+		app.Type = projectTypeArg
+		util.Success("`--update is set, Auto-configuring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
+		err = app.ConfigFileOverrideAction(true)
+		if err != nil {
+			util.Warning("ConfigOverrideAction failed: %v")
+		}
 	case app.Type != nodeps.AppTypeNone && projectTypeArg == "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
 		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
-		break
 	default:
 		if projectTypeArg == "" {
 			projectTypeArg = detectedApptype
