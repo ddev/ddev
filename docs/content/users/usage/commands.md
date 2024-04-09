@@ -184,7 +184,7 @@ Flags:
 
 * `--additional-fqdns`: Comma-delimited list of project FQDNs.
 * `--additional-hostnames`: Comma-delimited list of project hostnames.
-* `--auto`: Automatically run config without prompting. (default `true`)
+* `--auto`: Automatically run config without prompting.
 * `--bind-all-interfaces`: Bind host ports on all interfaces, not only on localhost network interface.
 * `--composer-root`: Overrides the default Composer root directory for the web service.
 * `--composer-root-default`: Unsets a web service Composer root directory override.
@@ -220,6 +220,7 @@ Flags:
 * `--project-type`: Provide the project type: `backdrop`, `drupal`, `drupal6`, `drupal7`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
+* `--update`: Automatically detect and update settings by inspecting the code.
 * `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible. (default `true`)
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
