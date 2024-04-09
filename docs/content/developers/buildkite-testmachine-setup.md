@@ -21,20 +21,13 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 11. If a laptop, set the “lid closing” setting to do nothing.
 12. Set the “Sleep after time” setting in settings to never.
 13. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
-14. The `buildkite/hooks/environment.bat` file must be updated to contain the Docker pull credentials:
-
-    ```bash
-    @echo off
-    set DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-    ```
-
-15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
-16. `git config --global --add safe.directory '*'`.
-17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-18. Run `.buildkite/sanetestbot.sh` to check your work.
-19. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
-20. Verify that `go`, `ddev`, `git-bash` are in the path.
-21. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
+14. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
+15. `git config --global --add safe.directory '*'`.
+16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+17. Run `.buildkite/sanetestbot.sh` to check your work.
+18. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
+19. Verify that `go`, `ddev`, `git-bash` are in the path.
+20. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
 
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
@@ -43,14 +36,6 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 3. Configure buildkite agent in /etc/buildkite-agent:
     * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
     * token="xxx"
-    * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
-
-    ```
-        #!/bin/bash
-        export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-        set -e
-    ```
-
 4. `wsl.exe --update`
 5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 6. Install DDEV using the standard WSL2 Docker Desktop installation.
@@ -155,20 +140,12 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * the agent `name` (the name of the machine).
     * `tags`, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-24. The `buildkite-agent/hooks/environment` file must be created and set executable to contain the Docker pull credentials (found in `druddockerpullaccount` in 1Password):
-
-       ```
-       #!/bin/bash
-       export DOCKERHUB_PULL_PASSWORD=xxx_readonly_token
-       set -e
-       ```
-
-25. Run `brew services start buildkite-agent`.
-26. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
-27. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
-28. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
-29. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**. The new service has to have `by-ssh-address` set to the name of the test runner, and that address needs to be added to `pi.ddev.site`'s `/etc/hosts` file.
-30. If `zsh` is the shell configured, add `/etc/zshenv` so that `/usr/local/bin/docker` will be picked up:
+24. Run `brew services start buildkite-agent`.
+25. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
+26. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
+27. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+28. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**. The new service has to have `by-ssh-address` set to the name of the test runner, and that address needs to be added to `pi.ddev.site`'s `/etc/hosts` file.
+29. If `zsh` is the shell configured, add `/etc/zshenv` so that `/usr/local/bin/docker` will be picked up:
 
     ```bash
     PATH=$PATH:/usr/local/bin:/opt/homebrew/bin
