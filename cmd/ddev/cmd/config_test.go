@@ -155,8 +155,8 @@ func TestConfigSetValues(t *testing.T) {
 	projectName := t.Name()
 	projectType := nodeps.AppTypeTYPO3
 	phpVersion := nodeps.PHP71
-	routerHttpPort := "81"
-	routerHttpsPort := "444"
+	routerHTTPPort := "81"
+	routerHTTPSPort := "444"
 	hostDBPort := "60001"
 	hostWebserverPort := "60002"
 	hostHTTPSPort := "60003"
@@ -196,8 +196,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--php-version", phpVersion,
 		"--composer-root", composerRoot,
 		"--composer-version", composerVersion,
-		"--router-http-port", routerHttpPort,
-		"--routerhttps-port", routerHttpsPort,
+		"--router-http-port", routerHTTPPort,
+		"--routerhttps-port", routerHTTPSPort,
 		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
 		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
@@ -249,8 +249,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(phpVersion, app.PHPVersion)
 	assert.Equal(composerRoot, app.ComposerRoot)
 	assert.Equal(composerVersion, app.ComposerVersion)
-	assert.Equal(routerHttpPort, app.RouterHTTPPort)
-	assert.Equal(routerHttpsPort, app.RouterHTTPSPort)
+	assert.Equal(routerHTTPPort, app.RouterHTTPPort)
+	assert.Equal(routerHTTPSPort, app.RouterHTTPSPort)
 	assert.Equal(hostWebserverPort, app.HostWebserverPort)
 	assert.Equal(hostDBPort, app.HostDBPort)
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
