@@ -171,6 +171,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^10
+    ddev config --update
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
@@ -181,11 +182,11 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 === "Drupal 11 (dev)"
 
     ```bash
-    mkdir my-drupal-site
-    cd my-drupal-site
-    ddev config --project-type=drupal --php-version=8.3 --docroot=web --corepack-enable
+    mkdir my-drupal-site && cd my-drupal-site
+    ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^11.x-dev
+    ddev config --update 
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
@@ -201,6 +202,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --project-type=drupal --php-version=8.1 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^9
+    ddev config --update
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
