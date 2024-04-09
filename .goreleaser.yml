@@ -171,7 +171,7 @@ brews:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
-  folder: Formula
+  directory: Formula
   homepage: https://github.com/ddev/ddev
   license: "Apache 2"
   # ddev brew will only be uploaded on non-prerelease
@@ -209,7 +209,7 @@ brews:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
-  folder: Formula
+  directory: Formula
   homepage: https://github.com/ddev/ddev
   license: "Apache 2"
   # ddev-edge brew will always be uploaded
@@ -365,7 +365,7 @@ aurs:
 furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
   secret_name: "FURY_TOKEN"
-  skip: '{{ ne .Prerelease "" }}'
+  disable: '{{ ne .Prerelease "" }}'
 
 
 dockerhub:
