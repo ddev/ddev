@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -779,7 +780,7 @@ func TestPHPOverrides(t *testing.T) {
 	require.NoError(t, err)
 
 	// Copy test overrides into the project .ddev directory
-	err = fileutil.CopyDir(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
+	err = copy2.Copy(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
 	assert.NoError(err)
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
 	assert.NoError(err)
