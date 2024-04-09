@@ -161,8 +161,9 @@ ddev launch
 
 ## Drupal
 
-=== "Drupal"
-    For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is "drupal".
+For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is "drupal".
+
+=== "Drupal 10"
 
     ```bash
     mkdir my-drupal-site
@@ -175,16 +176,36 @@ ddev launch
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
     ddev drush uli
     ddev launch
+    ```
 
-    # For Drupal 11:
-    # ddev config --project-type=drupal --php-version=8.3 --docroot=web --corepack-enable
-    # ddev composer create drupal/recommended-project:^11.x-dev
+=== "Drupal 11 (dev)"
 
+    ```bash
+    mkdir my-drupal-site
+    cd my-drupal-site
+    ddev config --project-type=drupal --php-version=8.3 --docroot=web --corepack-enable
+    ddev start
+    ddev composer create drupal/recommended-project:^11.x-dev
+    ddev composer require drush/drush
+    ddev drush site:install --account-name=admin --account-pass=admin -y
+    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
+    ddev drush uli
+    ddev launch
+    ```
 
-    Note that you need to make minor adjustments for obsolete Drupal versions.
-    For example, Drupal 9:
-    # ddev config --project-type=drupal --php-version=8.1 --docroot=web
-    # ddev composer create drupal/recommended-project:^9
+=== "Drupal 9 (EOL)"
+
+    ```bash
+    mkdir my-drupal-site
+    cd my-drupal-site
+    ddev config --project-type=drupal --php-version=8.1 --docroot=web
+    ddev start
+    ddev composer create drupal/recommended-project:^9
+    ddev composer require drush/drush
+    ddev drush site:install --account-name=admin --account-pass=admin -y
+    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
+    ddev drush uli
+    ddev launch
     ```
 
 === "Drupal 6/7"
@@ -199,7 +220,7 @@ ddev launch
 
     Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also run `drush site-install`, then `ddev exec drush site-install --yes`.
 
-    See [Importing a Database](#importing-a-database).
+    See [Importing a Database](../usage/managing-projects#importing-a-database).
 
 === "Git Clone"
 
@@ -449,41 +470,44 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
 ## Moodle
 
-```bash
-ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
-ddev start
-ddev composer create moodle/moodle -y
-ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
-ddev launch /login
-```
+=== "Composer"
 
-In the web browser, log into your account using `admin` and `password`.
+    ```bash
+    ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
+    ddev start
+    ddev composer create moodle/moodle -y
+    ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+    ddev launch /login
+    ```
 
-Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
+    In the web browser, log into your account using `admin` and `password`.
 
-!!!tip
-    Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
+    Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
+
+    !!!tip
+        Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
 
 ## Pimcore
 
-Using the [Pimcore skeleton](https://github.com/pimcore/skeleton) repository:
+=== "Composer"
 
-``` bash
-mkdir my-pimcore && cd my-pimcore
-ddev config --docroot=public
+    Using the [Pimcore skeleton](https://github.com/pimcore/skeleton) repository:
 
+    ``` bash
+    mkdir my-pimcore && cd my-pimcore
+    ddev config --docroot=public
 
-ddev start
-ddev composer create pimcore/skeleton
-ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
-echo "web_extra_daemons:
-  - name: consumer
-    command: 'while true; do /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance pimcore_scheduled_tasks pimcore_image_optimize pimcore_asset_update --memory-limit=250M --time-limit=3600; done'
-    directory: /var/www/html" >.ddev/config.pimcore.yaml
+    ddev start
+    ddev composer create pimcore/skeleton
+    ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
+    echo "web_extra_daemons:
+      - name: consumer
+        command: 'while true; do /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance pimcore_scheduled_tasks pimcore_image_optimize pimcore_asset_update --memory-limit=250M --time-limit=3600; done'
+        directory: /var/www/html" >.ddev/config.pimcore.yaml
 
-ddev start
-ddev launch /admin
-```
+    ddev start
+    ddev launch /admin
+    ```
 
 ## Python/Flask (Experimental)
 
@@ -506,22 +530,24 @@ ddev launch
 
 ## Shopware
 
-Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV adds necessary information to it. When `ddev composer create` asks if you want to include Docker configuration, answer `x`, as this approach does not use their Docker configuration.
+=== "Composer"
 
-```bash
-mkdir my-shopware6 && cd my-shopware6
-ddev config --project-type=shopware6 --docroot=public
-ddev composer create shopware/production:^v6.5
-# If it asks `Do you want to include Docker configuration from recipes?`
-# answer `x`, as we're using DDEV for this rather than its recipes.
-ddev exec console system:install --basic-setup
-ddev launch /admin
-# Default username and password are `admin` and `shopware`
-```
+    Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV adds necessary information to it. When `ddev composer create` asks if you want to include Docker configuration, answer `x`, as this approach does not use their Docker configuration.
 
-Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
+    ```bash
+    mkdir my-shopware6 && cd my-shopware6
+    ddev config --project-type=shopware6 --docroot=public
+    ddev composer create shopware/production:^v6.5
+    # If it asks `Do you want to include Docker configuration from recipes?`
+    # answer `x`, as we're using DDEV for this rather than its recipes.
+    ddev exec console system:install --basic-setup
+    ddev launch /admin
+    # Default username and password are `admin` and `shopware`
+    ```
 
-For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+    Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
+
+    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
 ## Silverstripe
 
@@ -584,6 +610,50 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ddev start
     ddev composer install
     ddev exec "php artisan key:generate"
+    ddev launch
+    ```
+
+## Symfony
+
+There are many ways to install Symfony, here are a few of them based on the [Symfony docs](https://symfony.com/doc/current/setup.html).
+
+If your project uses a database you'll want to set the [DB connection string](https://symfony.com/doc/current/doctrine.html#configuring-the-database) in the `.env`. If using the default MariaDB configuration, you'll want `DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=10.11"`. If you're using a different database type or version, see `ddev describe` for the type and version.
+
+=== "Composer"
+
+    ```bash
+    mkdir my-symfony && cd my-symfony
+    ddev config --docroot=public
+    ddev composer create symfony/skeleton:"7.0.*"
+    ddev composer require webapp
+    # When it asks if you want to include docker configuration, say "no" with "x"
+    ddev launch
+    ```
+
+=== "Symfony CLI"
+
+    In a future release the Symfony CLI will be provided by default in `ddev-webserver`, but for now it needs to be configured.
+
+    ```bash
+    mkdir my-symfony && cd my-symfony
+    ddev config --docroot=public
+    echo "RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+    RUN sudo apt install -y symfony-cli" >.ddev/web-build/Dockerfile.symfony-cli
+    ddev restart
+    ddev exec symfony check:requirements
+    ddev exec symfony new temp --version="7.0.*" --webapp
+    ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
+    ddev launch
+    ```
+
+=== "Git Clone"
+
+    ```bash
+    git clone <your-symfony-repo>
+    cd <your-symfony-repo>
+    ddev config --docroot=public --php-version=8.3
+    ddev start
+    ddev composer install
     ddev launch
     ```
 
