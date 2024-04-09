@@ -220,7 +220,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 
     Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also run `drush site-install`, then `ddev exec drush site-install --yes`.
 
-    See [Importing a Database](#importing-a-database).
+    See [Importing a Database](../usage/managing-projects#importing-a-database).
 
 === "Git Clone"
 
