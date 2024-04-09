@@ -96,7 +96,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		fmt.Println("")
 
 		// With no config file written, the ConfigFileOverrideAction should result in an override
-		err = app.ConfigFileOverrideAction(false)
+		err = app.ConfigFileOverrideAction(true)
 		assert.NoError(err)
 
 		// With a basic new app, the expectedPHPVersion should be the default
