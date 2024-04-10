@@ -366,19 +366,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	switch v {
 	case "8":
 		app.PHPVersion = nodeps.PHP74
-		// Override the database type if it's not yet set
-		dbType, err := app.GetExistingDBType()
-		if err != nil {
-			return err
-		}
-		recommendedDBType := "mariadb:10.4"
-		if dbType == "" {
-			// Assume that we don't have a database yet
-			app.Database = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDB104}
-			util.Success("Configuring Drupal 8 project with database type '%s'", recommendedDBType)
-		} else if dbType != recommendedDBType {
-			util.Warning("Drupal 8 project already has database type set to non-default: %s", dbType)
-		}
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
 	case "9":
 		app.PHPVersion = nodeps.PHP81
 	case "10":

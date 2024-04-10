@@ -432,7 +432,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 
 		app.Type = projectTypeArg
-		util.Success("Auto-updating project configuration because '--update' is set\nConfiguring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
+		util.Success("Auto-updating project configuration because update is requested.\nConfiguring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
 		err = app.ConfigFileOverrideAction(true)
 		if err != nil {
 			util.Warning("ConfigOverrideAction failed: %v")

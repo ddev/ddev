@@ -150,19 +150,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 }
 
 func craftCmsConfigOverrideAction(app *DdevApp) error {
-	// Override the database type if it's not yet set
-	dbType, err := app.GetExistingDBType()
-	if err != nil {
-		return err
-	}
-	recommendedDBType := "mysql:8.0"
-	if dbType == "" {
-		// Assume that we don't have a database yet
-		app.Database = DatabaseDesc{nodeps.MySQL, nodeps.MySQL80}
-		util.Success("Configuring Craft CMS project with database type '%s'", recommendedDBType)
-	} else if dbType != recommendedDBType {
-		util.Warning("Craft CMS project already has database type set to non-default: %s", dbType)
-	}
+	app.Database = DatabaseDesc{nodeps.MySQL, nodeps.MySQL80}
 	return nil
 }
 
