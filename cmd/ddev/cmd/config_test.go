@@ -569,9 +569,22 @@ func TestConfigUpdate(t *testing.T) {
 		baseExpectation   ddevapp.DdevApp
 		configExpectation ddevapp.DdevApp
 	}{
-		"drupal11-composer": {baseExpectation: ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false}, configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: true}},
-		"drupal11-git":      {baseExpectation: ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false}, configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "", CorepackEnable: true}},
-		"drupal10-composer": {baseExpectation: ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false}, configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: false}},
+		"drupal11-composer": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: true, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+		},
+		"drupal11-git": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "", CorepackEnable: true, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+		},
+		"drupal10-composer": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: false, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+		},
+		"craftcms": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeCraftCms, PHPVersion: nodeps.PHPDefault, Docroot: "web", CorepackEnable: false, Database: ddevapp.DatabaseDesc{nodeps.MySQL, "8.0"}},
+		},
 	}
 
 	for testName, expectation := range tests {
@@ -597,7 +610,7 @@ func TestConfigUpdate(t *testing.T) {
 			_ = app.Stop(true, false)
 
 			// Original values should match
-			checkValues(t, expectation.baseExpectation, app)
+			checkValues(t, testName, expectation.baseExpectation, app)
 
 			// ddev config --update and verify
 			out, err := exec.RunHostCommand(DdevBin, "config", "--update")
@@ -608,22 +621,27 @@ func TestConfigUpdate(t *testing.T) {
 			require.NoError(t, err)
 
 			// Updated values should match
-			checkValues(t, expectation.configExpectation, app)
+			checkValues(t, testName, expectation.configExpectation, app)
 
 		})
 	}
 }
 
 // checkValues compares several values of the expected and actual apps to make sure they're the same
-func checkValues(t *testing.T, expectation ddevapp.DdevApp, app *ddevapp.DdevApp) {
+func checkValues(t *testing.T, name string, expectation ddevapp.DdevApp, app *ddevapp.DdevApp) {
+	assert := asrt.New(t)
+
 	reflectedExpectation := reflect.ValueOf(expectation)
 	reflectedApp := reflect.ValueOf(*app)
 
-	for _, member := range []string{"Type", "PHPVersion", "Docroot", "CorepackEnable"} {
-		fieldValueExpectation := reflectedExpectation.FieldByName(member).Interface()
-		fieldValueApp := reflectedApp.FieldByName(member).Interface()
+	for _, member := range []string{"Type", "PHPVersion", "Docroot", "CorepackEnable", "Database"} {
 
-		require.Equal(t, fieldValueExpectation, fieldValueApp, "Field %s does not match", member)
+		fieldExpectation := reflectedExpectation.FieldByName(member)
+		if fieldExpectation.IsValid() {
+			fieldValueExpectation := fieldExpectation.Interface()
+			fieldValueApp := reflectedApp.FieldByName(member).Interface()
+			assert.Equal(fieldValueExpectation, fieldValueApp, "%s: field %s does not match", name, member)
+		}
 	}
 }
 
