@@ -27,6 +27,8 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"web-start-hooks",
 			"add-on-versioning",
 			"multiple-upload-dirs",
+			"debian-bookworm",
+			"corepack",
 		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},
