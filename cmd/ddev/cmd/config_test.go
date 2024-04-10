@@ -547,6 +547,45 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	}
 }
 
+// TestConfigUpdate verifies that ddev config --update does the right things updating default
+// config, and does not do the wrong things.
+func TestConfigUpdate(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(testDir)
+	require.NoError(t, err)
+
+	err = globalconfig.RemoveProjectInfo(t.Name())
+	assert.NoError(err)
+
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", t.Name())
+	assert.NoError(err, "Failed running ddev config --project-name: %s", out)
+
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+
+	app, err := ddevapp.GetActiveApp("")
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	_, err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.Equal(nodeps.MariaDB, app.Database.Type)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.Database.Version)
+
+}
+
 // TestConfigGitignore checks that our gitignore is ignoring the right things.
 func TestConfigGitignore(t *testing.T) {
 	assert := asrt.New(t)
