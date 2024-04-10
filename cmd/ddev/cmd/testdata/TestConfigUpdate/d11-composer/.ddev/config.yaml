@@ -1,3 +1,0 @@
-# assume that d11-composer has been set up with no existing configuration
-type: php
-php_version: "8.2"

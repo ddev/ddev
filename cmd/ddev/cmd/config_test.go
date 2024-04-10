@@ -5,6 +5,7 @@ import (
 	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -568,7 +569,9 @@ func TestConfigUpdate(t *testing.T) {
 		baseExpectation   ddevapp.DdevApp
 		configExpectation ddevapp.DdevApp
 	}{
-		"d11-composer": {baseExpectation: ddevapp.DdevApp{PHPVersion: nodeps.PHPDefault, CorepackEnable: false}, configExpectation: ddevapp.DdevApp{PHPVersion: nodeps.PHP83, CorepackEnable: true}},
+		"drupal11-composer": {baseExpectation: ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false}, configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: true}},
+		"drupal11-git":      {baseExpectation: ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false}, configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "", CorepackEnable: true}},
+		"drupal10-composer": {baseExpectation: ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false}, configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: false}},
 	}
 
 	for testName, expectation := range tests {
@@ -594,8 +597,7 @@ func TestConfigUpdate(t *testing.T) {
 			_ = app.Stop(true, false)
 
 			// Original values should match
-			require.Equal(t, app.PHPVersion, expectation.baseExpectation.PHPVersion)
-			require.Equal(t, app.CorepackEnable, expectation.baseExpectation.CorepackEnable)
+			checkValues(t, expectation.baseExpectation, app)
 
 			// ddev config --update and verify
 			out, err := exec.RunHostCommand(DdevBin, "config", "--update")
@@ -606,10 +608,22 @@ func TestConfigUpdate(t *testing.T) {
 			require.NoError(t, err)
 
 			// Updated values should match
-			require.Equal(t, app.PHPVersion, expectation.configExpectation.PHPVersion)
-			require.Equal(t, app.CorepackEnable, expectation.configExpectation.CorepackEnable)
+			checkValues(t, expectation.configExpectation, app)
 
 		})
+	}
+}
+
+// checkValues compares several values of the expected and actual apps to make sure they're the same
+func checkValues(t *testing.T, expectation ddevapp.DdevApp, app *ddevapp.DdevApp) {
+	reflectedExpectation := reflect.ValueOf(expectation)
+	reflectedApp := reflect.ValueOf(*app)
+
+	for _, member := range []string{"Type", "PHPVersion", "Docroot", "CorepackEnable"} {
+		fieldValueExpectation := reflectedExpectation.FieldByName(member).Interface()
+		fieldValueApp := reflectedApp.FieldByName(member).Interface()
+
+		require.Equal(t, fieldValueExpectation, fieldValueApp, "Field %s does not match", member)
 	}
 }
 
