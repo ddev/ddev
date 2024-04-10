@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -550,41 +551,66 @@ func TestConfigDatabaseVersion(t *testing.T) {
 // TestConfigUpdate verifies that ddev config --update does the right things updating default
 // config, and does not do the wrong things.
 func TestConfigUpdate(t *testing.T) {
-	t.Skip("This test is not ready")
-	assert := asrt.New(t)
-
+	var err error
 	origDir, _ := os.Getwd()
 
 	// Create a temporary directory and switch to it.
 	testDir := testcommon.CreateTmpDir(t.Name())
-	err := os.Chdir(testDir)
-	require.NoError(t, err)
-
-	err = globalconfig.RemoveProjectInfo(t.Name())
-	assert.NoError(err)
-
-	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", t.Name())
-	assert.NoError(err, "Failed running ddev config --project-name: %s", out)
-
-	err = globalconfig.ReadGlobalConfig()
-	require.NoError(t, err)
-
-	app, err := ddevapp.GetActiveApp("")
-	assert.NoError(err)
 
 	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		app, _ := ddevapp.NewApp(testDir, false)
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
 		_ = os.RemoveAll(testDir)
 	})
+	tests := map[string]struct {
+		input             string
+		baseExpectation   ddevapp.DdevApp
+		configExpectation ddevapp.DdevApp
+	}{
+		"d11-composer": {baseExpectation: ddevapp.DdevApp{PHPVersion: nodeps.PHPDefault, CorepackEnable: false}, configExpectation: ddevapp.DdevApp{PHPVersion: nodeps.PHP83, CorepackEnable: true}},
+	}
 
-	_, err = app.ReadConfig(false)
-	assert.NoError(err)
-	assert.Equal(nodeps.MariaDB, app.Database.Type)
-	assert.Equal(nodeps.MariaDBDefaultVersion, app.Database.Version)
+	for testName, expectation := range tests {
+		t.Run(testName, func(t *testing.T) {
+			// Delete existing
+			_ = globalconfig.RemoveProjectInfo(t.Name())
+			// Delete filesystem from existing
+			_ = os.RemoveAll(testDir)
 
+			err = os.MkdirAll(testDir, 0755)
+			require.NoError(t, err)
+			_ = os.Chdir(testDir)
+			require.NoError(t, err)
+
+			// Copy testdata in from source
+			testSource := filepath.Join(origDir, "testdata", t.Name())
+			err = copy2.Copy(testSource, testDir)
+			require.NoError(t, err)
+
+			// Start with an existing config.yaml and verify
+			app, err := ddevapp.NewApp("", false)
+			require.NoError(t, err)
+			_ = app.Stop(true, false)
+
+			// Original values should match
+			require.Equal(t, app.PHPVersion, expectation.baseExpectation.PHPVersion)
+			require.Equal(t, app.CorepackEnable, expectation.baseExpectation.CorepackEnable)
+
+			// ddev config --update and verify
+			out, err := exec.RunHostCommand(DdevBin, "config", "--update")
+			require.NoError(t, err, "failed to run ddev config --update: %v output=%s", err, out)
+
+			// Load the newly-created app to inspect it
+			app, err = ddevapp.NewApp("", false)
+			require.NoError(t, err)
+
+			// Updated values should match
+			require.Equal(t, app.PHPVersion, expectation.configExpectation.PHPVersion)
+			require.Equal(t, app.CorepackEnable, expectation.configExpectation.CorepackEnable)
+
+		})
+	}
 }
 
 // TestConfigGitignore checks that our gitignore is ignoring the right things.
