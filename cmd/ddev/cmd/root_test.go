@@ -185,7 +185,7 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert.Equal(TestSites[0].Dir, appRoot)
 }
 
-// TestCreateGlobalDdevDir checks to make sure that DDEV will create $XDG_CONFIG_HOME/ddev (and updatecheck)
+// TestCreateGlobalDdevDir checks to make sure that DDEV will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
@@ -224,29 +224,25 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	// Change the homedir temporarily
 	t.Setenv("HOME", tmpHomeDir)
 	t.Setenv("USERPROFILE", tmpHomeDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpHomeDir, ".config"))
 
-	// Make sure $HOME/.ddev and $XDG_CONFIG_HOME/ddev don't exist before we run ddev.
+	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
 	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
-	require.Error(t, err)
-	assert.True(os.IsNotExist(err))
-	_, err = os.Stat(filepath.Join(tmpHomeDir, ".config", "ddev"))
 	require.Error(t, err)
 	assert.True(os.IsNotExist(err))
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
 	require.NoError(t, err, "failed to ddev config --auto, out=%v, err=%v", out, err)
 
-	// Now $XDG_CONFIG_HOME/ddev should exist
-	_, err = os.Stat(filepath.Join(tmpHomeDir, ".config", "ddev"))
+	// Now global .ddev should exist
+	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
 	require.NoError(t, err)
 
 	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
-	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpHomeDir, ".config", "ddev/bin"))
+	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpHomeDir, ".ddev/bin"))
 	require.NoError(t, err)
 
 	// Make sure that tmpHomeDir/.ddev/.update don't exist before we run ddev start
-	tmpUpdateFilePath := filepath.Join(tmpHomeDir, ".config", "ddev", ".update")
+	tmpUpdateFilePath := filepath.Join(tmpHomeDir, ".ddev", ".update")
 	_, err = os.Stat(tmpUpdateFilePath)
 	require.Error(t, err)
 	assert.True(os.IsNotExist(err))
@@ -259,8 +255,12 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestLegacyGlobalDdevDir checks to make sure that DDEV will use existing $HOME/.ddev.
-func TestLegacyGlobalDdevDir(t *testing.T) {
+// TestCreateGlobalDdevDirInUserConfigDir checks to make sure that DDEV will use
+// ddev folder in user's config dir instead of ~/.ddev
+// Windows folder: %APPDATA%\ddev
+// macOS folder: ~/Library/Application Support/ddev
+// Linux folder: ~/.config/ddev by default (or $XDG_CONFIG_HOME/ddev)
+func TestCreateGlobalDdevDirInUserConfigDir(t *testing.T) {
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
 			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
@@ -271,8 +271,17 @@ func TestLegacyGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
+	origHomeDir, err := homedir.Dir()
+	require.NoError(t, err)
 
 	tmpHomeDir := testcommon.CreateTmpDir("globalDdevCheck")
+
+	tmpDdevConfigDir := filepath.Join(tmpHomeDir, ".config", "ddev")
+	if runtime.GOOS == "windows" {
+		tmpDdevConfigDir = filepath.Join(tmpHomeDir, "AppData", "ddev")
+	} else if runtime.GOOS == "darwin" {
+		tmpDdevConfigDir = filepath.Join(tmpHomeDir, "Library", "Application Support", "ddev")
+	}
 
 	t.Cleanup(
 		func() {
@@ -290,7 +299,7 @@ func TestLegacyGlobalDdevDir(t *testing.T) {
 			}
 		})
 
-	err := os.Chdir(TestSites[0].Dir)
+	err = os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
 
 	// Change the homedir temporarily
@@ -298,21 +307,39 @@ func TestLegacyGlobalDdevDir(t *testing.T) {
 	t.Setenv("USERPROFILE", tmpHomeDir)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpHomeDir, ".config"))
 
-	err = os.MkdirAll(filepath.Join(tmpHomeDir, ".ddev"), 0755)
-	assert.NoError(err)
-
-	// Make sure that the $XDG_CONFIG_HOME/ddev doesn't exist before we run ddev.
-	_, err = os.Stat(filepath.Join(tmpHomeDir, ".config", "ddev"))
+	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist.
+	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
 	require.Error(t, err)
 	assert.True(os.IsNotExist(err))
+
+	// Make sure that the tmpDdevConfigDir exists before we run ddev.
+	err = os.MkdirAll(tmpDdevConfigDir, 0755)
+	require.NoError(t, err)
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
 	require.NoError(t, err, "failed to ddev config --auto, out=%v, err=%v", out, err)
 
-	// $XDG_CONFIG_HOME/ddev should still not exist
-	_, err = os.Stat(filepath.Join(tmpHomeDir, ".config", "ddev"))
+	//Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist (because we use tmpDdevConfigDir).
+	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
 	require.Error(t, err)
 	assert.True(os.IsNotExist(err))
+
+	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
+	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpDdevConfigDir, "bin"))
+	require.NoError(t, err)
+
+	// Make sure that tmpDdevConfigDir/.update don't exist before we run ddev start
+	tmpUpdateFilePath := filepath.Join(tmpDdevConfigDir, ".update")
+	_, err = os.Stat(tmpUpdateFilePath)
+	require.Error(t, err)
+	assert.True(os.IsNotExist(err))
+
+	// The .update file is only created by ddev start
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y")
+	assert.NoError(err, "failed to start, out=%v, err=%v", out, err)
+
+	_, err = os.Stat(tmpUpdateFilePath)
+	assert.NoError(err)
 }
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new DDEV version is deployed

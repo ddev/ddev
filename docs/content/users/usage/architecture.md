@@ -7,7 +7,7 @@ DDEV writes and uses [docker-compose](https://docs.docker.com/compose/) files fo
 
 ## Directory Tour
 
-DDEV stores configuration in two places: a single `.ddev` directory in your home folder, and a `.ddev` directory for each project you set up.
+DDEV stores configuration in two places: a single `.ddev` directory in your home folder (can be [moved](#global-files) to your config folder), and a `.ddev` directory for each project you set up.
 
 The [global configuration directory](#global-files) is used to keep track of your projects and any of the [global settings](../configuration/config.md) that apply across all projects. You’ll probably spend more time working with the [per-project `.ddev` directories](#project-files) for their configuration and overrides.
 
@@ -101,6 +101,15 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 ### Global Files
 
 There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
+
+!!!tip
+    `~/.ddev` can be moved to:
+
+    * `~/Library/Application Support/ddev` on macOS
+    * `%APPDATA%\ddev` on Windows
+    * `~/.config/ddev` (or set `XDG_CONFIG_HOME` for `$XDG_CONFIG_HOME/ddev`) on Linux and WSL2
+
+    Note that `~/.ddev` must not exist, otherwise it will take precedence over the config folder.
 
 `global_config.yaml`
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md).

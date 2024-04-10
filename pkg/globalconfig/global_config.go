@@ -535,33 +535,34 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns the global configuration directory, which varies by OS.
+// GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
-	// Check for $HOME/.ddev for backwards compatibility.
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		logrus.Fatal("Could not get home directory for current user. Is it set?")
 	}
 	ddevDir := filepath.Join(userHome, ".ddev")
 
-	// Create new configuration directory.
+	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
+		// If there is no ~/.ddev, but they created a custom $XDG_CONFIG_HOME/ddev folder,
+		// for example ~/.config/ddev on Linux, use that folder instead.
 		userConfigDir, err := os.UserConfigDir()
-		if err != nil {
-			logrus.Fatal("Could not get config directory for current user. Is it set?")
-		}
-		ddevDir = filepath.Join(userConfigDir, "ddev")
-		if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
-			// If they happen to be running as root/sudo, we won't create the directory
-			// but act like we did. This should only happen for ddev hostname, which
-			// doesn't need config or access to this dir anyway.
-			if os.Geteuid() == 0 {
+		if err == nil {
+			ddevDir := filepath.Join(userConfigDir, "ddev")
+			if _, err := os.Stat(ddevDir); err == nil {
 				return ddevDir
 			}
-			err = os.MkdirAll(ddevDir, 0755)
-			if err != nil {
-				logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
-			}
+		}
+		// If they happen to be running as root/sudo, we won't create the directory
+		// but act like we did. This should only happen for ddev hostname, which
+		// doesn't need config or access to this dir anyway.
+		if os.Geteuid() == 0 {
+			return ddevDir
+		}
+		err = os.MkdirAll(ddevDir, 0755)
+		if err != nil {
+			logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
 		}
 	}
 	// config.yaml is not allowed in ~/.ddev, can only result in disaster
