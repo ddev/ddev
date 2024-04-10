@@ -6,6 +6,23 @@ search:
 
 This version history has been driven by what we hear from our wonderful community of users. Please share your comments or ideas in the [issue queue](https://github.com/ddev/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
+## v1.23 (Released 2024-04)
+
+- [x] `ddev-webserver` upgraded to Debian 12 Bookworm
+- [x] `nodejs_version` now defaults to 20
+- [x] `php_version` defaults to 8.2
+- [x] PHP 8.3
+- [x] Corepack and yarn v4 support
+- [x] Drupal 11 support
+- [x] New "drupal", "cakephp" and "silverstripe" project types.
+- [x] Support for even more Docker providers, especially on macOS
+- [x] Upsun by Platform.sh and Amazee Lagoon hosting provider support
+- [x] `ddev_version_constraint` constraint for `.ddev/config.yaml`
+- [x] `ddev dbeaver` support of DBeaver database browser
+- [x] PostgreSQL 16 and MariaDB 10.11 support
+- [x] `nodejs_version` can be fully-qualified version, like `18.2.4`
+- [x] Mailhog has been replaced by Mailpit as developer
+
 ## v1.22 (Released 2023-07)
 
 - [x] `ddev get` improvements, including `ddev get --version <add-on>`, `ddev get --installed` to show existing add-ons, `ddev get --remove` to remove. Removal action support added for add-ons.
