@@ -162,7 +162,7 @@ ddev composer create drupal/recommended-project
 
 ## `config`
 
-Create or modify a DDEV project’s configuration in the current directory.
+Create or modify a DDEV project’s configuration in the current directory. By default, `ddev config` will not change configuration that already exists in your `.ddev/config.yaml`, it will only make changes you specify with flags. However, if you want to autodetect everything, `ddev config --update` will usually do everything you need.
 
 !!!tip "You can also set these via YAML!"
     These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config.md).
@@ -172,6 +172,13 @@ Example:
 ```shell
 # Start interactive project configuration
 ddev config
+
+# Accept defaults on a new project. This is the same as hitting <RETURN>
+# on every question in `ddev config`
+ddev config --auto
+
+## Detect docroot, project type, and expected defaults for an existing project
+ddev config --update
 
 # Configure a Drupal project with a `web` document root
 ddev config --docroot=web --project-type=drupal

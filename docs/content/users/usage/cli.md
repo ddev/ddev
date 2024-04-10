@@ -2,7 +2,7 @@
 
 Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [commands](../usage/commands.md). There are commands to configure a project, start, stop, describe, etc. Each command also has help using `ddev help <command>` or `ddev command -h`. For example, `ddev help snapshot` will show help and examples for the snapshot command.
 
-* [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot.
+* [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot, either interactively or with flags.
 * [`ddev start`](../usage/commands.md#start) starts up a project.
 * [`ddev launch`](../usage/commands.md#launch) opens a web browser showing the project.
 * [`ddev list`](../usage/commands.md#list) shows current projects and their state.
