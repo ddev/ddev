@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -155,8 +157,8 @@ func TestConfigSetValues(t *testing.T) {
 	projectName := t.Name()
 	projectType := nodeps.AppTypeTYPO3
 	phpVersion := nodeps.PHP71
-	httpPort := "81"
-	httpsPort := "444"
+	routerHTTPPort := "81"
+	routerHTTPSPort := "444"
 	hostDBPort := "60001"
 	hostWebserverPort := "60002"
 	hostHTTPSPort := "60003"
@@ -196,8 +198,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--php-version", phpVersion,
 		"--composer-root", composerRoot,
 		"--composer-version", composerVersion,
-		"--http-port", httpPort,
-		"--https-port", httpsPort,
+		"--router-http-port", routerHTTPPort,
+		"--router-https-port", routerHTTPSPort,
 		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
 		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
@@ -223,6 +225,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--disable-upload-dirs-warning",
 	}
 
+	t.Logf("command=\n%s", strings.Join(args, " "))
 	out, err := exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
 
@@ -248,8 +251,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(phpVersion, app.PHPVersion)
 	assert.Equal(composerRoot, app.ComposerRoot)
 	assert.Equal(composerVersion, app.ComposerVersion)
-	assert.Equal(httpPort, app.RouterHTTPPort)
-	assert.Equal(httpsPort, app.RouterHTTPSPort)
+	assert.Equal(routerHTTPPort, app.RouterHTTPPort)
+	assert.Equal(routerHTTPSPort, app.RouterHTTPSPort)
 	assert.Equal(hostWebserverPort, app.HostWebserverPort)
 	assert.Equal(hostDBPort, app.HostDBPort)
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
@@ -543,6 +546,102 @@ func TestConfigDatabaseVersion(t *testing.T) {
 		assert.Equal(parts[1], app.Database.Version)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+	}
+}
+
+// TestConfigUpdate verifies that ddev config --update does the right things updating default
+// config, and does not do the wrong things.
+func TestConfigUpdate(t *testing.T) {
+	var err error
+	origDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	testDir := testcommon.CreateTmpDir(t.Name())
+
+	t.Cleanup(func() {
+		app, _ := ddevapp.NewApp(testDir, false)
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+	tests := map[string]struct {
+		input             string
+		baseExpectation   ddevapp.DdevApp
+		configExpectation ddevapp.DdevApp
+	}{
+		"drupal11-composer": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: true, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+		},
+		"drupal11-git": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "", CorepackEnable: true, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+		},
+		"drupal10-composer": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+		},
+		"craftcms": {
+			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeCraftCms, PHPVersion: nodeps.PHPDefault, Docroot: "web", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: "8.0"}},
+		},
+	}
+
+	for testName, expectation := range tests {
+		t.Run(testName, func(t *testing.T) {
+			// Delete existing
+			_ = globalconfig.RemoveProjectInfo(t.Name())
+			// Delete filesystem from existing
+			_ = os.RemoveAll(testDir)
+
+			err = os.MkdirAll(testDir, 0755)
+			require.NoError(t, err)
+			_ = os.Chdir(testDir)
+			require.NoError(t, err)
+
+			// Copy testdata in from source
+			testSource := filepath.Join(origDir, "testdata", t.Name())
+			err = copy2.Copy(testSource, testDir)
+			require.NoError(t, err)
+
+			// Start with an existing config.yaml and verify
+			app, err := ddevapp.NewApp("", false)
+			require.NoError(t, err)
+			_ = app.Stop(true, false)
+
+			// Original values should match
+			checkValues(t, testName, expectation.baseExpectation, app)
+
+			// ddev config --update and verify
+			out, err := exec.RunHostCommand(DdevBin, "config", "--update")
+			require.NoError(t, err, "failed to run ddev config --update: %v output=%s", err, out)
+
+			// Load the newly-created app to inspect it
+			app, err = ddevapp.NewApp("", false)
+			require.NoError(t, err)
+
+			// Updated values should match
+			checkValues(t, testName, expectation.configExpectation, app)
+
+		})
+	}
+}
+
+// checkValues compares several values of the expected and actual apps to make sure they're the same
+func checkValues(t *testing.T, name string, expectation ddevapp.DdevApp, app *ddevapp.DdevApp) {
+	assert := asrt.New(t)
+
+	reflectedExpectation := reflect.ValueOf(expectation)
+	reflectedApp := reflect.ValueOf(*app)
+
+	for _, member := range []string{"Type", "PHPVersion", "Docroot", "CorepackEnable", "Database"} {
+
+		fieldExpectation := reflectedExpectation.FieldByName(member)
+		if fieldExpectation.IsValid() {
+			fieldValueExpectation := fieldExpectation.Interface()
+			fieldValueApp := reflectedApp.FieldByName(member).Interface()
+			assert.Equal(fieldValueExpectation, fieldValueApp, "%s: field %s does not match", name, member)
+		}
 	}
 }
 

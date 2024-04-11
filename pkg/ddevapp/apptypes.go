@@ -386,10 +386,31 @@ func (app *DdevApp) PostImportDBAction() error {
 }
 
 // ConfigFileOverrideAction gives a chance for an apptype to override any element
-// of config.yaml that it needs to (on initial creation, but not after that)
-func (app *DdevApp) ConfigFileOverrideAction() error {
-	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.configOverrideAction != nil && !app.ConfigExists() {
-		return appFuncs.configOverrideAction(app)
+// of config.yaml that it needs to
+func (app *DdevApp) ConfigFileOverrideAction(overrideExistingConfig bool) error {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.configOverrideAction != nil && (overrideExistingConfig || !app.ConfigExists()) {
+		origDB := app.Database
+		err := appFuncs.configOverrideAction(app)
+		if err != nil {
+			return err
+		}
+		// If the override function has changed the database type
+		// check to make sure that there's not one already existing
+		if origDB != app.Database {
+			// We can't upgrade database if it already exists
+			dbType, err := app.GetExistingDBType()
+			if err != nil {
+				return err
+			}
+			recommendedDBType := app.Database.Type + ":" + app.Database.Version
+			if dbType == "" {
+				// Assume that we don't have a database yet
+				util.Success("Configuring %s project with database type '%s'", app.Type, recommendedDBType)
+			} else if dbType != recommendedDBType {
+				util.Warning("%s project already has database type set to non-recommended: %s, not changing it to recommended %s", app.Type, dbType, recommendedDBType)
+				app.Database = origDB
+			}
+		}
 	}
 
 	return nil

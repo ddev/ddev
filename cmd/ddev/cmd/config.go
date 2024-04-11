@@ -309,6 +309,7 @@ func init() {
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
 	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
+	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -423,10 +424,21 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 	}
 
+	doUpdate, _ := cmd.Flags().GetBool("update")
 	switch {
+	case doUpdate:
+		if projectTypeArg == "" {
+			projectTypeArg = detectedApptype
+		}
+
+		app.Type = projectTypeArg
+		util.Success("Auto-updating project configuration because update is requested.\nConfiguring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
+		err = app.ConfigFileOverrideAction(true)
+		if err != nil {
+			util.Warning("ConfigOverrideAction failed: %v")
+		}
 	case app.Type != nodeps.AppTypeNone && projectTypeArg == "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
 		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
-		break
 	default:
 		if projectTypeArg == "" {
 			projectTypeArg = detectedApptype
@@ -438,7 +450,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	// App overrides are done after app type is detected, but
 	// before user-defined flags are set.
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	if err != nil {
 		util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
 	}

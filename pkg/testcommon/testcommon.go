@@ -114,6 +114,9 @@ func (site *TestSite) Prepare() error {
 	}
 	output.UserOut.Println("Copying complete")
 
+	// Remove existing in project registry
+	_ = globalconfig.RemoveProjectInfo(site.Name)
+
 	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.
 	app, err := ddevapp.NewApp(site.Dir, true)
@@ -138,7 +141,7 @@ func (site *TestSite) Prepare() error {
 			},
 		}
 	}
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	util.CheckErr(err)
 
 	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0777)
