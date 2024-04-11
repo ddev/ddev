@@ -138,6 +138,7 @@ SQLite
 Starts
 Statamic
 Support
+Symfony
 TablePlus
 Traefik
 TravisCI
