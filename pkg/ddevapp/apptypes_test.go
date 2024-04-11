@@ -109,6 +109,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		err = app.ConfigFileOverrideAction(false)
 		assert.NoError(err)
 		// But with a config that has been written with a specified version, the version should be untouched by
+		// app.ConfigFileOverrideAction()
 		assert.EqualValues(app.PHPVersion, newVersion)
 	}
 }
