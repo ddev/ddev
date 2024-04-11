@@ -1,0 +1,6 @@
+# 2024-04-10: blackfire upgrade was broken per https://github.com/ddev/ddev/issues/6078
+# Pinned to current installed version
+Package: blackfire
+Version: 2:2.26.1
+Pin: version 2:2.26.1
+Pin-Priority: 1001
