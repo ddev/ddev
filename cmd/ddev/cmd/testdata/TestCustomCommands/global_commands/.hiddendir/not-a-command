@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: not-a-command global
+## Usage: not-a-command
+## Example: "ddev not-a-command"
+
+echo "this file shouldn't display in the commands list"

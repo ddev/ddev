@@ -89,6 +89,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.NotContains(out, "testwebglobal global (global shell web container command)")
 	assert.NotContains(out, "testhostcmd global")
 	assert.NotContains(out, "testwebcmd global")
+	assert.NotContains(out, "not-a-command")
 
 	out, err = exec.RunHostCommand(DdevBin, "testhostglobal-noproject", "hostarg1", "hostarg2", "--hostflag1")
 	assert.NoError(err)
@@ -140,6 +141,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.Contains(out, "testwebglobal global (global shell web container command)")
 	assert.NotContains(out, "testhostcmd global") //the global testhostcmd should have been overridden by the project one
 	assert.NotContains(out, "testwebcmd global")  //the global testwebcmd should have been overridden by the project one
+	assert.NotContains(out, "not-a-command")
 
 	// Have to do app.Start() because commands are copied into containers on start
 	err = app.Start()

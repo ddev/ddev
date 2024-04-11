@@ -82,6 +82,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			if !fileutil.IsDirectory(serviceDirOnHost) {
 				continue
 			}
+			// Skip hidden directories as well.
+			if strings.HasPrefix(filepath.Base(serviceDirOnHost), ".") {
+				continue
+			}
 			commandFiles, err := fileutil.ListFilesInDir(serviceDirOnHost)
 			if err != nil {
 				return err
