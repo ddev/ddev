@@ -41,7 +41,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 In addition to the [*commands*](../usage/commands.md) listed above, there are lots of tools included inside the containers:
 
 * [`ddev describe`](../usage/commands.md#describe) tells how to access **Mailpit**, which captures email in your development environment.
-* Composer, Git, Node.js, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via [`ddev ssh`](../usage/commands.md#ssh) or [`ddev exec`](../usage/commands.md#exec).
+* Composer, Git, Node.js, npm, nvm, symfony, and dozens of other tools are installed in the web container, and you can access them via [`ddev ssh`](../usage/commands.md#ssh) or [`ddev exec`](../usage/commands.md#exec).
 * [`ddev logs`](../usage/commands.md#logs) gets you web server logs; `ddev logs -s db` gets database server logs.
 * `sqlite3` and the `mysql` and `psql` clients are inside the web container (and `mysql` or `psql` client is also in the `db` container).
 

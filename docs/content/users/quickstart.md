@@ -632,14 +632,10 @@ If your project uses a database you'll want to set the [DB connection string](ht
 
 === "Symfony CLI"
 
-    In a future release the Symfony CLI will be provided by default in `ddev-webserver`, but for now it needs to be configured.
-
     ```bash
     mkdir my-symfony && cd my-symfony
     ddev config --docroot=public
-    echo "RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
-    RUN sudo apt install -y symfony-cli" >.ddev/web-build/Dockerfile.symfony-cli
-    ddev restart
+    ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --version="7.0.*" --webapp
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
