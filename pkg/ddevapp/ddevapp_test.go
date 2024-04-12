@@ -2999,7 +2999,7 @@ func TestRouterPortsCheck(t *testing.T) {
 		},
 	}
 
-	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, nil, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
+	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, nil, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding, nil)
 
 	if err != nil {
 		t.Fatalf("Failed to run Docker command to occupy port 80/443, err=%v output=%v", err, out)
