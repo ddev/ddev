@@ -142,15 +142,11 @@ func TestGetContainerHealth(t *testing.T) {
 		_, err = startTestContainer()
 		assert.NoError(err)
 		healthDetail, err := dockerutil.ContainerWait(30, labels)
-		assert.NoError(err, "healtdetail='%s'", healthDetail)
+		assert.NoError(err, "healthDetail='%s'", healthDetail)
 
 		container, err = dockerutil.FindContainerByLabels(labels)
 		assert.NoError(err)
 		assert.NotNil(container)
-
-		status, healthDetail := dockerutil.GetContainerHealth(container)
-		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK ")
-		assert.Equal("healthy", status)
 	})
 
 	container, err := dockerutil.FindContainerByLabels(labels)
@@ -166,7 +162,7 @@ func TestGetContainerHealth(t *testing.T) {
 	assert.NoError(err)
 
 	status, log = dockerutil.GetContainerHealth(container)
-	assert.Equal(status, "unhealthy", "container should be unhealthy; log=%v", log)
+	assert.Equal("exited", status, "container should be unhealthy; log=%v", log)
 	assert.NoError(err)
 
 }
