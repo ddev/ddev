@@ -949,6 +949,9 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		Entrypoint:   entrypoint,
 		AttachStderr: true,
 		AttachStdout: true,
+		Healthcheck: &dockerContainer.HealthConfig{
+			Test: []string{"NONE"}, // Disables any existing health check
+		},
 	}
 
 	containerHostConfig := &dockerContainer.HostConfig{
