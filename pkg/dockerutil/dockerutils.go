@@ -49,6 +49,9 @@ type ComposeCmdOpts struct {
 	Progress     bool // Add dots every second while the compose command is running
 }
 
+// NoHealthCheck is a HealthConfig that disables any existing healthcheck when
+// running a container. Used by RunSimpleContainer
+// See https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 var NoHealthCheck = dockerContainer.HealthConfig{
 	Test: []string{"NONE"}, // Disables any existing health check
 }
@@ -895,8 +898,12 @@ func GetDockerIP() (string, error) {
 // RunSimpleContainer runs a container (non-daemonized) and captures the stdout/stderr.
 // It will block, so not to be run on a container whose entrypoint or cmd might hang or run too long.
 // This should be the equivalent of something like
-// docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
+// docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --no-healthcheck --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
+// Default behavior is to use the image's healthcheck (healthConfig == nil)
+// When passed a pointer to HealthConfig (often &dockerutils.NoHealthCheck) it can turn off healthcheck
+// or it can replace it or have other behaviors, see
+// https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 // Returns containerID, output, error
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings nat.PortMap, healthConfig *dockerContainer.HealthConfig) (containerID string, output string, returnErr error) {
 	ctx, client := GetDockerClient()
