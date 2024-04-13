@@ -388,7 +388,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     mkdir my-laravel-app
     cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    ddev config --project-type=laravel --docroot=public --php-version=8.3
     ddev composer create --prefer-dist laravel/laravel:^11
     ddev launch
     ```
@@ -398,7 +398,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     git clone <your-laravel-repo>
     cd <your-laravel-project>
-    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    ddev config --project-type=laravel --docroot=public --php-version=8.3
     ddev start
     ddev composer install
     ddev php artisan key:generate
@@ -410,7 +410,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
     ```bash
-    ddev config --project-type=laravel --docroot=public --php-version=8.2 --omit-containers=db --disable-settings-management=true
+    ddev config --project-type=laravel --docroot=public --php-version=8.3 --omit-containers=db --disable-settings-management=true
     ```
 
 ## Magento
