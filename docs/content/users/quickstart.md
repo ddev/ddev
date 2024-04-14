@@ -234,11 +234,10 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 
 === "ExpressionEngine ZIP File Download"
 
-    Download the ExpressionEngine code from [expressionengine.com](https://expressionengine.com/), then follow these steps based on the [official installation instructions](https://docs.expressionengine.com/latest/installation/installation.html):
-
     ```bash
-    mkdir my-ee && cd my-ee
-    unzip /path/to/ee-zipfile.zip
+    mkdir my-ee-site
+    cd my-ee-site
+    # Download the zip archive for ExpressionEngine at https://github.com/ExpressionEngine/ExpressionEngine/releases/latest unarchive and move its content into the root of the my-ee-site directory
     ddev config --database=mysql:8.0
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
