@@ -94,7 +94,7 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     # Boot the project and install the starter project:
     ddev start
-    ddev composer create -y craftcms/craft:^5
+    ddev composer create -y craftcms/craft
     ddev launch
     ```
 
@@ -288,8 +288,8 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --php-version=8.2 --omit-containers=db
     ddev start
     ddev composer install
-    ddev exec bin/grav install
-    ddev exec bin/gpm install admin -y
+    ddev exec grav install
+    ddev exec gpm install admin -y
     ddev launch
     ```
 
@@ -297,13 +297,13 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     Upgrade Grave core:
 
     ```bash
-    ddev exec bin/gpm selfupgrade -f
+    ddev exec gpm selfupgrade -f
     ```
 
     Update plugins and themes:
 
     ```bash
-    ddev exec bin/gpm update -f
+    ddev exec gpm update -f
     ```
 
 Visit the [Grav Documentation](https://learn.getgrav.org/17) for more information about Grav in general and visit [Local Development with DDEV](https://learn.getgrav.org/17/webservers-hosting/local-development-with-ddev) for more details about the usage of Grav with DDEV.
@@ -314,13 +314,12 @@ Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
 
 ```bash
 mkdir my-ibexa-project && cd my-ibexa-project
-ddev config --project-type=php --php-version 8.1 --docroot=public
-ddev config --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+ddev config --project-type=php --php-version 8.1 --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
 ddev start
 ddev composer create ibexa/oss-skeleton
-ddev php bin/console ibexa:install
-ddev php bin/console ibexa:graphql:generate-schema
-ddev launch
+ddev exec console ibexa:install
+ddev exec console ibexa:graphql:generate-schema
+ddev launch /admin/login
 ```
 
 In the web browser, log into your account using `admin` and `publish`.
