@@ -11,17 +11,12 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 === "New projects"
 
     ```bash
-    # Create a project directory and move into it:
-    git clone https://github.com/backdrop/backdrop my-backdrop-site
+    mkdir my-backdrop-site
     cd my-backdrop-site
-    
-    # Set up the DDEV environment:
+    curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
+    unzip ./backdrop.zip && rm backdrop.zip && mv -f ./backdrop/{.,}* . && rm -r backdrop
     ddev config --project-type=backdrop
-    
-    # Boot the project and install the starter project:
     ddev start
-    
-    # Launch the website and step through the initial setup
     ddev launch
     ```
 
@@ -186,7 +181,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^11.x-dev
-    ddev config --update 
+    ddev config --update
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
