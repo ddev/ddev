@@ -94,7 +94,7 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     # Boot the project and install the starter project:
     ddev start
-    ddev composer create -y craftcms/craft
+    ddev composer create -y craftcms/craft:^5
     ddev launch
     ```
 
