@@ -182,6 +182,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev start
     ddev composer create drupal/recommended-project:^11.x-dev
     ddev config --update
+    ddev restart
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
