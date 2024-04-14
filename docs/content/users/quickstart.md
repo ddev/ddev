@@ -275,7 +275,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --php-version=8.2 --omit-containers=db
     ddev start
     ddev composer create getgrav/grav
-    ddev exec bin/gpm install admin -y
+    ddev exec gpm install admin -y
     ddev launch
     ```
 
