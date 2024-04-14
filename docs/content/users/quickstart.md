@@ -471,7 +471,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
     ddev start
-    ddev composer create moodle/moodle -y
+    ddev composer create moodle/moodle
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
@@ -556,7 +556,7 @@ Use a new or existing Composer project, or clone a Git repository.
     cd my-silverstripe-app
     ddev config --project-type=silverstripe --docroot=public
     ddev start
-    ddev composer create --prefer-dist silverstripe/installer -y
+    ddev composer create --prefer-dist silverstripe/installer
     ddev sake dev/build flush=all
     ddev launch /admin
     ```
@@ -606,7 +606,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ddev start
     ddev composer install
     ddev exec "php artisan key:generate"
-    ddev launch
+    ddev launch /cp
     ```
 
 ## Symfony
@@ -620,7 +620,7 @@ If your project uses a database you'll want to set the [DB connection string](ht
     ```bash
     mkdir my-symfony && cd my-symfony
     ddev config --docroot=public
-    ddev composer create symfony/skeleton:"7.0.*"
+    ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
     ddev launch
