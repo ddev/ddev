@@ -6,9 +6,6 @@ Xdebug is a server-side tool, and it’s installed automatically in the containe
 
 All IDEs basically work the same, listening on a port and reacting when they’re contacted there. IDEs other than those listed here work fine, if they listen on Xdebug’s default port 9003.
 
-!!!tip
-    This was port 9000 through DDEV v1.18, changed in v1.19+ to port 9003.
-
 **Key facts:**
 
 * Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.
@@ -143,9 +140,10 @@ Here are basic steps to take to sort out any difficulty:
 WSL2 is a complicated environment for Xdebug, especially if you're running your IDE on the Windows side, as most people do.
 
 * With PhpStorm, consider using the "Remote Development" feature to connect to WSL. That runs an actual PhpStorm instance on WSL2 to reduce networking complexity.
-* When using an IDE inside WSL2—like you would running PhpStorm or Visual Studio Code inside WSL2, or using PhpStorm's "Remote Development" feature—you may need to use the [`xdebug_ide_location`](../configuration/config.md#xdebugidelocation) setting to tell Xdebug to expect the IDE under WSL2. You can do this by running `ddev config global --xdebug-ide-location=wsl2`.
+* When using an IDE inside WSL2—like you would when running PhpStorm or Visual Studio Code inside WSL2, or using PhpStorm's "Remote Development" feature—you may need to use the [`xdebug_ide_location`](../configuration/config.md#xdebugidelocation) setting to tell Xdebug to expect the IDE under WSL2. You can do this by running `ddev config global --xdebug-ide-location=wsl2`.
 * `export DDEV_DEBUG=true && ddev start` will show you how DDEV is calculating the `host.docker.internal` IP address to be used when contacting the IDE, which may give a hint about problems you might discover in the general troubleshooting discussed above, when trying to connect to the listening IDE.
-* If you're using the IDE on the Windows side, WSL2’s `/etc/resolv.conf` file is the authoritative way to figure out where the IDE is in the Windows networking scheme. That value should be the same as `host.docker.internal`, so running `ddev exec ping -c 1 host.docker.internal` will show you what's actually being used. If your IDE is actually at a different address, you can tell DDEV to override the discovered value for `host.docker.internal` by running `ddev config global --xdebug-ide-location=<some_ip_address>`.
+* If you're using docker-ce and have the IDE on the Windows side, `ip -4 route show default` in the WSL2 distro is the best known way to figure out where the IDE is in the Windows networking scheme, so DDEV uses that to determine `host.docker.internal`. That value should be the same as `host.docker.internal`, so running `ddev exec ping -c 1 host.docker.internal` will show you what's actually being used. If your IDE is actually at a different address, you can tell DDEV to override the discovered value for `host.docker.internal` by running `ddev config global --xdebug-ide-location=<some_ip_address>`.
 * If you’re using PhpStorm inside WSL2 (or perhaps other Linux configurations), go to *Help* → *Edit Custom VM Options* and add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPv4; the Linux version of PhpStorm seems to default to using only IPv6.
 * If you’re on WSL2 using Docker Desktop, make sure that the `docker` command is the one provided by Docker Desktop. `ls -l $(which docker)` should show a link to `/mnt/wsl/docker-desktop...`. If you’re on WSL2 using Docker installed inside WSL2, make sure that `ls -l $(which docker)` is *not* a link to `/mnt/wsl`.
 * You can run `export DDEV_DEBUG=true` and `ddev start` to get information about how `host.docker.internal` is figured out, which can help in some situations especially with WSL2. (`host.docker.internal` inside the web container is where Xdebug thinks it should connect to your IDE. You can see what it is set to by running `ddev exec ping host.docker.internal`.)
+* On some WSL2 docker-ce systems you may have to work hard to find out the correct IP address for the Windows side. DDEV tries to figure this out for you, but it may not be able to do so. The IP address shown as `nameserver` in `/etc/resolv.conf` may be the correct one, and this used to be the recommended technique. If it's the address you need you can change the address DDEV will use for `host.docker.internal` using `ddev config global --xdebug-ide-location=<some-ip-address>`.
