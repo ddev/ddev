@@ -2684,7 +2684,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		codespaceName := os.Getenv("CODESPACE_NAME")
 		previewDomain := os.Getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
 		if codespaceName != "" && previewDomain != "" {
-			url := fmt.Sprintf("https://%s-%s.%s", codespaceName, app.HostWebserverPort, previewDomain)
+			url := fmt.Sprintf("https://%s-%s.%s", codespaceName, app.HostHTTPSPort, previewDomain)
 			httpsURLs = append(httpsURLs, url)
 		}
 	}
