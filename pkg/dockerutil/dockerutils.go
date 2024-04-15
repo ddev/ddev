@@ -1347,14 +1347,14 @@ func wsl2GetWindowsHostIP() string {
 	}
 	parts := strings.Split(out, " ")
 	if len(parts) < 3 {
-		util.Warning("Unable to parse output of ip -4 route show default, result was %v", parts)
+		util.Warning("Unable to parse output of 'ip -4 route show default', result was %v", parts)
 		return ""
 	}
 
 	ip := parts[2]
 
 	if parsedIP := net.ParseIP(ip); parsedIP == nil {
-		util.Warning("Unable to validate IP address '%s' from ip -4 route show default", ip)
+		util.Warning("Unable to validate IP address '%s' from 'ip -4 route show default'", ip)
 		return ""
 	}
 
