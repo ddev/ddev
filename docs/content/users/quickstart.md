@@ -431,6 +431,8 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
+    ddev php bin/magento info:adminuri
+    # Append the URI returned by the previous command either to ddev launch, like for example ddev launch /admin_XXXXXXX, or just run ddev launch and append the URI to the path in the browser
     ddev launch
     ```
 
