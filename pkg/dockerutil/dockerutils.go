@@ -302,7 +302,12 @@ func FindContainersByLabels(labels map[string]string) ([]dockerTypes.Container, 
 	}
 	filterList := dockerFilters.NewArgs()
 	for k, v := range labels {
-		filterList.Add("label", fmt.Sprintf("%s=%s", k, v))
+		label := fmt.Sprintf("%s=%s", k, v)
+		// If no value is specified, filter any value by the key.
+		if v == "" {
+			label = k
+		}
+		filterList.Add("label", label)
 	}
 
 	ctx, client := GetDockerClient()
