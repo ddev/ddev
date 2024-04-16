@@ -2,7 +2,7 @@
   "$id": "https://json.schemastore.org/base.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DDEV global config",
-  "description": "Schema for DDEV global config for version 1.23",
+  "description": "Schema for DDEV global_config.yaml",
   "type": "object",
   "additionalProperties": false,
   "properties": {
