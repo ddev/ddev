@@ -265,7 +265,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 
     ```bash
     mkdir my-grav-site && cd my-grav-site
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
     ddev start
     ddev composer create getgrav/grav
     ddev exec gpm install admin -y
@@ -277,7 +277,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ```bash
     mkdir my-grav-site && cd my-grav-site
     git clone -b master https://github.com/getgrav/grav.git .
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
     ddev start
     ddev composer install
     ddev exec grav install
@@ -331,7 +331,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     mkdir my-kirby-site && cd my-kirby-site
 
     # Set up the DDEV environment
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
 
     # Spin up the project and install the Kirby Starterkit
     ddev start
@@ -350,7 +350,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     cd my-kirby-site
 
     # Set up the DDEV environment
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
 
     # Spin up the project
     ddev start
@@ -372,7 +372,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
-    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist laravel/laravel:^11
     ddev launch
     ```
@@ -382,7 +382,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     git clone <your-laravel-repo> my-laravel-site
     cd your-laravel-site
-    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
     ddev php artisan key:generate
@@ -394,7 +394,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
     ```bash
-    ddev config --project-type=laravel --docroot=public --php-version=8.2 --omit-containers=db --disable-settings-management=true
+    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
     ```
 
 ## Magento
