@@ -2272,7 +2272,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
-		return "", fmt.Errorf("failed to process pre-stop hooks: %v", err)
+		return "", fmt.Errorf("failed to process pre-snapshot hooks: %v", err)
 	}
 
 	if snapshotName == "" {
@@ -2383,7 +2383,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
-		return snapshotFile, fmt.Errorf("failed to process pre-stop hooks: %v", err)
+		return snapshotFile, fmt.Errorf("failed to process post-snapshot hooks: %v", err)
 	}
 
 	return snapshotName, nil

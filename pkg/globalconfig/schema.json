@@ -2,28 +2,9 @@
   "$id": "https://json.schemastore.org/base.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DDEV global config",
-  "description": "Schema for DDEV global config for version 1.22",
+  "description": "Schema for DDEV global_config.yaml",
   "type": "object",
   "additionalProperties": false,
-  "definitions": {
-    "DdevTask": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "exec": {
-            "type": "string"
-          },
-          "exec-host": {
-            "type": "string"
-          },
-          "composer": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
   "properties": {
     "developer_mode": {
       "description": "Not currently used.",
@@ -37,84 +18,6 @@
       "description": "Whether ddev start should be interrupted by a failing hook, on a single project or for all projects if used globally.",
       "type": "boolean"
     },
-    "hooks": {
-      "description": "Run tasks before or after main DDEV commands are executed",
-      "type": "object",
-      "properties": {
-        "pre-start": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-start": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-import-db": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-import-db": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-import-files": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-import-files": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-composer": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-composer": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-stop": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-config": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-config": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-exec": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-exec": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-pause": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-pause": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-pull": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-pull": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-push": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-push": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-snapshot": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-snapshot": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "pre-restore-snapshot": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-restore-snapshot": {
-          "$ref": "#/definitions/DdevTask"
-        },
-        "post-stop": {
-          "$ref": "#/definitions/DdevTask"
-        }
-      }
-    },
     "instrumentation_opt_in": {
       "description": "Whether to allow instrumentation reporting.",
       "type": "boolean"
@@ -127,9 +30,17 @@
       "description": "Reporting interval in hours for instrumentation reporting.",
       "type": "integer"
     },
+    "instrumentation_user": {
+      "description": "Specific name identifier for instrumentation reporting.",
+      "type": "string"
+    },
     "internet_detection_timeout_ms": {
       "description": "Internet detection timeout in milliseconds.",
       "type": "integer"
+    },
+    "last_started_version": {
+      "description": "Last started version using \"ddev --version\" command.",
+      "type": "string"
     },
     "letsencrypt_email": {
       "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
@@ -156,15 +67,23 @@
         "ticker_interval"
       ]
     },
+    "mkcert_caroot": {
+      "description": "The absolute path to the directory containing mkcert certificates using \"mkcert -CAROOT\" command.",
+      "type": "string"
+    },
     "no_bind_mounts": {
       "description": "Whether to not use Docker bind mounts.",
       "type": "boolean"
     },
     "omit_containers": {
-      "description": "A list of container types that should not be started when the project is started",
+      "description": "A list of container types that should not be started when the project is started.",
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "ddev-router",
+          "ddev-ssh-agent"
+        ]
       },
       "uniqueItems": true
     },
@@ -179,7 +98,7 @@
       ]
     },
     "project_tld": {
-      "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\")",
+      "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\").",
       "type": "string"
     },
     "required_docker_compose_version": {
@@ -199,11 +118,11 @@
       "type": "boolean"
     },
     "router_http_port": {
-      "description": "The router HTTP port for this project",
+      "description": "The router HTTP port for this project.",
       "type": "string"
     },
     "router_https_port": {
-      "description": "The router HTTPS port for this project",
+      "description": "The router HTTPS port for this project.",
       "type": "string"
     },
     "simple_formatting": {
@@ -236,7 +155,7 @@
       "type": "boolean"
     },
     "web_environment": {
-      "description": "Add environment variables to web container",
+      "description": "Add environment variables to the web container.",
       "type": "array",
       "items": {
         "type": "string"

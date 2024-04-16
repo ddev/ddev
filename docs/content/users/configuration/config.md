@@ -76,7 +76,7 @@ When the network interfaces of a project should be exposed to the local network,
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`.
+| :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
 ## `composer_root`
 
@@ -278,6 +278,14 @@ Reporting interval in hours for [instrumentation reporting](../usage/diagnostics
 | -- | -- | --
 | :octicons-globe-16: global | `24` | Can be any integer.
 
+## `instrumentation_user`
+
+Specific name identifier for [instrumentation reporting](../usage/diagnostics.md).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `` | &zwnj;
+
 ## `internet_detection_timeout_ms`
 
 Internet detection timeout in milliseconds.
@@ -331,10 +339,10 @@ messages:
 
 Example: Show the "Tip of the Day" ticket every two hours:
 
-```yaml`
+```yaml
 messages:
   ticker_interval: 2
-``
+```
 
 ## `name`
 

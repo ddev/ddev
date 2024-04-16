@@ -2,7 +2,7 @@
   "$id": "https://json.schemastore.org/base.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DDEV project config",
-  "description": "Schema for DDEV project config for version 1.22",
+  "description": "Schema for DDEV project's config.yaml",
   "type": "object",
   "additionalProperties": false,
   "definitions": {
@@ -26,7 +26,7 @@
   },
   "properties": {
     "additional_fqdns": {
-      "description": "A comma-delimited list of FQDNs for the project",
+      "description": "A comma-delimited list of FQDNs for the project.",
       "type": "array",
       "items": {
         "type": "string"
@@ -34,7 +34,7 @@
       "uniqueItems": true
     },
     "additional_hostnames": {
-      "description": "A comma-delimited list of hostnames for the project",
+      "description": "A comma-delimited list of hostnames for the project.",
       "type": "array",
       "items": {
         "type": "string"
@@ -42,7 +42,7 @@
       "uniqueItems": true
     },
     "bind_all_interfaces": {
-      "description": "Bind host ports on all interfaces, not just on localhost network interface",
+      "description": "Bind host ports on all interfaces, not just on localhost network interface.",
       "type": "boolean"
     },
     "composer_root": {
@@ -53,22 +53,31 @@
       "description": "Composer version for the web container and the ddev composer command.",
       "type": "string"
     },
+    "corepack_enable": {
+      "description": "Whether to \"corepack enable\" on Node.js configuration.",
+      "type": "boolean"
+    },
     "database": {
-      "description": "Specify the database type and version to use. Defaults to mariadb:10.3",
+      "description": "Specify the database type and version to use.",
       "type": "object",
       "properties": {
         "type": {
-          "description": "Specify the database type to use",
-          "type": "string"
+          "description": "Specify the database type to use.",
+          "type": "string",
+          "enum": [
+            "mariadb",
+            "mysql",
+            "postgres"
+          ]
         },
         "version": {
-          "description": "Specify the database version to use",
+          "description": "Specify the database version to use.",
           "type": "string"
         }
       }
     },
     "dbimage_extra_packages": {
-      "description": "A list of Debian packages that should be added to db container when the project is started",
+      "description": "A list of Debian packages that should be added to db container when the project is started.",
       "type": "array",
       "items": {
         "type": "string"
@@ -81,10 +90,13 @@
     },
     "default_container_timeout": {
       "description": "Seconds DDEV will wait for all containers to become ready.",
-      "type": "integer"
+      "type": [
+        "integer",
+        "string"
+      ]
     },
     "disable_settings_management": {
-      "description": "Prevent ddev from creating or updating CMS settings files",
+      "description": "Prevent ddev from creating or updating CMS settings files.",
       "type": "boolean"
     },
     "disable_upload_dirs_warning": {
@@ -92,15 +104,15 @@
       "type": "boolean"
     },
     "docroot": {
-      "description": "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory",
+      "description": "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory.",
       "type": "string"
     },
     "fail_on_hook_fail": {
-      "description": "Decide whether 'ddev start' should be interrupted by a failing hook",
+      "description": "Decide whether 'ddev start' should be interrupted by a failing hook.",
       "type": "boolean"
     },
     "hooks": {
-      "description": "Run tasks before or after main DDEV commands are executed",
+      "description": "Run tasks before or after main DDEV commands are executed.",
       "type": "object",
       "properties": {
         "pre-start": {
@@ -166,6 +178,12 @@
         "post-snapshot": {
           "$ref": "#/definitions/DdevTask"
         },
+        "pre-delete-snapshot": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-delete-snapshot": {
+          "$ref": "#/definitions/DdevTask"
+        },
         "pre-restore-snapshot": {
           "$ref": "#/definitions/DdevTask"
         },
@@ -178,39 +196,35 @@
       }
     },
     "host_db_port": {
-      "description": "The db container's localhost-bound port",
-      "type": "string"
-    },
-    "host_dba_port": {
-      "description": "The dba (PHPMyAdmin) container's localhost-bound port, if exposed via bind-all-interfaces",
+      "description": "The db container's localhost-bound port.",
       "type": "string"
     },
     "host_https_port": {
-      "description": "The web container's localhost-bound https port",
+      "description": "The web container's localhost-bound https port.",
       "type": "string"
     },
     "host_mailpit_port": {
-      "description": "The mailpit localhost-bound port",
+      "description": "The mailpit localhost-bound port.",
       "type": "string"
     },
     "host_webserver_port": {
-      "description": "The web container's localhost-bound port",
+      "description": "The web container's localhost-bound port.",
       "type": "string"
     },
     "mailpit_http_port": {
-      "description": "Router port to be used for mailpit access",
+      "description": "Router port to be used for mailpit access.",
       "type": "string"
     },
     "mailpit_https_port": {
-      "description": "Router port to be used for mailpit access (https)",
+      "description": "Router port to be used for mailpit access (https).",
       "type": "string"
     },
     "name": {
-      "description": "Provide the name of the project to configure (normally the same as the last part of directory name)",
+      "description": "Provide the name of the project to configure (normally the same as the last part of directory name).",
       "type": "string"
     },
     "ngrok_args": {
-      "description": "Provide extra args to ngrok in ddev share",
+      "description": "Provide extra args to ngrok in ddev share.",
       "type": "string"
     },
     "no_project_mount": {
@@ -222,10 +236,14 @@
       "type": "string"
     },
     "omit_containers": {
-      "description": "A list of container types that should not be started when the project is started",
+      "description": "A list of container types that should not be started when the project is started.",
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "db",
+          "ddev-ssh-agent"
+        ]
       },
       "uniqueItems": true
     },
@@ -260,23 +278,23 @@
       ]
     },
     "project_tld": {
-      "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\")",
+      "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\").",
       "type": "string"
     },
     "router_http_port": {
-      "description": "The router HTTP port for this project",
+      "description": "The router HTTP port for this project.",
       "type": "string"
     },
     "router_https_port": {
-      "description": "The router HTTPS port for this project",
+      "description": "The router HTTPS port for this project.",
       "type": "string"
     },
     "timezone": {
-      "description": "Specify timezone for containers and php",
+      "description": "Specify timezone for containers and PHP.",
       "type": "string"
     },
     "type": {
-      "description": "Provide the project type",
+      "description": "Provide the project type.",
       "type": "string",
       "enum": [
         "backdrop",
@@ -300,18 +318,18 @@
       ]
     },
     "upload_dirs": {
-      "description": "Sets multiple project upload directories, the first is taken as the destination directory of the import-files command",
+      "description": "Sets multiple project upload directories, the first is taken as the destination directory of the import-files command.",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "use_dns_when_possible": {
-      "description": "Use DNS for hostname resolution instead of /etc/hosts when possible",
+      "description": "Use DNS for hostname resolution instead of /etc/hosts when possible.",
       "type": "boolean"
     },
     "web_environment": {
-      "description": "Add environment variables to web container",
+      "description": "Add environment variables to the web container.",
       "type": "array",
       "items": {
         "type": "string"
@@ -359,18 +377,18 @@
       }
     },
     "webimage": {
-      "description": "Sets the web container image",
+      "description": "Sets the web container image.",
       "type": "string"
     },
     "webimage_extra_packages": {
-      "description": "A list of Debian packages that should be added to web container when the project is started",
+      "description": "A list of Debian packages that should be added to web container when the project is started.",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "webserver_type": {
-      "description": "Sets the project's desired webserver type",
+      "description": "Sets the project's desired webserver type.",
       "type": "string",
       "enum": [
         "nginx-fpm",
@@ -379,21 +397,21 @@
       ]
     },
     "working_dir": {
-      "description": "Override default project working directories for db and web service",
+      "description": "Override default project working directories for db and web service.",
       "type": "object",
       "properties": {
         "web": {
-          "description": "Overrides the default working directory for the web service",
+          "description": "Overrides the default working directory for the web service.",
           "type": "string"
         },
         "db": {
-          "description": "Overrides the default working directory for the db service",
+          "description": "Overrides the default working directory for the db service.",
           "type": "string"
         }
       }
     },
     "xdebug_enabled": {
-      "description": "Whether or not XDebug is enabled in the web container",
+      "description": "Whether or not Xdebug is enabled in the web container.",
       "type": "boolean"
     }
   }
