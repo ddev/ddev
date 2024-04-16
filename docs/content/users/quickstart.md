@@ -11,17 +11,11 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 === "New projects"
 
     ```bash
-    # Create a project directory and move into it:
-    git clone https://github.com/backdrop/backdrop my-backdrop-site
-    cd my-backdrop-site
-    
-    # Set up the DDEV environment:
+    mkdir my-backdrop-site && cd my-backdrop-site
+    curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
+    unzip ./backdrop.zip && rm backdrop.zip && mv -f ./backdrop/{.,}* . && rm -r backdrop
     ddev config --project-type=backdrop
-    
-    # Boot the project and install the starter project:
     ddev start
-    
-    # Launch the website and step through the initial setup
     ddev launch
     ```
 
@@ -32,8 +26,8 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 
     ```bash
     # Clone an existing repository (or navigate to a local project directory):
-    git clone https://github.com/example/example-site example-site
-    cd example-site
+    git clone https://github.com/example/example-site my-backdrop-site
+    cd my-backdrop-site
 
     # Set up the DDEV environment:
     ddev config --project-type=backdrop
@@ -58,8 +52,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 === "Composer"
 
     ```bash
-    mkdir my-cakephp-app
-    cd my-cakephp-app
+    mkdir my-cakephp-site && cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
     ddev composer create --prefer-dist cakephp/app:~5.0
     ddev cake
@@ -69,8 +62,8 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 === "Git Clone"
 
     ```bash
-    git clone <your-cakephp-repo>
-    cd <your-cakephp-project>
+    git clone <my-cakephp-repo> my-cakephp-site
+    cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
     ddev start
     ddev composer install
@@ -91,15 +84,14 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     ```bash
     # Create a project directory and move into it:
-    mkdir my-craft-project
-    cd my-craft-project
+    mkdir my-craft-site && cd my-craft-site
 
     # Set up the DDEV environment:
     ddev config --project-type=craftcms --docroot=web
 
     # Boot the project and install the starter project:
     ddev start
-    ddev composer create -y craftcms/craft
+    ddev composer create craftcms/craft
     ddev launch
     ```
 
@@ -111,8 +103,8 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     ```bash
     # Clone an existing repository (or navigate to a local project directory):
-    git clone https://github.com/example/example-site my-craft-project
-    cd my-craft-project
+    git clone https://github.com/example/example-site my-craft-site
+    cd my-craft-site
 
     # Set up the DDEV environment:
     ddev config --project-type=craftcms
@@ -133,7 +125,7 @@ Environment variables will be automatically added to your `.env` file to simplif
 
 ### Running Craft in a Subdirectory
 
-In order for `ddev craft` to work when Craft is installed in a subdirectory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-project/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
+In order for `ddev craft` to work when Craft is installed in a subdirectory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-site/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
 
 Read more about customizing the environment and persisting configuration in [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
 
@@ -166,8 +158,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 === "Drupal 10"
 
     ```bash
-    mkdir my-drupal-site
-    cd my-drupal-site
+    mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^10
@@ -186,7 +177,8 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --project-type=drupal --php-version=8.3 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^11.x-dev
-    ddev config --update 
+    ddev config --update
+    ddev restart
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
@@ -197,8 +189,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 === "Drupal 9 (EOL)"
 
     ```bash
-    mkdir my-drupal-site
-    cd my-drupal-site
+    mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal --php-version=8.1 --docroot=web
     ddev start
     ddev composer create drupal/recommended-project:^9
@@ -238,11 +229,9 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 
 === "ExpressionEngine ZIP File Download"
 
-    Download the ExpressionEngine code from [expressionengine.com](https://expressionengine.com/), then follow these steps based on the [official installation instructions](https://docs.expressionengine.com/latest/installation/installation.html):
-
     ```bash
-    mkdir my-ee && cd my-ee
-    unzip /path/to/ee-zipfile.zip
+    mkdir my-ee-site && cd my-ee-site
+    # Download the zip archive for ExpressionEngine at https://github.com/ExpressionEngine/ExpressionEngine/releases/latest unarchive and move its content into the root of the my-ee-site directory
     ddev config --database=mysql:8.0
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
@@ -257,8 +246,8 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     Follow these steps based on the [ExpressionEngine Git Repository README.md](https://github.com/ExpressionEngine/ExpressionEngine#how-to-install):
 
     ```bash
-    git clone https://github.com/ExpressionEngine/ExpressionEngine # for example
-    cd ExpressionEngine
+    git clone https://github.com/ExpressionEngine/ExpressionEngine my-ee-site # for example
+    cd my-ee-site
     ddev config # Accept the defaults
     ddev start
     ddev composer install
@@ -275,26 +264,24 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 === "Composer"
 
     ```bash
-    mkdir grav
-    cd grav
-    ddev config --php-version=8.2 --omit-containers=db
+    mkdir my-grav-site && cd my-grav-site
+    ddev config --omit-containers=db
     ddev start
     ddev composer create getgrav/grav
-    ddev exec bin/gpm install admin -y
+    ddev exec gpm install admin -y
     ddev launch
     ```
 
 === "Git Clone"
 
     ```bash
-    mkdir grav
-    cd grav
+    mkdir my-grav-site && cd my-grav-site
     git clone -b master https://github.com/getgrav/grav.git .
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
     ddev start
     ddev composer install
-    ddev exec bin/grav install
-    ddev exec bin/gpm install admin -y
+    ddev exec grav install
+    ddev exec gpm install admin -y
     ddev launch
     ```
 
@@ -302,13 +289,13 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     Upgrade Grave core:
 
     ```bash
-    ddev exec bin/gpm selfupgrade -f
+    ddev exec gpm selfupgrade -f
     ```
 
     Update plugins and themes:
 
     ```bash
-    ddev exec bin/gpm update -f
+    ddev exec gpm update -f
     ```
 
 Visit the [Grav Documentation](https://learn.getgrav.org/17) for more information about Grav in general and visit [Local Development with DDEV](https://learn.getgrav.org/17/webservers-hosting/local-development-with-ddev) for more details about the usage of Grav with DDEV.
@@ -318,14 +305,13 @@ Visit the [Grav Documentation](https://learn.getgrav.org/17) for more informatio
 Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
 
 ```bash
-mkdir my-ibexa-project && cd my-ibexa-project
-ddev config --project-type=php --php-version 8.1 --docroot=public
-ddev config --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+mkdir my-ibexa-site && cd my-ibexa-site
+ddev config --project-type=php --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
 ddev start
 ddev composer create ibexa/oss-skeleton
-ddev php bin/console ibexa:install
-ddev php bin/console ibexa:graphql:generate-schema
-ddev launch
+ddev exec console ibexa:install
+ddev exec console ibexa:graphql:generate-schema
+ddev launch /admin/login
 ```
 
 In the web browser, log into your account using `admin` and `publish`.
@@ -342,11 +328,10 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
     ```bash
     # Create a new project directory and navigate into it
-    mkdir my-kirby-project
-    cd my-kirby-project
+    mkdir my-kirby-site && cd my-kirby-site
 
     # Set up the DDEV environment
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
 
     # Spin up the project and install the Kirby Starterkit
     ddev start
@@ -362,10 +347,10 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
     ```bash
     # Navigate to a existing project directory (or clone/download an existing project):
-    cd my-kirby-project
+    cd my-kirby-site
 
     # Set up the DDEV environment
-    ddev config --php-version=8.2 --omit-containers=db
+    ddev config --omit-containers=db
 
     # Spin up the project
     ddev start
@@ -386,9 +371,8 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 === "Composer"
 
     ```bash
-    mkdir my-laravel-app
-    cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    mkdir my-laravel-site && cd my-laravel-site
+    ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist laravel/laravel:^11
     ddev launch
     ```
@@ -396,9 +380,9 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 === "Git Clone"
 
     ```bash
-    git clone <your-laravel-repo>
-    cd <your-laravel-project>
-    ddev config --project-type=laravel --docroot=public --php-version=8.2
+    git clone <your-laravel-repo> my-laravel-site
+    cd your-laravel-site
+    ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
     ddev php artisan key:generate
@@ -410,7 +394,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 
     To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
     ```bash
-    ddev config --project-type=laravel --docroot=public --php-version=8.2 --omit-containers=db --disable-settings-management=true
+    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
     ```
 
 ## Magento
@@ -422,22 +406,28 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     Note that you can install the Adobe/Magento composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md).
 
     ```bash
-    SITENAME=ddev-magento2
-    mkdir -p ${SITENAME} && cd ${SITENAME}
-    ddev config --project-type=magento2 --php-version=8.2 --database=mariadb:10.6 --docroot=pub --disable-settings-management --upload-dirs=media
-    ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
+    mkdir my-magento2-site && cd my-magento2-site
+    ddev config --project-type=magento2 --docroot=pub --disable-settings-management \
+    --upload-dirs=media --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
+
     ddev get ddev/ddev-elasticsearch
     ddev start
-    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
+    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
     echo "/auth.json" >.ddev/homeadditions/.composer/.gitignore
 
     # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url="https://${SITENAME}.ddev.site/" --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=Password123 --language=en_US
+    ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
+    --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
+    --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
+    --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
+    --admin-user=admin --admin-password=Password123 --language=en_US
 
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
+    ddev php bin/magento info:adminuri
+    # Append the URI returned by the previous command either to ddev launch, like for example ddev launch /admin_XXXXXXX, or just run ddev launch and append the URI to the path in the browser
     ddev launch
     ```
 
@@ -475,9 +465,10 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 === "Composer"
 
     ```bash
+    mkdir my-moodle-site && cd my-moodle-site
     ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
     ddev start
-    ddev composer create moodle/moodle -y
+    ddev composer create moodle/moodle
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
@@ -496,7 +487,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     Using the [Pimcore skeleton](https://github.com/pimcore/skeleton) repository:
 
     ``` bash
-    mkdir my-pimcore && cd my-pimcore
+    mkdir my-pimcore-site && cd my-pimcore-site
     ddev config --docroot=public
 
     ddev start
@@ -537,7 +528,7 @@ ddev launch
     Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV adds necessary information to it. When `ddev composer create` asks if you want to include Docker configuration, answer `x`, as this approach does not use their Docker configuration.
 
     ```bash
-    mkdir my-shopware6 && cd my-shopware6
+    mkdir my-shopware-site && cd my-shopware-site
     ddev config --project-type=shopware6 --docroot=public
     ddev composer create shopware/production:^v6.5
     # If it asks `Do you want to include Docker configuration from recipes?`
@@ -558,11 +549,10 @@ Use a new or existing Composer project, or clone a Git repository.
 === "Composer"
 
     ```bash
-    mkdir my-silverstripe-app
-    cd my-silverstripe-app
+    mkdir my-silverstripe-site && cd my-silverstripe-site
     ddev config --project-type=silverstripe --docroot=public
     ddev start
-    ddev composer create --prefer-dist silverstripe/installer -y
+    ddev composer create --prefer-dist silverstripe/installer
     ddev sake dev/build flush=all
     ddev launch /admin
     ```
@@ -570,8 +560,8 @@ Use a new or existing Composer project, or clone a Git repository.
 === "Git Clone"
 
     ```bash
-    git clone <your-silverstripe-repo>
-    cd <your-silverstripe-project>
+    git clone <your-silverstripe-repo> my-silverstripe-site
+    cd my-silverstripe-site
     ddev config --project-type=silverstripe --docroot=public
     ddev start
     ddev composer install
@@ -596,8 +586,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 === "Composer"
 
     ```bash
-    mkdir my-statamic-app
-    cd my-statamic-app
+    mkdir my-statamic-site && cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist statamic/statamic
     ddev php please make:user
@@ -606,13 +595,13 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 === "Git Clone"
 
     ```bash
-    git clone <your-statamic-repo>
-    cd <your-statamic-project>
+    git clone <your-statamic-repo> my-statamic-site
+    cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
     ddev exec "php artisan key:generate"
-    ddev launch
+    ddev launch /cp
     ```
 
 ## Symfony
@@ -624,9 +613,9 @@ If your project uses a database you'll want to set the [DB connection string](ht
 === "Composer"
 
     ```bash
-    mkdir my-symfony && cd my-symfony
+    mkdir my-symfony-site && cd my-symfony-site
     ddev config --docroot=public
-    ddev composer create symfony/skeleton:"7.0.*"
+    ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
     ddev launch
@@ -635,7 +624,7 @@ If your project uses a database you'll want to set the [DB connection string](ht
 === "Symfony CLI"
 
     ```bash
-    mkdir my-symfony && cd my-symfony
+    mkdir my-symfony-site && cd my-symfony-site
     ddev config --docroot=public
     ddev start
     ddev exec symfony check:requirements
@@ -647,8 +636,8 @@ If your project uses a database you'll want to set the [DB connection string](ht
 === "Git Clone"
 
     ```bash
-    git clone <your-symfony-repo>
-    cd <your-symfony-repo>
+    git clone <your-symfony-repo> my-symfony-site
+    cd my-symfony-site
     ddev config --docroot=public --php-version=8.3
     ddev start
     ddev composer install
@@ -660,8 +649,7 @@ If your project uses a database you'll want to set the [DB connection string](ht
 === "Composer"
 
     ```bash
-    mkdir my-typo3-site
-    cd my-typo3-site
+    mkdir my-typo3-site && cd my-typo3-site
     ddev config --project-type=typo3 --docroot=public --php-version 8.3
     ddev start
     ddev composer create "typo3/cms-base-distribution"
@@ -672,8 +660,8 @@ If your project uses a database you'll want to set the [DB connection string](ht
 === "Git Clone"
 
     ```bash
-    git clone https://github.com/example/example-site
-    cd example-site
+    git clone https://github.com/example/example-site my-typo3-site
+    cd my-typo3-site
     ddev config --project-type=typo3 --docroot=public --php-version 8.3
     ddev composer install
     ddev restart
@@ -690,8 +678,7 @@ There are several easy ways to use DDEV with WordPress:
     DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
 
     ```bash
-    mkdir my-wp-site
-    cd my-wp-site/
+    mkdir my-wp-site && cd my-wp-site/
 
     # Create a new DDEV project inside the newly-created folder
     # (Primary URL automatically set to `https://<folder>.ddev.site`)
@@ -717,8 +704,7 @@ There are several easy ways to use DDEV with WordPress:
     [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation in WordPress:
 
     ```bash
-    mkdir my-wp-bedrock-site
-    cd my-wp-bedrock-site
+    mkdir my-wp-bedrock-site && cd my-wp-bedrock-site
     ddev config --project-type=wordpress --docroot=web
     ddev start
     ddev composer create roots/bedrock
@@ -745,8 +731,8 @@ There are several easy ways to use DDEV with WordPress:
     To get started using DDEV with an existing WordPress project, clone the project’s repository.
 
     ```bash
-    git clone https://github.com/example/my-site.git
-    cd my-site
+    git clone https://github.com/example/my-site.git my-wp-site
+    cd my-wp-site
     ddev config
     ```
 
