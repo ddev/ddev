@@ -28,7 +28,7 @@ func PowerOff() {
 	}
 
 	// Any straggling containers that have label "com.ddev.site-name" should be removed.
-	containers, err := dockerutil.FindContainersByLabels(map[string]string{"label": "com.ddev.site-name"})
+	containers, err := dockerutil.FindContainersByLabels(map[string]string{"com.ddev.site-name": ""})
 
 	if err == nil {
 		for _, c := range containers {
