@@ -32,6 +32,7 @@ If you need to create a service configuration for your project, see [Defining Ad
 There are many ways to deploy Node.js in any project, so DDEV tries to let you set up any possibility you can come up with.
 
 * You can choose any Node.js version you want (including minor and older versions) in `.ddev/config.yaml` with [`nodejs_version`](../configuration/config.md#nodejs_version).
+* If you have a `.nvmrc` file in the root of your project, DDEV will use this as the default node version if you don't include `nodejs_version` in your `config.yaml` file.
 * [`ddev nvm`](../usage/commands.md#nvm) gives you the full capabilities of [Node Version Manager](https://github.com/nvm-sh/nvm).
 * [`ddev npm`](../usage/commands.md#npm) and [`ddev yarn`](../usage/commands.md#yarn) provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
 * You can run Node.js daemons using [`web_extra_daemons`](#running-extra-daemons-in-the-web-container).

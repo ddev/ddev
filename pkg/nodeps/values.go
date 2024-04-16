@@ -1,8 +1,9 @@
 package nodeps
 
 import (
-	"github.com/maruel/natural"
 	"sort"
+
+	"github.com/maruel/natural"
 
 	"github.com/ddev/ddev/pkg/config/types"
 )

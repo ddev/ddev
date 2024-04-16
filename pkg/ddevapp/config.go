@@ -31,6 +31,9 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
+// Default NodeJS version, either from .nvmrc of the constant value defined by DDEV itself.
+var nodeJsDefault string
+
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
 func init() {
@@ -84,7 +87,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.Type = nodeps.AppTypeNone
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
-	app.NodeJSVersion = nodeps.NodeJSDefault
+	app.NodeJSVersion = app.getNodeJSDefault()
 	app.WebserverType = nodeps.WebserverDefault
 	app.SetPerformanceMode(nodeps.PerformanceModeDefault)
 
@@ -209,7 +212,7 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.DefaultContainerTimeout = ""
 	}
 
-	if appcopy.NodeJSVersion == nodeps.NodeJSDefault {
+	if appcopy.NodeJSVersion == app.getNodeJSDefault() {
 		appcopy.NodeJSVersion = ""
 	}
 
@@ -949,7 +952,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
-	if app.NodeJSVersion != nodeps.NodeJSDefault {
+	if app.NodeJSVersion != app.getNodeJSDefault() {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
 	}
@@ -1442,4 +1445,28 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
+}
+
+func (app *DdevApp) getNodeJSDefault() string {
+	if nodeJsDefault != "" {
+		return nodeJsDefault
+	}
+	nvmrcPath := filepath.Join(app.GetAppRoot(), ".nvmrc")
+	if fileutil.FileExists(nvmrcPath) && fileutil.FileIsReadable(nvmrcPath) {
+		versionRaw, err := fileutil.ReadFileIntoString(nvmrcPath)
+		if err == nil {
+			version := strings.TrimSpace(versionRaw)
+			if ok, err := regexp.MatchString(`^[0-9]+(\.[0-9]+(\.[0-9]+)?)?$`, version); ok && err == nil {
+				nodeJsDefault = version
+				return version
+			}
+			// emit a warning and fall back to the const default.
+			util.Warning("Problem getting node version from .nvmrc file, falling back to default.")
+		} else {
+			// emit a warning and fall back to the const default.
+			util.Warning("Error reading .nvmrc file, falling back to default. Error: %v", err)
+		}
+	}
+	nodeJsDefault = nodeps.NodeJSDefault
+	return nodeps.NodeJSDefault
 }
