@@ -38,7 +38,7 @@ for ddev_path in $(which -a ddev); do
       ;;
 
     *)
-      echo "Unable to determine how you installed DDEV, but you can remove $ddev_path and reinstall with one of the techniques in https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/"
+      echo "Unable to determine how you installed DDEV, but you can remove $ddev_path and reinstall with one of the techniques in https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/"
 
   esac
 done

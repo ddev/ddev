@@ -127,7 +127,7 @@ Environment variables will be automatically added to your `.env` file to simplif
 
 In order for `ddev craft` to work when Craft is installed in a subdirectory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-site/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
 
-Read more about customizing the environment and persisting configuration in [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
+Read more about customizing the environment and persisting configuration in [Providing Custom Environment Variables to a Container](./extend/customization-extendibility.md#providing-custom-environment-variables-to-a-container).
 
 !!!tip "Installing Craft"
     Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
@@ -213,7 +213,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 
     Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also run `drush site-install`, then `ddev exec drush site-install --yes`.
 
-    See [Importing a Database](../usage/managing-projects#importing-a-database).
+    See [Importing a Database](./usage/managing-projects.md#importing-a-database).
 
 === "Git Clone"
 
