@@ -64,8 +64,8 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 === "Git Clone"
 
     ```bash
-    git clone <my-cakephp-repo>
-    cd <my-cakephp-repo>
+    git clone <my-cakephp-repo> my-cakephp-site
+    cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
     ddev start
     ddev composer install
