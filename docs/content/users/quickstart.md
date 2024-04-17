@@ -380,8 +380,8 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
 === "Git Clone"
 
     ```bash
-    git clone <your-laravel-repo> my-laravel-site
-    cd your-laravel-site
+    git clone <my-laravel-repo> my-laravel-site
+    cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
@@ -560,7 +560,7 @@ Use a new or existing Composer project, or clone a Git repository.
 === "Git Clone"
 
     ```bash
-    git clone <your-silverstripe-repo> my-silverstripe-site
+    git clone <my-silverstripe-repo> my-silverstripe-site
     cd my-silverstripe-site
     ddev config --project-type=silverstripe --docroot=public
     ddev start
@@ -595,7 +595,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 === "Git Clone"
 
     ```bash
-    git clone <your-statamic-repo> my-statamic-site
+    git clone <my-statamic-repo> my-statamic-site
     cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
     ddev start
@@ -636,9 +636,9 @@ If your project uses a database you'll want to set the [DB connection string](ht
 === "Git Clone"
 
     ```bash
-    git clone <your-symfony-repo> my-symfony-site
+    git clone <my-symfony-repo> my-symfony-site
     cd my-symfony-site
-    ddev config --docroot=public --php-version=8.3
+    ddev config --docroot=public
     ddev start
     ddev composer install
     ddev launch
@@ -650,7 +650,7 @@ If your project uses a database you'll want to set the [DB connection string](ht
 
     ```bash
     mkdir my-typo3-site && cd my-typo3-site
-    ddev config --project-type=typo3 --docroot=public --php-version 8.3
+    ddev config --project-type=typo3 --docroot=public --php-version=8.3
     ddev start
     ddev composer create "typo3/cms-base-distribution"
     ddev exec touch public/FIRST_INSTALL
@@ -662,7 +662,7 @@ If your project uses a database you'll want to set the [DB connection string](ht
     ```bash
     git clone https://github.com/example/example-site my-typo3-site
     cd my-typo3-site
-    ddev config --project-type=typo3 --docroot=public --php-version 8.3
+    ddev config --project-type=typo3 --docroot=public --php-version=8.3
     ddev composer install
     ddev restart
     ddev exec touch public/FIRST_INSTALL
@@ -678,7 +678,7 @@ There are several easy ways to use DDEV with WordPress:
     DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
 
     ```bash
-    mkdir my-wp-site && cd my-wp-site/
+    mkdir my-wp-site && cd my-wp-site
 
     # Create a new DDEV project inside the newly-created folder
     # (Primary URL automatically set to `https://<folder>.ddev.site`)
