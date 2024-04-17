@@ -50,7 +50,7 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		}
 
 		util.Warning("You're about to push your local %s to your upstream production\nand replace it with your local project's %s.\nThis is normally a very dangerous operation.", message, message)
-		if !util.Confirm("Would you like to continue (not recommended)?") {
+		if !util.ConfirmTo("Would you like to continue (not recommended)?", false) {
 			util.Failed("Push cancelled")
 		}
 	}
