@@ -339,7 +339,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      },
+      }
     }
     ```
 
