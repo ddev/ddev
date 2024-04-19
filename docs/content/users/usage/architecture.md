@@ -138,6 +138,7 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 
 `.router-compose.yaml`
 : The base docker-compose directive used in generating `.router-compose-full.yaml`.
+
 `router-compose.*.yaml`
 : `docker-compose` files with the name `router-compose.*.yaml` can be used to override stanzas in the `.router-compose.yaml` file.
 
@@ -153,8 +154,8 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
 
-!!!tip "`.ddev_mutagen_data_directory`"
-    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
+!!!tip "`mutagen_data_directory` (`.ddev_mutagen_data_directory` previously)"
+    DDEV uses a global `~/.ddev/mutagen_data_directory` (`~/.ddev_mutagen_data_directory` in DDEV before v1.23.1) for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 
