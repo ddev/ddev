@@ -5,8 +5,10 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 
@@ -87,6 +89,18 @@ func RunInteractiveCommandWithOutput(command string, args []string, output io.Wr
 	go func() {
 		_ = CleanAndCopy(output, pr)
 		_ = pr.Close()
+	}()
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	// Goroutine to handle signals so the script can do the right thing
+	go func() {
+		sig := <-sigs
+		// Send the received signal to the child process
+		if err := cmd.Process.Signal(sig); err != nil {
+			panic(err)
+		}
 	}()
 
 	err = cmd.Wait()

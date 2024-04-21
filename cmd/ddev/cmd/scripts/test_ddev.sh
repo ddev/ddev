@@ -65,10 +65,19 @@ header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
-ddev config --project-type=php --docroot=web --disable-upload-dirs-warning --host-db-port=60001 --host-https-port=60002 --host-webserver-port=60003 || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+
+function cleanup {
+  printf "\n\nCleanup: deleting test project ${PROJECT_NAME}\n"
+  ddev delete -Oy ${PROJECT_NAME}
+  printf "\nPlease remove the files from this test with 'rm -r ${PROJECT_DIR}'\n"
+}
+
+ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 printf "\nhost_mailpit_port: 60004\n" >.ddev/config.local.yaml
 
-set +eu
+#set +eu
+
+trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 
 header "OS Information"
 uname -a
