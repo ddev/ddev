@@ -75,7 +75,9 @@ function cleanup {
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 printf "\nhost_mailpit_port: 60004\n" >.ddev/config.local.yaml
 
-#set +eu
+printf "RUN apt update\nRUN curl -I https://www.google.com\n" > .ddev/web-build/Dockerfile.test
+
+set +eu
 
 trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 
@@ -165,6 +167,9 @@ cat <<END >web/index.php
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 
+header "ddev debug refresh"
+ddev debug refresh
+
 header "Project startup"
 DDEV_DEBUG=true ddev start -y || ( \
   set +x && \
@@ -211,8 +216,5 @@ header 'Thanks for running the diagnostic!'
 echo "Running ddev launch in 3 seconds" && sleep 3
 echo "Running ddev launch"
 ddev launch
-# Launch may take some time on some systems
-echo "Waiting 10 seconds to run ddev stop --unlist"
+echo "Waiting for ddev launch to complete before deleting project"
 sleep 10
-echo "running ddev stop --unlist"
-ddev stop --unlist
