@@ -153,7 +153,7 @@ ddev launch
 
 ## Drupal
 
-For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is "drupal".
+For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version.
 
 === "Drupal 10"
 
@@ -173,7 +173,7 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 
     ```bash
     mkdir my-drupal-site && cd my-drupal-site
-    ddev config --project-type=drupal10 --php-version=8.3 --docroot=web
+    ddev config --project-type=drupal10 --php-version=8.3 --docroot=web # The drupal10 project type works for Drupal 11.
     ddev start
     ddev composer create drupal/recommended-project:^11.x-dev
     ddev restart
