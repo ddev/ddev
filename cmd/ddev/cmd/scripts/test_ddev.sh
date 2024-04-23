@@ -73,7 +73,6 @@ function cleanup {
 }
 
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
-printf "\nhost_mailpit_port: 60004\n" >.ddev/config.local.yaml
 
 printf "RUN apt update\nRUN curl -I https://www.google.com\n" > .ddev/web-build/Dockerfile.test
 
@@ -175,7 +174,7 @@ DDEV_DEBUG=true ddev start -y || ( \
   set +x && \
   ddev list && \
   ddev describe && \
-  printf "============= ddev-${PROJECT_NAME}-web healtcheck run =========\n" && \
+  printf "============= ddev-${PROJECT_NAME}-web healthcheck run =========\n" && \
   docker exec ddev-${PROJECT_NAME}-web bash -x 'rm -f /tmp/healthy && /healthcheck.sh' && \
   printf "========= web container healthcheck ======\n" && \
   docker inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web && \
