@@ -87,11 +87,9 @@ command -v sw_vers >/dev/null && sw_vers
 header "User information"
 id -a
 
-header "ddev version"
+header "DDEV version"
 ddev version
 docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."docker-platform"' 2>/dev/null)
-router_http_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router-http-port"' 2>/dev/null)
-router_https_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router-https-port"' 2>/dev/null)
 
 header "proxy settings"
 echo "
@@ -105,7 +103,7 @@ header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
-printf "docker client location: $(which docker)\n\n"
+printf "docker client location: ls -l \"$(which docker)\"\n\n"
 
 echo "docker client alternate locations:"
 which -a docker
@@ -189,19 +187,23 @@ DDEV_DEBUG=true ddev start -y || ( \
   printf "Start failed.\n" && \
   exit 1 )
 
+host_http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.services.web.host_http_url' 2>/dev/null)
 http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpURLs[0]' 2>/dev/null)
 https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpsURLs[0]' 2>/dev/null)
 
 header "Curl of site from inside container"
 ddev exec curl --fail -I http://127.0.0.1
 
-header "curl -I of ${http_url} from outside"
+header "curl -I of ${host_http_url} (web container http docker bind port) from outside"
+curl --fail -I ${host_http_url}
+
+header "curl -I of ${http_url} (router http URL) from outside"
 curl --fail -I "${http_url}"
 
-header "Full curl of ${http_url} from outside"
+header "Full curl of ${http_url} (router https URL) from outside"
 curl "${http_url}"
 
-header "Full curl of ${https_url} from outside"
+header "Full curl of ${https_url} (router https URL) from outside"
 curl "${https_url}"
 
 header "Project ownership on host"
