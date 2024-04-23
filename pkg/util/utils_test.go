@@ -116,7 +116,7 @@ func TestConfirmTo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	
+
 	// test a given input against a default value
 	testInput := func(input string, defaultTo bool, expected bool) {
 		text := util.RandString(32)
