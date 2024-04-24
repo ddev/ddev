@@ -27,10 +27,10 @@ Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since 
 If you’re not using the DDEV Integration Plugin, you can follow these steps instead:
 
 1. Start your project by running [`ddev start`](../usage/commands.md#start).
-2. Open the DDEV project. In this example, the project name is “drup” and the site is “drup.ddev.site”.
+2. Open the DDEV project. In this example, the project name is `drup` and the site is `drup.ddev.site`.
     - If you’re on Windows, running PhpStorm on the Windows side but using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the *Open* dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\drup` (in this example). (If you’re running PhpStorm inside WSL2, there are no special instructions.)
 3. Under *Build, Execution, Deployment* → *Docker*, set the correct Docker provider, for example “Colima” or “Docker for Mac”.
-4. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../debugging-profiling/step-debugging.md). This will result in a PhpStorm “Server” with the proper name, normally the same as the FQDN of the project. In this example, “drup.ddev.site”. (All you have to do here is click the little "bug" to “Start listening for PHP Debug Connections”, run `ddev xdebug on`, and visit a web page and choose the correct mapping from host to server.)
+4. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../debugging-profiling/step-debugging.md). This will result in a PhpStorm “Server” with the proper name, normally the same as the FQDN of the project. In this example, `drup.ddev.site`. (All you have to do here is click the little "bug" to “Start listening for PHP Debug Connections”, run `ddev xdebug on`, and visit a web page and choose the correct mapping from host to server.)
 5. Under *File* → *Settings* → *PHP* (Windows) or *Preferences* → *PHP* (macOS), click “...” to the right of “CLI Interpreter”.
     1. Use the “+” to select “From Docker, Vagrant, VM...”.
     2. Choose “Docker Compose”.
