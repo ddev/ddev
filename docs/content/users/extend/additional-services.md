@@ -94,10 +94,11 @@ If you have add-ons that were installed before v1.22, update them with `ddev get
 
 ## Adding Custom Configuration to an Add-on
 
-Sometimes it's necessary to add custom configuration to an add-on. For example, in [ddev-redis-7](https://github.com/ddev/ddev-redis-7) the `image` is set to ` image: redis:7.2-alpine`. If you wanted to change this to use `7.0-alpine` instead, you would have two choices:
+Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis-7`](https://github.com/ddev/ddev-redis-7) the `image` is set to `image: redis:7.2-alpine`. If you wanted to change this to use `7.0-alpine` instead, you would have two choices:
 
 1. Remove the `#ddev-generated` line in `docker-compose.redis-7.yaml` and edit the relevant line.
 2. Add a `.ddev/docker-compose.redis-7_extra.yaml` with the contents:
+
   ```yaml
   services:
     redis:
