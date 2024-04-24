@@ -103,7 +103,8 @@ header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
-printf "docker client location: ls -l \"$(which docker)\"\n\n"
+docker_client="$(which docker)"
+printf "docker client location: $(ls -l "${docker_client}")\n\n"
 
 echo "docker client alternate locations:"
 which -a docker
@@ -200,7 +201,7 @@ curl --fail -I ${host_http_url}
 header "curl -I of ${http_url} (router http URL) from outside"
 curl --fail -I "${http_url}"
 
-header "Full curl of ${http_url} (router https URL) from outside"
+header "Full curl of ${http_url} (router http URL) from outside"
 curl "${http_url}"
 
 header "Full curl of ${https_url} (router https URL) from outside"
