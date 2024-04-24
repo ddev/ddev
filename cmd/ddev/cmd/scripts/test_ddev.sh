@@ -65,10 +65,20 @@ header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
-ddev config --project-type=php --docroot=web --disable-upload-dirs-warning --host-db-port=60001 --host-https-port=60002 --host-webserver-port=60003 || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
-printf "\nhost_mailpit_port: 60004\n" >.ddev/config.local.yaml
+
+function cleanup {
+  printf "\n\nCleanup: deleting test project ${PROJECT_NAME}\n"
+  ddev delete -Oy ${PROJECT_NAME}
+  printf "\nPlease remove the files from this test with 'rm -r ${PROJECT_DIR}'\n"
+}
+
+ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+
+printf "RUN apt update\nRUN curl -I https://www.google.com\n" > .ddev/web-build/Dockerfile.test
 
 set +eu
+
+trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 
 header "OS Information"
 uname -a
@@ -77,11 +87,9 @@ command -v sw_vers >/dev/null && sw_vers
 header "User information"
 id -a
 
-header "ddev version"
+header "DDEV version"
 ddev version
 docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."docker-platform"' 2>/dev/null)
-router_http_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router-http-port"' 2>/dev/null)
-router_https_port=$(ddev config global -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw."router-https-port"' 2>/dev/null)
 
 header "proxy settings"
 echo "
@@ -95,7 +103,8 @@ header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
-printf "docker client location: $(which docker)\n\n"
+docker_client="$(which docker)"
+printf "docker client location: $(ls -l "${docker_client}")\n\n"
 
 echo "docker client alternate locations:"
 which -a docker
@@ -156,12 +165,15 @@ cat <<END >web/index.php
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 
+header "ddev debug refresh"
+ddev debug refresh
+
 header "Project startup"
 DDEV_DEBUG=true ddev start -y || ( \
   set +x && \
   ddev list && \
   ddev describe && \
-  printf "============= ddev-${PROJECT_NAME}-web healtcheck run =========\n" && \
+  printf "============= ddev-${PROJECT_NAME}-web healthcheck run =========\n" && \
   docker exec ddev-${PROJECT_NAME}-web bash -x 'rm -f /tmp/healthy && /healthcheck.sh' && \
   printf "========= web container healthcheck ======\n" && \
   docker inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web && \
@@ -176,19 +188,23 @@ DDEV_DEBUG=true ddev start -y || ( \
   printf "Start failed.\n" && \
   exit 1 )
 
+host_http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.services.web.host_http_url' 2>/dev/null)
 http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpURLs[0]' 2>/dev/null)
 https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpsURLs[0]' 2>/dev/null)
 
 header "Curl of site from inside container"
 ddev exec curl --fail -I http://127.0.0.1
 
-header "curl -I of ${http_url} from outside"
+header "curl -I of ${host_http_url} (web container http docker bind port) from outside"
+curl --fail -I ${host_http_url}
+
+header "curl -I of ${http_url} (router http URL) from outside"
 curl --fail -I "${http_url}"
 
-header "Full curl of ${http_url} from outside"
+header "Full curl of ${http_url} (router http URL) from outside"
 curl "${http_url}"
 
-header "Full curl of ${https_url} from outside"
+header "Full curl of ${https_url} (router https URL) from outside"
 curl "${https_url}"
 
 header "Project ownership on host"
@@ -202,8 +218,5 @@ header 'Thanks for running the diagnostic!'
 echo "Running ddev launch in 3 seconds" && sleep 3
 echo "Running ddev launch"
 ddev launch
-# Launch may take some time on some systems
-echo "Waiting 10 seconds to run ddev stop --unlist"
+echo "Waiting for ddev launch to complete before deleting project"
 sleep 10
-echo "running ddev stop --unlist"
-ddev stop --unlist
