@@ -957,11 +957,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
 
-	// Some installed packages can change the permissions of /run/php
-	// First seen in Debian 12 Bookworm
-	// See https://github.com/ddev/ddev/issues/5898
-	extraWebContent = extraWebContent + "\nRUN chmod 777 /run/php"
-
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string
 	for _, appStart := range app.WebExtraDaemons {
@@ -1188,6 +1183,18 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 			return err
 		}
 	}
+
+	// Some installed php packages (php-gmp, php-dev) can change the permissions of /run/php, which leads to errors like:
+	// Unable to create the PID file (/run/php/php-fpm.pid).: Permission denied (13)
+	// See https://github.com/ddev/ddev/issues/5898
+	// Place this at the very end of the Dockerfile
+	if strings.Contains(fullpath, "webimageBuild") {
+		contents = contents + fmt.Sprintf(`
+### DDEV-injected php folder permission fix
+RUN chmod 777 /run/php
+`)
+	}
+
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
