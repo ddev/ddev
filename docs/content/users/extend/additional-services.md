@@ -99,7 +99,7 @@ Sometimes it's necessary to add custom configuration to an add-on. For example, 
 1. Remove the `#ddev-generated` line in `docker-compose.redis-7.yaml` and edit the relevant line.
 2. Add a `.ddev/docker-compose.redis-7_extra.yaml` with the contents:
 
-  ```yaml
+```yaml
   services:
     redis:
       image: redis:7.0-alpine
