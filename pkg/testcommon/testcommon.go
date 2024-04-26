@@ -255,10 +255,7 @@ func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// refresh the global config from $XDG_CONFIG_HOME/ddev
-	err = globalconfig.ReadGlobalConfig()
-	require.NoError(t, err)
-	err = globalconfig.ReadProjectList()
-	require.NoError(t, err)
+	globalconfig.EnsureGlobalConfig()
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
@@ -281,10 +278,7 @@ func CleanupTmpXdgConfigHomeDir(t *testing.T, tmpXdgConfigHomeDir string, origin
 	err := os.RemoveAll(tmpXdgConfigHomeDir)
 	require.NoError(t, err)
 	// refresh the global config from ~/.ddev
-	err = globalconfig.ReadGlobalConfig()
-	require.NoError(t, err)
-	err = globalconfig.ReadProjectList()
-	require.NoError(t, err)
+	globalconfig.EnsureGlobalConfig()
 	// Make sure that the global config directory is set to ~/.ddev
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
