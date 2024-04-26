@@ -537,6 +537,16 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 
 // GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
+	// If user created a custom $XDG_CONFIG_HOME/ddev folder,
+	// for example ~/.config/ddev on Linux, use that folder instead.
+	xdgConfigHomeDir, err := getXdgConfigHomeDir()
+	if err == nil {
+		ddevDir := filepath.Join(xdgConfigHomeDir, "ddev")
+		if _, err := os.Stat(ddevDir); err == nil {
+			return ddevDir
+		}
+	}
+
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		logrus.Fatal("Could not get home directory for current user. Is it set?")
@@ -545,15 +555,6 @@ func GetGlobalDdevDir() string {
 
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
-		// If there is no ~/.ddev, but they created a custom $XDG_CONFIG_HOME/ddev folder,
-		// for example ~/.config/ddev on Linux, use that folder instead.
-		userConfigDir, err := os.UserConfigDir()
-		if err == nil {
-			ddevDir := filepath.Join(userConfigDir, "ddev")
-			if _, err := os.Stat(ddevDir); err == nil {
-				return ddevDir
-			}
-		}
 		// If they happen to be running as root/sudo, we won't create the directory
 		// but act like we did. This should only happen for ddev hostname, which
 		// doesn't need config or access to this dir anyway.
@@ -572,6 +573,15 @@ func GetGlobalDdevDir() string {
 		_ = os.Remove(filepath.Join(badFile))
 	}
 	return ddevDir
+}
+
+// getXdgConfigHomeDir returns $XDG_CONFIG_HOME
+func getXdgConfigHomeDir() (string, error) {
+	dir := os.Getenv("XDG_CONFIG_HOME")
+	if dir == "" {
+		return os.UserConfigDir()
+	}
+	return dir, nil
 }
 
 // IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid

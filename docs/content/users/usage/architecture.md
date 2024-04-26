@@ -103,13 +103,22 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
 
 !!!tip
-    `~/.ddev` can be moved to:
+    `~/.ddev` can be moved to `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is set:
+
+    ```bash
+    # permanently set environment variable depending on your OS (e.g. in ~/.bashrc):
+    export XDG_CONFIG_HOME="/my-desired-path"
+    # restart the terminal and run:
+    mv ~/.ddev /my-desired-path/ddev
+    ```
+
+    Otherwise, if `$XDG_CONFIG_HOME` is not set, `~/.ddev` can be moved to:
 
     * `~/Library/Application Support/ddev` on macOS
+    * `~/.config/ddev` on Linux and WSL2
     * `%APPDATA%\ddev` on Windows
-    * `~/.config/ddev` (or set `XDG_CONFIG_HOME` for `$XDG_CONFIG_HOME/ddev`) on Linux and WSL2
 
-    Note that `~/.ddev` must not exist, otherwise it will take precedence over the config folder.
+    Note that the custom global config directory `ddev` (if it exists) takes precedence over the `~/.ddev` directory.
 
 `global_config.yaml`
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md).
