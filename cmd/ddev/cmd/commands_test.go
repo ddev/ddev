@@ -299,10 +299,6 @@ func TestCustomCommands(t *testing.T) {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 
-	// Make sure we haven't accidentally created anything inappropriate in ~/.ddev
-	assert.False(fileutil.FileExists(filepath.Join(tmpHome, ".ddev", ".globalcommands")))
-	assert.False(fileutil.FileExists(filepath.Join(origHome, ".ddev", ".globalcommands")))
-
 	// Make sure that the old launch, mysql, and xdebug commands aren't in the project directory
 	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))

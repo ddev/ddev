@@ -139,7 +139,7 @@ func init() {
 	}
 
 	// Populate custom/script commands so they're visible.
-	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
+	// We really don't want ~/.ddev or .ddev/homeadditions to have root ownership, breaks things.
 	if os.Geteuid() != 0 {
 		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {
