@@ -25,7 +25,7 @@ RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" 
 RUN echo 'export PATH=~/bin:$PATH' >>~/.bashrc && mkdir -p ~/bin
 RUN echo ". /usr/share/autojump/autojump.sh" >> ~/.bashrc
 RUN ln -sf /workspace/ddev/.gotmp/bin/linux_amd64/ddev ~/bin/ddev
-RUN mkdir -p ~/.ddev && echo "omit_containers: [ddev-router,ddev-ssh-agent]" >> ~/.ddev/global_config.yaml
+RUN mkdir -p ~/.ddev && echo "omit_containers: [ddev-router]" >> ~/.ddev/global_config.yaml
 RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # a gcc instance named gcc-5 is required for some vscode installations
