@@ -232,6 +232,8 @@ func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	// Make sure that the global config directory is set to ~/.ddev
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Remember the original $MUTAGEN_DATA_DIRECTORY for cleanup
+	originalMutagenDataDir := globalconfig.GetMutagenDataDirectory()
 	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
 	sourceBinDir := filepath.Join(originalGlobalDdevDir, "bin")
 	_, err = os.Stat(sourceBinDir)
@@ -248,6 +250,8 @@ func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
 		err = copy2.Copy(globalConfigYamlFile, filepath.Join(tmpGlobalDdevDir, "global_config.yaml"))
 		require.NoError(t, err)
 	}
+	// Stop the Mutagen daemon running in the ~/.ddev
+	ddevapp.StopMutagenDaemon()
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// refresh the global config from $XDG_CONFIG_HOME/ddev
@@ -259,11 +263,9 @@ func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
 	require.NoError(t, err)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
 	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
-	// Remember the original $MUTAGEN_DATA_DIRECTORY for cleanup
-	originalMutagenDataDir := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+	t.Setenv("MUTAGEN_DATA_DIRECTORY", filepath.Join(tmpGlobalDdevDir, "mutagen_data_directory"))
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-		t.Setenv("MUTAGEN_DATA_DIRECTORY", filepath.Join(tmpGlobalDdevDir, "mutagen_data_directory"))
 		ddevapp.StartMutagenDaemon()
 	}
 
@@ -288,6 +290,10 @@ func CleanupTmpXdgConfigHomeDir(t *testing.T, tmpXdgConfigHomeDir string, origin
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
 	// Reset Mutagen data directory
 	t.Setenv("MUTAGEN_DATA_DIRECTORY", originalMutagenDataDir)
+	// Start mutagen daemon if it's enabled
+	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
+		ddevapp.StartMutagenDaemon()
+	}
 }
 
 // Chdir will change to the directory for the site specified by TestSite.
