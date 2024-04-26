@@ -131,6 +131,7 @@ func GetDDEVBinDir() string {
 
 // GetMutagenPath gets the full path to the Mutagen binary
 func GetMutagenPath() string {
+	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", GetMutagenDataDirectory())
 	mutagenBinary := "mutagen"
 	if runtime.GOOS == "windows" {
 		mutagenBinary = mutagenBinary + ".exe"
