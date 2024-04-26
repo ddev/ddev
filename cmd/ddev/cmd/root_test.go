@@ -5,7 +5,6 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -255,33 +254,12 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestCreateGlobalDdevDirInUserConfigDir checks to make sure that DDEV will use
-// ddev folder in user's config dir instead of ~/.ddev
-// Windows folder: %APPDATA%\ddev
-// macOS folder: ~/Library/Application Support/ddev
-// Linux folder: ~/.config/ddev by default (or $XDG_CONFIG_HOME/ddev)
-func TestCreateGlobalDdevDirInUserConfigDir(t *testing.T) {
-	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
-		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
-			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
-		nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because this changes homedir and breaks Mutagen functionality")
-	}
-
+// TestXdgConfigHomeGlobalDdevDir checks to make sure that DDEV will use
+// ddev folder in user's custom dir $XDG_CONFIG_HOME/ddev instead of ~/.ddev
+func TestXdgConfigHomeGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
-	origHomeDir, err := homedir.Dir()
-	require.NoError(t, err)
-
-	tmpHomeDir := testcommon.CreateTmpDir("globalDdevCheck")
-
-	tmpDdevConfigDir := filepath.Join(tmpHomeDir, ".config", "ddev")
-	if runtime.GOOS == "windows" {
-		tmpDdevConfigDir = filepath.Join(tmpHomeDir, "AppData", "ddev")
-	} else if runtime.GOOS == "darwin" {
-		tmpDdevConfigDir = filepath.Join(tmpHomeDir, "Library", "Application Support", "ddev")
-	}
+	tmpXdgConfigHomeDir, originalMutagenDataDir := testcommon.SetTmpXdgConfigHomeDir(t)
 
 	t.Cleanup(
 		func() {
@@ -289,8 +267,7 @@ func TestCreateGlobalDdevDirInUserConfigDir(t *testing.T) {
 			assert.NoError(err)
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpHomeDir)
-			assert.NoError(err)
+			testcommon.CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
 
 			// Because the start will have done a poweroff (new version),
 			// make sure sites are running again.
@@ -299,37 +276,14 @@ func TestCreateGlobalDdevDirInUserConfigDir(t *testing.T) {
 			}
 		})
 
-	err = os.Chdir(TestSites[0].Dir)
-	require.NoError(t, err)
-
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHomeDir)
-	t.Setenv("USERPROFILE", tmpHomeDir)
-	t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpHomeDir, ".config"))
-
-	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist.
-	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
-	require.Error(t, err)
-	assert.True(os.IsNotExist(err))
-
-	// Make sure that the tmpDdevConfigDir exists before we run ddev.
-	err = os.MkdirAll(tmpDdevConfigDir, 0755)
+	err := os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
 	require.NoError(t, err, "failed to ddev config --auto, out=%v, err=%v", out, err)
 
-	//Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist (because we use tmpDdevConfigDir).
-	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
-	require.Error(t, err)
-	assert.True(os.IsNotExist(err))
-
-	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
-	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpDdevConfigDir, "bin"))
-	require.NoError(t, err)
-
-	// Make sure that tmpDdevConfigDir/.update don't exist before we run ddev start
-	tmpUpdateFilePath := filepath.Join(tmpDdevConfigDir, ".update")
+	// Make sure that $XDG_CONFIG_HOME/ddev/.update don't exist before we run ddev start
+	tmpUpdateFilePath := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 	_, err = os.Stat(tmpUpdateFilePath)
 	require.Error(t, err)
 	assert.True(os.IsNotExist(err))
@@ -351,18 +305,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	var err error
 
 	origDir, _ := os.Getwd()
-
-	tmpHome := testcommon.CreateTmpDir(t.Name())
-	t.Cleanup(func() {
-		_ = os.RemoveAll(tmpHome)
-	})
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)
-
-	origHome := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
 
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
@@ -394,16 +338,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("USERPROFILE", tmpHome)
-
-	// Make sure we have the .ddev/bin dir we need
-	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
-	require.NoError(t, err)
-
-	// docker-compose v2 is dependent on the ~/.docker directory
-	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpHome, ".docker"))
+	tmpXdgConfigHomeDir, originalMutagenDataDir := testcommon.SetTmpXdgConfigHomeDir(t)
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -427,10 +362,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		_, err := exec.RunHostCommand(DdevBin, "poweroff")
 		assert.NoError(err)
 
-		_, err = os.Stat(globalconfig.GetMutagenPath())
-		if err == nil && app.IsMutagenEnabled() {
-			ddevapp.StopMutagenDaemon()
-		}
+		testcommon.CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
 	})
 
 	apps = ddevapp.GetActiveProjects()

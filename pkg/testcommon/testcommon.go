@@ -4,8 +4,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/url"
@@ -24,12 +22,15 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/pkg/homedir"
+	copy2 "github.com/otiai10/copy"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // URIWithExpect pairs a URI like "/readme.html" with some substring content "should be found in URI"
@@ -199,7 +200,7 @@ func OsTempDir() (string, error) {
 	return tmpDir, nil
 }
 
-// CreateTmpDir creates a temporary directory in the homoedir
+// CreateTmpDir creates a temporary directory in the homedir
 // and returns its path as a string. It's important that it's in
 // homedir since Colima doesn't mount things outside that.
 func CreateTmpDir(prefix string) string {
@@ -212,6 +213,81 @@ func CreateTmpDir(prefix string) string {
 	// Make the tmpdir fully writeable/readable, NFS problems
 	_ = os.Chmod(fullPath, 0777)
 	return fullPath
+}
+
+// SetTmpXdgConfigHomeDir creates a temporary global config directory for DDEV
+// using a temporary directory which is set to $XDG_CONFIG_HOME/ddev
+// Don't forget to run CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
+// in the test's cleanup function.
+func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
+	// Create $XDG_CONFIG_HOME
+	tmpXdgConfigHomeDir := CreateTmpDir("Home" + t.Name())
+	// Global DDEV config directory should be named "ddev"
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	// Make sure that the tmpDir/ddev doesn't exist.
+	_, err := os.Stat(tmpGlobalDdevDir)
+	require.Error(t, err)
+	require.True(t, os.IsNotExist(err))
+	// Original ~/.ddev dir location
+	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
+	// Make sure that the global config directory is set to ~/.ddev
+	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
+	sourceBinDir := filepath.Join(originalGlobalDdevDir, "bin")
+	_, err = os.Stat(sourceBinDir)
+	if !os.IsNotExist(err) {
+		// Copy ~/.ddev/bin to $XDG_CONFIG_HOME/ddev/bin
+		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
+		require.NoError(t, err)
+	}
+	// Make sure we have global_config.yaml from the original ~/.ddev for performance_mode
+	globalConfigYamlFile := filepath.Join(originalGlobalDdevDir, "global_config.yaml")
+	_, err = os.Stat(globalConfigYamlFile)
+	if !os.IsNotExist(err) {
+		// Copy ~/.ddev/global_config.yaml to $XDG_CONFIG_HOME/ddev/global_config.yaml
+		err = copy2.Copy(globalConfigYamlFile, filepath.Join(tmpGlobalDdevDir, "global_config.yaml"))
+		require.NoError(t, err)
+	}
+	// Set $XDG_CONFIG_HOME for tests
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+	// refresh the global config from $XDG_CONFIG_HOME/ddev
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	err = globalconfig.ReadProjectList()
+	require.NoError(t, err)
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
+	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Remember the original $MUTAGEN_DATA_DIRECTORY for cleanup
+	originalMutagenDataDir := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+	// Start mutagen daemon if it's enabled
+	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
+		t.Setenv("MUTAGEN_DATA_DIRECTORY", filepath.Join(tmpGlobalDdevDir, "mutagen_data_directory"))
+		ddevapp.StartMutagenDaemon()
+	}
+
+	return tmpXdgConfigHomeDir, originalMutagenDataDir
+}
+
+// CleanupTmpXdgConfigHomeDir removes temporary $XDG_CONFIG_HOME directory
+func CleanupTmpXdgConfigHomeDir(t *testing.T, tmpXdgConfigHomeDir string, originalMutagenDataDir string) {
+	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
+	ddevapp.StopMutagenDaemon()
+	// After the $XDG_CONFIG_HOME directory is removed,
+	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
+	err := os.RemoveAll(tmpXdgConfigHomeDir)
+	require.NoError(t, err)
+	// refresh the global config from ~/.ddev
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	err = globalconfig.ReadProjectList()
+	require.NoError(t, err)
+	// Make sure that the global config directory is set to ~/.ddev
+	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
+	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Reset Mutagen data directory
+	t.Setenv("MUTAGEN_DATA_DIRECTORY", originalMutagenDataDir)
 }
 
 // Chdir will change to the directory for the site specified by TestSite.
