@@ -198,6 +198,14 @@ Whether [`ddev start`](../usage/commands.md#start) should be interrupted by a fa
 | -- | -- | --
 | :octicons-file-directory-16: project<br>:octicons-globe-16: global | `false` | Can be `true` or `false`.
 
+## `global_config_path`
+
+Absolute path to the `global_config.yaml` file. Can be changed by [moving](../usage/architecture.md#global-files) the `~/.ddev` global directory.
+
+| Type | Default                          | Usage
+| -- |----------------------------------| --
+| :octicons-globe-16: global | `$HOME/.ddev/global_config.yaml` | Controlled by `$XDG_CONFIG_HOME` env variable.
+
 ## `hooks`
 
 DDEV-specific lifecycle [hooks](hooks.md) to be executed.

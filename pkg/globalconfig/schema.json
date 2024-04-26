@@ -18,6 +18,10 @@
       "description": "Whether ddev start should be interrupted by a failing hook, on a single project or for all projects if used globally.",
       "type": "boolean"
     },
+    "global_config_path": {
+      "description": "The absolute path to the global_config.yaml which can be changed using $XDG_CONFIG_HOME env.",
+      "type": "string"
+    },
     "instrumentation_opt_in": {
       "description": "Whether to allow instrumentation reporting.",
       "type": "boolean"

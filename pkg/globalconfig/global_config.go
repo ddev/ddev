@@ -44,6 +44,7 @@ type GlobalConfig struct {
 	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
 	DisableHTTP2                     bool                        `yaml:"disable_http2"`
 	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
+	GlobalConfigPath                 string                      `yaml:"global_config_path"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
 	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
@@ -240,6 +241,8 @@ func ReadGlobalConfig() error {
 	if GetCAROOT() == "" || !fileExists(filepath.Join(DdevGlobalConfig.MkcertCARoot, "rootCA.pem")) || (caRootEnv != "" && caRootEnv != DdevGlobalConfig.MkcertCARoot) {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
+
+	DdevGlobalConfig.GlobalConfigPath = GetGlobalConfigPath()
 
 	// If they set the internetdetectiontimeout below default, reset to default
 	// and ignore the setting.
