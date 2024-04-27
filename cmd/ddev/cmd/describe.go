@@ -61,6 +61,8 @@ running 'ddev describe <projectname>'.`,
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
 	status := desc["status"]
+	services := app.ComposeYaml["services"]
+
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -123,17 +125,33 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 		for _, k := range serviceNames {
 			v := serviceMap[k]
-
 			httpURL := ""
 			urlPortParts := []string{}
+			extraInfo := []string{}
+			hasVirtualHost := false
 
 			switch {
 			// Normal case, using ddev-router based URLs
 			case !ddevapp.IsRouterDisabled(app):
-				if httpsURL, ok := v["https_url"]; ok {
-					urlPortParts = append(urlPortParts, httpsURL)
-				} else if httpURL, ok = v["http_url"]; ok {
-					urlPortParts = append(urlPortParts, httpURL)
+				if services != nil && k != "web" {
+					service := services.(map[string]interface{})[k]
+
+					if env, ok := service.(map[string]interface{})["environment"]; ok {
+						if vhost, ok := env.(map[string]interface{})["VIRTUAL_HOST"].(string); ok {
+							if vhost != app.GetPrimaryURL() {
+								hasVirtualHost = true
+								urlPortParts = append(urlPortParts, vhost)
+							}
+						}
+					}
+				}
+
+				if !hasVirtualHost {
+					if httpsURL, ok := v["https_url"]; ok {
+						urlPortParts = append(urlPortParts, httpsURL)
+					} else if httpURL, ok = v["http_url"]; ok {
+						urlPortParts = append(urlPortParts, httpURL)
+					}
 				}
 			// Gitpod, web container only, using port proxied by Gitpod
 			case (nodeps.IsGitpod() || nodeps.IsCodespaces()) && k == "web":
@@ -148,13 +166,16 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			if p, ok := v["exposed_ports"]; ok {
-				urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
+				if p != "" {
+					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
+				} else {
+					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"])
+				}
 			}
+
 			if p, ok := v["host_ports"]; ok && p != "" {
 				urlPortParts = append(urlPortParts, "Host: 127.0.0.1:"+p)
 			}
-
-			extraInfo := []string{}
 
 			// Get extra info for web container
 			if k == "web" {
