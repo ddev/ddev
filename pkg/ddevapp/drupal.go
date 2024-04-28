@@ -2,15 +2,15 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/util"
-
 	"os"
 	"path"
 	"path/filepath"
 	"text/template"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 
@@ -172,7 +172,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 		}
 	}
 
-	drupalVersion, err := getDrupalVersion(app)
+	drupalVersion, err := GetDrupalVersion(app)
 	if err != nil || drupalVersion == "" {
 		// todo: Reconsider this logic for default version
 		drupalVersion = "10"
@@ -306,10 +306,10 @@ func isDrupal7App(app *DdevApp) bool {
 	return false
 }
 
-// getDrupalVersion finds the drupal8+ version so it can be used
+// GetDrupalVersion finds the drupal8+ version so it can be used
 // for setting requirements.
 // It can only work if there is configured Drupal8+ code
-func getDrupalVersion(app *DdevApp) (string, error) {
+func GetDrupalVersion(app *DdevApp) (string, error) {
 	// For drupal6/7 we use the apptype provided as version
 	switch app.Type {
 	case nodeps.AppTypeDrupal6:
@@ -329,7 +329,7 @@ func getDrupalVersion(app *DdevApp) (string, error) {
 
 // isDrupalApp returns true if the app is drupal
 func isDrupalApp(app *DdevApp) bool {
-	v, err := getDrupalVersion(app)
+	v, err := GetDrupalVersion(app)
 	if err == nil && v != "" {
 		return true
 	}
@@ -358,7 +358,7 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 
 // drupalConfigOverrideAction selects proper versions for
 func drupalConfigOverrideAction(app *DdevApp) error {
-	v, err := getDrupalVersion(app)
+	v, err := GetDrupalVersion(app)
 	if err != nil || v == "" {
 		util.Warning("Unable to detect Drupal version, continuing")
 		return nil
