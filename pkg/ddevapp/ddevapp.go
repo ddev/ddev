@@ -349,35 +349,33 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				appHostname = appDesc["hostname"].(string)
 			}
 
-			if httpExpose, ok := envMap["HTTP_EXPOSE"]; ok {
-				envValStr := fmt.Sprintf("%s", httpExpose)
-				portSpecs := strings.Split(envValStr, ",")
-				// There might be more than one exposed UI port, but this only handles the first listed,
-				// most often there's only one.
-				if len(portSpecs) > 0 {
-					// HTTP portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
-					ports := strings.Split(portSpecs[0], ":")
-
-					services[shortName]["http_url"] = "http://" + appHostname
-
-					if ports[0] != "80" {
-						services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
-					}
+			for name, port := range envMap {
+				if name == "VIRTUAL_HOST" {
+					continue
 				}
-			}
 
-			if httpsExpose, ok := envMap["HTTPS_EXPOSE"]; ok {
-				envValStr := fmt.Sprintf("%s", httpsExpose)
+				portCheck := "80"
+				serviceAttribute := "http_url"
+				protocol := "http://"
+
+				if name == "HTTPS_EXPOSE" {
+					portCheck = "443"
+					serviceAttribute = "https_url"
+					protocol = "https://"
+				}
+
+				envValStr := fmt.Sprintf("%s", port)
 				portSpecs := strings.Split(envValStr, ",")
 				// There might be more than one exposed UI port, but this only handles the first listed,
 				// most often there's only one.
 				if len(portSpecs) > 0 {
-					// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
 
-					services[shortName]["https_url"] = "https://" + appHostname
-					if ports[0] != "443" {
-						services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
+					services[shortName][serviceAttribute] = protocol + appHostname
+
+					if ports[0] != portCheck {
+						services[shortName][serviceAttribute] = services[shortName][serviceAttribute] + ":" + ports[0]
 					}
 				}
 			}
