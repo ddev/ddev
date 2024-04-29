@@ -349,33 +349,33 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				appHostname = appDesc["hostname"].(string)
 			}
 
-			for name, port := range envMap {
+			for name, portMapping := range envMap {
 				if name == "VIRTUAL_HOST" {
 					continue
 				}
 
-				portCheck := "80"
-				serviceAttribute := "http_url"
+				portDefault := "80"
+				attributeName := "http_url"
 				protocol := "http://"
 
 				if name == "HTTPS_EXPOSE" {
-					portCheck = "443"
-					serviceAttribute = "https_url"
+					portDefault = "443"
+					attributeName = "https_url"
 					protocol = "https://"
 				}
 
-				envValStr := fmt.Sprintf("%s", port)
-				portSpecs := strings.Split(envValStr, ",")
+				portValStr := fmt.Sprintf("%s", portMapping)
+				portSpecs := strings.Split(portValStr, ",")
 				// There might be more than one exposed UI port, but this only handles the first listed,
 				// most often there's only one.
 				if len(portSpecs) > 0 {
 					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
 
-					services[shortName][serviceAttribute] = protocol + appHostname
+					services[shortName][attributeName] = protocol + appHostname
 
-					if ports[0] != portCheck {
-						services[shortName][serviceAttribute] = services[shortName][serviceAttribute] + ":" + ports[0]
+					if ports[0] != portDefault {
+						services[shortName][attributeName] = services[shortName][attributeName] + ":" + ports[0]
 					}
 				}
 			}
