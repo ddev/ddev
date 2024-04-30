@@ -126,8 +126,8 @@ func TestMutagenSimple(t *testing.T) {
 		assert.Error(err)
 	}
 
-	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
+	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	assert.NoError(err, "Mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", mutagenDataDirectory, out, err)
 	assert.Contains(out, "Started Mutagen daemon in background")
 	if !strings.Contains(out, "Started Mutagen daemon in background") && (runtime.GOOS == "darwin" || runtime.GOOS == "linux") {

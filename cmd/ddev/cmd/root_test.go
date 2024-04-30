@@ -254,12 +254,12 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestXdgConfigHomeGlobalDdevDir checks to make sure that DDEV will use
+// TestMoveGlobalDdevDir checks to make sure that DDEV will use
 // ddev folder in user's custom dir $XDG_CONFIG_HOME/ddev instead of ~/.ddev
-func TestXdgConfigHomeGlobalDdevDir(t *testing.T) {
+func TestMoveGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	tmpXdgConfigHomeDir, originalMutagenDataDir := testcommon.SetTmpXdgConfigHomeDir(t)
+	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	t.Cleanup(
 		func() {
@@ -267,7 +267,7 @@ func TestXdgConfigHomeGlobalDdevDir(t *testing.T) {
 			assert.NoError(err)
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			testcommon.CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
+			testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
 
 			// Because the start will have done a poweroff (new version),
 			// make sure sites are running again.
@@ -338,7 +338,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
-	tmpXdgConfigHomeDir, originalMutagenDataDir := testcommon.SetTmpXdgConfigHomeDir(t)
+	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -362,7 +362,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		_, err := exec.RunHostCommand(DdevBin, "poweroff")
 		assert.NoError(err)
 
-		testcommon.CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
+		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
 	})
 
 	apps = ddevapp.GetActiveProjects()

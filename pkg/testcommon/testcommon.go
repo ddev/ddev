@@ -215,15 +215,15 @@ func CreateTmpDir(prefix string) string {
 	return fullPath
 }
 
-// SetTmpXdgConfigHomeDir creates a temporary global config directory for DDEV
+// MoveGlobalDdevDir creates a temporary global config directory for DDEV
 // using a temporary directory which is set to $XDG_CONFIG_HOME/ddev
-// Don't forget to run CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
+// Don't forget to run ResetGlobalDdevDir(t, tmpHomeDir)
 // in the test's cleanup function.
-func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
+func MoveGlobalDdevDir(t *testing.T) string {
 	// Create $XDG_CONFIG_HOME
-	tmpXdgConfigHomeDir := CreateTmpDir("Home" + t.Name())
+	tmpHomeDir := CreateTmpDir("Home" + t.Name())
 	// Global DDEV config directory should be named "ddev"
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpGlobalDdevDir := filepath.Join(tmpHomeDir, "ddev")
 	// Make sure that the tmpDir/ddev doesn't exist.
 	_, err := os.Stat(tmpGlobalDdevDir)
 	require.Error(t, err)
@@ -232,8 +232,6 @@ func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	// Make sure that the global config directory is set to ~/.ddev
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
-	// Remember the original $MUTAGEN_DATA_DIRECTORY for cleanup
-	originalMutagenDataDir := globalconfig.GetMutagenDataDirectory()
 	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
 	sourceBinDir := filepath.Join(originalGlobalDdevDir, "bin")
 	_, err = os.Stat(sourceBinDir)
@@ -253,40 +251,47 @@ func SetTmpXdgConfigHomeDir(t *testing.T) (string, string) {
 	// Stop the Mutagen daemon running in the ~/.ddev
 	ddevapp.StopMutagenDaemon()
 	// Set $XDG_CONFIG_HOME for tests
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+	t.Setenv("XDG_CONFIG_HOME", tmpHomeDir)
 	// refresh the global config from $XDG_CONFIG_HOME/ddev
 	globalconfig.EnsureGlobalConfig()
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
 	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
-	t.Setenv("MUTAGEN_DATA_DIRECTORY", filepath.Join(tmpGlobalDdevDir, "mutagen_data_directory"))
+	// Reset $MUTAGEN_DATA_DIRECTORY
+	err = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
+	require.NoError(t, err)
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
+		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
 	}
 
-	return tmpXdgConfigHomeDir, originalMutagenDataDir
+	return tmpHomeDir
 }
 
-// CleanupTmpXdgConfigHomeDir removes temporary $XDG_CONFIG_HOME directory
-func CleanupTmpXdgConfigHomeDir(t *testing.T, tmpXdgConfigHomeDir string, originalMutagenDataDir string) {
+// ResetGlobalDdevDir removes temporary $XDG_CONFIG_HOME directory
+func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
 	ddevapp.StopMutagenDaemon()
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
-	err := os.RemoveAll(tmpXdgConfigHomeDir)
+	err := os.RemoveAll(tmpHomeDir)
 	require.NoError(t, err)
 	// refresh the global config from ~/.ddev
 	globalconfig.EnsureGlobalConfig()
 	// Make sure that the global config directory is set to ~/.ddev
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
-	// Reset Mutagen data directory
-	t.Setenv("MUTAGEN_DATA_DIRECTORY", originalMutagenDataDir)
+	// Reset $MUTAGEN_DATA_DIRECTORY
+	err = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
+	require.NoError(t, err)
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
+		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
 	}
 }
 

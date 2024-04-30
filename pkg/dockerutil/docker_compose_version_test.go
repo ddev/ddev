@@ -25,10 +25,10 @@ func TestDockerComposeDownload(t *testing.T) {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
-	tmpXdgConfigHomeDir, originalMutagenDataDir := testcommon.SetTmpXdgConfigHomeDir(t)
+	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	t.Cleanup(func() {
-		testcommon.CleanupTmpXdgConfigHomeDir(t, tmpXdgConfigHomeDir, originalMutagenDataDir)
+		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
 	})
 
 	// Remove previous binary

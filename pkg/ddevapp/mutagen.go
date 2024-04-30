@@ -344,8 +344,8 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResult map[string]interface{}, err error) {
 	syncName := MutagenSyncName(app.Name)
 
-	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
+	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	if err != nil {
 		stderr := ""
 		if exitError, ok := err.(*osexec.ExitError); ok {
@@ -548,8 +548,8 @@ func DownloadMutagen() error {
 // But no problem if there wasn't one
 func StopMutagenDaemon() {
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
-		mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+		mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
 			util.Warning("Unable to stop Mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
 		}
