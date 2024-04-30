@@ -961,7 +961,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		drupalVersion, err := GetDrupalVersion(app)
 		if err == nil && drupalVersion == "11" {
 			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
-### Drupal 11+ requires a miniumum sqlite3 version (3.45 currently)
+### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
 ARG TARGETPLATFORM
 ENV SQLITE_VERSION=%s
 RUN mkdir -p /tmp/sqlite3 && \
