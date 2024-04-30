@@ -20,6 +20,7 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -220,6 +221,7 @@ func CreateTmpDir(prefix string) string {
 // Don't forget to run ResetGlobalDdevDir(t, tmpHomeDir)
 // in the test's cleanup function.
 func MoveGlobalDdevDir(t *testing.T) string {
+	assert := asrt.New(t)
 	// Create $XDG_CONFIG_HOME
 	tmpHomeDir := CreateTmpDir("Home" + t.Name())
 	// Global DDEV config directory should be named "ddev"
@@ -249,7 +251,9 @@ func MoveGlobalDdevDir(t *testing.T) string {
 		require.NoError(t, err)
 	}
 	// Stop the Mutagen daemon running in the ~/.ddev
-	ddevapp.StopMutagenDaemon()
+	out, err := exec2.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+	assert.NoError(err, "unable to run Mutagen daemon stop, out='%s', err=%v, MUTAGEN_DATA_DIRECTORY=%s", out, err, mutagenDataDirectory)
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpHomeDir)
 	// refresh the global config from $XDG_CONFIG_HOME/ddev
@@ -263,9 +267,11 @@ func MoveGlobalDdevDir(t *testing.T) string {
 	require.NoError(t, err)
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-		ddevapp.StartMutagenDaemon()
+		out, err := exec2.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		mutagenDataDirectory = os.Getenv("MUTAGEN_DATA_DIRECTORY")
+		assert.NoError(err, "unable to run Mutagen daemon start, out='%s', err=%v, MUTAGEN_DATA_DIRECTORY=%s", out, err, mutagenDataDirectory)
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
+		assert.Equal(os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
 	}
 
 	return tmpHomeDir
@@ -273,11 +279,14 @@ func MoveGlobalDdevDir(t *testing.T) string {
 
 // ResetGlobalDdevDir removes temporary $XDG_CONFIG_HOME directory
 func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
+	assert := asrt.New(t)
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
-	ddevapp.StopMutagenDaemon()
+	out, err := exec2.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+	assert.NoError(err, "unable to run Mutagen daemon stop, out='%s', err=%v, MUTAGEN_DATA_DIRECTORY=%s", out, err, mutagenDataDirectory)
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
-	err := os.RemoveAll(tmpHomeDir)
+	err = os.RemoveAll(tmpHomeDir)
 	require.NoError(t, err)
 	// refresh the global config from ~/.ddev
 	globalconfig.EnsureGlobalConfig()
@@ -289,9 +298,11 @@ func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
 	require.NoError(t, err)
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-		ddevapp.StartMutagenDaemon()
+		out, err := exec2.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		mutagenDataDirectory = os.Getenv("MUTAGEN_DATA_DIRECTORY")
+		assert.NoError(err, "unable to run Mutagen daemon start, out='%s', err=%v, MUTAGEN_DATA_DIRECTORY=%s", out, err, mutagenDataDirectory)
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
+		assert.Equal(os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
 	}
 }
 
