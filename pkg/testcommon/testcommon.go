@@ -223,7 +223,7 @@ func CreateTmpDir(prefix string) string {
 func MoveGlobalDdevDir(t *testing.T) string {
 	assert := asrt.New(t)
 	// Create $XDG_CONFIG_HOME
-	tmpHomeDir := CreateTmpDir("Home" + nodeps.RandomString(5))
+	tmpHomeDir := CreateTmpDir("Home_" + util.RandString(5))
 	// Global DDEV config directory should be named "ddev"
 	tmpGlobalDdevDir := filepath.Join(tmpHomeDir, "ddev")
 	// Make sure that the tmpDir/ddev doesn't exist.
