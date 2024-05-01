@@ -135,11 +135,34 @@ func GetMutagenPath() string {
 	if os.Getenv("MUTAGEN_DATA_DIRECTORY") == "" {
 		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", GetMutagenDataDirectory())
 	}
+	// Check socket path length on first call to Mutagen
+	checkMutagenSocketPathLength()
 	mutagenBinary := "mutagen"
 	if runtime.GOOS == "windows" {
 		mutagenBinary = mutagenBinary + ".exe"
 	}
 	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
+}
+
+var checkedMutagenSocketPathLength = false
+
+// checkMutagenSocketPathLength tells people if the Mutagen socket path is too long.
+// Mutagen may fail with this error: "unable to connect to daemon: connection timed out (is the daemon running?)"
+// See https://github.com/garden-io/garden/issues/4527#issuecomment-1584286590
+func checkMutagenSocketPathLength() {
+	if checkedMutagenSocketPathLength {
+		return
+	}
+	socketPathLength := len(filepath.Join(os.Getenv("MUTAGEN_DATA_DIRECTORY"), "daemon", "daemon.sock"))
+	// Limit from https://unix.stackexchange.com/a/367012
+	limit := 104
+	if runtime.GOOS == "linux" {
+		limit = 108
+	}
+	if socketPathLength >= limit {
+		logrus.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.\nConsider using a shorter path to DDEV global config with XDG_CONFIG_HOME env.", limit, socketPathLength))
+	}
+	checkedMutagenSocketPathLength = true
 }
 
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
