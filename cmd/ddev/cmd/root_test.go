@@ -352,7 +352,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure we have starting version that is not v0.0
-	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.yaml"), "last_started_version: v0.1")
+	globalconfig.DdevGlobalConfig.LastStartedVersion = "v0.1"
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	out, err = exec.RunHostCommand(DdevBin, "start")
 	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
