@@ -248,7 +248,7 @@ func MoveGlobalDdevDir(t *testing.T) string {
 	t.Setenv("XDG_CONFIG_HOME", tmpHomeDir)
 	// Create the global config in $XDG_CONFIG_HOME/ddev
 	globalconfig.EnsureGlobalConfig()
-	// And set the original performance mode
+	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
 	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
 	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
@@ -263,7 +263,7 @@ func MoveGlobalDdevDir(t *testing.T) string {
 		ddevapp.StartMutagenDaemon()
 		t.Log(fmt.Sprintf("start mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
 	}
 
 	return tmpHomeDir
@@ -291,7 +291,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
 		ddevapp.StartMutagenDaemon()
 		t.Log(fmt.Sprintf("start mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
 	}
 }
 

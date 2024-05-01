@@ -5,7 +5,7 @@ A DDEV installation consists of:
 * The self-contained `ddev` binary.
 * Each project’s `.ddev` directory.
 * The global `~/.ddev` directory where various global items are stored. (This directory can be [moved](./architecture.md#global-files) to your config folder.)
-* The global `~/.ddev/mutagen_data_directory` directory where Mutagen sync data may be stored.
+* The global `~/.ddev/.mdd` directory where Mutagen sync data may be stored.
 * The associated Docker images and containers DDEV created.
 * Any entries in `/etc/hosts`.
 

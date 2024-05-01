@@ -163,8 +163,8 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
 
-!!!tip "`mutagen_data_directory` (`.ddev_mutagen_data_directory` previously)"
-    DDEV uses a global `~/.ddev/mutagen_data_directory` (`~/.ddev_mutagen_data_directory` in DDEV before v1.23.1) for storing [Mutagen](../install/performance.md#mutagen) sync data.
+!!!tip "`.mdd` (`.ddev_mutagen_data_directory` previously)"
+    DDEV uses a global `~/.ddev/.mdd` (`~/.ddev_mutagen_data_directory` in DDEV before v1.23.2) for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 

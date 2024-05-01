@@ -171,9 +171,9 @@ func GetMutagenDataDirectory() string {
 	if currentMutagenDataDirectory != "" {
 		return currentMutagenDataDirectory
 	}
-	// If it's not already set, return ~/.ddev/mutagen_data_directory
+	// If it's not already set, return ~/.ddev.mdd
 	// This may be affected by tests that change $HOME and $XDG_CONFIG_HOME
-	return filepath.Join(GetGlobalDdevDir(), "mutagen_data_directory")
+	return filepath.Join(GetGlobalDdevDir(), ".mdd")
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary

@@ -4,7 +4,7 @@
 # directory where you're having trouble and provide its
 # output in a gist at gist.github.com with any issue you open about mutagen.
 
-export MUTAGEN_DATA_DIRECTORY=~/.ddev/mutagen_data_directory
+export MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd
 
 ddev list
 ddev describe
