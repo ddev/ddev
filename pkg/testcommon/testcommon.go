@@ -240,20 +240,16 @@ func MoveGlobalDdevDir(t *testing.T) string {
 		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
 		require.NoError(t, err)
 	}
-	// Make sure we have global_config.yaml from the original ~/.ddev for performance_mode
-	globalConfigYamlFile := filepath.Join(originalGlobalDdevDir, "global_config.yaml")
-	_, err = os.Stat(globalConfigYamlFile)
-	if !os.IsNotExist(err) {
-		// Copy ~/.ddev/global_config.yaml to $XDG_CONFIG_HOME/ddev/global_config.yaml
-		err = copy2.Copy(globalConfigYamlFile, filepath.Join(tmpGlobalDdevDir, "global_config.yaml"))
-		require.NoError(t, err)
-	}
+	originalGlobalConfig := globalconfig.DdevGlobalConfig
 	// Stop the Mutagen daemon running in the ~/.ddev
 	ddevapp.StopMutagenDaemon()
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpHomeDir)
-	// refresh the global config from $XDG_CONFIG_HOME/ddev
+	// Create the global config in $XDG_CONFIG_HOME/ddev
 	globalconfig.EnsureGlobalConfig()
+	// And set the original performance mode
+	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
+	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
