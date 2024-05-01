@@ -333,7 +333,8 @@ An extensive discussion of this class of problem is on [ddev.com](https://ddev.c
 
 ## Windows WSL2 Network Issues
 
-If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
+* Some recent WSL2 versions have had very slow or completely failed network access inside the container or during the Docker build process. A `wsl --shutdown` or a reboot seems to clear these up.
+* If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
 
 ## Limitations on Symbolic Links (symlinks)
 
