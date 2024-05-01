@@ -956,6 +956,22 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
+	if app.Type == nodeps.AppTypeDrupal {
+		// TODO: When ddev-webserver has required drupal 11+ sqlite version we can remove this.
+		drupalVersion, err := GetDrupalVersion(app)
+		if err == nil && drupalVersion == "11" {
+			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
+### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
+ARG TARGETPLATFORM
+ENV SQLITE_VERSION=%s
+RUN mkdir -p /tmp/sqlite3 && \
+wget -O /tmp/sqlite3/sqlite3.deb https://ftp.debian.org/debian/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
+wget -O /tmp/sqlite3/libsqlite3.deb https://ftp.debian.org/debian/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
+apt install -y /tmp/sqlite3/*.deb && \
+rm -rf /tmp/sqlite3
+			`, versionconstants.Drupal11RequiredSqlite3Version)
+		}
+	}
 
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string

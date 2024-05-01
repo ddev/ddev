@@ -2217,6 +2217,19 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.Error(err)
 			assert.Contains(err.Error(), "upload_dirs is not set", app.Type)
 		}
+
+		// Special installed sqlite3 test for drupal11.
+		if app.Type == nodeps.AppTypeDrupal {
+			drupalVersion, err := ddevapp.GetDrupalVersion(app)
+			if err == nil && drupalVersion == "11" {
+				stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+					Cmd: "sqlite3 --version | awk '{print $1}'",
+				})
+				require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
+				stdout = strings.Trim(stdout, "\r\n")
+				require.Equal(t, versionconstants.Drupal11RequiredSqlite3Version, stdout)
+			}
+		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
 		assert.NoError(err)
