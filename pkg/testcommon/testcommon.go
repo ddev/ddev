@@ -243,6 +243,7 @@ func MoveGlobalDdevDir(t *testing.T) string {
 	originalGlobalConfig := globalconfig.DdevGlobalConfig
 	// Stop the Mutagen daemon running in the ~/.ddev
 	ddevapp.StopMutagenDaemon()
+	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpHomeDir)
 	// Create the global config in $XDG_CONFIG_HOME/ddev
@@ -260,6 +261,7 @@ func MoveGlobalDdevDir(t *testing.T) string {
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
+		t.Log(fmt.Sprintf("start mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
 	}
@@ -271,6 +273,7 @@ func MoveGlobalDdevDir(t *testing.T) string {
 func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
 	ddevapp.StopMutagenDaemon()
+	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
 	err := os.RemoveAll(tmpHomeDir)
@@ -286,6 +289,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
+		t.Log(fmt.Sprintf("start mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), "mutagen_data_directory"))
 	}
