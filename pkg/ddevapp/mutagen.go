@@ -561,8 +561,9 @@ func StopMutagenDaemon() {
 func StartMutagenDaemon() {
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 		if err != nil {
-			util.Warning("Failed to run Mutagen daemon start: %v, out=%s", err, out)
+			util.Warning("Failed to run Mutagen daemon start: %v, out=%s; MUTAGEN_DATA_DIRECTORY=%s", err, out, mutagenDataDirectory)
 		}
 	}
 }
