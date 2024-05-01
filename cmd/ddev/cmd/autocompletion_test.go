@@ -220,14 +220,14 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
-
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
+
+	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
