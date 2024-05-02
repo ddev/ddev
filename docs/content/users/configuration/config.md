@@ -202,8 +202,8 @@ Whether [`ddev start`](../usage/commands.md#start) should be interrupted by a fa
 
 Absolute path to the `global_config.yaml` file. Can be changed by [moving](../usage/architecture.md#global-files) the `~/.ddev` global directory.
 
-| Type | Default                          | Usage
-| -- |----------------------------------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-globe-16: global | `$HOME/.ddev/global_config.yaml` | Controlled by `$XDG_CONFIG_HOME` env variable.
 
 ## `hooks`

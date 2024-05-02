@@ -7,7 +7,7 @@ DDEV writes and uses [docker-compose](https://docs.docker.com/compose/) files fo
 
 ## Directory Tour
 
-DDEV stores configuration in two places: a single `.ddev` directory in your home folder (can be [moved](#global-files) to your config folder), and a `.ddev` directory for each project you set up.
+DDEV stores configuration in two places: a single `.ddev` directory in your home folder (can be [moved](#global-files) to another location), and a `.ddev` directory for each project you set up.
 
 The [global configuration directory](#global-files) is used to keep track of your projects and any of the [global settings](../configuration/config.md) that apply across all projects. You’ll probably spend more time working with the [per-project `.ddev` directories](#project-files) for their configuration and overrides.
 
@@ -102,7 +102,10 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
 
-!!!tip
+!!!tip "Where is my global `.ddev` config?"
+    Use `ddev config global` (look at `global-config-path`) to check which location is currently used for the `.ddev` global directory.
+
+!!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
     `~/.ddev` can be moved to `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is set:
 
     ```bash
@@ -116,7 +119,7 @@ There’s only one global `.ddev` directory, which lives in your home directory:
 
     * `~/Library/Application Support/ddev` on macOS
     * `~/.config/ddev` on Linux and WSL2
-    * `%APPDATA%\ddev` on Windows
+    * `%AppData%\ddev` on Windows
 
     Note that the custom global config directory `ddev` (if it exists) takes precedence over the `~/.ddev` directory.
 
@@ -142,6 +145,9 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.gitignore`
 : Prevents files from getting checked in when they shouldn’t be.
 
+`.mdd` (`~/.ddev_mutagen_data_directory` previously)
+: Directory used for storing [Mutagen](../install/performance.md#mutagen) sync data.
+
 `.router-compose-full.yaml`
 : The complete, generated docker-compose directive used for DDEV’s router.
 
@@ -162,9 +168,6 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
-
-!!!tip "`.mdd` (`.ddev_mutagen_data_directory` previously)"
-    DDEV uses a global `~/.ddev/.mdd` (`~/.ddev_mutagen_data_directory` in DDEV before v1.23.2) for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 
