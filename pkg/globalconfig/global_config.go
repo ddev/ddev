@@ -569,7 +569,7 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 func GetGlobalDdevDir() string {
 	// If user created a custom $XDG_CONFIG_HOME/ddev folder,
 	// for example ~/.config/ddev on Linux, use that folder instead.
-	xdgConfigHomeDir, err := getXdgConfigHomeDir()
+	xdgConfigHomeDir, err := GetXdgConfigHomeDir()
 	if err == nil {
 		ddevDir := filepath.Join(xdgConfigHomeDir, "ddev")
 		if _, err := os.Stat(ddevDir); err == nil {
@@ -605,8 +605,8 @@ func GetGlobalDdevDir() string {
 	return ddevDir
 }
 
-// getXdgConfigHomeDir returns $XDG_CONFIG_HOME
-func getXdgConfigHomeDir() (string, error) {
+// GetXdgConfigHomeDir returns $XDG_CONFIG_HOME
+func GetXdgConfigHomeDir() (string, error) {
 	dir := os.Getenv("XDG_CONFIG_HOME")
 	if dir == "" {
 		return os.UserConfigDir()

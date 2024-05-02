@@ -5,6 +5,7 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -293,6 +294,28 @@ func TestMoveGlobalDdevDir(t *testing.T) {
 
 	_, err = os.Stat(tmpUpdateFilePath)
 	assert.NoError(err)
+}
+
+// TestGetXdgConfigHomeDir checks to make sure that DDEV will use the correct $XDG_CONFIG_HOME
+// or the default location provided by os.UserConfigDir()
+func TestGetXdgConfigHomeDir(t *testing.T) {
+	// Test when $XDG_CONFIG_HOME is not set
+	t.Setenv("XDG_CONFIG_HOME", "")
+	configHomeDir, err := globalconfig.GetXdgConfigHomeDir()
+	require.NoError(t, err)
+	defaultConfigHomeDir := filepath.Join(os.Getenv("HOME"), ".config")
+	switch runtime.GOOS {
+	case "windows":
+		defaultConfigHomeDir = os.Getenv("AppData")
+	case "darwin":
+		defaultConfigHomeDir = filepath.Join(os.Getenv("HOME"), "/Library/Application Support")
+	}
+	require.Equal(t, configHomeDir, defaultConfigHomeDir)
+	// Test when $XDG_CONFIG_HOME is set
+	t.Setenv("XDG_CONFIG_HOME", "/tmp/test")
+	configHomeDir, err = globalconfig.GetXdgConfigHomeDir()
+	require.NoError(t, err)
+	require.Equal(t, configHomeDir, "/tmp/test")
 }
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new DDEV version is deployed
