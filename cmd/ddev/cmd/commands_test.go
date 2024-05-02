@@ -35,7 +35,7 @@ func TestCustomCommands(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -45,7 +45,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		runTime()
 		app.Type = origType
 		err = app.WriteConfig()
@@ -69,7 +69,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	// We need to run some assertions outside of the context of a project first
-	err = os.Chdir(tmpHomeDir)
+	err = os.Chdir(tmpXdgConfigHomeDir)
 	require.NoError(t, err)
 
 	// Check that only global host commands with the XXX annotation display here

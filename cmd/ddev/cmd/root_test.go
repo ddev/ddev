@@ -259,22 +259,21 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 func TestMoveGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
 
-	t.Cleanup(
-		func() {
-			_, err := exec.RunHostCommand(DdevBin, "poweroff")
-			assert.NoError(err)
-			err = os.Chdir(origDir)
-			assert.NoError(err)
-			testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
+	t.Cleanup(func() {
+		_, err := exec.RunHostCommand(DdevBin, "poweroff")
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
-			// Because the start will have done a poweroff (new version),
-			// make sure sites are running again.
-			for _, site := range TestSites {
-				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
-			}
-		})
+		// Because the start will have done a poweroff (new version),
+		// make sure sites are running again.
+		for _, site := range TestSites {
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+	})
 
 	err := os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
@@ -338,7 +337,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -363,7 +362,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		_, err := exec.RunHostCommand(DdevBin, "poweroff")
 		assert.NoError(err)
 
-		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
 
 	apps = ddevapp.GetActiveProjects()

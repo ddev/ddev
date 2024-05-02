@@ -227,7 +227,7 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -236,7 +236,7 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
 	})
 	err = app.Start()
@@ -293,7 +293,7 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -302,7 +302,7 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
 	})
 	err = app.Start()

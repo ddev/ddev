@@ -217,13 +217,13 @@ func CreateTmpDir(prefix string) string {
 
 // MoveGlobalDdevDir creates a temporary global config directory for DDEV
 // using a temporary directory which is set to $XDG_CONFIG_HOME/ddev
-// Don't forget to run ResetGlobalDdevDir(t, tmpHomeDir)
+// Don't forget to run ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 // in the test's cleanup function.
 func MoveGlobalDdevDir(t *testing.T) string {
 	// Create $XDG_CONFIG_HOME
-	tmpHomeDir := CreateTmpDir("Home_" + util.RandString(5))
+	tmpXdgConfigHomeDir := CreateTmpDir("Home_" + util.RandString(5))
 	// Global DDEV config directory should be named "ddev"
-	tmpGlobalDdevDir := filepath.Join(tmpHomeDir, "ddev")
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
 	// Make sure that the tmpDir/ddev doesn't exist.
 	_, err := os.Stat(tmpGlobalDdevDir)
 	require.Error(t, err)
@@ -245,7 +245,7 @@ func MoveGlobalDdevDir(t *testing.T) string {
 	ddevapp.StopMutagenDaemon()
 	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// Set $XDG_CONFIG_HOME for tests
-	t.Setenv("XDG_CONFIG_HOME", tmpHomeDir)
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// Create the global config in $XDG_CONFIG_HOME/ddev
 	globalconfig.EnsureGlobalConfig()
 	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
@@ -266,17 +266,17 @@ func MoveGlobalDdevDir(t *testing.T) string {
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
 	}
 
-	return tmpHomeDir
+	return tmpXdgConfigHomeDir
 }
 
 // ResetGlobalDdevDir removes temporary $XDG_CONFIG_HOME directory
-func ResetGlobalDdevDir(t *testing.T, tmpHomeDir string) {
+func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
 	ddevapp.StopMutagenDaemon()
 	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
-	err := os.RemoveAll(tmpHomeDir)
+	err := os.RemoveAll(tmpXdgConfigHomeDir)
 	require.NoError(t, err)
 	// refresh the global config from ~/.ddev
 	globalconfig.EnsureGlobalConfig()

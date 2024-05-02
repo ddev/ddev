@@ -23,7 +23,7 @@ func TestHomeadditions(t *testing.T) {
 	origDir, _ := os.Getwd()
 	testdata := filepath.Join(origDir, "testdata", t.Name())
 
-	tmpHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
 
 	tmpHomeGlobalHomeadditionsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
 	err := os.RemoveAll(tmpHomeGlobalHomeadditionsDir)
@@ -42,7 +42,7 @@ func TestHomeadditions(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = fileutil.PurgeDirectory(projectHomeadditionsDir)
-		testcommon.ResetGlobalDdevDir(t, tmpHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
 
 	// Before we can symlink global, need to make sure anything is already gone
