@@ -55,8 +55,8 @@ jobs:
 
             body += `\n\n See [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr)` + `.`;
 
-            body += `\n\n* [Test on Gitpod](https://gitpod.io/?autostart=true#https://github.com/` + context.repo.owner + `/` + context.repo.repo + `/pull/` + prNumber + `).`;
-            body += `\n* [Test on GitHub Codespaces](https://codespaces.new/` + context.repo.owner + `/` + context.repo.repo + `/pull/` + prNumber + `).`;
+            body += `\n\n[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/?autostart=true#https://github.com/` + context.repo.owner + `/` + context.repo.repo + `/pull/` + prNumber + `)`;
+            body += `\n\n[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/` + context.repo.owner + `/` + context.repo.repo + `/pull/` + prNumber + `)`;
 
             // insert or update a bot comment
             async function upsertComment(owner, repo, issue_number, purpose, body) {
