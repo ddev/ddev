@@ -350,7 +350,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			}
 
 			for name, portMapping := range envMap {
-				if name == "VIRTUAL_HOST" {
+				if name != "HTTP_EXPOSE" && name != "HTTPS_EXPOSE" {
 					continue
 				}
 
