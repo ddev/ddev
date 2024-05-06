@@ -186,6 +186,7 @@ func pushGlobalTraefikConfig() error {
 		if err != nil {
 			util.Failed("Failed to create Traefik config file: %v", err)
 		}
+		defer f.Close()
 		t, err := template.New("traefik_global_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
