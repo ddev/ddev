@@ -192,9 +192,11 @@ fi
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
 if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
+  # This line can be removed when ~/.ddev/.mdd is well established in master, probably July 2024
   MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync terminate -a || true
   MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd/ ~/.ddev/bin/mutagen sync terminate -a || true
   MUTAGEN_DATA_DIRECTORY=~/.mutagen ~/.ddev/bin/mutagen daemon stop || true
+  # This line can be removed when ~/.ddev/.mdd is well established in master, probably July 2024
   MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen daemon stop || true
   MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd/ ~/.ddev/bin/mutagen daemon stop || true
 fi

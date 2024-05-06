@@ -112,7 +112,7 @@ There’s only one global `.ddev` directory, which lives in your home directory:
     # permanently set environment variable depending on your OS (e.g. in ~/.bashrc):
     export XDG_CONFIG_HOME="/my-desired-path"
     # restart the terminal and run:
-    mv ~/.ddev /my-desired-path/ddev
+    mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
     Otherwise, if `$XDG_CONFIG_HOME` is not set, `~/.ddev` can be moved to:
@@ -145,7 +145,7 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.gitignore`
 : Prevents files from getting checked in when they shouldn’t be.
 
-`.mdd` (`~/.ddev_mutagen_data_directory` previously)
+`.mdd` 
 : Directory used for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 `.router-compose-full.yaml`

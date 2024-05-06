@@ -150,9 +150,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.
-    * As of DDEV v1.21.2, DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY`:
-        * `.mdd` located in `~/.ddev/.mdd` in DDEV v1.23.2+
-        * `.ddev_mutagen_data_directory` located in `~/.ddev_mutagen_data_directory` in DDEV v1.21.2 to v1.23.1
+    * DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY`, by default in `~/.ddev/.mdd`.
     * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen`. You can use all the features of Mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd` and running the Mutagen binary in `~/.ddev/bin/mutagen`, for example:
 
         ```bash
