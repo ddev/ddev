@@ -106,20 +106,20 @@ There’s only one global `.ddev` directory, which lives in your home directory:
     Use `ddev version` (look at `global-ddev-dir`) to check which location is currently used for the `.ddev` global directory.
 
 !!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
-    `~/.ddev` can be moved to `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is set:
+    DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
 
     ```bash
-    # permanently set environment variable depending on your OS (e.g. in ~/.bashrc):
+    # permanently set environment variable depending on your OS:
     export XDG_CONFIG_HOME="/my-desired-path"
     # restart the terminal and run:
     mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
-    Otherwise, if `$XDG_CONFIG_HOME` is not set, `~/.ddev` can be moved to:
+    Otherwise (Linux and WSL2 only):
 
-    * `~/Library/Application Support/ddev` on macOS
-    * `~/.config/ddev` on Linux and WSL2
-    * `%AppData%\ddev` on Windows
+    ```bash
+    mv ~/.ddev ~/.config/ddev
+    ```
 
     Note that the custom global config directory `ddev` (if it exists) takes precedence over the `~/.ddev` directory.
 

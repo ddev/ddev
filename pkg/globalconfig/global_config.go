@@ -605,7 +605,10 @@ func GetGlobalDdevDir() string {
 // GetXdgConfigHomeDir returns $XDG_CONFIG_HOME
 func GetXdgConfigHomeDir() (string, error) {
 	dir := os.Getenv("XDG_CONFIG_HOME")
-	if dir == "" {
+	// From XDG Base Directory Specification
+	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	// If $XDG_CONFIG_HOME is either not set or empty, a default equal to $HOME/.config should be used.
+	if dir == "" && runtime.GOOS == "linux" {
 		return os.UserConfigDir()
 	}
 	return dir, nil

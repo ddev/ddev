@@ -303,12 +303,9 @@ func TestGetXdgConfigHomeDir(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "")
 	configHomeDir, err := globalconfig.GetXdgConfigHomeDir()
 	require.NoError(t, err)
-	defaultConfigHomeDir := filepath.Join(os.Getenv("HOME"), ".config")
-	switch runtime.GOOS {
-	case "windows":
-		defaultConfigHomeDir = os.Getenv("AppData")
-	case "darwin":
-		defaultConfigHomeDir = filepath.Join(os.Getenv("HOME"), "/Library/Application Support")
+	defaultConfigHomeDir := ""
+	if runtime.GOOS == "linux" {
+		defaultConfigHomeDir = filepath.Join(os.Getenv("HOME"), ".config")
 	}
 	require.Equal(t, configHomeDir, defaultConfigHomeDir)
 	// Test when $XDG_CONFIG_HOME is set
