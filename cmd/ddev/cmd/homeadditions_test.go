@@ -23,7 +23,7 @@ func TestHomeadditions(t *testing.T) {
 	origDir, _ := os.Getwd()
 	testdata := filepath.Join(origDir, "testdata", t.Name())
 
-	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	tmpHomeGlobalHomeadditionsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
 	err := os.RemoveAll(tmpHomeGlobalHomeadditionsDir)

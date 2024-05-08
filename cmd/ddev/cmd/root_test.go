@@ -255,12 +255,12 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestMoveGlobalDdevDir checks to make sure that DDEV will use
+// TestCopyGlobalDdevDir checks to make sure that DDEV will use
 // ddev folder in user's custom dir $XDG_CONFIG_HOME/ddev instead of ~/.ddev
-func TestMoveGlobalDdevDir(t *testing.T) {
+func TestCopyGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
 		_, err := exec.RunHostCommand(DdevBin, "poweroff")
@@ -357,7 +357,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
-	tmpXdgConfigHomeDir := testcommon.MoveGlobalDdevDir(t)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)

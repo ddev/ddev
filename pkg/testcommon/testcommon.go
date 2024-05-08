@@ -215,11 +215,11 @@ func CreateTmpDir(prefix string) string {
 	return fullPath
 }
 
-// MoveGlobalDdevDir creates a temporary global config directory for DDEV
+// CopyGlobalDdevDir creates a temporary global config directory for DDEV
 // using a temporary directory which is set to $XDG_CONFIG_HOME/ddev
 // Don't forget to run ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 // in the test's cleanup function.
-func MoveGlobalDdevDir(t *testing.T) string {
+func CopyGlobalDdevDir(t *testing.T) string {
 	// Create $XDG_CONFIG_HOME
 	tmpXdgConfigHomeDir := CreateTmpDir("Home_" + util.RandString(5))
 	// Global DDEV config directory should be named "ddev"
