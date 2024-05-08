@@ -103,7 +103,7 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
 
 !!!tip "Where is my global `.ddev` config?"
-    Use `ddev config global` (look at `global-config-path`) to check which location is currently used for the `.ddev` global directory.
+    Use `ddev version` (look at `global-ddev-dir`) to check which location is currently used for the `.ddev` global directory.
 
 !!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
     `~/.ddev` can be moved to `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is set:
