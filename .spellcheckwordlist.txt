@@ -163,6 +163,7 @@ WSL2
 WantedBy
 Webhosting
 XDebug
+XDG
 Xhprof
 Zoho
 XSym
