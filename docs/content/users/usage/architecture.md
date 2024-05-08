@@ -145,7 +145,7 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.gitignore`
 : Prevents files from getting checked in when they shouldn’t be.
 
-`.mdd` 
+`.mdd`
 : Directory used for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 `.router-compose-full.yaml`
