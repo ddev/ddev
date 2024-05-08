@@ -152,6 +152,11 @@ func checkMutagenSocketPathLength() {
 	if checkedMutagenSocketPathLength {
 		return
 	}
+	// Skip if not Linux or macOS.
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		checkedMutagenSocketPathLength = true
+		return
+	}
 	socketPathLength := len(filepath.Join(os.Getenv("MUTAGEN_DATA_DIRECTORY"), "daemon", "daemon.sock"))
 	// Limit from https://unix.stackexchange.com/a/367012
 	limit := 104
