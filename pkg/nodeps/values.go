@@ -1,8 +1,10 @@
 package nodeps
 
 import (
-	"github.com/maruel/natural"
 	"sort"
+	"strings"
+
+	"github.com/maruel/natural"
 
 	"github.com/ddev/ddev/pkg/config/types"
 )
@@ -175,8 +177,8 @@ func GetValidDatabaseVersions() []string {
 
 // IsValidMariaDBVersion is a helper function to determine if a MariaDB version is valid, returning
 // true if the supplied MariaDB version is valid and false otherwise.
-func IsValidMariaDBVersion(MariaDBVersion string) bool {
-	if _, ok := ValidMariaDBVersions[MariaDBVersion]; !ok {
+func IsValidMariaDBVersion(v string) bool {
+	if _, ok := ValidMariaDBVersions[strings.TrimPrefix(v, MariaDB+":")]; !ok {
 		return false
 	}
 
@@ -186,7 +188,7 @@ func IsValidMariaDBVersion(MariaDBVersion string) bool {
 // IsValidMySQLVersion is a helper function to determine if a MySQL version is valid, returning
 // true if the supplied version is valid and false otherwise.
 func IsValidMySQLVersion(v string) bool {
-	if _, ok := ValidMySQLVersions[v]; !ok {
+	if _, ok := ValidMySQLVersions[strings.TrimPrefix(v, MySQL+":")]; !ok {
 		return false
 	}
 
@@ -207,7 +209,7 @@ func GetValidMariaDBVersions() []string {
 // IsValidPostgresVersion is a helper function to determine if a PostgreSQL version is valid, returning
 // true if the supplied version is valid and false otherwise.
 func IsValidPostgresVersion(v string) bool {
-	if _, ok := ValidPostgresVersions[v]; !ok {
+	if _, ok := ValidPostgresVersions[strings.TrimPrefix(v, Postgres+":")]; !ok {
 		return false
 	}
 
