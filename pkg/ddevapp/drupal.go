@@ -5,16 +5,15 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"text/template"
 
+	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-
-	"github.com/ddev/ddev/pkg/fileutil"
-
-	"github.com/ddev/ddev/pkg/archive"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -363,18 +362,65 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		util.Warning("Unable to detect Drupal version, continuing")
 		return nil
 	}
+
+	var nonCompatibleMariaDBVersions []string
+	var nonCompatibleMySQLVersions []string
+	var nonCompatiblePostgresVersions []string
+	recommendedMariaDBVersion := nodeps.MariaDBDefaultVersion
+	recommendedMySQLVersion := nodeps.MySQLDefaultVersion
+	recommendedPostgresVersion := nodeps.PostgresDefaultVersion
+
 	switch v {
 	case "8":
 		app.PHPVersion = nodeps.PHP74
 		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
 	case "9":
 		app.PHPVersion = nodeps.PHP81
+		// Drupal 9 requires MariaDB 10.3+, MySQL 5.7+, Postgres 10+
+		// See https://git.drupalcode.org/project/drupal/-/blob/9.5.x/core/INSTALL.txt
+		nonCompatibleMariaDBVersions = []string{nodeps.MariaDB55, nodeps.MariaDB100, nodeps.MariaDB101, nodeps.MariaDB102}
+		nonCompatibleMySQLVersions = []string{nodeps.MySQL55, nodeps.MySQL56}
+		nonCompatiblePostgresVersions = []string{nodeps.Postgres9}
+		recommendedMariaDBVersion = nodeps.MariaDB104
+		recommendedMySQLVersion = nodeps.MySQL57
+		recommendedPostgresVersion = nodeps.Postgres10
 	case "10":
 		app.PHPVersion = nodeps.PHP83
+		// Drupal 10 requires MariaDB 10.3+, MySQL 5.7+, Postgres 10+
+		// See https://git.drupalcode.org/project/drupal/-/blob/10.3.x/core/INSTALL.txt
+		nonCompatibleMariaDBVersions = []string{nodeps.MariaDB55, nodeps.MariaDB100, nodeps.MariaDB101, nodeps.MariaDB102}
+		nonCompatibleMySQLVersions = []string{nodeps.MySQL55, nodeps.MySQL56}
+		nonCompatiblePostgresVersions = []string{nodeps.Postgres9}
+		recommendedMariaDBVersion = nodeps.MariaDB104
+		recommendedMySQLVersion = nodeps.MySQL57
+		recommendedPostgresVersion = nodeps.Postgres10
 	case "11":
 		app.PHPVersion = nodeps.PHP83
 		app.CorepackEnable = true
+		// Drupal 11 requires MariaDB 10.6+, MySQL 8.0+, Postgres 16+
+		// See https://git.drupalcode.org/project/drupal/-/blob/11.x/core/INSTALL.txt
+		nonCompatibleMariaDBVersions = []string{nodeps.MariaDB55, nodeps.MariaDB100, nodeps.MariaDB101, nodeps.MariaDB102, nodeps.MariaDB103, nodeps.MariaDB104, nodeps.MariaDB105}
+		nonCompatibleMySQLVersions = []string{nodeps.MySQL55, nodeps.MySQL56, nodeps.MySQL57}
+		nonCompatiblePostgresVersions = []string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11, nodeps.Postgres12, nodeps.Postgres13, nodeps.Postgres14, nodeps.Postgres15}
+		recommendedMariaDBVersion = nodeps.MariaDBDefaultVersion
+		recommendedMySQLVersion = nodeps.MySQL80
+		recommendedPostgresVersion = nodeps.Postgres16
 	}
+
+	if app.Database.Type == nodeps.MariaDB {
+		if slices.Contains(nonCompatibleMariaDBVersions, app.Database.Version) {
+			app.Database.Version = recommendedMariaDBVersion
+		}
+	} else if app.Database.Type == nodeps.MySQL {
+		if slices.Contains(nonCompatibleMySQLVersions, app.Database.Version) {
+			app.Database.Version = recommendedMySQLVersion
+		}
+	} else if app.Database.Type == nodeps.Postgres {
+		if slices.Contains(nonCompatiblePostgresVersions, app.Database.Version) {
+			app.Database.Version = recommendedPostgresVersion
+		}
+	}
+
 	return nil
 }
 
