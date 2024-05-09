@@ -407,12 +407,14 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		recommendedPostgresVersion = nodeps.Postgres16
 	}
 
-	if app.Database.Type == nodeps.MariaDB && slices.Contains(nonCompatibleMariaDBVersions, app.Database.Version) {
-		app.Database.Version = recommendedMariaDBVersion
-	} else if app.Database.Type == nodeps.MySQL && slices.Contains(nonCompatibleMySQLVersions, app.Database.Version) {
-		app.Database.Version = recommendedMySQLVersion
-	} else if app.Database.Type == nodeps.Postgres && slices.Contains(nonCompatiblePostgresVersions, app.Database.Version) {
-		app.Database.Version = recommendedPostgresVersion
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		if app.Database.Type == nodeps.MariaDB && slices.Contains(nonCompatibleMariaDBVersions, app.Database.Version) {
+			app.Database.Version = recommendedMariaDBVersion
+		} else if app.Database.Type == nodeps.MySQL && slices.Contains(nonCompatibleMySQLVersions, app.Database.Version) {
+			app.Database.Version = recommendedMySQLVersion
+		} else if app.Database.Type == nodeps.Postgres && slices.Contains(nonCompatiblePostgresVersions, app.Database.Version) {
+			app.Database.Version = recommendedPostgresVersion
+		}
 	}
 
 	return nil
