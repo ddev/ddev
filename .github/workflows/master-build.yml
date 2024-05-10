@@ -16,6 +16,13 @@ on:
         required: false
         default: false
 
+# We do not cancel in-progress builds here because in general we
+# want to see success on each commit, and we usually use [skip ci]
+# to prevent builds on commits that don't matter.
+#concurrency:
+#  group: ${{ github.workflow }}-${{ github.ref }}
+#  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
