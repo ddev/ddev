@@ -4,8 +4,8 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
 ## General Troubleshooting Strategies
 
+* Please use the [current stable version of DDEV](https://ddev.readthedocs.io/en/stable/users/install/ddev-upgrade/) and of your Docker provider before going too far or asking for support.
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
-* Please use the current stable version of DDEV and of your Docker provider before going too far or asking for support.
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Check to see if you're out of disk space. On macOS, make sure that your Docker provider has adequate disk space allocated. (DDEV will normally warn you about problems in this situation.)
