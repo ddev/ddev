@@ -4,13 +4,17 @@ on:
   pull_request_target:
     types: [opened, edited, reopened, synchronize, ready_for_review, review_requested]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   issues: write
   pull-requests: write
   statuses: write
   checks: write
-      
+
 jobs:
   check_pr_title:
     name: Check PR Title

@@ -14,6 +14,10 @@ on:
       - "pkg/**"
       - "go.*"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -61,7 +65,7 @@ jobs:
         with:
           go-version: '>=1.21'
 
-      # Fails if something is wrong with the dependencies 
+      # Fails if something is wrong with the dependencies
       - name: Verify Go Modules
         run: |
           go mod verify
