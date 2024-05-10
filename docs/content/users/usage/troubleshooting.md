@@ -10,6 +10,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Check to see if you're out of disk space. On macOS, make sure that your Docker provider has adequate disk space allocated. (DDEV will normally warn you about problems in this situation.)
 * On macOS, if you have a particular heavyweight project or are encountering `kill` statements in `ddev logs`, increase your memory allocation in your Docker provider. (Most projects are fine with 5-6GB allocated.)
+* On macOS your Docker provider limits the amount of disk space available to Docker. Make sure that you increase it if you're seeing disk space problems.
 * Please make sure that your project is in a subdirectory of your home directory and has normal ownership and privileges. For example, `ls -ld .` in your project directory should show you as owner of the directory and with write privileges.
 * Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
 * Make sure you do not have disk space problems on your computer. This can be especially tricky on WSL2, where you need to check both the main Windows disk space and WSL2 disk space as well.
