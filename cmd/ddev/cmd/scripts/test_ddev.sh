@@ -35,7 +35,7 @@ header "Please make sure that you have already looked at troubleshooting guide"
 printf "Troubleshooting guide: https://ddev.readthedocs.io/en/stable/users/usage/troubleshooting/ \n"
 printf "Simple things to check:\n* ddev poweroff\n* Restart Docker Provider\n* Reboot computer\n* Temporarily disable VPN and firewall\n"
 printf "Press any key to continue:\n"
-read x
+[[ "${DDEV_NONINTERACTIVE:-}" == "true" ]] || read x
 
 header "Output file will be in $1"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
