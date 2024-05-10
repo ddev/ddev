@@ -1,14 +1,21 @@
-name: 🐞 Bug report
+name: 🐞 Bug report or Support Request
 description: Create a report to help us improve.
 labels: [bug]
 body:
   - type: checkboxes
     attributes:
-      label: Is there an existing issue for this?
-      description: Please [search existing issues](https://github.com/ddev/ddev/issues) to see if yours has already been reported.
+      label: Preliminary checklist
+      description: Please complete the following checks before submitting an issue.
       options:
-        - label: I have searched the existing issues
+        - label: I am using the latest stable version of DDEV (see [upgrade guide](https://ddev.readthedocs.io/en/stable/users/install/ddev-upgrade/))
           required: true
+        - label: I have searched [existing issues](https://github.com/ddev/ddev/issues)
+          required: true
+        - label: I have checked the [troubleshooting guide](https://ddev.readthedocs.io/en/stable/users/usage/troubleshooting/)
+          required: true
+        - label: I have run `ddev debug test` to include output below
+          required: true
+
   - type: textarea
     attributes:
       label: Output of `ddev debug test`
