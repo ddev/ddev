@@ -54,7 +54,7 @@ var DebugRefreshCmd = &cobra.Command{
 
 		err = exec2.RunInteractiveCommand(composeBinaryPath, []string{"-f", composeRenderedPath, "build", "web", "--no-cache"})
 		if err != nil {
-			util.Failed("Failed to execute docker-compose -f %s build web --no-cache: %v", err)
+			util.Failed("Failed to execute %s -f %s build web --no-cache: %v", composeBinaryPath, composeRenderedPath, err)
 		}
 		buildDuration := util.FormatDuration(buildDurationStart())
 		util.Success("Refreshed Docker cache for project %s in %s", app.Name, buildDuration)
