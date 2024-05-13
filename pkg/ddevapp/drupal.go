@@ -7,14 +7,12 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-
-	"github.com/ddev/ddev/pkg/fileutil"
-
-	"github.com/ddev/ddev/pkg/archive"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -362,6 +360,16 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	if err != nil || v == "" {
 		util.Warning("Unable to detect Drupal version, continuing")
 		return nil
+	}
+	// If there is no database, update it to the default one,
+	// otherwise show a warning to the user.
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		if dbType, err := app.GetExistingDBType(); err == nil && dbType == "" {
+			app.Database = DatabaseDefault
+		} else if app.Database != DatabaseDefault && v != "8" {
+			defaultType := DatabaseDefault.Type + ":" + DatabaseDefault.Version
+			util.Warning("Default database type is %s, but the current actual database type is %s, you may want to migrate with 'ddev debug migrate-database %s'.", defaultType, dbType, defaultType)
+		}
 	}
 	switch v {
 	case "8":
