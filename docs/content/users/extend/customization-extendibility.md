@@ -235,7 +235,10 @@ After adding a snippet, run `ddev restart` to make it take effect.
 
 If you’re using [`webserver_type: apache-fpm`](../configuration/config.md#webserver_type) in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
 
+When you run [`ddev restart`](../usage/commands.md#restart) using `apache-fpm`, DDEV creates a configuration customized to your project type in `.ddev/apache/apache-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`.
+
 * Edit the `.ddev/apache/apache-site.conf`.
+* Remove the `#ddev-generated` to signal to DDEV that you're taking control of the file.
 * Add your configuration changes.
 * Save your configuration file and run [`ddev restart`](../usage/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../usage/commands.md#logs) to inspect the logs for possible Apache configuration errors.
 * Use `ddev exec apachectl -t` to do a general Apache syntax check.
