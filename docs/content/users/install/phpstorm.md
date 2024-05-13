@@ -118,7 +118,7 @@ Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell
 
 3. `wsl --shutdown` on the Windows side and wait 10 seconds, then restart your distro.
 4. In WSL2, `sudo snap install --classic phpstorm`.
-5. DDEV should already be installed as described in [DDEV installation](../install/ddev-installation.md#windows-wsl2).
+5. DDEV should already be installed as described in [DDEV installation](../install/ddev-installation.md#windows).
 6. `ddev config global --xdebug-ide-location=wsl2` to tell DDEV that the IDE is listening in WSL2 as opposed to listening on the Windows side.
 7. Start PhpStorm, `phpstorm &`.
 8. Use `ddev start` and `ddev xdebug on`.

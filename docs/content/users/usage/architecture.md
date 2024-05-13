@@ -20,10 +20,10 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
     For example, if you see a `solr` directory, it probably pertains to a custom Solr [add-on service](../extend/additional-services.md).
 
 `addon-metadata` directory
-: Contains metadata about add-on services that have been added to the project. This allows commands like `ddev get --installed` and `ddev get --remove` to work, see [Viewing and removing add-ons](../extend/additional-services.md#viewing-and-removing-installed-add-ons).
+: Contains metadata about add-on services that have been added to the project. This allows commands like `ddev get --installed` and `ddev get --remove` to work, see [Managing Installed Add-Ons](../extend/additional-services.md#managing-installed-add-ons).
 
 `apache` directory
-: Default Apache configuration when using `webserver_type: apache-fpm`, which [can be customized](../extend/customization-extendibility.md#providing-custom-apache-configuration).
+: Default Apache configuration when using `webserver_type: apache-fpm`, which [can be customized](../extend/customization-extendibility.md#custom-apache-configuration).
 
 `commands` subdirectories
 : Project custom [shell commands](../extend/custom-commands.md) that can run on the host or inside a container.
@@ -50,13 +50,13 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Contains `mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
 
 `mysql` directory
-: Contains [optional `mysql` or `mariadb` configuration](../extend/customization-extendibility.md#providing-custom-mysqlmariadb-configuration-mycnf).
+: Contains [optional `mysql` or `mariadb` configuration](../extend/customization-extendibility.md#custom-mysqlmariadb-configuration-mycnf).
 
 `nginx` directory
 : Can be used for add-on [nginx snippets](../extend/customization-extendibility.md#custom-nginx-configuration).
 
 `nginx_full` directory
-: Contains the nginx configuration used by the web container, which [can be customized](../extend/customization-extendibility.md#providing-custom-nginx-configuration).
+: Contains the nginx configuration used by the web container, which [can be customized](../extend/customization-extendibility.md#custom-nginx-configuration).
 
 `postgres` directory
 : Contains `postgresql.conf`, which can be edited if needed. Remove the `#ddev-generated` line at the top to take it over.
@@ -65,7 +65,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Contains examples and implementations to demonstrate how the [`ddev pull`](../usage/commands.md#pull) command can work with [hosting providers](../providers/index.md).
 
 `traefik` directory
-: Configures the `ddev-router` when it is using [Traefik](../extend/traefik-router.md#traefik-router).
+: Configures the `ddev-router` when it is using [Traefik](../extend/traefik-router.md).
 
 `web-build` directory
 : Can be used to provide a [custom Dockerfile](../extend/customizing-images.md) for the web container.

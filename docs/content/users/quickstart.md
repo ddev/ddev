@@ -458,7 +458,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
         `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
     * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --file=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
 
-    OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
+    OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#mutagen) on macOS and traditional Windows.
 
 ## Moodle
 
@@ -759,4 +759,4 @@ There are several easy ways to use DDEV with WordPress:
     // wp-config-ddev.php not needed
     ```
 
-    Now run [`ddev start`](../users/usage/commands.md#start) and continue [importing a database](#importing-a-database) if you need to.
+    Now run [`ddev start`](../users/usage/commands.md#start) and continue [Importing a Database](./usage/managing-projects.md#importing-a-database) if you need to.
