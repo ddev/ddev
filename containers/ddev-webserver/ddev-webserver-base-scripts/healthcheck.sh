@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This uses /bin/sh so it doesn't initialize profile/bashrc/etc
+# This uses /bin/sh, so it doesn't initialize profile/bashrc/etc
 
 # ddev-webserver healthcheck
 
@@ -8,7 +8,7 @@ set -e
 
 sleeptime=59
 
-# Make sure that mounted code, and mailpit
+# Make sure that phpstatus, mounted code, webserver and mailpit
 # are working.
 # Since docker doesn't provide a lazy period for startup,
 # we track health. If the last check showed healthy
@@ -16,7 +16,7 @@ sleeptime=59
 # sleep at startup. This requires the timeout to be set
 # higher than the sleeptime used here.
 if [ -f /tmp/healthy ]; then
-    printf "container was previously healthy, so sleeping ${sleeptime} seconds before continuing healthcheck...  "
+    printf "container was previously healthy, so sleeping %s seconds before continuing healthcheck... " ${sleeptime}
     sleep ${sleeptime}
 fi
 
@@ -61,9 +61,9 @@ if [ "${DDEV_WEBSERVER_TYPE#*-}" = "gunicorn" ]; then
 
 fi
 
-if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm"  ]; then
+if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm" ]; then
   gunicornstatus="true"
-  if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
+  if curl --fail -s 127.0.0.1/phpstatus >/dev/null; then
     phpstatus="true"
     printf "phpstatus:OK "
   else
@@ -71,7 +71,7 @@ if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm"  ]; then
   fi
 fi
 
-if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailpit}" = "true" ] ; then
+if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] && [ "${mailpit}" = "true" ]; then
     touch /tmp/healthy
     exit 0
 fi
