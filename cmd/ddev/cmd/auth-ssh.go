@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -9,8 +12,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
 )
 
 // sshKeyPath is the full path to the *directory* containing SSH keys.
@@ -19,7 +20,7 @@ var sshKeyPath string
 // AuthSSHCommand implements the "ddev auth ssh" command
 var AuthSSHCommand = &cobra.Command{
 	Use:     "ssh",
-	Short:   "Add SSH key authentication to the ddev-ssh-auth container",
+	Short:   "Add SSH key authentication to the ddev-ssh-agent container",
 	Long:    `Use this command to provide the password to your SSH key to the ddev-ssh-agent container, where it can be used by other containers. Normal usage is "ddev auth ssh", or if your key is not in ~/.ssh, ddev auth ssh --ssh-key-path=/some/path/.ssh"`,
 	Example: `ddev auth ssh`,
 	Run: func(_ *cobra.Command, args []string) {
