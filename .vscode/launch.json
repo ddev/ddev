@@ -7,7 +7,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d9simple",
+            "cwd": "${workspaceRoot}/../d10simple",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["start", "-y"],
             "showLog": true
@@ -18,7 +18,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d9simple",
+            "cwd": "${workspaceRoot}/../d10simple",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["snapshot"],
             "showLog": true
@@ -95,7 +95,7 @@
             "hostname": "0.0.0.0",
             "port": 9003,
             "pathMappings": {
-                "/var/www/html": "${workspaceRoot}/../d9simple"
+                "/var/www/html": "${workspaceRoot}/../d10simple"
             }
         }
     ]
