@@ -17,16 +17,16 @@ var WebTag = "v1.23.1" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.23.0"
+var BaseDBTag = "v1.23.1"
 
-const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.0"
-const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.0"
+const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.1"
+const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.1"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.23.0"
+var SSHAuthTag = "v1.23.1"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
