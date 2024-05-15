@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:20240513_stasadev_debsuryorg as ddev-webserver-base
+FROM ddev/ddev-php-base:v1.23.1 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -37,7 +37,7 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develo
 RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
 
-RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
@@ -157,7 +157,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
 #END ddev-webserver-dev-base
@@ -265,7 +265,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
 #END ddev-webserver-prod-base
