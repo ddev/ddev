@@ -69,3 +69,16 @@ func IsBundledCustomCommand(globalCommand bool, service, command string) bool {
 
 	return err == nil
 }
+
+func IsBundledCustomProvider(provider string) bool {
+	paths := []string{
+		filepath.Join("dotddev_assets", "providers", provider) + ".yaml",
+		filepath.Join("dotddev_assets", "providers", provider) + ".yaml.example",
+	}
+	for _, path := range paths {
+		if _, err := bundledAssets.ReadFile(path); err == nil {
+			return true
+		}
+	}
+	return false
+}

@@ -43,7 +43,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 		cmdCopy := *cmd
 		argsCopy := args
 		if IsUserDefinedCustomCommand(&cmdCopy) {
-			cmdCopy.Use = "custom-command"
+			cmdCopy = cobra.Command{Use: "custom-command"}
 			argsCopy = []string{}
 		}
 

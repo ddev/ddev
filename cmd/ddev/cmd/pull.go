@@ -125,6 +125,13 @@ ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 				appPull(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"], environment)
 			},
 		}
+		// Mark custom command
+		if !ddevapp.IsBundledCustomProvider(subCommandName) {
+			if subCommand.Annotations == nil {
+				subCommand.Annotations = map[string]string{}
+			}
+			subCommand.Annotations[CustomCommand] = "true"
+		}
 		PullCmd.AddCommand(subCommand)
 		subCommand.Flags().BoolP("skip-confirmation", "y", false, "Skip confirmation step")
 		subCommand.Flags().Bool("skip-db", false, "Skip pulling database archive")
