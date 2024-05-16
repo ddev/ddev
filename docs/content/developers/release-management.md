@@ -114,7 +114,7 @@ While it’s more error-prone, images can be pushed from the command line:
 5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.
 6. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
 
-## Maintaining `ddev-dbserver` MySQL 5.7 & 8.0 ARM64 Images
+## Maintaining `ddev-dbserver` MySQL 5.7 and 8.0 ARM64 Images
 
 Sadly, there are no ARM64 Docker images for MySQL 5.7 and 8.0, so we have our own process to maintain [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images) and [ddev/xtrabackup-build](https://github.com/ddev/xtrabackup-build) images for DDEV.
 
@@ -133,7 +133,7 @@ But here are the steps for building:
 
 1. The `ddev/ddev-php-base` image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
 2. The `ddev/ddev-webserver` Dockerfile must `FROM ddev/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the GitHub Actions or the manual technique.
-3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7 & 8.0 ARM64 Images](#maintaining-ddev-dbserver-mysql-57--80-arm64-images) instructions.
+3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7 & 8.0 ARM64 Images](#maintaining-ddev-dbserver-mysql-57-and-80-arm64-images) instructions.
 4. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
 
 ## Manually Updating Homebrew Formulas

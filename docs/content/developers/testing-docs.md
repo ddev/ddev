@@ -8,7 +8,7 @@ This page is about working with the DDEV documentation. See the [Writing Style G
 
 ## Fix Docs Using Web Browser
 
-The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/ddev/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions GitHub:
+The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/ddev/ddev/actions). While it may help to [check your work locally](#fork-or-clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using GitHub in a browser:
 
 1. Click the pencil in the upper right. That will take you to the right page on GitHub.
 2. Click the pencil button on GitHub and follow the instructions to create your change.
@@ -18,7 +18,7 @@ The documentation is built and checked automatically with various [GitHub Action
     ![Documentation preview build link](../images/docs-build-link.png)
 6. Take a look at the [“Check docs” action](https://github.com/ddev/ddev/actions/workflows/docscheck.yml) to make sure there were no linting or spelling errors.
 
-## Fork / Clone the DDEV Repository
+## Fork or Clone the DDEV Repository
 
 To start making changes you’ll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/ddev/ddev/fork) which includes the documentation.
 
