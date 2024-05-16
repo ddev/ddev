@@ -43,7 +43,7 @@ func Confirm(prompt string) bool {
 	return ConfirmTo(prompt, true)
 }
 
-// Confirm handles the asking and interpreting of a basic yes/no question.
+// ConfirmTo handles the asking and interpreting of a basic yes/no question.
 // If DDEV_NONINTERACTIVE is set, Confirm() returns true.
 // If response is blank, the defaultTo value is returned.
 // If response is invalid, the prompt will be presented at most three times
