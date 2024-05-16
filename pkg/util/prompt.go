@@ -38,13 +38,35 @@ func Prompt(prompt string, defaultValue string) string {
 // Confirm handles the asking and interpreting of a basic yes/no question.
 // If DDEV_NONINTERACTIVE is set, Confirm() returns true. The prompt will be
 // presented at most three times before returning false.
+// Defaults to true if left blank.
 func Confirm(prompt string) bool {
+	return ConfirmTo(prompt, true)
+}
+
+// ConfirmTo handles the asking and interpreting of a basic yes/no question.
+// If DDEV_NONINTERACTIVE is set, Confirm() returns true.
+// If response is blank, the defaultTo value is returned.
+// If response is invalid, the prompt will be presented at most three times
+// before returning false.
+func ConfirmTo(prompt string, defaultTo bool) bool {
 	if len(os.Getenv("DDEV_NONINTERACTIVE")) > 0 {
 		return true
 	}
 
+	var promptOptions string
+	var promptDefaultValue string
+
+	if defaultTo {
+		promptOptions = "Y/n"
+		promptDefaultValue = "yes"
+	} else {
+		promptOptions = "y/N"
+		promptDefaultValue = "no"
+	}
+
 	for i := 0; i < 3; i++ {
-		resp := strings.ToLower(Prompt(fmt.Sprintf("%s [Y/n]", prompt), "yes"))
+		resp := strings.ToLower(Prompt(fmt.Sprintf("%s [%s]", prompt, promptOptions), promptDefaultValue))
+
 		if resp == "yes" || resp == "y" {
 			return true
 		}
