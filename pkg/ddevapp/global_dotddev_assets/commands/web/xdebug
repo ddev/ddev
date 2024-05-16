@@ -15,6 +15,25 @@ fi
 
 xdebug_version=$(php --version | awk '/Xdebug v/ {print $3}')
 
+get_xdebug_status() {
+    case ${xdebug_version} in
+    v3*)
+      status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
+      if [[ "${status}" =~ .*"debug".* ]]; then
+        echo "1"
+      else
+        echo "0"
+      fi
+      ;;
+    v2*)
+      echo $(php -r 'echo ini_get("xdebug.remote_enable");')
+      ;;
+    *)
+      echo "0"
+      ;;
+    esac
+} 
+
 case $1 in
   on|true|enable)
     enable_xdebug
@@ -23,51 +42,20 @@ case $1 in
     disable_xdebug
     ;;
   toggle)
-    case ${xdebug_version} in
-    v3*)
-      status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
-      if [[ "${status}" =~ .*"debug".* ]]; then
-        disable_xdebug
-      else
-        enable_xdebug
-      fi
-      ;;
-    v2*)
-      status=$(php -r 'echo ini_get("xdebug.remote_enable");')
-      if [ "${status}" = "1" ]; then
-        disable_xdebug
-      else
-        enable_xdebug
-      fi
-      ;;
-    *)
+    status=$(get_xdebug_status)
+    if [ "${status}" = "1" ]; then
+      disable_xdebug
+    else
       enable_xdebug
-      ;;
-    esac
+    fi
     ;;
   status)
-    case ${xdebug_version} in
-    v3*)
-      status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
-      if [[ "${status}" =~ .*"debug".* ]]; then
-        result="xdebug enabled"
-      else
-        result="xdebug disabled"
-      fi
-      ;;
-    v2*)
-      status=$(php -r 'echo ini_get("xdebug.remote_enable");')
-      if [ "${status}" = "1" ]; then
-        result="xdebug enabled"
-      else
-        result="xdebug disabled"
-      fi
-      ;;
-    *)
+    status=$(get_xdebug_status)
+    if [ "${status}" = "1" ]; then
+      result="xdebug enabled"
+    else
       result="xdebug disabled"
-      ;;
-    esac
-
+    fi
     echo $result
     ;;
   *)
