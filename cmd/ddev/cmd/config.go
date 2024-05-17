@@ -542,8 +542,17 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
 	}
 
-	if omitContainersArg != "" {
-		app.OmitContainers = strings.Split(omitContainersArg, ",")
+	// Check if the 'omit-containers' flag has been set and not default
+	if cmd.Flag("omit-containers").Changed {
+		// Remove all spaces from the argument
+		omitContainersArg = strings.Replace(omitContainersArg, " ", "", -1)
+
+		app.OmitContainers = []string{} // Initialize as empty slice
+
+		if omitContainersArg != "" {
+			// Split the argument string by commas
+			app.OmitContainers = strings.Split(omitContainersArg, ",")
+		}
 	}
 
 	if cmd.Flag("web-environment").Changed {
