@@ -384,6 +384,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.Name = filepath.Base(pwd)
 	}
 
+	err = app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	// Ensure that the docroot exists
 	if docrootRelPathArg != "" {
 		app.Docroot = docrootRelPathArg
