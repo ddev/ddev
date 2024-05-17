@@ -88,7 +88,12 @@ ddev stop --remove-data`,
 			args = append(args, projectName)
 		}
 
-		projects, err := getRequestedProjects(args, stopAll)
+		// Skip project validation if --unlist is provided
+		originalRunValidateConfig := ddevapp.RunValidateConfig
+		ddevapp.RunValidateConfig = !unlist
+		projects, err := getRequestedProjects(args, deleteAll)
+		ddevapp.RunValidateConfig = originalRunValidateConfig
+
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
 		}
