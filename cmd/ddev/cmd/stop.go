@@ -91,7 +91,7 @@ ddev stop --remove-data`,
 		// Skip project validation if --unlist is provided
 		originalRunValidateConfig := ddevapp.RunValidateConfig
 		ddevapp.RunValidateConfig = !unlist
-		projects, err := getRequestedProjects(args, deleteAll)
+		projects, err := getRequestedProjects(args, stopAll)
 		ddevapp.RunValidateConfig = originalRunValidateConfig
 
 		if err != nil {
