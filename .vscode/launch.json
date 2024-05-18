@@ -7,7 +7,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d10simple",
+            "cwd": "${workspaceRoot}/../d10",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["start", "-y"],
             "showLog": true
