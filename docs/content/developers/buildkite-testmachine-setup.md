@@ -28,6 +28,8 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 18. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
 19. Verify that `go`, `ddev`, `git-bash` are in the path.
 20. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
+21. Turn off the settings that cause the "windows experience" prompts after new upgrades:
+![disable_windows_experience](../images/disable_windows_experience.png)
 
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
