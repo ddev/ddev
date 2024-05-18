@@ -16,7 +16,7 @@ For **Magento 1**, DDEV settings go into `app/etc/local.xml`.
 
 In **Magento 2**, DDEV settings go into `app/etc/env.php`.
 
-For **TYPO3**, DDEV settings are written to `AdditionalConfiguration.php`. If `AdditionalConfiguration.php` exists and is not managed by DDEV, it will not be modified.
+For **TYPO3**, DDEV settings are written to `config/system/additional.php`. If `additional.php` exists and is not managed by DDEV, it will not be modified.
 
 For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-ddev.php`. The `ddev config` command will attempt to write settings through the following steps:
 
