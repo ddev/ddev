@@ -453,7 +453,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
 		assert.NoError(err)
 		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name()+"_subdir")
-		assert.Error(err)
+		assert.NoError(err)
 		_ = os.RemoveAll(tmpDir)
 	})
 
