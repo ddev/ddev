@@ -1244,6 +1244,12 @@ func (app *DdevApp) promptForName() error {
 		return err
 	}
 	app.Name = name
+
+	err := app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	return nil
 }
 
