@@ -2081,8 +2081,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
 		"DDEV_DATABASE_FAMILY":           dbFamily,
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
-		"DDEV_FILES_DIR":                 app.getContainerUploadDir(),
-		"DDEV_FILES_DIRS":                strings.Join(app.getContainerUploadDirs(), ","),
+		"DDEV_FILES_DIR":                 app.GetContainerUploadDir(),
+		"DDEV_FILES_DIRS":                strings.Join(app.GetContainerUploadDirs(), ","),
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_MAILHOG_PORT":   app.HostMailpitPort,
@@ -2966,9 +2966,9 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 		return err
 	}
 
-	// If the destination path exists, remove it as was warned
+	// If the destination path exists, purge it as was warned
 	if fileutil.FileExists(destPath) {
-		if err := os.RemoveAll(destPath); err != nil {
+		if err := fileutil.PurgeDirectory(destPath); err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
@@ -2989,8 +2989,7 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 		return nil
 	}
 
-	//nolint: revive
-	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+	if err := copy.Copy(importPath, destPath); err != nil {
 		return err
 	}
 

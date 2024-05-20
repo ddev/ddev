@@ -2459,6 +2459,9 @@ func TestDdevImportFiles(t *testing.T) {
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
+		err = app.Start()
+		require.NoError(t, err)
+
 		if site.FilesTarballURL != "" && app.GetUploadDir() != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			assert.NoError(err)
@@ -2505,6 +2508,12 @@ func TestDdevImportFiles(t *testing.T) {
 					continue
 				}
 				assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), ext+".txt"))
+
+				// Make sure the imported file also appears inside the container
+				stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+					Cmd: fmt.Sprintf("file %s", app.GetContainerUploadDir()),
+				})
+				require.NoError(t, err, "Expected file not found inside container, err='%v', stdout='%s', stderr='%s'", err, stdout, stderr)
 			}
 			assert.FileExists("hello-pre-import-files-" + app.Name)
 			assert.FileExists("hello-post-import-files-" + app.Name)

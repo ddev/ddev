@@ -104,9 +104,9 @@ func (app *DdevApp) calculateContainerUploadDirFullPath(uploadDir string) string
 	return ""
 }
 
-// getContainerUploadDir returns the full path to the first upload
+// GetContainerUploadDir returns the full path to the first upload
 // directory in container or "" if there is none.
-func (app *DdevApp) getContainerUploadDir() string {
+func (app *DdevApp) GetContainerUploadDir() string {
 	uploadDirs := app.GetUploadDirs()
 	if len(uploadDirs) > 0 {
 		return app.calculateContainerUploadDirFullPath(uploadDirs[0])
@@ -115,9 +115,9 @@ func (app *DdevApp) getContainerUploadDir() string {
 	return ""
 }
 
-// getContainerUploadDirs returns a slice of the full path to the upload
+// GetContainerUploadDirs returns a slice of the full path to the upload
 // directories in container.
-func (app *DdevApp) getContainerUploadDirs() []string {
+func (app *DdevApp) GetContainerUploadDirs() []string {
 	uploadDirs := app.GetUploadDirs()
 	containerUploadDirs := make([]string, 0, len(uploadDirs))
 
