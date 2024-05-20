@@ -86,6 +86,7 @@ Lando
 Laravel
 Let's
 Lima
+Livewire
 MAMP
 Magento
 Magento's
