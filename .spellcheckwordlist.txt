@@ -85,6 +85,7 @@ Lando
 Laravel
 Let's
 Lima
+Livewire
 MAMP
 Magento
 Magento's
@@ -134,6 +135,7 @@ Snapshotting
 Solr
 SomeExternalDrive
 SQLite
+StarterKits
 Starts
 Statamic
 Support
