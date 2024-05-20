@@ -232,6 +232,25 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	// Make sure that the global config directory is set to ~/.ddev
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Make sure that the original global config directory exists
+	require.DirExists(t, originalGlobalDdevDir)
+	originalGlobalConfig := globalconfig.DdevGlobalConfig
+	// Stop the Mutagen daemon running in the ~/.ddev
+	ddevapp.StopMutagenDaemon()
+	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+	// Set $XDG_CONFIG_HOME for tests
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
+	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// And it should be created by now
+	require.DirExists(t, tmpGlobalDdevDir)
+	// Create the global config in $XDG_CONFIG_HOME/ddev
+	globalconfig.EnsureGlobalConfig()
+	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
+	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
+	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
 	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
 	sourceBinDir := filepath.Join(originalGlobalDdevDir, "bin")
 	_, err = os.Stat(sourceBinDir)
@@ -240,21 +259,6 @@ func CopyGlobalDdevDir(t *testing.T) string {
 		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
 		require.NoError(t, err)
 	}
-	originalGlobalConfig := globalconfig.DdevGlobalConfig
-	// Stop the Mutagen daemon running in the ~/.ddev
-	ddevapp.StopMutagenDaemon()
-	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
-	// Set $XDG_CONFIG_HOME for tests
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-	// Create the global config in $XDG_CONFIG_HOME/ddev
-	globalconfig.EnsureGlobalConfig()
-	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
-	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
-	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
-	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-	require.NoError(t, err)
-	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
-	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
 	// Reset $MUTAGEN_DATA_DIRECTORY
 	err = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
 	require.NoError(t, err)
@@ -276,13 +280,16 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
+	t.Setenv("XDG_CONFIG_HOME", "")
 	err := os.RemoveAll(tmpXdgConfigHomeDir)
 	require.NoError(t, err)
-	// refresh the global config from ~/.ddev
-	globalconfig.EnsureGlobalConfig()
 	// Make sure that the global config directory is set to ~/.ddev
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Make sure that the original global config directory exists
+	require.DirExists(t, originalGlobalDdevDir)
+	// refresh the global config from ~/.ddev
+	globalconfig.EnsureGlobalConfig()
 	// Reset $MUTAGEN_DATA_DIRECTORY
 	err = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
 	require.NoError(t, err)

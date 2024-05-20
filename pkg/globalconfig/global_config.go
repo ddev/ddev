@@ -567,24 +567,9 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns ~/.ddev, the global caching directory
+// GetGlobalDdevDir returns the global caching directory, and creates it as needed.
 func GetGlobalDdevDir() string {
-	// If user created a custom $XDG_CONFIG_HOME/ddev folder,
-	// for example ~/.config/ddev on Linux, use that folder instead.
-	xdgConfigHomeDir, err := GetXdgConfigHomeDir()
-	if err == nil {
-		ddevDir := filepath.Join(xdgConfigHomeDir, "ddev")
-		if _, err := os.Stat(ddevDir); err == nil {
-			return ddevDir
-		}
-	}
-
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		logrus.Fatal("Could not get home directory for current user. Is it set?")
-	}
-	ddevDir := filepath.Join(userHome, ".ddev")
-
+	ddevDir := GetGlobalConfigDirLocation()
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
 		// If they happen to be running as root/sudo, we won't create the directory
@@ -607,16 +592,33 @@ func GetGlobalDdevDir() string {
 	return ddevDir
 }
 
-// GetXdgConfigHomeDir returns $XDG_CONFIG_HOME
-func GetXdgConfigHomeDir() (string, error) {
-	dir := os.Getenv("XDG_CONFIG_HOME")
-	// From XDG Base Directory Specification
-	// https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	// If $XDG_CONFIG_HOME is either not set or empty, a default equal to $HOME/.config should be used.
-	if dir == "" && runtime.GOOS == "linux" {
-		return os.UserConfigDir()
+// GetGlobalConfigDirLocation returns the global caching directory location to be used by DDEV:
+// $XDG_CONFIG_HOME/ddev if $XDG_CONFIG_HOME is set,
+// ~/.config/ddev if on Linux and that directory exists,
+// ~/.ddev otherwise.
+func GetGlobalConfigDirLocation() string {
+	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev
+	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfigHomeDir != "" {
+		return filepath.Join(xdgConfigHomeDir, "ddev")
 	}
-	return dir, nil
+	// If Linux and ~/.config/ddev exists, use it,
+	// we don't create this directory.
+	if runtime.GOOS == "linux" {
+		userConfigDir, err := os.UserConfigDir()
+		if err == nil {
+			linuxDir := filepath.Join(userConfigDir, "ddev")
+			if _, err := os.Stat(linuxDir); err == nil {
+				return linuxDir
+			}
+		}
+	}
+	// Otherwise, use ~/.ddev
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatal("Could not get home directory for current user. Is it set?")
+	}
+	return filepath.Join(userHome, ".ddev")
 }
 
 // IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid
