@@ -646,6 +646,8 @@ If your project uses a database you'll want to set the [DB connection string](ht
 
 ## TYPO3
 
+TYPO3 provides a [detailed DDEV installation guide](https://docs.typo3.org/m/typo3/tutorial-getting-started/main/en-us/Installation/TutorialDdev.html) for each major version.
+
 === "Composer"
 
     ```bash
