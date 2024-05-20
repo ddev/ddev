@@ -398,7 +398,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```
 
 !!!tip "Add Vite support?"
-    Since Laravel v9.19.0, Vite will be shipped as default [asset bundler](https://laravel.com/docs/11.x/vite). There are two tweaks needed for usage in DDEV.
+    Since Laravel v9.19.0, Vite is included as the default [asset bundler](https://laravel.com/docs/11.x/vite). There are two tweaks needed for usage in DDEV.
 
     First, expose the port in `.ddev/config.yaml` and run `ddev restart`:
 
