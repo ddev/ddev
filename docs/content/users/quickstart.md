@@ -410,18 +410,29 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
         https_port: 5173
     ```
     
-    Secondly, add this to your `vite.config.js` and start the Vite devserver with `ddev npm run dev`:
+    Secondly, adjust your `vite.config.js` and start the Vite devserver with `ddev npm run dev`:
 
     ```js
-    server: {
-        host: '0.0.0.0',
-        strictPort: true,
-        port: 5173,
-        hmr: {
-            protocol: 'wss',
-            host: `${process.env.DDEV_HOSTNAME}`
+    import { defineConfig } from 'vite';
+    import laravel from 'laravel-vite-plugin';
+
+    const port = 5173;
+    const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
+
+    export default defineConfig({
+        plugins: [
+            laravel({
+                input: ['resources/css/app.css', 'resources/js/app.js'],
+                refresh: true,
+            }),
+        ],
+        server: {
+            host: '0.0.0.0',
+            port: port,
+            strictPort: true,
+            origin: origin
         }
-    }
+    });
     ```
 
 ## Magento
