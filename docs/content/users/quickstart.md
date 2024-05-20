@@ -398,42 +398,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```
 
 !!!tip "Add Vite support?"
-    Since Laravel v9.19.0, Vite is included as the default [asset bundler](https://laravel.com/docs/11.x/vite). There are two tweaks needed for usage in DDEV.
-
-    First, expose the port in `.ddev/config.yaml` and run `ddev restart`:
-
-    ```yaml
-    web_extra_exposed_ports:
-      - name: vite
-        container_port: 5173
-        http_port: 5172
-        https_port: 5173
-    ```
-    
-    Secondly, adjust your `vite.config.js` and start the Vite devserver with `ddev npm run dev`:
-
-    ```js
-    import { defineConfig } from 'vite';
-    import laravel from 'laravel-vite-plugin';
-
-    const port = 5173;
-    const origin = `${process.env.DDEV_PRIMARY_URL}:${port}`;
-
-    export default defineConfig({
-        plugins: [
-            laravel({
-                input: ['resources/css/app.css', 'resources/js/app.js'],
-                refresh: true,
-            }),
-        ],
-        server: {
-            host: '0.0.0.0',
-            port: port,
-            strictPort: true,
-            origin: origin
-        }
-    });
-    ```
+    Since Laravel v9.19.0, Vite is included as the default [asset bundler](https://laravel.com/docs/11.x/vite). There are small tweaks needed in order to use  Vite in DDEV: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
 
 ## Magento
 
