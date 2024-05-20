@@ -115,13 +115,13 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	assert.NoError(err)
 
 	// Create a config
-	args := []string{"config", "--project-name=config-with-sitename", "--php-version=7.2"}
+	args := []string{"config", "--project-name", t.Name(), "--php-version=7.2"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	defer func() {
-		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", "config-with-sitename"})
-	}()
-	assert.Contains(string(out), "Configuring a 'drupal6' project with docroot", nodeps.AppTypeDrupal6)
+	t.Cleanup(func() {
+		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", t.Name()})
+	})
+	assert.Contains(out, fmt.Sprintf("Configuring a '%s' project named '%s' with docroot '", nodeps.AppTypeDrupal6, t.Name()))
 }
 
 // TestConfigSetValues sets all available configuration values using command flags, then confirms that the

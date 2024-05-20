@@ -3172,7 +3172,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 
 	err = app.Start()
 	assert.Error(err)
-	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
+	assert.Contains(err.Error(), "already contains a project named '"+originalProjectName)
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
@@ -3191,7 +3191,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 	app.Name = secondProjectName
 	err = app.Start()
 	assert.Error(err)
-	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
+	assert.Contains(err.Error(), "already contains a project named '"+originalProjectName)
 }
 
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
