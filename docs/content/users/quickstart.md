@@ -366,14 +366,14 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
 Use a new or existing Composer project, or clone a Git repository.
 
-The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) like it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
+The Laravel project type can be used for Laravel Livewire, Inertia and others like it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
 === "Composer"
 
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
-    ddev composer create --prefer-dist laravel/laravel:^11
+    ddev composer create "laravel/laravel:^11"
     ddev launch
     ```
 
