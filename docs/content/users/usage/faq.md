@@ -256,7 +256,7 @@ Delete it and migrate it to a new project with your preferred name:
 1. Export the project’s database: `ddev export-db --file=/path/to/db.sql.gz`.
 2. Delete the project: `ddev delete <project>`. (This takes a snapshot by default for safety.)
 3. Rename the project: `ddev config --project-name=<new_name>`.
-4. Start thew new project with `ddev start`.
+4. Start the new project with `ddev start`.
 5. Import the database dump from step one: `ddev import-db --file=/path/to/db.sql.gz`.
 
 ### How can I move a project to another directory?
