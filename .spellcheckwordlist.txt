@@ -216,6 +216,7 @@ bugfix
 bugfixes
 buildkite
 buildx
+bundler
 busybox
 by
 cd
