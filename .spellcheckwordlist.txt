@@ -216,6 +216,7 @@ bugfix
 bugfixes
 buildkite
 buildx
+bundler
 busybox
 by
 cd
@@ -280,6 +281,7 @@ detailed
 dev
 devcontainer
 development
+devserver
 dir
 directory
 disable
