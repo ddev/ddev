@@ -109,13 +109,14 @@ There’s only one global `.ddev` directory, which lives in your home directory:
     DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
 
     ```bash
-    # permanently set environment variable depending on your OS:
-    export XDG_CONFIG_HOME="/my-desired-path"
+    ddev poweroff
+    # permanently set environment variable using a directory that works for you
+    export XDG_CONFIG_HOME="$HOME/.config"
     # restart the terminal and run:
     mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
-    Otherwise (Linux and WSL2 only):
+    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when you move the config:
 
     ```bash
     mv ~/.ddev ~/.config/ddev
