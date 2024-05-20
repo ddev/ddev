@@ -2081,8 +2081,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
 		"DDEV_DATABASE_FAMILY":           dbFamily,
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
-		"DDEV_FILES_DIR":                 app.getContainerUploadDir(),
-		"DDEV_FILES_DIRS":                strings.Join(app.getContainerUploadDirs(), ","),
+		"DDEV_FILES_DIR":                 app.GetContainerUploadDir(),
+		"DDEV_FILES_DIRS":                strings.Join(app.GetContainerUploadDirs(), ","),
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_MAILHOG_PORT":   app.HostMailpitPort,
