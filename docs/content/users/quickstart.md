@@ -398,7 +398,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```
 
 !!!tip "Add Vite support?"
-    Since Laravel v9.19.0, Vite is included as the default [asset bundler](https://laravel.com/docs/11.x/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
+    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/master/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
 
 ## Magento
 
