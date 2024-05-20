@@ -170,6 +170,44 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * Consider `ddev stop` before massive file change operations, like moving a directory.
     * If you get in real trouble, run `ddev stop`, reset your files with Git, and run `ddev mutagen reset` to throw away the Docker volume which may already have incorrect files on it.
 
+    #### Debugging Long Mutagen Startup Time
+
+    Normally, a first-time `ddev start` on a new or changed project should only take a minute or less. If it's taking longer than that, there are likely some huge files or directories that are being synced that we don't need to sync.
+
+    (All we really want to sync is PHP files, everything else is a waste. So if we're syncing fonts or user-generated files or anything else, we want to figure out what it is and stop it. As noted elsewhere here, `node_modules` can cause this behavior.)
+
+    To see what's causing the slow syncing try this technique:
+
+    ```bash
+    ddev mutagen reset # Cleans up all synced files so starting from scratch
+    ddev start
+    ```
+
+    Then in another terminal window view the syncing behavior with:
+
+    ```bash
+    while true; do ddev mutagen st -l | grep "^Current"; sleep 1; done
+    ```
+
+    You'll see something like this, which may help understand what mutagen is working so hard at. This example is a 5GB file named `dummyfile` in `vendor/bin`.
+
+    ```
+    Current file: vendor/bin/dummyfile (306 MB/5.2 GB)
+    Current file: vendor/bin/dummyfile (687 MB/5.2 GB)
+    Current file: vendor/bin/dummyfile (1.1 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (1.6 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (2.0 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (2.4 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (2.8 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (3.1 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (3.5 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (4.0 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (4.4 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (4.8 GB/5.2 GB)
+    Current file: vendor/mck89/peast/lib/Peast/Syntax/Parser.php (66 kB/131 kB)
+    Current file: web/core/tests/Drupal/Tests/Core/Config/Entity/EntityDisplayBaseTest.php (2.0 kB/2.0 kB)
+    ```
+
     #### Advanced Mutagen Troubleshooting
 
     You can observe what Mutagen is doing by watching `ddev mutagen monitor` in another terminal window to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
