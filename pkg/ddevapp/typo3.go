@@ -16,8 +16,8 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-// createTypo3SettingsFile creates the app's LocalConfiguration.php and
-// AdditionalConfiguration.php, adding things like database host, name, and
+// createTypo3SettingsFile creates the app's settings.php and
+// additional.php, adding things like database host, name, and
 // password. Returns the fullpath to settings file and error
 func createTypo3SettingsFile(app *DdevApp) (string, error) {
 	if filepath.Dir(app.SiteDdevSettingsFile) == app.AppRoot {
@@ -29,7 +29,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 		util.Warning("TYPO3 does not seem to have been set up yet, missing %s (%s)", filepath.Base(app.SiteSettingsPath), app.SiteSettingsPath)
 	}
 
-	// TYPO3 DDEV settings file will be AdditionalConfiguration.php (app.SiteDdevSettingsFile).
+	// TYPO3 DDEV settings file will be additional.php (app.SiteDdevSettingsFile).
 	// Check if the file already exists.
 	if fileutil.FileExists(app.SiteDdevSettingsFile) {
 		// Check if the file is managed by ddev.
@@ -47,14 +47,14 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteDdevSettingsFile))
 	if err := writeTypo3SettingsFile(app); err != nil {
-		return "", fmt.Errorf("failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
+		return "", fmt.Errorf("failed to write TYPO3 %s file: %v", app.SiteDdevSettingsFile, err.Error())
 	}
 
 	return app.SiteDdevSettingsFile, nil
 }
 
 // writeTypo3SettingsFile produces AdditionalConfiguration.php file
-// It's assumed that the LocalConfiguration.php already exists, and we're
+// It's assumed that the settings.php already exists, and we're
 // overriding the db config values in it. The typo3conf/ directory will
 // be created if it does not yet exist.
 func writeTypo3SettingsFile(app *DdevApp) error {
