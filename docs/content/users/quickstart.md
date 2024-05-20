@@ -397,6 +397,9 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
     ```
 
+!!!tip "Add Vite support?"
+    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/master/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
+
 ## Magento
 
 === "Magento 2"
