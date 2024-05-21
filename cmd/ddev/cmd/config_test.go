@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -651,6 +651,9 @@ func TestConfigGitignore(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+	globalDdevDir := globalconfig.GetGlobalDdevDir()
+
 	// Create a temporary directory and switch to it.
 	testDir := testcommon.CreateTmpDir(t.Name())
 
@@ -664,8 +667,7 @@ func TestConfigGitignore(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
-		assert.NoError(err)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = os.RemoveAll(testDir)
 	})
 
@@ -682,10 +684,10 @@ func TestConfigGitignore(t *testing.T) {
 	out = strings.ReplaceAll(out, "new file:   .ddev/config.yaml", "")
 	assert.NotContains(out, "new file:")
 
-	_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
+	_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf(`touch "/%s" "/%s"`, filepath.Join(globalDdevDir, "commands", "web", t.Name()), filepath.Join(globalDdevDir, "homeadditions", t.Name())))
 	assert.NoError(err)
 	if err != nil {
-		out, err = exec.RunHostCommand("bash", "-c", "ls -l ~/.ddev && ls -lR ~/.ddev/commands ~/.ddev/homeadditions")
+		out, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf(`ls -l "/%s" && ls -lR "/%s" "/%s"`, globalDdevDir, filepath.Join(globalDdevDir, "commands"), filepath.Join(globalDdevDir, "homeadditions")))
 		assert.NoError(err)
 		t.Logf("Contents of global .ddev: \n=====\n%s\n====", out)
 	}
