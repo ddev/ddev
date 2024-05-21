@@ -222,6 +222,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	// Change the homedir temporarily
 	t.Setenv("HOME", tmpHomeDir)
 	t.Setenv("USERPROFILE", tmpHomeDir)
+	// Set $XDG_CONFIG_HOME to empty string, otherwise it will take precedence over $HOME
+	t.Setenv("XDG_CONFIG_HOME", "")
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
 	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
