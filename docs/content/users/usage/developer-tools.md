@@ -13,7 +13,7 @@ Hundreds of useful developer tools are included inside the containers and can be
 * MySQL client (`mysql`) - Command-line interface for interacting with MySQL/MariaDB.
 * PostgreSQL client (`psql`) - Command-line tool for PostgreSQL.
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
-* [PHIVE](https://phar.io/) - Command line tool for “PHAR Installation and Verification Environment”.
+* [PHIVE](https://phar.io/) - Command-line tool for “PHAR Installation and Verification Environment”.
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as `wp` and as `wp-cli`.
 * `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
 * `node`
@@ -112,7 +112,7 @@ You can use this port with various tools that need a direct port, like `mysql` o
 
 ## DDEV and Terminus
 
-[Terminus](https://docs.pantheon.io/terminus) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
+[Terminus](https://docs.pantheon.io/terminus) is a command-line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
 
 To use Terminus, you’ll first need to:
 
