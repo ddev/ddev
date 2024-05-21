@@ -31,6 +31,11 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
+// RunValidateConfig controls whether to run ValidateConfig() function.
+// In some cases we don't actually need to check the config, e.g. when deleting the project.
+// It is enabled by default.
+var RunValidateConfig = true
+
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
 func init() {
@@ -441,6 +446,11 @@ func ValidateProjectName(name string) error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
+	// Skip project validation on request.
+	if !RunValidateConfig {
+		return nil
+	}
+
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
 		constraint := app.DdevVersionConstraint

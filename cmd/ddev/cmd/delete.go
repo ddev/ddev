@@ -30,7 +30,13 @@ ddev delete --all`,
 		if noConfirm && deleteAll {
 			util.Failed("Sorry, it's not possible to use flags --all and --yes together")
 		}
-		projects, err := getRequestedProjects(args, deleteAll)
+
+		// Skip project validation if --omit-snapshot is provided
+		originalRunValidateConfig := ddevapp.RunValidateConfig
+		ddevapp.RunValidateConfig = !omitSnapshot
+		projects, err := getRequestedProjectsExtended(args, deleteAll, true)
+		ddevapp.RunValidateConfig = originalRunValidateConfig
+
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
 		}
@@ -42,6 +48,9 @@ ddev delete --all`,
 		for _, project := range projects {
 			if !noConfirm {
 				prompt := "OK to delete this project and its database?\n  %s in %s\nThe code and its .ddev directory will not be touched.\n"
+				if project.AppRoot == "" {
+					prompt = "OK to delete this project and its database?\n  %s in a non-existent directory %v\n"
+				}
 				if !omitSnapshot {
 					prompt = prompt + "A database snapshot will be made before the database is deleted.\n"
 				}
