@@ -569,7 +569,7 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 
 // GetGlobalDdevDir returns the global caching directory, and creates it as needed.
 func GetGlobalDdevDir() string {
-	ddevDir := GetGlobalConfigDirLocation()
+	ddevDir := GetGlobalDdevDirLocation()
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
 		// If they happen to be running as root/sudo, we won't create the directory
@@ -592,12 +592,13 @@ func GetGlobalDdevDir() string {
 	return ddevDir
 }
 
-// GetGlobalConfigDirLocation returns the global caching directory location to be used by DDEV:
-// $XDG_CONFIG_HOME/ddev if $XDG_CONFIG_HOME is set,
-// ~/.config/ddev if on Linux and that directory exists,
+// GetGlobalDdevDirLocation returns the global caching directory location to be used by DDEV:
+// $XDG_CONFIG_HOME/ddev if this $XDG_CONFIG_HOME variable is not empty,
+// ~/.config/ddev if this directory exists on Linux/WSL2 only,
 // ~/.ddev otherwise.
-func GetGlobalConfigDirLocation() string {
-	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev
+func GetGlobalDdevDirLocation() string {
+	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
+	// we create this directory.
 	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
 	if xdgConfigHomeDir != "" {
 		return filepath.Join(xdgConfigHomeDir, "ddev")
@@ -614,6 +615,7 @@ func GetGlobalConfigDirLocation() string {
 		}
 	}
 	// Otherwise, use ~/.ddev
+	// It will be created if it doesn't exist.
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		logrus.Fatal("Could not get home directory for current user. Is it set?")

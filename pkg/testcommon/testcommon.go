@@ -229,7 +229,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	require.Error(t, err)
 	require.True(t, os.IsNotExist(err))
 	// Original ~/.ddev dir location
-	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
+	originalGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
 	// Make sure that the global config directory is set to ~/.ddev
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
 	// Make sure that the original global config directory exists
@@ -284,7 +284,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	err := os.RemoveAll(tmpXdgConfigHomeDir)
 	require.NoError(t, err)
 	// Make sure that the global config directory is set to ~/.ddev
-	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
+	originalGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
 	// Make sure that the original global config directory exists
 	require.DirExists(t, originalGlobalDdevDir)
