@@ -312,34 +312,70 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		}
 		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
 
-		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
+		// Extract VIRTUAL_HOST, HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		if !IsRouterDisabled(app) {
+			envMap := make(map[string]string)
+
 			for _, e := range c.Config.Env {
 				split := strings.SplitN(e, "=", 2)
 				envName := split[0]
-				if len(split) == 2 && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
-					envVal := split[1]
 
-					envValStr := fmt.Sprintf("%s", envVal)
-					portSpecs := strings.Split(envValStr, ",")
-					// There might be more than one exposed UI port, but this only handles the first listed,
-					// most often there's only one.
-					if len(portSpecs) > 0 {
-						// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
-						ports := strings.Split(portSpecs[0], ":")
-						//services[shortName][envName.(string)] = ports[0]
-						switch envName {
-						case "HTTP_EXPOSE":
-							services[shortName]["http_url"] = "http://" + appDesc["hostname"].(string)
-							if ports[0] != "80" {
-								services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
-							}
-						case "HTTPS_EXPOSE":
-							services[shortName]["https_url"] = "https://" + appDesc["hostname"].(string)
-							if ports[0] != "443" {
-								services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
-							}
-						}
+				// Store the values first, so we can have them all before assigning
+				if len(split) == 2 && (envName == "VIRTUAL_HOST" || envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+					envMap[envName] = split[1]
+				}
+			}
+
+			if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
+				vhostVal := virtualHost
+				vhostValStr := fmt.Sprintf("%s", vhostVal)
+				vhostsList := strings.Split(vhostValStr, ",")
+
+				// There might be more than one VIRTUAL_HOST value, but this only handles the first listed,
+				// most often there's only one.
+				if len(vhostsList) > 0 {
+					// VIRTUAL_HOSTS typically look like subdomain.domain.tld, for example - VIRTUAL_HOSTS=vhost1.myproject.ddev.site,vhost2.myproject.ddev.site
+					vhost := strings.Split(vhostsList[0], ",")
+					services[shortName]["virtual_host"] = vhost[0]
+				}
+			}
+
+			hostname, ok := services[shortName]["virtual_host"]
+			appHostname := ""
+
+			if ok {
+				appHostname = hostname
+			} else {
+				appHostname = appDesc["hostname"].(string)
+			}
+
+			for name, portMapping := range envMap {
+				if name != "HTTP_EXPOSE" && name != "HTTPS_EXPOSE" {
+					continue
+				}
+
+				portDefault := "80"
+				attributeName := "http_url"
+				protocol := "http://"
+
+				if name == "HTTPS_EXPOSE" {
+					portDefault = "443"
+					attributeName = "https_url"
+					protocol = "https://"
+				}
+
+				portValStr := fmt.Sprintf("%s", portMapping)
+				portSpecs := strings.Split(portValStr, ",")
+				// There might be more than one exposed UI port, but this only handles the first listed,
+				// most often there's only one.
+				if len(portSpecs) > 0 {
+					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
+					ports := strings.Split(portSpecs[0], ":")
+
+					services[shortName][attributeName] = protocol + appHostname
+
+					if ports[0] != portDefault {
+						services[shortName][attributeName] = services[shortName][attributeName] + ":" + ports[0]
 					}
 				}
 			}
