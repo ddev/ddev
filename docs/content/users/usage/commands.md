@@ -953,6 +953,17 @@ ddev mutagen sync
 ddev mutagen sync my-project
 ```
 
+### `mutagen version`
+
+Display the version of the Mutagen binary and the location of its components.
+
+Example:
+
+```shell
+# Print Mutagen details
+ddev mutagen version
+```
+
 ## `mysql`
 
 Run MySQL client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.

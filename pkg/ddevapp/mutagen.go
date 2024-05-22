@@ -344,19 +344,18 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResult map[string]interface{}, err error) {
 	syncName := MutagenSyncName(app.Name)
 
-	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
 		stderr := ""
 		if exitError, ok := err.(*osexec.ExitError); ok {
 			stderr = string(exitError.Stderr)
 		}
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory), fullJSONResult, nil, fmt.Errorf("failed to Mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenDataDirectory()), fullJSONResult, nil, fmt.Errorf("failed to Mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
 	}
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(fullJSONResult), &session)
 	if err != nil {
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshal Mutagen sync list results '%v'", mutagenDataDirectory, fullJSONResult), fullJSONResult, nil, err
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshal Mutagen sync list results '%v'", globalconfig.GetMutagenDataDirectory(), fullJSONResult), fullJSONResult, nil, err
 	}
 
 	if paused, ok := session["paused"].(bool); ok && paused == true {
@@ -548,10 +547,9 @@ func DownloadMutagen() error {
 // But no problem if there wasn't one
 func StopMutagenDaemon() {
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
-		mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
 		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
-			util.Warning("Unable to stop Mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
+			util.Warning("Unable to stop Mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, globalconfig.GetMutagenDataDirectory())
 		}
 		util.Success("Stopped Mutagen daemon")
 	}
@@ -562,7 +560,7 @@ func StartMutagenDaemon() {
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
 		if err != nil {
-			util.Warning("Failed to run Mutagen daemon start: %v, out=%s", err, out)
+			util.Warning("Failed to run Mutagen daemon start: %v, out=%s; MUTAGEN_DATA_DIRECTORY=%s", err, out, globalconfig.GetMutagenDataDirectory())
 		}
 	}
 }
