@@ -384,6 +384,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.Name = filepath.Base(pwd)
 	}
 
+	err = app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	// Ensure that the docroot exists
 	if docrootRelPathArg != "" {
 		app.Docroot = docrootRelPathArg
@@ -432,7 +437,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 
 		app.Type = projectTypeArg
-		util.Success("Auto-updating project configuration because update is requested.\nConfiguring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
+		util.Success("Auto-updating project configuration because update is requested.\nConfiguring a '%s' project with docroot '%s' at '%s'", app.Type, app.Docroot, fullPath)
 		err = app.ConfigFileOverrideAction(true)
 		if err != nil {
 			util.Warning("ConfigOverrideAction failed: %v")
@@ -445,7 +450,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 
 		app.Type = projectTypeArg
-		util.Success("Configuring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
+		util.Success("Configuring a '%s' project named '%s' with docroot '%s' at '%s'.\nFor full details use 'ddev describe'.", app.Type, app.Name, app.Docroot, fullPath)
 	}
 
 	// App overrides are done after app type is detected, but

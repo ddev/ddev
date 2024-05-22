@@ -366,14 +366,14 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
 Use a new or existing Composer project, or clone a Git repository.
 
-The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) like it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
+The Laravel project type can be used for [StarterKits](https://laravel.com/docs/starter-kits), [Laravel Livewire](https://livewire.laravel.com/) and others, as it is used with basic Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
 === "Composer"
 
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
-    ddev composer create --prefer-dist laravel/laravel:^11
+    ddev composer create "laravel/laravel:^11"
     ddev launch
     ```
 
@@ -396,6 +396,9 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ```bash
     ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
     ```
+
+!!!tip "Add Vite support?"
+    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/master/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
 
 ## Magento
 
@@ -645,6 +648,8 @@ If your project uses a database you'll want to set the [DB connection string](ht
     ```
 
 ## TYPO3
+
+TYPO3 provides a [detailed DDEV installation guide](https://docs.typo3.org/m/typo3/tutorial-getting-started/main/en-us/Installation/TutorialDdev.html) for each major version.
 
 === "Composer"
 

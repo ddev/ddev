@@ -50,7 +50,9 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 		// We don't want to send to amplitude if using --json-output
 		// That captures an enormous number of PhpStorm running the
 		// ddev describe -j over and over again.
-		if !output.JSONOutput {
+		// And we don't want to send __complete commands,
+		// that are called each time you press <TAB>.
+		if !output.JSONOutput && cmdCopy.Name() != cobra.ShellCompRequestCmd {
 			amplitude.TrackCommand(&cmdCopy, argsCopy)
 		}
 
@@ -137,7 +139,7 @@ func init() {
 	}
 
 	// Populate custom/script commands so they're visible.
-	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
+	// We really don't want ~/.ddev or .ddev/homeadditions to have root ownership, breaks things.
 	if os.Geteuid() != 0 {
 		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {

@@ -7,7 +7,7 @@ DDEV writes and uses [docker-compose](https://docs.docker.com/compose/) files fo
 
 ## Directory Tour
 
-DDEV stores configuration in two places: a single `.ddev` directory in your home folder, and a `.ddev` directory for each project you set up.
+DDEV stores configuration in two places: a single `.ddev` directory in your home folder (can be [moved](#global-files) to another location), and a `.ddev` directory for each project you set up.
 
 The [global configuration directory](#global-files) is used to keep track of your projects and any of the [global settings](../configuration/config.md) that apply across all projects. You’ll probably spend more time working with the [per-project `.ddev` directories](#project-files) for their configuration and overrides.
 
@@ -102,6 +102,28 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
 
+!!!tip "Where is my global `.ddev` config?"
+    Use `ddev version` (look at `global-ddev-dir`) to check which location is currently used for the `.ddev` global directory.
+
+!!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
+    DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
+
+    ```bash
+    ddev poweroff
+    # permanently set environment variable using a directory that works for you
+    export XDG_CONFIG_HOME="$HOME/.config"
+    # restart the terminal and run:
+    mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
+    ```
+
+    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when you move the config:
+
+    ```bash
+    mv ~/.ddev ~/.config/ddev
+    ```
+
+    Note that the custom global config directory `ddev` (if it exists) takes precedence over the `~/.ddev` directory.
+
 `global_config.yaml`
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md).
 
@@ -124,11 +146,15 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.gitignore`
 : Prevents files from getting checked in when they shouldn’t be.
 
+`.mdd`
+: Directory used for storing [Mutagen](../install/performance.md#mutagen) sync data.
+
 `.router-compose-full.yaml`
 : The complete, generated docker-compose directive used for DDEV’s router.
 
 `.router-compose.yaml`
 : The base docker-compose directive used in generating `.router-compose-full.yaml`.
+
 `router-compose.*.yaml`
 : `docker-compose` files with the name `router-compose.*.yaml` can be used to override stanzas in the `.router-compose.yaml` file.
 
@@ -143,9 +169,6 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
-
-!!!tip "`.ddev_mutagen_data_directory`"
-    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 

@@ -38,7 +38,12 @@ Additional commands that can help clean up resources:
 			util.Failed("No project provided. See ddev clean --help for usage")
 		}
 
+		// Skip project validation
+		originalRunValidateConfig := ddevapp.RunValidateConfig
+		ddevapp.RunValidateConfig = false
 		projects, err := getRequestedProjects(args, cleanAll)
+		ddevapp.RunValidateConfig = originalRunValidateConfig
+
 		if err != nil {
 			util.Failed("Failed to get project(s) '%v': %v", args, err)
 		}

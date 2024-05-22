@@ -130,11 +130,43 @@ func GetDDEVBinDir() string {
 
 // GetMutagenPath gets the full path to the Mutagen binary
 func GetMutagenPath() string {
+	// Set MUTAGEN_DATA_DIRECTORY if it is unset
+	if os.Getenv("MUTAGEN_DATA_DIRECTORY") == "" {
+		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", GetMutagenDataDirectory())
+	}
+	// Check socket path length on first call to Mutagen
+	checkMutagenSocketPathLength()
 	mutagenBinary := "mutagen"
 	if runtime.GOOS == "windows" {
 		mutagenBinary = mutagenBinary + ".exe"
 	}
 	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
+}
+
+var checkedMutagenSocketPathLength = false
+
+// checkMutagenSocketPathLength tells people if the Mutagen socket path is too long.
+// Mutagen may fail with this error: "unable to connect to daemon: connection timed out (is the daemon running?)"
+// See https://github.com/garden-io/garden/issues/4527#issuecomment-1584286590
+func checkMutagenSocketPathLength() {
+	if checkedMutagenSocketPathLength {
+		return
+	}
+	// Skip if not Linux or macOS.
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		checkedMutagenSocketPathLength = true
+		return
+	}
+	socketPathLength := len(filepath.Join(os.Getenv("MUTAGEN_DATA_DIRECTORY"), "daemon", "daemon.sock"))
+	// Limit from https://unix.stackexchange.com/a/367012
+	limit := 104
+	if runtime.GOOS == "linux" {
+		limit = 108
+	}
+	if socketPathLength >= limit {
+		logrus.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.\nConsider using a shorter path to DDEV global config with XDG_CONFIG_HOME env.", limit, socketPathLength))
+	}
+	checkedMutagenSocketPathLength = true
 }
 
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
@@ -143,9 +175,9 @@ func GetMutagenDataDirectory() string {
 	if currentMutagenDataDirectory != "" {
 		return currentMutagenDataDirectory
 	}
-	// If it's not already set, return ~/.ddev_mutagen_data_directory
-	// This may be affected by tests that change $HOME
-	return GetGlobalDdevDir() + "_" + "mutagen_data_directory"
+	// If it's not already set, return ~/.ddev.mdd
+	// This may be affected by tests that change $HOME and $XDG_CONFIG_HOME
+	return filepath.Join(GetGlobalDdevDir(), ".mdd")
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
@@ -417,7 +449,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Decide whether 'ddev start' should be interrupted by a failing hook
 
 # traefik_monitor_port: 10999
-# Change this only if you're having conflicts with some 
+# Change this only if you're having conflicts with some
 # service that needs port 10999
 
 # wsl2_no_windows_hosts_mgt: false
@@ -535,14 +567,9 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns ~/.ddev, the global caching directory
+// GetGlobalDdevDir returns the global caching directory, and creates it as needed.
 func GetGlobalDdevDir() string {
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		logrus.Fatal("Could not get home directory for current user. Is it set?")
-	}
-	ddevDir := filepath.Join(userHome, ".ddev")
-
+	ddevDir := GetGlobalDdevDirLocation()
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
 		// If they happen to be running as root/sudo, we won't create the directory
@@ -563,6 +590,37 @@ func GetGlobalDdevDir() string {
 		_ = os.Remove(filepath.Join(badFile))
 	}
 	return ddevDir
+}
+
+// GetGlobalDdevDirLocation returns the global caching directory location to be used by DDEV:
+// $XDG_CONFIG_HOME/ddev if this $XDG_CONFIG_HOME variable is not empty,
+// ~/.config/ddev if this directory exists on Linux/WSL2 only,
+// ~/.ddev otherwise.
+func GetGlobalDdevDirLocation() string {
+	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
+	// we create this directory.
+	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfigHomeDir != "" {
+		return filepath.Join(xdgConfigHomeDir, "ddev")
+	}
+	// If Linux and ~/.config/ddev exists, use it,
+	// we don't create this directory.
+	if runtime.GOOS == "linux" {
+		userConfigDir, err := os.UserConfigDir()
+		if err == nil {
+			linuxDir := filepath.Join(userConfigDir, "ddev")
+			if _, err := os.Stat(linuxDir); err == nil {
+				return linuxDir
+			}
+		}
+	}
+	// Otherwise, use ~/.ddev
+	// It will be created if it doesn't exist.
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatal("Could not get home directory for current user. Is it set?")
+	}
+	return filepath.Join(userHome, ".ddev")
 }
 
 // IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid

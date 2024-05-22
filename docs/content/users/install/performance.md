@@ -149,26 +149,69 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --performance-mode=none && ddev restart`.
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
-    * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.
-    * As of DDEV v1.21.2, DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY`, `~/.ddev_mutagen_data_directory`.
-    * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen`. You can use all the features of Mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory` and running the Mutagen binary in `~/.ddev/bin/mutagen`, for example:and `~/.ddev/bin/mutagen daemon stop`.
+    * `DDEV_DEBUG=true ddev start` will provide more information about what’s going on with Mutagen.
+    * DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY`, by default in `~/.ddev/.mdd`.
+    * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen`. You can use all the features of Mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd` and running the Mutagen binary in `~/.ddev/bin/mutagen`, for example:
 
         ```bash
-        export DDEV_DEBUG=true
-        export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory
-        export PATH=~/.ddev/bin:$PATH
+        export MUTAGEN_DATA_DIRECTORY=$(ddev mutagen version -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.MUTAGEN_DATA_DIRECTORY' 2>/dev/null)
+        export PATH=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw."global-ddev-dir"' 2>/dev/null)/bin:$PATH
         mutagen sync list -l
         mutagen sync monitor
+        ```
+
+    * `ddev debug mutagen` will let you run any Mutagen command using the binary in `~/.ddev/bin/mutagen`, for example:
+
+        ```bash
+        ddev debug mutagen sync list -l
+        ddev debug mutagen monitor
         ```
 
     * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
     * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the Mutagen daemon if you suspect it’s hanging.
     * Use `ddev mutagen reset` if you suspect trouble, and *always* after changing `.ddev/mutagen/mutagen.yml`. This restarts the project’s Mutagen data (Docker volume + Mutagen session) from scratch.
     * `ddev mutagen monitor` can help watch Mutagen behavior. It’s the same as `~/.ddev/bin/mutagen sync monitor <syncname>`.
-    * `ddev debug mutagen` will let you run any Mutagen command using the binary in `~/.ddev/bin/mutagen`.
     * If you’re working on the host and expecting things to show up immediately inside the container, you can learn a lot by running `ddev mutagen monitor` in a separate window as you work. You’ll see when Mutagen responds to your changes and get an idea about how much delay there is.
     * Consider `ddev stop` before massive file change operations, like moving a directory.
     * If you get in real trouble, run `ddev stop`, reset your files with Git, and run `ddev mutagen reset` to throw away the Docker volume which may already have incorrect files on it.
+
+    #### Debugging Long Mutagen Startup Time
+
+    Normally, a first-time `ddev start` on a new or changed project should only take a minute or less. If it's taking longer than that, there are likely some huge files or directories that are being synced that we don't need to sync.
+
+    (All we really want to sync is PHP files, everything else is a waste. So if we're syncing fonts or user-generated files or anything else, we want to figure out what it is and stop it. As noted elsewhere here, `node_modules` can cause this behavior.)
+
+    To see what's causing the slow syncing try this technique:
+
+    ```bash
+    ddev mutagen reset # Cleans up all synced files so starting from scratch
+    ddev start
+    ```
+
+    Then in another terminal window view the syncing behavior with:
+
+    ```bash
+    while true; do ddev mutagen st -l | grep "^Current"; sleep 1; done
+    ```
+
+    You'll see something like this, which may help understand what mutagen is working so hard at. This example is a 5GB file named `dummyfile` in `vendor/bin`.
+
+    ```
+    Current file: vendor/bin/dummyfile (306 MB/5.2 GB)
+    Current file: vendor/bin/dummyfile (687 MB/5.2 GB)
+    Current file: vendor/bin/dummyfile (1.1 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (1.6 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (2.0 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (2.4 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (2.8 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (3.1 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (3.5 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (4.0 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (4.4 GB/5.2 GB)
+    Current file: vendor/bin/dummyfile (4.8 GB/5.2 GB)
+    Current file: vendor/mck89/peast/lib/Peast/Syntax/Parser.php (66 kB/131 kB)
+    Current file: web/core/tests/Drupal/Tests/Core/Config/Entity/EntityDisplayBaseTest.php (2.0 kB/2.0 kB)
+    ```
 
     #### Advanced Mutagen Troubleshooting
 

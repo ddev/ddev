@@ -1,7 +1,6 @@
 1Password
 ARG
 AdditionalConfig
-AdditionalConfiguration
 Adminer
 Apache
 Acquia
@@ -86,6 +85,7 @@ Lando
 Laravel
 Let's
 Lima
+Livewire
 MAMP
 Magento
 Magento's
@@ -135,6 +135,7 @@ Snapshotting
 Solr
 SomeExternalDrive
 SQLite
+StarterKits
 Starts
 Statamic
 Support
@@ -162,6 +163,7 @@ WSL2
 WantedBy
 Webhosting
 XDebug
+XDG
 Xhprof
 Zoho
 XSym
@@ -216,6 +218,7 @@ bugfix
 bugfixes
 buildkite
 buildx
+bundler
 busybox
 by
 cd

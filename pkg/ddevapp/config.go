@@ -23,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/docker/pkg/homedir"
 	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -30,6 +31,11 @@ import (
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
+
+// RunValidateConfig controls whether to run ValidateConfig() function.
+// In some cases we don't actually need to check the config, e.g. when deleting the project.
+// It is enabled by default.
+var RunValidateConfig = true
 
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
@@ -441,6 +447,11 @@ func ValidateProjectName(name string) error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
+	// Skip project validation on request.
+	if !RunValidateConfig {
+		return nil
+	}
+
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
 		constraint := app.DdevVersionConstraint
@@ -722,6 +733,18 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
+	// Remove old ~/.ddev_mutagen_data_directory directory
+	legacyMutagenDataDir := filepath.Join(homedir.Get(), ".ddev_mutagen_data_directory")
+	if fileutil.IsDirectory(legacyMutagenDataDir) {
+		originalMutagenDataDir := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", legacyMutagenDataDir)
+		StopMutagenDaemon()
+		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", originalMutagenDataDir)
+		err := os.RemoveAll(legacyMutagenDataDir)
+		if err != nil {
+			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacyMutagenDataDir, err)
+		}
+	}
 }
 
 type composeYAMLVars struct {
@@ -1244,6 +1267,12 @@ func (app *DdevApp) promptForName() error {
 		return err
 	}
 	app.Name = name
+
+	err := app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	return nil
 }
 

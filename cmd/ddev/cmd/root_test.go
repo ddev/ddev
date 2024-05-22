@@ -20,7 +20,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/mitchellh/go-homedir"
+	"github.com/docker/docker/pkg/homedir"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -195,10 +195,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	}
 
 	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
-	origHomeDir, err := homedir.Dir()
-	require.NoError(t, err)
+	origDdevDir := globalconfig.GetGlobalDdevDirLocation()
 
 	tmpHomeDir := testcommon.CreateTmpDir("globalDdevCheck")
 
@@ -218,12 +216,14 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			}
 		})
 
-	err = os.Chdir(TestSites[0].Dir)
+	err := os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
 
 	// Change the homedir temporarily
 	t.Setenv("HOME", tmpHomeDir)
 	t.Setenv("USERPROFILE", tmpHomeDir)
+	// Set $XDG_CONFIG_HOME to empty string, otherwise it will take precedence over $HOME
+	t.Setenv("XDG_CONFIG_HOME", "")
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
 	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
@@ -238,7 +238,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
-	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpHomeDir, ".ddev/bin"))
+	err = fileutil.CopyDir(filepath.Join(origDdevDir, "bin"), filepath.Join(tmpHomeDir, ".ddev/bin"))
 	require.NoError(t, err)
 
 	// Make sure that tmpHomeDir/.ddev/.update don't exist before we run ddev start
@@ -255,6 +255,82 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
+// TestCopyGlobalDdevDir checks to make sure that DDEV will use
+// ddev folder in user's custom dir $XDG_CONFIG_HOME/ddev instead of ~/.ddev
+func TestCopyGlobalDdevDir(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
+	t.Cleanup(func() {
+		_, err := exec.RunHostCommand(DdevBin, "poweroff")
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+
+		// Because the start will have done a poweroff (new version),
+		// make sure sites are running again.
+		for _, site := range TestSites {
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+	})
+
+	err := os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
+
+	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err, "failed to ddev config --auto, out=%v, err=%v", out, err)
+
+	// Make sure that $XDG_CONFIG_HOME/ddev/.update don't exist before we run ddev start
+	tmpUpdateFilePath := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
+	_, err = os.Stat(tmpUpdateFilePath)
+	require.Error(t, err)
+	assert.True(os.IsNotExist(err))
+
+	// The .update file is only created by ddev start
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y")
+	assert.NoError(err, "failed to start, out=%v, err=%v", out, err)
+
+	_, err = os.Stat(tmpUpdateFilePath)
+	assert.NoError(err)
+}
+
+// TestGetGlobalDdevDirLocation checks to make sure that DDEV will use the correct location for its global config.
+func TestGetGlobalDdevDirLocation(t *testing.T) {
+	// Test when $XDG_CONFIG_HOME is not set
+	t.Setenv("XDG_CONFIG_HOME", "")
+	ddevDir := globalconfig.GetGlobalDdevDirLocation()
+	// Original ~/.ddev dir location
+	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
+	// If this test runs on Linux machine, where ~/.config/ddev is used by default:
+	if runtime.GOOS == "linux" {
+		linuxDdevDir := filepath.Join(homedir.Get(), ".config", "ddev")
+		if _, err := os.Stat(linuxDdevDir); err == nil {
+			originalGlobalDdevDir = linuxDdevDir
+		}
+	}
+	require.Equal(t, ddevDir, originalGlobalDdevDir)
+	// Test when $XDG_CONFIG_HOME is set
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tmpDir)
+	})
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+	// Make sure that the tmpDir/ddev doesn't exist.
+	_, err := os.Stat(filepath.Join(tmpDir, "ddev"))
+	require.Error(t, err)
+	require.True(t, os.IsNotExist(err))
+	// Check that we can get the correct location
+	ddevDir = globalconfig.GetGlobalDdevDirLocation()
+	require.Equal(t, ddevDir, filepath.Join(tmpDir, "ddev"))
+	// When $XDG_CONFIG_HOME is not set,
+	// it should use the default location
+	t.Setenv("XDG_CONFIG_HOME", "")
+	ddevDir = globalconfig.GetGlobalDdevDirLocation()
+	require.Equal(t, ddevDir, originalGlobalDdevDir)
+}
+
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new DDEV version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
@@ -264,18 +340,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	var err error
 
 	origDir, _ := os.Getwd()
-
-	tmpHome := testcommon.CreateTmpDir(t.Name())
-	t.Cleanup(func() {
-		_ = os.RemoveAll(tmpHome)
-	})
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)
-
-	origHome := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
 
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
@@ -307,16 +373,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("USERPROFILE", tmpHome)
-
-	// Make sure we have the .ddev/bin dir we need
-	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
-	require.NoError(t, err)
-
-	// docker-compose v2 is dependent on the ~/.docker directory
-	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpHome, ".docker"))
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -330,7 +387,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure we have starting version that is not v0.0
-	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.yaml"), "last_started_version: v0.1")
+	globalconfig.DdevGlobalConfig.LastStartedVersion = "v0.1"
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	out, err = exec.RunHostCommand(DdevBin, "start")
 	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
@@ -340,10 +398,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		_, err := exec.RunHostCommand(DdevBin, "poweroff")
 		assert.NoError(err)
 
-		_, err = os.Stat(globalconfig.GetMutagenPath())
-		if err == nil && app.IsMutagenEnabled() {
-			ddevapp.StopMutagenDaemon()
-		}
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
 
 	apps = ddevapp.GetActiveProjects()

@@ -353,10 +353,10 @@ var (
 		// 19: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
-			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.x-dev.1.tar.gz",
-			ArchiveInternalExtractionPath: "test-drupal11-11.x-dev.1/",
-			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.x-dev.1/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.0.0-beta1.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.0.0-beta1/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.0.0-beta1/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.0.0-beta1/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal,
 			Docroot:                       "web",
@@ -2459,6 +2459,9 @@ func TestDdevImportFiles(t *testing.T) {
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
+		err = app.Start()
+		require.NoError(t, err)
+
 		if site.FilesTarballURL != "" && app.GetUploadDir() != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			assert.NoError(err)
@@ -2505,6 +2508,12 @@ func TestDdevImportFiles(t *testing.T) {
 					continue
 				}
 				assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), ext+".txt"))
+
+				// Make sure the imported file also appears inside the container
+				stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+					Cmd: fmt.Sprintf("file %s", app.GetContainerUploadDir()),
+				})
+				require.NoError(t, err, "Expected file not found inside container, err='%v', stdout='%s', stderr='%s'", err, stdout, stderr)
 			}
 			assert.FileExists("hello-pre-import-files-" + app.Name)
 			assert.FileExists("hello-post-import-files-" + app.Name)
@@ -3172,7 +3181,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 
 	err = app.Start()
 	assert.Error(err)
-	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
+	assert.Contains(err.Error(), "already contains a project named '"+originalProjectName)
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
@@ -3191,7 +3200,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 	app.Name = secondProjectName
 	err = app.Start()
 	assert.Error(err)
-	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
+	assert.Contains(err.Error(), "already contains a project named '"+originalProjectName)
 }
 
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
