@@ -987,8 +987,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		if err == nil && drupalVersion == "11" {
 			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
 ### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
-ARG TARGETPLATFORM
-ENV SQLITE_VERSION=%s
+ARG SQLITE_VERSION=%s
 RUN mkdir -p /tmp/sqlite3 && \
 wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
@@ -1129,6 +1128,9 @@ FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `
 	contents = contents + `
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETOS
 ARG username
 ARG uid
 ARG gid
