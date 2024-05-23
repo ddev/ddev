@@ -38,7 +38,7 @@ if (empty($settings['config_sync_directory'])) {
   $settings['config_sync_directory'] = 'sites/default/files/sync';
 }
 
-// Override drupal/symfony_mailer default config to use Mailpit
+// Override drupal/symfony_mailer default config to use Mailpit.
 $config['symfony_mailer.settings']['default_transport'] = 'sendmail';
 $config['symfony_mailer.mailer_transport.sendmail']['plugin'] = 'smtp';
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['user'] = '';
