@@ -514,7 +514,7 @@ func DownloadMutagen() error {
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
 	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", versionconstants.RequiredMutagenVersion, flavor, versionconstants.RequiredMutagenVersion)
-	output.UserOut.Printf("Downloading %s ...", mutagenURL)
+	util.Debug("Downloading %s to %s...", mutagenURL, destFile)
 
 	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
 	// caching bug from confusing with a previously downloaded file?
