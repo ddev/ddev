@@ -32,5 +32,5 @@ To remove the `ddev` binary:
 
 * Find the binary location with `which -a ddev`, you may have several binaries installed in different ways. The output will give you a general idea of how you installed it.
 * On macOS or Linux with Homebrew, `brew uninstall ddev`.
-* For Linux or other simple installs, remove the binary. Example: `sudo rm /usr/local/bin/ddev`. For Linux installed via apt, `sudo apt remove ddev`.
+* For Linux or other simple installs, remove the binary. Example: `sudo rm /usr/local/bin/ddev`. For Linux installed via apt, `sudo apt-get remove ddev`.
 * On Windows, if you used the DDEV Windows installer, use the uninstall on the Start Menu or in the “Add or Remove Programs” section of Windows Settings.
