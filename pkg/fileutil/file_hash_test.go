@@ -39,7 +39,7 @@ func TestFileHash(t *testing.T) {
 			expectedHash, err := externalComputeSha1Sum(testFile)
 			require.NoError(t, err)
 
-			result, err := fileutil.FileHash(testFile)
+			result, err := fileutil.FileHash(testFile, "")
 			require.NoError(t, err)
 
 			require.Equal(t, expectedHash, result)

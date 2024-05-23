@@ -135,7 +135,9 @@ func GetMutagenConfigFilePath(app *DdevApp) string {
 // GetMutagenConfigFileHash returns the SHA1 hash of the mutagen.yml
 func GetMutagenConfigFileHash(app *DdevApp) (string, error) {
 	f := GetMutagenConfigFilePath(app)
-	hash, err := fileutil.FileHash(f)
+	// Create hash based on mutagen.yml file contents, location,
+	//and global config
+	hash, err := fileutil.FileHash(f, globalconfig.GetGlobalDdevDirLocation())
 	if err != nil {
 		return "", err
 	}
