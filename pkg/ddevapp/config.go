@@ -992,7 +992,7 @@ ENV SQLITE_VERSION=%s
 RUN mkdir -p /tmp/sqlite3 && \
 wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
-apt install -y /tmp/sqlite3/*.deb && \
+apt-get install -y /tmp/sqlite3/*.deb && \
 rm -rf /tmp/sqlite3
 			`, versionconstants.Drupal11RequiredSqlite3Version)
 		}
