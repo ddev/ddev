@@ -90,6 +90,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
+# Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
+RUN rm /etc/apt/sources.list.d/blackfire.list
+
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
 # blackfire user by default is set up with /dev/null as homedir, and 999 as uid, which
@@ -141,7 +144,7 @@ RUN chmod -fR ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/ngin
 RUN mkdir -p /var/xhprof && curl --fail  -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-  chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+    chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
@@ -224,6 +227,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
+# Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
+RUN rm /etc/apt/sources.list.d/blackfire.list
+
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
 ADD ddev-webserver-prod-files /
@@ -250,7 +256,7 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/ng
 RUN chmod -fR ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/lock/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-  chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+    chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
