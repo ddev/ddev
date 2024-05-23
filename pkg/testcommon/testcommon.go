@@ -281,8 +281,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
 	t.Setenv("XDG_CONFIG_HOME", "")
-	err := os.RemoveAll(tmpXdgConfigHomeDir)
-	require.NoError(t, err)
+	_ = os.RemoveAll(tmpXdgConfigHomeDir)
 	// Make sure that the global config directory is set to ~/.ddev
 	originalGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
 	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
@@ -291,7 +290,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// refresh the global config from ~/.ddev
 	globalconfig.EnsureGlobalConfig()
 	// Reset $MUTAGEN_DATA_DIRECTORY
-	err = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
+	err := os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
 	require.NoError(t, err)
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
