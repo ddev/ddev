@@ -18,11 +18,13 @@ import (
 func TestFileHash(t *testing.T) {
 
 	testCases := []struct {
-		content string
+		content       string
+		optionalExtra string
 	}{
-		{"This is a test file for FileHash function."},
-		{"Another test case with different content."},
-		{"Test file with special characters: !@#$%^&*()_+-=[]{};':\"|,.<>?"},
+		{"This is a test file for FileHash function.", ""},
+		{"Another test case with different content.", ""},
+		{"Test file with special characters: !@#$%^&*()_+-=[]{};':\"|,.<>?", ""},
+		{"Test file with provided extra content", "random extra content"},
 	}
 
 	for i, tc := range testCases {
@@ -36,7 +38,7 @@ func TestFileHash(t *testing.T) {
 			require.NoError(t, err)
 
 			// Use FileHash first
-			result, err := fileutil.FileHash(testFile, "")
+			result, err := fileutil.FileHash(testFile, tc.optionalExtra)
 			require.NoError(t, err)
 
 			// But we have to add the filepath to the testFile before
@@ -45,6 +47,10 @@ func TestFileHash(t *testing.T) {
 			require.NoError(t, err)
 			_, err = f.WriteString(testFile)
 			require.NoError(t, err)
+			if tc.optionalExtra != "" {
+				_, err = f.WriteString(tc.optionalExtra)
+				require.NoError(t, err)
+			}
 			_ = f.Close()
 
 			expectedHash, err := externalComputeSha1Sum(testFile)
