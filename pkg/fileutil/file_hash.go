@@ -28,6 +28,7 @@ func FileHash(filePath string, optionalExtraString string) (string, error) {
 	}
 	// Include file location in the hash, if in a different
 	// place it should not hash the same
+	// file.Name() is the full path of the file
 	if _, err := hash.Write([]byte(file.Name())); err != nil {
 		return "", err
 	}
