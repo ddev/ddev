@@ -684,10 +684,10 @@ func TestConfigGitignore(t *testing.T) {
 	out = strings.ReplaceAll(out, "new file:   .ddev/config.yaml", "")
 	assert.NotContains(out, "new file:")
 
-	_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf(`touch "/%s" "/%s"`, filepath.Join(globalDdevDir, "commands", "web", t.Name()), filepath.Join(globalDdevDir, "homeadditions", t.Name())))
+	_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf(`touch "%s" "%s"`, filepath.Join(globalDdevDir, "commands", "web", t.Name()), filepath.Join(globalDdevDir, "homeadditions", t.Name())))
 	assert.NoError(err)
 	if err != nil {
-		out, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf(`ls -l "/%s" && ls -lR "/%s" "/%s"`, globalDdevDir, filepath.Join(globalDdevDir, "commands"), filepath.Join(globalDdevDir, "homeadditions")))
+		out, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf(`ls -l "%s" && ls -lR "%s" "%s"`, globalDdevDir, filepath.Join(globalDdevDir, "commands"), filepath.Join(globalDdevDir, "homeadditions")))
 		assert.NoError(err)
 		t.Logf("Contents of global .ddev: \n=====\n%s\n====", out)
 	}

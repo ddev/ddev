@@ -25,6 +25,9 @@ func TestDockerComposeDownload(t *testing.T) {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
+	_, err = dockerutil.DownloadDockerComposeIfNeeded()
+	require.NoError(t, err)
+
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
