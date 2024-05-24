@@ -597,15 +597,23 @@ func GetGlobalDdevDir() string {
 // ~/.config/ddev if this directory exists on Linux/WSL2 only,
 // ~/.ddev otherwise.
 func GetGlobalDdevDirLocation() string {
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatal("Could not get home directory for current user. Is it set?")
+	}
+	userHomeDotDdev := filepath.Join(userHome, ".ddev")
+
 	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
 	// we create this directory.
 	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
 	if xdgConfigHomeDir != "" {
 		return filepath.Join(xdgConfigHomeDir, "ddev")
 	}
-	// If Linux and ~/.config/ddev exists, use it,
+	// If Linux and ~/.ddev doesn't exist and
+	// ~/.config/ddev exists, use it,
 	// we don't create this directory.
-	if runtime.GOOS == "linux" {
+	_, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
+	if runtime.GOOS == "linux" && userHomeDotDdevErr != nil {
 		userConfigDir, err := os.UserConfigDir()
 		if err == nil {
 			linuxDir := filepath.Join(userConfigDir, "ddev")
@@ -616,10 +624,7 @@ func GetGlobalDdevDirLocation() string {
 	}
 	// Otherwise, use ~/.ddev
 	// It will be created if it doesn't exist.
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		logrus.Fatal("Could not get home directory for current user. Is it set?")
-	}
+
 	return filepath.Join(userHome, ".ddev")
 }
 
