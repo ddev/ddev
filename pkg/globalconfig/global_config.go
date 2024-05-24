@@ -613,7 +613,7 @@ func GetGlobalDdevDirLocation() string {
 	// ~/.config/ddev exists, use it,
 	// we don't create this directory.
 	_, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
-	if runtime.GOOS == "linux" && userHomeDotDdevErr != nil {
+	if runtime.GOOS == "linux" && os.IsNotExist(userHomeDotDdevErr) {
 		userConfigDir, err := os.UserConfigDir()
 		if err == nil {
 			linuxDir := filepath.Join(userConfigDir, "ddev")
@@ -625,7 +625,7 @@ func GetGlobalDdevDirLocation() string {
 	// Otherwise, use ~/.ddev
 	// It will be created if it doesn't exist.
 
-	return filepath.Join(userHome, ".ddev")
+	return userHomeDotDdev
 }
 
 // IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid
