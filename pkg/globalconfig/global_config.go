@@ -612,8 +612,9 @@ func GetGlobalDdevDirLocation() string {
 	// If Linux and ~/.ddev doesn't exist and
 	// ~/.config/ddev exists, use it,
 	// we don't create this directory.
-	_, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
-	if runtime.GOOS == "linux" && os.IsNotExist(userHomeDotDdevErr) {
+	stat, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
+	userHomeDotDdevIsDir := userHomeDotDdevErr == nil && stat.IsDir()
+	if runtime.GOOS == "linux" && !userHomeDotDdevIsDir {
 		userConfigDir, err := os.UserConfigDir()
 		if err == nil {
 			linuxDir := filepath.Join(userConfigDir, "ddev")
