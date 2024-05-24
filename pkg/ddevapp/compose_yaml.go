@@ -1,11 +1,12 @@
 package ddevapp
 
 import (
+	"os"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"gopkg.in/yaml.v3"
-	"os"
-	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -22,6 +23,8 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 		return err
 	}
 	defer util.CheckClose(f)
+
+	app.CreateWebWorkingDir()
 
 	rendered, err := app.RenderComposeYAML()
 	if err != nil {
