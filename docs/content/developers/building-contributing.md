@@ -96,7 +96,7 @@ For a simple test, edit `r/cmd/ddev/cmd/start.go` and change the line
     output.UserOut.Printf("Starting %s...", project.GetName())
 ```
 
-to 
+to
 
 ```go
     output.UserOut.Printf("Let's gooooo ... %s...", project.GetName())
@@ -118,7 +118,7 @@ cd /workspace/d10simple/
 ddev start
 ```
 
-If you want to create a new project or use your own project, you will need to delete the dummy project to free up reserved host ports by running `ddev delete -Oy d10simple`. 
+If you want to create a new project or use your own project, you will need to delete the dummy project to free up reserved host ports by running `ddev delete -Oy d10simple`.
 
 Afterwards you can run [`ddev config`](../users/usage/commands.md#config) as usual:
 
