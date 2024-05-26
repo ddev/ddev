@@ -92,7 +92,7 @@ You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute
 
 ### Can different projects communicate with each other?
 
-Yes, this is commonly required for situations like Drupal migrations or API calls between projects. 
+Yes, this is commonly required for situations like Drupal migrations or server-side API calls between projects. 
 
 **Communicate with database of other project**
 
