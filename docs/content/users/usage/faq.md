@@ -92,28 +92,49 @@ You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute
 
 ### Can different projects communicate with each other?
 
-Yes, this is commonly required for situations like Drupal migrations. For the `web` container to access the `db` container of another project, use `ddev-<projectname>-db` as the hostname of the other project.
+Yes, this is commonly required for situations like Drupal migrations or API calls between projects. 
+
+**Communicate with database of other project**
+
+For the `web` container to access the `db` container of another project, use `ddev-<projectname>-db` as the hostname of the other project.
 
 Let’s say we have two projects, for example: project A, and project B.
 
 In project A, use `mysql -h ddev-projectb-db` to access the database server of project B.
 
-To enable HTTP/S communication (i.e. server-side API calls) between projects you can
+**Communicate via http/s**
 
-1.) access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443: `curl https://ddev-projectb-web`
+Let’s say we have two projects, for example: project A, and project B.
+
+To enable server-side HTTP/S communication (i.e. server-side API calls) between projects you can
+
+1.) access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443 from project A: 
+
+```bash
+# call from project A web container to project B's web container
+curl https://ddev-projectb-web`
+```
 
 or
 
-2.) add a `.ddev/docker-compose.communicate.yaml` to project A to allow access to project B via the official FQDN:
+2.) add a `.ddev/docker-compose.communicate.yaml` to project A:
 
 ```yaml
+# add this to project A, allows connection to project B
 services:
   web:
     external_links:
       - "ddev-router:projectb.ddev.site"
 ```
 
-This lets the `ddev-router` know that project A can access the web container on project B's DDEV URL. You can simply make calls now to project B via `https://projectb.ddev.site` from project A.
+This lets the `ddev-router` know that project A can access the web container on project B's official FQDN.
+
+You can simply make calls now to project B via the regular FQDN `https://projectb.ddev.site` from project A:
+
+```bash
+# call from project A web container to project B's web container
+curl https://projectb.ddev.site
+```
 
 If you are using other hostnames or `project_tld`, you will need to adjust the `projectb.ddev.site` value.
 
