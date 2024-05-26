@@ -94,17 +94,17 @@ You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute
 
 Yes, this is commonly required for situations like Drupal migrations. For the `web` container to access the `db` container of another project, use `ddev-<projectname>-db` as the hostname of the other project.
 
-Let’s say we have two projects, for example: project A, and project B. 
+Let’s say we have two projects, for example: project A, and project B.
 
-In project A, use `mysql -h ddev-projectb-db` to access the database server of project B. 
+In project A, use `mysql -h ddev-projectb-db` to access the database server of project B.
 
-To enable HTTP/S communication (i.e. server-side API calls) between projects you can 
+To enable HTTP/S communication (i.e. server-side API calls) between projects you can
 
-1. access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443: `curl https://ddev-projectb-web` 
+1.) access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443: `curl https://ddev-projectb-web`
 
 or
 
-2. add a `.ddev/docker-compose.communicate.yaml` to project A to allow access to project B via the official FQDN:
+2.) add a `.ddev/docker-compose.communicate.yaml` to project A to allow access to project B via the official FQDN:
 
 ```yaml
 services:
