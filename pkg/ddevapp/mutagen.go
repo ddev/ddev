@@ -101,6 +101,28 @@ func PauseAllMutagenSync(mutagenDataDirectory string) error {
 	return err
 }
 
+// PauseOldMutagenSync attempts to pause any mutagen sessions
+// that may belong to other configured DDEV setups
+// especially from previous versions
+func PauseOldMutagenSync() {
+	userHome, _ := os.UserHomeDir()
+
+	allKnownMutagenDataDirectories := []string{
+		filepath.Join(userHome, ".ddev_mutagen_data_directory"), // through v1.23.1
+		filepath.Join(userHome, ".ddev", ".mdd"),                // default current
+		filepath.Join(userHome, ".config", "ddev", ".mdd"),
+	}
+	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
+	for _, d := range allKnownMutagenDataDirectories {
+		if d != ourMutagenDataDirectory {
+			err := PauseAllMutagenSync(d)
+			if err != nil {
+				util.Debug("Error pausing mutagen sync for directory %s", d)
+			}
+		}
+	}
+}
+
 // SyncAndPauseMutagenSession syncs and pauses a Mutagen sync session
 func SyncAndPauseMutagenSession(app *DdevApp) error {
 	if !app.IsMutagenEnabled() {

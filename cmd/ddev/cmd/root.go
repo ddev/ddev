@@ -167,6 +167,8 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	}
 	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 
+		ddevapp.PauseOldMutagenSync()
+
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
 			output.UserOut.Print("You seem to have a new DDEV version.")
