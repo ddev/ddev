@@ -130,10 +130,6 @@ func GetDDEVBinDir() string {
 
 // GetMutagenPath gets the full path to the Mutagen binary
 func GetMutagenPath() string {
-	// Set MUTAGEN_DATA_DIRECTORY if it is unset
-	if os.Getenv("MUTAGEN_DATA_DIRECTORY") == "" {
-		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", GetMutagenDataDirectory())
-	}
 	// Check socket path length on first call to Mutagen
 	checkMutagenSocketPathLength()
 	mutagenBinary := "mutagen"

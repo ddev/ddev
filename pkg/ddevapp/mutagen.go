@@ -97,7 +97,11 @@ func PauseMutagenSync(app *DdevApp) error {
 // PauseAllMutagenSync pauses all mutagen sync sessions found in
 // a provided MUTAGEN_DATA_DIRECTORY
 func PauseAllMutagenSync(mutagenDataDirectory string) error {
-	_, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), []string{"MUTAGEN_DATA_DIRECTORY=" + mutagenDataDirectory}, "sync", "pause", "-a")
+	env := []string{"MUTAGEN_DATA_DIRECTORY=" + mutagenDataDirectory}
+	out, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "sync", "pause", "-a")
+	util.Verbose("ran mutagen sync pause -a(%s) output=%s err=%v", mutagenDataDirectory, out, err)
+	out, err = exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "daemon", "stop")
+	util.Verbose("ran mutagen daemon stop output=%s err=%v", mutagenDataDirectory, out, err)
 	return err
 }
 
@@ -105,6 +109,7 @@ func PauseAllMutagenSync(mutagenDataDirectory string) error {
 // that may belong to other configured DDEV setups
 // especially from previous versions
 func PauseOldMutagenSync() {
+	util.Debug("Attempting to terminate any mutagen sessions from other versions of DDEV")
 	userHome, _ := os.UserHomeDir()
 
 	allKnownMutagenDataDirectories := []string{
@@ -114,7 +119,8 @@ func PauseOldMutagenSync() {
 	}
 	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
 	for _, d := range allKnownMutagenDataDirectories {
-		if d != ourMutagenDataDirectory {
+		if d != ourMutagenDataDirectory && fileutil.FileExists(filepath.Join(d, "sessions")) {
+			util.Debug("Pausing mutagen sessions for '%s'", d)
 			err := PauseAllMutagenSync(d)
 			if err != nil {
 				util.Debug("Error pausing mutagen sync for directory %s", d)
