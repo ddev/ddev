@@ -395,4 +395,4 @@ If you are having trouble getting into the mood of idiomatic Go, we recommend re
 
 ## Contributor trainings
 
-We’re actively trying to increase the DDEV community of contributors and maintainers. To do that, we’re going to start a series of trainings, and we’d love to have you come. The trainings will be recorded for everybody’s benefit. The recordings and upcoming session dates can be found here: [DDEV Contributor Live Training](https://ddev.com/blog/contributor-training/).
+We’re actively trying to increase the DDEV community of contributors and maintainers. To do that, we regularly do contributor training, and we’d love to have you come. The trainings are recorded for everybody’s benefit. The recordings and upcoming session dates can be found here: [DDEV Contributor Live Training](https://ddev.com/blog/contributor-training/).
