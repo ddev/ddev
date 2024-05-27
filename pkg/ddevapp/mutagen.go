@@ -101,7 +101,7 @@ func PauseAllMutagenSync(mutagenDataDirectory string) error {
 	out, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "sync", "pause", "-a")
 	util.Verbose("ran mutagen sync pause -a(%s) output=%s err=%v", mutagenDataDirectory, out, err)
 	out, err = exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "daemon", "stop")
-	util.Verbose("ran mutagen daemon stop output=%s err=%v", mutagenDataDirectory, out, err)
+	util.Verbose("ran mutagen daemon stop(%s) output=%s err=%v", mutagenDataDirectory, out, err)
 	return err
 }
 
