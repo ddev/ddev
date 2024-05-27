@@ -123,6 +123,29 @@ func RunHostCommand(command string, args ...string) (string, error) {
 	return string(o), err
 }
 
+// RunHostCommandWithEnv executes a command on the host with optional
+// environment variables and returns the
+// combined stdout/stderr results and error
+func RunHostCommandWithEnv(command string, env []string, args ...string) (string, error) {
+	if globalconfig.DdevVerbose {
+		output.UserOut.Printf("RunHostCommandWithEnv(%v): %s %s", env, command, strings.Join(args, " "))
+	}
+
+	c := exec.Command(command, args...)
+	c.Env = append(os.Environ(), env...)
+	ddevExecutable, _ := os.Executable()
+	c.Env = append(os.Environ(),
+		"DDEV_EXECUTABLE="+ddevExecutable,
+	)
+	c.Stdin = os.Stdin
+	o, err := c.CombinedOutput()
+	if globalconfig.DdevVerbose {
+		output.UserOut.Printf("RunHostCommandWithEnv returned. output=%v err=%v", string(o), err)
+	}
+
+	return string(o), err
+}
+
 // RunHostCommandSeparateStreams executes a command on the host and returns the
 // stdout and error
 func RunHostCommandSeparateStreams(command string, args ...string) (string, error) {

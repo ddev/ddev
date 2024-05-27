@@ -94,6 +94,13 @@ func PauseMutagenSync(app *DdevApp) error {
 	return nil
 }
 
+// PauseAllMutagenSync pauses all mutagen sync sessions found in
+// a provided MUTAGEN_DATA_DIRECTORY
+func PauseAllMutagenSync(mutagenDataDirectory string) error {
+	_, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), []string{"MUTAGEN_DATA_DIRECTORY=" + mutagenDataDirectory}, "sync", "pause", "-a")
+	return err
+}
+
 // SyncAndPauseMutagenSession syncs and pauses a Mutagen sync session
 func SyncAndPauseMutagenSession(app *DdevApp) error {
 	if !app.IsMutagenEnabled() {
