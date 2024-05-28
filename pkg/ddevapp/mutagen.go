@@ -632,10 +632,12 @@ func MutagenReset(app *DdevApp) error {
 	if app.IsMutagenEnabled() {
 		err := app.Stop(false, false)
 		if err != nil {
+			util.Warning("Failed to stop project '%s': %v", app.Name, err)
 			return errors.Errorf("Failed to stop project %s: %v", app.Name, err)
 		}
 		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 		if err != nil {
+			util.Warning("Failed to remove Docker volume '%s': %v", GetMutagenVolumeName(app), err)
 			return err
 		}
 		util.Debug("Removed Docker volume %s", GetMutagenVolumeName(app))

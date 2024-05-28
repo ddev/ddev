@@ -528,7 +528,7 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 	// regex to find "goroutines=4 at exit of main()"
 	re := regexp.MustCompile(`goroutines=(\d+) at exit of main\(\)`)
 	matches := re.FindAllStringSubmatch(out, -1)
-	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=")
+	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=<value>, DDEV_GOROUTINES=%s actual output='%s'", os.Getenv(`DDEV_GOROUTINES`), out)
 	num, err := strconv.Atoi(matches[0][1])
 	require.NoError(t, err, "can't convert %s to number: %v", matches[0][1])
 	require.LessOrEqual(t, num, goroutineLimit, "number of goroutines=%v, higher than limit=%d", num, goroutineLimit)

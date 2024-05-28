@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/testcommon"
 	"os"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/testcommon"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -22,6 +23,9 @@ func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
 	_ = os.Setenv("DDEV_GOROUTINES", "true")
+
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Setenv(`DDEV_DEBUG`, `true`) // test requires DDEV_DEBUG to see removal of docker volume
 
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because Mutagen on by default")
@@ -51,6 +55,8 @@ func TestCmdMutagen(t *testing.T) {
 		assert.NoError(err)
 		app, err = ddevapp.NewApp(site.Dir, true)
 		assert.NoError(err)
+
+		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
 
 		err = app.Start()
 		assert.NoError(err)
@@ -89,15 +95,19 @@ func TestCmdMutagen(t *testing.T) {
 	// Make sure it got turned on
 	assert.True(app.IsMutagenEnabled())
 
+	t.Logf("DDEV_GOROUTINES before app.StartAndWait()=%s", os.Getenv(`DDEV_GOROUTINES`))
+
 	// Now test subcommands. Wait a bit for Mutagen to get completely done, with transition problems sorted out
 	err = app.StartAndWait(10)
 	require.NoError(t, err)
+	t.Logf("DDEV_GOROUTINES before first mutagen status --verbose=%s", os.Getenv(`DDEV_GOROUTINES`))
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	testcommon.CheckGoroutineOutput(t, out)
 
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "expected Mutagen: ok. Full output: %s", out)
 	assert.Contains(out, "Mutagen: ok")
+	t.Logf("DDEV_GOROUTINES before second mutagen status --verbose=%s", os.Getenv(`DDEV_GOROUTINES`))
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")
