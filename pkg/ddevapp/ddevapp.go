@@ -691,7 +691,10 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		return err
 	}
 	// The Perl manipulation removes statements like CREATE DATABASE and USE, which
-	// throw off imports. This is a scary manipulation, as it must not match actual content
+	// throw off imports.
+	// It also removes the new `/*!999999\- enable the sandbox mode */` introduced in
+	// LTS versions of MariaDB 2024-05.
+	// This is a scary manipulation, as it must not match actual content
 	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
 	// and in https://github.com/ddev/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
@@ -708,7 +711,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		}
 
 		// Case for reading from file
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
 
 		// Alternate case where we are reading from stdin
 		if dumpFile == "" && extractPath == "" {
