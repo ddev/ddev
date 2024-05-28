@@ -166,9 +166,11 @@ func checkMutagenSocketPathLength() {
 }
 
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
+// As a side-effect, it sets MUTAGEN_DATA_DIRECTORY if it's not set
 func GetMutagenDataDirectory() string {
 	currentMutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	if currentMutagenDataDirectory != "" {
+		_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, currentMutagenDataDirectory)
 		return currentMutagenDataDirectory
 	}
 	// If it's not already set, return ~/.ddev.mdd
