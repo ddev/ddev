@@ -168,14 +168,15 @@ func checkMutagenSocketPathLength() {
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
 // As a side-effect, it sets MUTAGEN_DATA_DIRECTORY if it's not set
 func GetMutagenDataDirectory() string {
-	currentMutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
-	if currentMutagenDataDirectory != "" {
-		_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, currentMutagenDataDirectory)
-		return currentMutagenDataDirectory
+	envSpecifiedMutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+	if envSpecifiedMutagenDataDirectory != "" {
+		return envSpecifiedMutagenDataDirectory
 	}
 	// If it's not already set, return ~/.ddev.mdd
 	// This may be affected by tests that change $HOME and $XDG_CONFIG_HOME
-	return filepath.Join(GetGlobalDdevDir(), ".mdd")
+	newMutagenDataDirectory := filepath.Join(GetGlobalDdevDir(), ".mdd")
+	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, newMutagenDataDirectory)
+	return newMutagenDataDirectory
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
