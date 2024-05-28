@@ -200,7 +200,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 
 	container, err := GetContainer(app, "web")
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to GetContainer() service web, app=%v, err=%v", app, err)
 	}
 	if container == nil {
 		return fmt.Errorf("web container for %s not found", app.Name)
@@ -217,23 +217,23 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 
 	sessionExists, err := mutagenSyncSessionExists(app)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to mutagenSyncSessionExists(): %v", err)
 	}
 	if sessionExists {
 		util.Verbose("Resume Mutagen sync if session already exists")
 		err := ResumeMutagenSync(app)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to resume Mutagen sync: %v", err)
 		}
 	} else {
 		vLabel, err := GetMutagenVolumeLabel(app)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to GetMutagenVolumeLabel(): %v", err)
 		}
 
 		hLabel, err := GetMutagenConfigFileHash(app)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to GetMutagenConfigFileHash(): %v", err)
 		}
 		// TODO: Consider using a function to specify the Docker beta
 		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
@@ -248,7 +248,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		util.Debug("Creating Mutagen sync: mutagen %v", args)
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 		if err != nil {
-			return fmt.Errorf("failed to mutagen %v (%v), output=%s", args, err, out)
+			return fmt.Errorf("failed to mutagen %v (%v), output='%s'", args, err, out)
 		}
 	}
 
@@ -336,7 +336,7 @@ func ResumeMutagenSync(app *DdevApp) error {
 	util.Verbose("Resuming Mutagen sync: mutagen %v", args)
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 	if err != nil {
-		return fmt.Errorf("failed to mutagen %v (%v), output=%s", args, err, out)
+		return fmt.Errorf("failed to mutagen %v (%v), output='%s'", args, err, out)
 	}
 	return nil
 }
