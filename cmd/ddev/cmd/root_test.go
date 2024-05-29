@@ -361,10 +361,13 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 
+		t.Logf("attempting to remove project %s", junkName)
 		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
 		assert.NoError(err)
 
-		_ = os.RemoveAll(tmpJunkProjectDir)
+		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
+		err = os.RemoveAll(tmpJunkProjectDir)
+		assert.NoError(err)
 
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
