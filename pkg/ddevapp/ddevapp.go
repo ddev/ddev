@@ -829,10 +829,10 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	} else {
 		confMsg = confMsg + " to stdout"
 	}
-	if compressionType != "" {
-		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
-	} else {
+	if compressionType == "cat" {
 		confMsg = confMsg + " in plain text format"
+	} else {
+		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
 	}
 
 	_, err = fmt.Fprintf(os.Stderr, confMsg+".\n")
