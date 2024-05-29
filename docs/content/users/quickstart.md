@@ -658,7 +658,7 @@ The content management part of Sulu is built upon webspaces. Each webspace confi
 !!!warning "Caution"
     Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
 
-The information for the database connection is set in the environment variable `DATABASE:URL`. For development simply clone the `.env` file by `cp .env .env.local` and change the environment variable to:
+The information for the database connection is set in the environment variable `DATABASE:URL`. For development, clone the `.env` file by `cp .env .env.local` and change the environment variable to:
 
 ```bash
 DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0.32&charset=utf8mb4"
