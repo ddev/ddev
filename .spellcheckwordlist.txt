@@ -412,6 +412,8 @@ live
 local
 localfile
 localhost
+localization
+localizations
 localpath
 logs
 lookups
