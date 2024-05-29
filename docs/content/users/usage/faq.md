@@ -92,9 +92,9 @@ You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute
 
 ### Can different projects communicate with each other?
 
-Yes, this is commonly required for situations like Drupal migrations or server-side API calls between projects. 
+Yes, this is commonly required for situations like Drupal migrations or server-side API calls between projects.
 
-**Communicate with database of other project**
+#### Communicate with database of other project
 
 For the `web` container to access the `db` container of another project, use `ddev-<projectname>-db` as the hostname of the other project.
 
@@ -102,13 +102,13 @@ Let’s say we have two projects, for example: project A, and project B.
 
 In project A, use `mysql -h ddev-projectb-db` to access the database server of project B.
 
-**Communicate via http/s**
+#### Communicate via http/s
 
 Let’s say we have two projects, for example: project A, and project B.
 
 To enable server-side HTTP/S communication (i.e. server-side API calls) between projects you can
 
-1.) access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443 from project A: 
+1.) access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443 from project A:
 
 ```bash
 # call from project A web container to project B's web container
