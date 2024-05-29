@@ -2041,12 +2041,12 @@ func TestDdevExportDB(t *testing.T) {
 		// Export an alternate database
 		importPath = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
 		err = app.ImportDB(importPath, "", false, false, "anotherdb")
-		require.NoError(t, err)
+		require.NoError(t, err, `unable to ImportDB(%s, "", false, false anotherdb) with dbType=%s`, dbType)
 		err = app.ExportDB("tmp/anotherdb.sql.gz", "gzip", "anotherdb")
-		assert.NoError(err)
+		require.NoError(t, err, `dbType=%v: unable to ExportDB("/tmp/anotherdb.sql.gz", "gzip"", "anotherdb")`, dbType)
 		importPath = "tmp/anotherdb.sql.gz"
 		err = app.ImportDB(importPath, "", false, false, "thirddb")
-		assert.NoError(err)
+		require.NoError(t, err, `dbType=%v: unable to importDB importPath=%s targetDB=thirddb`, dbType, importPath)
 
 		c := map[string]string{
 			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`,

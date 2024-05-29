@@ -778,22 +778,33 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB string) error {
 	app.DockerEnv()
-	exportCmd := []string{"mysqldump"}
-	if app.Database.Type == "postgres" {
-		exportCmd = []string{"pg_dump", "-U", "db"}
-	}
 	if targetDB == "" {
 		targetDB = "db"
 	}
-	exportCmd = append(exportCmd, targetDB)
 
-	if compressionType != "" {
-		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | %s`, strings.Join(exportCmd, " "), compressionType)}
+	exportCmd := "mysqldump " + targetDB
+	if app.Database.Type == "postgres" {
+		exportCmd = "pg_dump -U db " + targetDB
 	}
+
+	if app.Database.Type == nodeps.MariaDB {
+		// The `tail +2` is a workaround that removes the new mariadb directive added
+		// 2024-05 in mariadb-dump. It removes the first line of the dump, which has
+		// the offending /*!999999\- enable the sandbox mode */. See
+		// https://mariadb.org/mariadb-dump-file-compatibility-change/
+		// If not on a newer MariaDB version, this will remove the identification
+		// line from the top of the dump.
+		exportCmd = exportCmd + " | tail +2 "
+	}
+
+	if compressionType == "" {
+		compressionType = "cat"
+	}
+	exportCmd = exportCmd + " | " + compressionType
 
 	opts := &ExecOpts{
 		Service:   "db",
-		RawCmd:    exportCmd,
+		RawCmd:    []string{"bash", "-c", `set -eu -o pipefail; ` + exportCmd},
 		NoCapture: true,
 	}
 	if dumpFile != "" {
