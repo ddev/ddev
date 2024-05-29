@@ -629,6 +629,7 @@ ddev composer create sulu/skeleton
 
 !!!tip "Multilingual"
     To set up the administration interface for example in French alongside the default English, add the following snippet on top of `config/packages/sulu_admin.yaml` ([all available localizations](https://sulu.crowdin.com/sulusulu)):
+
     ```bash
     sulu_core:
     locales:
@@ -638,6 +639,7 @@ ddev composer create sulu/skeleton
         - en
         - fr
     ```
+
     `ddev exec bin/console sulu:admin:download-language` downloads any set language. The only exceptions are English and German which are shipping with Sulu.
 
 The content management part of Sulu is built upon webspaces. Each webspace configures a content tree. Each content tree may contain translations for different locales. Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
@@ -671,6 +673,7 @@ ddev launch /admin
 
 !!!tip
     If you don't want to add an admin user use the `prod` argument instead
+
     ```bash
     ddev execute bin/adminconsole sulu:build prod
     ```
