@@ -317,6 +317,15 @@ In the web browser, log into your account using `admin` and `publish`.
 
 Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
 
+## Joomla
+
+```bash
+mkdir my-joomla-site && cd my-joomla-site
+ddev config --project-type=php
+# Download the latest version from https://downloads.joomla.org/latest and unarchive everything into the empty my-joomla-site directory
+ddev launch
+```
+
 ## Kirby CMS
 
 Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
