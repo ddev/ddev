@@ -141,6 +141,7 @@ SQLite
 StarterKits
 Starts
 Statamic
+Sulu
 Support
 Symfony
 TablePlus
@@ -683,6 +684,8 @@ webimage
 webserver
 webservers
 webserving
+webspace
+webspaces
 webtag
 will
 winnfsd
