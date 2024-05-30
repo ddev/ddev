@@ -41,10 +41,10 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string, excluded
 					return err
 				}
 				if sigFound {
-					// TODO If the file already exists and has the same content, don't overwrite it.
-					//if existingContent, err := fsys.ReadFile(localPath); err == nil && string(existingContent) == string(content) {
-					//	continue
-					//}
+					// If the file already exists and has the same content, don't overwrite it.
+					if existingContent, err := os.ReadFile(localPath); err == nil && string(existingContent) == string(content) {
+						continue
+					}
 					// If the file already exists and is excluded, don't overwrite it.
 					if excludedFiles != nil && slices.Contains(excludedFiles, localPath) {
 						continue
