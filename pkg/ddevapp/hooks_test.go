@@ -78,11 +78,11 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 
 		captureOutputFunc, err := util.CaptureOutputToFile()
-		assert.NoError(err)
+		require.NoError(t, err, `failed to capture output to file for taxk='%v' err=%v`, task, err)
 		userOutFunc := util.CaptureUserOut()
 
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err, `failed to app.Start() for task '%v' err=%v`, task, err)
 
 		out := captureOutputFunc()
 		userOut := userOutFunc()
@@ -105,7 +105,7 @@ func TestProcessHooks(t *testing.T) {
 	}
 	// With default setting, ProcessHooks should succeed
 	err = app.ProcessHooks("hook-test")
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
 	app.FailOnHookFail = true

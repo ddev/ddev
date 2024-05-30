@@ -354,13 +354,22 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.NoError(err, "out=%s", out)
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
+
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+
+		t.Logf("attempting to remove project %s", junkName)
 		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
 		assert.NoError(err)
 
-		err = os.Chdir(origDir)
+		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
+		err = os.RemoveAll(tmpJunkProjectDir)
 		assert.NoError(err)
-		_ = os.RemoveAll(tmpJunkProjectDir)
+
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
 		// Because the start has done a poweroff (new DDEV version),
 		// make sure sites are running again.
@@ -372,8 +381,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	apps := ddevapp.GetActiveProjects()
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
-
-	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -394,12 +401,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
-	t.Cleanup(func() {
-		_, err := exec.RunHostCommand(DdevBin, "poweroff")
-		assert.NoError(err)
-
-		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
-	})
 
 	apps = ddevapp.GetActiveProjects()
 	activeCount = len(apps)

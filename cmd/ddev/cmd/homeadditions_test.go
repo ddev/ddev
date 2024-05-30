@@ -41,7 +41,7 @@ func TestHomeadditions(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_ = fileutil.PurgeDirectory(projectHomeadditionsDir)
+		_ = os.RemoveAll(projectHomeadditionsDir)
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
 
