@@ -788,13 +788,13 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	}
 
 	if app.Database.Type == nodeps.MariaDB {
-		// The `tail +2` is a workaround that removes the new mariadb directive added
+		// The `tail --lines=+2` is a workaround that removes the new mariadb directive added
 		// 2024-05 in mariadb-dump. It removes the first line of the dump, which has
 		// the offending /*!999999\- enable the sandbox mode */. See
 		// https://mariadb.org/mariadb-dump-file-compatibility-change/
 		// If not on a newer MariaDB version, this will remove the identification
 		// line from the top of the dump.
-		exportCmd = exportCmd + " | tail +2 "
+		exportCmd = exportCmd + " | tail --lines=+2 "
 	}
 
 	if compressionType == "" {
