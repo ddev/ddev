@@ -261,7 +261,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	}
 	// Reset $MUTAGEN_DATA_DIRECTORY
 	_ = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
-	// globalconfig.GetMutagenDataDirectory gets new version of MUTAGEH_DATA_DIRECTORY
+	// globalconfig.GetMutagenDataDirectory gets new version of MUTAGEN_DATA_DIRECTORY
 	// when MUTAGEN_DATA_DIRECTORY is unset
 	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, globalconfig.GetMutagenDataDirectory())
 	// Start mutagen daemon if it's enabled
