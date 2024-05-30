@@ -165,9 +165,20 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}
 	}
-	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 
+	// If the MUTAGEN_DATA_DIRECTORY has changed due to DDEV upgrade
+	// or due to XDG_CONFIG_HOME change, stop running daemons and remember the
+	// new LastMutagenDataDirectory
+	if globalconfig.DdevGlobalConfig.LastMutagenDataDirectory != globalconfig.GetMutagenDataDirectory() {
 		ddevapp.StopOldMutagenDaemons()
+		globalconfig.DdevGlobalConfig.LastMutagenDataDirectory = globalconfig.GetMutagenDataDirectory()
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
