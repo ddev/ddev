@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -365,9 +366,15 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
 		assert.NoError(err)
 
+		if runtime.GOOS == "windows" {
+			t.Log("Windows: sleeping to let Windows finish deleting %s", junkName)
+			time.Sleep(3 * time.Second)
+		}
 		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
 		err = os.RemoveAll(tmpJunkProjectDir)
-		assert.NoError(err)
+		if err != nil {
+			t.Logf("failed to remove junk project files in %s: %v", tmpJunkProjectDir, err)
+		}
 
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
