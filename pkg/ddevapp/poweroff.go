@@ -41,7 +41,7 @@ func PowerOff() {
 		util.Warning("Unable to run client.ListContainers(): %v", err)
 	}
 
-	StopMutagenDaemon()
+	StopMutagenDaemon("")
 
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)

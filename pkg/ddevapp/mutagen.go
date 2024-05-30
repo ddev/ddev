@@ -94,37 +94,23 @@ func PauseMutagenSync(app *DdevApp) error {
 	return nil
 }
 
-// PauseAllMutagenSync pauses all mutagen sync sessions found in
-// a provided MUTAGEN_DATA_DIRECTORY
-func PauseAllMutagenSync(mutagenDataDirectory string) error {
-	env := []string{"MUTAGEN_DATA_DIRECTORY=" + mutagenDataDirectory}
-	out, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "sync", "pause", "-a")
-	util.Verbose("ran mutagen sync pause -a(%s) output=%s err=%v", mutagenDataDirectory, out, err)
-	out, err = exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "daemon", "stop")
-	util.Verbose("ran mutagen daemon stop(%s) output=%s err=%v", mutagenDataDirectory, out, err)
-	return err
-}
-
-// PauseOldMutagenSync attempts to pause any mutagen sessions
+// StopOldMutagenDaemons attempts to stop any mutagen daemons
 // that may belong to other configured DDEV setups
 // especially from previous versions
-func PauseOldMutagenSync() {
-	util.Debug("Attempting to terminate any mutagen sessions from other versions of DDEV")
-	userHome, _ := os.UserHomeDir()
+func StopOldMutagenDaemons() {
+	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
+	util.Debug("Attempting to terminate any mutagen daemons from other versions of DDEV. Current MUTAGEN_DATA_DIRECTORY=%s", ourMutagenDataDirectory)
 
+	userHome, _ := os.UserHomeDir()
 	allKnownMutagenDataDirectories := []string{
 		filepath.Join(userHome, ".ddev_mutagen_data_directory"), // through v1.23.1
 		filepath.Join(userHome, ".ddev", ".mdd"),                // default current
 		filepath.Join(userHome, ".config", "ddev", ".mdd"),
 	}
-	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
 	for _, d := range allKnownMutagenDataDirectories {
-		if d != ourMutagenDataDirectory && fileutil.FileExists(filepath.Join(d, "sessions")) {
-			util.Debug("Pausing mutagen sessions for '%s'", d)
-			err := PauseAllMutagenSync(d)
-			if err != nil {
-				util.Debug("Error pausing mutagen sync for directory %s", d)
-			}
+		if d != ourMutagenDataDirectory && fileutil.FileExists(d) {
+			util.Debug("Stopping mutagen daemon for MUTAGEN_DATA_DIRECTORY='%s'", d)
+			StopMutagenDaemon(d)
 		}
 	}
 }
@@ -546,7 +532,7 @@ func MutagenSyncExists(app *DdevApp) bool {
 // DownloadMutagen gets the Mutagen binary and related and puts it into
 // ~/.ddev/.bin
 func DownloadMutagen() error {
-	StopMutagenDaemon()
+	StopMutagenDaemon("")
 	flavor := runtime.GOOS + "_" + runtime.GOARCH
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
@@ -576,19 +562,24 @@ func DownloadMutagen() error {
 	}
 
 	// Stop daemon in case it was already running somewhere else
-	StopMutagenDaemon()
+	StopMutagenDaemon("")
 	return nil
 }
 
-// StopMutagenDaemon will try to stop a running Mutagen daemon
-// But no problem if there wasn't one
-func StopMutagenDaemon() {
+// StopMutagenDaemon will try to stop a running Mutagen daemon related
+// to the provided mutagenDataDirectory. If mutagenDataDirectory
+// is empty, use the one configured globally.
+func StopMutagenDaemon(mutagenDataDirectory string) {
+	if mutagenDataDirectory == "" {
+		mutagenDataDirectory = globalconfig.GetMutagenDataDirectory()
+	}
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
-		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+		env := []string{"MUTAGEN_DATA_DIRECTORY=" + mutagenDataDirectory, "HOME=" + os.Getenv(`HOME`), "PWD=" + os.Getenv(`PWD`)}
+		out, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "daemon", "stop")
 		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
-			util.Warning("Unable to stop Mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, globalconfig.GetMutagenDataDirectory())
+			util.Debug("Unable to stop Mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
 		}
-		util.Success("Stopped Mutagen daemon")
+		util.Debug("Attempted to stop Mutagen daemon for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory)
 	}
 }
 

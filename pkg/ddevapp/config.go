@@ -738,7 +738,7 @@ func (app *DdevApp) FixObsolete() {
 	if fileutil.IsDirectory(legacyMutagenDataDir) {
 		originalMutagenDataDir := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", legacyMutagenDataDir)
-		StopMutagenDaemon()
+		StopMutagenDaemon("")
 		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", originalMutagenDataDir)
 		err := os.RemoveAll(legacyMutagenDataDir)
 		if err != nil {
