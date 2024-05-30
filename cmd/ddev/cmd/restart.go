@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
@@ -37,6 +38,18 @@ ddev restart --all`,
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {
 			util.Failed(err.Error())
+		}
+
+		// If the MUTAGEN_DATA_DIRECTORY has changed due to DDEV upgrade
+		// or due to XDG_CONFIG_HOME change, stop running daemons and remember the
+		// new LastMutagenDataDirectory
+		if globalconfig.DdevGlobalConfig.LastMutagenDataDirectory != globalconfig.GetMutagenDataDirectory() {
+			ddevapp.StopOldMutagenDaemons()
+			globalconfig.DdevGlobalConfig.LastMutagenDataDirectory = globalconfig.GetMutagenDataDirectory()
+			err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+			if err != nil {
+				util.Failed(err.Error())
+			}
 		}
 
 		// Look for version change and opt-in to instrumentation if it has changed.
