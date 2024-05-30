@@ -10,7 +10,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Upgrade DDEV to the latest version
-    brew upgrade ddev/ddev/ddev
+    brew upgrade drud/ddev/ddev
     ```
 
     ### Install Script
