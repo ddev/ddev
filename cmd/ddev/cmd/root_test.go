@@ -367,7 +367,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		assert.NoError(err)
 
 		if runtime.GOOS == "windows" {
-			t.Log("Windows: sleeping to let Windows finish deleting %s", junkName)
+			t.Logf("Windows: sleeping to let Windows finish deleting %s", junkName)
 			time.Sleep(3 * time.Second)
 		}
 		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
