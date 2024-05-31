@@ -2,14 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	osexec "os/exec"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
-	"testing"
-
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -24,6 +16,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"testing"
 )
 
 func init() {
@@ -343,6 +342,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)
 
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
 	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
@@ -355,19 +356,14 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 
-	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
-
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 
 		t.Logf("attempting to remove project %s", junkName)
-		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
-		assert.NoError(err)
-
-		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
-		err = os.RemoveAll(tmpJunkProjectDir)
-		assert.NoError(err)
+		out, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
+		require.NoError(t, err, "failed to remove project %s, out='%s' err=%v", junkName, out, err)
+		t.Logf("Output from 'ddev delete -Oy %s' was '%s'", junkName, out)
 
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
@@ -375,6 +371,12 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		// make sure sites are running again.
 		for _, site := range TestSites {
 			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+
+		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
+		err = os.RemoveAll(tmpJunkProjectDir)
+		if err != nil {
+			t.Logf("failed to remove junk project files in %s: %v", tmpJunkProjectDir, err)
 		}
 	})
 

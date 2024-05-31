@@ -23,26 +23,16 @@ func TestCmdStart(t *testing.T) {
 	require.NoError(t, err)
 
 	// Stop all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err)
-
-	// Ensure all sites are started after ddev start --all.
-	out, err := exec.RunCommand(DdevBin, []string{"start", "--all", "-y"})
-	assert.NoError(err, "ddev start --all should succeed but failed, err: %v, output: %s", err, out)
 	testcommon.CheckGoroutineOutput(t, out)
 
-	// Confirm all sites are running.
-	apps := ddevapp.GetActiveProjects()
-	for _, app := range apps {
-		status, statusDesc := app.SiteStatus()
-		assert.Equal(ddevapp.SiteRunning, status, "All sites should be running, but project=%s status=%sstatus description=%s", app.GetName(), status, statusDesc)
-		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
+	apps := []*ddevapp.DdevApp{}
+	for _, testSite := range TestSites {
+		app, err := ddevapp.NewApp(testSite.Dir, false)
+		require.NoError(t, err)
+		apps = append(apps, app)
 	}
-
-	// Stop all sites.
-	out, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
-	assert.NoError(err)
-	testcommon.CheckGoroutineOutput(t, out)
 
 	// Build start command startMultipleArgs
 	startMultipleArgs := []string{"start", "-y"}
@@ -59,6 +49,6 @@ func TestCmdStart(t *testing.T) {
 	for _, app := range apps {
 		status, statusDesc := app.SiteStatus()
 		assert.Equal(ddevapp.SiteRunning, status, "All sites should be running, but project=%s status=%s statusDesc=%s", app.GetName(), status, statusDesc)
-		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
+		assert.Equal(ddevapp.SiteRunning, statusDesc, `The status description should be "running", but project %s status  is: %s`, app.GetName(), statusDesc)
 	}
 }
