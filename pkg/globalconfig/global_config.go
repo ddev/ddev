@@ -154,7 +154,7 @@ func checkMutagenSocketPathLength() {
 		checkedMutagenSocketPathLength = true
 		return
 	}
-	socketPathLength := len(filepath.Join(os.Getenv("MUTAGEN_DATA_DIRECTORY"), "daemon", "daemon.sock"))
+	socketPathLength := len(filepath.Join(GetMutagenDataDirectory(), "daemon", "daemon.sock"))
 	// Limit from https://unix.stackexchange.com/a/367012
 	limit := 104
 	if runtime.GOOS == "linux" {
@@ -169,11 +169,9 @@ func checkMutagenSocketPathLength() {
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
 // As a side-effect, it sets MUTAGEN_DATA_DIRECTORY if it's not set
 func GetMutagenDataDirectory() string {
-	envSpecifiedMutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
-	if envSpecifiedMutagenDataDirectory != "" {
-		return envSpecifiedMutagenDataDirectory
-	}
-	// If it's not already set, return ~/.ddev.mdd
+	// Return GetGlobalDdevDir() + .ddev.mdd
+	// This is affected by changes to $XDG_CONFIG_HOME
+	// or anything that changes the global DDEV config directory
 	// This may be affected by tests that change $HOME and $XDG_CONFIG_HOME
 	newMutagenDataDirectory := filepath.Join(GetGlobalDdevDir(), ".mdd")
 	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, newMutagenDataDirectory)
