@@ -216,6 +216,9 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because untested on Windows")
 	}
+	if dockerutil.IsColima() {
+		t.Skip("Skipping on Colima because of slow mount responses")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
