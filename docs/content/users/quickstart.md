@@ -323,7 +323,7 @@ Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/insta
 mkdir my-joomla-site && cd my-joomla-site
 tag=$(curl -L "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/joomla/joomla-cms/releases/download/$tag/Joomla_$tag-Stable-Full_Package.zip" -o joomla.zip
 unzip ./joomla.zip && rm joomla.zip
-ddev config --project-type=php --webserver-type=apache-fpm
+ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 ddev start
 ddev launch
 ```
