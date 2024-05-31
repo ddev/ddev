@@ -73,7 +73,7 @@ popd >/dev/null
 
 # generate windows-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_amd64 >/dev/null
-curl --fail -JL -s -o mkcert "https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe"
+curl --fail -JL -s -o mkcert.exe "https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe"
 tar -czf $ARTIFACTS/ddev_windows-amd64.$VERSION.tar.gz ddev.exe  mkcert.exe
 popd >/dev/null
 
