@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	copy2 "github.com/otiai10/copy"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -986,9 +987,7 @@ func TestExtraPackages(t *testing.T) {
 	require.NoError(t, err)
 
 	addedDBPackage := "sudo"
-	// php-gmp is flaky on Debian 12 Bookworm,
-	// we can test it https://github.com/ddev/ddev/issues/5898
-	addedWebPackage := "php" + app.PHPVersion + "-" + "gmp"
+	addedWebPackage := "dnsutils"
 
 	// Test db container to make sure no sudo in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
