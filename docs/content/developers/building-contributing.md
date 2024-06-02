@@ -84,12 +84,54 @@ rm ~/bin/ddev
 
 [Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. For any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pull/<YOUR-PR>` to open that PR and build it in Gitpod.
 
-To open and work on DDEV master branch you can use the button below.
+It also allows you to work on the DDEV master branch and test modifiying DDEV's source code.
+
+To get started use the button below:
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ddev/ddev)
 
-If you want to run a web project, you can check it out into `/workspace/<yourproject>` and use it as usual. The things you’re familiar with work normally, except that `ddev-router` does not run.
+For a simple test, edit `r/cmd/ddev/cmd/start.go` and change the line
 
-A Gitpod dummy project for is provided by default in `/workspace/d10simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d10simple`. Then you can run [`ddev start`](../users/usage/commands.md#start) to work with your own.
+```go
+    output.UserOut.Printf("Starting %s...", project.GetName())
+```
+
+to
+
+```go
+    output.UserOut.Printf("Let's gooooo ... %s...", project.GetName())
+```
+
+Compile and install your new modified DDEV version:
+
+```bash
+cd /workspace/ddev/
+make
+```
+
+The command `ddev -v` now will output something like `ddev version v1.23.1-20-g70fc4cd7b-dirty`. The version will stay the same for all compilations until you make a commit.
+
+A Gitpod dummy project for is provided by default in `/workspace/d10simple` to test your changes:
+
+```bash
+cd /workspace/d10simple/
+ddev start
+```
+
+If you want to create a new project or use your own project, you will need to delete the dummy project to free up reserved host ports by running `ddev delete -Oy d10simple`.
+
+Afterwards you can run [`ddev config`](../users/usage/commands.md#config) as usual:
+
+```bash
+cd /workspace/
+mkdir my-new-project/
+cd my-new-project/
+ddev config
+```
+
+If you want to use an existing web project, also check it out into `/workspace/<yourproject>` and use it as usual.
+
+The things you’re familiar with work normally, except that `ddev-router` does not run.  
 
 ## Making Changes to DDEV Images
 
