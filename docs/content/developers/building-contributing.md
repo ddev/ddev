@@ -109,7 +109,7 @@ cd /workspace/ddev/
 make
 ```
 
-The command `ddev -v` now will output something like `ddev version v1.23.1-20-g70fc4cd7b-dirty`. The version will stay the same for all compilations.
+The command `ddev -v` now will output something like `ddev version v1.23.1-20-g70fc4cd7b-dirty`. The version will stay the same for all compilations until you make a commit.
 
 A Gitpod dummy project for is provided by default in `/workspace/d10simple` to test your changes:
 
