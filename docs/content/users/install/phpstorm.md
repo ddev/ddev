@@ -38,7 +38,7 @@ If you’re not using the DDEV Integration Plugin, you can follow these steps in
     4. In the “Path mappings” of the “Server” you may have to map the local paths (which on WSL2 means `/home/...`) to the in-container paths, especially if you have Mutagen enabled. So “Virtual Machine Path” would be `/var/www/html` and “Local path” would be something like `/Users/rfay/workspace/drup` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\drup` on Windows using WSL2.
     5. Now back in the “Configure Remote PHP Interpreter” for “Configuration files” use `.ddev/.ddev-docker-compose-full.yaml`. On macOS, you may need to use <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>.</kbd>, to show hidden dotfiles.
     6. Service: `web`.
-    7. Environment variables: Set the `COMPOSE_PROJECT_NAME` variable to the name of the project prefixed with `ddev`. In the `drup` example this would become `ddev-drup`. You can find the name of the project in je `config.yaml` of your project. The result will be `COMPOSE_PROJECT_NAME=ddev-drup`.
+    7. Environment variables: Set the `COMPOSE_PROJECT_NAME` variable to the name of the project prefixed with `ddev`. In the `drup` example this would become `ddev-drup`. You can find the name of the project in je `config.yaml` of your project. The result will be `COMPOSE_PROJECT_NAME=ddev-drup`. Note that the content of COMPOSE_PROJECT_NAME needs to be lowercase even when project name itself has uppercase characters.
     8. In the CLI interpreter “Lifecycle” select “Connect to existing container”.
     9. Here’s an example filled out:
         ![example configuration](../../images/phpstorm-cli-interpreter.png)
