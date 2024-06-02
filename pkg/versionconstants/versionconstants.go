@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "v1.23.1" // Note that this can be overridden by make
+var WebTag = "20240523_stasadev_apt_get_update_or_true" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -26,7 +26,7 @@ const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.1"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.23.1"
+var SSHAuthTag = "20240523_stasadev_apt_get_update_or_true"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"

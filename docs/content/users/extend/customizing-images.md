@@ -20,7 +20,7 @@ Then the additional packages will be built into the containers during [`ddev sta
 
 ### PHP Extensions supported by `deb.sury.org`
 
-If a PHP extension is supported by the upstream package management from `deb.sury.org`, you'll be able to add it with minimal effort. Test to see if it's available using `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-<extension>'`, for example, `ddev exec 'sudo apt update && sudo apt install php${DDEV_PHP_VERSION}-imap'`. If that works, then the extension is supported, and you can add `webimage_extra_packages: ["php${DDEV_PHP_VERSION}-<extension>"]` to your `.ddev/config.yaml` file.
+If a PHP extension is supported by the upstream package management from `deb.sury.org`, you'll be able to add it with minimal effort. Test to see if it's available using `ddev exec '(sudo apt-get update || true) && sudo apt-get install php${DDEV_PHP_VERSION}-<extension>'`, for example, `ddev exec '(sudo apt-get update || true) && sudo apt-get install php${DDEV_PHP_VERSION}-imap'`. If that works, then the extension is supported, and you can add `webimage_extra_packages: ["php${DDEV_PHP_VERSION}-<extension>"]` to your `.ddev/config.yaml` file.
 
 ### PECL PHP Extensions not supported by `deb.sury.org`
 
@@ -35,9 +35,9 @@ For example, a `.ddev/web-build/Dockerfile.mcrypt` might look like this:
 ENV extension=mcrypt
 SHELL ["/bin/bash", "-c"]
 # Install the needed development packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
 # mcrypt happens to require libmcrypt-dev
-RUN apt install -y libmcrypt-dev
+RUN apt-get install -y libmcrypt-dev
 RUN pecl install ${extension}
 RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini && chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
 RUN phpenmod ${extension}
@@ -49,9 +49,9 @@ A `.ddev/web-build/Dockerfile.xlswriter` to add `xlswriter` might be:
 ENV extension=xlswriter
 SHELL ["/bin/bash", "-c"]
 # Install the needed development packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
 # xlswriter requires libz-dev
-RUN sudo apt install -y libz-dev
+RUN sudo apt-get install -y libz-dev
 RUN echo | pecl install ${extension}
 RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini && chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
 RUN phpenmod ${extension}
@@ -66,9 +66,9 @@ ENV extension=xdebug
 SHELL ["/bin/bash", "-c"]
 RUN phpdismod xdebug
 # Install the needed development packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
 # Remove the standard xdebug provided by deb.sury.org
-RUN apt remove php${DDEV_PHP_VERSION}-xdebug || true
+RUN apt-get remove php${DDEV_PHP_VERSION}-xdebug || true
 RUN pecl install ${extension}
 # Use the standard xdebug.ini from source
 ADD https://raw.githubusercontent.com/ddev/ddev/master/containers/ddev-php-base/ddev-php-files/etc/php/8.2/mods-available/xdebug.ini /etc/php/${DDEV_PHP_VERSION}/mods-available
@@ -85,7 +85,7 @@ Most PHP extensions are built within the `deb.sury.org` distribution. You can Go
 
 If you need a package that is *not* a PHP package, you can view and search standard Debian packages at [packages.debian.org/stable](https://packages.debian.org/stable/), or use Google.
 
-To test that a package will do what you want, you can [`ddev ssh`](../usage/commands.md#ssh) and `sudo apt-get update && sudo apt-get install <package>` to verify that you can install it and you get what you need. A PHP extension may require `killall -USR2 php-fpm` to take effect. After you’ve tried that, you can add the package to [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages).
+To test that a package will do what you want, you can [`ddev ssh`](../usage/commands.md#ssh) and `(sudo apt-get update || true) && sudo apt-get install <package>` to verify that you can install it and you get what you need. A PHP extension may require `killall -USR2 php-fpm` to take effect. After you’ve tried that, you can add the package to [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages).
 
 ## Adding Extra Dockerfiles for `webimage` and `dbimage`
 
@@ -158,7 +158,7 @@ ENV extension=xhprof
 ENV extension_repo=https://github.com/longxinH/xhprof
 ENV extension_version=v2.3.8
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests autoconf build-essential libc-dev php-pear php${DDEV_PHP_VERSION}-dev pkg-config zlib1g-dev
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests autoconf build-essential libc-dev php-pear php${DDEV_PHP_VERSION}-dev pkg-config zlib1g-dev
 RUN mkdir -p /tmp/php-${extension} && cd /tmp/php-${extension} && git clone ${extension_repo} .
 WORKDIR /tmp/php-${extension}/extension
 RUN git checkout ${extension_version}

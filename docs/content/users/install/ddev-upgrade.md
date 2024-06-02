@@ -36,7 +36,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Update package information and all packages including DDEV
-    sudo apt update && sudo apt upgrade
+    sudo apt-get update && sudo apt-get upgrade
     ```
 
     ### Fedora, Red Hat, etc.
@@ -65,7 +65,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Upgrade the DDEV package
-    sudo apt update && sudo apt upgrade -y
+    sudo apt-get update && sudo apt-get upgrade -y
     ```
 
     ### Traditional Windows
@@ -87,7 +87,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Update package information and all packages including DDEV
-    sudo apt update && sudo apt upgrade -y
+    sudo apt-get update && sudo apt-get upgrade -y
     ```
 
 === "Codespaces"
@@ -96,7 +96,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Update package information and all packages including DDEV
-    sudo apt update && sudo apt upgrade -y
+    sudo apt-get update && sudo apt-get upgrade -y
     ```
 
 === "Manual"

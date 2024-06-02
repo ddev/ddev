@@ -221,7 +221,7 @@ You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for 
 
 * On macOS you likely installed via Homebrew; run `brew update && brew upgrade ddev`.
 <!-- markdownlint-disable-next-line -->
-* On Linux + WSL2 using Debian/Ubuntu’s `apt install` technique, run `sudo apt update && sudo apt upgrade ddev` like any other package on your system.
+* On Linux + WSL2 using Debian/Ubuntu’s `apt-get install` technique, run `sudo apt-get update && sudo apt-get upgrade ddev` like any other package on your system.
 <!-- markdownlint-disable-next-line -->
 * On Linux + WSL2 with a Homebrew install, run `brew update && brew upgrade ddev`.
 * On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh), run it again:
@@ -239,7 +239,7 @@ If you’re using Homebrew, first run `brew unlink ddev` to get rid of the versi
 
 1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
 2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.21.5, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.21.5`.
-3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.5`.
+3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt-get update && sudo apt-get install ddev=<version>`, for example `sudo apt-get install ddev=1.21.5`.
 4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
 ### Why do I have an old DDEV?
