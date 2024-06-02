@@ -565,7 +565,7 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns the global caching directory, and creates it as needed.
+// GetGlobalDdevDir returns the DDEV global config directory, and creates it as needed.
 func GetGlobalDdevDir() string {
 	ddevDir := GetGlobalDdevDirLocation()
 	// Create the directory if it is not already present.
@@ -604,6 +604,10 @@ func GetGlobalDdevDirLocation() string {
 	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
 	// we create this directory.
 	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
+	// Handle ~/xxx without failure; MUTAGEN_DATA_DIRECTORY, for example, can't have it.
+	if strings.HasPrefix(xdgConfigHomeDir, `~`) {
+		xdgConfigHomeDir = userHome + xdgConfigHomeDir[1:]
+	}
 	if xdgConfigHomeDir != "" {
 		return filepath.Join(xdgConfigHomeDir, "ddev")
 	}

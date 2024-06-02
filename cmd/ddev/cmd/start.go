@@ -75,9 +75,13 @@ ddev start --all`,
 		// or due to XDG_CONFIG_HOME change, stop running daemons and remember the
 		// new LastMutagenDataDirectory
 		if globalconfig.DdevGlobalConfig.LastMutagenDataDirectory != globalconfig.GetMutagenDataDirectory() {
+			err := ddevapp.DownloadMutagenIfNeeded()
+			if err != nil {
+				util.Warning("Failed to download mutagen binary: %v", err)
+			}
 			ddevapp.StopOldMutagenDaemons()
 			globalconfig.DdevGlobalConfig.LastMutagenDataDirectory = globalconfig.GetMutagenDataDirectory()
-			err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+			err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 			if err != nil {
 				util.Failed(err.Error())
 			}

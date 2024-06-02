@@ -99,7 +99,7 @@ func PauseMutagenSync(app *DdevApp) error {
 // especially from previous versions
 func StopOldMutagenDaemons() {
 	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
-	util.Debug("Attempting to terminate any mutagen daemons from other versions of DDEV. Current MUTAGEN_DATA_DIRECTORY=%s", ourMutagenDataDirectory)
+	util.Debug("Attempting to terminate any mutagen daemons from other versions of DDEV or other XDG_CONFIG_HOME. Current MUTAGEN_DATA_DIRECTORY=%s", ourMutagenDataDirectory)
 
 	userHome, _ := os.UserHomeDir()
 	allKnownMutagenDataDirectories := []string{
@@ -532,6 +532,7 @@ func MutagenSyncExists(app *DdevApp) bool {
 // DownloadMutagen gets the Mutagen binary and related and puts it into
 // ~/.ddev/.bin
 func DownloadMutagen() error {
+	// Stop our existing daemon, assuming we have a binary
 	StopMutagenDaemon("")
 	flavor := runtime.GOOS + "_" + runtime.GOARCH
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
@@ -557,13 +558,10 @@ func DownloadMutagen() error {
 		return err
 	}
 	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
-	if err != nil {
-		return err
-	}
-
-	// Stop daemon in case it was already running somewhere else
-	StopMutagenDaemon("")
-	return nil
+	// Now that we have a mutagen binary, we can stop any other
+	// sessions that we can find.
+	StopOldMutagenDaemons()
+	return err
 }
 
 // StopMutagenDaemon will try to stop a running Mutagen daemon related
