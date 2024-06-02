@@ -49,7 +49,6 @@ type GlobalConfig struct {
 	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
 	InstrumentationUser              string                      `yaml:"instrumentation_user,omitempty"`
 	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
-	LastMutagenDataDirectory         string                      `yaml:"last_mutagen_data_dir,omitempty"`
 	LastStartedVersion               string                      `yaml:"last_started_version"`
 	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email"`
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`

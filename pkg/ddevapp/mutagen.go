@@ -106,17 +106,11 @@ func StopOldMutagenDaemons() {
 		util.Warning("Failed to download mutagen binary: %v", err)
 	}
 
-	// If there was a previous "LastMutagenDataDirectory" then we need to get it stopped as well
-	lastMutagenDataDirectory := globalconfig.DdevGlobalConfig.LastMutagenDataDirectory
-
 	userHome, _ := os.UserHomeDir()
 	possibleMutagenDataDirectories := []string{
 		filepath.Join(userHome, ".ddev_mutagen_data_directory"), // used through v1.23.1
 		filepath.Join(userHome, ".ddev", ".mdd"),                // default current
 		filepath.Join(userHome, ".config", "ddev", ".mdd"),
-	}
-	if lastMutagenDataDirectory != "" {
-		possibleMutagenDataDirectories = append(possibleMutagenDataDirectories, lastMutagenDataDirectory)
 	}
 	for _, d := range possibleMutagenDataDirectories {
 		if d != ourMutagenDataDirectory && fileutil.FileExists(d) {
