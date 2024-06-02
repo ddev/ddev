@@ -74,7 +74,9 @@ ddev start --all`,
 		// If the MUTAGEN_DATA_DIRECTORY has changed due to DDEV upgrade
 		// or due to XDG_CONFIG_HOME change, stop running daemons and remember the
 		// new LastMutagenDataDirectory
-		if globalconfig.DdevGlobalConfig.LastMutagenDataDirectory != globalconfig.GetMutagenDataDirectory() {
+		// These are unlikely to happen unless global performance_mode is set to mutagen, and that is
+		// unlikely to happen except on macOS and Windows
+		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.LastMutagenDataDirectory != globalconfig.GetMutagenDataDirectory() {
 			err := ddevapp.DownloadMutagenIfNeeded()
 			if err != nil {
 				util.Warning("Failed to download mutagen binary: %v", err)
