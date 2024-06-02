@@ -77,10 +77,6 @@ ddev start --all`,
 		// These are unlikely to happen unless global performance_mode is set to mutagen, and that is
 		// unlikely to happen except on macOS and Windows
 		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.LastMutagenDataDirectory != globalconfig.GetMutagenDataDirectory() {
-			err := ddevapp.DownloadMutagenIfNeeded()
-			if err != nil {
-				util.Warning("Failed to download mutagen binary: %v", err)
-			}
 			ddevapp.StopOldMutagenDaemons()
 			globalconfig.DdevGlobalConfig.LastMutagenDataDirectory = globalconfig.GetMutagenDataDirectory()
 			err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)

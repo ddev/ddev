@@ -96,18 +96,29 @@ func PauseMutagenSync(app *DdevApp) error {
 
 // StopOldMutagenDaemons attempts to stop any mutagen daemons
 // that may belong to other configured DDEV setups
-// especially from previous versions
+// especially from previous versions or other values of XDG_CONFIG_HOME
 func StopOldMutagenDaemons() {
 	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
 	util.Debug("Attempting to terminate any mutagen daemons from other versions of DDEV or other XDG_CONFIG_HOME. Current MUTAGEN_DATA_DIRECTORY=%s", ourMutagenDataDirectory)
 
+	err := DownloadMutagenIfNeeded()
+	if err != nil {
+		util.Warning("Failed to download mutagen binary: %v", err)
+	}
+
+	// If there was a previous "LastMutagenDataDirectory" then we need to get it stopped as well
+	lastMutagenDataDirectory := globalconfig.DdevGlobalConfig.LastMutagenDataDirectory
+
 	userHome, _ := os.UserHomeDir()
-	allKnownMutagenDataDirectories := []string{
-		filepath.Join(userHome, ".ddev_mutagen_data_directory"), // through v1.23.1
+	possibleMutagenDataDirectories := []string{
+		filepath.Join(userHome, ".ddev_mutagen_data_directory"), // used through v1.23.1
 		filepath.Join(userHome, ".ddev", ".mdd"),                // default current
 		filepath.Join(userHome, ".config", "ddev", ".mdd"),
 	}
-	for _, d := range allKnownMutagenDataDirectories {
+	if lastMutagenDataDirectory != "" {
+		possibleMutagenDataDirectories = append(possibleMutagenDataDirectories, lastMutagenDataDirectory)
+	}
+	for _, d := range possibleMutagenDataDirectories {
 		if d != ourMutagenDataDirectory && fileutil.FileExists(d) {
 			util.Debug("Stopping mutagen daemon for MUTAGEN_DATA_DIRECTORY='%s'", d)
 			StopMutagenDaemon(d)
