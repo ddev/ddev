@@ -392,3 +392,7 @@ The rules:
 9. Even though we call these “rules” above, they are guidelines. Since you’ve read all the rules, you now know that.
 
 If you are having trouble getting into the mood of idiomatic Go, we recommend reading through [Effective Go](https://golang.org/doc/effective_go.html). The [Go Blog](https://blog.golang.org) is also a great resource. Drinking the kool-aid is a lot easier than going thirsty.
+
+## Contributor Live Training
+
+We’re actively trying to increase the DDEV community of contributors and maintainers. To do that, we regularly do contributor training, and we’d love to have you come. The trainings are recorded for everybody’s benefit. The recordings and upcoming session dates can be found here: [DDEV Contributor Live Training](https://ddev.com/blog/contributor-training/).
