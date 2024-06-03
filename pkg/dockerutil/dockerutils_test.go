@@ -581,6 +581,11 @@ func TestCopyIntoVolume(t *testing.T) {
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
+	t.Cleanup(func() {
+		err = dockerutil.RemoveVolume(t.Name())
+		assert.NoError(err)
+	})
+
 	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
@@ -617,7 +622,6 @@ subdir1.txt
 	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	assert.NoError(err)
 	assert.Equal("root.txt here\n", out)
-
 }
 
 // TestDockerIP tries out a number of DOCKER_HOST permutations
