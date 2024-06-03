@@ -100,7 +100,7 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 ### Global Files
 
-There’s only one global `.ddev` directory, which normally lives in your home directory: `~/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `~/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it is used.
+There’s only one global `.ddev` directory, which normally lives in your home directory: `~/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `~/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it will be `$XDG_CONFIG_HOME/ddev`.
 
 !!!tip "Where is my global `.ddev` config?"
     Use `ddev version` (look at `global-ddev-dir`) to check which location is used for the `.ddev` global directory.
@@ -116,7 +116,7 @@ There’s only one global `.ddev` directory, which normally lives in your home d
     mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
-    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when `~/.config/ddev` exists and `~/.ddev` does not exist.  You can move the config with:
+    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when `~/.config/ddev` exists and `~/.ddev` does not exist.  You can move the config directory with:
 
     ```bash
     mv ~/.ddev ~/.config/ddev
