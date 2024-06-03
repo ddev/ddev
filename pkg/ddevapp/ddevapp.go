@@ -1423,7 +1423,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		dependers = append(dependers, "db")
 	}
-	output.UserOut.Printf("Waiting for web/db containers to become ready: %v", dependers)
+	output.UserOut.Printf("Waiting for containers to become ready: %v", dependers)
 	waitErr := app.Wait(dependers)
 
 	err = PopulateGlobalCustomCommandFiles()
