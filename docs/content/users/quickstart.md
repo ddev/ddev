@@ -661,8 +661,7 @@ The content management part of Sulu is built upon webspaces. Each webspace confi
 The information for the database connection is set in the environment variable `DATABASE:URL`. For development, clone the `.env` file by `cp .env .env.local` and change the environment variable to:
 
 ```bash
-DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0.32&charset=utf8mb4"
-```
+DATABASE_URL="mysql://db:db@db:3306/db?charset=utf8mb4"
 
 Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
 
