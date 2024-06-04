@@ -9,7 +9,6 @@ import (
 	osexec "os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -646,22 +645,8 @@ func MutagenReset(app *DdevApp) error {
 }
 
 // GetMutagenVolumeName returns the name for the Mutagen Docker volume
-// It's based on the app.Name, Docker host ID, and MUTAGEN_DATA_DIRECTORY
-// This should generate a unique volume name and prevent deleting a docker volume
-// which belongs to another docker host or MUTAGEN_DATA_DIRECTORY sync
 func GetMutagenVolumeName(app *DdevApp) string {
-	name := app.Name + "_" + "project_mutagen" + "_" + globalconfig.GetMutagenDataDirectory() + "_" + dockerutil.GetDockerHostID()
-	name = strings.ToLower(name)
-	re := regexp.MustCompile(`[^a-z0-9-_]`)
-	name = re.ReplaceAllString(name, "-")
-	// Docker volume name is probably 255, but not clearly documented
-	// We'll limit to 127. We probably won't hit that but if we do the
-	// Docker hostID will be the first thing truncated, and it's not likely
-	// part of the problem anyway.
-	if len(name) > 127 {
-		name = name[:127]
-	}
-	return name
+	return app.Name + "_" + "project_mutagen"
 }
 
 // MutagenMonitor shows the output of `mutagen sync monitor <syncName>`
