@@ -144,9 +144,6 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.gitignore`
 : Prevents files from getting checked in when they shouldn’t be.
 
-`.mdd`
-: Directory used for storing [Mutagen](../install/performance.md#mutagen) sync data.
-
 `.router-compose-full.yaml`
 : The complete, generated docker-compose directive used for DDEV’s router.
 
@@ -167,6 +164,9 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
+
+!!!tip "`.ddev_mutagen_data_directory`"
+    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 
