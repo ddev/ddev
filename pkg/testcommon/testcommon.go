@@ -259,17 +259,14 @@ func CopyGlobalDdevDir(t *testing.T) string {
 		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
 		require.NoError(t, err)
 	}
-	// Reset $MUTAGEN_DATA_DIRECTORY
-	_ = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
-	// globalconfig.GetMutagenDataDirectory gets new version of MUTAGEN_DATA_DIRECTORY
-	// when MUTAGEN_DATA_DIRECTORY is unset
-	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, globalconfig.GetMutagenDataDirectory())
+	// globalconfig.GetMutagenDataDirectory sets MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
 		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
 
 	return tmpXdgConfigHomeDir
@@ -291,16 +288,15 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	require.DirExists(t, originalGlobalDdevDir)
 	// refresh the global config from ~/.ddev
 	globalconfig.EnsureGlobalConfig()
-	// Reset $MUTAGEN_DATA_DIRECTORY
-	_ = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
-	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, globalconfig.GetMutagenDataDirectory())
+	// Set $MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
 
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
 		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
 }
 

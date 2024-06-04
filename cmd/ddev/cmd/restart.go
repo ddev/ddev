@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
-
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -38,11 +36,6 @@ ddev restart --all`,
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {
 			util.Failed(err.Error())
-		}
-
-		// Stop any running mutagen daemons we can find
-		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-			ddevapp.StopOldMutagenDaemons()
 		}
 
 		// Look for version change and opt-in to instrumentation if it has changed.

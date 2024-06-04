@@ -94,32 +94,6 @@ func PauseMutagenSync(app *DdevApp) error {
 	return nil
 }
 
-// StopOldMutagenDaemons attempts to stop any mutagen daemons
-// that may belong to other configured DDEV setups
-// especially from previous versions or other values of XDG_CONFIG_HOME
-func StopOldMutagenDaemons() {
-	ourMutagenDataDirectory := globalconfig.GetMutagenDataDirectory()
-	util.Debug("Attempting to terminate any mutagen daemons from other versions of DDEV or other XDG_CONFIG_HOME. Current MUTAGEN_DATA_DIRECTORY=%s", ourMutagenDataDirectory)
-
-	err := DownloadMutagenIfNeeded()
-	if err != nil {
-		util.Warning("Failed to download mutagen binary: %v", err)
-	}
-
-	userHome, _ := os.UserHomeDir()
-	possibleMutagenDataDirectories := []string{
-		filepath.Join(userHome, ".ddev_mutagen_data_directory"), // used through v1.23.1
-		filepath.Join(userHome, ".ddev", ".mdd"),                // default current
-		filepath.Join(userHome, ".config", "ddev", ".mdd"),
-	}
-	for _, d := range possibleMutagenDataDirectories {
-		if d != ourMutagenDataDirectory && fileutil.FileExists(d) {
-			util.Debug("Stopping mutagen daemon for MUTAGEN_DATA_DIRECTORY='%s'", d)
-			StopMutagenDaemon(d)
-		}
-	}
-}
-
 // SyncAndPauseMutagenSession syncs and pauses a Mutagen sync session
 func SyncAndPauseMutagenSession(app *DdevApp) error {
 	if !app.IsMutagenEnabled() {
@@ -214,7 +188,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		util.Verbose("Resume Mutagen sync if session already exists")
 		err := ResumeMutagenSync(app)
 		if err != nil {
-			return fmt.Errorf("unable to resume Mutagen sync: %v", err)
+			return fmt.Errorf("unable to ResumeMutagenSync(): %v", err)
 		}
 	} else {
 		vLabel, err := GetMutagenVolumeLabel(app)
@@ -563,9 +537,6 @@ func DownloadMutagen() error {
 		return err
 	}
 	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
-	// Now that we have a mutagen binary, we can stop any other
-	// sessions that we can find.
-	StopOldMutagenDaemons()
 	return err
 }
 

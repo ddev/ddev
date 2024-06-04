@@ -168,13 +168,13 @@ func checkMutagenSocketPathLength() {
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
 // As a side-effect, it sets MUTAGEN_DATA_DIRECTORY if it's not set
 func GetMutagenDataDirectory() string {
-	// Return GetGlobalDdevDir() + .mdd
-	// This is affected by changes to $XDG_CONFIG_HOME
-	// or anything that changes the global DDEV config directory
-	// This may be affected by tests that change $HOME and $XDG_CONFIG_HOME
-	newMutagenDataDirectory := filepath.Join(GetGlobalDdevDir(), ".mdd")
-	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, newMutagenDataDirectory)
-	return newMutagenDataDirectory
+	home, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+	}
+	mutagenDataDirectory := filepath.Join(home, ".ddev_mutagen_data_directory")
+	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, mutagenDataDirectory)
+	return mutagenDataDirectory
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
@@ -596,7 +596,7 @@ func GetGlobalDdevDir() string {
 func GetGlobalDdevDirLocation() string {
 	userHome, err := os.UserHomeDir()
 	if err != nil {
-		logrus.Fatal("Could not get home directory for current user. Is it set?")
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
 	}
 	userHomeDotDdev := filepath.Join(userHome, ".ddev")
 

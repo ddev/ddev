@@ -71,11 +71,6 @@ ddev start --all`,
 			util.Failed(err.Error())
 		}
 
-		// Stop any running mutagen daemons we can find
-		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-			ddevapp.StopOldMutagenDaemons()
-		}
-
 		// Look for version change and opt-in to instrumentation if it has changed.
 		err = checkDdevVersionAndOptInInstrumentation(skip)
 		if err != nil {
