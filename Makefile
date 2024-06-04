@@ -96,9 +96,9 @@ mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTM
 # Download mkcert to it can be added to tarball installations
 $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" MKCERT_VERSION=v1.4.4 && \
 	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
-	curl --fail -JL -s -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://dl.filippo.io/mkcert/latest?for=$${GOOS}/$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
+	curl --fail -JL -s -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
