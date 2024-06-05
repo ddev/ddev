@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -69,7 +68,7 @@ var AuthSSHCommand = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
-		sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
+		sshKeyPath = nodeps.WindowsPathToCygwinPath(sshKeyPath)
 
 		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint=", "--mount=type=bind,src=" + sshKeyPath + ",dst=/tmp/sshtmp", versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && ssh-add $(file * | awk -F: "/private key/ { print \$1 }")`}
 

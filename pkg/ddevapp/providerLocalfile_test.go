@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -61,8 +60,8 @@ func TestLocalfilePull(t *testing.T) {
 	// Build our localfile.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/localfile.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "~/Dropbox", path.Join(dockerutil.MassageWindowsHostMountpoint(origDir), "testdata", t.Name()), -1)
-	appRoot := dockerutil.MassageWindowsHostMountpoint(app.AppRoot)
+	x := strings.Replace(string(s), "~/Dropbox", path.Join(nodeps.WindowsPathToCygwinPath(origDir), "testdata", t.Name()), -1)
+	appRoot := nodeps.WindowsPathToCygwinPath(app.AppRoot)
 	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = os.WriteFile(app.GetConfigPath("providers/localfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)
