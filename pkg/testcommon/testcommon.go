@@ -236,8 +236,8 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	require.DirExists(t, originalGlobalDdevDir)
 	originalGlobalConfig := globalconfig.DdevGlobalConfig
 	// Stop the Mutagen daemon running in the ~/.ddev
-	ddevapp.StopMutagenDaemon()
-	t.Log(fmt.Sprintf("stop mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+	ddevapp.StopMutagenDaemon("")
+	t.Log(fmt.Sprintf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
@@ -259,15 +259,14 @@ func CopyGlobalDdevDir(t *testing.T) string {
 		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
 		require.NoError(t, err)
 	}
-	// Reset $MUTAGEN_DATA_DIRECTORY
-	err = os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
-	require.NoError(t, err)
+	// globalconfig.GetMutagenDataDirectory sets MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
-		t.Log(fmt.Sprintf("start mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
 
 	return tmpXdgConfigHomeDir
@@ -276,8 +275,8 @@ func CopyGlobalDdevDir(t *testing.T) string {
 // ResetGlobalDdevDir removes temporary $XDG_CONFIG_HOME directory
 func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
-	ddevapp.StopMutagenDaemon()
-	t.Logf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
+	ddevapp.StopMutagenDaemon("")
+	t.Log(fmt.Sprintf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
 	t.Setenv("XDG_CONFIG_HOME", "")
@@ -289,15 +288,15 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	require.DirExists(t, originalGlobalDdevDir)
 	// refresh the global config from ~/.ddev
 	globalconfig.EnsureGlobalConfig()
-	// Reset $MUTAGEN_DATA_DIRECTORY
-	err := os.Unsetenv("MUTAGEN_DATA_DIRECTORY")
-	require.NoError(t, err)
+	// Set $MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
+
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
-		t.Log(fmt.Sprintf("started mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
-		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), filepath.Join(globalconfig.GetGlobalDdevDir(), ".mdd"))
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
 }
 
@@ -528,7 +527,7 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 	// regex to find "goroutines=4 at exit of main()"
 	re := regexp.MustCompile(`goroutines=(\d+) at exit of main\(\)`)
 	matches := re.FindAllStringSubmatch(out, -1)
-	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=")
+	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=<value>, DDEV_GOROUTINES=%s actual output='%s'", os.Getenv(`DDEV_GOROUTINES`), out)
 	num, err := strconv.Atoi(matches[0][1])
 	require.NoError(t, err, "can't convert %s to number: %v", matches[0][1])
 	require.LessOrEqual(t, num, goroutineLimit, "number of goroutines=%v, higher than limit=%d", num, goroutineLimit)

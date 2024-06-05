@@ -14,7 +14,8 @@ import (
 func init() {
 	globalconfig.EnsureGlobalConfig()
 	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
-	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
+	// GetMutagenDataDirectory() sets MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
 	// GetDockerClient should be called early to get DOCKER_HOST set
 	_, _ = dockerutil.GetDockerClient()
 }

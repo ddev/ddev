@@ -114,7 +114,7 @@ func TestMutagenSimple(t *testing.T) {
 	assert.Equal("paused", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
 	// Make sure we can stop the daemon
-	ddevapp.StopMutagenDaemon()
+	ddevapp.StopMutagenDaemon("")
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
 		// Verify that the Mutagen daemon stopped/died
 		sleepWait := time.Second * 1

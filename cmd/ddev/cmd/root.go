@@ -165,6 +165,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}
 	}
+
 	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 
 		// If they have a new version (but not first-timer) then prompt to poweroff

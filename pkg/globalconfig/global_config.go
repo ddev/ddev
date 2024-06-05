@@ -130,10 +130,6 @@ func GetDDEVBinDir() string {
 
 // GetMutagenPath gets the full path to the Mutagen binary
 func GetMutagenPath() string {
-	// Set MUTAGEN_DATA_DIRECTORY if it is unset
-	if os.Getenv("MUTAGEN_DATA_DIRECTORY") == "" {
-		_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", GetMutagenDataDirectory())
-	}
 	// Check socket path length on first call to Mutagen
 	checkMutagenSocketPathLength()
 	mutagenBinary := "mutagen"
@@ -157,7 +153,7 @@ func checkMutagenSocketPathLength() {
 		checkedMutagenSocketPathLength = true
 		return
 	}
-	socketPathLength := len(filepath.Join(os.Getenv("MUTAGEN_DATA_DIRECTORY"), "daemon", "daemon.sock"))
+	socketPathLength := len(filepath.Join(GetMutagenDataDirectory(), "daemon", "daemon.sock"))
 	// Limit from https://unix.stackexchange.com/a/367012
 	limit := 104
 	if runtime.GOOS == "linux" {
@@ -170,14 +166,15 @@ func checkMutagenSocketPathLength() {
 }
 
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
+// As a side-effect, it sets MUTAGEN_DATA_DIRECTORY if it's not set
 func GetMutagenDataDirectory() string {
-	currentMutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
-	if currentMutagenDataDirectory != "" {
-		return currentMutagenDataDirectory
+	home, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
 	}
-	// If it's not already set, return ~/.ddev.mdd
-	// This may be affected by tests that change $HOME and $XDG_CONFIG_HOME
-	return filepath.Join(GetGlobalDdevDir(), ".mdd")
+	mutagenDataDirectory := filepath.Join(home, ".ddev_mutagen_data_directory")
+	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, mutagenDataDirectory)
+	return mutagenDataDirectory
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
@@ -567,7 +564,7 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns the global caching directory, and creates it as needed.
+// GetGlobalDdevDir returns the DDEV global config directory, and creates it as needed.
 func GetGlobalDdevDir() string {
 	ddevDir := GetGlobalDdevDirLocation()
 	// Create the directory if it is not already present.
@@ -597,15 +594,28 @@ func GetGlobalDdevDir() string {
 // ~/.config/ddev if this directory exists on Linux/WSL2 only,
 // ~/.ddev otherwise.
 func GetGlobalDdevDirLocation() string {
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+	}
+	userHomeDotDdev := filepath.Join(userHome, ".ddev")
+
 	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
 	// we create this directory.
 	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
+	// Handle ~/xxx without failure; MUTAGEN_DATA_DIRECTORY, for example, can't have it.
+	if strings.HasPrefix(xdgConfigHomeDir, `~`) {
+		xdgConfigHomeDir = userHome + xdgConfigHomeDir[1:]
+	}
 	if xdgConfigHomeDir != "" {
 		return filepath.Join(xdgConfigHomeDir, "ddev")
 	}
-	// If Linux and ~/.config/ddev exists, use it,
+	// If Linux and ~/.ddev doesn't exist and
+	// ~/.config/ddev exists, use it,
 	// we don't create this directory.
-	if runtime.GOOS == "linux" {
+	stat, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
+	userHomeDotDdevIsDir := userHomeDotDdevErr == nil && stat.IsDir()
+	if runtime.GOOS == "linux" && !userHomeDotDdevIsDir {
 		userConfigDir, err := os.UserConfigDir()
 		if err == nil {
 			linuxDir := filepath.Join(userConfigDir, "ddev")
@@ -616,11 +626,8 @@ func GetGlobalDdevDirLocation() string {
 	}
 	// Otherwise, use ~/.ddev
 	// It will be created if it doesn't exist.
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		logrus.Fatal("Could not get home directory for current user. Is it set?")
-	}
-	return filepath.Join(userHome, ".ddev")
+
+	return userHomeDotDdev
 }
 
 // IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid

@@ -481,7 +481,7 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 		_ = f.Close()
 	}()
 
-	util.Success("Downloading %s", url)
+	util.Debug("Downloading %s to %s", url, f.Name())
 	tarball := f.Name()
 	defer func() {
 		_ = os.Remove(tarball)

@@ -86,7 +86,7 @@ func TestProcessHooks(t *testing.T) {
 
 		out := captureOutputFunc()
 		userOut := userOutFunc()
-		assert.Contains(out, task.stdoutExpect, "task: %v", task.task)
+		require.Contains(t, out, task.stdoutExpect, "task: %v", task.task)
 		assert.Contains(userOut, task.fulloutputExpect, "task: %v", task.task)
 		assert.NotContains(userOut, "Task failed")
 	}

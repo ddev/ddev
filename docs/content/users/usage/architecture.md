@@ -100,10 +100,10 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 ### Global Files
 
-There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
+There’s only one global `.ddev` directory, which normally lives in your home directory: `~/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `~/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it will be `$XDG_CONFIG_HOME/ddev`.
 
 !!!tip "Where is my global `.ddev` config?"
-    Use `ddev version` (look at `global-ddev-dir`) to check which location is currently used for the `.ddev` global directory.
+    Use `ddev version` (look at `global-ddev-dir`) to check which location is used for the `.ddev` global directory.
 
 !!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
     DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
@@ -116,13 +116,11 @@ There’s only one global `.ddev` directory, which lives in your home directory:
     mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
-    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when you move the config:
+    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when `~/.config/ddev` exists and `~/.ddev` does not exist.  You can move the config directory with:
 
     ```bash
     mv ~/.ddev ~/.config/ddev
     ```
-
-    Note that the custom global config directory `ddev` (if it exists) takes precedence over the `~/.ddev` directory.
 
 `global_config.yaml`
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md).
@@ -146,9 +144,6 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.gitignore`
 : Prevents files from getting checked in when they shouldn’t be.
 
-`.mdd`
-: Directory used for storing [Mutagen](../install/performance.md#mutagen) sync data.
-
 `.router-compose-full.yaml`
 : The complete, generated docker-compose directive used for DDEV’s router.
 
@@ -169,6 +164,9 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
+
+!!!tip "`.ddev_mutagen_data_directory`"
+    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 

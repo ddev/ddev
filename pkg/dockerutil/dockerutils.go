@@ -1543,7 +1543,7 @@ func DownloadDockerCompose() error {
 	if err != nil {
 		return err
 	}
-	output.UserOut.Printf("Downloading %s ...", composeURL)
+	util.Debug("Downloading '%s' to '%s' ...", composeURL, destFile)
 
 	_ = os.Remove(destFile)
 

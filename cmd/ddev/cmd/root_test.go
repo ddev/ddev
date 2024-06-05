@@ -295,17 +295,22 @@ func TestCopyGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestGetGlobalDdevDirLocation checks to make sure that DDEV will use the correct location for its global config.
+// TestGetGlobalDdevDirLocation checks to make sure that DDEV will use the
+// correct location for its global config. The correct location is:
+// ${XDG_CONFIG_HOME}/ddev if XDG_CONFIG_HOME is set or
+// ~/.ddev if it exists or
+// ~/.config/ddev if it exists
 func TestGetGlobalDdevDirLocation(t *testing.T) {
 	// Test when $XDG_CONFIG_HOME is not set
 	t.Setenv("XDG_CONFIG_HOME", "")
 	ddevDir := globalconfig.GetGlobalDdevDirLocation()
 	// Original ~/.ddev dir location
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
-	// If this test runs on Linux machine, where ~/.config/ddev is used by default:
-	if runtime.GOOS == "linux" {
+	// If test runs on Linux machine, where ~/.config/ddev is used
+	// if ~/.ddev does not exist:
+	if runtime.GOOS == "linux" && !fileutil.IsDirectory(originalGlobalDdevDir) {
 		linuxDdevDir := filepath.Join(homedir.Get(), ".config", "ddev")
-		if _, err := os.Stat(linuxDdevDir); err == nil {
+		if fileutil.IsDirectory(linuxDdevDir) {
 			originalGlobalDdevDir = linuxDdevDir
 		}
 	}
