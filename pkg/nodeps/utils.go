@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -152,16 +151,4 @@ func PathWithSlashesToArray(path string) []string {
 		partial += "/"
 	}
 	return paths
-}
-
-// WindowsPathToCygwinPath changes C:/path/to/something to //c/path/to/something
-// This is required for Docker bind mounts on Docker toolbox.
-// Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
-func WindowsPathToCygwinPath(windowsPath string) string {
-	windowsPath = filepath.ToSlash(windowsPath)
-	if string(windowsPath[1]) == ":" {
-		drive := strings.ToLower(string(windowsPath[0]))
-		windowsPath = "/" + drive + windowsPath[2:]
-	}
-	return windowsPath
 }

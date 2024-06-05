@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"io"
 	"os"
 	"path"
@@ -31,7 +30,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
-		p := nodeps.WindowsPathToCygwinPath(tmpDir)
+		p := util.WindowsPathToCygwinPath(tmpDir)
 		c := []string{"-c", path.Join(p, "test_ddev.sh") + " " + outputFilename}
 		util.Success("Running %s %v", bashPath, c)
 

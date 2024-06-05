@@ -2,7 +2,6 @@ package fileutil_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -49,7 +48,7 @@ func TestFileHash(t *testing.T) {
 			// we can use the externalComputeSha1Sum successfully
 			canonicalFileName := testFile
 			if runtime.GOOS == "windows" {
-				canonicalFileName = nodeps.WindowsPathToCygwinPath(testFile)
+				canonicalFileName = util.WindowsPathToCygwinPath(testFile)
 			}
 			f, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			require.NoError(t, err)
@@ -74,7 +73,7 @@ func externalComputeSha1Sum(filePath string) (string, error) {
 	// Use a canonical filename in unix-style format so that we don't
 	// get caught by differences in filename format on Windows.
 	if runtime.GOOS == "windows" {
-		filePath = nodeps.WindowsPathToCygwinPath(filePath)
+		filePath = util.WindowsPathToCygwinPath(filePath)
 	}
 	dir := path.Dir(filePath)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", filePath}, nil, nil, []string{dir + ":" + dir}, "0", true, false, nil, nil, nil)

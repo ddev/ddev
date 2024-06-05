@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
@@ -60,8 +61,8 @@ func TestLocalfilePull(t *testing.T) {
 	// Build our localfile.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/localfile.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "~/Dropbox", path.Join(nodeps.WindowsPathToCygwinPath(origDir), "testdata", t.Name()), -1)
-	appRoot := nodeps.WindowsPathToCygwinPath(app.AppRoot)
+	x := strings.Replace(string(s), "~/Dropbox", path.Join(util.WindowsPathToCygwinPath(origDir), "testdata", t.Name()), -1)
+	appRoot := util.WindowsPathToCygwinPath(app.AppRoot)
 	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = os.WriteFile(app.GetConfigPath("providers/localfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)

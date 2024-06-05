@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -89,7 +88,7 @@ func TestSSHAuth(t *testing.T) {
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
 	uidStr, _, username := util.GetContainerUIDGid()
 	sshKeyPath := app.GetConfigPath(".ssh")
-	sshKeyPath = nodeps.WindowsPathToCygwinPath(sshKeyPath)
+	sshKeyPath = util.WindowsPathToCygwinPath(sshKeyPath)
 
 	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "//test.expect.passphrase"})
 	require.NoError(t, err)

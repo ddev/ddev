@@ -3,7 +3,6 @@ package fileutil
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"io"
 	"os"
 	"runtime"
@@ -38,7 +37,7 @@ func FileHash(filePath string, optionalExtraString string) (string, error) {
 	// Use a canonical filename in unix-style format so that we don't
 	// get caught by differences in filename format on Windows.
 	if runtime.GOOS == "windows" {
-		canonicalFileName = nodeps.WindowsPathToCygwinPath(canonicalFileName)
+		canonicalFileName = util.WindowsPathToCygwinPath(canonicalFileName)
 	}
 	if _, err := hash.Write([]byte(canonicalFileName)); err != nil {
 		return "", err
