@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -65,6 +67,14 @@ func TestFileHash(t *testing.T) {
 // externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
 func externalComputeSha1Sum(filePath string) (string, error) {
 	filePath = filepath.ToSlash(filePath)
+	// Convert Windows path to POSIX path
+	if runtime.GOOS == "windows" {
+		out, err := exec.RunCommand("cygpath", []string{"-u", filePath})
+		if err != nil {
+			return "", err
+		}
+		filePath = out
+	}
 	dir := filepath.Dir(filePath)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", filePath}, nil, nil, []string{dir + ":" + dir}, "0", true, false, nil, nil, nil)
 
