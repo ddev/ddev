@@ -164,6 +164,12 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			util.Failed("failed to create project: %v", err)
 		}
 
+		// Make sure composer.json is here with Mutagen enabled
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			util.Failed("Failed to flush Mutagen: %v", err)
+		}
+
 		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
 
 		if !preserveFlags && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
