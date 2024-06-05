@@ -3,9 +3,11 @@ package fileutil
 import (
 	"crypto/sha1"
 	"fmt"
-	"github.com/ddev/ddev/pkg/util"
 	"io"
 	"os"
+	"path/filepath"
+
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // FileHash returns string of hash of filePath passed in
@@ -29,7 +31,7 @@ func FileHash(filePath string, optionalExtraString string) (string, error) {
 	// Include file location in the hash, if in a different
 	// place it should not hash the same
 	// file.Name() is the full path of the file
-	if _, err := hash.Write([]byte(file.Name())); err != nil {
+	if _, err := hash.Write([]byte(filepath.ToSlash(file.Name()))); err != nil {
 		return "", err
 	}
 

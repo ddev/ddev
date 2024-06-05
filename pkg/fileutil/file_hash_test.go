@@ -2,16 +2,17 @@ package fileutil_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 // TestFileHash is a unit test for FileHash()
@@ -63,6 +64,7 @@ func TestFileHash(t *testing.T) {
 
 // externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
 func externalComputeSha1Sum(filePath string) (string, error) {
+	filePath = filepath.ToSlash(filePath)
 	dir := filepath.Dir(filePath)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", filePath}, nil, nil, []string{dir + ":" + dir}, "0", true, false, nil, nil, nil)
 
