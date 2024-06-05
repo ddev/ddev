@@ -5,6 +5,10 @@
 
 ## The Issue
 
+- #<issue number>
+
+<!-- Provide a brief description of the issue. -->
+
 ## How This PR Solves The Issue
 
 ## Manual Testing Instructions
@@ -13,9 +17,6 @@
 
 <!-- Please describe the tests introduced by this PR, or explain why no tests are needed. -->
 
-## Related Issue Link(s)
-
 ## Release/Deployment Notes
 
 <!-- Does this affect anything else or have ramifications for other code? Does anything have to be done on deployment? -->
-
