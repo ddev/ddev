@@ -662,6 +662,7 @@ The information for the database connection is set in the environment variable `
 
 ```bash
 DATABASE_URL="mysql://db:db@db:3306/db?charset=utf8mb4"
+```
 
 Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
 
