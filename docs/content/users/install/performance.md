@@ -154,7 +154,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen` (or `$XDG_CONFIG_BASE/ddev/bin/mutagen`. You can use all the features of Mutagen with `ddev debug mutagen`. For example:
 
         ```bash
-        debug mutagen sync list --template "{{ json (index . 0) }}" | jq -r
+        ddev debug mutagen sync list --template "{{ json (index . 0) }}" | docker run -i --rm ddev/ddev-utilities jq -r
         ddev debug mutagen sync monitor <projectname> -l
         ```
     * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
