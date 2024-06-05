@@ -632,12 +632,12 @@ ddev composer create sulu/skeleton
 
     ```bash
     sulu_core:
-    locales:
-        en: English
-        fr: Francais
-    translations:
-        - en
-        - fr
+        locales:
+            en: English
+            fr: Francais
+        translations:
+            - en
+            - fr
     ```
 
     `ddev exec bin/console sulu:admin:download-language` downloads any set language. The only exceptions are English and German which are shipping with Sulu.
