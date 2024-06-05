@@ -2,14 +2,15 @@ package fileutil_test
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -46,9 +47,13 @@ func TestFileHash(t *testing.T) {
 
 			// But we have to add the filepath to the testFile before
 			// we can use the externalComputeSha1Sum successfully
+			canonicalFileName := testFile
+			if runtime.GOOS == "windows" {
+				canonicalFileName = nodeps.WindowsPathToCygwinPath(testFile)
+			}
 			f, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			require.NoError(t, err)
-			_, err = f.WriteString(testFile)
+			_, err = f.WriteString(canonicalFileName)
 			require.NoError(t, err)
 			if tc.optionalExtra != "" {
 				_, err = f.WriteString(tc.optionalExtra)
@@ -66,16 +71,12 @@ func TestFileHash(t *testing.T) {
 
 // externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
 func externalComputeSha1Sum(filePath string) (string, error) {
-	filePath = filepath.ToSlash(filePath)
-	// Convert Windows path to POSIX path
+	// Use a canonical filename in unix-style format so that we don't
+	// get caught by differences in filename format on Windows.
 	if runtime.GOOS == "windows" {
-		out, err := exec.RunCommand("cygpath", []string{"-u", filePath})
-		if err != nil {
-			return "", err
-		}
-		filePath = out
+		filePath = nodeps.WindowsPathToCygwinPath(filePath)
 	}
-	dir := filepath.Dir(filePath)
+	dir := path.Dir(filePath)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", filePath}, nil, nil, []string{dir + ":" + dir}, "0", true, false, nil, nil, nil)
 
 	if err != nil {
