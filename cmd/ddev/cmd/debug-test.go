@@ -7,7 +7,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -31,7 +30,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
-		p := dockerutil.MassageWindowsHostMountpoint(tmpDir)
+		p := util.WindowsPathToCygwinPath(tmpDir)
 		c := []string{"-c", path.Join(p, "test_ddev.sh") + " " + outputFilename}
 		util.Success("Running %s %v", bashPath, c)
 

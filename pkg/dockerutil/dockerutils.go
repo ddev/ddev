@@ -1116,18 +1116,6 @@ func GetExposedContainerPorts(containerID string) ([]string, error) {
 	return ports, nil
 }
 
-// MassageWindowsHostMountpoint changes C:/path/to/something to //c/path/to/something
-// This is required for Docker bind mounts on Docker toolbox.
-// Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
-func MassageWindowsHostMountpoint(mountPoint string) string {
-	if string(mountPoint[1]) == ":" {
-		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
-		drive := strings.ToLower(string(mountPoint[0]))
-		mountPoint = "/" + drive + pathPortion
-	}
-	return mountPoint
-}
-
 // MassageWindowsNFSMount changes C:\Path\to\something to /c/Path/to/something
 func MassageWindowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {

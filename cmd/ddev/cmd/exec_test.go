@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
@@ -107,7 +106,7 @@ func TestCmdExec(t *testing.T) {
 	bashPath := util.FindBashPath()
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
 	filename := t.Name() + "_junk.txt"
-	ddevBinForBash := dockerutil.MassageWindowsHostMountpoint(DdevBin)
+	ddevBinForBash := util.WindowsPathToCygwinPath(DdevBin)
 	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`printf "This file was piped into ddev exec" | %s exec "cat >/var/www/html/%s"`, ddevBinForBash, filename))
 	assert.NoError(err)
 	err = app.MutagenSyncFlush()
@@ -124,7 +123,7 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	defer os.Remove(f.Name()) // nolint: errcheck
 
-	bashTempName := dockerutil.MassageWindowsHostMountpoint(f.Name())
+	bashTempName := util.WindowsPathToCygwinPath(f.Name())
 	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", ddevBinForBash, bashTempName))
 
 	out, err = fileutil.ReadFileIntoString(f.Name())
