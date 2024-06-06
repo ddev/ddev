@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -26,7 +26,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		outputFilename := filepath.Join(tmpDir, "ddev-debug-test.txt")
 		outputFilename = filepath.ToSlash(outputFilename)
 		bashPath := util.FindBashPath()
-		err := fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir)
+		err := fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir, nil)
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}

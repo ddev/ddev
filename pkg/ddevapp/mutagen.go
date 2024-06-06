@@ -536,7 +536,7 @@ func DownloadMutagen() error {
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
+	err = util.Chmod(globalconfig.GetMutagenPath(), 0755)
 	return err
 }
 

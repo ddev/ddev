@@ -1545,7 +1545,7 @@ func DownloadDockerCompose() error {
 	// Remove the cached DockerComposeVersion
 	globalconfig.DockerComposeVersion = ""
 
-	err = os.Chmod(destFile, 0755)
+	err = util.Chmod(destFile, 0755)
 	if err != nil {
 		return err
 	}

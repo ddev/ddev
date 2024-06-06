@@ -28,7 +28,7 @@ func craftCmsImportFilesAction(app *DdevApp, uploadDir, importPath, extPath stri
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

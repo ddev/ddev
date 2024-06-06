@@ -563,7 +563,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(dbPath, 0777)
+	err = util.Chmod(dbPath, 0777)
 	if err != nil {
 		return err
 	}
@@ -1287,7 +1287,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 	// db_snapshots gets mounted into container, may have different user/group, so need 777
-	err = os.Chmod(app.GetConfigPath("db_snapshots"), 0777)
+	err = util.Chmod(app.GetConfigPath("db_snapshots"), 0777)
 	if err != nil {
 		return err
 	}
@@ -1700,7 +1700,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		}
 
 		if fileutil.FileExists(configPath) {
-			err = os.Chmod(configPath, 0666)
+			err = util.Chmod(configPath, 0666)
 			if err != nil {
 				return err
 			}
@@ -1722,7 +1722,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		if err != nil {
 			return err
 		}
-		err = os.Chmod(configPath, 0666)
+		err = util.Chmod(configPath, 0666)
 		if err != nil {
 			return err
 		}
@@ -3013,7 +3013,7 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

@@ -2,10 +2,12 @@ package ddevapp
 
 import (
 	"embed"
-	"github.com/ddev/ddev/pkg/globalconfig"
+	"fmt"
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // The bundled assets for the project .ddev directory are in directory dotddev_assets
@@ -36,8 +38,9 @@ var bundledAssets embed.FS
 // directory's assets (if it's a project) and then later (when called with appName) update
 // the actual project's assets.
 func PopulateExamplesCommandsHomeadditions(appName string) error {
+	defer util.TimeTrackC(fmt.Sprintf("CopyEmbedAssets in PopulateExamplesCommandsHomeadditions(%s)", appName))()
 
-	err := fileutil.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
+	err := fileutil.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir(), nil)
 	if err != nil {
 		return err
 	}
@@ -49,7 +52,7 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 		return nil
 	}
 
-	err = fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
+	err = fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""), GetInstalledAddonProjectFiles(app))
 	if err != nil {
 		return err
 	}

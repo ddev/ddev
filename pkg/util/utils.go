@@ -372,3 +372,19 @@ func WindowsPathToCygwinPath(windowsPath string) string {
 	}
 	return windowsPath
 }
+
+// Chmod changes the file permissions of the named path,
+// if the path already has the necessary permissions, do nothing.
+// This is needed so that Mutagen doesn't track this change,
+// don't use os.Chmod in the DDEV code, use util.Chmod instead.
+func Chmod(path string, mode os.FileMode) error {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	// If the mode is the same, do nothing
+	if fileInfo.Mode().Perm() == mode {
+		return nil
+	}
+	return os.Chmod(path, mode)
+}

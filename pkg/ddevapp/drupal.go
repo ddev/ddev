@@ -118,7 +118,7 @@ func writeDrupalSettingsPHP(filePath string, appType string) error {
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -183,7 +183,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -237,7 +237,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err := util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -493,7 +493,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 			continue
 		}
 
-		if err := os.Chmod(o, stat.Mode()|writePerms); err != nil {
+		if err := util.Chmod(o, stat.Mode()|writePerms); err != nil {
 			// Warn the user, but continue.
 			util.Warning("Unable to set permissions: %v", err)
 		}
@@ -569,7 +569,7 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 	}
 
 	// Parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 
