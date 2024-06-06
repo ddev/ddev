@@ -9,7 +9,7 @@
 
 # split the loop output below by newlines
 IFS=$'\n'
-for ddev_path in $(which -a ddev); do
+for ddev_path in $(which -a ddev | uniq); do
   case $ddev_path in
     "/usr/bin/ddev")
       if [[ ${OSTYPE} = "linux-gnu"* ]]; then
