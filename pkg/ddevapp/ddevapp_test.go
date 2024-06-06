@@ -3219,9 +3219,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	}
 
 	app, err = ddevapp.GetActiveApp(site.Name)
-	if err != nil {
-		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
-	}
+	require.NoError(t, err, "Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	startErr = app.StartAndWait(5)
 	//nolint: errcheck
 	defer app.Stop(true, false)
