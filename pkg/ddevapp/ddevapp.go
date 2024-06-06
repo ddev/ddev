@@ -2845,6 +2845,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 // To use the current working directory, siteName should be ""
 func GetActiveApp(siteName string) (*DdevApp, error) {
 	app := &DdevApp{}
+	siteName = NormalizeProjectName(siteName)
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
@@ -2868,6 +2869,11 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	}
 
 	return app, nil
+}
+
+// Lowercase and replace underscores in the site name with hyphens.
+func NormalizeProjectName(siteName string) string {
+	return strings.ToLower(strings.ReplaceAll(siteName, "_", "-"))
 }
 
 // restoreApp recreates an AppConfig's Name and returns an error

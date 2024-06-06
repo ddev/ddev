@@ -381,7 +381,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	} else { // No siteNameArg passed, c.Name not set: use c.Name from the directory
 		pwd, err := os.Getwd()
 		util.CheckErr(err)
-		app.Name = filepath.Base(pwd)
+		app.Name = ddevapp.NormalizeProjectName(filepath.Base(pwd))
 	}
 
 	err = app.CheckExistingAppInApproot()

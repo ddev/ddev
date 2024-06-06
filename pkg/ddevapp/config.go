@@ -102,7 +102,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 
 	// Provide a default app name based on directory name
-	app.Name = filepath.Base(app.AppRoot)
+	app.Name = NormalizeProjectName(filepath.Base(app.AppRoot))
 
 	// Gather containers to omit, adding ddev-router for gitpod/codespaces
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
@@ -1284,8 +1284,8 @@ func (app *DdevApp) promptForName() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
 		// If working directory name is invalid for hostnames, we shouldn't suggest it
-		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
-			app.Name = filepath.Base(dir)
+		if err == nil && hostRegex.MatchString(NormalizeProjectName(filepath.Base(dir))) {
+			app.Name = NormalizeProjectName(filepath.Base(dir))
 		}
 	}
 
