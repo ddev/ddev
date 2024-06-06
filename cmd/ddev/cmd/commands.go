@@ -120,7 +120,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// Any command we find will want to be executable on Linux
 		// Note that this only affects host commands and project-level commands.
 		// Global container commands are made executable on `ddev start` instead.
-		_ = os.Chmod(onHostFullPath, 0755)
+		_ = util.Chmod(onHostFullPath, 0755)
 		if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
 			util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 			continue
@@ -269,7 +269,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
-				_ = os.Chmod(autocompletePathOnHost, 0755)
+				_ = util.Chmod(autocompletePathOnHost, 0755)
 				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
 					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 					continue
@@ -288,7 +288,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
-				_ = os.Chmod(autocompletePathOnHost, 0755)
+				_ = util.Chmod(autocompletePathOnHost, 0755)
 				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
 					util.Warning("Autocomplete script for command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, autocompletePathOnHost)
 					continue

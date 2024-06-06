@@ -54,7 +54,7 @@ func CopyFile(src string, dst string) error {
 			return err
 		}
 
-		err = os.Chmod(dst, si.Mode())
+		err = util.Chmod(dst, si.Mode())
 		if err != nil {
 			return fmt.Errorf("failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
 		}
@@ -160,7 +160,7 @@ func PurgeDirectory(path string) error {
 	}
 
 	for _, file := range files {
-		err = os.Chmod(filepath.Join(path, file), 0777)
+		err = util.Chmod(filepath.Join(path, file), 0777)
 		if err != nil {
 			return err
 		}
