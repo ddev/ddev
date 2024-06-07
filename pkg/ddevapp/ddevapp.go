@@ -2903,6 +2903,22 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
+// GetHostWorkingDir will determine the appropriate working directory for the service on the host side
+func (app *DdevApp) GetHostWorkingDir(service string, dir string) string {
+	// We have a corresponding host working_dir for the "web" service only
+	if service != "web" {
+		return ""
+	}
+	if dir == "" && app.WorkingDir != nil {
+		dir = app.WorkingDir[service]
+	}
+	containerWorkingDirPrefix := strings.TrimSuffix(app.GetAbsAppRoot(true), "/") + "/"
+	if !strings.HasPrefix(dir, containerWorkingDirPrefix) {
+		return ""
+	}
+	return filepath.Join(app.GetAbsAppRoot(false), strings.TrimPrefix(dir, containerWorkingDirPrefix))
+}
+
 // GetNFSMountVolumeName returns the Docker volume name of the nfs mount volume
 func (app *DdevApp) GetNFSMountVolumeName() string {
 	// This is lowercased because the automatic naming in docker-compose v1/2
