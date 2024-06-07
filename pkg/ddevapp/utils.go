@@ -522,27 +522,6 @@ func (app *DdevApp) CanUseHTTPOnly() bool {
 	return false
 }
 
-// CreateWebWorkingDir creates a web working_dir if it does not exist on the host side.
-// If the app has a custom working_dir for the web service, like `/var/www/html/some/deep/dir`,
-// where `/var/www/html/` path corresponds to the project root,
-// and `some/deep/dir` does not exist on the host side, we should create it.
-// Otherwise, Docker will create it as root user (when Mutagen is disabled).
-// This problem (particularly for Docker volumes) is described in
-// https://github.com/moby/moby/issues/2259
-func (app *DdevApp) CreateWebWorkingDir() {
-	if app.WorkingDir != nil {
-		if workingDir := app.WorkingDir["web"]; workingDir != "" {
-			workingDirPrefix := app.DefaultWorkingDirMap()["web"]
-			if strings.HasPrefix(workingDir, workingDirPrefix) {
-				fullPath := filepath.Join(app.AppRoot, strings.TrimPrefix(workingDir, workingDirPrefix))
-				if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-					_ = os.MkdirAll(fullPath, 0755)
-				}
-			}
-		}
-	}
-}
-
 // Turn a slice of *DdevApp into a map keyed by name
 func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
 	nameMap := make(map[string]*DdevApp)

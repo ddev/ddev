@@ -24,7 +24,14 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	}
 	defer util.CheckClose(f)
 
-	app.CreateWebWorkingDir()
+	// Create a host working_dir for the web service beforehand.
+	// Otherwise, Docker will create it as root user (when Mutagen is disabled).
+	// This problem (particularly for Docker volumes) is described in
+	// https://github.com/moby/moby/issues/2259
+	hostWorkingDir := app.GetHostWorkingDir("web", "")
+	if hostWorkingDir != "" {
+		_ = os.MkdirAll(hostWorkingDir, 0755)
+	}
 
 	rendered, err := app.RenderComposeYAML()
 	if err != nil {
