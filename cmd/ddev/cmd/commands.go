@@ -132,6 +132,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// Skip host commands that need a project if we aren't in a project directory.
 		if service == "host" && app == nil {
 			if val, ok := directives["CanRunGlobally"]; !ok || val != "true" {
+				if isCustomCommandInArgs(commandName) {
+					util.Warning("Command '%s' cannot be used outside the project directory.", commandName)
+				}
 				continue
 			}
 		}
@@ -184,6 +187,14 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		// If ProjectTypes is specified and we aren't of that type, skip
 		if projectTypes != "" && (app == nil || !strings.Contains(projectTypes, app.Type)) {
+			if app != nil && isCustomCommandInArgs(commandName) {
+				suggestedCommands := strings.Split(projectTypes, ",")
+				for i, projectType := range suggestedCommands {
+					suggestedCommands[i] = fmt.Sprintf("ddev config --project-type=%s", projectType)
+				}
+				suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
+				util.Warning("Command '%s' is not available for the '%s' project type.\nIf you intend to use '%s', change the project type to one of the supported types %s", commandName, app.Type, commandName, suggestedCommand)
+			}
 			continue
 		}
 
@@ -195,6 +206,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// If OSTypes is specified and we aren't on one of the specified OSes, skip
 		if osTypes != "" {
 			if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
+				if isCustomCommandInArgs(commandName) {
+					util.Warning("Command '%s' cannot be used with your OS.", commandName)
+				}
 				continue
 			}
 		}
@@ -215,6 +229,10 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 				}
 			}
 			if !binExists {
+				if isCustomCommandInArgs(commandName) {
+					suggestedBinaries, _ := util.ArrayToReadableOutput(bins)
+					util.Warning("Command '%s' cannot be used, because the binary is not found at %s", commandName, suggestedBinaries)
+				}
 				continue
 			}
 		}
@@ -227,6 +245,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// If DBTypes is specified and we aren't using that DBTypes
 		if dbTypes != "" && app != nil {
 			if !strings.Contains(dbTypes, app.Database.Type) {
+				if isCustomCommandInArgs(commandName) {
+					util.Warning("Command '%s' is not available for the '%s' database type.", commandName, app.Database.Type)
+				}
 				continue
 			}
 		}
@@ -329,6 +350,11 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		commandsAdded[commandName] = 1
 	}
 	return nil
+}
+
+// isCustomCommandInArgs checks if the command is the first arg passed to the "ddev" command.
+func isCustomCommandInArgs(commandName string) bool {
+	return len(os.Args) > 1 && os.Args[1] == commandName
 }
 
 func makeHostCompletionFunc(autocompletePathOnHost string, commandToAdd *cobra.Command) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
