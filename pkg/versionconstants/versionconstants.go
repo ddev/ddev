@@ -17,7 +17,7 @@ var WebTag = "20240523_stasadev_apt_get_update_or_true" // Note that this can be
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.23.1"
+var BaseDBTag = "20240608_rfay_bump_mysql_8.0.36"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.1"
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.1"
