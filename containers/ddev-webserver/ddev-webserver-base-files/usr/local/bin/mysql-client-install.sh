@@ -6,10 +6,11 @@
 
 set -eu -o pipefail
 
+DDEV_DATABASE_FAMILY=${DDEV_DATABASE%:*}
 if [ "${DDEV_DATABASE_FAMILY}" != "mysql" ]; then
   echo "This script is to be used only with a project using mysql" && exit 1
 fi
-ARCH=${GOARCH}
+ARCH=$(dpkg --print-architecture)
 MYSQL_VERSION=${DDEV_DATABASE#*:}
 TARBALL_VERSION=v0.2.1
 TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBALL_VERSION}/mysql-${MYSQL_VERSION}-${ARCH}.tar.gz
