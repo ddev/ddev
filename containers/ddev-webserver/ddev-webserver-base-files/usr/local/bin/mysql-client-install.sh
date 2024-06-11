@@ -12,7 +12,7 @@ if [ "${DDEV_DATABASE_FAMILY}" != "mysql" ]; then
 fi
 ARCH=$(dpkg --print-architecture)
 MYSQL_VERSION=${DDEV_DATABASE#*:}
-TARBALL_VERSION=v0.2.1
+TARBALL_VERSION=v0.2.2
 TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBALL_VERSION}/mysql-${MYSQL_VERSION}-${ARCH}.tar.gz
 
 # Install the related mysql client if available
