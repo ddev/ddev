@@ -63,7 +63,7 @@ ARG PHP_DEFAULT_VERSION="8.2"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2 php8.3"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
-ENV YQ_VERSION=v4.30.5
+ENV YQ_VERSION=v4.44.1
 ENV DRUSH_VERSION=8.4.12
 ENV NODE_VERSION=20
 # composer normally screams about running as root, we don't need that.
