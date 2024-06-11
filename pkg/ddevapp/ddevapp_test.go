@@ -2143,7 +2143,7 @@ func TestWebserverDBClient(t *testing.T) {
 			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
 			// Or "mysql  Ver 14.14 Distrib 5.7.44, for Linux (aarch64) using  EditLine wrapper"
-			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbVersion)
+			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
