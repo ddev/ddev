@@ -2071,7 +2071,8 @@ func TestWebserverDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
 	// TODO: Add MySQL84 when it gets added to DDEV
-	serverVersions := []string{"mysql:5.7", "mysql:8.0"}
+	// TODO: Add mariadb:11.4 when it gets added
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -2098,8 +2099,8 @@ func TestWebserverDBClient(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		assert.NoError(err)
-		_ = os.RemoveAll(filepath.Join(site.Dir, "users.sql"))
-
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "users.sql"))
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "dbdump.sql"))
 		// Make sure we leave the config.yaml in expected state
 		app.Database.Type = nodeps.MariaDB
 		app.Database.Version = nodeps.MariaDBDefaultVersion
@@ -2134,13 +2135,19 @@ func TestWebserverDBClient(t *testing.T) {
 			require.NoError(t, err, "mysql --version with dbTypeVersion=%s, stdout=%s, stderr=%s", dbTypeVersion, stdout, stderr)
 			parts := strings.Fields(stdout)
 			require.True(t, len(parts) > 5)
+			expectedClientVersion := dbVersion
+
+			// For mariadb we have installed the 10.11 client
+			if dbType == nodeps.MariaDB {
+				expectedClientVersion = "10.11"
+			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
 			// Or "mysql  Ver 14.14 Distrib 5.7.44, for Linux (aarch64) using  EditLine wrapper"
-			require.True(t, strings.HasPrefix(parts[4], dbVersion) || strings.HasPrefix(parts[2], dbVersion), "string=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbVersion)
+			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbVersion)
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
-		err = fileutil.CopyFile(importPath, filepath.Join(site.Dir, "users.sql"))
+		err = fileutil.CopyFile(importPath, filepath.Join(app.AppRoot, "users.sql"))
 		require.NoError(t, err)
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
@@ -2150,21 +2157,33 @@ func TestWebserverDBClient(t *testing.T) {
 		require.NoError(t, err, "mysql db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysqldump -uroot -proot db >/tmp/db.sql",
+			Cmd: "mysqldump -uroot -proot db > dbdump.sql",
 		})
+		require.NoError(t, err, "mysqldump failed, stdout=%s, stderr=%s", stdout, stderr)
+
+		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
 
+		found, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "dbdump.sql"), `!999999\- enable the sandbox mode`)
+		require.NoError(t, err)
+		if dbType == nodeps.MariaDB {
+			require.True(t, found, "expected sandbox directive not found %s (%s)", dbType, "tmp/users1.sql")
+		}
+		if dbType == nodeps.MySQL {
+			require.False(t, found, "expected sandbox directive found inappropriately in %s (%s)", dbType, "tmp/users1.sql")
+		}
+
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysql db < /tmp/db.sql",
+			Cmd: "mysql db < dbdump.sql",
 		})
 		require.NoError(t, err, "mysql db </tmp/users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
-		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 			Cmd: `mysql -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`,
 		})
 		require.NoError(t, err)
 		stdout = strings.Trim(stdout, "\n")
-		assert.Equal("2", stdout)
+		require.Equal(t, "2", stdout)
 	}
 	runTime()
 }
