@@ -14,11 +14,11 @@ MYSQL_VERSION=${DDEV_DATABASE#*:}
 TARBALL_VERSION=v0.2.1
 TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBALL_VERSION}/mysql-${MYSQL_VERSION}-${ARCH}.tar.gz
 
-# set -x
+# Install the related mysql client if available
+set -x
+cd /tmp && curl -L -o /tmp/mysql.tgz --fail -s ${TARBALL_URL}
+sudo tar -zxf /tmp/mysql.tgz -C /usr/local/bin ./mysql ./mysqldump
 
 # Remove any existing mariadb installs
 sudo apt remove -y mariadb-client-core mariadb-client || true
 sudo apt autoremove -y || true
-
-cd /tmp && curl -L -o /tmp/mysql.tgz --fail -s ${TARBALL_URL}
-sudo tar -zxf /tmp/mysql.tgz -C /usr/local/bin ./mysql ./mysqldump

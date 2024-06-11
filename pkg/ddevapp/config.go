@@ -1017,7 +1017,7 @@ redirect_stderr=true
 	}
 	// For MySQL 5.7+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
 	if app.Database.Type == "mysql" && slices.Contains([]string{nodeps.MySQL57, nodeps.MySQL80, nodeps.MySQL84}, app.Database.Version) {
-		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh\n"
+		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
