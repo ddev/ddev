@@ -18,7 +18,7 @@ TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBA
 
 # Remove any existing mariadb installs
 sudo apt remove -y mariadb-client-core mariadb-client || true
-sudo apt autoremove || true
+sudo apt autoremove -y || true
 
 cd /tmp && curl -L -o /tmp/mysql.tgz --fail -s ${TARBALL_URL}
 sudo tar -zxf /tmp/mysql.tgz -C /usr/local/bin ./mysql ./mysqldump
