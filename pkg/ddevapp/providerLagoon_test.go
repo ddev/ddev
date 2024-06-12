@@ -84,6 +84,11 @@ func TestLagoonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	app.Docroot = "web"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
+
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -106,7 +111,7 @@ func TestLagoonPull(t *testing.T) {
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "1\n"))
+	assert.True(strings.HasSuffix(out, "\n1\n"))
 }
 
 // TestLagoonPush ensures we can push to lagoon for a configured environment.
@@ -141,6 +146,10 @@ func TestLagoonPush(t *testing.T) {
 	_ = app.Stop(true, false)
 
 	app.Docroot = "web"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
 
 	err = app.WriteConfig()
 	require.NoError(t, err)
