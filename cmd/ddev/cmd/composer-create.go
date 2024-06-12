@@ -27,7 +27,7 @@ var ComposerCreateCmd = &cobra.Command{
 web container. Projects will be installed to a temporary directory and moved to
 the Composer root directory after install.`,
 	Example: `ddev composer create drupal/recommended-project
-ddev composer create -y drupal/recommended-project
+ddev composer create drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
 ddev composer create drupal/recommended-project --no-install
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
@@ -43,9 +43,20 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		osargs := []string{}
 		if len(os.Args) > 3 {
 			osargs = os.Args[3:]
-			osargs = nodeps.RemoveItemFromSlice(osargs, "--yes")
-			osargs = nodeps.RemoveItemFromSlice(osargs, "-y")
 			osargs = nodeps.RemoveItemFromSlice(osargs, "--preserve-flags")
+			expandedOsargs := []string{}
+			for _, osarg := range osargs {
+				// If this is a combined short option like "-test", split it into "-t -e -s -t"
+				// This is necessary, because each of these options will be checked for validity
+				if strings.HasPrefix(osarg, "-") && !strings.HasPrefix(osarg, "--") && len(osarg) > 2 {
+					for _, char := range osarg[1:] {
+						expandedOsargs = append(expandedOsargs, "-"+string(char))
+					}
+				} else {
+					expandedOsargs = append(expandedOsargs, osarg)
+				}
+			}
+			osargs = expandedOsargs
 		}
 
 		app, err := ddevapp.GetActiveApp("")
@@ -100,9 +111,35 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
+		// Function to check if a Composer option is valid for a given command
+		isValidComposerOption := func(command, option string) bool {
+			// We have to pass arguments and options to "create-project",
+			// but only options for other composer commands.
+			if command != "create-project" && !strings.HasPrefix(option, "-") {
+				return false
+			}
+			// Try each option with --dry-run to see if it is valid.
+			validateCmd := []string{"composer", command, option, "--dry-run"}
+			userOutFunc := util.CaptureUserOut()
+			_, _, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Dir:     app.GetComposerRoot(true, false),
+				RawCmd:  validateCmd,
+			})
+			out := userOutFunc()
+			// If there is an error from symfony/console, it is an invalid option
+			return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
+		}
+
 		// Add some args to avoid troubles while cloning as long as
 		// --preserve-flags is not set.
-		createArgs := osargs
+		createArgs := []string{}
+
+		for _, osarg := range osargs {
+			if isValidComposerOption("create-project", osarg) {
+				createArgs = append(createArgs, osarg)
+			}
+		}
 
 		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
 			createArgs = append(createArgs, "--no-plugins")
@@ -180,6 +217,12 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				"post-root-package-install",
 			}
 
+			for _, osarg := range osargs {
+				if isValidComposerOption("run-script", osarg) {
+					composerCmd = append(composerCmd, osarg)
+				}
+			}
+
 			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
@@ -213,38 +256,9 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				"install",
 			}
 
-			// Apply args supported by install
-			supportedArgs := []string{
-				"--prefer-source",
-				"--prefer-dist",
-				"--prefer-install",
-				"--no-dev",
-				"--no-progress",
-				"--ignore-platform-req",
-				"--ignore-platform-reqs",
-				"-q",
-				"--quiet",
-				"--ansi",
-				"--no-ansi",
-				"-n",
-				"--no-interaction",
-				"--profile",
-				"--no-plugins",
-				"--no-scripts",
-				"-d",
-				"--working-dir",
-				"--no-cache",
-				"-v",
-				"-vv",
-				"-vvv",
-				"--verbose",
-			}
-
 			for _, osarg := range osargs {
-				for _, supportedArg := range supportedArgs {
-					if strings.HasPrefix(osarg, supportedArg) {
-						composerCmd = append(composerCmd, osarg)
-					}
+				if isValidComposerOption("install", osarg) {
+					composerCmd = append(composerCmd, osarg)
 				}
 			}
 
@@ -279,6 +293,12 @@ ddev composer create --preserve-flags --no-interaction psr/log
 					"composer",
 					"run-script",
 					"post-create-project-cmd",
+				}
+
+				for _, osarg := range osargs {
+					if isValidComposerOption("run-script", osarg) {
+						composerCmd = append(composerCmd, osarg)
+					}
 				}
 
 				output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
@@ -329,7 +349,6 @@ for basic project creation or 'ddev ssh' into the web container and execute
 }
 
 func init() {
-	ComposerCreateCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
 	ComposerCreateCmd.Flags().Bool("preserve-flags", false, "Do not append `--no-plugins` and `--no-scripts` flags")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
