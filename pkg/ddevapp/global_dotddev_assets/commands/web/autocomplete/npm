@@ -1,7 +1,11 @@
 #!/bin/bash
 
 #ddev-generated
-# set env variables required for nvm's bash completion script
+# load bash completion for npm if it is not declared
+if ! declare -F _npm_completion >/dev/null; then
+  [ -n "$(type -t npm)" ] && eval "$(npm completion)"
+fi
+# set env variables required for npm's bash completion script
 COMP_WORDS=("$@")
 COMP_CWORD=$(($# - 1))
 # run the actual script

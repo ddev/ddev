@@ -1,6 +1,12 @@
 #!/bin/bash
 
 #ddev-generated
+# load bash completion for nvm if it is not declared
+if ! declare -F __nvm >/dev/null; then
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+fi
 # set env variables required for nvm's bash completion script
 COMP_WORDS=("$@")
 COMP_CWORD=$(($# - 1))
