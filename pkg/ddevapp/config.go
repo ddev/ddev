@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1014,6 +1015,10 @@ redirect_stderr=true
 		}
 		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/webextradaemons.conf\n"
 	}
+	// For MySQL 5.7+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
+	if app.Database.Type == "mysql" && slices.Contains([]string{nodeps.MySQL57, nodeps.MySQL80, nodeps.MySQL84}, app.Database.Version) {
+		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
+	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
@@ -1111,6 +1116,7 @@ ARG username
 ARG uid
 ARG gid
 ARG DDEV_PHP_VERSION
+ARG DDEV_DATABASE
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
 	// If there are user pre.Dockerfile* files, insert their contents
