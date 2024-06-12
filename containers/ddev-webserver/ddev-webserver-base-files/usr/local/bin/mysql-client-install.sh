@@ -3,6 +3,7 @@
 # This script is used to install a matching `mysql` client (with `mysqldump`)
 # in ddev-webserver
 # It should be called with the appropriate mysql version as an argument
+# This script is intended to be run with root privileges (normally in a docker build phase)
 
 set -eu -o pipefail
 
@@ -18,8 +19,8 @@ TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBA
 # Install the related mysql client if available
 set -x
 cd /tmp && curl -L -o /tmp/mysql.tgz --fail -s ${TARBALL_URL}
-sudo tar -zxf /tmp/mysql.tgz -C /usr/local/bin
+tar -zxf /tmp/mysql.tgz -C /usr/local/bin && rm -f /tmp/mysql.tgz
 
 # Remove any existing mariadb installs
-sudo apt remove -y mariadb-client-core mariadb-client || true
-sudo apt autoremove -y || true
+apt remove -y mariadb-client-core mariadb-client || true
+apt autoremove -y || true
