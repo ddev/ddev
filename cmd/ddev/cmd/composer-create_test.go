@@ -6,9 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/composer"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
@@ -43,7 +45,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				continue
 			}
 			if projectType == nodeps.AppTypeDrupal6 {
-				// Skip as an empty django4/python do not start nicely right away
+				// Skip as an empty drupal6 do not start nicely right away
 				// https://github.com/ddev/ddev/issues/5171
 				t.Logf("== SKIP TestComposerCreateCmd for project of type '%s' with docroot  '%s'\n", projectType, docRoot)
 				t.Logf("== SKIP drupal6 projects uses a very old php version and composer create is very unlikely to be used")
@@ -142,4 +144,76 @@ func TestComposerCreateAutocomplete(t *testing.T) {
 	assert.Contains(completions, "--no-install")
 	assert.Contains(completions, "--no-scripts")
 	assert.Contains(completions, "--keep-vcs")
+}
+
+func TestComposerCreateRunScript(t *testing.T) {
+	// This condition is copied from TestComposerCreateCmd
+	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
+		t.Skip("Composer has strange behavior in NFS context, so skipping")
+	}
+	assert := asrt.New(t)
+
+	origDir, err := os.Getwd()
+	assert.NoError(err)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	composerRoot := tmpDir
+	err = os.Chdir(tmpDir)
+	assert.NoError(err)
+
+	// Prepare arguments
+	arguments := []string{"config", "--auto"}
+
+	// Basic config
+	_, err = exec.RunHostCommand(DdevBin, arguments...)
+	assert.NoError(err)
+
+	// Test trivial command
+	out, err := exec.RunHostCommand(DdevBin, "composer")
+	assert.NoError(err)
+	assert.Contains(out, "Available commands:")
+
+	// Get an app so we can do waits
+	app, err := ddevapp.NewApp(tmpDir, true)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = app.StartAndWait(5)
+	require.NoError(t, err)
+
+	importPath := filepath.Join(origDir, "testdata", t.Name(), ".ddev/test-composer-create-run-script")
+	err = fileutil.CopyDir(importPath, filepath.Join(app.AppRoot, ".ddev/test-composer-create-run-script"))
+	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+
+	// ddev composer create --repository '{"type": "path", "url": ".ddev/test-composer-create-run-script", "options": {"symlink": false}}' test/composer-create-run-script
+	args := []string{"composer", "create", "--repository", `{"type": "path", "url": ".ddev/test-composer-create-run-script", "options": {"symlink": false}}`, "test/composer-create-run-script"}
+
+	// Test success
+	out, err = exec.RunHostCommand(DdevBin, args...)
+	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+	assert.Contains(out, "Created project in ")
+	assert.FileExists(filepath.Join(composerRoot, "composer.json"))
+
+	// Check that all composer scripts were run
+	assert.Contains(out, "Executing composer command: [composer run-script post-root-package-install]")
+	assert.Contains(out, "Executing composer command: [composer run-script post-create-project-cmd]")
+	// Check if the files created by composer scripts from the test/composer-create-run-script package are here
+	assert.FileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
+	assert.FileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+	// Check that resulting composer.json has all the scripts
+	composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, "composer.json"))
+	assert.NoError(err)
+	assert.True(composerManifest != nil)
+	assert.True(composerManifest.HasPostRootPackageInstallScript())
+	assert.True(composerManifest.HasPostCreateProjectCmdScript())
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
 }

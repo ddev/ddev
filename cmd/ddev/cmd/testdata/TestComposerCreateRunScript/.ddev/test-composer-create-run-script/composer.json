@@ -1,0 +1,13 @@
+{
+    "name": "test/composer-create-run-script",
+    "type": "project",
+    "version": "1.0.0",
+    "scripts": {
+        "post-root-package-install": [
+            "@php -r \"touch('created-by-post-root-package-install');\""
+        ],
+        "post-create-project-cmd": [
+            "@php -r \"touch('created-by-post-create-project-cmd');\""
+        ]
+    }
+}
