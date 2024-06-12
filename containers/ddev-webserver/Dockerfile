@@ -47,8 +47,8 @@ RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 
 # Install older mariadb client and mariadb-dump into /usr/local/mariadb-old/bin
 # to solve variety of problems with newer mariadb-dump.
-RUN cd /tmp && curl -L -s --fail -O https://dlm.mariadb.com/3607865/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_$(dpkg --print-architecture).deb
-RUN cd /tmp && curl -L -s --fail -O https://dlm.mariadb.com/3607494/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_$(dpkg --print-architecture).deb
+RUN cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607865/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_$(dpkg --print-architecture).deb"
+RUN cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607494/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_$(dpkg --print-architecture).deb"
 RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
 RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
 
