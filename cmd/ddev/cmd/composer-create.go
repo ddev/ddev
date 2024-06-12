@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/composer"
@@ -43,6 +44,8 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		osargs := []string{}
 		if len(os.Args) > 3 {
 			osargs = os.Args[3:]
+			// I don't know why, but cmd.Flags().GetBool("preserve-flags") is always false, so we can check it here
+			preserveFlags = slices.Contains(osargs, "--preserve-flags")
 			osargs = nodeps.RemoveItemFromSlice(osargs, "--preserve-flags")
 			expandedOsargs := []string{}
 			for _, osarg := range osargs {
@@ -91,10 +94,10 @@ ddev composer create --preserve-flags --no-interaction psr/log
 
 				checkPath := app.GetRelativeDirectory(walkPath)
 
-				if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
+				if walkInfo.IsDir() && slices.Contains(skipDirs, checkPath) {
 					return filepath.SkipDir
 				}
-				if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
+				if !slices.Contains(composerCreateAllowedPaths, checkPath) {
 					return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
 				}
 				if err != nil {
@@ -141,16 +144,16 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			}
 		}
 
-		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
+		if !preserveFlags && !slices.Contains(createArgs, "--no-plugins") {
 			createArgs = append(createArgs, "--no-plugins")
 		}
 
-		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-scripts") {
+		if !preserveFlags && !slices.Contains(createArgs, "--no-scripts") {
 			createArgs = append(createArgs, "--no-scripts")
 		}
 
 		// Remember if --no-install was provided by the user
-		noInstallPresent := nodeps.ArrayContainsString(createArgs, "--no-install")
+		noInstallPresent := slices.Contains(createArgs, "--no-install")
 		if !noInstallPresent {
 			// Add the --no-install option by default to avoid issues with
 			// rsyncing many files afterwards to the project root.
