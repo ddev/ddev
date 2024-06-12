@@ -75,6 +75,10 @@ func TestAcquiaPull(t *testing.T) {
 	require.NoError(t, err)
 	// acli really wants the project to look like the target project
 	app.Docroot = "docroot"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
@@ -164,6 +168,10 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	// acli really wants the project to look like the target project
 	app.Docroot = "docroot"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
