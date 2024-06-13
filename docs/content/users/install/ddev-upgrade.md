@@ -2,6 +2,9 @@
 
 Installing and upgrading DDEV are nearly the same thing, because you're upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
 
+!!!tip "`ddev --version` shows an old version"
+    If you have installed or upgraded DDEV to the latest version, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](../usage/faq.md#why-do-i-have-an-old-ddev)
+
 === "macOS"
 
     ## macOS

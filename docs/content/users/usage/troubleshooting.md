@@ -252,7 +252,7 @@ You should then be able to start your DDEV machine.
 
 ## `ddev --version` shows an old version
 
-If you have installed the latest version of DDEV, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)
+If you have installed or upgraded DDEV to the latest version, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)
 
 ## Trouble Building Dockerfiles
 
