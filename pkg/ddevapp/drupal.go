@@ -357,6 +357,7 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 
 // drupalConfigOverrideAction selects proper versions for
 func drupalConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP83
 	v, err := GetDrupalVersion(app)
 	if err != nil || v == "" {
 		util.Warning("Unable to detect Drupal version, continuing")
