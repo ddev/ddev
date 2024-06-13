@@ -93,6 +93,9 @@ func TestProcessHooks(t *testing.T) {
 		require.Contains(t, out, task.stdoutExpect, "task: '%v'", task.task)
 		assert.Contains(userOut, task.fulloutputExpect, "task: %v", task.task)
 		assert.NotContains(userOut, "Task failed")
+
+		err = app.Stop(true, false)
+		require.NoError(t, err)
 	}
 
 	err = app.MutagenSyncFlush()
@@ -134,6 +137,4 @@ func TestProcessHooks(t *testing.T) {
 	app.FailOnHookFail = true
 	err = app.ProcessHooks("hook-test")
 	assert.Error(err)
-	err = app.Stop(true, false)
-	require.NoError(t, err)
 }
