@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -97,35 +98,41 @@ func TestComposerCreateCmd(t *testing.T) {
 			err = app.MutagenSyncFlush()
 			require.NoError(t, err)
 
-			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-interaction --no-dev -av --fake-flag test/ddev-composer-create
-			// Rules:
-			// combined short options will be split into single options, i.e. -av here will become -a -v
-			// all invalid options will be ignored without any error: --fake-flag
-			// composer commands will use only the flags they are supposed to use, i.e. -a (short form of --classmap-authoritative) will not be used by create-project
-			// Validation:
-			// valid options for create-project: --repository --no-interaction --no-dev -v
-			// valid options for run-script: --no-interaction --no-dev -v
-			// valid options for install: --no-interaction --no-dev -a -v
-			args := []string{"composer", "create", "--repository", repository, "--no-interaction", "--no-dev", "-av", "--fake-flag", "test/ddev-composer-create"}
+			composerCommandTypeCheck := ""
+			args := []string{}
 
-			// If --no-install is provided, the 'install' and 'run-script post-create-project-cmd' scripts will not run, but 'run-script post-root-package-install' will
-			if docRoot != "" {
-				// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-interaction --no-install test/ddev-composer-create
-				// Validation:
-				// valid options for create-project: --repository --no-interaction --no-install
-				// valid options for run-script: --no-interaction
-				// valid options for install: doesn't run
-				args = []string{"composer", "create", "--repository", repository, "--no-interaction", "--no-install", "test/ddev-composer-create"}
+			// These are different conditions to test different composer flag combinations
+			// Conditions for docRoot and projectType are not important here, they are only needed to make the test act different each time
+			if docRoot == "" {
+				composerCommandTypeCheck = "installation with --no-dev --no-plugins --no-scripts"
+				if projectType == nodeps.AppTypePHP {
+					composerCommandTypeCheck = "installation with short flag expansion and non-existing flags"
+				}
+			} else {
+				composerCommandTypeCheck = "installation with --no-install"
+				if projectType == nodeps.AppTypePHP {
+					composerCommandTypeCheck = "installation with --preserve-flags"
+				}
 			}
 
-			// If --preserve-flags is provided, the --no-plugins and --no-scripts flags will not be added
-			if docRoot != "" && projectType == nodeps.AppTypePHP {
-				// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --preserve-flags --no-interaction test/ddev-composer-create
-				// Validation:
-				// valid options for create-project: --repository --no-interaction --no-install
-				// valid options for run-script: none
-				// valid options for install: doesn't run
-				args = []string{"composer", "create", "--repository", repository, "--preserve-flags", "--no-interaction", "test/ddev-composer-create"}
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev --no-plugins --no-scripts test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with --no-dev --no-plugins --no-scripts" {
+				args = []string{"composer", "create", "--repository", repository, "--no-dev", "--no-plugins", "--no-scripts", "test/ddev-composer-create"}
+			}
+
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -avv --fake-flag test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with short flag expansion and non-existing flags" {
+				args = []string{"composer", "create", "--repository", repository, "-avv", "--fake-flag", "test/ddev-composer-create"}
+			}
+
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-install test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with --no-install" {
+				args = []string{"composer", "create", "--repository", repository, "--no-install", "test/ddev-composer-create"}
+			}
+
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --preserve-flags test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with --preserve-flags" {
+				args = []string{"composer", "create", "--repository", repository, "--preserve-flags", "test/ddev-composer-create"}
 			}
 
 			// Test failure
@@ -142,51 +149,69 @@ func TestComposerCreateCmd(t *testing.T) {
 			assert.Contains(out, "Created project in ")
 			assert.FileExists(filepath.Join(composerRoot, "composer.json"))
 
-			// Check that all composer commands were run, these include the specified flags
-			if docRoot == "" {
-				// When there is no --preserve-flags, the --no-plugins and --no-scripts flags are appended
-				// --no-install is always added to 'composer create-project' to avoid problems with installation
-				assert.Contains(out, `Executing Composer command: [composer create-project --repository {"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}} --no-interaction --no-dev -v test/ddev-composer-create --no-plugins --no-scripts --no-install`)
-				assert.Contains(out, "Executing composer command: [composer run-script post-root-package-install --no-interaction --no-dev -v]")
-				// -av is expanded to -a -v
-				assert.Contains(out, "Executing Composer command: [composer install --no-interaction --no-dev -a -v]")
-				assert.Contains(out, "Executing composer command: [composer run-script post-create-project-cmd --no-interaction --no-dev -v]")
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev --no-plugins --no-scripts test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with --no-dev --no-plugins --no-scripts" {
+				// Check what was executed or not
+				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository %s --no-dev --no-plugins --no-scripts test/ddev-composer-create --no-install`, repository))
+				assert.NotContains(out, "Executing Composer command: [composer run-script post-root-package-install")
+				assert.Contains(out, "Executing Composer command: [composer install --no-dev --no-plugins --no-scripts]")
+				assert.NotContains(out, "Executing Composer command: [composer run-script post-create-project-cmd")
+				// Check the actual result of executing composer scripts
+				assert.NoFileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
+				assert.NoFileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				// Check vendor directory
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "autoload.php"))
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
+				assert.NoFileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
+			}
 
-				// Check if the files created by composer scripts from the test/composer-create-run-script package are here
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -avv --fake-flag test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with short flag expansion and non-existing flags" {
+				// Check what was executed or not
+				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository %s -v -v test/ddev-composer-create --no-plugins --no-scripts --no-install`, repository))
+				assert.Contains(out, "Executing Composer command: [composer run-script post-root-package-install -v -v]")
+				assert.Contains(out, "Executing Composer command: [composer install -a -v -v]")
+				assert.Contains(out, "Executing Composer command: [composer run-script post-create-project-cmd -v -v]")
+				// Check the actual result of executing composer scripts
 				assert.FileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
 				assert.FileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
-				// Check if vendor/autoload.php is created
+				// Check vendor directory
 				assert.FileExists(filepath.Join(composerRoot, "vendor", "autoload.php"))
-				// psr/log is installed by test/ddev-composer-create package
-				assert.DirExists(filepath.Join(composerRoot, "vendor", "psr", "log"))
-			} else {
-				// If --preserve-flags is provided, the --no-plugins and --no-scripts flags will not be added
-				if projectType == nodeps.AppTypePHP {
-					assert.Contains(out, `Executing Composer command: [composer create-project --repository {"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}} --no-interaction test/ddev-composer-create --no-install`)
-					assert.Contains(out, "Executing Composer command: [composer install --no-interaction]")
-					// With --preserve-flags scripts will run, but without DDEV help
-					assert.NotContains(out, "Executing composer command: [composer run-script post-root-package-install")
-					assert.NotContains(out, "Executing composer command: [composer run-script post-create-project-cmd")
-					// Check if the files created by composer scripts from the test/composer-create-run-script package are here
-					assert.FileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
-					assert.FileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
-					// Check if vendor/autoload.php is created
-					assert.FileExists(filepath.Join(composerRoot, "vendor", "autoload.php"))
-					// psr/log is installed by test/ddev-composer-create package
-					assert.DirExists(filepath.Join(composerRoot, "vendor", "psr", "log"))
-				} else {
-					// If --no-install is provided, the 'install' and 'run-script post-create-project-cmd' flags will not run, but 'run-script post-root-package-install' will
-					assert.Contains(out, `Executing Composer command: [composer create-project --repository {"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}} --no-interaction --no-install test/ddev-composer-create --no-plugins --no-scripts`)
-					assert.Contains(out, "Executing composer command: [composer run-script post-root-package-install --no-interaction]")
-					assert.NotContains(out, "Executing Composer command: [composer install")
-					assert.NotContains(out, "Executing composer command: [composer run-script post-create-project-cmd")
-					// Check if the files created by composer scripts from the test/composer-create-run-script package are here
-					assert.FileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
-					// The post-create-project-cmd script doesn't run, so there should be no file
-					assert.NoFileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
-					// If --no-install is provided, no vendor should be created
-					assert.NoDirExists(filepath.Join(composerRoot, "vendor"))
-				}
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
+			}
+
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-install test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with --no-install" {
+				// Check what was executed or not
+				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository %s --no-install test/ddev-composer-create --no-plugins --no-scripts`, repository))
+				assert.Contains(out, "Executing Composer command: [composer run-script post-root-package-install]")
+				assert.NotContains(out, "Executing Composer command: [composer install")
+				assert.Contains(out, "Executing Composer command: [composer run-script post-create-project-cmd]")
+				// Check the actual result of executing composer scripts
+				assert.FileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
+				assert.FileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				// Check vendor directory
+				assert.NoDirExists(filepath.Join(composerRoot, "vendor"))
+			}
+
+			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --preserve-flags test/ddev-composer-create
+			if composerCommandTypeCheck == "installation with --preserve-flags" {
+				// Check what was executed or not
+				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository %s test/ddev-composer-create --no-scripts --no-install`, repository))
+				assert.Contains(out, "Executing Composer command: [composer run-script post-root-package-install]")
+				assert.Contains(out, "Executing Composer command: [composer install]")
+				assert.Contains(out, "Executing Composer command: [composer run-script post-create-project-cmd]")
+				// Preserve flags should not append --no-plugins
+				assert.NotContains(out, "--no-plugins")
+				// Check the actual result of executing composer scripts
+				// These files should exist because with --preserve-flags we do not append --no-scripts to the command
+				assert.FileExists(filepath.Join(composerRoot, "created-by-post-root-package-install"))
+				assert.FileExists(filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				// Check vendor directory
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "autoload.php"))
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
+				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
 			}
 
 			// Check that resulting composer.json (copied from testdata) has post-root-package-install and post-create-project-cmd scripts

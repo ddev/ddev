@@ -148,7 +148,9 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			createArgs = append(createArgs, "--no-plugins")
 		}
 
-		if !preserveFlags && !slices.Contains(createArgs, "--no-scripts") {
+		// Remember if --no-scripts was provided by the user
+		noScriptsPresent := slices.Contains(createArgs, "--no-scripts")
+		if !noScriptsPresent {
 			createArgs = append(createArgs, "--no-scripts")
 		}
 
@@ -188,6 +190,11 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			output.UserErr.Println(stderr)
 		}
 
+		// If options contain help or version flags, do not continue
+		if slices.Contains(createArgs, "-h") || slices.Contains(createArgs, "--help") || slices.Contains(createArgs, "-V") || slices.Contains(createArgs, "--version") {
+			return
+		}
+
 		output.UserOut.Printf("Moving install to Composer root")
 
 		rsyncArgs := "-rltgopD" // Same as -a
@@ -212,7 +219,7 @@ ddev composer create --preserve-flags --no-interaction psr/log
 
 		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
 
-		if !preserveFlags && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
+		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
 			// Try to run post-root-package-install.
 			composerCmd = []string{
 				"composer",
@@ -226,7 +233,7 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				}
 			}
 
-			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
@@ -286,42 +293,43 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
 			}
+		}
 
-			// Reload composer.json if it has changed in the meantime.
-			composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+		// Reload composer.json if it has changed in the meantime.
+		composerManifest, _ = composer.NewManifest(path.Join(composerRoot, "composer.json"))
 
-			if !preserveFlags && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
-				// Try to run post-create-project-cmd.
-				composerCmd = []string{
-					"composer",
-					"run-script",
-					"post-create-project-cmd",
-				}
+		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
+			// Try to run post-create-project-cmd.
+			composerCmd = []string{
+				"composer",
+				"run-script",
+				"post-create-project-cmd",
+			}
 
-				for _, osarg := range osargs {
-					if isValidComposerOption("run-script", osarg) {
-						composerCmd = append(composerCmd, osarg)
-					}
-				}
-
-				output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
-
-				stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Dir:     app.GetComposerRoot(true, false),
-					RawCmd:  composerCmd,
-					Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				})
-
-				if len(stdout) > 0 {
-					output.UserOut.Println(stdout)
-				}
-
-				if len(stderr) > 0 {
-					output.UserErr.Println(stderr)
+			for _, osarg := range osargs {
+				if isValidComposerOption("run-script", osarg) {
+					composerCmd = append(composerCmd, osarg)
 				}
 			}
+
+			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
+
+			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Dir:     app.GetComposerRoot(true, false),
+				RawCmd:  composerCmd,
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+
+			if len(stdout) > 0 {
+				output.UserOut.Println(stdout)
+			}
+
+			if len(stderr) > 0 {
+				output.UserErr.Println(stderr)
+			}
 		}
+
 		// Do a spare restart, which will create any needed settings files
 		// and also restart Mutagen
 		err = app.Restart()
@@ -352,7 +360,7 @@ for basic project creation or 'ddev ssh' into the web container and execute
 }
 
 func init() {
-	ComposerCreateCmd.Flags().Bool("preserve-flags", false, "Do not append `--no-plugins` and `--no-scripts` flags")
+	ComposerCreateCmd.Flags().Bool("preserve-flags", false, "Do not append `--no-plugins` flag")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }
