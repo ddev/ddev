@@ -11,22 +11,22 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20240613_rfay_mysql_5.5_5.6" // Note that this can be overridden by make
+var WebTag = "v1.23.2" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20240608_rfay_bump_mysql_8.0.36"
+var BaseDBTag = "v1.23.2"
 
-const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.1"
-const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.1"
+const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.2"
+const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.2"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "20240523_stasadev_apt_get_update_or_true"
+var SSHAuthTag = "v1.23.2"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
