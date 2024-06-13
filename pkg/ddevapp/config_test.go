@@ -230,7 +230,7 @@ func TestConfigCommand(t *testing.T) {
 	testMatrix := map[string][]string{
 		"magentophpversion": {nodeps.AppTypeMagento, nodeps.PHPDefault},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP82},
-		"drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
+		"drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHP83},
 	}
 
 	for testName, testValues := range testMatrix {
