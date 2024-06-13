@@ -250,7 +250,7 @@ You may have installed DDEV several times using different techniques. Use `which
 $ which -a ddev
 /home/linuxbrew/.linuxbrew/bin/ddev # installed with Homebrew
 /usr/local/bin/ddev # installed manually with install_ddev.sh script
-/usr/bin/ddev # installed with apt/yum
+/usr/bin/ddev # installed with apt or yum/rpm
 /bin/ddev # don't touch it, it's a link to /usr/bin/ddev
 ```
 
