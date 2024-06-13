@@ -23,13 +23,16 @@ func TestProcessHooks(t *testing.T) {
 
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
-	// We don't get the expected task debug output without DDEV_DEBUG
-	t.Setenv("DDEV_DEBUG", "true")
 	runTime := util.TimeTrackC(t.Name())
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)
-	assert.NoError(err)
+	require.NoError(t, err)
+
+	// We don't get the expected task debug output without DDEV_DEBUG
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Setenv(`DDEV_DEBUG`, `true`) // test requires DDEV_DEBUG to see task output
+
 	t.Cleanup(func() {
 		runTime()
 		err = os.Chdir(origDir)
@@ -38,6 +41,7 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 		_ = os.RemoveAll(app.GetConfigPath("config.hooks.yaml"))
 		_ = os.RemoveAll(filepath.Join(app.AppRoot, "composer.json"))
+		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
 	})
 	err = app.Start()
 	assert.NoError(err)
@@ -72,21 +76,21 @@ func TestProcessHooks(t *testing.T) {
 		fName := app.GetConfigPath("config.hooks.yaml")
 		fullTask := []byte("hooks:\n  post-start:\n  - " + task.task + "\n")
 		err = os.WriteFile(fName, fullTask, 0644)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		app, err = ddevapp.NewApp(site.Dir, true)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		captureOutputFunc, err := util.CaptureOutputToFile()
 		require.NoError(t, err, `failed to capture output to file for taxk='%v' err=%v`, task, err)
 		userOutFunc := util.CaptureUserOut()
 
 		err = app.Start()
-		require.NoError(t, err, `failed to app.Start() for task '%v' err=%v`, task, err)
+		require.NoError(t, err, `failed to app.Start() for task '%v' err='%v'`, task, err)
 
 		out := captureOutputFunc()
 		userOut := userOutFunc()
-		require.Contains(t, out, task.stdoutExpect, "task: %v", task.task)
+		require.Contains(t, out, task.stdoutExpect, "task: '%v'", task.task)
 		assert.Contains(userOut, task.fulloutputExpect, "task: %v", task.task)
 		assert.NotContains(userOut, "Task failed")
 	}
@@ -130,4 +134,6 @@ func TestProcessHooks(t *testing.T) {
 	app.FailOnHookFail = true
 	err = app.ProcessHooks("hook-test")
 	assert.Error(err)
+	err = app.Stop(true, false)
+	require.NoError(t, err)
 }
