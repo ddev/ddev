@@ -244,15 +244,21 @@ If you’re using Homebrew, first run `brew unlink ddev` to get rid of the versi
 
 ### Why do I have an old DDEV?
 
-You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, and then install it again with `apt`:
+You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, install it manually, and then install it again with `apt`:
 
 ```bash
 $ which -a ddev
-/home/linuxbrew/.linuxbrew/bin/ddev
-/usr/bin/ddev
+/home/linuxbrew/.linuxbrew/bin/ddev # installed with Homebrew
+/usr/local/bin/ddev # installed manually with install_ddev.sh script
+/usr/bin/ddev # installed with apt or yum/rpm
+/bin/ddev # don't touch it, it's a link to /usr/bin/ddev
 ```
 
-You can check each binary version by its full path (`/usr/bin/ddev --version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew: `brew uninstall ddev`.
+You can check each binary version by its full path (`/usr/bin/ddev --version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew: `brew uninstall ddev`. A manually installed DDEV can be removed by deleting the `ddev` binary.
+
+Restart the terminal (or run `hash -r`) after uninstalling other versions of DDEV for the changes to take effect.
+
+If you see duplicates in the `which -a ddev` output, it means that some directories are added to your `$PATH` more than once. You can either ignore this or remove the extra directory from your `$PATH`.
 
 ### How can I back up or restore all project databases?
 
