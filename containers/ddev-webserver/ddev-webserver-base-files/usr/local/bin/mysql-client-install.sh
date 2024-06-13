@@ -13,6 +13,11 @@ if [ "${DDEV_DATABASE_FAMILY}" != "mysql" ]; then
 fi
 ARCH=$(dpkg --print-architecture)
 MYSQL_VERSION=${DDEV_DATABASE#*:}
+# For MySQL 5.6 and 5.5 we can't build the client, but the 5.7 client is probably as good as it gets
+if [ "${MYSQL_VERSION}" = "5.6" ] || [ "${MYSQL_VERSION}" = "5.5" ]; then
+  MYSQL_VERSION="5.7"
+fi
+
 TARBALL_VERSION=v0.2.2
 TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBALL_VERSION}/mysql-${MYSQL_VERSION}-${ARCH}.tar.gz
 
