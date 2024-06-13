@@ -65,7 +65,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,
-		nodeps.AppTypeDrupal:       nodeps.PHPDefault,
+		nodeps.AppTypeDrupal:       nodeps.PHP83,
 		nodeps.AppTypeLaravel:      nodeps.PHP82,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento2:     nodeps.PHP82,
