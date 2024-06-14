@@ -137,6 +137,10 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
+// Global variable that's set from --skip-hooks global flag.
+// If true, all hooks would be skiped.
+var SkipHooks = false
+
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
 	return strings.ToLower(app.Type)
@@ -1004,6 +1008,10 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 
 // ProcessHooks executes Tasks defined in Hooks
 func (app *DdevApp) ProcessHooks(hookName string) error {
+	if SkipHooks {
+		output.UserOut.Debugf("Skipping the execution of %s hook...", hookName)
+		return nil
+	}
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Debugf("Executing %s hook...", hookName)
 	}
