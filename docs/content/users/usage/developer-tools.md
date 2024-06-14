@@ -40,7 +40,14 @@ For example:
 
 When using `ddev composer create` your project should be essentially empty or the command will refuse to run, to avoid loss of your files.
 
-By default `--no-plugins` and `--no-scripts` options are used while cloning the project and `composer install` is executed afterwards as long as `--no-install` is not provided. When using `--preserve-flags` plugins are allowed during the cloning step.
+Standard order of operations for `ddev composer create`:
+
+1. `composer create-project --no-plugins --no-scripts --no-install` clones a bare Composer package without any additional actions.
+2. `composer run-script post-root-package-install` runs if `--no-scripts` is not provided manually.
+3. `composer install` runs if `--no-install` is not provided manually.
+4. `composer run-script post-create-project-cmd` runs if `--no-scripts` is not provided manually.
+
+All flags that you provide to `ddev composer create` are checked for validity. All invalid flags will be ignored. If they are valid for `composer create-project`, they will be also passed to `composer run-script` and `composer install`, but only if these commands support these flags.
 
 To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing [`ddev ssh`](../usage/commands.md#ssh), or pass the full command to [`ddev exec`](../usage/commands.md#exec), like so:
 
