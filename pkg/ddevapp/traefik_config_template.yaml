@@ -22,8 +22,6 @@ http:
       {{else}}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
-      middlewares:
-        - autodetect
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
       {{ if not $.UseLetsEncrypt }}
       tls: true
