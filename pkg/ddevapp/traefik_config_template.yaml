@@ -10,8 +10,6 @@ http:
       {{else}}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
-      middlewares:
-        - autodetect
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
@@ -37,12 +35,6 @@ http:
         - http-{{$s.ExternalPort}}
     {{ end }}
     {{ end }}
-
-  # autodetect won't be needed in Traefik 3 https://github.com/traefik/traefik/pull/9546
-  middlewares:
-    autodetect:
-      contentType:
-        autoDetect: false
 
   services:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
