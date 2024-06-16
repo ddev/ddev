@@ -17,9 +17,7 @@ certificatesResolvers:
     acme:
       email: {{ .LetsEncryptEmail }}
       storage: /mnt/ddev-global-cache/traefik/acme.json
-      httpChallenge:
-        # used during the challenge
-        entryPoint: http-80
+      tlsChallenge: {}
 {{ end }}
 
 providers:
