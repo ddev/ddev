@@ -2,8 +2,6 @@
 
 !!!warning "Experimental Feature!"
     This is not a replacement for scalable, managed hosting. It’s unknown how much traffic it can handle in a given environment.
-!!!warning "Let's Encrypt support not directly compatible with Traefik router"
-    `ddev config global --use-letsencrypt` is not directly compatible with the Traefik router, but it [can be configured using Traefik docs](https://doc.traefik.io/traefik/https/acme/).
 
 One of DDEV’s experimental features is lightweight hosting with Let’s Encrypt for HTTPS support. You can run DDEV on a public web server, point DNS to it, and use it as a limited hosting environment.
 
@@ -35,7 +33,7 @@ Here’s how to try it for yourself:
 
 10. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
 
-You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed because port 80 is not open, or the DNS name is not yet resolving. (Use `docker logs ddev-router` to see Let’s Encrypt activity.)
+You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed or the DNS name is not yet resolving. (Use `docker logs -f ddev-router` to see Let’s Encrypt activity.)
 
 ## Additional Server Setup
 

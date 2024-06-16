@@ -298,7 +298,7 @@ DDEV must detect whether the internet is working to determine whether to add hos
 
 ## `letsencrypt_email`
 
-Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).) (Not currently compatible with Traefik router.)
+Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).)
 
 | Type | Default | Usage
 | -- | -- | --
@@ -469,11 +469,11 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 
 ## `router`
 
-Whether to enable the default [Traefik router](../extend/traefik-router.md) or the legacy "nginx-proxy" router.
+Whether to enable the default [Traefik router](../extend/traefik-router.md) or the deprecated "nginx-proxy" router.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (legacy).
+| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (deprecated).
 
 May also be set via `ddev config global --router=traefik` or `ddev config global --router=nginx-proxy`.
 
@@ -602,7 +602,7 @@ When `true`, more secure hardened images are used for an internet deployment. Th
 
 ## `use_letsencrypt`
 
-Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).) (Not currently compatible with Traefik router.)
+Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).)
 
 | Type | Default | Usage
 | -- | -- | --
