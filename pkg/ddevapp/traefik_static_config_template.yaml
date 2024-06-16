@@ -8,6 +8,9 @@ api:
   dashboard: true
   insecure: true
 
+core:
+  defaultRuleSyntax: v2
+
 {{ if .UseLetsEncrypt }}
 certificatesResolvers:
   acmeresolver:
