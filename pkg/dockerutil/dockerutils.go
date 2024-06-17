@@ -1388,14 +1388,8 @@ func RemoveImage(tag string) error {
 // targetSubdir is where to copy it to on the volume
 // uid is the uid of the resulting files
 // exclusion is a path to be excluded
-// If destroyExisting the volume is removed and recreated
+// If destroyExisting the specified targetSubdir is removed and recreated
 func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
-	if destroyExisting {
-		err := RemoveVolume(volumeName)
-		if err != nil {
-			util.Warning("Could not remove Docker volume %s: %v", volumeName, err)
-		}
-	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
 	_, err := os.Stat(sourcePath)
@@ -1414,7 +1408,14 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+
+	var cmd = ""
+	if destroyExisting {
+		cmd = cmd + " rm -rf " + targetSubdirFullPath + " && "
+	}
+	cmd = "mkdir -p " + targetSubdirFullPath + " && sleep infinity "
+
+	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", cmd}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	if err != nil {
 		return err
 	}
