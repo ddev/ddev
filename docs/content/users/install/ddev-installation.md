@@ -8,13 +8,13 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Homebrew
 
-    [Homebrew](https://brew.sh/) is the easiest and most reliable way to install and upgrade DDEV:
+    [Homebrew](https://brew.sh/) is the easiest and most reliable way to install and [upgrade](./ddev-upgrade.md) DDEV:
 
     ```bash
     # Install DDEV
     brew install ddev/ddev/ddev
 
-    # Initialize mkcert
+    # One-time initialization of mkcert
     mkcert -install
     ```
 
@@ -27,6 +27,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     curl -fsSL https://ddev.com/install.sh | bash
     ```
 
+    ??? "Do you still have an old version after installing or upgrading?"
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
     ??? "Need a specific version?"
         Use the `-s` argument to specify a specific stable or prerelease version:
 
@@ -38,17 +40,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 === "Linux"
 
     ## Linux
-
-    ### Locally-trusted certificate with mkcert
-
-    Modern browsers require valid certificates, which mkcert can create. [Install mkcert](https://github.com/FiloSottile/mkcert#installation), and then run this:
-
-    ```bash
-    # Initialize mkcert
-    mkcert -install
-    ```
-
-    Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305), see also [this issue](https://github.com/ddev/ddev/issues/5415).
 
     ### Debian/Ubuntu
 
@@ -69,7 +60,12 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Update package information and install DDEV
     sudo sh -c 'echo ""'
     sudo apt-get update && sudo apt-get install -y ddev
+
+    # One-time initialization of mkcert
+    mkcert -install
     ```
+
+    (Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305), see also [this issue](https://github.com/ddev/ddev/issues/5415).)
 
     ??? "Need to remove a previously-installed variant?"
         If you previously used DDEV’s [install script](#install-script), you can remove that version:
@@ -94,7 +90,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Install DDEV
     sudo sh -c 'echo ""'
     sudo dnf install --refresh ddev
-    ```
+
+    # One-time initialization of mkcert
+    mkcert -install
 
     Signed yum repository support will be added in the future.
 
@@ -107,11 +105,19 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     yay -S ddev-bin
     ```
 
+    ```bash
+    # One-time initialization of mkcert
+    mkcert -install
+    ```
+
     ### Homebrew (AMD64 only)
 
     ```bash
     # Install DDEV using Homebrew
     brew install ddev/ddev/ddev
+    # One-time initialization of mkcert
+    mkcert -install
+
     ```
 
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
@@ -131,6 +137,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         # Download and run the script to install DDEV v1.21.4
         curl -fsSL https://ddev.com/install.sh | bash -s v1.21.4
         ```
+
+    ??? "Do you still have an old version after installing or upgrading?"
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
 
 === "Windows"
 
