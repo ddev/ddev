@@ -122,6 +122,13 @@ func pushGlobalTraefikConfig() error {
 			}
 		}
 	}
+
+	// If using Let's Encrypt, the default_cert.crt must not exist or
+	// Traefik will use it.
+	if globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists {
+		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_cert.crt"))
+		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_key.key"))
+	}
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
 	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
