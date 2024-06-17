@@ -83,7 +83,37 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     display_startup_errors = Off
     ```
 
-Caveats:
+## Using Let's Encrypt DNS challenge
+
+It is possible to use a Let's Encrypt DNS challenge instead of the default `tlsChallenge`. This requires manual configuration and a token from a DNS provider like Cloudflare. Full details of Traefik configuration are in the [Traefik documentation](https://doc.traefik.io/traefik/https/acme/).
+
+This example shows how to do it with Cloudflare.
+
+1. Set up and make sure that things already work with the default `tlsChallenge`.
+2. Provide the required configuration for Cloudflare with a `~/.ddev/router-compose.cloudflare.yaml`
+
+   ```yaml
+   services:
+     ddev-router:
+       environment:
+       - CLOUDFLARE_EMAIL=you@somewhere.com
+       - CLOUDFLARE_API_KEY=your-api-key-from-cloudflare
+    ```
+
+3. Set `project-tld` either globally or for each project with the proper top-level-domain. For example, your project may be named `xx` and your `project-tld` may be `jumphost.example.com`. `xx.jumphost.example.com` must be resolvable (you have to have set up DNS for it, or a wildcard for `*.jumphost.example.com`)
+4. Edit `~/.ddev/traefik/static_config.yaml` to remove the `#ddev-generated` from the top, so you take it over.
+5. Edit `~/.ddev/traefix/static_config.yaml` to replace the `certificateResolvers` stanza:
+
+    ```yaml
+    certificatesResolvers:
+      acmeresolver:
+        acme:
+          #caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+          dnsChallenge: 
+            provider: cloudflare
+   ```
+
+## Caveats
 
 * It’s unknown how much traffic a given server and Docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
 * DDEV does not provide outgoing SMTP mail handling service, and the development-focused Mailpit feature is disabled if you’re using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to use SMTP in your application via a third-party transactional email service such as [SendGrid](https://sendgrid.com), [Postmark](https://postmarkapp.com), or [Mailgun](https://www.mailgun.com). This is the best way to ensure mail is actually delivered.
