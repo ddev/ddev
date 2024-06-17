@@ -122,7 +122,9 @@ func pushGlobalTraefikConfig() error {
 			}
 		}
 	}
-	if sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	// Install default certs, except when using Let's Encrypt (when they would
+	// get used instead of Let's Encrypt certs)
+	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		c := []string{"--cert-file", filepath.Join(sourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(sourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
