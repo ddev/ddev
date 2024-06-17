@@ -1409,13 +1409,13 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 
 	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
 
-	var cmd = ""
+	var c = ""
 	if destroyExisting {
-		cmd = cmd + " rm -rf " + targetSubdirFullPath + " && "
+		c = c + `rm -rf "` + targetSubdirFullPath + `"/{*,.*} && `
 	}
-	cmd = "mkdir -p " + targetSubdirFullPath + " && sleep infinity "
+	c = c + "mkdir -p " + targetSubdirFullPath + " && sleep infinity "
 
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", cmd}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	if err != nil {
 		return err
 	}

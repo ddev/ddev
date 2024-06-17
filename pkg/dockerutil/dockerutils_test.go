@@ -587,7 +587,7 @@ func TestCopyIntoVolume(t *testing.T) {
 	})
 
 	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Make sure that the content is the same, and that .test.sh is executable
 	// On Windows the upload can result in losing executable bit
@@ -622,6 +622,16 @@ subdir1.txt
 	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	assert.NoError(err)
 	assert.Equal("root.txt here\n", out)
+
+	// Copy destructively and make sure that stuff got destroyed
+	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()+"2"), t.Name(), "", "0", "", true)
+	require.NoError(t, err)
+
+	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/subdir1.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	require.Error(t, err)
+
+	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	require.NoError(t, err)
 }
 
 // TestDockerIP tries out a number of DOCKER_HOST permutations
