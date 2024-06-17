@@ -20,7 +20,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Install Script
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
 
     ```bash
     # Download and run the install script
@@ -28,7 +28,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```
 
     ??? "Do you still have an old version after installing or upgrading?"
-        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
     ??? "Need a specific version?"
         Use the `-s` argument to specify a specific stable or prerelease version:
 
@@ -65,7 +65,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
-    (Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305), see also [this issue](https://github.com/ddev/ddev/issues/5415).)
+    (Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305) with `mkcert`, see also [this issue](https://github.com/ddev/ddev/issues/5415).)
+
+    ??? "Do you still have an old version after installing or upgrading?"
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
 
     ??? "Need to remove a previously-installed variant?"
         If you previously used DDEV’s [install script](#install-script), you can remove that version:
@@ -104,9 +107,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV
     yay -S ddev-bin
-    ```
 
-    ```bash
     # One-time initialization of mkcert
     mkcert -install
     ```
@@ -124,7 +125,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
     <h3 id="install-script-linux">Install Script<a class="headerlink" href="#install-script-linux" title="Permanent link">¶</a></h3>
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
 
     ```bash
     # Download and run the install script
@@ -140,7 +141,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         ```
 
     ??? "Do you still have an old version after installing or upgrading?"
-        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
 
 === "Windows"
 
@@ -498,7 +499,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## Manual
 
-    DDEV is a single executable, so installation on any OS is a matter of copying the `ddev` binary for your architecture into the appropriate system path on your machine.
+    DDEV is a single executable, so installation on any OS is a matter of copying the `ddev` executable for your architecture into the appropriate system path on your machine.
 
     * Download and extract the latest [DDEV release](https://github.com/ddev/ddev/releases) for your architecture.
     * Move `ddev` to `/usr/local/bin` with `mv ddev /usr/local/bin/` (may require `sudo`), or another directory in your `$PATH` as preferred.
