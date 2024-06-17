@@ -88,6 +88,7 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 // pushGlobalTraefikConfig pushes the config into ddev-global-cache
 func pushGlobalTraefikConfig() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+	uid, _, _ := util.GetContainerUIDGid()
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global .ddev/traefik directory: %v", err)
@@ -128,6 +129,7 @@ func pushGlobalTraefikConfig() error {
 	if globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists {
 		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_cert.crt"))
 		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_key.key"))
+		err = dockerutil.CopyIntoVolume(sourceCertsPath, "ddev-global-cache", "certs", uid, "", true)
 	}
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
@@ -238,7 +240,6 @@ func pushGlobalTraefikConfig() error {
 			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
 		}
 	}
-	uid, _, _ := util.GetContainerUIDGid()
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
