@@ -130,6 +130,9 @@ func pushGlobalTraefikConfig() error {
 		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_cert.crt"))
 		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_key.key"))
 		err = dockerutil.CopyIntoVolume(sourceCertsPath, "ddev-global-cache", "certs", uid, "", true)
+		if err != nil {
+			util.Warning("Failed to clear certs in ddev-global-cache volume certs directory: %v", err)
+		}
 	}
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)

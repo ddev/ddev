@@ -627,10 +627,10 @@ subdir1.txt
 	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()+"2"), t.Name(), "", "0", "", true)
 	require.NoError(t, err)
 
-	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/subdir1.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/subdir1.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	require.Error(t, err)
 
-	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	require.NoError(t, err)
 }
 
