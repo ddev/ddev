@@ -34,3 +34,15 @@ Project configuration is automatically generated in the project’s `.ddev/traef
 
 Traefik provides a dynamic description of its configuration you can visit at `http://localhost:10999`.
 When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.
+
+## Router `docker-compose` Customization
+
+The default configuration for the router is found in `~/.ddev/.router-compose.yaml`. However, this configuration can be overridden in the same way project configuration can be overridden. You can create a `~/.ddev/router-compose.*.yaml`. For example, as `~/.ddev/router-compose.cloudflare.yaml` might contain environment variables like this:
+
+```yaml
+services:
+  ddev-router:
+    environment:
+      - CLOUDFLARE_EMAIL=you@example.com
+      - CLOUDFLARE_API_KEY=some-key
+```
