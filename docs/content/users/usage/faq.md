@@ -260,6 +260,14 @@ Restart the terminal (or run `hash -r`) after uninstalling other versions of DDE
 
 If you see duplicates in the `which -a ddev` output, it means that some directories are added to your `$PATH` more than once. You can either ignore this or remove the extra directory from your `$PATH`.
 
+### Should I check in the `.ddev` directory? How about add-ons?
+
+Most teams check in the project `.ddev` directory. That way all team members will have the exact same configuration for the project, even if they're on different operating systems or architectures or Docker providers.
+
+DDEV [add-ons](../extend/additional-services.md) are installed via the `.ddev` directory, so checking things in will get them as well, and that's also recommended practice.
+
+Do *not* alter or check in the `.ddev/.gitignore` as it is automatically generated to DDEV and does its best to figure out what files you "own" (like the `.ddev/config.yaml`) and which files DDEV "owns", so do not have to be committed.
+
 ### How can I back up or restore all project databases?
 
 You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects displayed in `ddev list`; any projects not shown there will need to be started so they’re be registered in `ddev list`.
