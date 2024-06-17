@@ -93,6 +93,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     # One-time initialization of mkcert
     mkcert -install
+    ```
 
     Signed yum repository support will be added in the future.
 
@@ -115,9 +116,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV using Homebrew
     brew install ddev/ddev/ddev
+
     # One-time initialization of mkcert
     mkcert -install
-
     ```
 
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
