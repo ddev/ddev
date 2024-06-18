@@ -215,7 +215,7 @@ The reason that `ddev-webserver` is so big is that it's built for your daily req
 
 ### How can I update/upgrade DDEV?
 
-You’ll want to update DDEV using the same method you chose to install it. See **[Upgrading DDEV](../install/ddev-upgrade.md)**.
+See **[Upgrading DDEV](../install/ddev-upgrade.md)** for your operating system and installation technique.
 
 You can use the [`ddev self-upgrade`](../usage/commands.md#self-upgrade) command for quick instructions tailored to your installation.
 
