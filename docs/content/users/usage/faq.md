@@ -164,7 +164,7 @@ RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
 
 ### How can I update/upgrade DDEV?
 
-You’ll want to update DDEV using the same method you chose to install it. Since upgrading is basically the same as installing, you can follow [DDEV Installation](../install/ddev-installation.md) to upgrade.
+You’ll want to update DDEV using the same method you chose to install it. You can follow [Upgrading DDEV](../install/ddev-upgrade.md) to upgrade.
 
 You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for getting instructions tailored to your installation.
 
