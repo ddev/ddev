@@ -27,21 +27,22 @@ Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since 
 If you’re not using the DDEV Integration Plugin, you can follow these steps instead:
 
 1. Start your project by running [`ddev start`](../usage/commands.md#start).
-2. Open the DDEV project. In this example, the project name is “d9” and the site is “d9.ddev.site”.
-    - If you’re on Windows, running PhpStorm on the Windows side but using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the *Open* dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\d9` (in this example). (If you’re running PhpStorm inside WSL2, there are no special instructions.)
+2. Open the DDEV project. In this example, the project name is `drup` and the site is `drup.ddev.site`.
+    - If you’re on Windows, running PhpStorm on the Windows side but using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the *Open* dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\drup` (in this example). (If you’re running PhpStorm inside WSL2, there are no special instructions.)
 3. Under *Build, Execution, Deployment* → *Docker*, set the correct Docker provider, for example “Colima” or “Docker for Mac”.
-4. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../debugging-profiling/step-debugging.md). This will result in a PhpStorm “Server” with the proper name, normally the same as the FQDN of the project. In this example, “d9.ddev.site”. (All you have to do here is click the little telephone to “Start listening for PHP Debug Connections”, run `ddev xdebug on`, and visit a web page and choose the correct mapping from host to server.)
+4. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../debugging-profiling/step-debugging.md). This will result in a PhpStorm “Server” with the proper name, normally the same as the FQDN of the project. In this example, `drup.ddev.site`. (All you have to do here is click the little "bug" to “Start listening for PHP Debug Connections”, run `ddev xdebug on`, and visit a web page and choose the correct mapping from host to server.)
 5. Under *File* → *Settings* → *PHP* (Windows) or *Preferences* → *PHP* (macOS), click “...” to the right of “CLI Interpreter”.
     1. Use the “+” to select “From Docker, Vagrant, VM...”.
     2. Choose “Docker Compose”.
     3. Create a “server”; Choose the appropriate Docker provider configured above under *Build, Execution, Deployment* → *Docker*.
-    4. In the “Path mappings” of the “Server” you may have to map the local paths (which on WSL2 means `/home/...`) to the in-container paths, especially if you have Mutagen enabled. So “Virtual Machine Path” would be `/var/www/html` and “Local path” would be something like `/Users/rfay/workspace/d9` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\d9` on Windows using WSL2.
+    4. In the “Path mappings” of the “Server” you may have to map the local paths (which on WSL2 means `/home/...`) to the in-container paths, especially if you have Mutagen enabled. So “Virtual Machine Path” would be `/var/www/html` and “Local path” would be something like `/Users/rfay/workspace/drup` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\drup` on Windows using WSL2.
     5. Now back in the “Configure Remote PHP Interpreter” for “Configuration files” use `.ddev/.ddev-docker-compose-full.yaml`. On macOS, you may need to use <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>.</kbd>, to show hidden dotfiles.
     6. Service: `web`.
-    7. In the CLI interpreter “Lifecycle” select “Connect to existing container”.
-    8. Here’s an example filled out:
+    7. Environment variables: Set the `COMPOSE_PROJECT_NAME` variable to the name of the project prefixed with `ddev`. In the `drup` example this would become `ddev-drup`. You can find the name of the project in je `config.yaml` of your project. The result will be `COMPOSE_PROJECT_NAME=ddev-drup`. Note that the content of COMPOSE_PROJECT_NAME needs to be lowercase even when project name itself has uppercase characters.
+    8. In the CLI interpreter “Lifecycle” select “Connect to existing container”.
+    9. Here’s an example filled out:
         ![example configuration](../../images/phpstorm-cli-interpreter.png)
-6. In the main PHP setup dialog, add an entry to the path mappings, as it doesn’t correctly derive the full path mapping. Add an entry that maps your project location to `/var/www/html`. So in this example, the “Local Path” is `/Users/rfay/workspace/d9` and the “Remote Path” is `/var/www/html`:
+6. In the main PHP setup dialog, add an entry to the path mappings, as it doesn’t correctly derive the full path mapping. Add an entry that maps your project location to `/var/www/html`. So in this example, the “Local Path” is `/Users/rfay/workspace/drup` and the “Remote Path” is `/var/www/html`:
     ![example mapping](../../images/phpstorm-mapping.png)
 7. Configure composer under *PHP* → *Composer*.
     - Use “remote interpreter”
@@ -118,7 +119,7 @@ Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell
 
 3. `wsl --shutdown` on the Windows side and wait 10 seconds, then restart your distro.
 4. In WSL2, `sudo snap install --classic phpstorm`.
-5. DDEV should already be installed as described in [DDEV installation](../install/ddev-installation.md#windows-wsl2).
+5. DDEV should already be installed as described in [DDEV installation](../install/ddev-installation.md#windows).
 6. `ddev config global --xdebug-ide-location=wsl2` to tell DDEV that the IDE is listening in WSL2 as opposed to listening on the Windows side.
 7. Start PhpStorm, `phpstorm &`.
 8. Use `ddev start` and `ddev xdebug on`.

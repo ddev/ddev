@@ -9,10 +9,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     Install one of the supported Docker providers:
 
     * [OrbStack](#orbstack): Recommended, easiest to install, most performant, commercial, not open-source.
-    * [Colima](#colima): Free, open-source, can be unstable.
     * [Lima](#lima): Free, open-source.
     * [Docker Desktop](#docker-desktop-for-mac): Familiar, popular, not open-source, may require license, may be unstable.
     * [Rancher Desktop](#rancher-desktop): Free, open-source, simple installation, slower startup.
+    * [Colima](#colima): Free, open-source, no longer recommended.
 
     ### OrbStack
 
@@ -20,30 +20,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     
     1. Install OrbStack with `brew install orbstack` or [download it directly](https://orbstack.dev/download).
     2. Run the OrbStack app (from Applications) to finish setup, choosing "Docker" as the option. Answer any prompts to allow OrbStack access.
-
-
-    ### Colima
-
-    [Colima](https://github.com/abiosoft/colima) is a free and open-source project which bundles Lima.
-
-    1. Install Colima with `brew install colima`.
-    2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
-    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
-    ```
-    colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
-    ```
-    (On macOS versions before Ventura, use `colima start --cpu 4 --memory 6 --disk 100 --mount-type=sshfs --dns=1.1.1.1` as the `--vm-type` option are not supported for older macOS versions.)
-
-    After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
-
-    !!!tip "Colima disk allocation"
-        In Colima you can increase—but not decrease—the disk allocation by editing `~/.colima/default/colima.yaml` to change the `disk` setting to a higher value. For example, `disk: 200` will increase allocation to 200 gigabytes. Then `colima restart` will create the new disk allocation.
-
-    !!!warning "Docker contexts let the Docker client point at the right Docker server"
-        Colima activates its own Docker context to prevent conflicts with Docker Desktop. If you run `docker context ls`, you’ll see a list of available contexts where the currently-active one is indicated with a `*`—which will be `colima` after you’ve started it. You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can run Docker Desktop and Colima at the same time, but be mindful of which context you’re pointing at!
-
-    !!!warning "Colima can only work in your home directory unless you do further configuration"
-        By default, Colima only works with DDEV projects in your home directory. You need to have your projects somewhere in your home directory for DDEV to work unless you do additional configuration. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/main/embedded/defaults/colima.yaml#L160-L173).
 
     ### Lima
 
@@ -53,7 +29,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
     3. Create a 100GB VM in Lima with 4 CPUs, 6GB memory, and Cloudflare DNS. Adjust to your own needs:
     ```
-    limactl create --vm-type=vz --mount-type=virtiofs --mount-writable --memory=6 --cpus=4 --disk=100 template://docker
+    limactl create --name=default --vm-type=vz --mount-type=virtiofs --mount-writable --memory=6 --cpus=4 --disk=100 template://docker
     docker context create lima-default --docker "host=unix://$HOME/.lima/default/sock/docker.sock"
     docker context use lima-default
     ```
@@ -72,11 +48,32 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     Docker Desktop for Mac can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing. It is not open-source, may require a license for many users, and sometimes has stability problems.
 
     !!!warning "Ports unavailable?"
-        If you get messages like `Ports are not available... exposing port failed... is vmnetd running?` it means you need to check the "Allow privileged port mapping (requires password)" checkbox in the "Advanced" section of the Docker Desktop configuration. You may have to stop and restart Docker Desktop. (More extensive problem resolution is in [Docker Desktop issue](https://github.com/docker/for-mac/issues/6677).)
+        If you get messages like `Ports are not available... exposing port failed... is vmnetd running?` it means you need to check the "Allow privileged port mapping (requires password)" checkbox in the "Advanced" section of the Docker Desktop configuration. You may have to stop and restart Docker Desktop, and you may have to turn it off, restart Docker Desktop, turn it on again, restart Docker Desktop. (More extensive problem resolution is in [Docker Desktop issue](https://github.com/docker/for-mac/issues/6677).)
 
     ### Rancher Desktop
 
     Rancher Desktop is an easy-to-install free and open-source Docker provider. Install from [Rancher Desktop.io](https://rancherdesktop.io/). It has automated testing with DDEV. When installing, choose only the Docker option and turn off Kubernetes.
+
+
+    ### Colima
+
+    [Colima](https://github.com/abiosoft/colima) is a free and open-source project which bundles Lima. It is no longer a top recommendation because it has been unstable. You can migrate to other providers using [How can I migrate from one Docker provider to another?](../usage/faq.md#how-can-i-migrate-from-one-docker-provider-to-another).
+
+    1. Install Colima with `brew install colima`.
+    2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
+    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
+    ```
+    colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
+    ```
+    (On macOS versions before Ventura, use `colima start --cpu 4 --memory 6 --disk 100 --mount-type=sshfs --dns=1.1.1.1` as the `--vm-type` option are not supported for older macOS versions.)
+
+    After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
+
+    !!!warning "Docker contexts let the Docker client point at the right Docker server"
+        Colima activates its own Docker context to prevent conflicts with Docker Desktop. If you run `docker context ls`, you’ll see a list of available contexts where the currently-active one is indicated with a `*`—which will be `colima` after you’ve started it. You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can run Docker Desktop and Colima at the same time, but be mindful of which context you’re pointing at!
+
+    !!!warning "Colima can only work in your home directory unless you do further configuration"
+        By default, Colima only works with DDEV projects in your home directory. You need to have your projects somewhere in your home directory for DDEV to work unless you do additional configuration. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/main/embedded/defaults/colima.yaml#L160-L173).
 
     #### Migrating Projects Between Docker Providers
 
@@ -116,13 +113,13 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Many have moved away from using Docker Desktop in favor of the Docker-provided open-source `docker-ce` package inside WSL2.
 
-    The instructions for [DDEV Installation in WSL2](ddev-installation.md#windows-wsl2) include Docker CE setup and a script that does almost all the work. Please use those.
+    The instructions for [DDEV Installation in WSL2](ddev-installation.md#wsl2-docker-ce-inside-install-script) include Docker CE setup and a script that does almost all the work. Please use those.
 
     ### Docker Desktop for Windows
 
     Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
 
-    See [WSL2 DDEV Installation](ddev-installation.md#windows-wsl2) for help installing DDEV with Docker Desktop on WSL2.
+    See [WSL2 DDEV Installation](ddev-installation.md#wsl2-docker-desktop-install-script) for help installing DDEV with Docker Desktop on WSL2.
 
 === "Gitpod"
 
@@ -137,10 +134,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     You can set up [GitHub Codespaces](https://github.com/features/codespaces) following the instructions in the [DDEV Installation](ddev-installation.md#github-codespaces) section.
 
 <a name="troubleshooting"></a>
-
-## Alternate Docker Providers
-
-There are a number of [alternate Docker providers](../usage/faq.md#are-there-alternate-docker-providers-i-can-use) that can be used with DDEV.
 
 ## Testing and Troubleshooting Your Docker Installation
 

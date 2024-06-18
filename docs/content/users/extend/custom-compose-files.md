@@ -50,9 +50,9 @@ To better understand how DDEV parses your custom docker-compose files, run `ddev
 
 ## Conventions for Defining Additional Services
 
-When defining additional services for your project, we recommended following these conventions to ensure DDEV handles your service the same way DDEV handles default services.
+When defining additional services for your project, we recommend following these conventions to ensure DDEV handles your service the same way DDEV handles default services.
 
-* The container name should be `ddev-${DDEV_SITENAME}-<servicename>`.
+* The container name should be `ddev-${DDEV_SITENAME}-<servicename>`. This ensures the auto-generated [Traefik routing configuration](./traefik-router.md#project-traefik-configuration) matches your custom service.
 * Provide containers with required labels:
 
     ```yaml
@@ -67,7 +67,7 @@ When defining additional services for your project, we recommended following the
 
     * To expose a web interface to be accessible over HTTP, define the following environment variables in the `environment` section for docker-compose:
 
-        * `VIRTUAL_HOST=$DDEV_HOSTNAME`
+        * `VIRTUAL_HOST=$DDEV_HOSTNAME` You can set a subdomain with `VIRTUAL_HOST=mysubdomain.$DDEV_HOSTNAME`. You can also specify an arbitrary hostname like `VIRTUAL_HOST=extra.ddev.site`.
         * `HTTP_EXPOSE=portNum` The `hostPort:containerPort` convention may be used here to expose a container’s port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
         * `HTTPS_EXPOSE=<exposedPortNumber>:portNum` This will expose an HTTPS interface on `<exposedPortNumber>` to the host (and to the `web` container) as `https://<project>.ddev.site:exposedPortNumber`. To expose multiple ports for a single container, use comma-separated definitions, as in `HTTPS_EXPOSE=9998:80,9999:81`, which would expose HTTP port 80 from the container as `https://<project>.ddev.site:9998` and HTTP port 81 from the container as `https://<project>.ddev.site:9999`.
 
@@ -114,6 +114,7 @@ services:
       - .:/mnt/ddev_config
       # `ddev-global-cache` gets mounted so we have the CAROOT
       # This is required so that the CA is available for `mkcert` to install
+      # and for custom commands to work
       - ddev-global-cache:/mnt/ddev-global-cache
 ```
 

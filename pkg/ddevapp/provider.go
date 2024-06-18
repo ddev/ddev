@@ -325,8 +325,14 @@ func (p *Provider) doFilesPullCommand() (filename []string, error error) {
 // getDatabaseBackups retrieves database using `generic backup database`, then
 // describe until it appears, then download it.
 func (p *Provider) getDatabaseBackups() (filename []string, error error) {
-	_ = os.RemoveAll(p.getDownloadDir())
-	_ = os.Mkdir(p.getDownloadDir(), 0755)
+	err := os.RemoveAll(p.getDownloadDir())
+	if err != nil {
+		return nil, err
+	}
+	err = os.Mkdir(p.getDownloadDir(), 0755)
+	if err != nil {
+		return nil, err
+	}
 
 	if p.DBPullCommand.Command == "" {
 		return nil, nil
@@ -336,7 +342,7 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	if s == "" {
 		s = "web"
 	}
-	err := p.app.MutagenSyncFlush()
+	err = p.app.MutagenSyncFlush()
 	if err != nil {
 		return nil, err
 	}

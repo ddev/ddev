@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	copy2 "github.com/otiai10/copy"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
@@ -115,7 +117,7 @@ func TestDisasterConfig(t *testing.T) {
 
 }
 
-// TestAllowedAppType tests the IsAllowedAppType function.
+// TestAllowedAppType tests the IsValidAppType function.
 func TestAllowedAppTypes(t *testing.T) {
 	assert := asrt.New(t)
 	for _, v := range ddevapp.GetValidAppTypes() {
@@ -194,7 +196,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	})
 
 	app.Name = util.RandString(32)
-	app.Type = ddevapp.GetValidAppTypes()[0]
+	app.Type = ddevapp.GetValidAppTypesWithoutAliases()[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()
@@ -226,10 +228,9 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"magentophpversion":  {nodeps.AppTypeMagento, nodeps.PHP74},
-		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal9phpversion":  {nodeps.AppTypeDrupal9, nodeps.PHPDefault},
-		"drupal10phpversion": {nodeps.AppTypeDrupal10, nodeps.PHP81},
+		"magentophpversion": {nodeps.AppTypeMagento, nodeps.PHPDefault},
+		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP82},
+		"drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -780,7 +781,7 @@ func TestPHPOverrides(t *testing.T) {
 	require.NoError(t, err)
 
 	// Copy test overrides into the project .ddev directory
-	err = fileutil.CopyDir(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
+	err = copy2.Copy(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
 	assert.NoError(err)
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
 	assert.NoError(err)
@@ -818,7 +819,9 @@ func TestPHPOverrides(t *testing.T) {
 
 // TestPHPConfig checks some key PHP configuration items
 func TestPHPConfig(t *testing.T) {
-
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("skipping on Lima/Colima because of unpredictable behavior, unable to connect")
+	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -984,9 +987,7 @@ func TestExtraPackages(t *testing.T) {
 	require.NoError(t, err)
 
 	addedDBPackage := "sudo"
-	// php-gmp is flaky on Debian 12 Bookworm,
-	// we can test it https://github.com/ddev/ddev/issues/5898
-	addedWebPackage := "php" + app.PHPVersion + "-" + "gmp"
+	addedWebPackage := "dnsutils"
 
 	// Test db container to make sure no sudo in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{

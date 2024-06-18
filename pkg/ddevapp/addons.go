@@ -94,6 +94,22 @@ func GetInstalledAddonNames(app *DdevApp) []string {
 	return names
 }
 
+// GetInstalledAddonProjectFiles returns a list of project files installed by add-ons
+func GetInstalledAddonProjectFiles(app *DdevApp) []string {
+	manifests := GetInstalledAddons(app)
+	uniqueFilesMap := make(map[string]struct{})
+	for _, manifest := range manifests {
+		for _, file := range manifest.ProjectFiles {
+			uniqueFilesMap[filepath.Join(app.AppConfDir(), file)] = struct{}{}
+		}
+	}
+	uniqueFiles := make([]string, 0, len(uniqueFilesMap))
+	for file := range uniqueFilesMap {
+		uniqueFiles = append(uniqueFiles, file)
+	}
+	return uniqueFiles
+}
+
 // ProcessAddonAction takes a stanza from yaml exec section and executes it.
 func ProcessAddonAction(action string, dict map[string]interface{}, bashPath string, verbose bool) error {
 	action = "set -eu -o pipefail\n" + action

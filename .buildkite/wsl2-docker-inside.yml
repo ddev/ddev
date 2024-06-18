@@ -3,10 +3,6 @@
 # Runs on master and all PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
-    plugins:
-      - docker-login#v2.1.0:
-          username: druddockerpullaccount
-          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=wsl2"
       - "architecture=amd64"

@@ -2,6 +2,9 @@ package nodeps
 
 import (
 	"sort"
+	"strings"
+
+	"github.com/maruel/natural"
 
 	"github.com/ddev/ddev/pkg/config/types"
 )
@@ -67,6 +70,10 @@ var SimpleFormatting = false
 // FailOnHookFailDefault is the default value for app.FailOnHookFail
 var FailOnHookFailDefault = false
 
+// GoroutineLimit is the number of goroutines allowed at exit in parts of some tests
+// Can be overridden by setting DDEV_TEST_GOROUTINE_LIMIT=<somenumber>
+var GoroutineLimit = 10
+
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
@@ -79,6 +86,7 @@ var ValidWebserverTypes = map[string]bool{
 const (
 	AppTypeNone         = ""
 	AppTypeBackdrop     = "backdrop"
+	AppTypeCakePHP      = "cakephp"
 	AppTypeCraftCms     = "craftcms"
 	AppTypeDjango4      = "django4"
 	AppTypeDrupal6      = "drupal6"
@@ -86,6 +94,7 @@ const (
 	AppTypeDrupal8      = "drupal8"
 	AppTypeDrupal9      = "drupal9"
 	AppTypeDrupal10     = "drupal10"
+	AppTypeDrupal       = "drupal"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"
 	AppTypeMagento      = "magento"
@@ -132,7 +141,7 @@ func GetValidPHPVersions() []string {
 	for p := range ValidPHPVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
@@ -168,8 +177,8 @@ func GetValidDatabaseVersions() []string {
 
 // IsValidMariaDBVersion is a helper function to determine if a MariaDB version is valid, returning
 // true if the supplied MariaDB version is valid and false otherwise.
-func IsValidMariaDBVersion(MariaDBVersion string) bool {
-	if _, ok := ValidMariaDBVersions[MariaDBVersion]; !ok {
+func IsValidMariaDBVersion(v string) bool {
+	if _, ok := ValidMariaDBVersions[strings.TrimPrefix(v, MariaDB+":")]; !ok {
 		return false
 	}
 
@@ -179,7 +188,7 @@ func IsValidMariaDBVersion(MariaDBVersion string) bool {
 // IsValidMySQLVersion is a helper function to determine if a MySQL version is valid, returning
 // true if the supplied version is valid and false otherwise.
 func IsValidMySQLVersion(v string) bool {
-	if _, ok := ValidMySQLVersions[v]; !ok {
+	if _, ok := ValidMySQLVersions[strings.TrimPrefix(v, MySQL+":")]; !ok {
 		return false
 	}
 
@@ -193,14 +202,14 @@ func GetValidMariaDBVersions() []string {
 	for p := range ValidMariaDBVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
 // IsValidPostgresVersion is a helper function to determine if a PostgreSQL version is valid, returning
 // true if the supplied version is valid and false otherwise.
 func IsValidPostgresVersion(v string) bool {
-	if _, ok := ValidPostgresVersions[v]; !ok {
+	if _, ok := ValidPostgresVersions[strings.TrimPrefix(v, Postgres+":")]; !ok {
 		return false
 	}
 
@@ -214,7 +223,7 @@ func GetValidMySQLVersions() []string {
 	for p := range ValidMySQLVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 
@@ -225,7 +234,7 @@ func GetValidPostgresVersions() []string {
 	for p := range ValidPostgresVersions {
 		s = append(s, p)
 	}
-	sort.Strings(s)
+	sort.Sort(natural.StringSlice(s))
 	return s
 }
 

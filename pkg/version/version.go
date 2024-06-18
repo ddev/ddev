@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/docker"
@@ -24,6 +25,8 @@ func GetVersionInfo() map[string]string {
 	versionInfo := make(map[string]string)
 
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
+	versionInfo["cgo_enabled"] = strconv.FormatInt(versionconstants.CGOEnabled, 10)
+	versionInfo["global-ddev-dir"] = globalconfig.GetGlobalDdevDir()
 	versionInfo["web"] = docker.GetWebImage()
 	versionInfo["db"] = docker.GetDBImage(nodeps.MariaDB, "")
 	versionInfo["router"] = docker.GetRouterImage()
@@ -33,6 +36,9 @@ func GetVersionInfo() map[string]string {
 	versionInfo["architecture"] = runtime.GOARCH
 	if versionInfo["docker"], err = dockerutil.GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("Failed to GetDockerVersion(): %v", err)
+	}
+	if versionInfo["docker-api"], err = dockerutil.GetDockerAPIVersion(); err != nil {
+		versionInfo["docker-api"] = fmt.Sprintf("Failed to GetDockerAPIVersion(): %v", err)
 	}
 	if versionInfo["docker-platform"], err = GetDockerPlatform(); err != nil {
 		versionInfo["docker-platform"] = fmt.Sprintf("Failed to GetDockerPlatform(): %v", err)
@@ -67,15 +73,14 @@ func GetDockerPlatform() (string, error) {
 	switch {
 	case strings.HasPrefix(platform, "Docker Desktop"):
 		platform = "docker-desktop"
+	case strings.HasPrefix(platform, "Rancher Desktop") || strings.Contains(info.Name, "rancher-desktop"):
+		platform = "rancher-desktop"
 	case strings.HasPrefix(info.Name, "colima"):
 		platform = "colima"
 	case strings.HasPrefix(info.Name, "lima"):
 		platform = "lima"
 	case platform == "OrbStack":
 		platform = "orbstack"
-	case strings.HasPrefix(platform, "Rancher Desktop") || strings.Contains(info.Name, "rancher-desktop"):
-
-		platform = "rancher-desktop"
 	case nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "wsl2-docker-ce"
 	case !nodeps.IsWSL2() && info.OSType == "linux":

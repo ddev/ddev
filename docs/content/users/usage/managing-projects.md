@@ -16,7 +16,7 @@ For **Magento 1**, DDEV settings go into `app/etc/local.xml`.
 
 In **Magento 2**, DDEV settings go into `app/etc/env.php`.
 
-For **TYPO3**, DDEV settings are written to `AdditionalConfiguration.php`. If `AdditionalConfiguration.php` exists and is not managed by DDEV, it will not be modified.
+For **TYPO3**, DDEV settings are written to `config/system/additional.php`. If `additional.php` exists and is not managed by DDEV, it will not be modified.
 
 For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-ddev.php`. The `ddev config` command will attempt to write settings through the following steps:
 
@@ -47,62 +47,53 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` current projects.
 
 ```
-
 ➜  ddev list
-NAME          TYPE     LOCATION                   URL(s)                                STATUS
-d8git         drupal8  ~/workspace/d8git          <https://d8git.ddev.local>            running
-                                                  <http://d8git.ddev.local>
-hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
-
+ NAME            STATUS        LOCATION                    URL                           TYPE
+ bakerydemo      running (ok)  ~/workspace/bakerydemo      https://bakerydemo.ddev.site  django4
+ d10             stopped       ~/workspace/d10                                           drupal10
+ drup            running (ok)  ~/workspace/drup            https://drup.ddev.site        drupal
+ my-cakephp-app  stopped       ~/workspace/my-cakephp-app                                cakephp
+ Router          healthy       ~/.ddev                     http://127.0.0.1:10999        traefik
 ```
 
 ```
 
 ➜  ddev list --active-only
-NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>  running
-                                       <https://drupal8.ddev.site>
-
+ NAME        STATUS        LOCATION                URL                           TYPE
+ bakerydemo  running (ok)  ~/workspace/bakerydemo  https://bakerydemo.ddev.site  django4
+ drup        running (ok)  ~/workspace/drup        https://drup.ddev.site        drupal
+ Router      healthy       ~/.ddev                 http://127.0.0.1:10999        traefik
 ```
 
 You can also see more detailed information about a project by running [`ddev describe`](../usage/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
-NAME        TYPE     LOCATION                URL                           STATUS
-d9composer  drupal8  ~/workspace/d9composer  https://d9composer.ddev.site  running
-
-Project Information
--------------------
-PHP version:    7.4
-MariaDB version 10.3
-
-URLs
-----
-https://d9composer.ddev.site
-https://127.0.0.1:33232
-http://d9composer.ddev.site
-http://127.0.0.1:33233
-
-MySQL/MariaDB Credentials
--------------------------
-Username: "db", Password: "db", Default database: "db"
-
-or use root credentials when needed: Username: "root", Password: "root"
-
-Database hostname and port INSIDE container: ddev-d9-db:3306
-To connect to db server inside container or in project settings files:
-mysql --host=ddev-d9-dbcomposer --user=db --password=db --database=db
-Database hostname and port from HOST: 127.0.0.1:33231
-To connect to mysql from your host machine,
-mysql --host=127.0.0.1 --port=33231 --user=db --password=db --database=db
-
-Other Services
---------------
-Mailpit (HTTPS):    https://d9composer.ddev.site:8026
-Mailpit:            http://d9composer.ddev.site:8025
-
-DDEV ROUTER STATUS: healthy
-ssh-auth status: healthy
+$ ddev describe drup
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ Project: drup ~/workspace/drup https://drup.ddev.site                            │
+│ Docker platform: orbstack                                                        │
+│ Router: traefik                                                                  │
+├──────────┬──────┬───────────────────────────────────────────┬────────────────────┤
+│ SERVICE  │ STAT │ URL/PORT                                  │ INFO               │
+├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
+│ web      │ OK   │ https://drup.ddev.site                    │ drupal PHP8.3      │
+│          │      │ InDocker: web:8025,443,80                 │ nginx-fpm          │
+│          │      │ Host: 127.0.0.1:33016,33017               │ docroot:'web'      │
+│          │      │                                           │ Perf mode: mutagen │
+│          │      │                                           │ NodeJS:20          │
+├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
+│ db       │ OK   │ InDocker: db:3306                         │ mariadb:10.11      │
+│          │      │ Host: 127.0.0.1:33018                     │ User/Pass: 'db/db' │
+│          │      │                                           │ or 'root/root'     │
+├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
+│ Mailpit  │      │ Mailpit: https://drup.ddev.site:8026      │                    │
+│          │      │ `ddev mailpit`                            │                    │
+├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
+│ All URLs │      │ https://drup.ddev.site,                   │                    │
+│          │      │ https://127.0.0.1:33016,                  │                    │
+│          │      │ http://drup.ddev.site,                    │                    │
+│          │      │ http://127.0.0.1:33017                    │                    │
+└──────────┴──────┴───────────────────────────────────────────┴────────────────────┘
 ```
 
 ## Removing Projects

@@ -54,7 +54,7 @@ func CopyFile(src string, dst string) error {
 			return err
 		}
 
-		err = os.Chmod(dst, si.Mode())
+		err = util.Chmod(dst, si.Mode())
 		if err != nil {
 			return fmt.Errorf("failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
 		}
@@ -160,7 +160,7 @@ func PurgeDirectory(path string) error {
 	}
 
 	for _, file := range files {
-		err = os.Chmod(filepath.Join(path, file), 0777)
+		err = util.Chmod(filepath.Join(path, file), 0777)
 		if err != nil {
 			return err
 		}
@@ -186,16 +186,16 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 
 // GrepStringInFile is a small hammer for looking for a regex in a file.
 // It should only be used against very modest sized files, as the entire file is read
-// into a string.
-func GrepStringInFile(fullPath string, needle string) (bool, error) {
+// into a string. Returns found, matches, error
+func GrepStringInFile(fullPath string, needle string) (bool, []string, error) {
 	fullFileBytes, err := os.ReadFile(fullPath)
 	if err != nil {
-		return false, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
+		return false, nil, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
 	}
 	fullFileString := string(fullFileBytes)
 	re := regexp.MustCompile(needle)
 	matches := re.FindStringSubmatch(fullFileString)
-	return len(matches) > 0, nil
+	return len(matches) > 0, matches, nil
 }
 
 // ListFilesInDir returns an array of files or directories found in a directory

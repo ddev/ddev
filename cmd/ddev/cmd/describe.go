@@ -61,6 +61,7 @@ running 'ddev describe <projectname>'.`,
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
 	status := desc["status"]
+
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -123,9 +124,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 		for _, k := range serviceNames {
 			v := serviceMap[k]
-
 			httpURL := ""
 			urlPortParts := []string{}
+			extraInfo := []string{}
 
 			switch {
 			// Normal case, using ddev-router based URLs
@@ -135,6 +136,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				} else if httpURL, ok = v["http_url"]; ok {
 					urlPortParts = append(urlPortParts, httpURL)
 				}
+
 			// Gitpod, web container only, using port proxied by Gitpod
 			case (nodeps.IsGitpod() || nodeps.IsCodespaces()) && k == "web":
 				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
@@ -148,13 +150,16 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			if p, ok := v["exposed_ports"]; ok {
-				urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
+				if p != "" {
+					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
+				} else {
+					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"])
+				}
 			}
+
 			if p, ok := v["host_ports"]; ok && p != "" {
 				urlPortParts = append(urlPortParts, "Host: 127.0.0.1:"+p)
 			}
-
-			extraInfo := []string{}
 
 			// Get extra info for web container
 			if k == "web" {
@@ -182,7 +187,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if _, ok := desc["mailpit_https_url"]; ok {
 				mailpitURL = desc["mailpit_https_url"].(string)
 			}
-			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\n`ddev mailpit`", mailpitURL)})
+			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", mailpitURL)})
 
 			//WebExtraExposedPorts stanza
 			for _, extraPort := range app.WebExtraExposedPorts {

@@ -10,6 +10,8 @@ GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -type f)
+GORACE = "halt_on_error=1"
+CGO_ENABLED = 0
 .PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 setup
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
@@ -30,7 +32,7 @@ PKG := github.com/ddev/ddev
 SRC_DIRS := cmd pkg
 
 # Version variables to replace in build
-VERSION_VARIABLES ?= DdevVersion SegmentKey AmplitudeAPIKey
+VERSION_VARIABLES ?= DdevVersion AmplitudeAPIKey
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
@@ -74,14 +76,14 @@ completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): mkcert $(GOFILES)
-	@echo "building $@ from $(SRC_AND_UNDER)";
+	@echo "building $@ from $(SRC_AND_UNDER) GORACE=$(GORACE) CGO_ENABLED=$(CGO_ENABLED)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=0 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
+	export CGO_ENABLED=$(CGO_ENABLED) GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $(BUILDARGS) -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
@@ -94,9 +96,9 @@ mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTM
 # Download mkcert to it can be added to tarball installations
 $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" MKCERT_VERSION=v1.4.4 && \
 	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
-	curl --fail -JL -s -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://dl.filippo.io/mkcert/latest?for=$${GOOS}/$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
+	curl --fail -JL -s -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -118,18 +120,18 @@ test: testpkg testcmd
 testcmd: $(DEFAULT_BUILD) setup
 	@echo LDFLAGS=$(LDFLAGS)
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
 
 testpkg: testnotddevapp testddevapp
 
 testddevapp: $(DEFAULT_BUILD) setup
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(TESTARGS)
 
 testnotddevapp: $(DEFAULT_BUILD) setup
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(TESTARGS)
 
 testfullsitesetup: $(DEFAULT_BUILD) setup
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,src,pkg/mod/cache,.cache}
@@ -163,12 +165,18 @@ mkdocs:
 # It works best with mkdocs installed, `pip3 install mkdocs`,
 # see https://www.mkdocs.org/user-guide/installation/
 # But it will also work using docker.
+MKDOCS_TAG := 1.5.2
+ifeq ($(BUILD_ARCH),arm64)
+    MKDOCS_TAG := arm64v8-$(MKDOCS_TAG)
+endif
 mkdocs-serve:
+	set -x; \
 	if command -v mkdocs >/dev/null ; then \
   		mkdocs serve; \
 	else \
-		docker run -it --rm -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs:1.2.3; \
-	fi
+		docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" "polinux/mkdocs:$(MKDOCS_TAG)"; \
+	fi; \
+	set +x
 
 # Install markdown-link-check locally with "npm install -g markdown-link-check"
 markdown-link-check:

@@ -2,19 +2,18 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/util"
-
 	"os"
 	"path"
 	"path/filepath"
 	"text/template"
 
-	"github.com/ddev/ddev/pkg/fileutil"
-
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+	copy2 "github.com/otiai10/copy"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -119,7 +118,7 @@ func writeDrupalSettingsPHP(filePath string, appType string) error {
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -172,14 +171,19 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 		}
 	}
 
-	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", app.Type, "settings.ddev.php"))
+	drupalVersion, err := GetDrupalVersion(app)
+	if err != nil || drupalVersion == "" {
+		// todo: Reconsider this logic for default version
+		drupalVersion = "10"
+	}
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", "drupal"+drupalVersion, "settings.ddev.php"))
 	if err != nil {
 		return err
 	}
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -233,7 +237,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err := util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -256,17 +260,11 @@ func getDrupalUploadDirs(_ *DdevApp) []string {
 	return uploadDirs
 }
 
-// Drupal10Hooks adds a d10-specific hooks example for post-import-db
-const Drupal10Hooks = `# post-import-db:
+// DrupalHooks adds d8+-specific hooks example for post-import-db
+const DrupalHooks = `# post-import-db:
 #   - exec: drush sql:sanitize
 #   - exec: drush updatedb
 #   - exec: drush cache:rebuild
-`
-
-// Drupal8Hooks adds a d8-specific hooks example for post-import-db
-const Drupal8Hooks = `# post-import-db:
-#   - exec: drush cr
-#   - exec: drush updb
 `
 
 // Drupal7Hooks adds a d7-specific hooks example for post-import-db
@@ -285,14 +283,9 @@ func getDrupal6Hooks() []byte {
 	return []byte(Drupal7Hooks)
 }
 
-// getDrupal8Hooks for appending as byte array
-func getDrupal8Hooks() []byte {
-	return []byte(Drupal8Hooks)
-}
-
-// getDrupal10Hooks for appending as byte array
-func getDrupal10Hooks() []byte {
-	return []byte(Drupal10Hooks)
+// getDrupalHooks for appending as byte array
+func getDrupalHooks() []byte {
+	return []byte(DrupalHooks)
 }
 
 // setDrupalSiteSettingsPaths sets the paths to settings.php/settings.ddev.php
@@ -312,28 +305,31 @@ func isDrupal7App(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal8App returns true if the app is of type drupal8
-func isDrupal8App(app *DdevApp) bool {
-	isD8, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '8`)
-	if err == nil && isD8 {
-		return true
+// GetDrupalVersion finds the drupal8+ version so it can be used
+// for setting requirements.
+// It can only work if there is configured Drupal8+ code
+func GetDrupalVersion(app *DdevApp) (string, error) {
+	// For drupal6/7 we use the apptype provided as version
+	switch app.Type {
+	case nodeps.AppTypeDrupal6:
+		return "6", nil
+	case nodeps.AppTypeDrupal7:
+		return "7", nil
 	}
-	return false
+	// Otherwise figure out the version from existing code
+	f := filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php")
+	hasVersion, matches, err := fileutil.GrepStringInFile(f, `const VERSION = '([0-9]+)`)
+	v := ""
+	if hasVersion {
+		v = matches[1]
+	}
+	return v, err
 }
 
-// isDrupal9App returns true if the app is of type drupal9
-func isDrupal9App(app *DdevApp) bool {
-	isD9, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '9`)
-	if err == nil && isD9 {
-		return true
-	}
-	return false
-}
-
-// isDrupal10App returns true if the app is of type drupal10
-func isDrupal10App(app *DdevApp) bool {
-	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '10`)
-	if err == nil && isD10 {
+// isDrupalApp returns true if the app is drupal
+func isDrupalApp(app *DdevApp) bool {
+	v, err := GetDrupalVersion(app)
+	if err == nil && v != "" {
 		return true
 	}
 	return false
@@ -347,50 +343,52 @@ func isDrupal6App(app *DdevApp) bool {
 	return false
 }
 
-// drupal6ConfigOverrideAction overrides php_version for D6, since it is incompatible
-// with php7+
+// drupal6ConfigOverrideAction overrides php_version for D6
 func drupal6ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP56
 	return nil
 }
 
-func drupal8ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP74
+// drupal7ConfigOverrideAction overrides php_version for D7
+func drupal7ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP82
 	return nil
 }
 
-// drupal0ConfigOverrideAction overrides php_version for D10, requires PHP8.0
-//func drupal9ConfigOverrideAction(app *DdevApp) error {
-//	app.PHPVersion = nodeps.PHP80
-//	return nil
-//}
-
-// drupal10ConfigOverrideAction overrides php_version for D10, requires PHP8.0
-func drupal10ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
-	return nil
-}
-
-// drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
-// useful permissions settings on sites/default.
-func drupal8PostStartAction(app *DdevApp) error {
-	// Return early because we aren't expected to manage settings.
-	if app.DisableSettingsManagement {
+// drupalConfigOverrideAction selects proper versions for
+func drupalConfigOverrideAction(app *DdevApp) error {
+	v, err := GetDrupalVersion(app)
+	if err != nil || v == "" {
+		util.Warning("Unable to detect Drupal version, continuing")
 		return nil
 	}
-	if err := createDrupal8SyncDir(app); err != nil {
-		return err
+	// If there is no database, update it to the default one,
+	// otherwise show a warning to the user.
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		if dbType, err := app.GetExistingDBType(); err == nil && dbType == "" {
+			app.Database = DatabaseDefault
+		} else if app.Database != DatabaseDefault && v != "8" {
+			defaultType := DatabaseDefault.Type + ":" + DatabaseDefault.Version
+			util.Warning("Default database type is %s, but the current actual database type is %s, you may want to migrate with 'ddev debug migrate-database %s'.", defaultType, dbType, defaultType)
+		}
 	}
-
-	//nolint: revive
-	if err := drupalEnsureWritePerms(app); err != nil {
-		return err
+	switch v {
+	case "8":
+		app.PHPVersion = nodeps.PHP74
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
+	case "9":
+		app.PHPVersion = nodeps.PHP81
+	case "10":
+		app.PHPVersion = nodeps.PHP83
+	case "11":
+		app.PHPVersion = nodeps.PHP83
+		app.CorepackEnable = true
 	}
 	return nil
 }
 
 func drupalPostStartAction(app *DdevApp) error {
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupal9App(app) || isDrupal10App(app)) {
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupalApp(app)) {
 		err := app.Wait([]string{nodeps.DBContainer})
 		if err != nil {
 			return err
@@ -495,7 +493,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 			continue
 		}
 
-		if err := os.Chmod(o, stat.Mode()|writePerms); err != nil {
+		if err := util.Chmod(o, stat.Mode()|writePerms); err != nil {
 			// Warn the user, but continue.
 			util.Warning("Unable to set permissions: %v", err)
 		}
@@ -571,13 +569,15 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 	}
 
 	// Parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 
-	// If the destination path exists, remove it as was warned
+	// If the destination path exists, remove contents as was warned
+	// We do not remove the directory as it may be a docker bind-mount in
+	// various situations, especially when mutagen is in use.
 	if fileutil.FileExists(destPath) {
-		if err := os.RemoveAll(destPath); err != nil {
+		if err := fileutil.PurgeDirectory(destPath); err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
@@ -598,8 +598,7 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 		return nil
 	}
 
-	//nolint: revive
-	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+	if err := copy2.Copy(importPath, destPath); err != nil {
 		return err
 	}
 

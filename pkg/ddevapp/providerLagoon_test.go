@@ -39,7 +39,7 @@ func lagoonSetupSSHKey(t *testing.T) string {
 		t.Skipf("No DDEV_LAGOON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
-	return sshkey
+	return sshkey + "\n"
 }
 
 // TestLagoonPull ensures we can pull from lagoon
@@ -63,7 +63,7 @@ func TestLagoonPull(t *testing.T) {
 	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal9
+	app.Type = nodeps.AppTypeDrupal
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
@@ -84,6 +84,11 @@ func TestLagoonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	app.Docroot = "web"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
+
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -106,7 +111,7 @@ func TestLagoonPull(t *testing.T) {
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "1\n"))
+	assert.True(strings.HasSuffix(out, "\n1\n"))
 }
 
 // TestLagoonPush ensures we can push to lagoon for a configured environment.
@@ -137,10 +142,14 @@ func TestLagoonPush(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal9
+	app.Type = nodeps.AppTypeDrupal
 	_ = app.Stop(true, false)
 
 	app.Docroot = "web"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
 
 	err = app.WriteConfig()
 	require.NoError(t, err)

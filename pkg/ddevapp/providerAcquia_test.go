@@ -75,6 +75,10 @@ func TestAcquiaPull(t *testing.T) {
 	require.NoError(t, err)
 	// acli really wants the project to look like the target project
 	app.Docroot = "docroot"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
@@ -91,7 +95,7 @@ func TestAcquiaPull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal10
+	app.Type = nodeps.AppTypeDrupal
 
 	_ = app.Stop(true, false)
 	err = app.WriteConfig()
@@ -116,9 +120,9 @@ func TestAcquiaPull(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "chocolate-brownie-umami.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -B --skip-column-names `, DdevBin)})
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "1\n"))
+	assert.True(strings.HasSuffix(out, "\n1\n"), "out is unexpected '%s'", out)
 }
 
 // TestAcquiaPush ensures we can push to acquia for a configured environment.
@@ -164,6 +168,10 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	// acli really wants the project to look like the target project
 	app.Docroot = "docroot"
+	app.Database = ddevapp.DatabaseDesc{
+		Type:    nodeps.MySQL,
+		Version: nodeps.MySQL57,
+	}
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)

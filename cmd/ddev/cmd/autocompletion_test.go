@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,8 +8,11 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -214,6 +216,9 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because untested on Windows")
 	}
+	if dockerutil.IsColima() {
+		t.Skip("Skipping on Colima because of slow mount responses")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -225,8 +230,7 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	tmpHome, _, err := makeTempHomeDir(app, t)
-	require.NoError(t, err)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -235,30 +239,19 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		// Stop the Mutagen daemon running in the bogus homedir
-		ddevapp.StopMutagenDaemon()
-		_ = os.RemoveAll(tmpHome)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 	})
 	err = app.Start()
 	require.NoError(t, err)
 
-	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
-	// It's changed via $HOME for the DDEV subprocess
-	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
-	assert.NoError(err)
-
-	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+	tmpHomeGlobalCommandsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
 	projectCommandsDir := app.GetConfigPath("commands")
-	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
 
 	// Remove existing commands
 	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
 	assert.NoError(err)
 	err = os.RemoveAll(projectCommandsDir)
-	assert.NoError(err)
-	err = os.RemoveAll(projectGlobalCommandsCopy)
 	assert.NoError(err)
 	// Copy project and global commands into project
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
@@ -303,8 +296,7 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	tmpHome, _, err := makeTempHomeDir(app, t)
-	require.NoError(t, err)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -313,30 +305,19 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		// Stop the Mutagen daemon running in the bogus homedir
-		ddevapp.StopMutagenDaemon()
-		_ = os.RemoveAll(tmpHome)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 	})
 	err = app.Start()
 	require.NoError(t, err)
 
-	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
-	// It's changed via $HOME for the DDEV subprocess
-	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
-	assert.NoError(err)
-
-	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+	tmpHomeGlobalCommandsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
 	projectCommandsDir := app.GetConfigPath("commands")
-	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
 
 	// Remove existing commands
 	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
 	assert.NoError(err)
 	err = os.RemoveAll(projectCommandsDir)
-	assert.NoError(err)
-	err = os.RemoveAll(projectGlobalCommandsCopy)
 	assert.NoError(err)
 	// Copy project and global commands into project
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)

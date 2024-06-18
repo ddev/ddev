@@ -8,25 +8,27 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Homebrew
 
-    [Homebrew](https://brew.sh/) is the easiest and most reliable way to install and upgrade DDEV:
+    [Homebrew](https://brew.sh/) is the easiest and most reliable way to install and [upgrade](./ddev-upgrade.md) DDEV:
 
     ```bash
     # Install DDEV
     brew install ddev/ddev/ddev
 
-    # Initialize mkcert
+    # One-time initialization of mkcert
     mkcert -install
     ```
 
     ### Install Script
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
 
     ```bash
     # Download and run the install script
     curl -fsSL https://ddev.com/install.sh | bash
     ```
 
+    ??? "Do you still have an old version after installing or upgrading?"
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
     ??? "Need a specific version?"
         Use the `-s` argument to specify a specific stable or prerelease version:
 
@@ -39,17 +41,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## Linux
 
-    ### Locally-trusted certificate with mkcert
-
-    Modern browsers require valid certificates, which mkcert can create. [Install mkcert](https://github.com/FiloSottile/mkcert#installation), and then run this:
-
-    ```bash
-    # Initialize mkcert
-    mkcert -install
-    ```
-
-    Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305), see also [this issue](https://github.com/ddev/ddev/issues/5415).
-
     ### Debian/Ubuntu
 
     DDEV’s Debian and RPM packages work with `apt` and `yum` repositories and most variants that use them, including Windows WSL2:
@@ -57,6 +48,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Add DDEV’s GPG key to your keyring
     sudo sh -c 'echo ""'
+    sudo apt-get update && sudo apt-get install -y curl
     sudo install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
     sudo chmod a+r /etc/apt/keyrings/ddev.gpg
@@ -67,8 +59,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     # Update package information and install DDEV
     sudo sh -c 'echo ""'
-    sudo apt update && sudo apt install -y ddev
+    sudo apt-get update && sudo apt-get install -y ddev
+
+    # One-time initialization of mkcert
+    mkcert -install
     ```
+
+    (Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305) with `mkcert`, see also [this issue](https://github.com/ddev/ddev/issues/5415).)
+
+    ??? "Do you still have an old version after installing or upgrading?"
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
 
     ??? "Need to remove a previously-installed variant?"
         If you previously used DDEV’s [install script](#install-script), you can remove that version:
@@ -93,6 +93,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Install DDEV
     sudo sh -c 'echo ""'
     sudo dnf install --refresh ddev
+
+    # One-time initialization of mkcert
+    mkcert -install
     ```
 
     Signed yum repository support will be added in the future.
@@ -104,6 +107,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV
     yay -S ddev-bin
+
+    # One-time initialization of mkcert
+    mkcert -install
     ```
 
     ### Homebrew (AMD64 only)
@@ -111,12 +117,15 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV using Homebrew
     brew install ddev/ddev/ddev
+
+    # One-time initialization of mkcert
+    mkcert -install
     ```
 
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
     <h3 id="install-script-linux">Install Script<a class="headerlink" href="#install-script-linux" title="Permanent link">¶</a></h3>
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
 
     ```bash
     # Download and run the install script
@@ -130,6 +139,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         # Download and run the script to install DDEV v1.21.4
         curl -fsSL https://ddev.com/install.sh | bash -s v1.21.4
         ```
+
+    ??? "Do you still have an old version after installing or upgrading?"
+        If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
 
 === "Windows"
 
@@ -258,10 +270,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     12. Install DDEV:
 
         ```bash
+        sudo apt-get update && sudo apt-get install -y curl
         sudo install -m 0755 -d /etc/apt/keyrings
         curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
         echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
-        sudo apt update && sudo apt install -y ddev
+        sudo apt-get update && sudo apt-get install -y ddev
         ```
 
     13. In WSL2, run `mkcert -install`.
@@ -314,7 +327,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
 
         # Update package information and install DDEV
-        sudo apt update && sudo apt install -y ddev
+        sudo apt-get update && sudo apt-get install -y ddev
         ```
 
         * You can install your web app there, or import a database.
@@ -339,7 +352,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      },
+      }
     }
     ```
 
@@ -486,7 +499,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## Manual
 
-    DDEV is a single executable, so installation on any OS is a matter of copying the `ddev` binary for your architecture into the appropriate system path on your machine.
+    DDEV is a single executable, so installation on any OS is a matter of copying the `ddev` executable for your architecture into the appropriate system path on your machine.
 
     * Download and extract the latest [DDEV release](https://github.com/ddev/ddev/releases) for your architecture.
     * Move `ddev` to `/usr/local/bin` with `mv ddev /usr/local/bin/` (may require `sudo`), or another directory in your `$PATH` as preferred.

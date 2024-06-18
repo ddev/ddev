@@ -105,8 +105,8 @@ func TestCaptureOutputToFile(t *testing.T) {
 	assert.Contains(out, "randstring-stderr="+text)
 }
 
-// TestConfirm ensures that the confirmation prompt works as expected.
-func TestConfirm(t *testing.T) {
+// TestConfirmTo ensures that the confirmation prompt works as expected.
+func TestConfirmTo(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Unset the env var, then reset after the test
@@ -117,47 +117,43 @@ func TestConfirm(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	yesses := []string{"YES", "Yes", "yes", "Y", "y"}
-	for _, y := range yesses {
+	// test a given input against a default value
+	testInput := func(input string, defaultTo bool, expected bool) {
 		text := util.RandString(32)
-		scanner := bufio.NewScanner(strings.NewReader(y))
+		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
 		getOutput := util.CaptureStdOut()
-		resp := util.Confirm(text)
-		assert.True(resp)
+		resp := util.ConfirmTo(text, defaultTo)
+		if expected {
+			assert.True(resp)
+		} else {
+			assert.False(resp)
+		}
 		assert.Contains(getOutput(), text)
+	}
+
+	yesses := []string{"YES", "Yes", "yes", "Y", "y"}
+	for _, y := range yesses {
+		testInput(y, true, true)
+		testInput(y, false, true)
 	}
 
 	nos := []string{"NO", "No", "no", "N", "n"}
 	for _, n := range nos {
-		text := util.RandString(32)
-		scanner := bufio.NewScanner(strings.NewReader(n))
-		util.SetInputScanner(scanner)
-
-		getOutput := util.CaptureStdOut()
-		resp := util.Confirm(text)
-		assert.False(resp)
-		assert.Contains(getOutput(), text)
+		testInput(n, true, false)
+		testInput(n, false, false)
 	}
 
 	// Test that junk answers (not yes, no, or <enter>) eventually return a false
-	scanner := bufio.NewScanner(strings.NewReader("a\nb\na\nb\na\nb\na\nb\na\nb\n"))
-	util.SetInputScanner(scanner)
-	getOutput := util.CaptureStdOut()
-	text := util.RandString(32)
-	resp := util.Confirm(text)
-	assert.False(resp)
-	assert.Contains(getOutput(), text)
+	junkText := "a\nb\na\nb\na\nb\na\nb\na\nb\n"
+	testInput(junkText, true, false)
+	testInput(junkText, false, false)
 
-	// Test that <enter> returns true
-	scanner = bufio.NewScanner(strings.NewReader("\n"))
-	util.SetInputScanner(scanner)
-	getOutput = util.CaptureStdOut()
-	text = util.RandString(32)
-	resp = util.Confirm(text)
-	assert.True(resp)
-	assert.Contains(getOutput(), text)
+	// Test that <enter> returns the defaultTo value
+	enter := "\n"
+	testInput(enter, true, true)
+	testInput(enter, false, false)
 }
 
 // TestSliceToUniqueSlice tests SliceToUniqueSlice
@@ -178,4 +174,23 @@ func TestSliceToUniqueSlice(t *testing.T) {
 		res := util.SliceToUniqueSlice(&testBedSources[i])
 		assert.Equal(testBedExpectations[i], res)
 	}
+}
+
+// TestArrayToReadableOutput tests ArrayToReadableOutput
+func TestArrayToReadableOutput(t *testing.T) {
+	assert := asrt.New(t)
+
+	testSource := []string{
+		"file1.conf",
+		"file2.conf",
+	}
+	expectation := `[
+	file1.conf
+	file2.conf
+]`
+	res, _ := util.ArrayToReadableOutput(testSource)
+	assert.Equal(expectation, res)
+
+	_, err := util.ArrayToReadableOutput([]string{})
+	assert.EqualErrorf(err, "empty slice", "Expected error when passing an empty slice")
 }

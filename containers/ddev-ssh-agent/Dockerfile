@@ -1,6 +1,6 @@
 FROM debian:bullseye-slim
 
-RUN apt-get update && apt-get install -y bash expect file openssh-client socat psmisc && apt autoclean
+RUN apt-get update && apt-get install -y bash expect file openssh-client socat psmisc && apt-get autoclean
 
 # Copy container files
 COPY files /

@@ -9,7 +9,7 @@ search:
 There are several ways to use DDEV’s latest-committed HEAD version:
 
 * **Download** the latest master branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/master-build/master). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
-* **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased. Since you’re building this on your own computer, it’s not signed or notarized, and you’ll get a notification that instrumentation doesn’t work, which is fine. If you’re using Linux/WSL2, you’ll likely need to install build-essential by running the following command: `sudo apt install -y build-essential`.
+* **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased. Since you’re building this on your own computer, it’s not signed or notarized, and you’ll get a notification that instrumentation doesn’t work, which is fine. If you’re using Linux/WSL2, you’ll likely need to install build-essential by running the following command: `sudo apt-get install -y build-essential`.
 * **Build manually**: If you have normal build tools like `make` and `go` installed, you can check out the code and run `make`.
 * **Gitpod** You can use the latest build by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/ddev/ddev).
 
@@ -84,12 +84,54 @@ rm ~/bin/ddev
 
 [Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. For any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pull/<YOUR-PR>` to open that PR and build it in Gitpod.
 
-To open and work on DDEV master branch you can use the button below.
+It also allows you to work on the DDEV master branch and test modifiying DDEV's source code.
+
+To get started use the button below:
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ddev/ddev)
 
-If you want to run a web project, you can check it out into `/workspace/<yourproject>` and use it as usual. The things you’re familiar with work normally, except that `ddev-router` does not run.
+For a simple test, edit `r/cmd/ddev/cmd/start.go` and change the line
 
-A Gitpod dummy project for is provided by default in `/workspace/d10simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d9simple`. Then you can run [`ddev start`](../users/usage/commands.md#start) to work with your own.
+```go
+    output.UserOut.Printf("Starting %s...", project.GetName())
+```
+
+to
+
+```go
+    output.UserOut.Printf("Let's gooooo ... %s...", project.GetName())
+```
+
+Compile and install your new modified DDEV version:
+
+```bash
+cd /workspace/ddev/
+make
+```
+
+The command `ddev -v` now will output something like `ddev version v1.23.1-20-g70fc4cd7b-dirty`. The version will stay the same for all compilations until you make a commit.
+
+A Gitpod dummy project for is provided by default in `/workspace/d10simple` to test your changes:
+
+```bash
+cd /workspace/d10simple/
+ddev start
+```
+
+If you want to create a new project or use your own project, you will need to delete the dummy project to free up reserved host ports by running `ddev delete -Oy d10simple`.
+
+Afterwards you can run [`ddev config`](../users/usage/commands.md#config) as usual:
+
+```bash
+cd /workspace/
+mkdir my-new-project/
+cd my-new-project/
+ddev config
+```
+
+If you want to use an existing web project, also check it out into `/workspace/<yourproject>` and use it as usual.
+
+The things you’re familiar with work normally, except that `ddev-router` does not run.  
 
 ## Making Changes to DDEV Images
 
@@ -252,10 +294,13 @@ Then run `ddev` commands as usual, and the data will be sent to Amplitude.
 
 Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
 
+You can add additional `go build` args with `make BUILDARGS=<something>`, for example, `make BUILDARGS=-race`.
+
 Build/test/check static analysis with:
 
 ```
 make # Builds on current os/architecture
+make BUILDARGS=-race
 make linux_amd64
 make linux_arm64
 make darwin_amd64
@@ -268,7 +313,9 @@ make staticrequired
 
 ## Testing
 
-Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name.
+Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name. This is also easy to do in Visual Studio Code.
+
+To test with race detection, `make test TESTARGS="-race"` for example.
 
 To see which DDEV commands the tests are executing, set the environment variable `DDEV_DEBUG=true`.
 
@@ -387,3 +434,7 @@ The rules:
 9. Even though we call these “rules” above, they are guidelines. Since you’ve read all the rules, you now know that.
 
 If you are having trouble getting into the mood of idiomatic Go, we recommend reading through [Effective Go](https://golang.org/doc/effective_go.html). The [Go Blog](https://blog.golang.org) is also a great resource. Drinking the kool-aid is a lot easier than going thirsty.
+
+## Contributor Live Training
+
+We’re actively trying to increase the DDEV community of contributors and maintainers. To do that, we regularly do contributor training, and we’d love to have you come. The trainings are recorded for everybody’s benefit. The recordings and upcoming session dates can be found here: [DDEV Contributor Live Training](https://ddev.com/blog/contributor-training/).

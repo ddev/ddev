@@ -114,7 +114,7 @@ func TestMutagenSimple(t *testing.T) {
 	assert.Equal("paused", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
 	// Make sure we can stop the daemon
-	ddevapp.StopMutagenDaemon()
+	ddevapp.StopMutagenDaemon("")
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
 		// Verify that the Mutagen daemon stopped/died
 		sleepWait := time.Second * 1
@@ -126,9 +126,8 @@ func TestMutagenSimple(t *testing.T) {
 		assert.Error(err)
 	}
 
-	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
-	assert.NoError(err, "Mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", mutagenDataDirectory, out, err)
+	assert.NoError(err, "Mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", globalconfig.GetMutagenDataDirectory(), out, err)
 	assert.Contains(out, "Started Mutagen daemon in background")
 	if !strings.Contains(out, "Started Mutagen daemon in background") && (runtime.GOOS == "darwin" || runtime.GOOS == "linux") {
 		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")

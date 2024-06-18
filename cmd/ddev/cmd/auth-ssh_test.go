@@ -9,12 +9,11 @@ import (
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
-
-	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
@@ -68,7 +67,7 @@ func TestCmdAuthSSH(t *testing.T) {
 
 	// Now we add the key with passphrase
 	testAuthSSHDir := filepath.Join(origDir, "testdata", "TestCmdAuthSSH")
-	err = os.Chmod(filepath.Join(testAuthSSHDir, ".ssh", "id_rsa"), 0600)
+	err = util.Chmod(filepath.Join(testAuthSSHDir, ".ssh", "id_rsa"), 0600)
 	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
 	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), cmd.DdevBin, sshDir, "testkey"})

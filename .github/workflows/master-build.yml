@@ -9,6 +9,19 @@ on:
   release:
     types: [ created ]
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+# We do not cancel in-progress builds here because in general we
+# want to see success on each commit, and we usually use [skip ci]
+# to prevent builds on commits that don't matter.
+#concurrency:
+#  group: ${{ github.workflow }}-${{ github.ref }}
+#  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
   BUILDKIT_PROGRESS: plain
@@ -17,13 +30,14 @@ env:
   GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
   DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-22.04
     env:
-      SegmentKey: ${{ secrets.SEGMENTKEY }}
       AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
@@ -52,12 +66,10 @@ jobs:
         run: |
           export PATH=".gotmp/bin/linux_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
-          if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
           if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
           ddev config global | grep instrumentation-opt-in=true
-          ddev config global | grep -v "SegmentKey is not available."
-          ddev config global | grep -v "AmplitudeAPIKey is not available."
+          ddev version | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
 
@@ -78,7 +90,6 @@ jobs:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
     env:
-      SegmentKey: ${{ secrets.SEGMENTKEY }}
       AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
@@ -99,12 +110,10 @@ jobs:
         run: |
           export PATH=".gotmp/bin/windows_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
-          if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
           if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
           ddev config global | grep instrumentation-opt-in=true
-          ddev config global | grep -v "SegmentKey is not available."
-          ddev config global | grep -v "AmplitudeAPIKey is not available."
+          ddev version | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
       - name: Cache signed binaries
@@ -174,13 +183,11 @@ jobs:
       CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
     steps:
-      # The upload-artifacts section often fails. This may give us a recovery technique
       - name: Setup tmate session
-        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 45
         with:
           limit-access-to-actor: true
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - uses: actions/checkout@v4
         with:
@@ -221,15 +228,23 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
+      - name: "Verify that cgo_enabled is 0 in Linux binary"
+        run: |
+          .gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev version
+          cgo=$(".gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev" version 2>/dev/null | awk '/cgo_enabled/ {print $2}')
+          if [ "${cgo}" != "0" ]; then echo "CGO_ENABLED=${cgo} but it must be 0 in released binary" && exit 10; fi
+
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         if: startsWith( github.ref, 'refs/tags/v1')
         with:
           distribution: goreleaser-pro
           version: latest
           args: release --clean
         env:
+          CGO_ENABLED: 0
+          DOCKER_ORG: ddev
           GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
@@ -243,32 +258,32 @@ jobs:
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: Upload all artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: all-ddev-executables
           path: ${{ github.workspace }}/artifacts/*
       - name: Upload macos-amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ddev-macos-amd64
           path: .gotmp/bin/darwin_amd64/ddev
       - name: Upload macos-arm64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ddev-macos-arm64
           path: .gotmp/bin/darwin_arm64/ddev
       - name: Upload linux-arm64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ddev-linux-arm64
           path: .gotmp/bin/linux_arm64/ddev
       - name: Upload linux-amd64 binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ddev-linux-amd64
           path: .gotmp/bin/linux_amd64/ddev
       - name: Upload windows_amd64 installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe

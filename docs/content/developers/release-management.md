@@ -37,12 +37,13 @@ The following “Repository secret” environment variables must be added to <ht
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MAIN_REPO_ORGNAME`: The organization to be used for testing, normally `ddev` but it may be `ddev-test` for the test organization.
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
+* `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
+* `DOCKERHUB_TOKEN`: Token for pushing to `hub.docker.com`. or updating image descriptions.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
 * `GORELEASER_KEY`: License key for GoReleaser Pro.
 * `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev-test/homebrew-ddev-edge`.
 * `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev/homebrew-ddev-edge`.
-* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`. (This will be obsolete in DDEV v1.23.)
 
 ## Creating a Release
 
@@ -56,8 +57,7 @@ The following “Repository secret” environment variables must be added to <ht
 * Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a GITHUB_TOKEN that has power to manage packages, like `https://github.com/settings/tokens/1121534855` (`Package management token - see https://ddev.readthedocs.io/en/latest/developers/release-management/#prerelease-tasks`)
-    * Change the version in `.github/devcontainers/src/install-ddev/devcontainer-feature.json`.
+* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a `GITHUB_TOKEN` that has power to manage packages (`write:packages` scope, classic PAT), change the version in the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) and run:
 
     ```bash
     cd .github/devcontainers/src
@@ -114,7 +114,7 @@ While it’s more error-prone, images can be pushed from the command line:
 5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.
 6. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
 
-## Maintaining `ddev-dbserver` MySQL 5.7 & 8.0 ARM64 Images
+## Maintaining `ddev-dbserver` MySQL 5.7 and 8.0 ARM64 Images
 
 Sadly, there are no ARM64 Docker images for MySQL 5.7 and 8.0, so we have our own process to maintain [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images) and [ddev/xtrabackup-build](https://github.com/ddev/xtrabackup-build) images for DDEV.
 
@@ -133,7 +133,7 @@ But here are the steps for building:
 
 1. The `ddev/ddev-php-base` image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
 2. The `ddev/ddev-webserver` Dockerfile must `FROM ddev/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the GitHub Actions or the manual technique.
-3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7 & 8.0 ARM64 Images](#maintaining-ddev-dbserver-mysql-57--80-arm64-images) instructions.
+3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7 & 8.0 ARM64 Images](#maintaining-ddev-dbserver-mysql-57-and-80-arm64-images) instructions.
 4. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
 
 ## Manually Updating Homebrew Formulas

@@ -8,7 +8,7 @@ This page is about working with the DDEV documentation. See the [Writing Style G
 
 ## Fix Docs Using Web Browser
 
-The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/ddev/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using [GitHub in a browser](#fix-docs-using-web-browser):
+The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/ddev/ddev/actions). While it may help to [check your work locally](#fork-or-clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using GitHub in a browser:
 
 1. Click the pencil in the upper right. That will take you to the right page on GitHub.
 2. Click the pencil button on GitHub and follow the instructions to create your change.
@@ -18,7 +18,7 @@ The documentation is built and checked automatically with various [GitHub Action
     ![Documentation preview build link](../images/docs-build-link.png)
 6. Take a look at the [“Check docs” action](https://github.com/ddev/ddev/actions/workflows/docscheck.yml) to make sure there were no linting or spelling errors.
 
-## Fork / Clone the DDEV Repository
+## Fork or Clone the DDEV Repository
 
 To start making changes you’ll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/ddev/ddev/fork) which includes the documentation.
 
@@ -44,7 +44,20 @@ This will launch a web server on port 8000 and automatically refresh pages as th
     It’s easiest to [install MkDocs locally](https://www.mkdocs.org/user-guide/installation/), but you don’t have to. The `make mkdocs-serve` command will look for and use a local binary, otherwise using `make` to build and serve the documentation. If you don’t have `make` installed on your system, you can directly run the command it would have instead:
 
     ```
-    docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;
+    TAG=$(arch)
+    if [ "${TAG}" = "arm64" ]; then TAG="${TAG}v8-1.5.2"; else TAG=1.5.2; fi
+    docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" "polinux/mkdocs:$TAG"
+    ```
+
+!!!tip "Installing mkdocs locally on macOS"
+    On macOS with recent versions of Homebrew use this technique to install mkdocs:
+
+    ```bash
+    brew install pipx
+    export PIPX_BIN_DIR=/usr/local/bin
+    pipx install mkdocs
+    pipx runpip mkdocs install -r docs/mkdocs-pip-requirements
+    pipx ensurepath
     ```
 
 ## Check Markdown for Errors

@@ -164,6 +164,12 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			util.Failed("failed to create project: %v", err)
 		}
 
+		// Make sure composer.json is here with Mutagen enabled
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			util.Failed("Failed to flush Mutagen: %v", err)
+		}
+
 		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
 
 		if !preserveFlags && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
@@ -299,6 +305,8 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		if err != nil {
 			util.Warning("Failed to restart project after composer create: %v", err)
 		}
+
+		util.Success("\nddev composer create was successful.\nConsider using `ddev config --update` to autodetect configuration for your project")
 
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)

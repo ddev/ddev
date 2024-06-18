@@ -66,13 +66,13 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
-	copiedGlobalCommandPath := app.GetConfigPath(".global_commands")
-	err = os.MkdirAll(copiedGlobalCommandPath, 0755)
+	globalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
+	err = os.MkdirAll(globalCommandPath, 0755)
 	if err != nil {
 		return err
 	}
 
-	for _, commandSet := range []string{projectCommandPath, copiedGlobalCommandPath} {
+	for _, commandSet := range []string{projectCommandPath, globalCommandPath} {
 		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
 		if err != nil {
 			return err
@@ -82,11 +82,15 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			if !fileutil.IsDirectory(serviceDirOnHost) {
 				continue
 			}
+			// Skip hidden directories as well.
+			if strings.HasPrefix(filepath.Base(serviceDirOnHost), ".") {
+				continue
+			}
 			commandFiles, err := fileutil.ListFilesInDir(serviceDirOnHost)
 			if err != nil {
 				return err
 			}
-			err = addCustomCommandsFromDir(rootCmd, app, serviceDirOnHost, commandFiles, commandSet == copiedGlobalCommandPath, commandsAdded)
+			err = addCustomCommandsFromDir(rootCmd, app, serviceDirOnHost, commandFiles, commandSet == globalCommandPath, commandsAdded)
 			if err != nil {
 				return err
 			}
@@ -102,9 +106,6 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 	var err error
 
 	for _, commandName := range commandFiles {
-		// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
-		// host; a Windows path is not useful here.
-		inContainerFullPath := path.Join("/mnt/ddev_config", filepath.Base(filepath.Dir(serviceDirOnHost)), service, commandName)
 		onHostFullPath := filepath.Join(serviceDirOnHost, commandName)
 
 		if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
@@ -117,7 +118,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		}
 
 		// Any command we find will want to be executable on Linux
-		_ = os.Chmod(onHostFullPath, 0755)
+		// Note that this only affects host commands and project-level commands.
+		// Global container commands are made executable on `ddev start` instead.
+		_ = util.Chmod(onHostFullPath, 0755)
 		if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
 			util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 			continue
@@ -129,6 +132,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// Skip host commands that need a project if we aren't in a project directory.
 		if service == "host" && app == nil {
 			if val, ok := directives["CanRunGlobally"]; !ok || val != "true" {
+				if isCustomCommandInArgs(commandName) {
+					util.Warning("Command '%s' cannot be used outside the project directory.", commandName)
+				}
 				continue
 			}
 		}
@@ -181,6 +187,14 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		// If ProjectTypes is specified and we aren't of that type, skip
 		if projectTypes != "" && (app == nil || !strings.Contains(projectTypes, app.Type)) {
+			if app != nil && isCustomCommandInArgs(commandName) {
+				suggestedCommands := strings.Split(projectTypes, ",")
+				for i, projectType := range suggestedCommands {
+					suggestedCommands[i] = fmt.Sprintf("ddev config --project-type=%s", projectType)
+				}
+				suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
+				util.Warning("Command '%s' is not available for the '%s' project type.\nIf you intend to use '%s', change the project type to one of the supported types %s", commandName, app.Type, commandName, suggestedCommand)
+			}
 			continue
 		}
 
@@ -192,6 +206,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// If OSTypes is specified and we aren't on one of the specified OSes, skip
 		if osTypes != "" {
 			if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
+				if isCustomCommandInArgs(commandName) {
+					util.Warning("Command '%s' cannot be used with your OS.", commandName)
+				}
 				continue
 			}
 		}
@@ -212,6 +229,10 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 				}
 			}
 			if !binExists {
+				if isCustomCommandInArgs(commandName) {
+					suggestedBinaries, _ := util.ArrayToReadableOutput(bins)
+					util.Warning("Command '%s' cannot be used, because the binary is not found at %s", commandName, suggestedBinaries)
+				}
 				continue
 			}
 		}
@@ -224,6 +245,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		// If DBTypes is specified and we aren't using that DBTypes
 		if dbTypes != "" && app != nil {
 			if !strings.Contains(dbTypes, app.Database.Type) {
+				if isCustomCommandInArgs(commandName) {
+					util.Warning("Command '%s' is not available for the '%s' database type.", commandName, app.Database.Type)
+				}
 				continue
 			}
 		}
@@ -266,7 +290,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
-				_ = os.Chmod(autocompletePathOnHost, 0755)
+				_ = util.Chmod(autocompletePathOnHost, 0755)
 				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
 					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 					continue
@@ -275,16 +299,23 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 				commandToAdd.ValidArgsFunction = makeHostCompletionFunc(autocompletePathOnHost, commandToAdd)
 			}
 		} else {
+			// Use path.Join() for the container path because it's about the path in the container, not on the
+			// host; a Windows path is not useful here.
+			containerBasePath := path.Join("/mnt/ddev_config", filepath.Base(filepath.Dir(serviceDirOnHost)), service)
+			if strings.HasPrefix(serviceDirOnHost, globalconfig.GetGlobalDdevDir()) {
+				containerBasePath = path.Join("/mnt/ddev-global-cache/global-commands/", service)
+			}
+			inContainerFullPath := path.Join(containerBasePath, commandName)
 			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
-				_ = os.Chmod(autocompletePathOnHost, 0755)
+				_ = util.Chmod(autocompletePathOnHost, 0755)
 				if hasCR, _ := fileutil.FgrepStringInFile(autocompletePathOnHost, "\r\n"); hasCR {
-					util.Warning("Command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
+					util.Warning("Autocomplete script for command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, autocompletePathOnHost)
 					continue
 				}
 				// Add autocomplete script
-				autocompletePathInContainer := path.Join("/mnt/ddev_config", filepath.Base(filepath.Dir(serviceDirOnHost)), service, "autocomplete", commandName)
+				autocompletePathInContainer := path.Join(containerBasePath, "autocomplete", commandName)
 				commandToAdd.ValidArgsFunction = makeContainerCompletionFunc(autocompletePathInContainer, service, app, commandToAdd)
 			}
 		}
@@ -319,6 +350,11 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		commandsAdded[commandName] = 1
 	}
 	return nil
+}
+
+// isCustomCommandInArgs checks if the command is the first arg passed to the "ddev" command.
+func isCustomCommandInArgs(commandName string) bool {
+	return len(os.Args) > 1 && os.Args[1] == commandName
 }
 
 func makeHostCompletionFunc(autocompletePathOnHost string, commandToAdd *cobra.Command) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {

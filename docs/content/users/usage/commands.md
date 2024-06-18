@@ -109,6 +109,15 @@ ddev blackfire off
     * `on`: `start`, `enable`, `true`
     * `off`: `stop`, `disable`, `false`
 
+## `cake`
+
+Run the `cake` command; available only in projects of type `cakephp`, and only available if `cake.php` is in bin folder.
+
+```shell
+# Show all cake subcommands
+ddev cake
+```
+
 ## `clean`
 
 Removes items DDEV has created. (See [Uninstalling DDEV](../usage/uninstall.md).)
@@ -153,7 +162,7 @@ ddev composer create drupal/recommended-project
 
 ## `config`
 
-Create or modify a DDEV project’s configuration in the current directory.
+Create or modify a DDEV project’s configuration in the current directory. By default, `ddev config` will not change configuration that already exists in your `.ddev/config.yaml`, it will only make changes you specify with flags. However, if you want to autodetect everything, `ddev config --update` will usually do everything you need.
 
 !!!tip "You can also set these via YAML!"
     These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config.md).
@@ -164,8 +173,15 @@ Example:
 # Start interactive project configuration
 ddev config
 
-# Configure a Drupal 8 project with a `web` document root
-ddev config --docroot=web --project-type=drupal8
+# Accept defaults on a new project. This is the same as hitting <RETURN>
+# on every question in `ddev config`
+ddev config --auto
+
+## Detect docroot, project type, and expected defaults for an existing project
+ddev config --update
+
+# Configure a Drupal project with a `web` document root
+ddev config --docroot=web --project-type=drupal
 
 # Switch the project’s default `nginx-fpm` to `apache-fpm`
 ddev config --webserver-type=apache-fpm
@@ -175,7 +191,7 @@ Flags:
 
 * `--additional-fqdns`: Comma-delimited list of project FQDNs.
 * `--additional-hostnames`: Comma-delimited list of project hostnames.
-* `--auto`: Automatically run config without prompting. (default `true`)
+* `--auto`: Automatically run config without prompting.
 * `--bind-all-interfaces`: Bind host ports on all interfaces, not only on localhost network interface.
 * `--composer-root`: Overrides the default Composer root directory for the web service.
 * `--composer-root-default`: Unsets a web service Composer root directory override.
@@ -208,9 +224,10 @@ Flags:
 * `--php-version`: PHP version that will be enabled in the web container.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
-* `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
+* `--project-type`: Provide the project type: `backdrop`, `drupal`, `drupal6`, `drupal7`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
+* `--update`: Automatically detect and update settings by inspecting the code.
 * `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible. (default `true`)
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
@@ -385,7 +402,7 @@ ddev debug get-volume-db-version
 
 ### `debug migrate-database`
 
-Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL.
+Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's config.yaml file.
 
 Example:
 
@@ -521,7 +538,7 @@ ddev describe my-project
 
 ## `drush`
 
-Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal8` and higher, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
+Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal`, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
 
 ```shell
 # Show drush status/configuration
@@ -755,6 +772,13 @@ Flags:
 
 * `--mailpit`, `-m`: Open Mailpit.
 
+!!!tip "How to disable HTTP redirect to HTTPS?"
+    Recommendations for:
+
+    * [Google Chrome](https://stackoverflow.com/q/73875589)
+    * [Mozilla Firefox](https://stackoverflow.com/q/30532471)
+    * [Safari](https://stackoverflow.com/q/46394682)
+
 Example:
 
 ```shell
@@ -766,6 +790,12 @@ ddev launch --mailpit
 
 # Open your project’s base URL appended with `temp/phpinfo.php`
 ddev launch temp/phpinfo.php
+
+# Open the full URL (any website) in the default browser
+ddev launch https://your.ddev.site
+
+# Open your project’s base URL using a specific port
+ddev launch :3000
 ```
 
 ## `list`
@@ -779,7 +809,7 @@ Flags:
 * `--active-only`, `-A`: If set, only currently active projects will be displayed.
 * `--continuous`: If set, project information will be emitted until the command is stopped.
 * `--continuous-sleep-interval`, `-I`: Time in seconds between `ddev list --continuous` output lists. (default `1`)
-* `--type`, `-t`: Show only projects of this type (e.g. `drupal8`, `wordpress`, `php`).
+* `--type`, `-t`: Show only projects of this type (e.g. `drupal`, `wordpress`, `php`).
 * `--wrap-table`, `-W`: Display table with wrapped text if required.
 
 Example:
@@ -923,6 +953,17 @@ ddev mutagen sync
 ddev mutagen sync my-project
 ```
 
+### `mutagen version`
+
+Display the version of the Mutagen binary and the location of its components.
+
+Example:
+
+```shell
+# Print Mutagen details
+ddev mutagen version
+```
+
 ## `mysql`
 
 Run MySQL client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.
@@ -956,14 +997,32 @@ ddev npm update
 
 ## `nvm`
 
-Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command). (Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.)
+Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command).
+
+!!!tip
+    Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.
 
 Example:
 
 ```shell
 # Use `nvm` to switch to Node.js v20
 ddev nvm install 20
+
+# Check the installed Node.js version
+ddev nvm current
+
+# Reset Node.js to `nodejs_version`
+ddev nvm alias default system
+
+# Switch between two installed Node.js versions
+ddev nvm install 20
+ddev nvm install 18
+ddev nvm alias default 20
+ddev nvm alias default 18
 ```
+
+!!!warning "`nvm use` works only inside the web container after `ddev ssh`"
+    Use `ddev nvm alias default <version>` instead.
 
 ## `php`
 
@@ -1441,7 +1500,10 @@ ddev xhprof off
 Run [`yarn` commands](https://yarnpkg.com/cli) inside the web container in the root of the project (global shell host container command).
 
 !!!tip
-    Use `--cwd` for another directory.
+    Use `--cwd` for another directory, or you can change directories to the desired directory and `ddev yarn` will act on the same relative directory inside the container.
+
+!!!tip
+    If you want to define your Yarn version on a per project basis, set `corepack_enable: true` in `.ddev/config.yaml` or `ddev config --corepack-enable`
 
 Example:
 
@@ -1452,6 +1514,14 @@ ddev yarn install
 # Use Yarn to add the Lerna package
 ddev yarn add lerna
 
+# Use yarn in a relative directory
+cd web/core && ddev yarn add lerna
+
 # Use Yarn to add the Lerna package from the `web/core` directory
 ddev yarn --cwd web/core add lerna
+
+# Use latest yarn or specified yarn
+ddev config --corepack-enable && ddev restart
+ddev yarn set version stable
+ddev yarn --version
 ```

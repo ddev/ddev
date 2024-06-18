@@ -2,7 +2,7 @@
 
 Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [commands](../usage/commands.md). There are commands to configure a project, start, stop, describe, etc. Each command also has help using `ddev help <command>` or `ddev command -h`. For example, `ddev help snapshot` will show help and examples for the snapshot command.
 
-* [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot.
+* [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot, either interactively or with flags.
 * [`ddev start`](../usage/commands.md#start) starts up a project.
 * [`ddev launch`](../usage/commands.md#launch) opens a web browser showing the project.
 * [`ddev list`](../usage/commands.md#list) shows current projects and their state.
@@ -30,6 +30,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 * `ddev magento` (Magento2 only) gives access to the `magento` CLI.
 * [`ddev craft`](../usage/commands.md#craft) (Craft CMS only) gives access to the `craft` CLI.
 * [`ddev yarn`](../usage/commands.md#yarn) and [`ddev npm`](../usage/commands.md#npm) give direct access to the `yarn` and `npm` CLIs.
+* `ddev cake` (CakePHP only) gives direct access to the CakePHP `cake` CLI.
 
 ## Node.js, npm, nvm, and Yarn
 
@@ -40,7 +41,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 In addition to the [*commands*](../usage/commands.md) listed above, there are lots of tools included inside the containers:
 
 * [`ddev describe`](../usage/commands.md#describe) tells how to access **Mailpit**, which captures email in your development environment.
-* Composer, Git, Node.js, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via [`ddev ssh`](../usage/commands.md#ssh) or [`ddev exec`](../usage/commands.md#exec).
+* Composer, Git, Node.js, npm, nvm, symfony, and dozens of other tools are installed in the web container, and you can access them via [`ddev ssh`](../usage/commands.md#ssh) or [`ddev exec`](../usage/commands.md#exec).
 * [`ddev logs`](../usage/commands.md#logs) gets you web server logs; `ddev logs -s db` gets database server logs.
 * `sqlite3` and the `mysql` and `psql` clients are inside the web container (and `mysql` or `psql` client is also in the `db` container).
 

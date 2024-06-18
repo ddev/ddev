@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
-
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/util"
+	"os"
 )
 
 func main() {
+	defer util.CheckGoroutines()
 	defer util.TimeTrack()()
 
 	// Initialization is currently done before via init() func somewhere while
@@ -25,4 +25,5 @@ func main() {
 	}
 
 	cmd.Execute()
+
 }

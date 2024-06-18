@@ -28,7 +28,7 @@ Not all maintainers can do all these things at any given time, but these are the
 
 ## Maintainer Documentation Resources
 
-* [DDEV Developer Documentation](https://ddev.readthedocs.io/en/latest/developers/)
+* [DDEV Developer Documentation](./index.md)
 * [Maintainer Private Repository](https://github.com/ddev/maintainer-info). This has information that may be sensitive, with screencasts and tips.
 * [DDEV Contributor Training](https://ddev.com/blog/contributor-training/), a series of training sessions that were recorded.
 * [DDEV blog](https://ddev.com/blog)

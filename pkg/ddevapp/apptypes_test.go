@@ -22,7 +22,7 @@ import (
 func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	appTypes := ddevapp.GetValidAppTypes()
+	appTypes := ddevapp.GetValidAppTypesWithoutAliases()
 	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
 		if t != nodeps.AppTypePHP {
@@ -53,25 +53,24 @@ func TestApptypeDetection(t *testing.T) {
 	}
 }
 
-// TestPostConfigAction tests that the post-config action is properly applied, but only if the
+// TestConfigOverrideAction tests that the ConfigOverride action is properly applied, but only if the
 // config is not included in the config.yaml.
-func TestPostConfigAction(t *testing.T) {
+func TestConfigOverrideAction(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
 	appTypes := map[string]string{
 		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
-		nodeps.AppTypeCraftCms:     nodeps.PHP81,
+		nodeps.AppTypeCakePHP:      nodeps.PHP83,
+		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
-		nodeps.AppTypeDrupal7:      nodeps.PHPDefault,
-		nodeps.AppTypeDrupal8:      nodeps.PHP74,
-		nodeps.AppTypeDrupal9:      nodeps.PHPDefault,
-		nodeps.AppTypeDrupal10:     nodeps.PHP81,
+		nodeps.AppTypeDrupal7:      nodeps.PHP82,
+		nodeps.AppTypeDrupal:       nodeps.PHPDefault,
 		nodeps.AppTypeLaravel:      nodeps.PHP82,
-		nodeps.AppTypeMagento:      nodeps.PHP74,
-		nodeps.AppTypeMagento2:     nodeps.PHP81,
+		nodeps.AppTypeMagento:      nodeps.PHPDefault,
+		nodeps.AppTypeMagento2:     nodeps.PHP82,
+		nodeps.AppTypeSilverstripe: nodeps.PHPDefault,
 		nodeps.AppTypeWordPress:    nodeps.PHPDefault,
-		nodeps.AppTypeSilverstripe: nodeps.PHP81,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
@@ -97,7 +96,7 @@ func TestPostConfigAction(t *testing.T) {
 		fmt.Println("")
 
 		// With no config file written, the ConfigFileOverrideAction should result in an override
-		err = app.ConfigFileOverrideAction()
+		err = app.ConfigFileOverrideAction(true)
 		assert.NoError(err)
 
 		// With a basic new app, the expectedPHPVersion should be the default
@@ -107,11 +106,60 @@ func TestPostConfigAction(t *testing.T) {
 		app.PHPVersion = newVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.ConfigFileOverrideAction()
+		err = app.ConfigFileOverrideAction(false)
 		assert.NoError(err)
 		// But with a config that has been written with a specified version, the version should be untouched by
 		// app.ConfigFileOverrideAction()
 		assert.EqualValues(app.PHPVersion, newVersion)
+	}
+}
+
+// TestConfigOverrideActionOnExistingConfig tests that the ConfigOverride action is properly applied, even if the config
+// existed when the override flag is enabled.
+func TestConfigOverrideActionOnExistingConfig(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+
+	// This will only work for those project types defining configOverrideAction and altering php version
+	appTypes := map[string]string{
+		nodeps.AppTypeCakePHP: nodeps.PHP83,
+		nodeps.AppTypeDrupal6: nodeps.PHP56,
+		nodeps.AppTypeDrupal7: nodeps.PHP82,
+		// For AppTypeDrupal we can't guess a version without a working installation.
+	}
+
+	for appType, expectedPHPVersion := range appTypes {
+		testDir := testcommon.CreateTmpDir(t.Name())
+
+		app, err := ddevapp.NewApp(testDir, true)
+		assert.NoError(err)
+
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			_ = os.RemoveAll(testDir)
+		})
+
+		// Prompt for apptype as a way to get it into the config.
+		input := fmt.Sprintf(appType + "\n")
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+		err = app.AppTypePrompt()
+		assert.NoError(err)
+		fmt.Println("")
+		// We write the config first time.
+		newVersion := "19.0-" + appType
+		app.PHPVersion = newVersion
+		err = app.WriteConfig()
+
+		assert.EqualValues(newVersion, app.PHPVersion, "expected PHP version %s but got %s for apptype=%s", newVersion, app.PHPVersion, appType)
+
+		err = app.ConfigFileOverrideAction(true)
+		assert.NoError(err)
+		// We can override existing config.
+		assert.EqualValues(expectedPHPVersion, app.PHPVersion, "expected PHP version %s but got %s for apptype=%s", expectedPHPVersion, app.PHPVersion, appType)
 	}
 
 }

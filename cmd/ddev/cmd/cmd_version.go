@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"bytes"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/styles"
 	"os"
 	"sort"
+
+	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/styles"
 
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -63,6 +65,7 @@ var versionCmd = &cobra.Command{
 		}
 		t.Render()
 		output.UserOut.WithField("raw", v).Println(out.String())
+		amplitude.CheckSetUp()
 	},
 }
 

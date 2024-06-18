@@ -11,7 +11,9 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"testing"
 	"time"
 
@@ -20,12 +22,15 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/pkg/homedir"
+	copy2 "github.com/otiai10/copy"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // URIWithExpect pairs a URI like "/readme.html" with some substring content "should be found in URI"
@@ -110,6 +115,9 @@ func (site *TestSite) Prepare() error {
 	}
 	output.UserOut.Println("Copying complete")
 
+	// Remove existing in project registry
+	_ = globalconfig.RemoveProjectInfo(site.Name)
+
 	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.
 	app, err := ddevapp.NewApp(site.Dir, true)
@@ -123,7 +131,7 @@ func (site *TestSite) Prepare() error {
 	app.UploadDirs = site.UploadDirs
 	app.Type = app.DetectAppType()
 	if app.Type != site.Type {
-		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)
+		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", app.Type, site.Type)
 	}
 
 	app.WebEnvironment = site.WebEnvironment
@@ -134,7 +142,7 @@ func (site *TestSite) Prepare() error {
 			},
 		}
 	}
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	util.CheckErr(err)
 
 	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0777)
@@ -192,7 +200,7 @@ func OsTempDir() (string, error) {
 	return tmpDir, nil
 }
 
-// CreateTmpDir creates a temporary directory in the homoedir
+// CreateTmpDir creates a temporary directory in the homedir
 // and returns its path as a string. It's important that it's in
 // homedir since Colima doesn't mount things outside that.
 func CreateTmpDir(prefix string) string {
@@ -203,8 +211,93 @@ func CreateTmpDir(prefix string) string {
 		log.Fatalf("Failed to create temp directory %s, err=%v", fullPath, err)
 	}
 	// Make the tmpdir fully writeable/readable, NFS problems
-	_ = os.Chmod(fullPath, 0777)
+	_ = util.Chmod(fullPath, 0777)
 	return fullPath
+}
+
+// CopyGlobalDdevDir creates a temporary global config directory for DDEV
+// using a temporary directory which is set to $XDG_CONFIG_HOME/ddev
+// Don't forget to run ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+// in the test's cleanup function.
+func CopyGlobalDdevDir(t *testing.T) string {
+	// Create $XDG_CONFIG_HOME
+	tmpXdgConfigHomeDir := CreateTmpDir("Home_" + util.RandString(5))
+	// Global DDEV config directory should be named "ddev"
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	// Make sure that the tmpDir/ddev doesn't exist.
+	_, err := os.Stat(tmpGlobalDdevDir)
+	require.Error(t, err)
+	require.True(t, os.IsNotExist(err))
+	// Original ~/.ddev dir location
+	originalGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
+	// Make sure that the global config directory is set to ~/.ddev
+	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Make sure that the original global config directory exists
+	require.DirExists(t, originalGlobalDdevDir)
+	originalGlobalConfig := globalconfig.DdevGlobalConfig
+	// Stop the Mutagen daemon running in the ~/.ddev
+	ddevapp.StopMutagenDaemon("")
+	t.Log(fmt.Sprintf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+	// Set $XDG_CONFIG_HOME for tests
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
+	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// And it should be created by now
+	require.DirExists(t, tmpGlobalDdevDir)
+	// Create the global config in $XDG_CONFIG_HOME/ddev
+	globalconfig.EnsureGlobalConfig()
+	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
+	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
+	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
+	sourceBinDir := filepath.Join(originalGlobalDdevDir, "bin")
+	_, err = os.Stat(sourceBinDir)
+	if !os.IsNotExist(err) {
+		// Copy ~/.ddev/bin to $XDG_CONFIG_HOME/ddev/bin
+		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
+		require.NoError(t, err)
+	}
+	// globalconfig.GetMutagenDataDirectory sets MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
+	// Start mutagen daemon if it's enabled
+	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
+		ddevapp.StartMutagenDaemon()
+		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
+	}
+
+	return tmpXdgConfigHomeDir
+}
+
+// ResetGlobalDdevDir removes temporary $XDG_CONFIG_HOME directory
+func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
+	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
+	ddevapp.StopMutagenDaemon("")
+	t.Log(fmt.Sprintf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+	// After the $XDG_CONFIG_HOME directory is removed,
+	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
+	t.Setenv("XDG_CONFIG_HOME", "")
+	_ = os.RemoveAll(tmpXdgConfigHomeDir)
+	// Make sure that the global config directory is set to ~/.ddev
+	originalGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
+	require.Equal(t, originalGlobalDdevDir, globalconfig.GetGlobalDdevDir())
+	// Make sure that the original global config directory exists
+	require.DirExists(t, originalGlobalDdevDir)
+	// refresh the global config from ~/.ddev
+	globalconfig.EnsureGlobalConfig()
+	// Set $MUTAGEN_DATA_DIRECTORY
+	_ = globalconfig.GetMutagenDataDirectory()
+
+	// Start mutagen daemon if it's enabled
+	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
+		ddevapp.StartMutagenDaemon()
+		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
+		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
+	}
 }
 
 // Chdir will change to the directory for the site specified by TestSite.
@@ -425,6 +518,19 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v, body=%v: %v", rawurl, resp, body, err)
 	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	return resp, err
+}
+
+// CheckgoroutineOutput makes sure that goroutines
+// aren't beyond specified level
+func CheckGoroutineOutput(t *testing.T, out string) {
+	goroutineLimit := nodeps.GoroutineLimit
+	// regex to find "goroutines=4 at exit of main()"
+	re := regexp.MustCompile(`goroutines=(\d+) at exit of main\(\)`)
+	matches := re.FindAllStringSubmatch(out, -1)
+	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=<value>, DDEV_GOROUTINES=%s actual output='%s'", os.Getenv(`DDEV_GOROUTINES`), out)
+	num, err := strconv.Atoi(matches[0][1])
+	require.NoError(t, err, "can't convert %s to number: %v", matches[0][1])
+	require.LessOrEqual(t, num, goroutineLimit, "number of goroutines=%v, higher than limit=%d", num, goroutineLimit)
 }
 
 // PortPair is for tests to use naming portsets for tests

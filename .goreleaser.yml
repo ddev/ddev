@@ -1,3 +1,4 @@
+version: 2
 ##### BUILDS ######
 builds:
 - id: ddev
@@ -171,7 +172,7 @@ brews:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
-  folder: Formula
+  directory: Formula
   homepage: https://github.com/ddev/ddev
   license: "Apache 2"
   # ddev brew will only be uploaded on non-prerelease
@@ -209,7 +210,7 @@ brews:
     owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
-  folder: Formula
+  directory: Formula
   homepage: https://github.com/ddev/ddev
   license: "Apache 2"
   # ddev-edge brew will always be uploaded
@@ -365,4 +366,145 @@ aurs:
 furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
   secret_name: "FURY_TOKEN"
-  skip: '{{ ne .Prerelease "" }}'
+  disable: '{{ ne .Prerelease "" }}'
+
+
+dockerhub:
+
+  #arch-aur-builder
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/arch-aur-builder'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: Arch push helper (obsolete)
+    full_description:
+      from_file:
+        path: ./.circleci/README.arch-aur-builder.md
+
+  # ddev-dbserver
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-5.5'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.0'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.1'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.2'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.3'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.4'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.5'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.6'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.7'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.8'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.11'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.5'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.6'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.7'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.0'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-dbserver image
+    full_description:
+      from_file:
+        path: ./containers/ddev-dbserver/README.md
+
+
+  #ddev-gitpod-base
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-gitpod-base'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: Gitpod integration for DDEV
+    full_description:
+      from_file:
+        path: ./.gitpod/images/README.md
+
+  #ddev-nginx-proxy-router
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-nginx-proxy-router'
+      - '{{ .Env.DOCKER_ORG }}/ddev-router'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's DEPRECATED ddev-nginx-proxy-router
+    full_description:
+      from_file:
+        path: ./containers/ddev-nginx-proxy-router/README.md
+
+  #ddev-php-base
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-php-base'
+      - '{{ .Env.DOCKER_ORG }}/ddev-php-prod'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-php-base image, base image for ddev-webserver
+    full_description:
+      from_file:
+        path: ./containers/ddev-php-base/README.md
+
+  #ddev-ssh-agent
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-ssh-agent'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-ssh-agent image
+    full_description:
+      from_file:
+        path: ./containers/ddev-ssh-agent/README.md
+
+  #ddev-traefik-router
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-traefik-router'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-traefik-router, a wrapper on traefik
+    full_description:
+      from_file:
+        path: ./containers/ddev-traefik-router/README.md
+
+  #ddev-utilities
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-utilities'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: Utility provider for jq, base64, etc
+    full_description:
+      from_url:
+        url: https://github.com/ddev/ddev-utilities/raw/main/README.md
+
+  #ddev-webserver
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/ddev-webserver'
+      - '{{ .Env.DOCKER_ORG }}/ddev-webserver-prod'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's ddev-webserver image
+    full_description:
+      from_file:
+        path: ./containers/ddev-webserver/README.md
+
+  #mysql == mysql-arm64-images
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/mysql'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: ARM64 base images for ddev-dbserver-mysql-8.0 and 5.7
+    full_description:
+      from_url:
+        url: https://github.com/ddev/mysql-arm64-images/raw/main/README.md
+
+  #mysql-client-build
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/mysql-client-build'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: Utility builder for mysql client binaries
+    full_description:
+      from_url:
+        url: https://github.com/ddev/mysql-client-build/raw/main/README.md
+
+  #test-ssh-server
+  - images:
+      - '{{ .Env.DOCKER_ORG }}/test-ssh-server'
+    username: '{{ .Env.DOCKERHUB_USERNAME }}'
+    secret_name: "DOCKERHUB_TOKEN"
+    description: DDEV's test-ssh-server image, used only for automated tests
+    full_description:
+      from_file:
+        path: ./containers/test-ssh-server/README.md

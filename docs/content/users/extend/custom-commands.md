@@ -1,3 +1,7 @@
+---
+search:
+  boost: 2
+---
 # Custom Commands
 
 Custom commands can easily be added to DDEV, to be executed on the host or in containers.
@@ -36,11 +40,11 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 To provide a command which will execute in a container, add a Bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The Bash script will be executed inside the named container. For example, see the [several standard DDEV script-based web container commands](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web).
 
-You can run commands in custom containers as well as standard DDEV `web` and `db` containers. Use the service name, like `.ddev/commands/solr/<command>`. The only catch with a custom container is that your service must mount `/mnt/ddev_config` like the `web` and `db` containers do; the `volumes` section of `docker-compose.<servicename>.yaml` needs:
+You can run commands in custom containers as well as standard DDEV `web` and `db` containers. Use the service name, like `.ddev/commands/solr/<command>`. The only catch with a custom container is that your service must mount `/mnt/ddev-global-cache` like the `web` and `db` containers do; the `volumes` section of `docker-compose.<servicename>.yaml` needs:
 
 ```
     volumes:
-    - ".:/mnt/ddev_config"
+      - ddev-global-cache:/mnt/ddev-global-cache
 ```
 
 For example, to add a `solrtail` command that runs in a Solr service, add `.ddev/commands/solr/solrtail` with:
@@ -103,7 +107,8 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary project URL
 * `DDEV_PROJECT`: Project name, like `d8composer`
-* `DDEV_PROJECT_TYPE`: `drupal8`, `typo3`, `backdrop`, `wordpress`, etc.
+* `DDEV_PROJECT_STATUS`: Project status determined from the `web` and `db` services health, like `starting`, `running`, `stopped`, `paused`, or another status returned from Docker, including `healthy`, `unhealthy`, `exited`, `restarting`
+* `DDEV_PROJECT_TYPE`: `backdrop`, `drupal`, `typo3`,`wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
 * `DDEV_SITENAME`: Project name, like `d8composer`
@@ -123,7 +128,7 @@ Useful variables for container scripts are:
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary URL for the project
 * `DDEV_PROJECT`: Project name, like `d8composer`
-* `DDEV_PROJECT_TYPE`: `drupal8`, `typo3`, `backdrop`, `wordpress`, etc.
+* `DDEV_PROJECT_TYPE`: `backdrop`, `drupal`, `typo3`,`wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
 * `DDEV_SITENAME`: Project name, like `d8composer`
@@ -233,7 +238,7 @@ If your command should only be visible for a specific project type, `ProjectType
 
 Usage: `## ProjectTypes: <list-of-project-types>`
 
-Example: `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
+Example: `## ProjectTypes: drupal7,drupal,backdrop`
 
 ### `OSTypes` Annotation (Host Commands Only)
 

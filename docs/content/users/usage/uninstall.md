@@ -4,7 +4,7 @@ A DDEV installation consists of:
 
 * The self-contained `ddev` binary.
 * Each project’s `.ddev` directory.
-* The global `~/.ddev` directory where various global items are stored.
+* The global `~/.ddev` directory where various global items are stored. (This directory can be [moved](./architecture.md#global-files) to another location.)
 * The global `~/.ddev_mutagen_data_directory` directory where Mutagen sync data may be stored.
 * The associated Docker images and containers DDEV created.
 * Any entries in `/etc/hosts`.
@@ -19,7 +19,7 @@ To remove all DDEV-owned `/etc/hosts` entries: [`ddev hostname --remove-inactive
 
 To remove the global `.ddev` directory: `rm -r ~/.ddev`.
 
-To remove the global `.ddev_mutagen_data_directory` directory: `rm -r ~/.ddev_mutagen_data_directory`.
+To remove the global `.ddev_mutagen_data_directory` directory: `ddev poweroff && rm -r ~/.ddev_mutagen_data_directory`.
 
 If you installed Docker only for DDEV and want to uninstall it with all containers and images, uninstall it for your version of Docker.
 
@@ -35,5 +35,5 @@ To remove the `ddev` binary:
 
 * Find the binary location with `which -a ddev`, you may have several binaries installed in different ways. The output will give you a general idea of how you installed it.
 * On macOS or Linux with Homebrew, `brew uninstall ddev`.
-* For Linux or other simple installs, remove the binary. Example: `sudo rm /usr/local/bin/ddev`. For Linux installed via apt, `sudo apt remove ddev`.
+* For Linux or other simple installs, remove the binary. Example: `sudo rm /usr/local/bin/ddev`. For Linux installed via apt, `sudo apt-get remove ddev`.
 * On Windows, if you used the DDEV Windows installer, use the uninstall on the Start Menu or in the “Add or Remove Programs” section of Windows Settings.

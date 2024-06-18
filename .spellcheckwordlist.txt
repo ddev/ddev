@@ -1,7 +1,6 @@
 1Password
 ARG
 AdditionalConfig
-AdditionalConfiguration
 Adminer
 Apache
 Acquia
@@ -9,6 +8,7 @@ amazee.io
 Autocompletion
 Available
 Bash
+CakePHP
 Callgraph
 CGroups
 CIFS
@@ -47,6 +47,7 @@ Dump
 DXP
 Enable
 EndeavourOS
+EOL
 ExecStart
 ExecStop
 Execute
@@ -70,6 +71,7 @@ Gzipped
 HOWTO
 HeidiSQL
 Homebrew
+HSTS
 Ibexa
 IDE
 IDE's
@@ -83,6 +85,7 @@ Lando
 Laravel
 Let's
 Lima
+Livewire
 MAMP
 Magento
 Magento's
@@ -119,6 +122,7 @@ PowerShell
 Pull
 Quickstart
 RabbitMQ
+ReactPHP
 RemainAfterExit
 Remove
 Run
@@ -131,9 +135,11 @@ Snapshotting
 Solr
 SomeExternalDrive
 SQLite
+StarterKits
 Starts
 Statamic
 Support
+Symfony
 TablePlus
 Traefik
 TravisCI
@@ -157,6 +163,7 @@ WSL2
 WantedBy
 Webhosting
 XDebug
+XDG
 Xhprof
 Zoho
 XSym
@@ -211,6 +218,7 @@ bugfix
 bugfixes
 buildkite
 buildx
+bundler
 busybox
 by
 cd

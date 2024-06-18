@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -12,6 +13,8 @@ import (
 // TestCmdSnapshotRestore runs `ddev snapshot restore` on the test apps
 func TestCmdSnapshotRestore(t *testing.T) {
 	assert := asrt.New(t)
+	// Gather reporting about goroutines at exit
+	_ = os.Setenv("DDEV_GOROUTINES", "true")
 
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
@@ -37,6 +40,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Created database snapshot test-snapshot")
+	testcommon.CheckGoroutineOutput(t, out)
 
 	// Try interactive command
 	// Doesn't seem to work without pty, 2021-12-14
@@ -50,4 +54,5 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "restore", "--latest")
 	assert.NoError(err)
 	assert.Contains(out, "Database snapshot test-snapshot was restored")
+	testcommon.CheckGoroutineOutput(t, out)
 }

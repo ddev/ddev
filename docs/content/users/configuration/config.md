@@ -51,6 +51,8 @@ An array of [extra fully-qualified domain names](../extend/additional-hostnames.
 
 Example: `additional_fqdns: ["example.com", "sub1.example.com"]` would provide HTTP and HTTPS URLs for `example.com` and `sub1.example.com`.
 
+See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
+
 !!!warning
     Take care with `additional_fqdns`; it adds items to your `/etc/hosts` file which can cause confusion.
 
@@ -64,7 +66,9 @@ An array of [extra hostnames](../extend/additional-hostnames.md) to be used for 
 
 Example: `additional_hostnames: ["somename", "someothername", "*.thirdname"]` would provide HTTP and HTTPS URLs for `somename.ddev.site`, `someothername.ddev.site`, and `one.thirdname.ddev.site` + `two.thirdname.ddev.site`.
 
-The wildcard (`*`) setting only works if you’re using DNS to resolve hostnames (default) and connected to the internet.
+The wildcard (`*.<whatever>`) setting only works if you’re [using DNS to resolve hostnames (default)](#use_dns_when_possible) and connected to the internet and using `ddev.site` as your [`project_tld`](#project_tld).
+
+See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
 ## `bind_all_interfaces`
 
@@ -72,7 +76,7 @@ When the network interfaces of a project should be exposed to the local network,
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`.
+| :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
 ## `composer_root`
 
@@ -90,6 +94,16 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
+## `corepack_enable`
+
+Whether to `corepack enable` on Node.js configuration.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
+
+When `true`, `corepack_enable` will be executed, making latest `yarn` and `pnpm` package managers available.
+
 ## `database`
 
 The type and version of the database engine the project should use.
@@ -100,7 +114,7 @@ The type and version of the database engine the project should use.
 
 ## `dbimage_extra_packages`
 
-Extra Debian packages for the project’s database container.
+Extra Debian packages for the project’s database container. (This is rarely used.)
 
 | Type | Default | Usage
 | -- | -- | --
@@ -110,9 +124,13 @@ Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the
 
 ## `ddev_version_constraint`
 
-You can configure a [DDEV version constraint](https://github.com/Masterminds/semver#checking-version-constraints) that will be validated against the running DDEV executable and prevent any command from running if it doesn't match.
+You can configure a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent `ddev start` from running if it doesn't validate. For example:
 
-This will only work with DDEV versions above v1.22.4; older versions will ignore this setting.
+```yaml
+ddev_version_constraint: '>=v1.23.0-alpha1'
+```
+
+This is only supported with DDEV versions above v1.22.4; older DDEV versions will ignore this setting.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -260,6 +278,14 @@ Reporting interval in hours for [instrumentation reporting](../usage/diagnostics
 | -- | -- | --
 | :octicons-globe-16: global | `24` | Can be any integer.
 
+## `instrumentation_user`
+
+Specific name identifier for [instrumentation reporting](../usage/diagnostics.md).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `` | &zwnj;
+
 ## `internet_detection_timeout_ms`
 
 Internet detection timeout in milliseconds.
@@ -313,10 +339,10 @@ messages:
 
 Example: Show the "Tip of the Day" ticket every two hours:
 
-```yaml`
+```yaml
 messages:
   ticker_interval: 2
-``
+```
 
 ## `name`
 
@@ -366,6 +392,9 @@ Node.js version for the web container’s “system” version.
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
 There is no need to configure `nodejs_version` unless you want a version other than the default version.
+
+!!!note "Switching from `nvm` to `nodejs_version`"
+    If switching from using `nvm` to using `nodejs_version`, you may find that the container continues to use the previously specified version. If this happens, use `ddev nvm alias default system` or `ddev ssh` into the container (`ddev ssh`) and run `rm -rf /mnt/ddev-global-cache/nvm_dir/${DDEV_PROJECT}-web`, then `ddev restart`.
 
 ## `omit_containers`
 
@@ -417,11 +446,13 @@ You can only specify the major version (`7.3`), not a minor version (`7.3.2`), f
 
 ## `project_tld`
 
-Default TLD to be used for a project’s domains, or globally for all project domains.
+Default Top-Level-Domain (`TLD`) to be used for a project’s domains, or globally for all project domains. This defaults to `ddev.site` and it's easiest to work with DDEV using the default setting.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project<br>:octicons-globe-16: global | `ddev.site` | Can be changed to any TLD you’d prefer.
+
+See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
 ## `required_docker_compose_version`
 
@@ -438,7 +469,7 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 
 ## `router`
 
-Whether to enable the default [Traefik router](../extend/traefik-router.md#traefik-router) or the legacy "nginx-proxy" router.
+Whether to enable the default [Traefik router](../extend/traefik-router.md) or the legacy "nginx-proxy" router.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -518,13 +549,17 @@ The DDEV-specific project type.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `django4`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`,  `laravel`, `magento`, `magento2`, `php`, `python`, `shopware6`, `silverstripe`, `typo3`, or `wordpress`.
+| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `django4`, `drupal6`, `drupal7`, `drupal`,  `laravel`, `magento`, `magento2`, `php`, `python`, `shopware6`, `silverstripe`, `typo3`, or `wordpress`.
 
 The `php` and `python` types don’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
+
+The former DDEV project types `drupal8`, `drupal9`, and `drupal10` can still be manually specified; by using `drupal` instead, DDEV will autodetect the correct type and its corresponding settings.
 
 ## `upload_dirs`
 
 Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`. Can be outside the docroot but must be within the project directory e.g. `../private`. Some CMSes and frameworks have default `upload_dirs`, like Drupal's `sites/default/files`; `upload_dirs` will override the defaults, so if you want Drupal to use both `sites/default/files` and `../private` you would list both, `upload_dirs: ["sites/default/files", "../private"]`. `upload_dirs` is used for targeting `ddev import-files` and also, when Mutagen is enabled, to bind-mount those directories so their contents does not need to be synced into Mutagen.
+
+If you do not have directories of static assets of this type, or they are small and you don't care about them, you can disable the warning `You have Mutagen enabled and your 'php' project type doesn't have upload_dirs set.` by setting [`disable_upload_dirs_warning`](#disable_upload_dirs_warning) with `ddev config --disable-upload-dirs-warning`.
 
 | Type | Default | Usage
 | -- | -- | --

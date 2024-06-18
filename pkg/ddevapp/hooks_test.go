@@ -78,15 +78,15 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 
 		captureOutputFunc, err := util.CaptureOutputToFile()
-		assert.NoError(err)
+		require.NoError(t, err, `failed to capture output to file for taxk='%v' err=%v`, task, err)
 		userOutFunc := util.CaptureUserOut()
 
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err, `failed to app.Start() for task '%v' err=%v`, task, err)
 
 		out := captureOutputFunc()
 		userOut := userOutFunc()
-		assert.Contains(out, task.stdoutExpect, "task: %v", task.task)
+		require.Contains(t, out, task.stdoutExpect, "task: %v", task.task)
 		assert.Contains(userOut, task.fulloutputExpect, "task: %v", task.task)
 		assert.NotContains(userOut, "Task failed")
 	}
@@ -97,6 +97,18 @@ func TestProcessHooks(t *testing.T) {
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
+	// Make sure skip hooks work
+	ddevapp.SkipHooks = true
+	app.Hooks = map[string][]ddevapp.YAMLTask{
+		"hook-test-skip-hooks": {
+			{"exec": "\"echo TestProcessHooks > /var/www/html/TestProcessHooksSkipHooks${DDEV_ROUTER_HTTPS_PORT}.txt\""},
+		},
+	}
+	err = app.ProcessHooks("hook-test")
+	require.NoError(t, err)
+	assert.NoFileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooksSkipHooks%s.txt", app.GetRouterHTTPSPort())))
+	ddevapp.SkipHooks = false
+
 	// Attempt processing hooks with a guaranteed failure
 	app.Hooks = map[string][]ddevapp.YAMLTask{
 		"hook-test": {
@@ -105,7 +117,7 @@ func TestProcessHooks(t *testing.T) {
 	}
 	// With default setting, ProcessHooks should succeed
 	err = app.ProcessHooks("hook-test")
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
 	app.FailOnHookFail = true

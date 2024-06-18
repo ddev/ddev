@@ -39,7 +39,7 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 * You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec node <script>`.
 
 !!!tip "Please share your techniques!"
-    There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md#additional-service-configurations-and-add-ons-for-ddev), [Stack Overflow](https://stackoverflow.com/tags/ddev), and [ddev-contrib](https://github.com/ddev/ddev-contrib).
+    There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md), [Stack Overflow](https://stackoverflow.com/tags/ddev), and [ddev-contrib](https://github.com/ddev/ddev-contrib).
 
 ## Running Extra Daemons in the Web Container
 
@@ -49,7 +49,22 @@ There are several ways to run processes inside the `web` container.
 2. Run them with a `post-start` [hook](../configuration/hooks.md).
 3. Run them automatically using `web_extra_daemons`.
 
-### Running Extra Daemons with `post-start` Hook
+!!!tip "Daemons requiring network access should bind to `0.0.0.0`, not to `localhost` or `127.0.0.1`"
+    Many examples on the internet show starting daemons starting up and binding to `127.0.0.1` or `localhost`. Those examples are assuming that network consumers are on the same network interface, but with a DDEV-based solution the network server is essentially on a different computer from the host computer (workstation). If the host computer needs to have connectivity, then bind to `0.0.0.0` (meaning "all network interfaces") rather than `127.0.0.1` or `localhost` (which means only allow access from the local network). A [ReactPHP example](https://github.com/orgs/ddev/discussions/5973) would be:
+    <!-- markdownlint-disable -->
+    ```php
+    $socket = new React\Socket\SocketServer('0.0.0.0:3000');
+    ```
+    <!-- markdownlint-restore -->
+    instead of:
+    <!-- markdownlint-disable -->
+    ```php
+    $socket = new React\Socket\SocketServer('127.0.0.1:3000');
+    ```
+    <!-- markdownlint-restore -->
+    To expose your daemon to the workstation and browser, see [Exposing Extra Ports via `ddev-router`](#exposing-extra-ports-via-ddev-router).
+
+### Running Extra Daemons with a `post-start` Hook
 
 Daemons can be run with a `post-start` `exec` hook or automatically started using `supervisord`.
 
@@ -220,7 +235,10 @@ After adding a snippet, run `ddev restart` to make it take effect.
 
 If you’re using [`webserver_type: apache-fpm`](../configuration/config.md#webserver_type) in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
 
+When you run [`ddev restart`](../usage/commands.md#restart) using `apache-fpm`, DDEV creates a configuration customized to your project type in `.ddev/apache/apache-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`.
+
 * Edit the `.ddev/apache/apache-site.conf`.
+* Remove the `#ddev-generated` to signal to DDEV that you're taking control of the file.
 * Add your configuration changes.
 * Save your configuration file and run [`ddev restart`](../usage/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../usage/commands.md#logs) to inspect the logs for possible Apache configuration errors.
 * Use `ddev exec apachectl -t` to do a general Apache syntax check.
@@ -327,7 +345,7 @@ In these case you can create a `.ddev/web-build/<daemonname>.conf` with configur
 command=/var/www/html/path/to/daemon
 directory=/var/www/html/
 autorestart=true
-startretries=10
+startretries=3
 stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true

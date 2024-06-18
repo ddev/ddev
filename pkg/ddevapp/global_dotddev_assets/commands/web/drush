@@ -4,7 +4,7 @@
 ## Description: Run drush CLI inside the web container
 ## Usage: drush [flags] [args]
 ## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
-## ProjectTypes: drupal7,drupal8,drupal9,drupal10,backdrop
+## ProjectTypes: drupal,drupal10,drupal9,drupal8,drupal7,backdrop
 ## ExecRaw: true
 
 if ! command -v drush >/dev/null; then

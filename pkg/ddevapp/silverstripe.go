@@ -71,11 +71,9 @@ func getSilverstripeUploadDirs(_ *DdevApp) []string {
 	return uploadDirs
 }
 
-// silverstripeConfigOverrideAction overrides php_version for Silverstripe, requires PHP8.1
+// silverstripeConfigOverrideAction: Silverstripe prefers Apache
+// https://docs.silverstripe.org/en/5/getting_started/#server-requirements
 func silverstripeConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
 	app.WebserverType = nodeps.WebserverApacheFPM
-	app.Database.Type = nodeps.MariaDB
-	app.Database.Version = nodeps.MariaDB104
 	return nil
 }

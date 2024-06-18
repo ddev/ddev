@@ -80,6 +80,7 @@ type WebExtraDaemon struct {
 type DdevApp struct {
 	Name                      string                 `yaml:"name"`
 	Type                      string                 `yaml:"type"`
+	AppRoot                   string                 `yaml:"-"`
 	Docroot                   string                 `yaml:"docroot"`
 	PHPVersion                string                 `yaml:"php_version"`
 	WebserverType             string                 `yaml:"webserver_type"`
@@ -98,7 +99,6 @@ type DdevApp struct {
 	BindAllInterfaces         bool                   `yaml:"bind_all_interfaces,omitempty"`
 	FailOnHookFailGlobal      bool                   `yaml:"-"`
 	ConfigPath                string                 `yaml:"-"`
-	AppRoot                   string                 `yaml:"-"`
 	DataDir                   string                 `yaml:"-"`
 	SiteSettingsPath          string                 `yaml:"-"`
 	SiteDdevSettingsFile      string                 `yaml:"-"`
@@ -127,6 +127,7 @@ type DdevApp struct {
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
 	NodeJSVersion             string                 `yaml:"nodejs_version,omitempty"`
+	CorepackEnable            bool                   `yaml:"corepack_enable"`
 	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
 	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
 	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
@@ -135,6 +136,10 @@ type DdevApp struct {
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
+
+// Global variable that's set from --skip-hooks global flag.
+// If true, all hooks would be skiped.
+var SkipHooks = false
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
@@ -311,34 +316,70 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		}
 		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
 
-		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
+		// Extract VIRTUAL_HOST, HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		if !IsRouterDisabled(app) {
+			envMap := make(map[string]string)
+
 			for _, e := range c.Config.Env {
 				split := strings.SplitN(e, "=", 2)
 				envName := split[0]
-				if len(split) == 2 && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
-					envVal := split[1]
 
-					envValStr := fmt.Sprintf("%s", envVal)
-					portSpecs := strings.Split(envValStr, ",")
-					// There might be more than one exposed UI port, but this only handles the first listed,
-					// most often there's only one.
-					if len(portSpecs) > 0 {
-						// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
-						ports := strings.Split(portSpecs[0], ":")
-						//services[shortName][envName.(string)] = ports[0]
-						switch envName {
-						case "HTTP_EXPOSE":
-							services[shortName]["http_url"] = "http://" + appDesc["hostname"].(string)
-							if ports[0] != "80" {
-								services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
-							}
-						case "HTTPS_EXPOSE":
-							services[shortName]["https_url"] = "https://" + appDesc["hostname"].(string)
-							if ports[0] != "443" {
-								services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
-							}
-						}
+				// Store the values first, so we can have them all before assigning
+				if len(split) == 2 && (envName == "VIRTUAL_HOST" || envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+					envMap[envName] = split[1]
+				}
+			}
+
+			if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
+				vhostVal := virtualHost
+				vhostValStr := fmt.Sprintf("%s", vhostVal)
+				vhostsList := strings.Split(vhostValStr, ",")
+
+				// There might be more than one VIRTUAL_HOST value, but this only handles the first listed,
+				// most often there's only one.
+				if len(vhostsList) > 0 {
+					// VIRTUAL_HOSTS typically look like subdomain.domain.tld, for example - VIRTUAL_HOSTS=vhost1.myproject.ddev.site,vhost2.myproject.ddev.site
+					vhost := strings.Split(vhostsList[0], ",")
+					services[shortName]["virtual_host"] = vhost[0]
+				}
+			}
+
+			hostname, ok := services[shortName]["virtual_host"]
+			appHostname := ""
+
+			if ok {
+				appHostname = hostname
+			} else {
+				appHostname = appDesc["hostname"].(string)
+			}
+
+			for name, portMapping := range envMap {
+				if name != "HTTP_EXPOSE" && name != "HTTPS_EXPOSE" {
+					continue
+				}
+
+				portDefault := "80"
+				attributeName := "http_url"
+				protocol := "http://"
+
+				if name == "HTTPS_EXPOSE" {
+					portDefault = "443"
+					attributeName = "https_url"
+					protocol = "https://"
+				}
+
+				portValStr := fmt.Sprintf("%s", portMapping)
+				portSpecs := strings.Split(portValStr, ",")
+				// There might be more than one exposed UI port, but this only handles the first listed,
+				// most often there's only one.
+				if len(portSpecs) > 0 {
+					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
+					ports := strings.Split(portSpecs[0], ":")
+
+					services[shortName][attributeName] = protocol + appHostname
+
+					if ports[0] != portDefault {
+						services[shortName][attributeName] = services[shortName][attributeName] + ":" + ports[0]
 					}
 				}
 			}
@@ -526,7 +567,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(dbPath, 0777)
+	err = util.Chmod(dbPath, 0777)
 	if err != nil {
 		return err
 	}
@@ -654,7 +695,10 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		return err
 	}
 	// The Perl manipulation removes statements like CREATE DATABASE and USE, which
-	// throw off imports. This is a scary manipulation, as it must not match actual content
+	// throw off imports.
+	// It also removes the new `/*!999999\- enable the sandbox mode */` introduced in
+	// LTS versions of MariaDB 2024-05.
+	// This is a scary manipulation, as it must not match actual content
 	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
 	// and in https://github.com/ddev/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
@@ -671,7 +715,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		}
 
 		// Case for reading from file
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
 
 		// Alternate case where we are reading from stdin
 		if dumpFile == "" && extractPath == "" {
@@ -738,22 +782,33 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB string) error {
 	app.DockerEnv()
-	exportCmd := []string{"mysqldump"}
-	if app.Database.Type == "postgres" {
-		exportCmd = []string{"pg_dump", "-U", "db"}
-	}
 	if targetDB == "" {
 		targetDB = "db"
 	}
-	exportCmd = append(exportCmd, targetDB)
 
-	if compressionType != "" {
-		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | %s`, strings.Join(exportCmd, " "), compressionType)}
+	exportCmd := "mysqldump " + targetDB
+	if app.Database.Type == "postgres" {
+		exportCmd = "pg_dump -U db " + targetDB
 	}
+
+	if app.Database.Type == nodeps.MariaDB {
+		// The `tail --lines=+2` is a workaround that removes the new mariadb directive added
+		// 2024-05 in mariadb-dump. It removes the first line of the dump, which has
+		// the offending /*!999999\- enable the sandbox mode */. See
+		// https://mariadb.org/mariadb-dump-file-compatibility-change/
+		// If not on a newer MariaDB version, this will remove the identification
+		// line from the top of the dump.
+		exportCmd = exportCmd + " | tail --lines=+2 "
+	}
+
+	if compressionType == "" {
+		compressionType = "cat"
+	}
+	exportCmd = exportCmd + " | " + compressionType
 
 	opts := &ExecOpts{
 		Service:   "db",
-		RawCmd:    exportCmd,
+		RawCmd:    []string{"bash", "-c", `set -eu -o pipefail; ` + exportCmd},
 		NoCapture: true,
 	}
 	if dumpFile != "" {
@@ -778,10 +833,10 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	} else {
 		confMsg = confMsg + " to stdout"
 	}
-	if compressionType != "" {
-		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
-	} else {
+	if compressionType == "cat" {
 		confMsg = confMsg + " in plain text format"
+	} else {
+		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
 	}
 
 	_, err = fmt.Fprintf(os.Stderr, confMsg+".\n")
@@ -953,6 +1008,10 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 
 // ProcessHooks executes Tasks defined in Hooks
 func (app *DdevApp) ProcessHooks(hookName string) error {
+	if SkipHooks {
+		output.UserOut.Debugf("Skipping the execution of %s hook...", hookName)
+		return nil
+	}
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Debugf("Executing %s hook...", hookName)
 	}
@@ -1075,6 +1134,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		// Check again to make sure the Mutagen Docker volume exists. It's compatible if we found it above
 		// so we can keep it in that case.
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
+			util.Debug("Creating new docker volume '%s' with signature '%v'", GetMutagenVolumeName(app), GetDefaultMutagenVolumeSignature(app))
 			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
 			if err != nil {
 				return fmt.Errorf("unable to create new Mutagen Docker volume %s: %v", GetMutagenVolumeName(app), err)
@@ -1100,11 +1160,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	err = PrepDdevDirectory(app)
 	if err != nil {
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
-	}
-
-	err = PopulateCustomCommandFiles(app)
-	if err != nil {
-		util.Warning("Failed to populate custom command files: %v", err)
 	}
 
 	// The .ddev directory may still need to be populated, especially in tests
@@ -1172,7 +1227,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// TODO: We shouldn't be chowning /var/lib/mysql if PostgreSQL?
 	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
-	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
+	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
@@ -1182,7 +1237,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
 		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
 		}
@@ -1240,7 +1295,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 	// db_snapshots gets mounted into container, may have different user/group, so need 777
-	err = os.Chmod(app.GetConfigPath("db_snapshots"), 0777)
+	err = util.Chmod(app.GetConfigPath("db_snapshots"), 0777)
 	if err != nil {
 		return err
 	}
@@ -1339,7 +1394,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		err = CreateOrResumeMutagenSync(app)
 		if err != nil {
-			return fmt.Errorf("failed to create Mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
+			return fmt.Errorf("failed to CreateOrResumeMutagenSync on Mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
@@ -1377,8 +1432,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		dependers = append(dependers, "db")
 	}
-	output.UserOut.Printf("Waiting for web/db containers to become ready: %v", dependers)
+	output.UserOut.Printf("Waiting for containers to become ready: %v", dependers)
 	waitErr := app.Wait(dependers)
+
+	err = PopulateGlobalCustomCommandFiles()
+	if err != nil {
+		util.Warning("Failed to populate global custom command files: %v", err)
+	}
 
 	if globalconfig.DdevVerbose {
 		out, err = app.CaptureLogs("web", true, "200")
@@ -1566,7 +1626,7 @@ func (app *DdevApp) CheckExistingAppInApproot() error {
 	pList := globalconfig.GetGlobalProjectList()
 	for name, v := range pList {
 		if app.AppRoot == v.AppRoot && name != app.Name {
-			return fmt.Errorf(`this project root %s already contains a project named %s. You may want to remove the existing project with "ddev stop --unlist %s"`, v.AppRoot, name, name)
+			return fmt.Errorf(`this project root '%s' already contains a project named '%s'. You may want to remove the existing project with "ddev stop --unlist %s"`, v.AppRoot, name, name)
 		}
 	}
 	return nil
@@ -1648,7 +1708,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		}
 
 		if fileutil.FileExists(configPath) {
-			err = os.Chmod(configPath, 0666)
+			err = util.Chmod(configPath, 0666)
 			if err != nil {
 				return err
 			}
@@ -1670,7 +1730,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		if err != nil {
 			return err
 		}
-		err = os.Chmod(configPath, 0666)
+		err = util.Chmod(configPath, 0666)
 		if err != nil {
 			return err
 		}
@@ -2080,8 +2140,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
 		"DDEV_DATABASE_FAMILY":           dbFamily,
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
-		"DDEV_FILES_DIR":                 app.getContainerUploadDir(),
-		"DDEV_FILES_DIRS":                strings.Join(app.getContainerUploadDirs(), ","),
+		"DDEV_FILES_DIR":                 app.GetContainerUploadDir(),
+		"DDEV_FILES_DIRS":                strings.Join(app.GetContainerUploadDirs(), ","),
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_MAILHOG_PORT":   app.HostMailpitPort,
@@ -2271,7 +2331,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
-		return "", fmt.Errorf("failed to process pre-stop hooks: %v", err)
+		return "", fmt.Errorf("failed to process pre-snapshot hooks: %v", err)
 	}
 
 	if snapshotName == "" {
@@ -2382,7 +2442,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
-		return snapshotFile, fmt.Errorf("failed to process pre-stop hooks: %v", err)
+		return snapshotFile, fmt.Errorf("failed to process post-snapshot hooks: %v", err)
 	}
 
 	return snapshotName, nil
@@ -2478,7 +2538,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	if removeData {
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
@@ -2516,10 +2576,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 		app.RemoveGlobalProjectInfo()
-		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		if err != nil {
-			util.Warning("Could not WriteGlobalConfig: %v", err)
-		}
 
 		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
 		if globalconfig.DdevGlobalConfig.NoBindMounts {
@@ -2855,6 +2911,22 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
+// GetHostWorkingDir will determine the appropriate working directory for the service on the host side
+func (app *DdevApp) GetHostWorkingDir(service string, dir string) string {
+	// We have a corresponding host working_dir for the "web" service only
+	if service != "web" {
+		return ""
+	}
+	if dir == "" && app.WorkingDir != nil {
+		dir = app.WorkingDir[service]
+	}
+	containerWorkingDirPrefix := strings.TrimSuffix(app.GetAbsAppRoot(true), "/") + "/"
+	if !strings.HasPrefix(dir, containerWorkingDirPrefix) {
+		return ""
+	}
+	return filepath.Join(app.GetAbsAppRoot(false), strings.TrimPrefix(dir, containerWorkingDirPrefix))
+}
+
 // GetNFSMountVolumeName returns the Docker volume name of the nfs mount volume
 func (app *DdevApp) GetNFSMountVolumeName() string {
 	// This is lowercased because the automatic naming in docker-compose v1/2
@@ -2965,13 +3037,13 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 
-	// If the destination path exists, remove it as was warned
+	// If the destination path exists, purge it as was warned
 	if fileutil.FileExists(destPath) {
-		if err := os.RemoveAll(destPath); err != nil {
+		if err := fileutil.PurgeDirectory(destPath); err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
@@ -2992,8 +3064,7 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 		return nil
 	}
 
-	//nolint: revive
-	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+	if err := copy.Copy(importPath, destPath); err != nil {
 		return err
 	}
 

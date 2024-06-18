@@ -2,11 +2,11 @@
 
 ## #ddev-generated
 ## Description: Enable or disable xhprof
-## Usage: xhprof on|off|enable|disable|true|false|status
-## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof status"
+## Usage: xhprof on|off|enable|disable|true|false|toggle|status
+## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof toggle", "ddev xhprof status"
 ## ExecRaw: false
 ## Flags: []
-## AutocompleteTerms: ["on","off","enable","disable","status"]
+## AutocompleteTerms: ["on","off","enable","disable","toggle","status"]
 
 if [ $# -eq 0 ]; then
   enable_xhprof
@@ -19,6 +19,14 @@ on | true | enable)
   ;;
 off | false | disable)
   disable_xhprof
+  ;;
+toggle)
+  status=$(php -m | grep 'xhprof')
+  if [ "${status}" = "xhprof" ]; then
+    disable_xhprof
+  else
+    enable_xhprof
+  fi
   ;;
 status)
   status=$(php -m | grep 'xhprof')

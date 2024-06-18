@@ -2,7 +2,6 @@ package fileutil_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,7 +9,9 @@ import (
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var testFileLocation = "testdata/regular_file"
@@ -100,7 +101,7 @@ func TestPurgeDirectory(t *testing.T) {
 	err = fileutil.CopyFile(testFileLocation, tmpPurgeSubFile)
 	assert.NoError(err)
 
-	err = os.Chmod(tmpPurgeSubFile, 0444)
+	err = util.Chmod(tmpPurgeSubFile, 0444)
 	assert.NoError(err)
 
 	err = fileutil.PurgeDirectory(tmpPurgeDir)

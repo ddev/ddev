@@ -14,9 +14,8 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/stretchr/testify/require"
-
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestSSHAuth tests basic SSH authentication
@@ -52,11 +51,11 @@ func TestSSHAuth(t *testing.T) {
 	srcDdev := filepath.Join(origDir, "testdata", t.Name(), ".ddev")
 	err = fileutil.CopyDir(filepath.Join(srcDdev, ".ssh"), app.GetConfigPath(".ssh"))
 	require.NoError(t, err)
-	err = os.Chmod(app.GetConfigPath(".ssh"), 0700)
+	err = util.Chmod(app.GetConfigPath(".ssh"), 0700)
 	require.NoError(t, err)
-	err = os.Chmod(app.GetConfigPath(".ssh/authorized_keys"), 0600)
+	err = util.Chmod(app.GetConfigPath(".ssh/authorized_keys"), 0600)
 	require.NoError(t, err)
-	err = os.Chmod(app.GetConfigPath(".ssh/id_rsa"), 0600)
+	err = util.Chmod(app.GetConfigPath(".ssh/id_rsa"), 0600)
 	require.NoError(t, err)
 	err = fileutil.CopyFile(filepath.Join(srcDdev, "docker-compose.sshserver.yaml"), app.GetConfigPath("docker-compose.sshserver.yaml"))
 	require.NoError(t, err)
@@ -88,7 +87,7 @@ func TestSSHAuth(t *testing.T) {
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
 	uidStr, _, username := util.GetContainerUIDGid()
 	sshKeyPath := app.GetConfigPath(".ssh")
-	sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
+	sshKeyPath = util.WindowsPathToCygwinPath(sshKeyPath)
 
 	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "//test.expect.passphrase"})
 	require.NoError(t, err)

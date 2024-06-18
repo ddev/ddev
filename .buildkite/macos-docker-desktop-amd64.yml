@@ -3,15 +3,10 @@
 # Runs on master only
 
   - command: ".buildkite/test.sh"
-    plugins:
-      - docker-login#v2.1.0:
-          username: druddockerpullaccount
-          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
       - "docker-desktop=true"
       - "architecture=amd64"
-    branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

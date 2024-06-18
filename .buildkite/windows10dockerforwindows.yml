@@ -1,12 +1,8 @@
 # Windows native with Mutagen, used by ddev-windows-mutagen
 # See https://buildkite.com/ddev/ddev-windows-mutagen/settings/repository
-# Runs on master only
+# Runs on branches/PRs on ddev/ddev only
 
   - command: ".buildkite/test.cmd"
-    plugins:
-      - docker-login#v2.1.0:
-          username: druddockerpullaccount
-          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=windows"
       - "dockertype=dockerforwindows"

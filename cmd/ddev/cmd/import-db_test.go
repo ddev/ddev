@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/testcommon"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdImportDB does an import from stdin; many other cases are covered in
@@ -32,7 +33,7 @@ func TestCmdImportDB(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	if app.IsMutagenEnabled() {

@@ -28,9 +28,9 @@ func TestComposerCreateCmd(t *testing.T) {
 	origDir, err := os.Getwd()
 	assert.NoError(err)
 
-	types := ddevapp.GetValidAppTypes()
+	types := ddevapp.GetValidAppTypesWithoutAliases()
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal10}
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
 	}
 
 	for _, docRoot := range []string{"", "doc-root"} {
@@ -60,8 +60,8 @@ func TestComposerCreateCmd(t *testing.T) {
 			composerRoot := tmpDir
 			if docRoot != "" {
 				arguments = append(arguments, "--docroot", docRoot)
-				// For Drupal10 we test that the composer root is the same as the create root
-				if projectType == nodeps.AppTypeDrupal10 {
+				// For Drupal we test that the composer root is the same as the created root
+				if projectType == nodeps.AppTypeDrupal {
 					arguments = append(arguments, "--composer-root", docRoot)
 					composerRoot = filepath.Join(tmpDir, docRoot)
 				}

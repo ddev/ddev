@@ -7,11 +7,13 @@
 ## Example: "ddev self-upgrade"
 ## CanRunGlobally: true
 
-for ddev_path in $(which -a ddev); do
+# split the loop output below by newlines
+IFS=$'\n'
+for ddev_path in $(which -a ddev | uniq); do
   case $ddev_path in
     "/usr/bin/ddev")
       if [[ ${OSTYPE} = "linux-gnu"* ]]; then
-        if command -v apt; then echo "You seem to have an apt-installed DDEV, upgrade with 'sudo apt update && sudo apt upgrade -y ddev'";
+        if command -v apt-get; then echo "You seem to have an apt-installed DDEV, upgrade with 'sudo apt-get update && sudo apt-get upgrade -y ddev'";
         elif [ -f /etc/arch-release ] && command -v yay >/dev/null ; then echo "You seem to have yay-installed DDEV (AUR), upgrade with 'yay -Syu ddev-bin'";
         elif command -v dnf; then echo "You seem to have dnf-installed DDEV, upgrade with 'sudo dnf install --refresh ddev'"; fi
       fi
@@ -38,7 +40,10 @@ for ddev_path in $(which -a ddev); do
       ;;
 
     *)
-      echo "Unable to determine how you installed DDEV, but you can remove $ddev_path and reinstall with one of the techniques in https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/"
+      echo "Unable to determine how you installed DDEV, but you can remove $ddev_path and reinstall with one of the techniques in https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/"
 
   esac
 done
+printf "\n'ddev --version' will show you the version you currently have installed.\n"
+printf "'which ddev' will show you where that executable is on your filesystem.\n"
+printf "See docs for more info: \nhttps://ddev.readthedocs.io/en/stable/users/install/ddev-installation/\n"

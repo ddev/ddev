@@ -214,9 +214,11 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&composerRootRelPathDefaultArg, "composer-root-default", false, "Unsets a web service Composer root directory override")
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
-	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
+	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project; deprecated alias for `--router-http-port`")
+	_ = ConfigCommand.Flags().MarkDeprecated("http-port", "--http-port is a deprecated alias for `--router-http-port`")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "router-http-port", "", "The router HTTP port for this project")
-	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
+	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project; deprecated alias for `--router-https-port`")
+	_ = ConfigCommand.Flags().MarkDeprecated("https-port", "--https-port is a deprecated alias for `--router-https-port`")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "router-https-port", "", "The router HTTPS port for this project")
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
 	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether or not to skip mounting project code into the web container")
@@ -306,6 +308,8 @@ func init() {
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that DDEV waits for all containers to become ready on start`)
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
+	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
+	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -380,6 +384,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.Name = filepath.Base(pwd)
 	}
 
+	err = app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	// Ensure that the docroot exists
 	if docrootRelPathArg != "" {
 		app.Docroot = docrootRelPathArg
@@ -410,7 +419,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	if projectTypeArg != "" && !ddevapp.IsValidAppType(projectTypeArg) {
-		validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
+		validAppTypes := strings.Join(ddevapp.GetValidAppTypesWithoutAliases(), ", ")
 		util.Failed("Apptype must be one of %s", validAppTypes)
 	}
 
@@ -420,22 +429,33 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 	}
 
+	doUpdate, _ := cmd.Flags().GetBool("update")
 	switch {
+	case doUpdate:
+		if projectTypeArg == "" {
+			projectTypeArg = detectedApptype
+		}
+
+		app.Type = projectTypeArg
+		util.Success("Auto-updating project configuration because update is requested.\nConfiguring a '%s' project with docroot '%s' at '%s'", app.Type, app.Docroot, fullPath)
+		err = app.ConfigFileOverrideAction(true)
+		if err != nil {
+			util.Warning("ConfigOverrideAction failed: %v")
+		}
 	case app.Type != nodeps.AppTypeNone && projectTypeArg == "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
 		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
-		break
 	default:
 		if projectTypeArg == "" {
 			projectTypeArg = detectedApptype
 		}
 
 		app.Type = projectTypeArg
-		util.Success("Configuring a '%s' project with docroot '%s' at %s", app.Type, app.Docroot, fullPath)
+		util.Success("Configuring a '%s' project named '%s' with docroot '%s' at '%s'.\nFor full details use 'ddev describe'.", app.Type, app.Name, app.Docroot, fullPath)
 	}
 
 	// App overrides are done after app type is detected, but
 	// before user-defined flags are set.
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	if err != nil {
 		util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
 	}
@@ -645,6 +665,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.DisableUploadDirsWarning, _ = cmd.Flags().GetBool("disable-upload-dirs-warning")
 	}
 
+	if cmd.Flag("corepack-enable").Changed {
+		app.CorepackEnable, _ = cmd.Flags().GetBool("corepack-enable")
+	}
+
 	if webserverTypeArg != "" {
 		app.WebserverType = webserverTypeArg
 	}
@@ -700,7 +724,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	// If the database already exists in volume and is not of this type, then throw an error
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, dbType, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/stable/users/extend/database-types/")
+			return fmt.Errorf("unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, app.Database.Type+":"+app.Database.Version, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/stable/users/extend/database-types/")
 		}
 	}
 

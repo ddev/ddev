@@ -3,10 +3,6 @@ package versionconstants
 // DdevVersion is the current version of DDEV, by default the Git committish (should be current Git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
-// SegmentKey is the ddev-specific key for Segment service
-// Compiled with link-time variables
-var SegmentKey = ""
-
 // AmplitudeAPIKey is the ddev-specific key for Amplitude service
 // Compiled with link-time variables
 var AmplitudeAPIKey = ""
@@ -15,22 +11,22 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20240305_stasadev_remove_kill_supervisor" // Note that this can be overridden by make
+var WebTag = "v1.23.2" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20240213_mariadb_1011_default"
+var BaseDBTag = "v1.23.2"
 
-const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.22.7"
-const TraefikRouterImage = "ddev/ddev-traefik-router:20240213_traefik_2.11"
+const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.2"
+const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.2"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.22.7"
+var SSHAuthTag = "v1.23.2"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
@@ -43,4 +39,7 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.17.2"
 
-const RequiredDockerComposeVersionDefault = "v2.24.5"
+const RequiredDockerComposeVersionDefault = "v2.27.0"
+
+// Drupal11RequiredSqlite3Version for ddev-webserver
+const Drupal11RequiredSqlite3Version = "3.45.1"

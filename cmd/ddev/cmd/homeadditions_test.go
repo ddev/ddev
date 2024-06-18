@@ -6,12 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,32 +18,18 @@ import (
 // TestHomeadditions makes sure that extra files added to
 // .ddev/homeadditions and ~/.ddev/homeadditions get added into the container's ~/
 func TestHomeadditions(t *testing.T) {
-	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
-		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
-			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
-		nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because this changes homedir and breaks Mutagen functionality")
-	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
 	testdata := filepath.Join(origDir, "testdata", t.Name())
 
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("USERPROFILE", tmpHome)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
+	tmpHomeGlobalHomeadditionsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
+	err := os.RemoveAll(tmpHomeGlobalHomeadditionsDir)
+	assert.NoError(err)
 	site := TestSites[0]
 	projectHomeadditionsDir := filepath.Join(site.Dir, ".ddev", "homeadditions")
-
-	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
-	// It's changed via $HOME for the DDEV subprocess
-	err := os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
-	assert.NoError(err)
-	tmpHomeGlobalHomeadditionsDir := filepath.Join(tmpHome, ".ddev", "homeadditions")
-	err = os.RemoveAll(tmpHomeGlobalHomeadditionsDir)
-	assert.NoError(err)
 	err = os.RemoveAll(projectHomeadditionsDir)
 	assert.NoError(err)
 	err = fileutil.CopyDir(filepath.Join(testdata, "global"), tmpHomeGlobalHomeadditionsDir)
@@ -55,16 +39,10 @@ func TestHomeadditions(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		_, err := os.Stat(globalconfig.GetMutagenPath())
-		if err == nil {
-			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
-		}
-
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_ = fileutil.PurgeDirectory(projectHomeadditionsDir)
-		_ = os.RemoveAll(tmpHome)
+		_ = os.RemoveAll(projectHomeadditionsDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
 
 	// Before we can symlink global, need to make sure anything is already gone

@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -10,6 +9,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	copy2 "github.com/otiai10/copy"
 )
 
 // isMagentoApp returns true if the app is of type magento
@@ -77,13 +77,13 @@ func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 
 	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
-		if err := os.RemoveAll(destPath); err != nil {
+		if err := fileutil.PurgeDirectory(destPath); err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
@@ -104,8 +104,7 @@ func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 		return nil
 	}
 
-	//nolint: revive
-	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+	if err := copy2.Copy(importPath, destPath); err != nil {
 		return err
 	}
 
@@ -160,15 +159,18 @@ func setMagento2SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "..", "app", "etc", "env.php")
 }
 
-func magentoConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP74
-	return nil
-}
+// magentoConfigOverrideAction is not currently required
+// as OpenMage allows PHP up to 8.3
+// See https://github.com/OpenMage/magento-lts#requirements
+//func magentoConfigOverrideAction(app *DdevApp) error {
+//	app.PHPVersion = nodeps.PHP74
+//	return nil
+//}
 
 // Magento2 2.4.6 requires php8.1/2 and MariaDB 10.6
 // https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html
 func magento2ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP81
+	app.PHPVersion = nodeps.PHP82
 	app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB106}
 	return nil
 }

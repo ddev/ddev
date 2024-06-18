@@ -4,10 +4,13 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
 ## General Troubleshooting Strategies
 
+* Please use the [current stable version of DDEV](https://ddev.readthedocs.io/en/stable/users/install/ddev-upgrade/) and of your Docker provider before going too far or asking for support.
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
-* Please use the current stable version of DDEV and of your Docker provider before going too far or asking for support.
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
+* Check to see if you're out of disk space. On macOS, make sure that your Docker provider has adequate disk space allocated. (DDEV will normally warn you about problems in this situation.)
+* On macOS, if you have a particular heavyweight project or are encountering `kill` statements in `ddev logs`, increase your memory allocation in your Docker provider. (Most projects are fine with 5-6GB allocated.)
+* On macOS your Docker provider limits the amount of disk space available to Docker. Make sure that you increase it if you're seeing disk space problems.
 * Please make sure that your project is in a subdirectory of your home directory and has normal ownership and privileges. For example, `ls -ld .` in your project directory should show you as owner of the directory and with write privileges.
 * Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
 * Make sure you do not have disk space problems on your computer. This can be especially tricky on WSL2, where you need to check both the main Windows disk space and WSL2 disk space as well.
@@ -249,7 +252,7 @@ You should then be able to start your DDEV machine.
 
 ## `ddev --version` shows an old version
 
-If you have installed the latest version of DDEV, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)
+If you have installed or upgraded DDEV to the latest version, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)
 
 ## Trouble Building Dockerfiles
 
@@ -318,18 +321,21 @@ You may see one of several messages:
 
 Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since `*.ddev.site` resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like “<url> server IP address could not be found” or “We can’t connect to the server at <url>”.
 
-You verify this is your problem by running `ping dkkd.ddev.site`. If you get “No address associated with hostname” or something of that type, your computer is unable to look up `*.ddev.site`.
+You verify this is your problem by running `ping -c 1 dkkd.ddev.site`. If you get “No address associated with hostname” or something of that type, your computer is unable to look up `*.ddev.site`.
 
 In this case, you can take any one of the following approaches:
 
 1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it. See [issue](https://github.com/ddev/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it’s a simple change to a configuration directive to allow it.
-2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
+2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution, see [this article](https://www.hellotech.com/guide/for/how-to-change-dns-server-windows-mac).
 3. If you have control of the router, you can usually change its DHCP settings to choose a public, relaxed DNS server as in #2.
 4. You can live with DDEV trying to edit the `/etc/hosts` file, which it only has to do when a new name is added to a project.
 
+An extensive discussion of this class of problem is on [ddev.com](https://ddev.com/blog/ddev-name-resolution-wildcards).
+
 ## Windows WSL2 Network Issues
 
-If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
+* Some recent WSL2 versions have had very slow or completely failed network access inside the container or during the Docker build process. A `wsl --shutdown` or a reboot seems to clear these up.
+* If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
 
 ## Limitations on Symbolic Links (symlinks)
 

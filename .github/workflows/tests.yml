@@ -22,6 +22,11 @@ on:
         required: false
         default: false
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -53,23 +58,26 @@ jobs:
             router: "nginx-proxy"
           - name: "pull-push-test-platforms"
             pull-push-test-platforms: true
+          - name: "race-detection"
+            race-detection: true
 
       fail-fast: false
 
     runs-on: ubuntu-22.04
 
     env:
+      CGO_ENABLED: 0
+      DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
       DDEV_NONINTERACTIVE: "true"
-      GOTEST_SHORT: "12" # 8 is drupal10; means in TestFullSiteSetup we only use drupal10
+      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
+      DDEV_SKIP_NODEJS_TEST: "true"
+      GOTEST_SHORT: "12" # 12 is drupal10; means in TestFullSiteSetup we only use drupal10
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
       DDEV_TEST_USE_NGINX_PROXY_ROUTER: ${{ matrix.nginx-proxy-router }}
       MAKE_TARGET: "test"
       TESTARGS: "-failfast"
-      DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
-      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
-      DDEV_SKIP_NODEJS_TEST: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -102,29 +110,6 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Get Homebrew Cache Directory
-        id: homebrew-cache
-        run: |
-          echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
-
-      - name: Homebrew cache
-        uses: actions/cache@v4
-        if: github.ref == 'refs/heads/master'
-        with:
-          path: ${{ steps.homebrew-cache.outputs.dir }}
-          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-cache-
-
-      - name: Homebrew cache/restore
-        uses: actions/cache/restore@v4
-        if: github.ref != 'refs/heads/master'
-        with:
-          path: ${{ steps.homebrew-cache.outputs.dir }}
-          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-cache-
-
       - name: Remove unnecessary items on disk
         run: sudo rm -rf /usr/local/lib/android && df -h .
 
@@ -152,9 +137,18 @@ jobs:
       - name: Override environment variables for plain nginx
         run: |
           echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
+          echo "TESTARGS=" >> $GITHUB_ENV
         if: ${{ matrix.webserver == 'nginx-fpm' }}
 
-      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
+      - name: Override environment variables for race detection
+        run: |
+          echo "BUILDARGS=-race" >> $GITHUB_ENV
+          echo "TESTARGS=-failfast -race" >> $GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+          echo "DDEV_TEST_USE_MUTAGEN=true" >>$GITHUB_ENV
+        if: ${{ matrix.race-detection }}
+
+      - run: echo "BUILDARGS=${BUILDARGS} TESTARGS=${TESTARGS} CGO_ENABLED=${CGO_ENABLED} DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -163,7 +157,13 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: DDEV tests
-        run: make TESTARGS="${TESTARGS}" ${MAKE_TARGET}
+        run: |
+          make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
+          cgo=$(.gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev version 2>/dev/null | awk '/cgo_enabled/ { print $2 }')
+          if [ "${CGO_ENABLED}" != "${cgo}" ]; then
+            echo "CGO_ENABLED=${CGO_ENABLED} but built cgo=${cgo}" && exit 5
+          fi
+          make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
       - name: Clean up Homebrew
         continue-on-error: true

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -30,9 +31,15 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
+// RunValidateConfig controls whether to run ValidateConfig() function.
+// In some cases we don't actually need to check the config, e.g. when deleting the project.
+// It is enabled by default.
+var RunValidateConfig = true
+
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
 func init() {
+	var err error
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
@@ -48,6 +55,12 @@ func init() {
 	}
 	if os.Getenv("DDEV_TEST_USE_NGINX_PROXY_ROUTER") == "true" {
 		nodeps.UseNginxProxyRouter = true
+	}
+	if g := os.Getenv("DDEV_TEST_GOROUTINE_LIMIT"); g != "" {
+		nodeps.GoroutineLimit, err = strconv.Atoi(g)
+		if err != nil {
+			util.Failed("DDEV_TEST_GOROUTINE_LIMIT must be empty or numeric value, not '%v'", g)
+		}
 	}
 }
 
@@ -68,8 +81,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
 	}
 
-	if !fileutil.FileExists(app.AppRoot) {
-		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
+	if _, err := os.Stat(app.AppRoot); err != nil {
+		return app, err
 	}
 
 	app.ConfigPath = app.GetConfigPath("config.yaml")
@@ -317,6 +330,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 
 // ReadConfig reads project configuration from the config.yaml file
 // It does not attempt to set default values; that's NewApp's job.
+// returns the list of config files read
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 	// Load base .ddev/config.yaml - original config
@@ -408,7 +422,7 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
-	err = app.ConfigFileOverrideAction()
+	err = app.ConfigFileOverrideAction(false)
 	if err != nil {
 		return err
 	}
@@ -432,6 +446,11 @@ func ValidateProjectName(name string) error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
+	// Skip project validation on request.
+	if !RunValidateConfig {
+		return nil
+	}
+
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
 		constraint := app.DdevVersionConstraint
@@ -473,7 +492,7 @@ func (app *DdevApp) ValidateConfig() error {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
 		if hn == nodeps.DdevDefaultTLD {
-			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as FQDN for the project %s is not allowed because other projects would not work in that case", app.Name)
+			return fmt.Errorf("wildcarding the full hostname\nor using 'ddev.site' as FQDN for the project %s is not allowed\nbecause other projects would not work in that case", app.Name)
 		}
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("the %s project has an invalid hostname: '%s', see https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)
@@ -522,10 +541,6 @@ func (app *DdevApp) ValidateConfig() error {
 			return fmt.Errorf("the %s project has an invalid timezone %s: %v", app.Name, app.Timezone, err)
 		}
 	}
-
-	// if app.Database.Type == nodeps.Postgres && (nodeps.ArrayContainsString([]string{"wordpress", "magento", "magento2"}, app.Type)) {
-	//	return fmt.Errorf("the %s project has a project type %s that does not support PostgreSQL database", app.Name, app.Type)
-	// }
 
 	return nil
 }
@@ -610,7 +625,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
 		util.CheckErr(err)
 		if len(nginxFiles) > 0 {
-			util.Warning("Using nginx snippets: %v", nginxFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(nginxFiles)
+			util.Warning("Using nginx snippets: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -620,7 +636,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
-			util.Warning("Using custom MySQL configuration: %v", mysqlFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(mysqlFiles)
+			util.Warning("Using custom MySQL configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -630,7 +647,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		phpFiles, err := filepath.Glob(phpPath + "/*.ini")
 		util.CheckErr(err)
 		if len(phpFiles) > 0 {
-			util.Warning("Using custom PHP configuration: %v", phpFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(phpFiles)
+			util.Warning("Using custom PHP configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -640,7 +658,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		entrypointFiles, err := filepath.Glob(webEntrypointPath + "/*.sh")
 		util.CheckErr(err)
 		if len(entrypointFiles) > 0 {
-			util.Warning("Using custom web-entrypoint.d configuration: %v", entrypointFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(entrypointFiles)
+			util.Warning("Using custom web-entrypoint.d configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
@@ -658,7 +677,6 @@ func (app *DdevApp) CheckDeprecations() {
 
 // FixObsolete removes files that may be obsolete, etc.
 func (app *DdevApp) FixObsolete() {
-
 	// Remove old in-project commands (which have been moved to global)
 	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
@@ -702,6 +720,15 @@ func (app *DdevApp) FixObsolete() {
 			if err != nil {
 				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", item, err)
 			}
+		}
+	}
+
+	// Remove old .global_commands directory
+	legacyCommandDir := app.GetConfigPath(".global_commands")
+	if fileutil.IsDirectory(legacyCommandDir) {
+		err := os.RemoveAll(legacyCommandDir)
+		if err != nil {
+			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacyCommandDir, err)
 		}
 	}
 }
@@ -935,11 +962,27 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
 	}
-
-	// Some installed packages can change the permissions of /run/php
-	// First seen in Debian 12 Bookworm
-	// See https://github.com/ddev/ddev/issues/5898
-	extraWebContent = extraWebContent + "\nRUN chmod 777 /run/php"
+	if app.CorepackEnable {
+		extraWebContent = extraWebContent + "\nRUN corepack enable"
+	}
+	if app.Type == nodeps.AppTypeDrupal {
+		// TODO: When ddev-webserver has required drupal 11+ sqlite version we can remove this.
+		// These packages must be retrieved from snapshot.debian.org. We hope they'll be there
+		// when we need them.
+		drupalVersion, err := GetDrupalVersion(app)
+		if err == nil && drupalVersion == "11" {
+			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
+### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
+ARG TARGETPLATFORM
+ENV SQLITE_VERSION=%s
+RUN mkdir -p /tmp/sqlite3 && \
+wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
+wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
+apt-get install -y /tmp/sqlite3/*.deb && \
+rm -rf /tmp/sqlite3
+			`, versionconstants.Drupal11RequiredSqlite3Version)
+		}
+	}
 
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string
@@ -970,6 +1013,10 @@ redirect_stderr=true
 			return "", fmt.Errorf("failed to write .webimageBuild/webextradaemons.conf: %v", err)
 		}
 		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/webextradaemons.conf\n"
+	}
+	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
+	if app.Database.Type == "mysql" {
+		extraWebContent = extraWebContent + "\nRUN timeout 30 mysql-client-install.sh || true\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -1010,7 +1057,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
 	// because that deletes the .dbimageBuild directory
 	if app.Database.Type == nodeps.Postgres {
-		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/db/postgres", app.GetConfigPath(".dbimageBuild"))
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/db/postgres", app.GetConfigPath(".dbimageBuild"), nil)
 		if err != nil {
 			return "", err
 		}
@@ -1068,6 +1115,7 @@ ARG username
 ARG uid
 ARG gid
 ARG DDEV_PHP_VERSION
+ARG DDEV_DATABASE
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
 	// If there are user pre.Dockerfile* files, insert their contents
@@ -1167,6 +1215,18 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 			return err
 		}
 	}
+
+	// Some installed php packages (php-gmp, php-dev) can change the permissions of /run/php, which leads to errors like:
+	// Unable to create the PID file (/run/php/php-fpm.pid).: Permission denied (13)
+	// See https://github.com/ddev/ddev/issues/5898
+	// Place this at the very end of the Dockerfile
+	if strings.Contains(fullpath, "webimageBuild") {
+		contents = contents + fmt.Sprintf(`
+### DDEV-injected php folder permission fix
+RUN chmod 777 /run/php
+`)
+	}
+
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
@@ -1198,6 +1258,12 @@ func (app *DdevApp) promptForName() error {
 		return err
 	}
 	app.Name = name
+
+	err := app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	return nil
 }
 
@@ -1295,7 +1361,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	// If we found an application type set it and inform the user.
 	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
 
-	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
+	validAppTypes := strings.Join(GetValidAppTypesWithoutAliases(), ", ")
 	typePrompt := "Project Type [%s] (%s): "
 
 	defaultAppType := app.Type
@@ -1339,7 +1405,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 		return err
 	}
 
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:20240213_php_8.2_default as ddev-webserver-base
+FROM ddev/ddev-php-base:v1.23.2 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -21,8 +21,11 @@ ARG BUILDPLATFORM
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
 
+# symfony cli
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
+
 RUN apt-get -qq update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all pv supervisor
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all pv supervisor symfony-cli xz-utils
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
@@ -34,13 +37,21 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develo
 RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
 
-RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 
 # /usr/local/bin may need to be updated by start.sh, etc
 RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
+
+# Install older mariadb client and mariadb-dump into /usr/local/mariadb-old/bin
+# to solve variety of problems with newer mariadb-dump.
+RUN if [ "$(dpkg --print-architecture)" = "arm64" ]; then cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607865/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_arm64.deb" -O "https://dlm.mariadb.com/3607494/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_arm64.deb"; fi
+RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607675/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_amd64.deb" -O "https://dlm.mariadb.com/3607123/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_amd64.deb"; fi
+RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
+RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
+
 # END ddev-webserver-base
 
 
@@ -87,6 +98,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
+# Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
+RUN rm /etc/apt/sources.list.d/blackfire.list
+
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
 # blackfire user by default is set up with /dev/null as homedir, and 999 as uid, which
@@ -100,12 +114,12 @@ RUN phpdismod xhprof
 RUN set -x && set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/axllent/mailpit/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/axllent/mailpit/releases/download/${tag}/mailpit-linux-${TARGETPLATFORM##linux/}.tar.gz" -o /tmp/mailpit.tar.gz && tar -zx -C /usr/local/bin -f /tmp/mailpit.tar.gz mailpit && rm /tmp/mailpit.tar.gz
 
 RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive
+# Install terminus cli
 RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
-RUN set -o pipefail && curl --fail -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl -L --fail --silent "https://api.github.com/repositories/16695539/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
-
+# Install platform cli
+RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash
 # Install upsun cli
-RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/platformsh/cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/platformsh/cli/releases/download/${tag}/upsun_${tag}_linux_${TARGETPLATFORM##linux/}.tar.gz" -o /tmp/upsun.tar.gz && tar -zx -C /usr/local/bin -f /tmp/upsun.tar.gz upsun && rm /tmp/upsun.tar.gz
-
+RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | VENDOR=upsun bash
 # Install lagoon cli
 RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETPLATFORM##linux/}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
 # Install lagoon-sync
@@ -138,7 +152,7 @@ RUN chmod -fR ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/ngin
 RUN mkdir -p /var/xhprof && curl --fail  -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-  chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+    chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
@@ -154,7 +168,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
 #END ddev-webserver-dev-base
@@ -221,6 +235,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
+# Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
+RUN rm /etc/apt/sources.list.d/blackfire.list
+
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
 ADD ddev-webserver-prod-files /
@@ -247,7 +264,7 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/ng
 RUN chmod -fR ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/lock/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-  chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+    chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
@@ -262,7 +279,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
 #END ddev-webserver-prod-base

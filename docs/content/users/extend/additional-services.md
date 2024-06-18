@@ -84,9 +84,28 @@ Officially-supported add-ons:
 * [Selenium Standalone Chrome](https://github.com/ddev/ddev-selenium-standalone-chrome): `ddev get ddev/ddev-selenium-standalone-chrome`.
 * [Varnish](https://github.com/ddev/ddev-varnish): `ddev get ddev/ddev-varnish`.
 
-## Viewing and Removing Installed Add-Ons
+## Managing Installed Add-Ons
 
-Add-ons installed in DDEV v1.22+ are versioned and can be viewed by running `ddev get --installed`. You can remove an add-on by running `ddev get --remove <addonname>`. If you have add-ons that were installed before v1.22, re-add them with `ddev get <addonname>` and they will be versioned and available in `ddev get --installed`.
+Add-ons installed in DDEV v1.22+ are versioned and can be viewed by running `ddev get --installed`.
+
+You can update an add-on by running `ddev get <addonname>`, or remove it by running `ddev get --remove <addonname>`.
+
+If you have add-ons that were installed before v1.22, update them with `ddev get <addonname>` and they will be versioned and available in `ddev get --installed`.
+
+## Adding Custom Configuration to an Add-on
+
+Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis-7`](https://github.com/ddev/ddev-redis-7) the `image` is set to `image: redis:7.2-alpine`. If you wanted to change this to use `7.0-alpine` instead, you would have two choices:
+
+1. Remove the `#ddev-generated` line in `docker-compose.redis-7.yaml` and edit the relevant line.
+2. Add a `.ddev/docker-compose.redis-7_extra.yaml` with the contents:
+
+```yaml
+  services:
+    redis:
+      image: redis:7.0-alpine
+```
+
+Using the second option (`docker-compose.redis-7_extra.yaml`) allows you to update to future versions of `ddev-redis-7` without losing your configuration, and without the upgrade being blocked because you removed the `#ddev-generated` line from the upstream `docker-compose.redis-7.yaml`.
 
 ## Creating an Additional Service for `ddev get`
 

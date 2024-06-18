@@ -1,7 +1,6 @@
 package dockerutil_test
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"os"
 	"os/exec"
 	"strings"
@@ -26,27 +25,18 @@ func TestDockerComposeDownload(t *testing.T) {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
-	// Unusual case where we need to alter the RequiredDockerComposeVersion
-	// so we can make sure the one in PATH is different.
-	origRequiredComposeVersion := globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion
+	_, err = dockerutil.DownloadDockerComposeIfNeeded()
+	require.NoError(t, err)
 
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("USERPROFILE", tmpHome)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
-		_, err := os.Stat(globalconfig.GetMutagenPath())
-		if err == nil {
-			ddevapp.StopMutagenDaemon()
-		}
-
-		_ = os.RemoveAll(tmpHome)
-		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = origRequiredComposeVersion
-		// Reset the cached DockerComposeVersion so it doesn't come into play again
-		globalconfig.DockerComposeVersion = ""
-		globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = false
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
+
+	// Remove previous binary
+	previousDockerCompose, _ := globalconfig.GetDockerComposePath()
+	_ = os.RemoveAll(previousDockerCompose)
 
 	// Download the normal required version specified in code
 	globalconfig.DockerComposeVersion = ""

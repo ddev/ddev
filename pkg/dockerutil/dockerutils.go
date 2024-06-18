@@ -32,6 +32,7 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
+	dockerImage "github.com/docker/docker/api/types/image"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
@@ -46,6 +47,13 @@ type ComposeCmdOpts struct {
 	ComposeFiles []string
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
+}
+
+// NoHealthCheck is a HealthConfig that disables any existing healthcheck when
+// running a container. Used by RunSimpleContainer
+// See https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
+var NoHealthCheck = dockerContainer.HealthConfig{
+	Test: []string{"NONE"}, // Disables any existing health check
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
@@ -301,7 +309,12 @@ func FindContainersByLabels(labels map[string]string) ([]dockerTypes.Container, 
 	}
 	filterList := dockerFilters.NewArgs()
 	for k, v := range labels {
-		filterList.Add("label", fmt.Sprintf("%s=%s", k, v))
+		label := fmt.Sprintf("%s=%s", k, v)
+		// If no value is specified, filter any value by the key.
+		if v == "" {
+			label = k
+		}
+		filterList.Add("label", label)
 	}
 
 	ctx, client := GetDockerClient()
@@ -380,7 +393,16 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 		select {
 		case <-timeoutChan.C:
 			_ = timeoutChan.Stop()
-			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v", durationWait, labels, status)
+			desc := ""
+			container, err := FindContainerByLabels(labels)
+			if err == nil && container != nil {
+				health, _ := GetContainerHealth(container)
+				if health != "healthy" {
+					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+				}
+			}
+			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v, detail=%s ", durationWait, labels, status, desc)
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
@@ -393,14 +415,11 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			case "healthy":
 				return logOutput, nil
 			case "unhealthy":
-				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
 			case "exited":
-				service := container.Labels["com.docker.compose.service"]
-				suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
-				if service == "ddev-router" || service == "ddev-ssh-agent" {
-					suggestedCommand = fmt.Sprintf("docker logs %s", service)
-				}
-				return logOutput, fmt.Errorf("container exited, please use '%s' to find out why it failed", suggestedCommand)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
 			}
 		}
 	}
@@ -430,8 +449,8 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				for _, container := range containers {
 					health, _ := GetContainerHealth(&container)
 					if health != "healthy" {
-						n := strings.TrimPrefix(container.Names[0], "/")
-						desc = desc + fmt.Sprintf(" %s:%s - more info with `docker inspect --format \"{{json .State.Health }}\" %s`", n, health, n)
+						name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+						desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
 					}
 				}
 			}
@@ -450,14 +469,11 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				case "healthy":
 					continue
 				case "unhealthy":
-					return fmt.Errorf("container %s is unhealthy: %s", container.Names[0], logOutput)
+					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+					return fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
 				case "exited":
-					service := container.Labels["com.docker.compose.service"]
-					suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
-					if service == "ddev-router" || service == "ddev-ssh-agent" {
-						suggestedCommand = fmt.Sprintf("docker logs %s", service)
-					}
-					return fmt.Errorf("container '%s' exited, please use '%s' to find out why it failed", service, suggestedCommand)
+					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
+					return fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -489,7 +505,16 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	for {
 		select {
 		case <-timeoutChan:
-			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+			desc := ""
+			container, err := FindContainerByLabels(labels)
+			if err == nil && container != nil {
+				health, _ := GetContainerHealth(container)
+				if health != "healthy" {
+					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+				}
+			}
+			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
@@ -502,10 +527,11 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 			case status == "healthy" && expectedLog == logOutput:
 				return logOutput, nil
 			case status == "unhealthy":
-				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
 			case status == "exited":
-				service := container.Labels["com.docker.compose.service"]
-				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
+				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
 			}
 		}
 	}
@@ -513,6 +539,28 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	// We should never get here.
 	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
+}
+
+// getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
+func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (string, string) {
+	suggestedCommands := []string{}
+	service := container.Labels["com.docker.compose.service"]
+	if service != "" && service != "ddev-router" && service != "ddev-ssh-agent" {
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("ddev logs -s %s", service))
+	}
+	name := strings.TrimPrefix(container.Names[0], "/")
+	if name != "" {
+		suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s | docker run -i --rm ddev/ddev-utilities jq -r", name))
+	}
+	// Should never happen, but added just in case
+	if name == "" {
+		name = "unknown"
+	}
+	if len(suggestedCommands) == 0 {
+		suggestedCommands = append(suggestedCommands, "ddev logs", "docker logs CONTAINER (find CONTAINER with 'docker ps')", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER", "docker inspect --format \"{{ json .State.Health }}\" CONTAINER | docker run -i --rm ddev/ddev-utilities jq -r")
+	}
+	suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
+	return name, suggestedCommand
 }
 
 // ContainerName returns the container's human-readable name.
@@ -855,10 +903,14 @@ func GetDockerIP() (string, error) {
 // RunSimpleContainer runs a container (non-daemonized) and captures the stdout/stderr.
 // It will block, so not to be run on a container whose entrypoint or cmd might hang or run too long.
 // This should be the equivalent of something like
-// docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
+// docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --no-healthcheck --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
+// Default behavior is to use the image's healthcheck (healthConfig == nil)
+// When passed a pointer to HealthConfig (often &dockerutils.NoHealthCheck) it can turn off healthcheck
+// or it can replace it or have other behaviors, see
+// https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings nat.PortMap) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings nat.PortMap, healthConfig *dockerContainer.HealthConfig) (containerID string, output string, returnErr error) {
 	ctx, client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -913,6 +965,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		Entrypoint:   entrypoint,
 		AttachStderr: true,
 		AttachStdout: true,
+		Healthcheck:  healthConfig,
 	}
 
 	containerHostConfig := &dockerContainer.HostConfig{
@@ -1063,18 +1116,6 @@ func GetExposedContainerPorts(containerID string) ([]string, error) {
 	return ports, nil
 }
 
-// MassageWindowsHostMountpoint changes C:/path/to/something to //c/path/to/something
-// This is required for Docker bind mounts on Docker toolbox.
-// Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
-func MassageWindowsHostMountpoint(mountPoint string) string {
-	if string(mountPoint[1]) == ":" {
-		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
-		drive := strings.ToLower(string(mountPoint[0]))
-		mountPoint = "/" + drive + pathPortion
-	}
-	return mountPoint
-}
-
 // MassageWindowsNFSMount changes C:\Path\to\something to /c/Path/to/something
 func MassageWindowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
@@ -1196,9 +1237,11 @@ func GetHostDockerInternalIP() (string, error) {
 		break
 
 	case nodeps.IsWSL2() && !IsDockerDesktop():
+		// Microsoft instructions for finding Windows IP address at
+		// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
-		hostDockerInternal = wsl2ResolvConfNameserver()
-		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from resolv.conf", hostDockerInternal)
+		hostDockerInternal = wsl2GetWindowsHostIP()
+		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from ip -4 route show default", hostDockerInternal)
 
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
@@ -1241,9 +1284,8 @@ func GetNFSServerAddr() (string, error) {
 		break
 
 	case nodeps.IsWSL2() && !IsDockerDesktop():
-		// If IDE is on Windows, we have to parse /etc/resolv.conf
-		// Else it will be fine, we can fallthrough to the Linux version
-		nfsAddr = wsl2ResolvConfNameserver()
+
+		nfsAddr = wsl2GetWindowsHostIP()
 
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
@@ -1269,31 +1311,59 @@ func GetNFSServerAddr() (string, error) {
 	return nfsAddr, nil
 }
 
+// 2024-04-13: The approach in wsl2ResolveConfNameserver no longer seems to be valid
+
 // wsl2ResolvConfNameserver parses /etc/resolv.conf to get the nameserver,
 // which is the only documented way to know how to connect to the host
 // to connect to PhpStorm or other IDE listening there. Or for other apps.
-func wsl2ResolvConfNameserver() string {
-	if nodeps.IsWSL2() {
-		isAuto, err := fileutil.FgrepStringInFile("/etc/resolv.conf", "automatically generated by WSL")
-		if err != nil || !isAuto {
-			util.Warning("unable to determine WSL2 host.docker.internal because /etc/resolv.conf is not available or not auto-generated")
-			return ""
-		}
-		// We grepped it so no need to check error
-		etcResolv, _ := fileutil.ReadFileIntoString("/etc/resolv.conf")
-		util.Debug("resolv.conf=%s", etcResolv)
+//func wsl2ResolvConfNameserver() string {
+//	if nodeps.IsWSL2() {
+//		isAuto, err := fileutil.FgrepStringInFile("/etc/resolv.conf", "automatically generated by WSL")
+//		if err != nil || !isAuto {
+//			util.Warning("unable to determine WSL2 host.docker.internal because /etc/resolv.conf is not available or not auto-generated")
+//			return ""
+//		}
+//		// We grepped it so no need to check error
+//		etcResolv, _ := fileutil.ReadFileIntoString("/etc/resolv.conf")
+//		util.Debug("resolv.conf=%s", etcResolv)
+//
+//		nameserverRegex := regexp.MustCompile(`nameserver *([0-9\.]*)`)
+//		// nameserverRegex.ReplaceAllFunc([]byte(etcResolv), []byte(`$1`))
+//		res := nameserverRegex.FindStringSubmatch(etcResolv)
+//		if res == nil || len(res) != 2 {
+//			util.Warning("unable to determine host.docker.internal from /etc/resolv.conf")
+//			return ""
+//		}
+//		return res[1]
+//	}
+//	util.Warning("inappropriately using wsl2ResolvConfNameserver() but not on WSL2")
+//	return ""
+//}
 
-		nameserverRegex := regexp.MustCompile(`nameserver *([0-9\.]*)`)
-		// nameserverRegex.ReplaceAllFunc([]byte(etcResolv), []byte(`$1`))
-		res := nameserverRegex.FindStringSubmatch(etcResolv)
-		if res == nil || len(res) != 2 {
-			util.Warning("unable to determine host.docker.internal from /etc/resolv.conf")
-			return ""
-		}
-		return res[1]
+// wsl2GetWindowsHostIP() uses ip -4 route show default to get the Windows IP address
+// for use in determining host.docker.internal
+func wsl2GetWindowsHostIP() string {
+	// Get default route from WSL2
+	out, err := ddevexec.RunHostCommand("ip", "-4", "route", "show", "default")
+
+	if err != nil {
+		util.Warning("Unable to run 'ip -4 route show default' to get Windows IP address")
+		return ""
 	}
-	util.Warning("inappropriately using wsl2ResolvConfNameserver() but not on WSL2")
-	return ""
+	parts := strings.Split(out, " ")
+	if len(parts) < 3 {
+		util.Warning("Unable to parse output of 'ip -4 route show default', result was %v", parts)
+		return ""
+	}
+
+	ip := parts[2]
+
+	if parsedIP := net.ParseIP(ip); parsedIP == nil {
+		util.Warning("Unable to validate IP address '%s' from 'ip -4 route show default'", ip)
+		return ""
+	}
+
+	return ip
 }
 
 // RemoveImage removes an image with force
@@ -1301,7 +1371,7 @@ func RemoveImage(tag string) error {
 	ctx, client := GetDockerClient()
 	_, _, err := client.ImageInspectWithRaw(ctx, tag)
 	if err == nil {
-		_, err = client.ImageRemove(ctx, tag, dockerTypes.ImageRemoveOptions{Force: true})
+		_, err = client.ImageRemove(ctx, tag, dockerImage.RemoveOptions{Force: true})
 
 		if err == nil {
 			util.Debug("Deleted Docker image %s", tag)
@@ -1344,7 +1414,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil)
+	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -1416,7 +1486,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if Docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(ddevImages.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil)
+	_, out, _ := RunSimpleContainer(ddevImages.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {
@@ -1461,7 +1531,7 @@ func DownloadDockerCompose() error {
 	if err != nil {
 		return err
 	}
-	output.UserOut.Printf("Downloading %s ...", composeURL)
+	util.Debug("Downloading '%s' to '%s' ...", composeURL, destFile)
 
 	_ = os.Remove(destFile)
 
@@ -1475,7 +1545,7 @@ func DownloadDockerCompose() error {
 	// Remove the cached DockerComposeVersion
 	globalconfig.DockerComposeVersion = ""
 
-	err = os.Chmod(destFile, 0755)
+	err = util.Chmod(destFile, 0755)
 	if err != nil {
 		return err
 	}
@@ -1558,6 +1628,20 @@ func IsLima() bool {
 		return false
 	}
 	if strings.HasPrefix(info.Name, "lima") {
+		return true
+	}
+	return false
+}
+
+// IsOrbstack detects if running on Orbstack
+func IsOrbstack() bool {
+	ctx, client := GetDockerClient()
+	info, err := client.Info(ctx)
+	if err != nil {
+		util.Warning("IsOrbstack(): Unable to get Docker info, err=%v", err)
+		return false
+	}
+	if strings.HasPrefix(info.Name, "orbstack") {
 		return true
 	}
 	return false

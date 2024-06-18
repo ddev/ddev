@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	osexec "os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -34,8 +35,7 @@ func TestCustomCommands(t *testing.T) {
 	app, err := ddevapp.NewApp("", false)
 	assert.NoError(err)
 
-	tmpHome, origHome, err := makeTempHomeDir(app, t)
-	require.NoError(t, err)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -45,30 +45,22 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		// Stop the Mutagen daemon running in the bogus homedir
-		ddevapp.StopMutagenDaemon()
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		runTime()
 		app.Type = origType
 		err = app.WriteConfig()
 		assert.NoError(err)
-		_ = os.RemoveAll(tmpHome)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 	})
+	// We must start the app before copying commands, so they don't get copied over
 	err = app.Start()
 	require.NoError(t, err)
 
-	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
-	// It's changed via $HOME for the DDEV subprocess
-	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
-	assert.NoError(err)
-	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+	tmpHomeGlobalCommandsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
 	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
 	assert.NoError(err)
 
 	projectCommandsDir := app.GetConfigPath("commands")
-	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
-	_ = os.RemoveAll(projectGlobalCommandsCopy)
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
 
@@ -77,7 +69,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	// We need to run some assertions outside of the context of a project first
-	err = os.Chdir(tmpHome)
+	err = os.Chdir(tmpXdgConfigHomeDir)
 	require.NoError(t, err)
 
 	// Check that only global host commands with the XXX annotation display here
@@ -90,6 +82,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.NotContains(out, "testwebglobal global (global shell web container command)")
 	assert.NotContains(out, "testhostcmd global")
 	assert.NotContains(out, "testwebcmd global")
+	assert.NotContains(out, "not-a-command")
 
 	out, err = exec.RunHostCommand(DdevBin, "testhostglobal-noproject", "hostarg1", "hostarg2", "--hostflag1")
 	assert.NoError(err)
@@ -122,8 +115,6 @@ func TestCustomCommands(t *testing.T) {
 
 	err = os.RemoveAll(projectCommandsDir)
 	assert.NoError(err)
-	err = os.RemoveAll(projectGlobalCommandsCopy)
-	assert.NoError(err)
 
 	// Now copy a project commands and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
@@ -143,6 +134,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.Contains(out, "testwebglobal global (global shell web container command)")
 	assert.NotContains(out, "testhostcmd global") //the global testhostcmd should have been overridden by the project one
 	assert.NotContains(out, "testwebcmd global")  //the global testwebcmd should have been overridden by the project one
+	assert.NotContains(out, "not-a-command")
 
 	// Have to do app.Start() because commands are copied into containers on start
 	err = app.Start()
@@ -156,7 +148,7 @@ func TestCustomCommands(t *testing.T) {
 			homeEnv := os.Getenv("HOME")
 			t.Errorf("userHome=%s, globalDdevDir=%s, homeEnv=%s", userHome, globalDdevDir, homeEnv)
 			t.Errorf("Failed to run ddev %s: %v, home=%s output=%s", c, err, userHome, out)
-			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "comamnds")
+			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "commands")
 			assert.NoError(err)
 			t.Errorf("Commands dir: %s", out)
 		}
@@ -214,7 +206,7 @@ func TestCustomCommands(t *testing.T) {
 	app.Type = origAppType
 
 	// The various CMS commands should not be available here
-	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms", "wp"} {
+	for _, c := range []string{"artisan", "cake", "drush", "magento", "typo3", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
@@ -226,7 +218,7 @@ func TestCustomCommands(t *testing.T) {
 	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
-	for _, c := range []string{"typo3", "typo3cms"} {
+	for _, c := range []string{"typo3"} {
 		_, err = exec.RunHostCommand(DdevBin, "help", c)
 		assert.NoError(err)
 	}
@@ -249,7 +241,7 @@ func TestCustomCommands(t *testing.T) {
 	_, _ = exec.RunHostCommand(DdevBin)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
-	for _, c := range []string{"artisan"} {
+	for _, c := range []string{"artisan", "pint"} {
 		_, err = exec.RunHostCommand(DdevBin, "help", c)
 		assert.NoError(err)
 	}
@@ -276,25 +268,35 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Make sure that the non-command stuff we installed has been copied into projectGlobalCommandsCopy
-	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "host/heidisql", "host/mysqlworkbench.example", "host/phpstorm.example", "host/README.txt", "host/sequelace", "host/sequelpro", "host/tableplus", "host/dbeaver", "host/querious", "web/README.txt"} {
-		assert.FileExists(filepath.Join(projectGlobalCommandsCopy, f))
+	// CakePHP commands should only be available for type cakephp
+	app.Type = nodeps.AppTypeCakePHP
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"cake"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
 	}
+
+	// Make sure that the non-command stuff we installed has been copied into /mnt/ddev-global-cache
+	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
+	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "web/README.txt"} {
+		filePathInVolume := path.Join(commandDirInVolume, f)
+		out, err = exec.RunHostCommand(DdevBin, "exec", "[ -f "+filePathInVolume+" ] && exit 0 || exit 1")
+		assert.NoError(err, filePathInVolume+" does not exist, output=%s", out)
+	}
+
 	// Make sure that the non-command stuff we installed is in project commands dir
 	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
-
-	// Make sure we haven't accidentally created anything inappropriate in ~/.ddev
-	assert.False(fileutil.FileExists(filepath.Join(tmpHome, ".ddev", ".globalcommands")))
-	assert.False(fileutil.FileExists(filepath.Join(origHome, ".ddev", ".globalcommands")))
 
 	// Make sure that the old launch, mysql, and xdebug commands aren't in the project directory
 	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		assert.False(fileutil.FileExists(cmdPath), "file %s exists but it should not", cmdPath)
 	}
-
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
@@ -320,8 +322,11 @@ func TestLaunchCommand(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
-	// This only tests the https port changes, but that might be enough
+	primaryURLWithoutPort := app.GetPrimaryURL()
+	app.RouterHTTPPort = "8080"
 	app.RouterHTTPSPort = "8443"
+	app.MailpitHTTPPort = "18025"
+	app.MailpitHTTPSPort = "18026"
 	err = app.WriteConfig()
 	assert.NoError(err)
 	err = app.Start()
@@ -330,11 +335,33 @@ func TestLaunchCommand(t *testing.T) {
 	desc, err := app.Describe(false)
 	require.NoError(t, err)
 	cases := map[string]string{
-		"":   app.GetPrimaryURL(),
-		"-m": desc["mailpit_https_url"].(string),
+		"":                                 app.GetPrimaryURL(),
+		"-m":                               desc["mailpit_https_url"].(string),
+		"path":                             app.GetPrimaryURL() + "/path",
+		"nested/path":                      app.GetPrimaryURL() + "/nested/path",
+		"/path-with-slash":                 app.GetPrimaryURL() + "/path-with-slash",
+		app.GetPrimaryURL() + "/full-path": app.GetPrimaryURL() + "/full-path",
+		"http://example.com":               "http://example.com",
+		"https://example.com:443/test":     "https://example.com:443/test",
+		":8080":                            desc["httpurl"].(string),
+		":8080/http-port-path":             desc["httpurl"].(string) + "/http-port-path",
+		":8443":                            desc["httpsurl"].(string),
+		":8443/https-port-path":            desc["httpsurl"].(string) + "/https-port-path",
+		":18025":                           "http://" + app.GetHostname() + ":18025",
+		":18026":                           "https://" + app.GetHostname() + ":18026",
+		// if it is impossible to determine the http/https scheme, the default site protocol should be used
+		":3000":                     primaryURLWithoutPort + ":3000",
+		":3000/with-default-scheme": "https://" + app.GetHostname() + ":3000/with-default-scheme",
 	}
-	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+	if runtime.GOOS == "windows" {
+		// Git-Bash converts single forward slashes to a Windows path
+		// Escape it with a second slash, see https://stackoverflow.com/q/58677021
+		cases["//path-with-slash"] = app.GetPrimaryURL() + "/path-with-slash"
+		delete(cases, "/path-with-slash")
+	}
+	if app.CanUseHTTPOnly() {
 		cases["-m"] = desc["mailpit_url"].(string)
+		cases[":3000/with-default-scheme"] = "http://" + app.GetHostname() + ":3000/with-default-scheme"
 	}
 	for partialCommand, expect := range cases {
 		// Try with the base URL, simplest case
@@ -342,7 +369,7 @@ func TestLaunchCommand(t *testing.T) {
 		out, err := exec.RunHostCommand("bash", "-c", c)
 		out = strings.Trim(out, "\r\n")
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
-		assert.Contains(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
+		assert.Equal(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}
 }
 
@@ -373,7 +400,7 @@ func TestMysqlCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	// This populates the project's
-	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	_, err = exec.RunHostCommand("ddev")
 	assert.NoError(err)
@@ -416,7 +443,7 @@ func TestPsqlCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	// This populates the project's
-	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	_, err = exec.RunHostCommand("ddev")
 	assert.NoError(err)
@@ -496,50 +523,4 @@ func TestNpmYarnCommands(t *testing.T) {
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
 	}
-}
-
-// makeTempHomeDir makes a temporary home directory named for the test being executed.
-// Don't forget to run `ddevapp.StopMutagenDaemon()` and `os.RemoveAll(tmpHome)` in the
-// test's cleanup function.
-func makeTempHomeDir(app *ddevapp.DdevApp, t *testing.T) (string, string, error) {
-	// Before changing HOME, make sure that Mutagen is already running if we are using it,
-	// so we don't accidentally start it in the wrong directory
-	err := globalconfig.ReadGlobalConfig()
-	if err != nil {
-		return "", "", err
-	}
-	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
-		if err != nil {
-			return "", "", fmt.Errorf("unable to run Mutagen daemon start, out='%s', err=%v", out, err)
-		}
-	}
-
-	// Must be stopped before changing homedir or Mutagen will lose track
-	// of sessions which are also tracked in the homedir.
-	err = app.Stop(true, false)
-	if err != nil {
-		return "", "", err
-	}
-
-	origHome, err := os.UserHomeDir()
-	require.NoError(t, err)
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
-
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
-
-	// Change the homedir temporarily
-	t.Setenv("HOME", tmpHome)
-	t.Setenv("USERPROFILE", tmpHome)
-	t.Setenv("DDEV_DEBUG", "")
-
-	// Make sure we have the .ddev/bin dir we need
-	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
-	if err != nil {
-		return "", "", err
-	}
-
-	return tmpHome, origHome, nil
 }

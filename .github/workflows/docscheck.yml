@@ -17,6 +17,11 @@ on:
       - ".readthedocs.yaml"
       - ".github/workflows/**"
       - "markdown-link-check.json"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

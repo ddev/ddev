@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -42,43 +41,43 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
-	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
+	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
+	DisableHTTP2                     bool                        `yaml:"disable_http2"`
+	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
 	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
-	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
 	InstrumentationUser              string                      `yaml:"instrumentation_user,omitempty"`
+	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
 	LastStartedVersion               string                      `yaml:"last_started_version"`
-	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
-	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
 	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email"`
-	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
-	WebEnvironment                   []string                    `yaml:"web_environment"`
-	DisableHTTP2                     bool                        `yaml:"disable_http2"`
-	TableStyle                       string                      `yaml:"table_style"`
-	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
-	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
-	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
+	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
-	ProjectTldGlobal                 string                      `yaml:"project_tld"`
-	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
+	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
+	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
+	ProjectTldGlobal                 string                      `yaml:"project_tld"`
+	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
+	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
 	Router                           string                      `yaml:"router"`
-	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
-	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
+	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
 	RouterMailpitHTTPPort            string                      `yaml:"mailpit_http_port,omitempty"`
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
-	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
-	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
-	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`
+	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
+	TableStyle                       string                      `yaml:"table_style"`
+	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
+	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
+	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
+	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
+	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
+	WebEnvironment                   []string                    `yaml:"web_environment"`
+	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
+	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info,omitempty"`
 }
 
-// New() returns a default GlobalConfig
+// New returns a default GlobalConfig
 func New() GlobalConfig {
 
 	cfg := GlobalConfig{
@@ -93,7 +92,6 @@ func New() GlobalConfig {
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
 		Router:                       types.RouterTypeDefault,
 		MkcertCARoot:                 readCAROOT(),
-		ProjectList:                  make(map[string]*ProjectInfo),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
 	}
@@ -132,6 +130,8 @@ func GetDDEVBinDir() string {
 
 // GetMutagenPath gets the full path to the Mutagen binary
 func GetMutagenPath() string {
+	// Check socket path length on first call to Mutagen
+	checkMutagenSocketPathLength()
 	mutagenBinary := "mutagen"
 	if runtime.GOOS == "windows" {
 		mutagenBinary = mutagenBinary + ".exe"
@@ -139,15 +139,42 @@ func GetMutagenPath() string {
 	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
 }
 
-// GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
-func GetMutagenDataDirectory() string {
-	currentMutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
-	if currentMutagenDataDirectory != "" {
-		return currentMutagenDataDirectory
+var checkedMutagenSocketPathLength = false
+
+// checkMutagenSocketPathLength tells people if the Mutagen socket path is too long.
+// Mutagen may fail with this error: "unable to connect to daemon: connection timed out (is the daemon running?)"
+// See https://github.com/garden-io/garden/issues/4527#issuecomment-1584286590
+func checkMutagenSocketPathLength() {
+	if checkedMutagenSocketPathLength {
+		return
 	}
-	// If it's not already set, return ~/.ddev_mutagen_data_directory
-	// This may be affected by tests that change $HOME
-	return GetGlobalDdevDir() + "_" + "mutagen_data_directory"
+	// Skip if not Linux or macOS.
+	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+		checkedMutagenSocketPathLength = true
+		return
+	}
+	socketPathLength := len(filepath.Join(GetMutagenDataDirectory(), "daemon", "daemon.sock"))
+	// Limit from https://unix.stackexchange.com/a/367012
+	limit := 104
+	if runtime.GOOS == "linux" {
+		limit = 108
+	}
+	if socketPathLength >= limit {
+		logrus.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.\nConsider using a shorter path to DDEV global config with XDG_CONFIG_HOME env.", limit, socketPathLength))
+	}
+	checkedMutagenSocketPathLength = true
+}
+
+// GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
+// As a side-effect, it sets MUTAGEN_DATA_DIRECTORY if it's not set
+func GetMutagenDataDirectory() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+	}
+	mutagenDataDirectory := filepath.Join(home, ".ddev_mutagen_data_directory")
+	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, mutagenDataDirectory)
+	return mutagenDataDirectory
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
@@ -419,7 +446,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Decide whether 'ddev start' should be interrupted by a failing hook
 
 # traefik_monitor_port: 10999
-# Change this only if you're having conflicts with some 
+# Change this only if you're having conflicts with some
 # service that needs port 10999
 
 # wsl2_no_windows_hosts_mgt: false
@@ -475,14 +502,26 @@ func ReadProjectList() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			// write an empty file
-			err := os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
-			if err != nil {
+			// If someone upgrades from an earlier version, the global config may hold the project list.
+			if DdevGlobalConfig.ProjectList != nil && len(DdevGlobalConfig.ProjectList) > 0 {
+				DdevProjectList = DdevGlobalConfig.ProjectList
+				err := WriteProjectList(DdevProjectList)
+				if err != nil {
+					return err
+				}
+				// Clean up deprecated project list
+				DdevGlobalConfig.ProjectList = nil
+				err = WriteGlobalConfig(DdevGlobalConfig)
+				// Whether there's an error or nil here we want to return
 				return err
 			}
-		} else {
-			return err
+
+			// Write an empty file - we have no known projects
+			err = os.WriteFile(GetProjectListPath(), make([]byte, 0), 0644)
 		}
+
+		// Whether there's an error or nil here we want to return
+		return err
 	}
 
 	source, err := os.ReadFile(globalProjectsFile)
@@ -496,16 +535,13 @@ func ReadProjectList() error {
 		return err
 	}
 
-	// For backwards compatability we're keeping the project_list in global config
-	// in sync with the list in project_list.yaml. If someone upgrades from an earlier
-	// version the global config will have correct content that isn't in projects.yaml.
-	// For now, treat global config as the source of truth when the two lists differ.
-	if !reflect.DeepEqual(DdevGlobalConfig.ProjectList, DdevProjectList) {
-		DdevProjectList = DdevGlobalConfig.ProjectList
-		err := WriteProjectList(DdevProjectList)
-		if err != nil {
-			return err
-		}
+	// Clean up the deprecated DdevGlobalConfig.ProjectList if it not nil,
+	// but only if the new one DdevProjectList is not nil (for safe migration).
+	if DdevGlobalConfig.ProjectList != nil && DdevProjectList != nil {
+		DdevGlobalConfig.ProjectList = nil
+		err := WriteGlobalConfig(DdevGlobalConfig)
+		// Whether there's an error or nil here we want to return
+		return err
 	}
 
 	return nil
@@ -513,15 +549,6 @@ func ReadProjectList() error {
 
 // WriteProjectList writes the global projects list into ~/.ddev.
 func WriteProjectList(projects map[string]*ProjectInfo) error {
-	// Write to global config for backwards compatability.
-	// This allows devs to downgrade to an earlier version without
-	// worrying about copying project info into their global config file.
-	DdevGlobalConfig.ProjectList = projects
-	err := WriteGlobalConfig(DdevGlobalConfig)
-	if err != nil {
-		return err
-	}
-
 	// Prepare projects file content
 	projectsBytes, err := yaml.Marshal(projects)
 	if err != nil {
@@ -537,14 +564,9 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 	return nil
 }
 
-// GetGlobalDdevDir returns ~/.ddev, the global caching directory
+// GetGlobalDdevDir returns the DDEV global config directory, and creates it as needed.
 func GetGlobalDdevDir() string {
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		logrus.Fatal("Could not get home directory for current user. Is it set?")
-	}
-	ddevDir := filepath.Join(userHome, ".ddev")
-
+	ddevDir := GetGlobalDdevDirLocation()
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
 		// If they happen to be running as root/sudo, we won't create the directory
@@ -565,6 +587,47 @@ func GetGlobalDdevDir() string {
 		_ = os.Remove(filepath.Join(badFile))
 	}
 	return ddevDir
+}
+
+// GetGlobalDdevDirLocation returns the global caching directory location to be used by DDEV:
+// $XDG_CONFIG_HOME/ddev if this $XDG_CONFIG_HOME variable is not empty,
+// ~/.config/ddev if this directory exists on Linux/WSL2 only,
+// ~/.ddev otherwise.
+func GetGlobalDdevDirLocation() string {
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+	}
+	userHomeDotDdev := filepath.Join(userHome, ".ddev")
+
+	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
+	// we create this directory.
+	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
+	// Handle ~/xxx without failure; MUTAGEN_DATA_DIRECTORY, for example, can't have it.
+	if strings.HasPrefix(xdgConfigHomeDir, `~`) {
+		xdgConfigHomeDir = userHome + xdgConfigHomeDir[1:]
+	}
+	if xdgConfigHomeDir != "" {
+		return filepath.Join(xdgConfigHomeDir, "ddev")
+	}
+	// If Linux and ~/.ddev doesn't exist and
+	// ~/.config/ddev exists, use it,
+	// we don't create this directory.
+	stat, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
+	userHomeDotDdevIsDir := userHomeDotDdevErr == nil && stat.IsDir()
+	if runtime.GOOS == "linux" && !userHomeDotDdevIsDir {
+		userConfigDir, err := os.UserConfigDir()
+		if err == nil {
+			linuxDir := filepath.Join(userConfigDir, "ddev")
+			if _, err := os.Stat(linuxDir); err == nil {
+				return linuxDir
+			}
+		}
+	}
+	// Otherwise, use ~/.ddev
+	// It will be created if it doesn't exist.
+
+	return userHomeDotDdev
 }
 
 // IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid
@@ -693,12 +756,9 @@ func RemoveProjectInfo(projectName string) error {
 	_, ok := DdevProjectList[projectName]
 	if ok {
 		delete(DdevProjectList, projectName)
-		err := WriteProjectList(DdevProjectList)
-		if err != nil {
-			return err
-		}
 	}
-	return nil
+	err := WriteProjectList(DdevProjectList)
+	return err
 }
 
 // GetGlobalProjectList returns the global project list map

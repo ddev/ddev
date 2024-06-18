@@ -7,7 +7,6 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
-	"github.com/ddev/ddev/pkg/fileutil"
 	"io"
 	"io/fs"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ulikunitz/xz"
 )
@@ -248,7 +248,7 @@ func Untar(source string, dest string, extractionDir string) error {
 				return err
 			}
 
-			err = os.Chmod(fullPath, fs.FileMode(file.Mode))
+			err = util.Chmod(fullPath, fs.FileMode(file.Mode))
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v dir %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
 			}
@@ -271,7 +271,7 @@ func Untar(source string, dest string, extractionDir string) error {
 			if err != nil {
 				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 			}
-			err = os.Chmod(fullPath, fs.FileMode(file.Mode))
+			err = util.Chmod(fullPath, fs.FileMode(file.Mode))
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
 			}
@@ -481,7 +481,7 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 		_ = f.Close()
 	}()
 
-	util.Success("Downloading %s", url)
+	util.Debug("Downloading %s to %s", url, f.Name())
 	tarball := f.Name()
 	defer func() {
 		_ = os.Remove(tarball)

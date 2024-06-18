@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
@@ -8,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -39,7 +39,7 @@ func TestLocalfilePull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal9
+	app.Type = nodeps.AppTypeDrupal
 	app.Docroot = "web"
 	err = app.Stop(true, false)
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestLocalfilePull(t *testing.T) {
 	require.NoError(t, err)
 
 	// This not only shows us the version but also populates the project's
-	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	out, err := exec.RunHostCommand("ddev", "--version")
 	assert.NoError(err)
@@ -61,8 +61,8 @@ func TestLocalfilePull(t *testing.T) {
 	// Build our localfile.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/localfile.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "~/Dropbox", path.Join(dockerutil.MassageWindowsHostMountpoint(origDir), "testdata", t.Name()), -1)
-	appRoot := dockerutil.MassageWindowsHostMountpoint(app.AppRoot)
+	x := strings.Replace(string(s), "~/Dropbox", path.Join(util.WindowsPathToCygwinPath(origDir), "testdata", t.Name()), -1)
+	appRoot := util.WindowsPathToCygwinPath(app.AppRoot)
 	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = os.WriteFile(app.GetConfigPath("providers/localfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)

@@ -3,16 +3,11 @@
 # Runs on master and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
-    plugins:
-      - docker-login#v2.1.0:
-          username: druddockerpullaccount
-          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
       - "colima=true"
       - "colima_vz=true"
       - "architecture=arm64"
-    #branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

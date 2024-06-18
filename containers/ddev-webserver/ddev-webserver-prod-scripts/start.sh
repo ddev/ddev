@@ -90,9 +90,7 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
-if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
 # The following ensures a persistent and shared "global" cache for
 # yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
@@ -104,7 +102,7 @@ if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
-if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
+if [ ! -f ~/.nvm/nvm.sh ]; then (timeout 30 install_nvm.sh || true); fi
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/

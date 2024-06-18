@@ -3,12 +3,13 @@ package ddevapp
 import (
 	"errors"
 	"fmt"
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
+	copy2 "github.com/otiai10/copy"
 )
 
 // isShopware6App returns true if the app is of type shopware6
@@ -35,13 +36,13 @@ func shopware6ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath str
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 
-	// If the destination path exists, remove it as was warned
+	// If the destination path exists, purge it as was warned
 	if fileutil.FileExists(destPath) {
-		if err := os.RemoveAll(destPath); err != nil {
+		if err := fileutil.PurgeDirectory(destPath); err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
@@ -62,8 +63,7 @@ func shopware6ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath str
 		return nil
 	}
 
-	//nolint: revive
-	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+	if err := copy2.Copy(importPath, destPath); err != nil {
 		return err
 	}
 

@@ -14,6 +14,10 @@ on:
       - "pkg/**"
       - "go.*"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -44,7 +48,7 @@ jobs:
         run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
 
       - name: Lint Go Files
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=30m --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
@@ -61,7 +65,7 @@ jobs:
         with:
           go-version: '>=1.21'
 
-      # Fails if something is wrong with the dependencies 
+      # Fails if something is wrong with the dependencies
       - name: Verify Go Modules
         run: |
           go mod verify

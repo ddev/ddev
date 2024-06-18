@@ -20,7 +20,7 @@ These environments can be extended, version controlled, and shared, so you can t
     * macOS Big Sur (11) or higher, [mostly](./users/usage/faq.md#can-i-run-ddev-on-an-older-mac)
     * RAM: 8GB
     * Storage: 256GB
-    * [OrbStack](https://orbstack.dev/) or [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io/)
+    * [OrbStack](https://orbstack.dev/) or [Lima](https://github.com/lima-vm/lima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io/) or [Colima](https://github.com/abiosoft/colima)
 
     **Next steps:**
 
