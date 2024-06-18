@@ -31,9 +31,7 @@ http:
       {{end}}
       entrypoints:
         - http-{{$s.ExternalPort}}
-    {{ end }}
-    {{ end }}
-
+    {{ end }}{{ end }}
   services:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
