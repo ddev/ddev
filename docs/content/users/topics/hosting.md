@@ -23,14 +23,7 @@ Here’s how to try it for yourself:
     ```
 
 8. Create your DDEV project as you normally would, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`.
-9. Redirect HTTP to HTTPS. If you’re using `nginx-fpm`, for example, create `.ddev/nginx/redirect.conf`:
-
-    ```
-    if ($http_x_forwarded_proto = "http") {
-      return 301 https://$host$request_uri;
-    }
-    ```
-
+9. Redirect HTTP to HTTPS. Edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
 10. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
 11. Consider temporarily uncommenting the Let's Encrypt staging configuration by uncommenting the `caServer` line in the `~/.ddev/traefik/static_config.yaml` file. Let's Encrypt is very quick to rate-limit your requests for a certificate while you're getting things set up and you'll get errors like this:
 
