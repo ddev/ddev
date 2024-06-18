@@ -27,7 +27,7 @@ Here’s how to try it for yourself:
 10. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
 11. Consider temporarily uncommenting the Let's Encrypt staging configuration by uncommenting the `caServer` line in the `~/.ddev/traefik/static_config.yaml` file. Let's Encrypt is very quick to rate-limit your requests for a certificate while you're getting things set up and you'll get errors like this:
 
-`unable to generate a certificate for the domains [some.example.com]: acme: error: 429 :: POST :: https://acme-v02.api.letsencrypt.org/acme/new-order :: urn:ietf:params:acme:error:rateLimited :: Error creating new order :: too many failed authorizations recently: see https://letsencrypt.org/docs/failed-validation-limit/`
+    `unable to generate a certificate for the domains [some.example.com]: acme: error: 429 :: POST :: https://acme-v02.api.letsencrypt.org/acme/new-order :: urn:ietf:params:acme:error:rateLimited :: Error creating new order :: too many failed authorizations recently: see https://letsencrypt.org/docs/failed-validation-limit/`
 
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs ddev-router` to see Let’s Encrypt activity.)
 
@@ -88,8 +88,8 @@ This example shows how to do it with Cloudflare.
 1. Set up and make sure that things already work with the default `tlsChallenge`.
 2. Provide the required configuration for Cloudflare with a `~/.ddev/router-compose.cloudflare.yaml`
 
-   ```yaml
-   services:
+    ```yaml
+    services:
      ddev-router:
        environment:
        - CLOUDFLARE_EMAIL=you@somewhere.com
@@ -107,7 +107,7 @@ This example shows how to do it with Cloudflare.
           #caServer: https://acme-staging-v02.api.letsencrypt.org/directory
           dnsChallenge: 
             provider: cloudflare
-   ```
+    ```
 
 ## Caveats
 
