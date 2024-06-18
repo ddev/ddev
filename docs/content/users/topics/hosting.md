@@ -19,7 +19,7 @@ Here’s how to try it for yourself:
 7. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
 
     ```
-    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com`
+    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com
     ```
 
 8. Create your DDEV project as you normally would, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`.
