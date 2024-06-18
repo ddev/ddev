@@ -10,6 +10,8 @@ http:
       {{else}}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
+      #middlewares:
+      #  - "redirectHttps"
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
@@ -32,6 +34,12 @@ http:
       entrypoints:
         - http-{{$s.ExternalPort}}
     {{ end }}{{ end }}
+  middlewares:
+    redirectHttps:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
   services:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
