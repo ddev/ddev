@@ -19,7 +19,7 @@ Here’s how to try it for yourself:
 7. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
 
     ```
-    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com
+    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
     ```
 
 8. Create your DDEV project as you normally would, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`.
@@ -98,7 +98,7 @@ This example shows how to do it with Cloudflare.
 
 3. Set `project-tld` either globally or for each project with the proper top-level-domain. For example, your project may be named `xx` and your `project-tld` may be `jumphost.example.com`. `xx.jumphost.example.com` must be resolvable (you have to have set up DNS for it, or a wildcard for `*.jumphost.example.com`)
 4. Edit `~/.ddev/traefik/static_config.yaml` to remove the `#ddev-generated` from the top, so you take it over.
-5. Edit `~/.ddev/traefix/static_config.yaml` to replace the `certificateResolvers` stanza:
+5. Edit `~/.ddev/traefix/static_config.yaml` to replace the `certificatesResolvers` stanza:
 
     ```yaml
     certificatesResolvers:
