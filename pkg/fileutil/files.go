@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/sirupsen/logrus"
 )
 
 // CopyFile copies the contents of the file named src to the file named
@@ -538,4 +539,17 @@ func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {
 		}
 	}
 	return expanded, nil
+}
+
+// ShortHomeJoin returns the same result as filepath.Join() path with $HOME/ replaced by ~/
+func ShortHomeJoin(elem ...string) string {
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+	}
+	fullPath := filepath.Join(elem...)
+	if strings.HasPrefix(fullPath, userHome) {
+		return strings.Replace(fullPath, userHome, "~", 1)
+	}
+	return fullPath
 }
