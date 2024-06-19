@@ -251,7 +251,11 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 	generatedIgnores := []string{}
 	for _, p := range ignores {
-		sigFound, err := fileutil.FgrepStringInFile(p, nodeps.DdevFileSignature)
+		pFullPath := filepath.Join(targetDir, p)
+		sigFound, err := fileutil.FgrepStringInFile(pFullPath, nodeps.DdevFileSignature)
+		//if err != nil {
+		//	util.Warning("file not found: %s: %v", p, err)
+		//}
 		if sigFound || err != nil {
 			generatedIgnores = append(generatedIgnores, p)
 		}
