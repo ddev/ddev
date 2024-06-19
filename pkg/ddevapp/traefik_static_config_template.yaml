@@ -16,7 +16,8 @@ certificatesResolvers:
   acmeresolver:
     acme:
       email: {{ .LetsEncryptEmail }}
-      # To avoid Let's Encrypt rate-limiting, uncomment caServer to use the staging caServer and avoid messages like
+      # To avoid Let's Encrypt rate-limiting, remove the ddev-generated line at top
+      # and uncomment `caServer` here to use the staging caServer and avoid messages like
       # rateLimited :: Error creating new order :: too many failed authorizations recently:
       # see https://letsencrypt.org/docs/failed-validation-limit/
       #caServer: https://acme-staging-v02.api.letsencrypt.org/directory
