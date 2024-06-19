@@ -6,7 +6,7 @@ http:
     {{ if not $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
       {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
-      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`^{{ $h }}$`{{end}})
+      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{else}}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
