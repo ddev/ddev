@@ -5,7 +5,7 @@ http:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}
     {{ if not $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
-      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
+      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
       rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{else}}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
@@ -19,7 +19,7 @@ http:
     {{ end }}{{ end }}
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
-      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
+      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
       rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{else}}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
