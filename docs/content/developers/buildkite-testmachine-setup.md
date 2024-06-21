@@ -47,7 +47,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 7. `sudo apt-get update && sudo apt-get install -y buildkite-agent`
 8. `buildkite-agent` should have home directory `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
 9. Configure buildkite agent in /etc/buildkite-agent:
-    * `tags="os=wsl2,architecture=amd64,dockertype=wsl2"`
+    * `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"`
     * token="xxx"
 10. `sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent`
 11. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it does require escalation.
