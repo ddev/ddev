@@ -1,8 +1,9 @@
 package ddevapp
 
 import (
-	asrt "github.com/stretchr/testify/assert"
 	"testing"
+
+	asrt "github.com/stretchr/testify/assert"
 )
 
 func TestDBTypeVersionFromString(t *testing.T) {
@@ -34,6 +35,7 @@ func TestDBTypeVersionFromString(t *testing.T) {
 		"mariadb_10.4":  "mariadb:10.4",
 		"mariadb_10.7":  "mariadb:10.7",
 		"mariadb_10.11": "mariadb:10.11",
+		"mariadb_11.4":  "mariadb:11.4",
 		"mysql_5.7":     "mysql:5.7",
 		"mysql_8.0":     "mysql:8.0",
 	}

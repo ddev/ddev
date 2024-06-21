@@ -23,6 +23,11 @@ RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 
     apt-key remove "${item}" || true; \
   done;
 
+# MariaDB 11.x moved MySQL symlinks into separate packages
+RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
+    apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" mariadb-server-compat mariadb-client-compat; \
+    fi
+
 # Older versions of mariadb have been removed from
 # the mariadb apt repository, so we don't want to
 # look there when doing apt-get update. And we don't use new packages from there.
