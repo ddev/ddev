@@ -2,8 +2,8 @@
 
 http:
   routers:
-    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}
-    {{ if not $s.HTTPS }}
+    {{ $appname := .App.Name}}{{ range $s := .RoutingTable }}
+    {{- if not $s.HTTPS -}}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
       {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
       rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
@@ -12,28 +12,42 @@ http:
       {{end}}
       #middlewares:
       #  - "redirectHttps"
+
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
         - http-{{$s.ExternalPort}}
-    {{ end }}{{ end }}
-    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
+
+    {{ end }}
+
+    {{- end -}}
+    {{- $appname := .App.Name -}}
+    {{ range $s := .RoutingTable }}
+      {{- if $s.HTTPS -}}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
-      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
-      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
-      {{else}}
-      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
-      {{end}}
-      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
+
+      {{ if not $.UseLetsEncrypt }}{{- /* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/ -}}
+      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{ if $i }}, {{ end }}`{{$h}}`{{ end }})
+      {{ else }}
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{- if $i -}}, {{- end -}}`{{$h}}`{{end}})
+      {{ end }}
+
+      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       {{ if not $.UseLetsEncrypt }}
       tls: true
-      {{ else }}
+
+      {{- else -}}
       tls:
         certResolver: acmeresolver
-      {{end}}
+
+      {{ end }}
+
       entrypoints:
         - http-{{$s.ExternalPort}}
-    {{ end }}{{ end }}
+
+    {{ end }}
+    {{ end }}
+
   middlewares:
     redirectHttps:
       redirectScheme:
@@ -43,21 +57,19 @@ http:
   services:
     {{$appname := .App.Name}}
     {{- $outputPorts := dict -}}
-    {{- range $s := .RoutingTable -}}
+    {{ range $s := .RoutingTable }}
       {{- if not (index $outputPorts (print $s.InternalServicePort)) -}}
         {{- $outputPorts = merge $outputPorts (dict (print $s.InternalServicePort) true) -}}
-
     {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:
       loadbalancer:
         servers:
           - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
-
-      {{ end }}
+    {{ end }}
     {{ end }}
 
-{{ if not .UseLetsEncrypt }}{{/* let's encrypt doesn't work if there's already a provided cert */}}
+{{- if not .UseLetsEncrypt -}}{{/* let's encrypt doesn't work if there's already a provided cert */}}
 tls:
   certificates:
     - certFile: {{ .TargetCertsPath }}/{{ .App.Name }}.crt
       keyFile: {{ .TargetCertsPath }}/{{ .App.Name }}.key
-{{end}}
+{{- end -}}
