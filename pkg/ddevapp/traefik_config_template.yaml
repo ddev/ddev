@@ -41,13 +41,18 @@ http:
         permanent: true
 
   services:
-    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
-    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
-    {{ else }}
-    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:{{end}}
+    {{$appname := .App.Name}}
+    {{- $outputPorts := dict -}}
+    {{- range $s := .RoutingTable -}}
+      {{- if not (index $outputPorts (print $s.InternalServicePort)) -}}
+        {{- $outputPorts = merge $outputPorts (dict (print $s.InternalServicePort) true) -}}
+
+    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:
       loadbalancer:
         servers:
           - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
+
+      {{ end }}
     {{ end }}
 
 {{ if not .UseLetsEncrypt }}{{/* let's encrypt doesn't work if there's already a provided cert */}}
