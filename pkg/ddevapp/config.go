@@ -1015,8 +1015,12 @@ redirect_stderr=true
 		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/webextradaemons.conf\n"
 	}
 	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
-	if app.Database.Type == "mysql" {
-		extraWebContent = extraWebContent + "\nRUN timeout 30 mysql-client-install.sh || true\n"
+	if app.Database.Type == nodeps.MySQL {
+		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
+	}
+	// For MariaDb 11.4 we'll install the matching mariadb-client in the ddev-webserver
+	if app.Database.Type == nodeps.MariaDB {
+		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
