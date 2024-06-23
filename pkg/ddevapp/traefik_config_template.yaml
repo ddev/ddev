@@ -1,5 +1,6 @@
 #ddev-generated
 
+{{$top := .}}
 http:
   routers:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}
@@ -11,7 +12,8 @@ http:
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
       middlewares:
-        - autodetect
+        - autodetect{{ range $top.Middlewares.Middleware}}
+        - {{.Name}}{{ end }}
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
@@ -25,7 +27,8 @@ http:
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
       middlewares:
-        - autodetect
+        - autodetect{{ range $top.Middlewares.Middleware}}
+        - {{.Name}}{{ end }}
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
       {{ if not $.UseLetsEncrypt }}
       tls: true
@@ -43,6 +46,9 @@ http:
     autodetect:
       contentType:
         autoDetect: false
+    {{range .Middlewares.Middleware}}
+    {{.Name}}:
+      {{.Body}}{{end}}
 
   services:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}

@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"gopkg.in/yaml.v3"
 )
 
 type TraefikRouting struct {
@@ -323,20 +324,22 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 
 	type traefikData struct {
-		App             *DdevApp
-		Hostnames       []string
-		PrimaryHostname string
-		TargetCertsPath string
-		RoutingTable    []TraefikRouting
-		UseLetsEncrypt  bool
+		App             	*DdevApp
+		Hostnames       	[]string
+		PrimaryHostname 	string
+		TargetCertsPath 	string
+		RoutingTable    	[]TraefikRouting
+		UseLetsEncrypt  	bool
+		Middlewares   		Middlewares
 	}
 	templateData := traefikData{
-		App:             app,
-		Hostnames:       []string{},
-		PrimaryHostname: app.GetHostname(),
-		TargetCertsPath: targetCertsPath,
-		RoutingTable:    routingTable,
-		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		App:             	app,
+		Hostnames:       	[]string{},
+		PrimaryHostname: 	app.GetHostname(),
+		TargetCertsPath: 	targetCertsPath,
+		RoutingTable:    	routingTable,
+		UseLetsEncrypt:  	globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		Middlewares:		LoadMiddleware(app.AppRoot),
 	}
 
 	// Convert externalHostnames wildcards like `*.<anything>` to `{subdomain:.+}.wild.ddev.site`
@@ -395,4 +398,67 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 	return nil
+}
+
+
+// Middleware holds the name and the body (as a YAML string) of a plugin configuration.
+type Middleware struct {
+	Name string
+	Body string
+}
+
+// Middlewares holds all plugin configurations.
+type Middlewares struct {
+	Middleware []Middleware
+}
+
+// LoadMiddleware reads the middleware.yaml file and populates the Middleware struct.
+func LoadMiddleware(appRoot string) Middlewares {
+	middlewareYamlFilePath := appRoot + "/.ddev/middleware.yaml"
+
+	//Read middleware.yaml
+	rawMiddlewareData, err := os.ReadFile(middlewareYamlFilePath)
+	if err != nil {
+		fmt.Printf("Failed to read Middleware YAML file: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Unmarshal yaml plugin configs to intermediate map
+	var rawMiddlewareConfig map[string]interface{}
+	err = yaml.Unmarshal(rawMiddlewareData, &rawMiddlewareConfig)
+	if err != nil {
+		fmt.Printf("Error unmarshaling YAML: %s\n", err)
+		os.Exit(1)
+	}
+	
+	var middlewareData Middlewares
+	
+	for name, body := range rawMiddlewareConfig {
+		
+		// Marshal the body back to a YAML string.
+		bodyYAML, err := yaml.Marshal(body)
+		if err != nil {
+			fmt.Printf("Error marshaling plugin body: %s\n", err)
+			continue
+		}
+		
+		
+		// Prepend each line with 4 spaces for indentation. Kludge to solve weird issue with lines 2+ losing an indent
+		lines := strings.Split(string(bodyYAML), "\n")
+		for i, line := range lines {
+			if i > 0 {
+				lines[i] = "    " + line
+			}
+		}
+
+		// Join the lines back into a single string.
+		indentedBodyYAML := strings.Join(lines, "\n")
+
+		pluginConfig := Middleware{
+			Name: name,
+			Body: string(indentedBodyYAML),
+		}
+		middlewareData.Middleware = append(middlewareData.Middleware, pluginConfig)
+	}
+	return middlewareData
 }
