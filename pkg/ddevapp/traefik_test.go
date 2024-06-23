@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -208,6 +209,105 @@ func TestTraefikStaticConfig(t *testing.T) {
 			renderedStaticConfig, err := fileutil.ReadFileIntoString(staticConfigFinalPath)
 			require.NoError(t, err)
 			require.Equal(t, string(unmarshalledExpectationString), renderedStaticConfig)
+		})
+	}
+}
+
+// TestTraefikDynamicConfig tests static config usage and merging
+func TestTraefikDynamicConfig(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0] // 0 == wordpress
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	projectTraefikDir := app.GetConfigPath("traefik")
+	dynamicConfigFinalPath := filepath.Join(projectTraefikDir, "config", app.Name+".yaml")
+
+	testData := filepath.Join(origDir, "testdata", t.Name())
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		ddevapp.PowerOff()
+	})
+
+	testCases := []struct {
+		content string
+		dir     string
+	}{
+		{"extraPlugin", "extraPlugin"},
+	}
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			testSourceDir := filepath.Join(testData, tc.dir)
+
+			err = copy2.Copy(testSourceDir, projectTraefikDir)
+			require.NoError(t, err)
+
+			// Remove any dynamic_config.*.yaml we have added
+			t.Cleanup(func() {
+				files, _ := filepath.Glob(filepath.Join(testSourceDir, "dynamic_config.*.yaml"))
+				for _, fileToRemove := range files {
+					f := filepath.Base(fileToRemove)
+					err = os.Remove(filepath.Join(projectTraefikDir, f))
+					require.NoError(t, err)
+				}
+				err = os.Remove(filepath.Join(projectTraefikDir, "expectation.yaml"))
+				require.NoError(t, err)
+				err = ddevapp.ConfigureTraefikForApp(app)
+				require.NoError(t, err)
+			})
+
+			// Read expected result, create template out of it, parse and execute it - this is to allow different OS tests to use different (non-wordpress) apps
+			expectedResultString, err := fileutil.ReadFileIntoString(filepath.Join(testSourceDir, "expectation.yaml"))
+			require.NoError(t, err)
+
+			// Need a ToLower function to create the hostname from AppName in the router regex rules
+			funcMap := template.FuncMap{
+				"toLower": strings.ToLower,
+			}
+
+			tmpl, err := template.New("dynamic_config_extras").Funcs(funcMap).Parse(string(expectedResultString))
+			require.NoError(t, err)
+
+			type traefikData struct {
+				App *ddevapp.DdevApp
+			}
+			templateData := traefikData{
+				App: app,
+			}
+
+			// Execute the template with the app's templateData
+			var expectedResultStringProcessed strings.Builder
+			err = tmpl.Execute(&expectedResultStringProcessed, templateData)
+			require.NoError(t, err)
+
+			resultString := expectedResultStringProcessed.String()
+
+			// Unmarshal and remarshal to remove any comments
+			var tmpMap map[string]interface{}
+			err = yaml.Unmarshal([]byte(resultString), &tmpMap)
+			require.NoError(t, err)
+
+			unmarshalledExpectationString, err := yaml.Marshal(tmpMap)
+			require.NoError(t, err)
+
+			// Generate and push config
+			err = ddevapp.ConfigureTraefikForApp(app)
+			require.NoError(t, err)
+			// Now read result config and compare
+			renderedStaticConfig, err := fileutil.ReadFileIntoString(dynamicConfigFinalPath)
+			require.NoError(t, err)
+			// Need to unmarshall and remarshal to get rid of #ddev-generated comment
+			err = yaml.Unmarshal([]byte(renderedStaticConfig), &tmpMap)
+			require.NoError(t, err)
+			unmarshalledActualString, err := yaml.Marshal(tmpMap)
+			require.NoError(t, err)
+
+			require.Equal(t, string(unmarshalledExpectationString), string(unmarshalledActualString))
 		})
 	}
 }

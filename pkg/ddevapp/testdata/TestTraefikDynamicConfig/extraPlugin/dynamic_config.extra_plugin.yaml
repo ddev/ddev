@@ -1,0 +1,8 @@
+#ddev-generated
+http:
+  middlewares:
+    redirectHttps:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    

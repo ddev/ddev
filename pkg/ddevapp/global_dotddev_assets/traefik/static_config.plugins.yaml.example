@@ -1,0 +1,13 @@
+#ddev-generated
+# copy this file and remove the .example extension in order to define Traefik middleware plugins to be used across DDEV projects
+# Plugins can be found at https://plugins.traefik.io/plugins
+# Note: it is important to click Install Plugin on any plugin page to receive the plugin's configuration, as the configuration provided in the body of the page tends to be outdated.
+# fail2ban plugin example from
+# https://plugins.traefik.io/plugins/628c9ebcffc0cd18356a979f/fail2-ban
+# It is also necessary to define the plugins in each project's dynamic configuration. See /<ddev-project>/.ddev/traefik/README.md for more information.
+
+experimental:
+  plugins:
+    fail2ban:
+      moduleName: "github.com/tomMoulard/fail2ban"
+      version: "v0.8.1"

@@ -19,6 +19,7 @@ import (
 //go:embed router_compose_template.yaml
 //go:embed ssh_auth_compose_template.yaml
 //go:embed traefik_config_template.yaml
+//go:embed traefik_config_middlewares_template.yaml
 //go:embed traefik_static_config_template.yaml
 //go:embed traefik_global_config_template.yaml
 //go:embed router_Dockerfile_template

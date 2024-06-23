@@ -1,0 +1,29 @@
+#ddev-generated
+http:
+  routers:
+    {{ .App.Name }}-web-80-http:
+      middlewares:
+        - {{ .App.Name }}-redirectHttps
+        - {{ .App.Name }}-my-fail2ban
+    {{ .App.Name }}-web-80-https:
+      middlewares:
+        - {{ .App.Name }}-my-fail2ban
+
+  middlewares:
+    {{ .App.Name }}-redirectHttps:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    {{ .App.Name }}-my-fail2ban:
+      plugin:
+        fail2ban:
+          allowlist:
+            ip: ::1,127.0.0.1
+          denylist:
+            ip: 192.168.0.0/24
+          rules:
+            bantime: 3h
+            enabled: "true"
+            findtime: 10m
+            maxretry: "4"
+            statuscode: 400,401,403-499

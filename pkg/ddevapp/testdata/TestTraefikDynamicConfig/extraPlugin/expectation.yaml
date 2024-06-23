@@ -1,0 +1,50 @@
+#ddev-generated
+{{- $appName := .App.Name | toLower }}
+http:
+    middlewares:
+        redirectHttps:
+            redirectScheme:
+                permanent: true
+                scheme: https
+    routers:
+        {{ .App.Name }}-web-80-http:
+            entrypoints:
+                - http-80
+            middlewares: []
+            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            service: {{ .App.Name }}-web-80
+            tls: false
+        {{ .App.Name }}-web-80-https:
+            entrypoints:
+                - http-443
+            middlewares: []
+            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            service: {{ .App.Name }}-web-80
+            tls: true
+        {{ .App.Name }}-web-8025-http:
+            entrypoints:
+                - http-8025
+            middlewares: []
+            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            service: {{ .App.Name }}-web-8025
+            tls: false
+        {{ .App.Name }}-web-8025-https:
+            entrypoints:
+                - http-8026
+            middlewares: []
+            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            service: {{ .App.Name }}-web-8025
+            tls: true
+    services:
+        {{ .App.Name }}-web-80:
+            loadbalancer:
+                servers:
+                    - url: http://ddev-{{ .App.Name }}-web:80
+        {{ .App.Name }}-web-8025:
+            loadbalancer:
+                servers:
+                    - url: http://ddev-{{ .App.Name }}-web:8025
+tls:
+    certificates:
+        - certFile: /mnt/ddev-global-cache/traefik/certs/{{ .App.Name }}.crt
+          keyFile: /mnt/ddev-global-cache/traefik/certs/{{ .App.Name }}.key
