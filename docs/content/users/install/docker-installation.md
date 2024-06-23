@@ -27,9 +27,16 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     1. Install Lima with `brew install lima`.
     2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
-    3. Create a 100GB VM in Lima with 4 CPUs, 6GB memory, and Cloudflare DNS. Adjust to your own needs:
+    3. Create a 100GB VM in Lima with 4 CPUs, 6GB memory, and Cloudflare DNS. Adjust to your own needs. For Intel systems run:
     ```
     limactl create --name=default --vm-type=vz --mount-type=virtiofs --mount-writable --memory=6 --cpus=4 --disk=100 template://docker
+    ```
+    On Apple Silicon systems, enable Rosetta in case you need to run Intel / x86_64 Docker images:
+    ```
+    limactl create --name=default --vm-type=vz --mount-type=virtiofs --mount-writable --memory=6 --cpus=4 --disk=100 --rosetta template://docker
+    ```
+    Then, set up the Docker context so it uses Lima to run containers:
+    ```
     docker context create lima-default --docker "host=unix://$HOME/.lima/default/sock/docker.sock"
     docker context use lima-default
     ```
@@ -61,10 +68,15 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     1. Install Colima with `brew install colima`.
     2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
-    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
+    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed. For Intel systems run:
     ```
     colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
     ```
+    On Apple Silicon systems, enable Rosetta in case you need to run Intel / x86_64 Docker images:
+    ```
+    colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1 --vz-rosetta
+    ```
+    
     (On macOS versions before Ventura, use `colima start --cpu 4 --memory 6 --disk 100 --mount-type=sshfs --dns=1.1.1.1` as the `--vm-type` option are not supported for older macOS versions.)
 
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
