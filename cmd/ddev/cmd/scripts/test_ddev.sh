@@ -30,12 +30,10 @@ function docker_desktop_version {
   fi
 }
 
-header "Please make sure that you have already looked at troubleshooting guide"
 
-printf "Troubleshooting guide: https://ddev.readthedocs.io/en/stable/users/usage/troubleshooting/ \n"
-printf "Simple things to check:\n* ddev poweroff\n* Restart Docker Provider\n* Reboot computer\n* Temporarily disable VPN and firewall\n"
-printf "Press any key to continue:\n"
-[[ "${DDEV_NONINTERACTIVE:-}" == "true" ]] || read x
+if [[ ${PWD} != ${HOME}* ]]; then
+  printf "\n\nWARNING: Project should usually be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
+fi
 
 header "Output file will be in $1"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
@@ -46,10 +44,6 @@ header "Existing project config"
 echo "ddev installation alternate locations:"
 which -a ddev
 echo
-
-if [[ ${PWD} != ${HOME}* ]]; then
-  printf "\n\nWARNING: Project should most often be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
-fi
 
 ddev debug configyaml | grep -v web_environment
 

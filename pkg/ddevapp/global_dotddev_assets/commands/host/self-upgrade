@@ -44,3 +44,6 @@ for ddev_path in $(which -a ddev | uniq); do
 
   esac
 done
+printf "\n'ddev --version' will show you the version you currently have installed.\n"
+printf "'which ddev' will show you where that executable is on your filesystem.\n"
+printf "See docs for more info: \nhttps://ddev.readthedocs.io/en/stable/users/install/ddev-installation/\n"

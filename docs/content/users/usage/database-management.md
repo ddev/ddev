@@ -70,7 +70,7 @@ If you’d like to use a GUI database client, you’ll need the right connection
 * WSL2 and Linux users can use [`ddev dbeaver`](../usage/commands.md#dbeaver) to launch [DBeaver](https://dbeaver.io/). (Must be installed for the command to exist.)
 * PhpStorm (and all JetBrains tools) have a nice database browser. (If you use the [DDEV Integration plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) this is all done for you.)
     * Choose a static [`host_db_port`](../configuration/config.md#host_db_port) setting for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use [`ddev start`](../usage/commands.md#start) for it to take effect.
-    * Use the “database” tool to create a source from “localhost”, with the proper type “mysql” or “postgresql” and the port you chose, username `db` + password `db`.
+    * Use the “database” tool to create a source from “localhost”, with the proper type `mysql` or `postgresql` and the port you chose, username `db` + password `db`.
     * Explore away!
 * There’s a sample custom command that will run the free MySQL Workbench on macOS, Windows or Linux. To use it, run:
     * `cp ~/.ddev/commands/host/mysqlworkbench.example ~/.ddev/commands/host/mysqlworkbench`

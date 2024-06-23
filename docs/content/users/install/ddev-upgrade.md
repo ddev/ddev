@@ -23,6 +23,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     curl -fsSL https://ddev.com/install.sh | bash
     ```
 
+    ### Verify New Version
+
+    Use `ddev --version` to find out the version of the `ddev` binary in your `$PATH`. If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
+
     ??? "Need a specific version?"
         Use the `-s` argument to specify a specific stable or prerelease version:
 
@@ -56,6 +60,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     yay -Syu ddev-bin
     ```
 
+    ### Verify New Version
+
+    Use `ddev --version` to find out the version of the `ddev` binary in your `$PATH`. If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
+
 === "Windows"
 
     ## Windows
@@ -70,6 +78,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     # Upgrade the DDEV package
     sudo apt-get update && sudo apt-get upgrade -y
     ```
+
+    ### Verify New Version
+
+    Use `ddev --version` to find out the version of the `ddev` binary in your `$PATH`. If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` binary must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
 
     ### Traditional Windows
 
