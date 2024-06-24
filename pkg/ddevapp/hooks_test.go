@@ -44,7 +44,7 @@ func TestProcessHooks(t *testing.T) {
 		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
 	})
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Create a composer.json so we can do actions on it.
 	fName := filepath.Join(app.AppRoot, "composer.json")
@@ -91,18 +91,18 @@ func TestProcessHooks(t *testing.T) {
 		out := captureOutputFunc()
 		userOut := userOutFunc()
 		require.Contains(t, out, task.stdoutExpect, "task: '%v'", task.task)
-		assert.Contains(userOut, task.fulloutputExpect, "task: %v", task.task)
-		assert.NotContains(userOut, "Task failed")
+		require.Contains(t, userOut, task.fulloutputExpect, "task: %v", task.task)
+		require.NotContains(t, userOut, "Task failed")
 
 		err = app.Stop(true, false)
 		require.NoError(t, err)
 	}
 
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	err = app.Restart()
+	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
-	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
+	require.FileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
+	require.FileExists(t, filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	// Make sure skip hooks work
 	ddevapp.SkipHooks = true
@@ -113,7 +113,7 @@ func TestProcessHooks(t *testing.T) {
 	}
 	err = app.ProcessHooks("hook-test")
 	require.NoError(t, err)
-	assert.NoFileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooksSkipHooks%s.txt", app.GetRouterHTTPSPort())))
+	require.NoFileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooksSkipHooks%s.txt", app.GetRouterHTTPSPort())))
 	ddevapp.SkipHooks = false
 
 	// Attempt processing hooks with a guaranteed failure
@@ -129,12 +129,12 @@ func TestProcessHooks(t *testing.T) {
 	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
 	app.FailOnHookFail = true
 	err = app.ProcessHooks("hook-test")
-	assert.Error(err)
+	require.Error(t, err)
 	app.FailOnHookFail = false
 	app.FailOnHookFailGlobal = true
 	err = app.ProcessHooks("hook-test")
-	assert.Error(err)
+	require.Error(t, err)
 	app.FailOnHookFail = true
 	err = app.ProcessHooks("hook-test")
-	assert.Error(err)
+	require.Error(t, err)
 }
