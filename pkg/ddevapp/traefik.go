@@ -17,11 +17,14 @@ import (
 )
 
 type TraefikRouting struct {
-	ExternalHostnames   []string
-	ExternalPort        string
-	InternalServiceName string
-	InternalServicePort string
-	HTTPS               bool
+	ExternalHostnames []string
+	ExternalPort      string
+	Service           struct {
+		ServiceName         string
+		InternalServiceName string
+		InternalServicePort string
+	}
+	HTTPS bool
 }
 
 // detectAppRouting reviews the configured services and uses their
@@ -84,7 +87,16 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 			util.Debug("skipping port 8025 (mailpit) because not appropriate in casual hosting environment")
 			continue
 		}
-		routingTable = append(routingTable, TraefikRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0], InternalServiceName: serviceName, InternalServicePort: ports[1], HTTPS: isHTTPS})
+		routingTable = append(routingTable, TraefikRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0],
+			Service: struct {
+				ServiceName         string
+				InternalServiceName string
+				InternalServicePort string
+			}{
+				ServiceName:         fmt.Sprintf("%s-%s", serviceName, ports[1]),
+				InternalServiceName: serviceName,
+				InternalServicePort: ports[1],
+			}, HTTPS: isHTTPS})
 	}
 	return routingTable, nil
 }

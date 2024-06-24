@@ -44,18 +44,19 @@ http:
 
   services:
     {{$appname := .App.Name}}
-    {{- $outputPorts := dict -}}
+    {{- $outputServices := dict -}}
     {{ range $s := .RoutingTable }}
-      {{- if not (index $outputPorts (print $s.InternalServicePort)) -}}
-        {{- $outputPorts = merge $outputPorts (dict (print $s.InternalServicePort) true) -}}
-    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:
+      {{- if not (index $outputServices (print $s.ServiceName)) -}}
+        {{- $outputServices = merge $outputServices (dict (print $s.ServiceName) true) -}}
+    {{$appname}}-{{ $s.ServiceName }}:
       loadbalancer:
         servers:
-          - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
-    {{ end }}
-    {{ end }}
+          - url: http://ddev-{{$appname}}-{{$s.Service.InternalServiceName}}:{{$s.Service.InternalServicePort}}
+        {{ end }}
+      {{ end }}
 
-{{- if not .UseLetsEncrypt -}}{{/* let's encrypt doesn't work if there's already a provided cert */}}
+{{/* let's encrypt doesn't work if there's already a provided cert, so omit there */}}
+{{- if not .UseLetsEncrypt -}}
 tls:
   certificates:
     - certFile: {{ .TargetCertsPath }}/{{ .App.Name }}.crt
