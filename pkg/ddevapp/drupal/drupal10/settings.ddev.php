@@ -22,6 +22,9 @@ $databases['default']['default']['driver'] = $driver;
 
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
+// Recommended setting for Drupal 10 only
+$settings['state_cache'] = TRUE;
+
 // This will prevent Drupal from setting read-only permissions on sites/default.
 $settings['skip_permissions_hardening'] = TRUE;
 
