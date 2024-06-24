@@ -81,10 +81,6 @@ RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
 RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
 http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
 
-# Prefer IPv4 over IPv6 for commands like "ping" inside a container.
-# https://wiki.archlinux.org/title/IPv6#Prefer_IPv4_over_IPv6
-RUN sed -i '/^#\s*precedence\s*::ffff:0:0\/96\s*100$/s/^#//' /etc/gai.conf
-
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
 # Don't forget to update mariadb-client-install.sh when changing MariaDB version here
