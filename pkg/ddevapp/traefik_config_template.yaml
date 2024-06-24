@@ -4,7 +4,7 @@ http:
   routers:
     {{ $appname := .App.Name}}{{ range $s := .RoutingTable }}
     {{- if not $s.HTTPS -}}
-    {{ $appname }}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:
+    {{ $appname }}-{{ $s.Service.InternalServiceName }}-{{ $s.Service.InternalServicePort }}-http:
       entrypoints:
         - http-{{$s.ExternalPort}}
       {{- if not $.UseLetsEncrypt -}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
@@ -12,14 +12,14 @@ http:
       {{ else }}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{ end }}
-      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
+      service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}-http"
       tls: false
       # middlewares:
       #   - "redirectHttps"
     {{ end }}{{ end }}
     {{ range $s := .RoutingTable }}
       {{- if $s.HTTPS -}}
-    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
+    {{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}-https:
       entrypoints:
         - http-{{$s.ExternalPort}}
       {{- if not $.UseLetsEncrypt -}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
@@ -27,7 +27,7 @@ http:
       {{ else }}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{- if $i -}}, {{- end -}}`{{$h}}`{{end}})
       {{ end }}
-      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
+      service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}-http"
       {{ if not $.UseLetsEncrypt }}
       tls: true
       {{ else }}
@@ -46,14 +46,14 @@ http:
     {{$appname := .App.Name}}
     {{- $outputServices := dict -}}
     {{ range $s := .RoutingTable }}
-      {{- if not (index $outputServices (print $s.ServiceName)) -}}
-        {{- $outputServices = merge $outputServices (dict (print $s.ServiceName) true) -}}
-    {{$appname}}-{{ $s.ServiceName }}:
+      {{- if not (index $outputServices (print $s.Service.ServiceName)) -}}
+        {{- $outputServices = merge $outputServices (dict (print $s.Service.ServiceName) true) -}}
+    {{$appname}}-{{ $s.Service.ServiceName }}:
       loadbalancer:
         servers:
           - url: http://ddev-{{$appname}}-{{$s.Service.InternalServiceName}}:{{$s.Service.InternalServicePort}}
         {{ end }}
-      {{ end }}
+    {{ end }}
 
 {{/* let's encrypt doesn't work if there's already a provided cert, so omit there */}}
 {{- if not .UseLetsEncrypt -}}
