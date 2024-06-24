@@ -93,12 +93,14 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
 # The following ensures a persistent and shared "global" cache for
-# yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
+# yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache
 # will only be used if the project is configured to use it through it's own
 # enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
 # global folder.
-( (cd ~ || echo "unable to cd to home directory"; exit 22) && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
-# ensure default yarn2 global folder is there to symlink cache afterwards
+(if cd ~ || (echo "unable to cd to home directory"; exit 22); then
+  yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic >/dev/null || true
+fi)
+# ensure default yarn berry global folder is there to symlink cache afterwards
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
