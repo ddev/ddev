@@ -38,19 +38,3 @@ case "$answer" in
         echo "Nothing has been changed."
         ;;
 esac
-
-if [[ "$answer" == "yes" ]]; then
-    ddev get ddev/ddev-phpmyadmin
-    echo "phpMyAdmin has been installed and requires a restart."
-    read -p "Would you like me to restart now? (yes/no): " answerrestart
-    if [[ "answerrestart" == "yes" ]]; then
-      ddev restart
-      echo "Run ddev phpmyadmin again to use it."
-    else
-      echo "You must manually restart ddev to use phpMyAdmin ddev restart."
-    fi
-elif [[ "$answer" == "no" ]]; then
-    echo "Nothing has been changed."
-else
-    echo "Please enter yes or no."
-fi
