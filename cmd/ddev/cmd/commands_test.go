@@ -182,7 +182,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that all the official ddev-provided custom commands are usable by checking help
-	for _, c := range []string{"launch", "xdebug"} {
+	for _, c := range []string{"launch", "phpmyadmin", "xdebug"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
