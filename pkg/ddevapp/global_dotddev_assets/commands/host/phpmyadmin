@@ -1,0 +1,29 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Prompt downloading phpMyAdmin if it is not installed.
+## Usage: phpmyadmin
+## Example: "ddev phpmyadmin"
+
+if [ "${DDEV_PROJECT_STATUS-running}" != "running" ] && [ -z "$no_recursion" ]; then
+  echo "Project ${DDEV_PROJECT} is not running, starting it"
+  ddev start
+  start_exit_code=$?
+  if [ $start_exit_code -ne 0 ]; then
+    exit $start_exit_code
+  fi
+  # run this script again, as the environment is updated after "ddev start"
+  no_recursion=true ddev "$(basename "$0")" "$@"
+  exit $?
+fi
+
+read -p "phpMyAdmin is not installed would you like to install? (yes/no): " answer
+
+if [[ "$answer" == "yes" ]]; then
+    ddev get ddev/ddev-phpmyadmin
+    echo "phpMyAdmin has been installed. Run ddev phpmyadmin again to use it."
+elif [[ "$answer" == "no" ]]; then
+    echo "Nothing has been changed."
+else
+    echo "Please enter yes or no."
+fi
