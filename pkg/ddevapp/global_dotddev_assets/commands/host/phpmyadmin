@@ -19,10 +19,36 @@ fi
 
 read -p "phpMyAdmin is not installed would you like to install? (yes/no): " answer
 
+case "$answer" in
+    [Yy] | [Yy][Ee][Ss])
+        ddev get ddev/ddev-phpmyadmin
+        echo "phpMyAdmin has been installed and requires a restart."
+        read -p "Would you like me to restart now? (yes/no): " answerrestart
+        case "$answerrestart" in
+            [Yy] | [Yy][Ee][Ss])
+                ddev restart
+                echo "Run ddev phpmyadmin again to use it."
+                ;;
+            *)
+                echo "You must manually restart ddev to use phpMyAdmin ddev restart."
+                ;;
+        esac
+        ;;
+    *)
+        echo "Nothing has been changed."
+        ;;
+esac
+
 if [[ "$answer" == "yes" ]]; then
     ddev get ddev/ddev-phpmyadmin
-    ddev restart
-    echo "phpMyAdmin has been installed. Run ddev phpmyadmin again to use it."
+    echo "phpMyAdmin has been installed and requires a restart."
+    read -p "Would you like me to restart now? (yes/no): " answerrestart
+    if [[ "answerrestart" == "yes" ]]; then
+      ddev restart
+      echo "Run ddev phpmyadmin again to use it."
+    else
+      echo "You must manually restart ddev to use phpMyAdmin ddev restart."
+    fi
 elif [[ "$answer" == "no" ]]; then
     echo "Nothing has been changed."
 else
