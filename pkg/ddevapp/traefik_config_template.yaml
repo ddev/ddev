@@ -12,7 +12,7 @@ http:
       {{ else }}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{ end }}
-      service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}-http"
+      service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
       tls: false
       # middlewares:
       #   - "redirectHttps"
@@ -27,7 +27,7 @@ http:
       {{ else }}
       rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{- if $i -}}, {{- end -}}`{{$h}}`{{end}})
       {{ end }}
-      service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}-http"
+      service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
       {{ if not $.UseLetsEncrypt }}
       tls: true
       {{ else }}
