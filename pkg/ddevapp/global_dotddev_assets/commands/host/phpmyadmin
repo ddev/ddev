@@ -27,7 +27,7 @@ case "$answer" in
         case "$answerrestart" in
             [Yy] | [Yy][Ee][Ss])
                 ddev restart
-                echo "Run ddev phpmyadmin again to use it."
+                echo "Run 'ddev phpmyadmin' again to use it."
                 ;;
             *)
                 echo "You must run 'ddev restart' to finish configuring the phpMyAdmin add-on."
