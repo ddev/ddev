@@ -15,9 +15,6 @@ builds:
   - arm64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
@@ -34,9 +31,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert{{.Ext}}
   binary: mkcert
@@ -64,9 +58,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_bash_completion.sh
   binary: ddev_bash_completion.sh
@@ -83,9 +74,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_zsh_completion.sh
   binary: ddev_zsh_completion.sh
@@ -102,9 +90,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_fish_completion.sh
   binary: ddev_fish_completion.sh
