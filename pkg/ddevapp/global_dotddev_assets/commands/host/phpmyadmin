@@ -17,7 +17,7 @@ if [ "${DDEV_PROJECT_STATUS-running}" != "running" ] && [ -z "$no_recursion" ]; 
   exit $?
 fi
 
-read -p "phpMyAdmin is not installed would you like to install? (yes/no): " answer
+read -p "phpMyAdmin is not installed would you like to install? (y/N): " answer
 
 case "$answer" in
     [Yy] | [Yy][Ee][Ss])
