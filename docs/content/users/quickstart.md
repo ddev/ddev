@@ -661,7 +661,8 @@ The content management part of Sulu is built upon webspaces. Each webspace confi
 The information for the database connection is set in the environment variable `DATABASE_URL`. The installation should have already created a `.env.local` file which allows you overwrite the `DATABASE_URL` if no `.env.local` exists create it and define also the `APP_ENV` variable:
 
 ```bash
-DATABASE_URL="mysql://db:db@db:3306/db?charset=utf8mb4"
+APP_ENV=dev
+DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
 ```
 
 Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
