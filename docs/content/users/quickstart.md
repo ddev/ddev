@@ -622,7 +622,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 
 ```bash
 mkdir my-sulu-site && cd my-sulu-site
-ddev config --project-type=php --docroot=public --upload-dirs=uploads
+ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
 ddev start
 ddev composer create sulu/skeleton
 ```
