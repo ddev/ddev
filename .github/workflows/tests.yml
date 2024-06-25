@@ -11,8 +11,8 @@ on:
   push:
     branches: [ master, main ]
 
-  schedule:
-    - cron: '01 00 * * *'
+#  schedule:
+#    - cron: '01 00 * * *'
 
   workflow_dispatch:
     inputs:
