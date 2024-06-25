@@ -97,4 +97,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-arm64
-          path: .gotmp/bin/windows_arm64/ddev
+          path: .gotmp/bin/windows_arm64/ddev.exe
