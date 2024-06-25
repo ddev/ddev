@@ -5,7 +5,7 @@
 ## Usage: phpmyadmin
 ## Example: "ddev phpmyadmin"
 
-if [ "${DDEV_NONINTERACTIVE:-}" != "" ]]; then
+if [ "${DDEV_NONINTERACTIVE:-}" != "" ]; then
   echo "Nothing has been changed."
   exit 0
 fi
