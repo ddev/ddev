@@ -271,9 +271,13 @@ $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.
 	curl --fail -JL -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/arm64"
 	curl --fail -sSL -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
-$(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_arm64/sudo_license.txt:
+$(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	set -x
 	curl --fail -sSL -o "$(GOTMP)/bin/windows_amd64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
+
+$(GOTMP)/bin/windows_arm64/sudo_license.txt:
+	set -x
+	curl --fail -sSL -o "$(GOTMP)/bin/windows_arm64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
