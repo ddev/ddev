@@ -10,7 +10,7 @@ if [ "${DDEV_NONINTERACTIVE:-}" != "" ]; then
   exit 0
 fi
 
-read -p "phpMyAdmin is not installed would you like to install? (Y/n): [Y]" answer
+read -p "The phpMyAdmin add-on is not installed. Would you like to install it? (Y/n): [Y]" answer
 if [ -z "$answer" ]; then
     answer="Y"
 fi
