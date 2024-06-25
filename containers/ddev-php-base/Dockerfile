@@ -83,7 +83,7 @@ http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.lis
 
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
-# Don't forget to update mariadb-client-install.sh when changing MariaDB version here
+# Search for CHANGE_MARIADB_CLIENT to update related code.
 RUN /usr/local/bin/mariadb_repo_setup --mariadb-server-version="mariadb-10.11"
 
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \

@@ -2136,10 +2136,11 @@ func TestWebserverDBClient(t *testing.T) {
 			require.True(t, len(parts) > 5)
 			expectedClientVersion := dbVersion
 
-			// For mariadb we have installed the 10.11 client
+			// Search for CHANGE_MARIADB_CLIENT to update related code.
 			if dbType == nodeps.MariaDB {
+				// For MariaDB, we have installed the 10.11 client.
 				expectedClientVersion = "10.11"
-				// Use MariaDB 11.4 client
+				// Add MariaDB versions that can have their own client here:
 				if dbVersion == nodeps.MariaDB114 {
 					expectedClientVersion = "11.4"
 				}
