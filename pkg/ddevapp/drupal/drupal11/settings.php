@@ -2,6 +2,8 @@
 
 // phpcs:ignoreFile
 
+// DDEV-created Drupal 11 settings.php from upstream default.settings.php
+
 /**
  * @file
  * Drupal site-specific configuration file.

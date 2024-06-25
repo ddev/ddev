@@ -61,7 +61,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
-		if err := writeDrupalSettingsPHP(app.SiteSettingsPath, app.Type); err != nil {
+		if err := writeDrupalSettingsPHP(app); err != nil {
 			return "", err
 		}
 	}
@@ -76,7 +76,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsDdev)
 
-		if err = appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
+		if err = appendIncludeToDrupalSettingsFile(nil); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsDdev, settings.SiteSettings, err)
 		}
 	}
