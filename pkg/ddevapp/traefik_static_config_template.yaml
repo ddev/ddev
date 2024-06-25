@@ -36,3 +36,12 @@ entryPoints:
   http-{{$port}}:
     address: ":{{$port}}"
   {{ end }}
+
+experimental:
+    plugins:
+        rewrite-response-body:
+            moduleName: "github.com/the-ccsn/traefik-plugin-rewritebody"
+            version: "v0.1.3"
+        rewrite-response-headers:
+            moduleName: "github.com/jamesmcroft/traefik-plugin-rewrite-response-headers"
+            version: "v1.1.2"

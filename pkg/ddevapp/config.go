@@ -257,12 +257,6 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
-	// Allow project-specific post-config action
-	err = appcopy.PostConfigAction()
-	if err != nil {
-		return err
-	}
-
 	// Write example Dockerfiles into build directories
 	contents := []byte(`
 #ddev-generated
@@ -289,6 +283,67 @@ RUN echo "Built on $(date)" > /build-date.txt
 		return err
 	}
 
+	
+	//write example Traefik .middleware-template.yaml.example. These two configurations are for turning absolute static resource urls into relative paths
+	
+	contents = []byte(`{{ $webEnv := .App.WebEnvironment }}
+relative-location-header:
+  plugin:
+    rewrite-response-headers:
+      rewrites:
+        - header: Location {{ range $index, $element := $webEnv }}{{ $keyVal := splitList "=" $element }}{{ if eq (index $keyVal 0) "WPURL" }}
+        - regex: (https?)?(%3A|:)?(%2F|\/|\\/|\\%2F)(%2F|\/|\\/|\\%2F){{ index $keyVal 1 }}(%2F|\/|\\\/|\\%2F)?(.*?)?
+          # {RequestHost} token is available to be used in the replacement. e.g. replacement: https://{RequestHost}/$2
+          replacement: $4$6 {{ end }}{{ end }} #uses $4$6 so as to add a slash if there's nothing in the path. $3$4 are separated so as to allow for the single slash. The various permutations of / came up through trial and error across different pages and resource requests.
+relative-urls-body:
+  plugin:
+    rewrite-response-body:
+      # Keep Last-Modified header returned by the HTTP service.
+      # By default, the Last-Modified header is removed.
+      lastModified: "true"
+      rewrites: {{ range $index, $element := $webEnv }}{{ $keyVal := splitList "=" $element }}{{ if eq (index $keyVal 0) "WPURL" }}
+        - regex: (https?)?(%3A|:)?(%2F|\/|\\/|\\%2F)(%2F|\/|\\/|\\%2F){{ index $keyVal 1 }}(%2F|\/|\\\/|\\%2F)?(.*?)?
+          replacement: $4$6 {{ end }}{{ end }}
+      # Available logLevels: (Trace: -2, Debug: -1, Info: 0, Warning: 1, Error: 2)
+      logLevel: 0
+      # monitoring is optional, defaults to below configuration
+      # monitoring configuration limits the HTTP queries that are checked for regex replacement.
+      monitoring:
+        # methods is a string list. Options are standard HTTP Methods. Entries MUST be ALL CAPS
+        # For a list of options: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+        methods:
+          - GET
+          - POST
+        # types is a string list. Options are HTTP Content Types. Entries should match standard formatting
+        # For a list of options: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+        # Wildcards(*) are not supported!
+        types:
+          - text/html
+        # checkMimeAccept is a boolean. If true, the Accept header will be checked for the MIME type
+        checkMimeAccept: true
+        # checkMimeContentType is a boolean. If true, the Content-Type header will be checked for the MIME type
+        checkMimeContentType: true
+        # checkAcceptEncoding is a boolean. If true, the Accept-Encoding header will be checked for the encoding
+        checkAcceptEncoding: true
+        # checkContentEncoding is a boolean. If true, the Content-Encoding header will be checked for the encoding
+        checkContentEncoding: true
+
+`)
+	
+	err = os.WriteFile(app.GetConfigPath(".middleware-template.yaml.example"), contents, 0644)
+	if err != nil {
+		return err
+	}
+	
+	
+	// Allow project-specific post-config action
+	err = appcopy.PostConfigAction()
+	if err != nil {
+		return err
+	}
+
+	
+	
 	return nil
 }
 
