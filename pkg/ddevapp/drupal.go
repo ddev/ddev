@@ -16,6 +16,10 @@ import (
 	copy2 "github.com/otiai10/copy"
 )
 
+// DefaultDrupalSettingsVersion is the version used for settings.php/settings.ddev.php
+// when no known Drupal version is detected
+const DefaultDrupalSettingsVersion = "10"
+
 // DrupalSettings encapsulates all the configurations for a Drupal site.
 type DrupalSettings struct {
 	DeployName       string
@@ -114,8 +118,7 @@ func writeDrupalSettingsPHP(app *DdevApp) error {
 
 	drupalVersion, err := GetDrupalVersion(app)
 	if err != nil || drupalVersion == "" {
-		// todo: Reconsider this logic for default version
-		drupalVersion = "10"
+		drupalVersion = DefaultDrupalSettingsVersion
 	}
 
 	content, err := bundledAssets.ReadFile(path.Join("drupal", "drupal"+drupalVersion, "settings.php"))
@@ -180,8 +183,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 
 	drupalVersion, err := GetDrupalVersion(app)
 	if err != nil || drupalVersion == "" {
-		// todo: Reconsider this logic for default version
-		drupalVersion = "10"
+		drupalVersion = DefaultDrupalSettingsVersion
 	}
 	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", "drupal"+drupalVersion, "settings.ddev.php"))
 	if err != nil {
