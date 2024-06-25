@@ -327,6 +327,7 @@ ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 ddev start
 ddev launch
 ```
+
 Now follow the instructions in the installer. The only detail to note, within the Database Configuration section, for the database type use the default `MySQLi`, and for the host name, the database user name, the database password, and the database name use `db`. The database prefix and the connection encryption settings can be left at the default settings.
 
 ## Kirby CMS
