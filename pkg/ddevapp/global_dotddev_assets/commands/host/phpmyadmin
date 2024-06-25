@@ -6,8 +6,8 @@
 ## Example: "ddev phpmyadmin"
 
 if [ "${DDEV_NONINTERACTIVE:-}" != "" ]; then
-  echo "Nothing has been changed."
-  exit 0
+    echo "Nothing has been changed."
+    exit 0
 fi
 
 read -p "The phpMyAdmin add-on is not installed. Would you like to install it? (Y/n): [Y]" answer
