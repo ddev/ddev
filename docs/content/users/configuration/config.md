@@ -30,6 +30,13 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
     ```
 
     Run `ddev help config` to see all the available config arguments.
+=== "Environment variable"
+
+    ```shell
+    ddev exec 'echo $DDEV_PHP_VERSION'
+    ```
+
+    Some config arguments are available as readable environment variables. See [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided).
 
 ### Environmental Overrides
 
