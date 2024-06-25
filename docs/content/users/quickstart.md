@@ -626,9 +626,7 @@ ddev config --project-type=php --docroot=public --upload-dirs=uploads --database
 ddev start
 ddev composer create sulu/skeleton
 ```
-
-
-The content management part of Sulu is built upon webspaces. Each webspace configures a content tree. Each content tree may contain translations for different locales. Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
+Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
 
 ```bash
 <?xml version="1.0" encoding="utf-8"?>
