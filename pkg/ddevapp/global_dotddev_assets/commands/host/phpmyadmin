@@ -30,7 +30,7 @@ case "$answer" in
                 echo "Run ddev phpmyadmin again to use it."
                 ;;
             *)
-                echo "You must manually restart ddev to use phpMyAdmin ddev restart."
+                echo "You must run 'ddev restart' to finish configuring the phpMyAdmin add-on."
                 ;;
         esac
         ;;
