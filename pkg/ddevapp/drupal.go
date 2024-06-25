@@ -105,7 +105,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error 
 	} else {
 		util.Debug("Existing %s file does not include %s, modifying to include DDEV settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
-		if err := appendIncludeToDrupalSettingsFile(nil); err != nil {
+		if err := appendIncludeToDrupalSettingsFile(app); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}

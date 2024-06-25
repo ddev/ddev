@@ -76,7 +76,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsDdev)
 
-		if err = appendIncludeToDrupalSettingsFile(nil); err != nil {
+		if err = appendIncludeToDrupalSettingsFile(app); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsDdev, settings.SiteSettings, err)
 		}
 	}
