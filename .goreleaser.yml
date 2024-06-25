@@ -4,7 +4,7 @@ builds:
 - id: ddev
   main: ./cmd/ddev
 
-  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
+  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
   builder: prebuilt
   goos:
   - linux
