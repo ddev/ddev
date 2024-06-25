@@ -2138,7 +2138,7 @@ func TestWebserverDBClient(t *testing.T) {
 
 			// Search for CHANGE_MARIADB_CLIENT to update related code.
 			if dbType == nodeps.MariaDB {
-				// For MariaDB, we have installed the 10.11 client.
+				// For MariaDB, we have installed the 10.11 client by default.
 				expectedClientVersion = "10.11"
 				// Add MariaDB versions that can have their own client here:
 				if dbVersion == nodeps.MariaDB114 {

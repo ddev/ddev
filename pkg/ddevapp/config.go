@@ -1018,7 +1018,7 @@ redirect_stderr=true
 	if app.Database.Type == nodeps.MySQL {
 		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
 	}
-	// For MariaDb 11.4 we'll install the matching mariadb-client in the ddev-webserver
+	// Some MariaDB versions may have their own client in the ddev-webserver
 	if app.Database.Type == nodeps.MariaDB {
 		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
 	}
