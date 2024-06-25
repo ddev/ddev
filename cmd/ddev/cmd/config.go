@@ -646,7 +646,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 		parts := strings.Split(raw, ":")
 		if len(parts) != 2 {
-			util.Failed("Incorrect database value: %s - use something like 'mariadb:10.3 or mysql:8.0. Options are %v", raw, nodeps.GetValidDatabaseVersions())
+			util.Failed("Incorrect database value: %s - use something like 'mariadb:10.11' or 'mysql:8.0'. Options are %v", raw, nodeps.GetValidDatabaseVersions())
 		}
 		app.Database.Type = parts[0]
 		app.Database.Version = parts[1]
