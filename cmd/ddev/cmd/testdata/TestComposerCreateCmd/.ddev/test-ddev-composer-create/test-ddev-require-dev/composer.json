@@ -1,0 +1,6 @@
+{
+    "name": "test/ddev-require-dev",
+    "description": "This is a test library to check if 'require-dev' section works.",
+    "type": "library",
+    "version": "1.0.0"
+}

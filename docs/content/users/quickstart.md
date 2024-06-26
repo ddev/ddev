@@ -54,8 +54,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ```bash
     mkdir my-cakephp-site && cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
-    ddev composer create --prefer-dist cakephp/app:~5.0
-    ddev cake
+    ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
     ddev launch
     ```
 
