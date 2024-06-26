@@ -135,6 +135,8 @@ type DdevApp struct {
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
+	EphemeralRouterHTTPPort   string
+	EphemeralRouterHTTPSPort  string
 }
 
 // Global variable that's set from --skip-hooks global flag.
@@ -516,6 +518,27 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 	if app.RouterHTTPPort != "" {
 		port = app.RouterHTTPPort
 	}
+
+	// Check if port is available
+	if RouterPortIsAvailable(port) {
+		return port
+	} else {
+		if app.EphemeralRouterHTTPPort != "" {
+			return app.EphemeralRouterHTTPPort
+		} else {
+			// Find an ephemeral port and use it
+			ephemeralPort, ok := FindEphemeralRouterPort(8080, 8130)
+			if ok {
+				app.EphemeralRouterHTTPPort = fmt.Sprint(ephemeralPort)
+				util.Warning("HTTP port %s is not available, using %s instead.", port, app.EphemeralRouterHTTPPort)
+				port = app.EphemeralRouterHTTPPort
+			} else {
+				// We could not find any available port. Return original port
+				// and an error will be thrown later on when runnning CheckRouterPorts
+			}
+		}
+	}
+
 	return port
 }
 
@@ -526,6 +549,27 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 	if app.RouterHTTPSPort != "" {
 		port = app.RouterHTTPSPort
 	}
+
+	// Check if port is available
+	if RouterPortIsAvailable(port) {
+		return port
+	} else {
+		if app.EphemeralRouterHTTPSPort != "" {
+			return app.EphemeralRouterHTTPSPort
+		} else {
+			// Find an ephemeral port and use it
+			ephemeralPort, ok := FindEphemeralRouterPort(8443, 8493)
+			if ok {
+				app.EphemeralRouterHTTPSPort = fmt.Sprint(ephemeralPort)
+				util.Warning("HTTP port %s is not available, using %s instead.", port, app.EphemeralRouterHTTPSPort)
+				port = app.EphemeralRouterHTTPSPort
+			} else {
+				// We could not find any available port. Return original port
+				// and an error will be thrown later on when runnning CheckRouterPorts
+			}
+		}
+	}
+
 	return port
 }
 

@@ -342,3 +342,21 @@ func CheckRouterPorts() error {
 	}
 	return nil
 }
+
+// Returns true if the port is available to use by the router, false otherwise.
+func RouterPortIsAvailable(port string) bool {
+	return !netutil.IsPortActive(port)
+}
+
+// Finds a free port in the local machine, in the range provided.
+// Returns the port found, and a boolean that determines if the
+// port is valid (true) or not (false)
+func FindEphemeralRouterPort(start, upTo int) (int, bool) {
+	for p := start; p <= upTo; p++ {
+		if RouterPortIsAvailable(fmt.Sprint(p)) {
+			return p, true
+		}
+	}
+
+	return 0, false
+}
