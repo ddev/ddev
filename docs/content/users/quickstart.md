@@ -325,7 +325,8 @@ tag=$(curl -L "https://api.github.com/repos/joomla/joomla-cms/releases/latest" |
 unzip ./joomla.zip && rm joomla.zip
 ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 ddev start
-ddev launch
+ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="John Doe" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@mail.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
+ddev launch /administrator
 ```
 
 Now follow the instructions in the installer. The only detail to note, within the Database Configuration section, for the database type use the default `MySQLi`, and for the host name, the database user name, the database password, and the database name use `db`. The database prefix and the connection encryption settings can be left at the default settings.
