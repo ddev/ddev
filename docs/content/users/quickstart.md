@@ -325,7 +325,7 @@ tag=$(curl -L "https://api.github.com/repos/joomla/joomla-cms/releases/latest" |
 unzip ./joomla.zip && rm joomla.zip
 ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 ddev start
-ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="John Doe" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@mail.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
+ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
 ddev launch /administrator
 ```
 
