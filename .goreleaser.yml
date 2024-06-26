@@ -394,6 +394,7 @@ dockerhub:
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.7'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.8'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.11'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-11.4'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.5'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.6'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.7'

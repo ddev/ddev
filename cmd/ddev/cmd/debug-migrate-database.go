@@ -16,7 +16,7 @@ var DebugMigrateDatabase = &cobra.Command{
 	Use:   "migrate-database",
 	Short: "Migrate a MySQL or MariaDB database to a different dbtype:dbversion; works only with MySQL and MariaDB, not with PostgreSQL",
 	Example: `ddev debug migrate-database mysql:8.0
-ddev debug migrate-database mariadb:10.7`,
+ddev debug migrate-database mariadb:11.4`,
 	Args: cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
