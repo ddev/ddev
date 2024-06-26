@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
@@ -13,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 )
@@ -119,6 +122,10 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	if _, _, err := RootCmd.Find(os.Args[1:]); err != nil {
+		suggestAddonForUnknownCommand(os.Args[1])
+	}
+
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
@@ -189,4 +196,65 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	}
 
 	return nil
+}
+
+func suggestAddonForUnknownCommand(command string) {
+	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
+		return
+	}
+	app, err := ddevapp.GetActiveApp("")
+	if err != nil {
+		return
+	}
+	// TODO: cache this
+	repos, err := ddevapp.ListAvailableAddons(true)
+	if err != nil {
+		return
+	}
+	var matches []string
+	for _, repo := range repos {
+		if fuzzy.Match(command, *repo.Name) {
+			matches = append(matches, *repo.FullName)
+		}
+	}
+	if len(matches) < 1 {
+		return
+	}
+	selectedAddon := matches[0]
+	// TODO: add check if add-on is already installed
+	if len(matches) > 1 {
+		// TODO: make the output fancier
+		for i, match := range matches {
+			fmt.Printf("%d. %s\n", i+1, match)
+		}
+		selection := util.Prompt("Do you want to install one of these add-ons?", "choose a number")
+		choice, err := strconv.Atoi(selection)
+		if err != nil || choice < 1 || choice > len(selection) {
+			util.Failed("Invalid selection")
+		}
+		selectedAddon = matches[choice-1]
+	} else {
+		y := util.Confirm(fmt.Sprintf("Do you want to install %s add-on?", selectedAddon))
+		if !y {
+			util.Warning("Exiting, no permission given to install")
+			os.Exit(-1)
+		}
+	}
+	RootCmd.SetArgs([]string{"get", selectedAddon})
+	err = RootCmd.Execute()
+	if err != nil {
+		os.Exit(-1)
+	}
+	util.Success("\n%s has been installed and requires a restart.", selectedAddon)
+	y := util.Confirm("Would you like to restart DDEV now?")
+	if !y {
+		util.Warning("Exiting, no permission given to restart")
+		os.Exit(-1)
+	}
+	output.UserOut.Printf("Restarting project %s...", app.GetName())
+	err = app.Restart()
+	if err != nil {
+		util.Failed("Failed to restart %s: %v", app.GetName(), err)
+	}
+	os.Exit(0)
 }
