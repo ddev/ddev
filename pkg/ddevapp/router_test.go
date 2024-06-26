@@ -1,6 +1,9 @@
 package ddevapp_test
 
 import (
+	"fmt"
+	"math/rand"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -265,4 +268,77 @@ func TestDisableHTTP2(t *testing.T) {
 	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
 	assert.Equal("HTTP/1.1 200 OK\r\n", out)
 
+}
+
+// Test the function FindEphemeralPort
+func TestFindEphemeralPort(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Get a random port number in the dynamic port range
+	startPort := rand.Intn(65535 - 49152 + 1)
+	goodEndPort := startPort + 3
+	badEndPort := startPort + 2
+
+	// Listen in the first 3 ports
+	l0, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(startPort))
+	require.NoError(t, err)
+	defer l0.Close()
+	l1, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(startPort+1))
+	require.NoError(t, err)
+	defer l1.Close()
+	l2, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(startPort+2))
+	require.NoError(t, err)
+	defer l2.Close()
+
+	_, ok := ddevapp.FindEphemeralRouterPort(startPort, badEndPort)
+	assert.Exactly(false, ok)
+
+	port, ok := ddevapp.FindEphemeralRouterPort(startPort, goodEndPort)
+	assert.Exactly(true, ok)
+	assert.Exactly(startPort+3, port)
+}
+
+// Test that the app assigns an ephemeral port if the default one is not available.
+func TestUseEphemeralPort(t *testing.T) {
+	assert := asrt.New(t)
+
+	origGlobalHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
+	origGlobalHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8080"
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8443"
+
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = origGlobalHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origGlobalHTTPSPort
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+	})
+
+	// Occupy default router ports:
+	l0, err := net.Listen("tcp", "127.0.0.1:"+globalconfig.DdevGlobalConfig.RouterHTTPPort)
+	require.NoError(t, err)
+	defer l0.Close()
+	l1, err := net.Listen("tcp", "127.0.0.1:"+globalconfig.DdevGlobalConfig.RouterHTTPSPort)
+	require.NoError(t, err)
+	defer l1.Close()
+
+	ephemeralHttpPort, ok := ddevapp.FindEphemeralRouterPort(8080, 8130)
+	assert.Exactly(true, ok)
+	ephemeralHttpsPort, ok := ddevapp.FindEphemeralRouterPort(8443, 8493)
+	assert.Exactly(true, ok)
+
+	err = app.Restart()
+	require.NoError(t, err)
+	require.NotEqual(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, app.GetRouterHTTPPort())
+	require.NotEqual(t, globalconfig.DdevGlobalConfig.RouterHTTPSPort, app.GetRouterHTTPSPort())
+
+	require.Equal(t, fmt.Sprint(ephemeralHttpPort), app.GetRouterHTTPPort())
+	require.Equal(t, fmt.Sprint(ephemeralHttpsPort), app.GetRouterHTTPSPort())
 }
