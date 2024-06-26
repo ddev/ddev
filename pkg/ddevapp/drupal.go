@@ -16,6 +16,10 @@ import (
 	copy2 "github.com/otiai10/copy"
 )
 
+// DefaultDrupalSettingsVersion is the version used for settings.php/settings.ddev.php
+// when no known Drupal version is detected
+const DefaultDrupalSettingsVersion = "10"
+
 // DrupalSettings encapsulates all the configurations for a Drupal site.
 type DrupalSettings struct {
 	DeployName       string
@@ -77,7 +81,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true' && is_readable($ddev_settings)) {
 `
 
 // manageDrupalSettingsFile will direct inspecting and writing of settings.php.
-func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appType string) error {
+func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error {
 	// We'll be writing/appending to the settings files and parent directory, make sure we have permissions to do so
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
@@ -86,7 +90,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", drupalConfig.SiteSettings)
 
-		if err := writeDrupalSettingsPHP(app.SiteSettingsPath, appType); err != nil {
+		if err := writeDrupalSettingsPHP(app); err != nil {
 			return fmt.Errorf("failed to write: %v", err)
 		}
 	}
@@ -101,7 +105,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	} else {
 		util.Debug("Existing %s file does not include %s, modifying to include DDEV settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
-		if err := appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
+		if err := appendIncludeToDrupalSettingsFile(app); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}
@@ -110,14 +114,20 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 }
 
 // writeDrupalSettingsPHP creates the project's settings.php if it doesn't exist
-func writeDrupalSettingsPHP(filePath string, appType string) error {
-	content, err := bundledAssets.ReadFile(path.Join("drupal", appType, "settings.php"))
+func writeDrupalSettingsPHP(app *DdevApp) error {
+
+	drupalVersion, err := GetDrupalVersion(app)
+	if err != nil || drupalVersion == "" {
+		drupalVersion = DefaultDrupalSettingsVersion
+	}
+
+	content, err := bundledAssets.ReadFile(path.Join("drupal", "drupal"+drupalVersion, "settings.php"))
 	if err != nil {
 		return err
 	}
 
 	// Ensure target directory exists and is writable
-	dir := filepath.Dir(filePath)
+	dir := filepath.Dir(app.SiteSettingsPath)
 	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
@@ -127,7 +137,7 @@ func writeDrupalSettingsPHP(filePath string, appType string) error {
 	}
 
 	// Create file
-	err = os.WriteFile(filePath, content, 0755)
+	err = os.WriteFile(app.SiteSettingsPath, content, 0755)
 	if err != nil {
 		return err
 	}
@@ -143,7 +153,7 @@ func createDrupalSettingsPHP(app *DdevApp) (string, error) {
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings(app)
 
-	if err := manageDrupalSettingsFile(app, drupalConfig, app.Type); err != nil {
+	if err := manageDrupalSettingsFile(app, drupalConfig); err != nil {
 		return "", err
 	}
 
@@ -173,8 +183,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 
 	drupalVersion, err := GetDrupalVersion(app)
 	if err != nil || drupalVersion == "" {
-		// todo: Reconsider this logic for default version
-		drupalVersion = "10"
+		drupalVersion = DefaultDrupalSettingsVersion
 	}
 	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", "drupal"+drupalVersion, "settings.ddev.php"))
 	if err != nil {
@@ -533,20 +542,20 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 
 // appendIncludeToDrupalSettingsFile modifies the settings.php file to include the settings.ddev.php
 // file, which contains ddev-specific configuration.
-func appendIncludeToDrupalSettingsFile(siteSettingsPath string, appType string) error {
+func appendIncludeToDrupalSettingsFile(app *DdevApp) error {
 	// Check if file is empty
-	contents, err := os.ReadFile(siteSettingsPath)
+	contents, err := os.ReadFile(app.SiteSettingsPath)
 	if err != nil {
 		return err
 	}
 
 	// If the file is empty, write the complete settings file and return
 	if len(contents) == 0 {
-		return writeDrupalSettingsPHP(siteSettingsPath, appType)
+		return writeDrupalSettingsPHP(app)
 	}
 
 	// The file is not empty, open it for appending
-	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
+	file, err := os.OpenFile(app.SiteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
