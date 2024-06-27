@@ -80,6 +80,7 @@ IDEs
 IPv
 If
 IIS
+Joomla
 Kalabox
 Kubernetes
 Lando
