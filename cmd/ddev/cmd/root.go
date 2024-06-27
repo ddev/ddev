@@ -234,7 +234,7 @@ func suggestAddonForUnknownCommand(command string) {
 		}
 		selectedAddon = matches[choice-1]
 	} else {
-		y := util.Confirm(fmt.Sprintf("Do you want to install %s add-on?", selectedAddon))
+		y := util.Confirm(fmt.Sprintf("Do you want to install '%s' add-on?", selectedAddon))
 		if !y {
 			util.Warning("Exiting, no permission given to install")
 			os.Exit(-1)
