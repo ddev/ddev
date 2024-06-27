@@ -5,10 +5,12 @@
   "rules": {
     "no-todo": true,
     "terminology": {
-      "defaultTerms": false,
+      "defaultTerms": true,
       "skip": [
         "Code",
         "Image",
+       ],
+       "exclude": [
        ],
       "terms": [
         "AMD64",
@@ -32,6 +34,7 @@
         ["web-?server", "web server"]
       ],
       "exclude": [
+        'V[ -]?S[ -]?Code',
         "back[- ]end(\\w*)",
         "command ?line",
         "front[- ]end(\\w*)",
