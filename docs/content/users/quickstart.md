@@ -618,6 +618,52 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ddev launch /cp
     ```
 
+## Sulu
+
+```bash
+mkdir my-sulu-site && cd my-sulu-site
+ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
+ddev start
+ddev composer create sulu/skeleton
+```
+
+Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
+
+```bash
+<?xml version="1.0" encoding="utf-8"?>
+<webspace xmlns="http://schemas.sulu.io/webspace/webspace"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/webspace/webspace http://schemas.sulu.io/webspace/webspace-1.1.xsd">
+    <!-- See: http://docs.sulu.io/en/latest/book/webspaces.html how to configure your webspace-->
+
+    <name>My Sulu CMS</name>
+    <key>my-sulu-cms</key>
+```
+
+!!!warning "Caution"
+    Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
+
+The information for the database connection is set in the environment variable `DATABASE_URL`. The installation will have created a `.env.local` file.  Set `DATABASE_URL` in the `.env.local` file so it looks like this:
+
+```bash
+APP_ENV=dev
+DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
+```
+
+Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
+
+```bash
+ddev exec bin/adminconsole sulu:build dev
+ddev launch /admin
+```
+
+!!!tip
+    If you don't want to add an admin user use the `prod` argument instead
+
+    ```bash
+    ddev execute bin/adminconsole sulu:build prod
+    ```
+
 ## Symfony
 
 There are many ways to install Symfony, here are a few of them based on the [Symfony docs](https://symfony.com/doc/current/setup.html).

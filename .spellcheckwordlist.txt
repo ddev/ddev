@@ -141,6 +141,7 @@ SQLite
 StarterKits
 Starts
 Statamic
+Sulu
 Support
 Symfony
 TablePlus
@@ -411,6 +412,8 @@ live
 local
 localfile
 localhost
+localization
+localizations
 localpath
 logs
 lookups
@@ -683,6 +686,8 @@ webimage
 webserver
 webservers
 webserving
+webspace
+webspaces
 webtag
 will
 winnfsd
