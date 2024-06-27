@@ -221,7 +221,7 @@ Prerequisites:
 ```bash
 export GITHUB_REPOSITORY_OWNER=ddev-test
 git tag <tagname> # Try to include context like PR number, for example v1.22.8-PR5824
-make windows_amd64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
+make windows_amd64 windows_arm64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
 goreleaser release --prepare --nightly --clean
 ```
 
