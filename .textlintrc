@@ -10,8 +10,6 @@
         "Code",
         "Image",
        ],
-       "exclude": [
-       ],
       "terms": [
         "AMD64",
         "ARM64",
