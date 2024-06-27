@@ -5,12 +5,11 @@
   "rules": {
     "no-todo": true,
     "terminology": {
-      "defaultTerms": true,
+      "defaultTerms": false,
       "skip": [
         "Code",
         "Image",
        ],
-      "allow": ["VS Code"],
       "terms": [
         "AMD64",
         "ARM64",
@@ -24,8 +23,8 @@
         "MySQL",
         "phpMyAdmin",
         "Traefik",
+        ["V[ -]?S[ -]?Code", "VS Code"],
         "Xdebug",
-        ["VS Code", "VSCODE"],
         ["(\\s)ddev", "DDEV"],
         ["(\\s)http", "HTTP"],
         ["(\\s)https", "HTTPS"],

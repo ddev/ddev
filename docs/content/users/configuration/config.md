@@ -712,5 +712,5 @@ For PhpStorm running inside WSL2 (or JetBrains Gateway), use `"wsl2"`. For in-co
 Examples:
 
 * `xdebug_ide_location: 172.16.0.2` when you need to provide an explicit IP address where the IDE is listening. This is very unusual.
-* `xdebug_ide_location: container` when the IDE is actually listening inside the `ddev-webserver` container. This is only done very occasionally with obscure vscode setups like VS Code Language Server.
+* `xdebug_ide_location: container` when the IDE is actually listening inside the `ddev-webserver` container. This is only done very occasionally with obscure Visual Studio Code setups like VS Code Language Server.
 * `xdebug_ide_location: wsl2` when an IDE is running (or listening) in WSL2. This is the situation when running an IDE directly inside WSL2 instead of running it on Windows.
