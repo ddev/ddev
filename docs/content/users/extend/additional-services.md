@@ -118,7 +118,7 @@ Anyone can create an add-on for `ddev get`. See [this screencast](https://www.yo
 5. Add the `ddev-get` label and a good short description to the GitHub repository.
 6. When you’re ready for the add-on to become official, open an issue in the [DDEV issue queue](https://github.com/ddev/ddev/issues/new) requesting upgrade to official. You’ll be expected to maintain it, and subscribe to all activity and be responsive to questions.
 
-### Sections and Features of ddev-get Add-On install.yaml
+### Sections and Features of ddev-get Add-On `install.yaml`
 
 The `install.yaml` is a simple YAML file with a few main sections:
 

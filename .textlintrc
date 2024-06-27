@@ -6,7 +6,11 @@
     "no-todo": true,
     "terminology": {
       "defaultTerms": true,
-      "skip": ["Code", "Image"],
+      "skip": [
+        "Code",
+        "Image",
+       ],
+      "allow": ["VS Code"],
       "terms": [
         "AMD64",
         "ARM64",
@@ -21,6 +25,7 @@
         "phpMyAdmin",
         "Traefik",
         "Xdebug",
+        ["VS Code", "VSCODE"],
         ["(\\s)ddev", "DDEV"],
         ["(\\s)http", "HTTP"],
         ["(\\s)https", "HTTPS"],

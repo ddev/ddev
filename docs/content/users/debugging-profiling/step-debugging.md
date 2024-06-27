@@ -22,7 +22,7 @@ For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/doc
 ## IDE Setup
 
 * [PhpStorm](#phpstorm-debugging-setup)
-* [Visual Studio Code (VS Code)](#visual-studio-code-vs-code-debugging-setup)
+* [Visual Studio Code](#visual-studio-code-vs-code-debugging-setup)
 
 <a name="phpstorm"></a>
 
@@ -75,7 +75,7 @@ However, if you’ve not yet used PhpStorm with Xdebug for a regular web request
 
 If you encounter the error: "Can't find a source position. Server with name 'SITE_NAME.ddev.site' doesn't exist", change the "PHP | Servers" **Name** to **`SITE_NAME.ddev.site`**. In the example screenshot above both Name and Host are "**`d8composer.ddev.site`**".
 
-### Visual Studio Code (VS Code) Debugging Setup
+### Visual Studio Code Debugging Setup
 
 1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) extension.
 2. In the menu, choose *Run* → *Open Configuration* and add the [“Listen for Xdebug” configuration snippet](../snippets/launch.json) to the project’s `.vscode/launch.json`.
