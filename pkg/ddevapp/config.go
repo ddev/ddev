@@ -292,7 +292,7 @@ relative-location-header:
     rewrite-response-headers:
       rewrites:
         - header: Location {{ range $index, $element := $webEnv }}{{ $keyVal := splitList "=" $element }}{{ if eq (index $keyVal 0) "WPURL" }}
-        - regex: (https?)?(%3A|:)?(%2F|\/|\\/|\\%2F)(%2F|\/|\\/|\\%2F){{ index $keyVal 1 }}(%2F|\/|\\\/|\\%2F)?(.*?)?
+          regex: (https?)?(%3A|:)?(%2F|\/|\\/|\\%2F)(%2F|\/|\\/|\\%2F){{ index $keyVal 1 }}(%2F|\/|\\\/|\\%2F)?(.*?)?
           # {RequestHost} token is available to be used in the replacement. e.g. replacement: https://{RequestHost}/$2
           replacement: $4$6 {{ end }}{{ end }} #uses $4$6 so as to add a slash if there's nothing in the path. $3$4 are separated so as to allow for the single slash. The various permutations of / came up through trial and error across different pages and resource requests.
 relative-urls-body:
