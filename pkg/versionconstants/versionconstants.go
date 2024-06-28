@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "v1.23.2" // Note that this can be overridden by make
+var WebTag = "20240620_stasadev_ipv4" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -39,7 +39,7 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.17.2"
 
-const RequiredDockerComposeVersionDefault = "v2.27.0"
+const RequiredDockerComposeVersionDefault = "v2.28.1"
 
 // Drupal11RequiredSqlite3Version for ddev-webserver
 const Drupal11RequiredSqlite3Version = "3.45.1"

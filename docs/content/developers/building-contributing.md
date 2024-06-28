@@ -292,7 +292,7 @@ Then run `ddev` commands as usual, and the data will be sent to Amplitude.
 * You'll want both your fork/branch and the upstream as remotes in Git, so that tags can be determined. For example, the upstream Git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, Git may not know about tags that it needs for tests to work.
 * To run tests, you'll want `~/tmp` to be allowed in Docker. This is not normally an issue as the home directory is available by default in most Docker providers.
 
-Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
+Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` or `.gotmp/bin/windows_arm64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
 
 You can add additional `go build` args with `make BUILDARGS=<something>`, for example, `make BUILDARGS=-race`.
 
@@ -306,6 +306,7 @@ make linux_arm64
 make darwin_amd64
 make darwin_arm64
 make windows_amd64
+make windows_arm64
 make test
 make clean
 make staticrequired

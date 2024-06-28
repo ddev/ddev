@@ -2071,8 +2071,7 @@ func TestWebserverDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
 	// TODO: Add MySQL84 when it gets added to DDEV
-	// TODO: Add mariadb:11.4 when it gets added
-	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4"}
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -2137,9 +2136,14 @@ func TestWebserverDBClient(t *testing.T) {
 			require.True(t, len(parts) > 5)
 			expectedClientVersion := dbVersion
 
-			// For mariadb we have installed the 10.11 client
+			// Search for CHANGE_MARIADB_CLIENT to update related code.
 			if dbType == nodeps.MariaDB {
+				// For MariaDB, we have installed the 10.11 client by default.
 				expectedClientVersion = "10.11"
+				// Add MariaDB versions that can have their own client here:
+				if dbVersion == nodeps.MariaDB114 {
+					expectedClientVersion = "11.4"
+				}
 			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
 			// Or "mysql  Ver 14.14 Distrib 5.7.44, for Linux (aarch64) using  EditLine wrapper"

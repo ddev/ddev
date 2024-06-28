@@ -41,7 +41,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 1. The Ubuntu distro should be set up with the user `buildkite-agent`
 2. `sudo apt update && sudo apt install -y apt-transport-https autojump build-essential ca-certificates curl dirmngr etckeeper expect git gnupg icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client nagios-plugins postgresql-client unzip vim zip`
 3. `sudo snap install --classic go`
-4. `sudo snap install ngrok`
+4. Install `ngrok` with the [`linux apt` technique](https://ngrok.com/download).
 5. `curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg`
 6. `echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list`
 7. `sudo apt-get update && sudo apt-get install -y buildkite-agent`
@@ -60,7 +60,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
      [Environment]::SetEnvironmentVariable("WSLENV", $null, "Machine")
      ```
 
-15. Install homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+15. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 16. Configure brew in PATH with:
 
      ```
@@ -139,7 +139,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 24. Run `brew services start buildkite-agent`.
 25. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
 26. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
-27. The `testbot` user's ssh account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+27. The `testbot` user's SSH account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
 28. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**. The new service has to have `by-ssh-address` set to the name of the test runner, and that address needs to be added to `pi.ddev.site`'s `/etc/hosts` file.
 29. If `zsh` is the shell configured, add `/etc/zshenv` so that `/usr/local/bin/docker` will be picked up:
 

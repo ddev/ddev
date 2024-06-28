@@ -54,8 +54,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ```bash
     mkdir my-cakephp-site && cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
-    ddev composer create --prefer-dist cakephp/app:~5.0
-    ddev cake
+    ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
     ddev launch
     ```
 
@@ -317,6 +316,18 @@ ddev launch /admin/login
 In the web browser, log into your account using `admin` and `publish`.
 
 Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
+
+## Joomla
+
+```bash
+mkdir my-joomla-site && cd my-joomla-site
+tag=$(curl -L "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/joomla/joomla-cms/releases/download/$tag/Joomla_$tag-Stable-Full_Package.zip" -o joomla.zip
+unzip ./joomla.zip && rm joomla.zip
+ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
+ddev start
+ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
+ddev launch /administrator
+```
 
 ## Kirby CMS
 
@@ -605,6 +616,52 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ddev composer install
     ddev exec "php artisan key:generate"
     ddev launch /cp
+    ```
+
+## Sulu
+
+```bash
+mkdir my-sulu-site && cd my-sulu-site
+ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
+ddev start
+ddev composer create sulu/skeleton
+```
+
+Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
+
+```bash
+<?xml version="1.0" encoding="utf-8"?>
+<webspace xmlns="http://schemas.sulu.io/webspace/webspace"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/webspace/webspace http://schemas.sulu.io/webspace/webspace-1.1.xsd">
+    <!-- See: http://docs.sulu.io/en/latest/book/webspaces.html how to configure your webspace-->
+
+    <name>My Sulu CMS</name>
+    <key>my-sulu-cms</key>
+```
+
+!!!warning "Caution"
+    Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
+
+The information for the database connection is set in the environment variable `DATABASE_URL`. The installation will have created a `.env.local` file.  Set `DATABASE_URL` in the `.env.local` file so it looks like this:
+
+```bash
+APP_ENV=dev
+DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
+```
+
+Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
+
+```bash
+ddev exec bin/adminconsole sulu:build dev
+ddev launch /admin
+```
+
+!!!tip
+    If you don't want to add an admin user use the `prod` argument instead
+
+    ```bash
+    ddev execute bin/adminconsole sulu:build prod
     ```
 
 ## Symfony

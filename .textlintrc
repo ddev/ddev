@@ -6,7 +6,10 @@
     "no-todo": true,
     "terminology": {
       "defaultTerms": true,
-      "skip": ["Code", "Image"],
+      "skip": [
+        "Code",
+        "Image",
+       ],
       "terms": [
         "AMD64",
         "ARM64",
@@ -20,6 +23,7 @@
         "MySQL",
         "phpMyAdmin",
         "Traefik",
+        ["V[ -]?S[ -]?Code", "VS Code"],
         "Xdebug",
         ["(\\s)ddev", "DDEV"],
         ["(\\s)http", "HTTP"],
@@ -28,6 +32,7 @@
         ["web-?server", "web server"]
       ],
       "exclude": [
+        'V[ -]?S[ -]?Code',
         "back[- ]end(\\w*)",
         "command ?line",
         "front[- ]end(\\w*)",

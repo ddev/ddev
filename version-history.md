@@ -12,7 +12,7 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] `nodejs_version` now defaults to 20
 - [x] `php_version` defaults to 8.2
 - [x] PHP 8.3
-- [x] Corepack and yarn v4 support
+- [x] Corepack and Yarn v4 support
 - [x] Drupal 11 support
 - [x] New "drupal", "cakephp" and "silverstripe" project types.
 - [x] Support for even more Docker providers, especially on macOS
@@ -55,7 +55,7 @@ This version history has been driven by what we hear from our wonderful communit
 
 ## v1.20 (Released 2022-08)
 
-- [x] Improved Node.js support**. You can now run a Node.js daemon with simple `config.yaml` support (`web_extra_daemons`) and if it listens on a port you can expose it via `ddev-router` with `web_extra_exposed_ports`. (Both of these features can be used for daemons other than nodejs daemons.)
+- [x] Improved Node.js support**. You can now run a Node.js daemon with simple `config.yaml` support (`web_extra_daemons`) and if it listens on a port you can expose it via `ddev-router` with `web_extra_exposed_ports`. (Both of these features can be used for daemons other than Node.js daemons.)
 - [x] Default PHP version for new projects is now 8.0; the default database version is now MariaDB 10.4.
 - [x] `config.*.yaml` are now *merged* instead of overwriting other values. For example, if `config.yaml` has hooks, and `config.something.yaml` has hooks, the values will be merged, getting all of the hooks. Scalar values (like `php_version`, for example) still are overwritten by the last value loaded.
 - [x] `ddev craft` command is now included for projects of type `php`.
@@ -125,7 +125,7 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] Global homeadditions
 - [x] WSL2 support
 - [x] Reworked Nginx/Apache configurations
-- [x] zsh completions
+- [x] Zsh completions
 - [x] MariaDB 10.5 support
 - [x] Remove obsolete support for `drud-aws`.
 
@@ -172,7 +172,7 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] [Contrib-pointers for additional Services and techniques](https://github.com/ddev/ddev/issues/1474): We want to make another place for the outstanding content and pointers and applications that our users are developing. This will probably be a contrib repository for ddev.
 - [x] [NFS Setup Security Review](https://github.com/ddev/ddev/issues/1474): More docs and improved NFS setup scripts so people can think clearly and plan carefully for how they’re using NFS with DDEV.
 - [x] [Use DNS to provide name resolution when internet available](https://github.com/ddev/ddev/issues/416)
-- [x] [Manage ddev project list in ~/.ddev/global_config.yaml](https://github.com/ddev/ddev/issues/642): Since the beginning of DDEV, `ddev list` and everything that depended on it couldn’t work if the project was shut down. This should fix that.
+- [x] [Manage ddev project list in `~/.ddev/global_config.yaml`](https://github.com/ddev/ddev/issues/642): Since the beginning of DDEV, `ddev list` and everything that depended on it couldn’t work if the project was shut down. This should fix that.
 - [x] [Allow specifying a target container for hook execution](https://github.com/ddev/ddev/issues/1038)
 - [x] [Support ngrok to allow web access remotely](https://github.com/ddev/ddev/issues/375)
 - [x] [Hook system overhaul](https://github.com/ddev/ddev/issues/1372)
@@ -216,7 +216,7 @@ This version history has been driven by what we hear from our wonderful communit
     - Note that because of problems with symlinks on Windows, it is *not* recommended to use code from the host (Windows) side, or to check it in. That means it will not be appropriate to check in the vendor directory on the host (although it would be safe inside the container), but most people do a composer build anyway.
     - The `ddev composer create` command is almost the same as `composer create-project` but we couldn’t make it exactly the same. See [docs](https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#ddev-and-composer) for its usage.
 - Composer caching: Composer downloads are now cached in a shared Docker volume, making in-container composer builds far faster.
-- Shared SSH authentication in web container: You can now `ddev auth ssh` to authenticate your keys in the automatically-started `ddev-ssh-agent` container, which shares auth information with ever project’s web container. This allows access to private composer repositories without the pain of manually mounting ssh keys and authenticating each time you need them in each web container. It also allows easier use of facilities like `drush rsync` that need SSH auth. This means that the previous [manual workaround for mounting ssh keys](https://stackoverflow.com/questions/51065054/how-can-i-get-my-ssh-keys-and-identity-into-ddevs-web-container) is now obsolete. Please use `ddev auth ssh` instead.
+- Shared SSH authentication in web container: You can now `ddev auth ssh` to authenticate your keys in the automatically-started `ddev-ssh-agent` container, which shares auth information with ever project’s web container. This allows access to private composer repositories without the pain of manually mounting SSH keys and authenticating each time you need them in each web container. It also allows easier use of facilities like `drush rsync` that need SSH auth. This means that the previous [manual workaround for mounting SSH keys](https://stackoverflow.com/questions/51065054/how-can-i-get-my-ssh-keys-and-identity-into-ddevs-web-container) is now obsolete. Please use `ddev auth ssh` instead.
 - Configurable working and destination directories. You can now specify the container directory you land in with `ddev ssh`, `ddev exec`, and exec hooks in `config.yaml` (#1214). This also means that TYPO3 users will land in the project root by default; Drupal/Backdrop users land in the project root by default.
 - [`ddev export-db`](https://ddev.readthedocs.io/en/stable/users/cli-usage/#exporting-a-database) makes textual exports of the database easier; Don’t forget about `ddev snapshot` as well.
 

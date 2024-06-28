@@ -1,4 +1,7 @@
 <?php
+
+// DDEV-created Backdrop settings.php from upstream defaults
+
 /**
  * @file
  * Main Backdrop CMS configuration file.

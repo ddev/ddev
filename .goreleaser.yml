@@ -4,7 +4,7 @@ builds:
 - id: ddev
   main: ./cmd/ddev
 
-  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
+  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
   builder: prebuilt
   goos:
   - linux
@@ -15,9 +15,6 @@ builds:
   - arm64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
@@ -34,9 +31,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert{{.Ext}}
   binary: mkcert
@@ -64,9 +58,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_bash_completion.sh
   binary: ddev_bash_completion.sh
@@ -83,9 +74,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_zsh_completion.sh
   binary: ddev_zsh_completion.sh
@@ -102,9 +90,6 @@ builds:
   - amd64
   goamd64:
   - v1
-  ignore:
-  - goos: windows
-    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_fish_completion.sh
   binary: ddev_fish_completion.sh
@@ -394,6 +379,7 @@ dockerhub:
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.7'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.8'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-10.11'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-11.4'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.5'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.6'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.7'
