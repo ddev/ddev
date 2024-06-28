@@ -2,21 +2,23 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/asaskevich/govalidator"
-	"github.com/ddev/ddev/pkg/ddevhosts"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/util"
-	goodhosts "github.com/goodhosts/hostsfile"
 	"net"
 	"os"
 	exec2 "os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/ddev/ddev/pkg/ddevhosts"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/netutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+	goodhosts "github.com/goodhosts/hostsfile"
 )
 
 // windowsDdevExeAvailable says if ddev.exe is available on Windows side
@@ -94,9 +96,9 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			checkName := strings.TrimPrefix(name, "*.")
 			hostIPs, err := net.LookupHost(checkName)
 
-			// If we had successful lookup and dockerIP matches
-			// with adding to hosts file.
-			if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
+			// If we had successful lookup and the IP address looked up is local
+			// then we don't have to add it to the /etc/hosts.
+			if err == nil && len(hostIPs) > 0 && netutil.IsLocalIP(hostIPs[0]) {
 				continue
 			}
 		}
