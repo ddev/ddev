@@ -32,6 +32,16 @@ type BackdropSettings struct {
 	DBPublishedPort  int
 }
 
+// backdropSettingsLocalAnchorPattern defines a pattern to search for settings.local.php in settings.php with a comment.
+//
+//	/**
+//	 * Include a local settings file...
+//	 */
+//	if (file_exists(__DIR__ . '/settings.local.php')) {
+//	  include __DIR__ . '/settings.local.php';
+//	}
+const backdropSettingsLocalAnchorPattern = `(?s)\n/\*\*\s*\*\s*Include a local settings file.*?\*/\s*if\s*\(\s*file_exists\s*\(\s*__DIR__\s*\.\s*'\/settings\.local\.php'\s*\)\s*\)\s*{\s*include\s*__DIR__\s*\.\s*'\/settings\.local\.php'\s*;\s*}`
+
 // NewBackdropSettings produces a BackdropSettings object with default values.
 func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 	dockerIP, _ := dockerutil.GetDockerIP()
@@ -76,7 +86,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsDdev)
 
-		if err = appendIncludeToDrupalSettingsFile(app); err != nil {
+		if err = appendIncludeToDrupalSettingsFile(app, backdropSettingsLocalAnchorPattern); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsDdev, settings.SiteSettings, err)
 		}
 	}

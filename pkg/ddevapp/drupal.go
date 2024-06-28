@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -105,7 +106,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error 
 	} else {
 		util.Debug("Existing %s file does not include %s, modifying to include DDEV settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
-		if err := appendIncludeToDrupalSettingsFile(app); err != nil {
+		if err := appendIncludeToDrupalSettingsFile(app, ""); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}
@@ -116,12 +117,18 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error 
 // writeDrupalSettingsPHP creates the project's settings.php if it doesn't exist
 func writeDrupalSettingsPHP(app *DdevApp) error {
 
-	drupalVersion, err := GetDrupalVersion(app)
-	if err != nil || drupalVersion == "" {
-		drupalVersion = DefaultDrupalSettingsVersion
+	var appType string
+	if app.Type == nodeps.AppTypeBackdrop {
+		appType = app.Type
+	} else {
+		drupalVersion, err := GetDrupalVersion(app)
+		if err != nil || drupalVersion == "" {
+			drupalVersion = DefaultDrupalSettingsVersion
+		}
+		appType = "drupal" + drupalVersion
 	}
 
-	content, err := bundledAssets.ReadFile(path.Join("drupal", "drupal"+drupalVersion, "settings.php"))
+	content, err := bundledAssets.ReadFile(path.Join("drupal", appType, "settings.php"))
 	if err != nil {
 		return err
 	}
@@ -542,7 +549,7 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 
 // appendIncludeToDrupalSettingsFile modifies the settings.php file to include the settings.ddev.php
 // file, which contains ddev-specific configuration.
-func appendIncludeToDrupalSettingsFile(app *DdevApp) error {
+func appendIncludeToDrupalSettingsFile(app *DdevApp, anchorPattern string) error {
 	// Check if file is empty
 	contents, err := os.ReadFile(app.SiteSettingsPath)
 	if err != nil {
@@ -554,14 +561,38 @@ func appendIncludeToDrupalSettingsFile(app *DdevApp) error {
 		return writeDrupalSettingsPHP(app)
 	}
 
-	// The file is not empty, open it for appending
-	file, err := os.OpenFile(app.SiteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
+	// Determine where to insert the settingsIncludeStanza
+	var newContent string
+	// Use appending mode
+	fileOpenMode := os.O_APPEND
+	if anchorPattern == "" {
+		// If no anchorPattern is provided, append to the end of the file
+		newContent = settingsIncludeStanza
+	} else {
+		// If anchorPattern is provided, find its position
+		anchorPattern := regexp.MustCompile(anchorPattern)
+		index := anchorPattern.FindStringIndex(string(contents))
+		if index == nil {
+			// If anchorPattern not found, append to the end of the file
+			newContent = settingsIncludeStanza
+		} else {
+			// Split the file content at the anchorPattern and insert the settingsIncludeStanza
+			part1 := string(contents[:index[0]])
+			part2 := string(contents[index[0]:])
+			newContent = part1 + settingsIncludeStanza + part2
+			// Use truncating mode
+			fileOpenMode = os.O_TRUNC
+		}
+	}
+
+	// The file is not empty, open it for appending/truncating
+	file, err := os.OpenFile(app.SiteSettingsPath, os.O_RDWR|fileOpenMode, 0644)
 	if err != nil {
 		return err
 	}
 	defer util.CheckClose(file)
 
-	_, err = file.Write([]byte(settingsIncludeStanza))
+	_, err = file.Write([]byte(newContent))
 	if err != nil {
 		return err
 	}
