@@ -32,7 +32,7 @@ http:
       tls: true
       {{ else }}
       tls:
-        certResolver: acmeresolver
+        certResolver: acme-tlsChallenge
       {{ end }}{{ end }}
     {{ end }}
 

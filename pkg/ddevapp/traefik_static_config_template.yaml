@@ -11,9 +11,8 @@ api:
 core:
   defaultRuleSyntax: v2
 
-{{ if .UseLetsEncrypt }}
 certificatesResolvers:
-  acmeresolver:
+  acme-tlsChallenge:
     acme:
       email: {{ .LetsEncryptEmail }}
       # To avoid Let's Encrypt rate-limiting, remove the ddev-generated line at top
@@ -23,7 +22,6 @@ certificatesResolvers:
       #caServer: https://acme-staging-v02.api.letsencrypt.org/directory
       storage: /mnt/ddev-global-cache/traefik/acme.json
       tlsChallenge: {}
-{{ end }}
 
 providers:
   file:
