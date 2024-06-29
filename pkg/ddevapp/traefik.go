@@ -230,7 +230,7 @@ func pushGlobalTraefikConfig() error {
 
 	// sourceConfigDir for static config
 	sourceConfigDir = globalTraefikDir
-	traefikYamlFile = filepath.Join(sourceConfigDir, "static_config.yaml")
+	traefikYamlFile = filepath.Join(sourceConfigDir, ".static_config.yaml")
 
 	f, err := os.Create(traefikYamlFile)
 	if err != nil {

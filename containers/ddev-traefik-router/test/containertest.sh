@@ -52,7 +52,7 @@ set -x
 docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ${SCRIPT_DIR}/testdata:/mnt/testdata -v ddev-global-cache:/mnt/ddev-global-cache ${DOCKER_IMAGE} bash -c "mkdir -p /mnt/ddev-global-cache/{mkcert,traefik} && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache && cp /mnt/testdata/* /mnt/ddev-global-cache/traefik"
 
 # Run the router alone
-docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
+docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v ddev-global-cache:/mnt/ddev-global-cache --name ${CONTAINER_NAME} -d $DOCKER_IMAGE --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml
 
 if ! containercheck; then
     printf "=============== FAIL: $CONTAINER_NAME failed to become ready ====================\n"
