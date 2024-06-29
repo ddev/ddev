@@ -29,7 +29,7 @@ Here’s how to try it for yourself:
 
     `unable to generate a certificate for the domains [some.example.com]: acme: error: 429 :: POST :: https://acme-v02.api.letsencrypt.org/acme/new-order :: urn:ietf:params:acme:error:rateLimited :: Error creating new order :: too many failed authorizations recently: see https://letsencrypt.org/docs/failed-validation-limit/`
 
-You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs ddev-router` to see Let’s Encrypt activity.)
+You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs -f ddev-router` to see Let’s Encrypt activity.)
 
 ## Additional Server Setup
 
@@ -71,7 +71,6 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     WantedBy=multi-user.target
     ```
 
-* You’ll need to regularly renew the Let’s Encrypt certificates. This is often done on a system reboot, but that may not be soon enough. A cron with the command `docker exec ddev-router bash -c "certbot renew && nginx -s reload"` will do the renewals.
 * You’ll likely want to turn off PHP errors to screen in a `.ddev/php/noerrors.ini`:
 
     ```ini
