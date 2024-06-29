@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -197,22 +198,22 @@ func pushGlobalTraefikConfig() error {
 		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
 
-	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")
+	staticConfigFilepath := filepath.Join(sourceConfigDir, "default_config.yaml")
 	sigExists = true
 	// TODO: Systematize this checking-for-signature, allow an arg to skip if empty
-	fi, err := os.Stat(traefikYamlFile)
+	fi, err := os.Stat(staticConfigFilepath)
 	// Don't use simple fileutil.FileExists() because of the danger of an empty file
 	if err == nil && fi.Size() > 0 {
 		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
+		sigExists, err = fileutil.FgrepStringInFile(staticConfigFilepath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}
 	}
 	if !sigExists {
-		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
+		util.Debug("Not creating %s because it exists and is managed by user", staticConfigFilepath)
 	} else {
-		f, err := os.Create(traefikYamlFile)
+		f, err := os.Create(staticConfigFilepath)
 		if err != nil {
 			util.Failed("Failed to create Traefik config file: %v", err)
 		}
@@ -228,22 +229,43 @@ func pushGlobalTraefikConfig() error {
 		}
 	}
 
-	// sourceConfigDir for static config
-	sourceConfigDir = globalTraefikDir
-	traefikYamlFile = filepath.Join(sourceConfigDir, ".static_config.yaml")
+	staticConfigFilepath = filepath.Join(globalTraefikDir, ".static_config.yaml")
 
-	f, err := os.Create(traefikYamlFile)
+	staticConfigFile, err := os.Create(staticConfigFilepath)
 	if err != nil {
 		util.Failed("Failed to create Traefik config file: %v", err)
 	}
+	defer staticConfigFile.Close()
 	t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 	if err != nil {
 		return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
 	}
 
-	err = t.Execute(f, templateData)
+	err = t.Execute(staticConfigFile, templateData)
 	if err != nil {
-		return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
+		return fmt.Errorf("could not parse traefik_static_config_template.yaml with templatedate='%v':: %v", templateData, err)
+	}
+
+	// Append contents of globalTraefikDir's `static_config.*.yaml` to the config file
+	extraStaticConfigFiles, err := fileutil.GlobFilenames(globalTraefikDir, "static_config.*.yaml")
+	if err != nil {
+		return fmt.Errorf("could not GlobFilenames(%s, static_config.*.yaml): %v", globalTraefikDir, err)
+	}
+
+	for _, extraFile := range extraStaticConfigFiles {
+		_, err = staticConfigFile.Write([]byte(fmt.Sprintf("\n# Appended content from file '%s'\n", extraFile)))
+		if err != nil {
+			return fmt.Errorf("could not append content from %s: %v", extraFile, err)
+		}
+		s, err := fileutil.ReadFileIntoString(extraFile)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(staticConfigFile, strings.NewReader(s))
+		if err != nil {
+			return err
+		}
+
 	}
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
