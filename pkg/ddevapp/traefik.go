@@ -231,33 +231,19 @@ func pushGlobalTraefikConfig() error {
 	// sourceConfigDir for static config
 	sourceConfigDir = globalTraefikDir
 	traefikYamlFile = filepath.Join(sourceConfigDir, "static_config.yaml")
-	sigExists = true
-	// TODO: Systematize this checking-for-signature, allow an arg to skip if empty
-	fi, err = os.Stat(traefikYamlFile)
-	// Don't use simple fileutil.FileExists() because of the danger of an empty file
-	if err == nil && fi.Size() > 0 {
-		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
-		if err != nil {
-			return err
-		}
-	}
-	if !sigExists {
-		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
-	} else {
-		f, err := os.Create(traefikYamlFile)
-		if err != nil {
-			util.Failed("Failed to create Traefik config file: %v", err)
-		}
-		t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
-		if err != nil {
-			return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
-		}
 
-		err = t.Execute(f, templateData)
-		if err != nil {
-			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
-		}
+	f, err := os.Create(traefikYamlFile)
+	if err != nil {
+		util.Failed("Failed to create Traefik config file: %v", err)
+	}
+	t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
+	if err != nil {
+		return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
+	}
+
+	err = t.Execute(f, templateData)
+	if err != nil {
+		return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
 	}
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
