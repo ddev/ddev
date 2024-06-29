@@ -18,7 +18,7 @@ http:
       service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
       tls: false
       # middlewares:
-      #   - "redirectHttps"
+      #   - "{{ $.App.Name }}-redirectHttps"
     {{ end }}{{ end }}
     {{ range $s := .RoutingTable }}
       {{- if $s.HTTPS -}}
@@ -40,7 +40,7 @@ http:
     {{ end }}
 
   middlewares:
-    redirectHttps:
+    {{ $.App.Name }}-redirectHttps:
       redirectScheme:
         scheme: https
         permanent: true
