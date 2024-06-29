@@ -1,4 +1,7 @@
 #ddev-generated
+# If you remove the ddev-generated line above you
+# are responsible for maintaining this file. DDEV will not then
+# update it, for example if you add `additional_hostnames`, etc.
 
 http:
   routers:
