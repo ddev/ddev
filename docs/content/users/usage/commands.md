@@ -477,6 +477,22 @@ Example:
 ddev debug testcleanup
 ```
 
+### `debug version-constraint`
+
+Checks if the current version of DDEV meets the given [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+
+Example:
+
+```shell
+# Check the semver constraint
+ddev debug version-constraint ">=v1.23.0-alpha1"
+
+# It's useful in add-ons
+if [ "$(ddev debug version-constraint ">=v1.23.3" 2>/dev/null)" != "true" ]; then
+    echo "This add-on requires DDEV v1.23.3 or higher, please upgrade." && exit 2
+fi
+```
+
 ## `delete`
 
 Remove all information, including the database, for an existing project.
