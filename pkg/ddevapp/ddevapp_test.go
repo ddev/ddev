@@ -2126,7 +2126,7 @@ func TestWebserverDBClient(t *testing.T) {
 		startErr := app.Start()
 		require.NoError(t, startErr)
 
-		for _, tool := range []string{"mysql", "mysqldump"} {
+		for _, tool := range []string{"mysql", "mysqladmin", "mysqldump"} {
 			cmd := tool + " --version"
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Cmd: cmd,
