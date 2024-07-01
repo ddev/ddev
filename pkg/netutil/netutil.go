@@ -46,9 +46,21 @@ func IsPortActive(port string) bool {
 // IsLocalIP returns true if the provided IP address is
 // assigned to the local computer
 func IsLocalIP(ipAddress string) bool {
-	localIPs, err := GetLocalIPs()
+	dockerIP, err := dockerutil.GetDockerIP()
+	
 	if err != nil {
-		fmt.Printf("Error fetching local IPs: %v\n", err)
+		util.Warning("Failed to get Docker IP address: %v", err)
+		return false
+	}
+	
+	if ipAddress == dockerIP {
+		return true
+	}
+	
+	localIPs, err := GetLocalIPs()
+
+	if err != nil {
+		util.Warning("Failed to get local IPs: %v", err)
 		return false
 	}
 
