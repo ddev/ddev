@@ -1,7 +1,6 @@
 package netutil
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"slices"
@@ -47,16 +46,16 @@ func IsPortActive(port string) bool {
 // assigned to the local computer
 func IsLocalIP(ipAddress string) bool {
 	dockerIP, err := dockerutil.GetDockerIP()
-	
+
 	if err != nil {
 		util.Warning("Failed to get Docker IP address: %v", err)
 		return false
 	}
-	
+
 	if ipAddress == dockerIP {
 		return true
 	}
-	
+
 	localIPs, err := GetLocalIPs()
 
 	if err != nil {
