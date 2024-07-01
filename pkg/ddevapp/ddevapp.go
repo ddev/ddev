@@ -135,8 +135,8 @@ type DdevApp struct {
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
-	EphemeralRouterHTTPPort   string
-	EphemeralRouterHTTPSPort  string
+	EphemeralRouterHTTPPort   string                 `yaml:"-"`
+	EphemeralRouterHTTPSPort  string                 `yaml:"-"`
 }
 
 // Global variable that's set from --skip-hooks global flag.
@@ -519,26 +519,9 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 		port = app.RouterHTTPPort
 	}
 
-	// Check if port is available
-	if RouterPortIsAvailable(port) {
-		return port
-	} else {
-		if app.EphemeralRouterHTTPPort != "" {
-			return app.EphemeralRouterHTTPPort
-		} else {
-			// Find an ephemeral port and use it
-			ephemeralPort, ok := FindEphemeralRouterPort(8080, 8130)
-			if ok {
-				app.EphemeralRouterHTTPPort = fmt.Sprint(ephemeralPort)
-				util.Warning("HTTP port %s is not available, using %s instead.", port, app.EphemeralRouterHTTPPort)
-				port = app.EphemeralRouterHTTPPort
-			} else {
-				// We could not find any available port. Return original port
-				// and an error will be thrown later on when runnning CheckRouterPorts
-			}
-		}
+	if app.EphemeralRouterHTTPPort != "" {
+		port = app.EphemeralRouterHTTPPort
 	}
-
 	return port
 }
 
@@ -550,26 +533,9 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 		port = app.RouterHTTPSPort
 	}
 
-	// Check if port is available
-	if RouterPortIsAvailable(port) {
-		return port
-	} else {
-		if app.EphemeralRouterHTTPSPort != "" {
-			return app.EphemeralRouterHTTPSPort
-		} else {
-			// Find an ephemeral port and use it
-			ephemeralPort, ok := FindEphemeralRouterPort(8443, 8493)
-			if ok {
-				app.EphemeralRouterHTTPSPort = fmt.Sprint(ephemeralPort)
-				util.Warning("HTTP port %s is not available, using %s instead.", port, app.EphemeralRouterHTTPSPort)
-				port = app.EphemeralRouterHTTPSPort
-			} else {
-				// We could not find any available port. Return original port
-				// and an error will be thrown later on when runnning CheckRouterPorts
-			}
-		}
+	if app.EphemeralRouterHTTPSPort != "" {
+		port = app.EphemeralRouterHTTPSPort
 	}
-
 	return port
 }
 
@@ -2214,6 +2180,30 @@ func (app *DdevApp) DockerEnv() {
 	if app.Database.Type == "postgres" {
 		// 'postgres' & 'postgresql' are both valid, but we'll go with the shorter one.
 		dbFamily = "postgres"
+	}
+
+	// Find out if ephemeral router ports are in use.
+	status, _ := GetRouterStatus()
+	if status == "healthy" {
+		c, err := dockerutil.InspectContainer(RouterProjectName)
+		if err == nil {
+			for _, e := range c.Config.Env {
+				if strings.Contains(e, "DDEV_EPHEMERAL_ROUTER_HTTP_PORT") {
+					parts := strings.Split(e, "=")
+					if len(parts) == 2 {
+						app.EphemeralRouterHTTPPort = parts[1]
+						util.Warning("Eph HTTP is %s", parts[1])
+					}
+				}
+				if strings.Contains(e, "DDEV_EPHEMERAL_ROUTER_HTTPS_PORT") {
+					parts := strings.Split(e, "=")
+					if len(parts) == 2 {
+						app.EphemeralRouterHTTPSPort = parts[1]
+						util.Warning("Eph HTTPS is %s", parts[1])
+					}
+				}
+			}
+		}
 	}
 
 	envVars := map[string]string{
