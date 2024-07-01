@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/ddev/ddev/pkg/nodeps"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDebugCapabilitiesCmd tests that ddev debug capabilities works
@@ -23,7 +23,7 @@ func TestDebugCapabilitiesCmd(t *testing.T) {
 
 	jsonCapabilities := make(map[string]interface{})
 	err = json.Unmarshal([]byte(out), &jsonCapabilities)
-	require.NoError(t, err, "failed to unmarshal json capabilities '%v', out")
+	require.NoError(t, err, "failed to unmarshal json capabilities '%v'", out)
 	caps, ok := jsonCapabilities["raw"]
 	require.True(t, ok, "raw section wasn't found in jsonCapabilities: %v", out)
 	sArr := []string{}
