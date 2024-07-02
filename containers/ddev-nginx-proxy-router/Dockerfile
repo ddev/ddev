@@ -2,9 +2,9 @@ FROM nginx:1.20.1
 
 ENV MKCERT_VERSION=v1.4.6
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV DOCKER_GEN_VERSION 0.7.7
-ENV DOCKER_HOST unix:///tmp/docker.sock
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DOCKER_GEN_VERSION=0.7.7
+ENV DOCKER_HOST=unix:///tmp/docker.sock
 
 ARG TARGETARCH
 

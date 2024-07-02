@@ -66,8 +66,8 @@ ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV DRUSH_VERSION=8.4.12
 ENV NODE_VERSION=20
 # composer normally screams about running as root, we don't need that.
-ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_PROCESS_TIMEOUT 2000
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_PROCESS_TIMEOUT=2000
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while
 # BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
