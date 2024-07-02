@@ -342,3 +342,50 @@ func TestUseEphemeralPort(t *testing.T) {
 	require.Equal(t, fmt.Sprint(ephemeralHttpPort), app.GetRouterHTTPPort())
 	require.Equal(t, fmt.Sprint(ephemeralHttpsPort), app.GetRouterHTTPSPort())
 }
+
+func TestRouterPort(t *testing.T) {
+	assert := asrt.New(t)
+
+	origGlobalHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
+	origGlobalHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8080"
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8443"
+
+	fmt.Print("Number of test sites is ", len(TestSites))
+
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = origGlobalHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origGlobalHTTPSPort
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+	})
+
+	l0, err := net.Listen("tcp", "127.0.0.1:"+globalconfig.DdevGlobalConfig.RouterHTTPPort)
+	require.NoError(t, err)
+	defer l0.Close()
+	l1, err := net.Listen("tcp", "127.0.0.1:"+globalconfig.DdevGlobalConfig.RouterHTTPSPort)
+	require.NoError(t, err)
+	defer l1.Close()
+
+	app.Start()
+
+	site = TestSites[1]
+	app2, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = origGlobalHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origGlobalHTTPSPort
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+	})
+	app2.Start()
+}
