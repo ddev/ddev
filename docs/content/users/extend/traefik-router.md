@@ -10,7 +10,7 @@ DDEV uses Traefik by default unless you configure the (deprecated) `nginx-proxy`
 
 Before continuing, it's important to note that **very few users ever experiment with custom Traefik configuration**. This is an advanced topic, and the vast majority of users never need to know anything about it, as DDEV generates all of the necessary configuration. An understanding of Traefik configuration is required.
 
-You can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/). (DDEV uses the Traefik `v2` rule syntax by default, `defaultRuleSyntax: v2`. However, any custom router configuration can use `ruleSyntax: v3` to override this.)
+You can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/getting-started/configuration-overview/). (DDEV uses the Traefik `v2` rule syntax by default, `defaultRuleSyntax: v2`. However, any custom router configuration can use `ruleSyntax: v3` to override this.)
 
 All Traefik configuration uses the *file* provider, not the *Docker* provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
 
@@ -51,7 +51,9 @@ When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#p
 
 ## Router `docker-compose` Customization
 
-The default configuration for the router is found in `~/.ddev/.router-compose.yaml`. It is quite unusual to override this configuration, but it can be overridden in the same way project configuration can be overridden (project `.ddev/docker-compose.*.yaml`). You can create a `~/.ddev/router-compose.*.yaml`. For example, as `~/.ddev/router-compose.cloudflare.yaml` might contain environment variables like this:
+The default configuration for the router is found in `~/.ddev/.router-compose.yaml`. It is quite unusual to override this configuration, but it can be overridden in the same way project configuration can be overridden (project `.ddev/docker-compose.*.yaml`). These ultimately get merged into `~/.ddev/.router-compose-full.yaml`
+
+You can create a `~/.ddev/router-compose.*.yaml`. For example, as `~/.ddev/router-compose.cloudflare.yaml` might contain environment variables like this:
 
 ```yaml
 services:

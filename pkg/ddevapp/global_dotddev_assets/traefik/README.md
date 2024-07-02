@@ -18,4 +18,4 @@ adding `static_config.*.yaml` files. For example, a `static_config.test.yaml` wi
 
 would be appended to the ``.static_config.yaml`
 
-A more significant example (a Traefik plugin) is shown in the `static_config.plugin.yaml.example`.
+A more significant example (a Traefik plugin) is shown in the `static_config.fail2ban.yaml.example`.
