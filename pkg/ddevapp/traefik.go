@@ -198,22 +198,22 @@ func pushGlobalTraefikConfig() error {
 		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
 
-	staticConfigFilepath := filepath.Join(sourceConfigDir, "default_config.yaml")
+	defaultConfigPath := filepath.Join(sourceConfigDir, "default_config.yaml")
 	sigExists = true
 	// TODO: Systematize this checking-for-signature, allow an arg to skip if empty
-	fi, err := os.Stat(staticConfigFilepath)
+	fi, err := os.Stat(defaultConfigPath)
 	// Don't use simple fileutil.FileExists() because of the danger of an empty file
 	if err == nil && fi.Size() > 0 {
 		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-		sigExists, err = fileutil.FgrepStringInFile(staticConfigFilepath, nodeps.DdevFileSignature)
+		sigExists, err = fileutil.FgrepStringInFile(defaultConfigPath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}
 	}
 	if !sigExists {
-		util.Debug("Not creating %s because it exists and is managed by user", staticConfigFilepath)
+		util.Debug("Not creating %s because it exists and is managed by user", defaultConfigPath)
 	} else {
-		f, err := os.Create(staticConfigFilepath)
+		f, err := os.Create(defaultConfigPath)
 		if err != nil {
 			util.Failed("Failed to create Traefik config file: %v", err)
 		}
@@ -229,9 +229,9 @@ func pushGlobalTraefikConfig() error {
 		}
 	}
 
-	staticConfigFilepath = filepath.Join(globalTraefikDir, ".static_config.yaml")
+	staticConfigPath := filepath.Join(globalTraefikDir, ".static_config.yaml")
 
-	staticConfigFile, err := os.Create(staticConfigFilepath)
+	staticConfigFile, err := os.Create(staticConfigPath)
 	if err != nil {
 		util.Failed("Failed to create Traefik config file: %v", err)
 	}
