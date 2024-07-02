@@ -1139,6 +1139,13 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		}
 	}
 
+	if extraContent != "" {
+		contents = contents + fmt.Sprintf(`
+### DDEV-injected extra content
+%s
+`, extraContent)
+	}
+
 	if extraPackages != nil {
 		contents = contents + `
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
@@ -1173,13 +1180,6 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 ### DDEV-injected composer update
 RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
-	}
-
-	if extraContent != "" {
-		contents = contents + fmt.Sprintf(`
-### DDEV-injected extra content
-%s
-`, extraContent)
 	}
 
 	// If there are user dockerfiles, appends their contents
