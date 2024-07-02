@@ -1220,14 +1220,14 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 		}
 	}
 
-	// Some installed php packages (php-gmp, php-dev) can change the permissions of /run/php, which leads to errors like:
-	// Unable to create the PID file (/run/php/php-fpm.pid).: Permission denied (13)
-	// See https://github.com/ddev/ddev/issues/5898
-	// Place this at the very end of the Dockerfile
+	// Some packages have default folder/file permissions described in /usr/lib/tmpfiles.d/*.conf files.
+	// For example, when you upgrade systemd, it sets 755 for /var/log.
+	// This may cause problems with previously set permissions when installing/upgrading packages.
+	// Place this at the very end of the Dockerfile.
 	if strings.Contains(fullpath, "webimageBuild") {
 		contents = contents + fmt.Sprintf(`
-### DDEV-injected php folder permission fix
-RUN chmod 777 /run/php
+### DDEV-injected folders permission fix
+RUN chmod 777 /run/php /var/log
 `)
 	}
 
