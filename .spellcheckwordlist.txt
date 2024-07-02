@@ -435,6 +435,8 @@ mapall
 mariabackup
 mariadb
 memcached
+middleware
+middlewares
 misconfigured
 mkcert
 mkdir
