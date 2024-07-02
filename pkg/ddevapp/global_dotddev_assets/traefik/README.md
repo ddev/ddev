@@ -16,6 +16,6 @@ adding `static_config.*.yaml` files. For example, a `static_config.test.yaml` wi
 # there is nothing here
 ```
 
-would be appended to the ``.static_config.yaml`
+would be appended to the `.static_config.yaml`
 
 A more significant example (a Traefik plugin) is shown in the `static_config.fail2ban.yaml.example`.
