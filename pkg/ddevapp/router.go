@@ -137,19 +137,51 @@ func generateRouterCompose() (string, error) {
 
 	uid, gid, username := util.GetContainerUIDGid()
 
+	// Check for 80 and 443 ports availability
+	var ephemeralHttp, ephemeralHttps bool
+	var ephemeralHttpPort, ephemeralHttpsPort string
+	for i := range exposedPorts {
+		portPtr := &exposedPorts[i]
+		if *portPtr == globalconfig.DdevGlobalConfig.RouterHTTPPort {
+			if !RouterPortIsAvailable(*portPtr) {
+				httpPort, ok := FindEphemeralRouterPort(8080, 8130)
+				if ok {
+					ephemeralHttp = true
+					ephemeralHttpPort = fmt.Sprint(httpPort)
+					util.Warning("Port %s is occupied. Using %s instead.", globalconfig.DdevGlobalConfig.RouterHTTPPort, ephemeralHttpPort)
+					*portPtr = ephemeralHttpPort
+				}
+			}
+		} else if *portPtr == globalconfig.DdevGlobalConfig.RouterHTTPSPort {
+			if !RouterPortIsAvailable(*portPtr) {
+				httpsPort, ok := FindEphemeralRouterPort(8443, 8493)
+				if ok {
+					ephemeralHttps = true
+					ephemeralHttpsPort = fmt.Sprint(httpsPort)
+					util.Warning("Port %s is occupied. Using %s instead.", globalconfig.DdevGlobalConfig.RouterHTTPSPort, ephemeralHttpsPort)
+					*portPtr = ephemeralHttpsPort
+				}
+			}
+		}
+	}
+
 	templateVars := map[string]interface{}{
-		"Username":                   username,
-		"UID":                        uid,
-		"GID":                        gid,
-		"router_image":               ddevImages.GetRouterImage(),
-		"ports":                      exposedPorts,
-		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
-		"dockerIP":                   dockerIP,
-		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
-		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
-		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
-		"Router":                     globalconfig.DdevGlobalConfig.Router,
-		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
+		"Username":                     username,
+		"UID":                          uid,
+		"GID":                          gid,
+		"router_image":                 ddevImages.GetRouterImage(),
+		"ports":                        exposedPorts,
+		"router_bind_all_interfaces":   globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"dockerIP":                     dockerIP,
+		"disable_http2":                globalconfig.DdevGlobalConfig.DisableHTTP2,
+		"letsencrypt":                  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		"letsencrypt_email":            globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		"Router":                       globalconfig.DdevGlobalConfig.Router,
+		"TraefikMonitorPort":           globalconfig.DdevGlobalConfig.TraefikMonitorPort,
+		"DdevEphemeralRouterHttp":      ephemeralHttp,
+		"DdevEphemeralRouterHttps":     ephemeralHttps,
+		"DdevEphemeralRouterHttpPort":  ephemeralHttpPort,
+		"DdevEphemeralRouterHttpsPort": ephemeralHttpsPort,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -337,7 +369,9 @@ func CheckRouterPorts() error {
 			continue
 		}
 		if netutil.IsPortActive(port) {
-			return fmt.Errorf("port %s is already in use", port)
+			if port != globalconfig.DdevGlobalConfig.RouterHTTPPort && port != globalconfig.DdevGlobalConfig.RouterHTTPSPort {
+				return fmt.Errorf("port %s is already in use", port)
+			}
 		}
 	}
 	return nil
