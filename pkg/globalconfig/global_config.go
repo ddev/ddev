@@ -223,10 +223,6 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
 
-	if DdevGlobalConfig.IsTraefikRouter() && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
-		return fmt.Errorf("use-letsencrypt is not directly supported with Traefik. But it can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
-	}
-
 	return nil
 }
 

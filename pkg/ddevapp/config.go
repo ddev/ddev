@@ -723,6 +723,20 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
+	// Remove old global traefik configuuration.
+	for _, f := range []string{"static_config.yaml"} {
+		traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+
+		item := filepath.Join(traefikGlobalConfigPath, f)
+		signatureFound, err := fileutil.FgrepStringInFile(item, nodeps.DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(item)
+			if err != nil {
+				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", item, err)
+			}
+		}
+	}
+
 	// Remove old .global_commands directory
 	legacyCommandDir := app.GetConfigPath(".global_commands")
 	if fileutil.IsDirectory(legacyCommandDir) {
