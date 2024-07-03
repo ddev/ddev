@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
@@ -15,7 +16,6 @@ import (
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 )
@@ -213,7 +213,7 @@ func suggestAddonForUnknownCommand(command string) {
 	}
 	var matches []string
 	for _, repo := range repos {
-		if fuzzy.Match(command, *repo.Name) {
+		if strings.Contains(command, strings.TrimPrefix(*repo.Name, "ddev-")) {
 			matches = append(matches, *repo.FullName)
 		}
 	}

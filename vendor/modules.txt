@@ -166,9 +166,6 @@ github.com/jedib0t/go-pretty/v6/text
 # github.com/joho/godotenv v1.5.1
 ## explicit; go 1.12
 github.com/joho/godotenv
-# github.com/lithammer/fuzzysearch v1.1.8
-## explicit; go 1.15
-github.com/lithammer/fuzzysearch/fuzzy
 # github.com/magefile/mage v1.15.0
 ## explicit; go 1.12
 github.com/magefile/mage/mg
