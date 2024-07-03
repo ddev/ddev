@@ -17,7 +17,7 @@ var WebTag = "v1.23.3" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.23.3"
+var BaseDBTag = "20240703_fix_xtrabackup"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.3"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20240616_traefik_3"
