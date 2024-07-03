@@ -433,6 +433,16 @@ func TemplateStringToFile(content string, vars map[string]interface{}, targetFil
 	return nil
 }
 
+// GlobFilenames looks in dirPath for files matching globPattern
+// like "static_config.*.yaml" for example
+func GlobFilenames(dirPath string, globPattern string) ([]string, error) {
+	matchingFiles, err := filepath.Glob(filepath.Join(dirPath, globPattern))
+	if err != nil {
+		return nil, err
+	}
+	return matchingFiles, nil
+}
+
 // CheckSignatureOrNoFile checks to make sure that a file or directory either doesn't exist
 // or has #ddev-generated in its contents (so it can be overwritten)
 // returns nil if overwrite is OK (if sig found or no file existing)
