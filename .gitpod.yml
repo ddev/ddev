@@ -1,4 +1,4 @@
-image: ddev/ddev-gitpod-base:20240614
+image: ddev/ddev-gitpod-base:20240702
 tasks:
   - name: build-run
     init: |
