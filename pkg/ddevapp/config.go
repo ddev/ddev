@@ -1060,7 +1060,7 @@ RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg ma
 `
 		}
 		extraDBContent = extraDBContent + `
-ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
+ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
 RUN chmod ugo+rx /postgres_healthcheck.sh
 RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
