@@ -8,10 +8,10 @@ FROM ddev/ddev-php-base:v1.23.3 as ddev-webserver-base
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
 
-ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
+ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
-ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV CAROOT=/mnt/ddev-global-cache/mkcert
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while
 # BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
@@ -58,7 +58,7 @@ RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariad
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
 FROM ddev-webserver-base as ddev-webserver-dev-base
-ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
@@ -179,18 +179,18 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
 FROM scratch as ddev-webserver
 ENV PHP_DEFAULT_VERSION="8.2"
-ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
+ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
-ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
-ENV DEBIAN_FRONTEND noninteractive
-ENV TERM xterm
-ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
-ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm
+ENV MH_SMTP_BIND_ADDR=127.0.0.1:1025
+ENV BASH_ENV=/etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
@@ -205,7 +205,7 @@ CMD ["/start.sh"]
 ### Build ddev-webserver-prod-base from ddev-webserver-base
 ### This image is aimed at actual hardened production environments
 FROM ddev-webserver-base as ddev-webserver-prod-base
-ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 ARG TARGETPLATFORM
 
@@ -289,18 +289,18 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### (Withut dev features, single layer)
 FROM scratch as ddev-webserver-prod
 ENV PHP_DEFAULT_VERSION="8.2"
-ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
+ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
-ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
-ENV TERM xterm
-ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV TERM=xterm
+ENV BASH_ENV=/etc/bash.nointeractive.bashrc
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
 
 COPY --from=ddev-webserver-prod-base / /
