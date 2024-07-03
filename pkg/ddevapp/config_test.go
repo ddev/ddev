@@ -1449,7 +1449,9 @@ func TestConfigFunctionality(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
-	if !dockerutil.IsColima() {
+	// This isn't very important, and is unusual
+	// On some WSL2 systems (tb-wsldd-05) it works fine locally, can't work in buildkite.
+	if !dockerutil.IsColima() && !nodeps.IsWSL2() {
 		safeURL = "https://127.0.0.1:" + hostHTTPSPort + site.Safe200URIWithExpectation.URI
 		out, _, err = testcommon.GetLocalHTTPResponse(t, safeURL, 60)
 		assert.NoError(err)

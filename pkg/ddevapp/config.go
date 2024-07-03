@@ -1014,6 +1014,14 @@ redirect_stderr=true
 		}
 		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/webextradaemons.conf\n"
 	}
+	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
+	if app.Database.Type == nodeps.MySQL {
+		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
+	}
+	// Some MariaDB versions may have their own client in the ddev-webserver
+	if app.Database.Type == nodeps.MariaDB {
+		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
@@ -1053,7 +1061,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
 	// because that deletes the .dbimageBuild directory
 	if app.Database.Type == nodeps.Postgres {
-		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/db/postgres", app.GetConfigPath(".dbimageBuild"))
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/db/postgres", app.GetConfigPath(".dbimageBuild"), nil)
 		if err != nil {
 			return "", err
 		}
@@ -1111,6 +1119,7 @@ ARG username
 ARG uid
 ARG gid
 ARG DDEV_PHP_VERSION
+ARG DDEV_DATABASE
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
 	// If there are user pre.Dockerfile* files, insert their contents
@@ -1128,6 +1137,13 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 
 			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
 		}
+	}
+
+	if extraContent != "" {
+		contents = contents + fmt.Sprintf(`
+### DDEV-injected extra content
+%s
+`, extraContent)
 	}
 
 	if extraPackages != nil {
@@ -1164,13 +1180,6 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 ### DDEV-injected composer update
 RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
-	}
-
-	if extraContent != "" {
-		contents = contents + fmt.Sprintf(`
-### DDEV-injected extra content
-%s
-`, extraContent)
 	}
 
 	// If there are user dockerfiles, appends their contents
@@ -1211,14 +1220,14 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 		}
 	}
 
-	// Some installed php packages (php-gmp, php-dev) can change the permissions of /run/php, which leads to errors like:
-	// Unable to create the PID file (/run/php/php-fpm.pid).: Permission denied (13)
-	// See https://github.com/ddev/ddev/issues/5898
-	// Place this at the very end of the Dockerfile
+	// Some packages have default folder/file permissions described in /usr/lib/tmpfiles.d/*.conf files.
+	// For example, when you upgrade systemd, it sets 755 for /var/log.
+	// This may cause problems with previously set permissions when installing/upgrading packages.
+	// Place this at the very end of the Dockerfile.
 	if strings.Contains(fullpath, "webimageBuild") {
 		contents = contents + fmt.Sprintf(`
-### DDEV-injected php folder permission fix
-RUN chmod 777 /run/php
+### DDEV-injected folders permission fix
+RUN chmod 777 /run/php /var/log
 `)
 	}
 
@@ -1400,7 +1409,9 @@ func PrepDdevDirectory(app *DdevApp) error {
 		return err
 	}
 
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	// Some of the listed items are wildcards or directories, and if they are, there's an error
+	// opening them and they innately get added to the .gitignore.
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

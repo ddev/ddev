@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"time"
 
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -74,7 +75,7 @@ func List(settings ListCommandSettings) {
 			}
 			router := globalconfig.DdevGlobalConfig.Router
 			t.AppendFooter(table.Row{
-				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), router},
+				"Router", routerStatus, fileutil.ShortHomeJoin(globalconfig.GetGlobalDdevDirLocation()), globalconfig.GetRouterURL(), router},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())

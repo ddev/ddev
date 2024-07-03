@@ -2,6 +2,8 @@
 
 // phpcs:ignoreFile
 
+// DDEV-created Drupal 11 settings.php from upstream default.settings.php
+
 /**
  * @file
  * Drupal site-specific configuration file.
@@ -144,7 +146,7 @@ $databases = [];
  * in deadlocks, the other two options are 'READ UNCOMMITTED' and 'SERIALIZABLE'.
  * They are available but not supported; use them at your own risk. For more
  * info:
- * https://dev.mysql.com/doc/refman/5.7/en/innodb-transaction-isolation-levels.html
+ * https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html
  *
  * On your settings.php, change the isolation level:
  * @code
@@ -181,8 +183,8 @@ $databases = [];
  *
  * WARNING: The above defaults are designed for database portability. Changing
  * them may cause unexpected behavior, including potential data loss. See
- * https://www.drupal.org/developing/api/database/configuration for more
- * information on these defaults and the potential issues.
+ * https://www.drupal.org/docs/8/api/database-api/database-configuration for
+ * more information on these defaults and the potential issues.
  *
  * More details can be found in the constructor methods for each driver:
  * - \Drupal\mysql\Driver\Database\mysql\Connection::__construct()
@@ -723,15 +725,6 @@ $settings['container_yamls'][] = $app_root . '/' . $site_path . '/services.yml';
  * to test a service container that throws an exception.
  */
 # $settings['container_base_class'] = '\Drupal\Core\DependencyInjection\Container';
-
-/**
- * Override the default yaml parser class.
- *
- * Provide a fully qualified class name here if you would like to provide an
- * alternate implementation YAML parser. The class must implement the
- * \Drupal\Component\Serialization\SerializationInterface interface.
- */
-# $settings['yaml_parser_class'] = NULL;
 
 /**
  * Trusted host configuration.

@@ -2,14 +2,17 @@ package fileutil
 
 import (
 	"embed"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
+
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // CopyEmbedAssets copies files in the named embed.FS sourceDir to the local targetDir (full path)
-func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string) error {
+// Some files may be excluded if they are in the excludedFiles list and contain #ddev-generated.
+func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string, excludedFiles []string) error {
 	subdirs, err := fsys.ReadDir(sourceDir)
 	if err != nil {
 		return err
@@ -17,7 +20,7 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string) error {
 	for _, d := range subdirs {
 		sourcePath := path.Join(sourceDir, d.Name())
 		if d.IsDir() {
-			err = CopyEmbedAssets(fsys, path.Join(sourceDir, d.Name()), path.Join(targetDir, d.Name()))
+			err = CopyEmbedAssets(fsys, path.Join(sourceDir, d.Name()), path.Join(targetDir, d.Name()), excludedFiles)
 			if err != nil {
 				return err
 			}
@@ -36,6 +39,16 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string) error {
 				err = os.MkdirAll(filepath.Dir(localPath), 0755)
 				if err != nil {
 					return err
+				}
+				if sigFound {
+					// If the file already exists and has the same content, don't overwrite it.
+					if existingContent, err := os.ReadFile(localPath); err == nil && string(existingContent) == string(content) {
+						continue
+					}
+					// If the file already exists and is excluded, don't overwrite it.
+					if excludedFiles != nil && slices.Contains(excludedFiles, localPath) {
+						continue
+					}
 				}
 				err = os.WriteFile(localPath, content, 0755)
 				if err != nil {

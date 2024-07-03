@@ -137,6 +137,10 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
+// Global variable that's set from --skip-hooks global flag.
+// If true, all hooks would be skiped.
+var SkipHooks = false
+
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
 	return strings.ToLower(app.Type)
@@ -563,7 +567,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	if err != nil {
 		return err
 	}
-	err = os.Chmod(dbPath, 0777)
+	err = util.Chmod(dbPath, 0777)
 	if err != nil {
 		return err
 	}
@@ -711,11 +715,11 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		}
 
 		// Case for reading from file
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 
 		// Alternate case where we are reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 		}
 
 	case nodeps.Postgres:
@@ -782,7 +786,7 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 		targetDB = "db"
 	}
 
-	exportCmd := "mysqldump " + targetDB
+	exportCmd := "mysqldump " + targetDB + nodeps.MySQLRemoveDeprecatedMessage
 	if app.Database.Type == "postgres" {
 		exportCmd = "pg_dump -U db " + targetDB
 	}
@@ -1004,6 +1008,10 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 
 // ProcessHooks executes Tasks defined in Hooks
 func (app *DdevApp) ProcessHooks(hookName string) error {
+	if SkipHooks {
+		output.UserOut.Debugf("Skipping the execution of %s hook...", hookName)
+		return nil
+	}
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Debugf("Executing %s hook...", hookName)
 	}
@@ -1287,7 +1295,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 	// db_snapshots gets mounted into container, may have different user/group, so need 777
-	err = os.Chmod(app.GetConfigPath("db_snapshots"), 0777)
+	err = util.Chmod(app.GetConfigPath("db_snapshots"), 0777)
 	if err != nil {
 		return err
 	}
@@ -1700,7 +1708,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		}
 
 		if fileutil.FileExists(configPath) {
-			err = os.Chmod(configPath, 0666)
+			err = util.Chmod(configPath, 0666)
 			if err != nil {
 				return err
 			}
@@ -1722,7 +1730,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		if err != nil {
 			return err
 		}
-		err = os.Chmod(configPath, 0666)
+		err = util.Chmod(configPath, 0666)
 		if err != nil {
 			return err
 		}
@@ -2903,6 +2911,22 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
+// GetHostWorkingDir will determine the appropriate working directory for the service on the host side
+func (app *DdevApp) GetHostWorkingDir(service string, dir string) string {
+	// We have a corresponding host working_dir for the "web" service only
+	if service != "web" {
+		return ""
+	}
+	if dir == "" && app.WorkingDir != nil {
+		dir = app.WorkingDir[service]
+	}
+	containerWorkingDirPrefix := strings.TrimSuffix(app.GetAbsAppRoot(true), "/") + "/"
+	if !strings.HasPrefix(dir, containerWorkingDirPrefix) {
+		return ""
+	}
+	return filepath.Join(app.GetAbsAppRoot(false), strings.TrimPrefix(dir, containerWorkingDirPrefix))
+}
+
 // GetNFSMountVolumeName returns the Docker volume name of the nfs mount volume
 func (app *DdevApp) GetNFSMountVolumeName() string {
 	// This is lowercased because the automatic naming in docker-compose v1/2
@@ -3013,7 +3037,7 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

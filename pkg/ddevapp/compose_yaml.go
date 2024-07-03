@@ -1,11 +1,12 @@
 package ddevapp
 
 import (
+	"os"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"gopkg.in/yaml.v3"
-	"os"
-	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -22,6 +23,15 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 		return err
 	}
 	defer util.CheckClose(f)
+
+	// Create a host working_dir for the web service beforehand.
+	// Otherwise, Docker will create it as root user (when Mutagen is disabled).
+	// This problem (particularly for Docker volumes) is described in
+	// https://github.com/moby/moby/issues/2259
+	hostWorkingDir := app.GetHostWorkingDir("web", "")
+	if hostWorkingDir != "" {
+		_ = os.MkdirAll(hostWorkingDir, 0755)
+	}
 
 	rendered, err := app.RenderComposeYAML()
 	if err != nil {

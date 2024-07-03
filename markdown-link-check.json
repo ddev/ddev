@@ -52,6 +52,9 @@
       "pattern": "^https://packages.debian.org/stable/"
     },
     {
+      "pattern": "^https://symfony.com"
+    },
+    {
       "pattern": "^https://community.chocolatey.org"
     }
   ],

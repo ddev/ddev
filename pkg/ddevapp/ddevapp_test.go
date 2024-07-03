@@ -2065,6 +2065,133 @@ func TestDdevExportDB(t *testing.T) {
 	runTime()
 }
 
+// TestWebserverDBClient tests functionality of database clients
+// in the ddev-webserver
+func TestWebserverDBClient(t *testing.T) {
+	assert := asrt.New(t)
+
+	// TODO: Add MySQL84 when it gets added to DDEV
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4"}
+
+	app := &ddevapp.DdevApp{}
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
+	// Existing DB type in volume should be empty
+	dbType, err := app.GetExistingDBType()
+	assert.NoError(err)
+	assert.Equal("", strings.Trim(dbType, " \n\r\t"))
+
+	// Make sure there isn't an old db laying around
+	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "users.sql"))
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "dbdump.sql"))
+		// Make sure we leave the config.yaml in expected state
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	for _, dbTypeVersion := range serverVersions {
+		t.Logf("Testing mysql client functionality of %s", dbTypeVersion)
+		parts := strings.Split(dbTypeVersion, ":")
+		dbType := parts[0]
+		dbVersion := parts[1]
+		require.Len(t, parts, 2)
+
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		app.Database.Type = dbType
+		app.Database.Version = dbVersion
+		err = app.WriteConfig()
+		require.NoError(t, err)
+
+		startErr := app.Start()
+		require.NoError(t, startErr)
+
+		for _, tool := range []string{"mysql", "mysqladmin", "mysqldump"} {
+			cmd := tool + " --version"
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Cmd: cmd,
+			})
+			require.NoError(t, err, "mysql --version with dbTypeVersion=%s, stdout=%s, stderr=%s", dbTypeVersion, stdout, stderr)
+			parts := strings.Fields(stdout)
+			require.True(t, len(parts) > 5)
+			expectedClientVersion := dbVersion
+
+			// Search for CHANGE_MARIADB_CLIENT to update related code.
+			if dbType == nodeps.MariaDB {
+				// For MariaDB, we have installed the 10.11 client by default.
+				expectedClientVersion = "10.11"
+				// Add MariaDB versions that can have their own client here:
+				if dbVersion == nodeps.MariaDB114 {
+					expectedClientVersion = "11.4"
+				}
+			}
+			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
+			// Or "mysql  Ver 14.14 Distrib 5.7.44, for Linux (aarch64) using  EditLine wrapper"
+			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
+		}
+
+		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
+		err = fileutil.CopyFile(importPath, filepath.Join(app.AppRoot, "users.sql"))
+		require.NoError(t, err)
+		err = app.MutagenSyncFlush()
+		require.NoError(t, err)
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: "mysql db < users.sql",
+		})
+		require.NoError(t, err, "mysql db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+
+		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "mysqldump -uroot -proot db > dbdump.sql",
+		})
+		require.NoError(t, err, "mysqldump failed, stdout=%s, stderr=%s", stdout, stderr)
+
+		err = app.MutagenSyncFlush()
+		require.NoError(t, err)
+
+		found, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "dbdump.sql"), `!999999\- enable the sandbox mode`)
+		require.NoError(t, err)
+		if dbType == nodeps.MariaDB {
+			require.True(t, found, "expected sandbox directive not found %s (%s)", dbType, "tmp/users1.sql")
+		}
+		if dbType == nodeps.MySQL {
+			require.False(t, found, "expected sandbox directive found inappropriately in %s (%s)", dbType, "tmp/users1.sql")
+		}
+
+		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "mysql db < dbdump.sql",
+		})
+		require.NoError(t, err, "mysql db </tmp/users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: `mysql -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`,
+		})
+		require.NoError(t, err)
+		stdout = strings.Trim(stdout, "\n")
+		require.Equal(t, "2", stdout)
+	}
+	runTime()
+}
+
 // readLastLine opens the fileName listed and returns the last
 // 80 bytes of the file
 func readLastLine(fileName string) (string, error) {

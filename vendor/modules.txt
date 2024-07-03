@@ -39,7 +39,7 @@ github.com/ProtonMail/go-crypto/openpgp/internal/ecc
 github.com/ProtonMail/go-crypto/openpgp/internal/encoding
 github.com/ProtonMail/go-crypto/openpgp/packet
 github.com/ProtonMail/go-crypto/openpgp/s2k
-# github.com/amplitude/analytics-go v1.0.1
+# github.com/amplitude/analytics-go v1.0.2
 ## explicit; go 1.17
 github.com/amplitude/analytics-go/amplitude
 github.com/amplitude/analytics-go/amplitude/constants

@@ -4,7 +4,7 @@ require (
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/amplitude/analytics-go v1.0.1
+	github.com/amplitude/analytics-go v1.0.2
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cheggaaa/pb v1.0.29
 	github.com/denisbrodbeck/machineid v1.0.1

@@ -2,6 +2,7 @@
 ARG
 AdditionalConfig
 Adminer
+Andrasch
 Apache
 Acquia
 amazee.io
@@ -79,6 +80,7 @@ IDEs
 IPv
 If
 IIS
+Joomla
 Kalabox
 Kubernetes
 Lando
@@ -94,6 +96,7 @@ Mailpit's
 Mailgun
 Manage
 MariaDB
+Matthias
 Misconfigured
 MUTAGEN_DATA_DIRECTORY
 MyDevSite
@@ -138,6 +141,7 @@ SQLite
 StarterKits
 Starts
 Statamic
+Sulu
 Support
 Symfony
 TablePlus
@@ -408,6 +412,8 @@ live
 local
 localfile
 localhost
+localization
+localizations
 localpath
 logs
 lookups
@@ -680,6 +686,8 @@ webimage
 webserver
 webservers
 webserving
+webspace
+webspaces
 webtag
 will
 winnfsd

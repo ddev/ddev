@@ -215,23 +215,9 @@ The reason that `ddev-webserver` is so big is that it's built for your daily req
 
 ### How can I update/upgrade DDEV?
 
-You’ll want to update DDEV using the same method you chose to install it. Since upgrading is basically the same as installing, you can follow [DDEV Installation](../install/ddev-installation.md) to upgrade.
+See **[Upgrading DDEV](../install/ddev-upgrade.md)** for your operating system and installation technique.
 
-You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for getting instructions tailored to your installation.
-
-* On macOS you likely installed via Homebrew; run `brew update && brew upgrade ddev`.
-<!-- markdownlint-disable-next-line -->
-* On Linux + WSL2 using Debian/Ubuntu’s `apt-get install` technique, run `sudo apt-get update && sudo apt-get upgrade ddev` like any other package on your system.
-<!-- markdownlint-disable-next-line -->
-* On Linux + WSL2 with a Homebrew install, run `brew update && brew upgrade ddev`.
-* On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh), run it again:
-    <!-- markdownlint-disable -->
-    ```
-    curl -fsSL https://ddev.com/install.sh | bash
-    ```
-    <!-- markdownlint-restore -->
-* On traditional Windows, you likely installed with Chocolatey or by downloading the installer package. You can upgrade with `choco upgrade ddev` or by visiting the [releases](https://github.com/ddev/ddev/releases) page and downloading the installer. Both techniques will work.
-* On Arch-Linux based systems, use the standard upgrade techniques, e.g. `yay -Syu`.
+You can use the [`ddev self-upgrade`](../usage/commands.md#self-upgrade) command for quick instructions tailored to your installation.
 
 ### How can I install a specific version of DDEV?
 
@@ -244,15 +230,29 @@ If you’re using Homebrew, first run `brew unlink ddev` to get rid of the versi
 
 ### Why do I have an old DDEV?
 
-You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, and then install it again with `apt`:
+You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, install it manually, and then install it again with `apt`:
 
 ```bash
 $ which -a ddev
-/home/linuxbrew/.linuxbrew/bin/ddev
-/usr/bin/ddev
+/home/linuxbrew/.linuxbrew/bin/ddev # installed with Homebrew
+/usr/local/bin/ddev # installed manually with install_ddev.sh script
+/usr/bin/ddev # installed with apt or yum/rpm
+/bin/ddev # don't touch it, it's a link to /usr/bin/ddev
 ```
 
-You can check each binary version by its full path (`/usr/bin/ddev --version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew: `brew uninstall ddev`.
+You can check each binary version by its full path (`/usr/bin/ddev --version`) to find old versions. Remove them preferably in the same way you installed them, i.e. `/home/linuxbrew/.linuxbrew/bin/ddev` should be removed with Homebrew: `brew uninstall ddev`. A manually installed DDEV can be removed by deleting the `ddev` binary.
+
+Restart the terminal (or run `hash -r`) after uninstalling other versions of DDEV for the changes to take effect.
+
+If you see duplicates in the `which -a ddev` output, it means that some directories are added to your `$PATH` more than once. You can either ignore this or remove the extra directory from your `$PATH`.
+
+### Should I check in the `.ddev` directory? How about add-ons?
+
+Most teams check in the project `.ddev` directory. That way all team members will have the exact same configuration for the project, even if they're on different operating systems or architectures or Docker providers.
+
+DDEV [add-ons](../extend/additional-services.md) are installed via the `.ddev` directory, so checking things in will get them as well, and that's also recommended practice.
+
+Do *not* alter or check in the `.ddev/.gitignore` as it is automatically generated to DDEV and does its best to figure out what files you "own" (like the `.ddev/config.yaml`) and which files DDEV "owns", so do not have to be committed.
 
 ### How can I back up or restore all project databases?
 

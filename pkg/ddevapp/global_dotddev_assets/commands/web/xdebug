@@ -4,7 +4,7 @@
 ## Description: Enable or disable xdebug
 ## Usage: xdebug on|off|enable|disable|true|false|toggle|status
 ## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status"
-## Execraw: false
+## ExecRaw: false
 ## Flags: []
 ## AutocompleteTerms: ["on","off","enable","disable","toggle","status"]
 
@@ -32,7 +32,7 @@ get_xdebug_status() {
       echo "0"
       ;;
     esac
-} 
+}
 
 case $1 in
   on|true|enable)

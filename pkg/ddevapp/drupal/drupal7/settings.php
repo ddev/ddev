@@ -1,5 +1,7 @@
 <?php
 
+// DDEV-created Drupal 7 settings.php from upstream default.settings.php
+
 /**
  * @file
  * Drupal site-specific configuration file.

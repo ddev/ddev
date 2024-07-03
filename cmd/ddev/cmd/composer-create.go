@@ -6,12 +6,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/composer"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
@@ -27,25 +27,44 @@ var ComposerCreateCmd = &cobra.Command{
 web container. Projects will be installed to a temporary directory and moved to
 the Composer root directory after install.`,
 	Example: `ddev composer create drupal/recommended-project
-ddev composer create -y drupal/recommended-project
+ddev composer create drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
 ddev composer create drupal/recommended-project --no-install
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev composer create --prefer-dist --no-interaction --no-dev psr/log
-ddev composer create --preserve-flags --no-interaction psr/log
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
 	Run: func(cmd *cobra.Command, _ []string) {
-		preserveFlags, _ := cmd.Flags().GetBool("preserve-flags")
-
 		// We only want to pass all flags and args to Composer
 		// cobra does not seem to allow direct access to everything predictably
-		osargs := []string{}
+		var osargs []string
 		if len(os.Args) > 3 {
 			osargs = os.Args[3:]
-			osargs = nodeps.RemoveItemFromSlice(osargs, "--yes")
-			osargs = nodeps.RemoveItemFromSlice(osargs, "-y")
-			osargs = nodeps.RemoveItemFromSlice(osargs, "--preserve-flags")
+			var expandedOsargs []string
+			for _, osarg := range osargs {
+				// If this is a combined short option like "-test", split it into "-t -e -s -t"
+				// This is necessary, because each of these options will be checked for validity
+				if strings.HasPrefix(osarg, "-") && !strings.HasPrefix(osarg, "--") && len(osarg) > 2 {
+					// -vvv and -vv are exceptions, that should not be split
+					if strings.HasPrefix(osarg, "-vvv") {
+						expandedOsargs = append(expandedOsargs, "-vvv")
+						continue
+					}
+					if strings.HasPrefix(osarg, "-vv") {
+						expandedOsargs = append(expandedOsargs, "-vv")
+						continue
+					}
+					for _, char := range osarg[1:] {
+						expandedOsargs = append(expandedOsargs, "-"+string(char))
+					}
+				} else {
+					expandedOsargs = append(expandedOsargs, osarg)
+				}
+			}
+			osargs = expandedOsargs
+		} else {
+			_ = cmd.Help()
+			return
 		}
 
 		app, err := ddevapp.GetActiveApp("")
@@ -80,10 +99,10 @@ ddev composer create --preserve-flags --no-interaction psr/log
 
 				checkPath := app.GetRelativeDirectory(walkPath)
 
-				if walkInfo.IsDir() && nodeps.ArrayContainsString(skipDirs, checkPath) {
+				if walkInfo.IsDir() && slices.Contains(skipDirs, checkPath) {
 					return filepath.SkipDir
 				}
-				if !nodeps.ArrayContainsString(composerCreateAllowedPaths, checkPath) {
+				if !slices.Contains(composerCreateAllowedPaths, checkPath) {
 					return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
 				}
 				if err != nil {
@@ -100,20 +119,54 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
-		// Add some args to avoid troubles while cloning as long as
-		// --preserve-flags is not set.
-		createArgs := osargs
+		// Function to check if a Composer option is valid for a given command
+		isValidComposerOption := func(command, option string) bool {
+			// We have to pass arguments and options to "create-project",
+			// but only options for other composer commands.
+			if command != "create-project" && !strings.HasPrefix(option, "-") {
+				return false
+			}
+			// Try each option with --dry-run to see if it is valid.
+			validateCmd := []string{"composer", command, option, "--dry-run"}
+			userOutFunc := util.CaptureUserOut()
+			_, _, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Dir:     app.GetComposerRoot(true, false),
+				RawCmd:  validateCmd,
+			})
+			out := userOutFunc()
+			// If there is an error from symfony/console, it is an invalid option
+			return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
+		}
 
-		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
+		// Add some args to avoid troubles while cloning the project.
+		// We add the three options to "composer create-project": --no-plugins, --no-scripts, --no-install
+		// These options make the difference between "composer create-project" and "ddev composer create".
+		var createArgs []string
+
+		for _, osarg := range osargs {
+			if isValidComposerOption("create-project", osarg) {
+				createArgs = append(createArgs, osarg)
+			}
+		}
+
+		// this slice will be used for nested composer commands
+		validCreateArgs := createArgs
+
+		if !slices.Contains(createArgs, "--no-plugins") {
+			// Don't run plugin events for "composer create-project", but run them for "composer run-script" and "composer install"
 			createArgs = append(createArgs, "--no-plugins")
 		}
 
-		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-scripts") {
+		// Remember if --no-scripts was provided by the user
+		noScriptsPresent := slices.Contains(createArgs, "--no-scripts")
+		if !noScriptsPresent {
+			// Don't run scripts for "composer create-project", but run them for "composer install"
 			createArgs = append(createArgs, "--no-scripts")
 		}
 
 		// Remember if --no-install was provided by the user
-		noInstallPresent := nodeps.ArrayContainsString(createArgs, "--no-install")
+		noInstallPresent := slices.Contains(createArgs, "--no-install")
 		if !noInstallPresent {
 			// Add the --no-install option by default to avoid issues with
 			// rsyncing many files afterwards to the project root.
@@ -148,6 +201,11 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			output.UserErr.Println(stderr)
 		}
 
+		// If options contain help or version flags, do not continue
+		if slices.Contains(createArgs, "-h") || slices.Contains(createArgs, "--help") || slices.Contains(createArgs, "-V") || slices.Contains(createArgs, "--version") {
+			return
+		}
+
 		output.UserOut.Printf("Moving install to Composer root")
 
 		rsyncArgs := "-rltgopD" // Same as -a
@@ -164,9 +222,16 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			util.Failed("failed to create project: %v", err)
 		}
 
-		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+		// Make sure composer.json is here with Mutagen enabled
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			util.Failed("Failed to flush Mutagen: %v", err)
+		}
 
-		if !preserveFlags && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
+		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+		var validRunScriptArgs []string
+
+		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
 			// Try to run post-root-package-install.
 			composerCmd = []string{
 				"composer",
@@ -174,7 +239,15 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				"post-root-package-install",
 			}
 
-			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+			for _, validCreateArg := range validCreateArgs {
+				if isValidComposerOption("run-script", validCreateArg) {
+					validRunScriptArgs = append(validRunScriptArgs, validCreateArg)
+				}
+			}
+
+			composerCmd = append(composerCmd, validRunScriptArgs...)
+
+			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
@@ -207,38 +280,9 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				"install",
 			}
 
-			// Apply args supported by install
-			supportedArgs := []string{
-				"--prefer-source",
-				"--prefer-dist",
-				"--prefer-install",
-				"--no-dev",
-				"--no-progress",
-				"--ignore-platform-req",
-				"--ignore-platform-reqs",
-				"-q",
-				"--quiet",
-				"--ansi",
-				"--no-ansi",
-				"-n",
-				"--no-interaction",
-				"--profile",
-				"--no-plugins",
-				"--no-scripts",
-				"-d",
-				"--working-dir",
-				"--no-cache",
-				"-v",
-				"-vv",
-				"-vvv",
-				"--verbose",
-			}
-
-			for _, osarg := range osargs {
-				for _, supportedArg := range supportedArgs {
-					if strings.HasPrefix(osarg, supportedArg) {
-						composerCmd = append(composerCmd, osarg)
-					}
+			for _, validCreateArg := range validCreateArgs {
+				if isValidComposerOption("install", validCreateArg) {
+					composerCmd = append(composerCmd, validCreateArg)
 				}
 			}
 
@@ -263,36 +307,48 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
 			}
+		}
 
-			// Reload composer.json if it has changed in the meantime.
-			composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+		// Reload composer.json if it has changed in the meantime.
+		composerManifest, _ = composer.NewManifest(path.Join(composerRoot, "composer.json"))
 
-			if !preserveFlags && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
-				// Try to run post-create-project-cmd.
-				composerCmd = []string{
-					"composer",
-					"run-script",
-					"post-create-project-cmd",
-				}
+		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
+			// Try to run post-create-project-cmd.
+			composerCmd = []string{
+				"composer",
+				"run-script",
+				"post-create-project-cmd",
+			}
 
-				output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
-
-				stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Dir:     app.GetComposerRoot(true, false),
-					RawCmd:  composerCmd,
-					Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				})
-
-				if len(stdout) > 0 {
-					output.UserOut.Println(stdout)
-				}
-
-				if len(stderr) > 0 {
-					output.UserErr.Println(stderr)
+			// If the flags for "run-script" were already validated, don't validate them again.
+			if validRunScriptArgs == nil {
+				for _, validCreateArg := range validCreateArgs {
+					if isValidComposerOption("run-script", validCreateArg) {
+						validRunScriptArgs = append(validRunScriptArgs, validCreateArg)
+					}
 				}
 			}
+
+			composerCmd = append(composerCmd, validRunScriptArgs...)
+
+			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
+
+			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Dir:     app.GetComposerRoot(true, false),
+				RawCmd:  composerCmd,
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+
+			if len(stdout) > 0 {
+				output.UserOut.Println(stdout)
+			}
+
+			if len(stderr) > 0 {
+				output.UserErr.Println(stderr)
+			}
 		}
+
 		// Do a spare restart, which will create any needed settings files
 		// and also restart Mutagen
 		err = app.Restart()
@@ -323,8 +379,6 @@ for basic project creation or 'ddev ssh' into the web container and execute
 }
 
 func init() {
-	ComposerCreateCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
-	ComposerCreateCmd.Flags().Bool("preserve-flags", false, "Do not append `--no-plugins` and `--no-scripts` flags")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }

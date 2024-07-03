@@ -21,13 +21,21 @@ jobs:
           # https://github.com/oprypin/nightly.link/blob/master/.github/workflows/pr-comment.yml
           # https://github.com/AKSW/submission.d2r2.aksw.org/blob/main/.github/workflows/pr-comment.yml
           script: |
-            // get a PR number
-            const {owner, repo} = context.repo;
-            const pullHeadSHA = '${{github.event.workflow_run.head_sha}}';
-            const {prNumber, prRef, prRepoId} = await (async () => {
-              for await (const {data} of github.paginate.iterator(github.rest.pulls.list, {owner, repo})) {
+            // Function Definitions
+
+            /**
+             * Fetch PR details for a given commit SHA.
+             * @returns {Object} PR details containing prNumber, prRef, prRepoId.
+             * @throws {Error} If no matching PR is found.
+             */
+            async function fetchPRDetails() {
+              const iterator = github.paginate.iterator(github.rest.pulls.list, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+              for await (const { data } of iterator) {
                 for (const pull of data) {
-                  if (pull.head.sha === pullHeadSHA) {
+                  if (pull.head.sha === '${{github.event.workflow_run.head_sha}}') {
                     return {
                       prNumber: pull.number,
                       prRef: pull.head.ref,
@@ -36,55 +44,119 @@ jobs:
                   }
                 }
               }
-            })();
-            if (!prNumber) {
-              return core.error("This workflow doesn't match any pull requests!");
+              throw new Error("No matching PR found for the commit SHA");
             }
 
-            // collect all artifacts
-            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id,
-            });
-            if (!(allArtifacts && allArtifacts.data && allArtifacts.data.artifacts && allArtifacts.data.artifacts.length)) {
-              return core.error(`No artifacts found`);
+            /**
+             * Fetch all artifacts for a given workflow run.
+             * @returns {Object} All artifacts data.
+             * @throws {Error} If no artifacts are found.
+             */
+            async function fetchAllArtifacts() {
+              const artifactsResponse = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.payload.workflow_run.id,
+              });
+              if (!(artifactsResponse.data && artifactsResponse.data.artifacts && artifactsResponse.data.artifacts.length)) {
+                throw new Error("No artifacts found for the workflow run");
+              }
+              return artifactsResponse.data.artifacts;
             }
 
-            let body = allArtifacts.data.artifacts.reduce((acc, item) => {
+            /**
+             * Create or update a comment on the PR.
+             * @param {number} prNumber - The PR number.
+             * @param {string} purpose - The purpose of the comment.
+             * @param {string} body - The comment body.
+             * @throws {Error} If the comment creation or update fails.
+             */
+            async function upsertComment(prNumber, purpose, body) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+              });
+              const marker = `<!-- bot: ${purpose} -->`;
+              body = marker + "\n" + body;
+
+              const existing = comments.filter(c => c.body.includes(marker));
+              if (existing.length > 0) {
+                const last = existing[existing.length - 1];
+                core.info(`Updating comment ${last.id}`);
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: body,
+                  comment_id: last.id,
+                });
+              } else {
+                core.info(`Creating a comment in PR #${prNumber}`);
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: body,
+                  issue_number: prNumber,
+                });
+              }
+            }
+            
+            /**
+             * Handle and log errors with detailed context and exit the process.
+             * @param {Error} error - The error object.
+             * @param {string} description - Description of the context where the error occurred.
+             */
+            function handleError(error, description, prNumber) {
+              core.error(`Failed to ${description}`);
+              core.error(`Message: ${error.message}`);
+              core.error(`Stack Trace: ${error.stack || 'No stack trace available'}`);
+              if (prNumber) {
+                core.error(`PR Number: ${prNumber}`);
+              }
+              core.error(`PRs: https://api.github.com/repos/${context.repo.owner}/${context.repo.repo}/pulls`);
+              core.error(`SHA: ${{github.event.workflow_run.head_sha}}`);
+              process.exit(1);
+            }
+
+            // Main Code Execution
+
+            let prNumber, prRef, prRepoId;
+
+            // Fetch PR details
+            try {
+              ({ prNumber, prRef, prRepoId } = await fetchPRDetails());
+              core.info(`Found PR: #${prNumber}, Ref: ${prRef}, Repo ID: ${prRepoId}`);
+            } catch (error) {
+              handleError(error, 'fetch PR details', undefined);
+            }
+
+            // Fetch all artifacts
+            let allArtifacts;
+            try {
+              allArtifacts = await fetchAllArtifacts();
+              core.info(`Artifacts fetched successfully`);
+            } catch (error) {
+              handleError(error, 'fetch artifacts', prNumber);
+            }
+
+            // Construct the comment body
+            let body = allArtifacts.reduce((acc, item) => {
               if (item.name === "assets") return acc;
               acc += `\n* [${item.name}.zip](https://nightly.link/${context.repo.owner}/${context.repo.repo}/actions/artifacts/${item.id}.zip)`;
               return acc;
             }, 'Download the artifacts for this pull request:\n');
 
-            body += `\n\n See [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr)` + `.`;
-
+            body += `\n\nSee [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr).`;
             body += `\n\n[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${prNumber})`;
-            codespacesLink = prRef && prRepoId
+            const codespacesLink = prRef && prRepoId
               ? `https://codespaces.new/?ref=${prRef}&repo=${prRepoId}`
               : `https://codespaces.new/${context.repo.owner}/${context.repo.repo}`;
             body += `\n\n[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](${codespacesLink})`;
 
-            // insert or update a bot comment
-            async function upsertComment(owner, repo, issue_number, purpose, body) {
-              const {data: comments} = await github.rest.issues.listComments(
-                {owner, repo, issue_number});
-
-              const marker = `<!-- bot: ${purpose} -->`;
-              body = marker + "\n" + body;
-
-              const existing = comments.filter((c) => c.body.includes(marker));
-              if (existing.length > 0) {
-                const last = existing[existing.length - 1];
-                core.info(`Updating comment ${last.id}`);
-                await github.rest.issues.updateComment({
-                  owner, repo,
-                  body,
-                  comment_id: last.id,
-                });
-              } else {
-                core.info(`Creating a comment in issue / PR #${issue_number}`);
-                await github.rest.issues.createComment({issue_number, body, owner, repo});
-              }
+            // Upsert the comment on the PR
+            try {
+              await upsertComment(prNumber, "nightly-link", body);
+              core.info("Comment created/updated successfully");
+            } catch (error) {
+              handleError(error, 'create/update comment', prNumber);
             }
-            await upsertComment(owner, repo, prNumber, "nightly-link", body);

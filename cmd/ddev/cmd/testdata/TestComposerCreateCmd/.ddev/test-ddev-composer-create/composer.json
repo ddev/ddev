@@ -1,0 +1,36 @@
+{
+    "name": "test/ddev-composer-create",
+    "description": "This is a test project to check 'ddev composer create' behavior.",
+    "type": "project",
+    "version": "1.0.0",
+    "require": {
+        "test/ddev-require": "1.0.0"
+    },
+    "require-dev": {
+        "test/ddev-require-dev": "1.0.0"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./test-ddev-require",
+            "options": {
+                "symlink": false
+            }
+        },
+        {
+            "type": "path",
+            "url": "./test-ddev-require-dev",
+            "options": {
+                "symlink": false
+            }
+        }
+    ],
+    "scripts": {
+        "post-root-package-install": [
+            "@php -r \"touch('created-by-post-root-package-install');\""
+        ],
+        "post-create-project-cmd": [
+            "@php -r \"touch('created-by-post-create-project-cmd');\""
+        ]
+    }
+}

@@ -61,7 +61,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
-		if err := writeDrupalSettingsPHP(app.SiteSettingsPath, app.Type); err != nil {
+		if err := writeDrupalSettingsPHP(app); err != nil {
 			return "", err
 		}
 	}
@@ -76,7 +76,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsDdev)
 
-		if err = appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
+		if err = appendIncludeToDrupalSettingsFile(app); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsDdev, settings.SiteSettings, err)
 		}
 	}
@@ -111,7 +111,7 @@ func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, _
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -176,7 +176,7 @@ func backdropImportFilesAction(app *DdevApp, uploadDir, importPath, extPath stri
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

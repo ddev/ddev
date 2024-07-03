@@ -64,7 +64,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
 	var perms os.FileMode = 0755
-	if err := os.Chmod(dir, perms); err != nil {
+	if err := util.Chmod(dir, perms); err != nil {
 		if !os.IsNotExist(err) {
 			// The directory exists, but chmod failed.
 			return err
@@ -82,7 +82,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	settings := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetExposedPort(app, "db")}
 
 	// Ensure target directory exists and is writable
-	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err := util.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

@@ -261,7 +261,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 				perms = 0755
 			}
 
-			err = os.Chmod(fp, os.FileMode(perms))
+			err = util.Chmod(fp, os.FileMode(perms))
 			if err != nil {
 				return "", fmt.Errorf("could not change permissions on file %s to make it writeable: %v", fp, err)
 			}

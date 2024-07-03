@@ -6,10 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ddev/ddev/pkg/util"
-
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 )
 
@@ -37,7 +36,7 @@ func shopware6ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath str
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

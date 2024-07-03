@@ -2,6 +2,8 @@
 
 // @codingStandardsIgnoreFile
 
+// DDEV-created Drupal 8 settings.php from upstream default.settings.php
+
 /**
  * @file
  * Drupal site-specific configuration file.

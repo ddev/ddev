@@ -187,7 +187,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if _, ok := desc["mailpit_https_url"]; ok {
 				mailpitURL = desc["mailpit_https_url"].(string)
 			}
-			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\n`ddev mailpit`", mailpitURL)})
+			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", mailpitURL)})
 
 			//WebExtraExposedPorts stanza
 			for _, extraPort := range app.WebExtraExposedPorts {

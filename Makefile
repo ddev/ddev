@@ -74,7 +74,7 @@ windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 completions: $(GOTMP)/bin/completions.tar.gz
 
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe
 $(TARGETS): mkcert $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER) GORACE=$(GORACE) CGO_ENABLED=$(CGO_ENABLED)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
@@ -134,7 +134,7 @@ testfullsitesetup: $(DEFAULT_BUILD) setup
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
 
 setup:
-	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,src,pkg/mod/cache,.cache}
+	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
@@ -236,11 +236,15 @@ darwin_arm64_notarized: darwin_arm64_signed
 
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.exe
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_installer.exe: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
+windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
 	ls -l .gotmp/bin/windows_amd64
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
+	ls -l .gotmp/bin/windows_arm64
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
+
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer.exe: windows_sign_binaries $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing ddev_windows_installer, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer binary..." && signtool sign -fd SHA256 "$@"; fi
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev_windows_installer, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer amd64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
 
 no_v_version:
@@ -263,9 +267,17 @@ $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.
 	curl --fail -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/amd64"
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
+$(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt:
+	curl --fail -JL -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/arm64"
+	curl --fail -sSL -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
+
 $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	set -x
 	curl --fail -sSL -o "$(GOTMP)/bin/windows_amd64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
+
+$(GOTMP)/bin/windows_arm64/sudo_license.txt:
+	set -x
+	curl --fail -sSL -o "$(GOTMP)/bin/windows_arm64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:

@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -78,7 +77,7 @@ func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	// parent of destination dir should be writable.
-	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+	if err := util.Chmod(filepath.Dir(destPath), 0755); err != nil {
 		return err
 	}
 

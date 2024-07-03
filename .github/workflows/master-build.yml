@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build and sign windows binaries and installer
+      - name: Build and sign windows amd64 + arm64 binaries and amd64 installer
         shell: bash
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN is not true"; fi
@@ -122,7 +122,7 @@ jobs:
         # But trying again with @v3, 2023-02-18
         uses: actions/cache@v4
         with:
-          path: .gotmp/bin/windows_amd64
+          path: .gotmp/bin/windows*
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
           enableCrossOsArchive: true
 
@@ -208,7 +208,7 @@ jobs:
         uses: actions/cache@v4
         id: signedwindows
         with:
-          path: .gotmp/bin/windows_amd64
+          path: .gotmp/bin/windows*
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
           enableCrossOsArchive: true
           fail-on-cache-miss: true
@@ -236,7 +236,7 @@ jobs:
 
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         if: startsWith( github.ref, 'refs/tags/v1')
         with:
           distribution: goreleaser-pro
@@ -287,6 +287,11 @@ jobs:
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+      - name: Upload windows-arm64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-arm64
+          path: .gotmp/bin/windows_arm64/ddev.exe
 
       - name: Show github.ref
         run: echo ${{ github.ref }}

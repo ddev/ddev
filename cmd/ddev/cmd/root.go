@@ -127,6 +127,7 @@ func Execute() {
 func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
+	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
 
 	output.LogSetUp()
 
@@ -175,8 +176,6 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}
-			util.Debug("Terminating all Mutagen sync sessions")
-			ddevapp.TerminateAllMutagenSync()
 		}
 
 		// If they have a new version write the new version into last-started

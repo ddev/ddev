@@ -58,7 +58,7 @@ jobs:
       - run: "(git log --oneline | head -5) || true"
 
       - name: Build DDEV executables
-        run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install
+        run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 windows_install
 
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
@@ -93,3 +93,8 @@ jobs:
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+      - name: Upload windows-arm64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-arm64
+          path: .gotmp/bin/windows_arm64/ddev.exe

@@ -24,6 +24,10 @@ concurrency:
 
 env:
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  actions: write
 
 jobs:
   build:
@@ -31,8 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: rojopolis/spellcheck-github-actions@v0
-        name: Spellcheck
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Spellcheck
+        uses: rojopolis/spellcheck-github-actions@v0
       - name: Install textlint
         run: |
           npm init -y
@@ -43,8 +50,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
-      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-      - name: Run markdownlint on docs
+      - name: Run markdownlint
         uses: docker://avtodev/markdown-lint:v1
         with:
           config: '.markdownlint.jsonc'

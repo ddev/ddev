@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	globalconfigTypes "github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -297,9 +298,9 @@ func init() {
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrumentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 3000, "Increase timeout when checking internet timeout, in milliseconds")
-	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in deprecated nginx-proxy ddev-router, 'ddev global --disable-http2' or `ddev global --disable-http2=false'")
-	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'")
-	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev global --letsencrypt-email=me@example.com'")
+	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in deprecated nginx-proxy ddev-router, 'ddev config global --disable-http2' or `ddev config global --disable-http2=false'")
+	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev config global --use-letsencrypt' or `ddev config global --use-letsencrypt=false'")
+	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev config global --letsencrypt-email=me@example.com'")
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment.")
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")
@@ -307,11 +308,11 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", configTypes.FlagPerformanceModeName))
 	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceModeDescription(configTypes.ConfigTypeGlobal))
 	configGlobalCommand.Flags().Bool(configTypes.FlagPerformanceModeResetName, true, configTypes.FlagPerformanceModeResetDescription(configTypes.ConfigTypeGlobal))
-	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
+	configGlobalCommand.Flags().String("table-style", "", fmt.Sprintf("Table style for list and describe, see %s for values", fileutil.ShortHomeJoin(globalconfig.GetGlobalConfigPath())))
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version (used only in development testing)")
 	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")
 	configGlobalCommand.Flags().String("project-tld", "", "Override default project tld")
-	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose (used only in development testing)")
+	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, fmt.Sprintf("If true, use docker-compose from path instead of private %s (used only in development testing)", fileutil.ShortHomeJoin(globalconfig.GetDDEVBinDir(), "docker-compose")))
 	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote Docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")

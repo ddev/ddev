@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/sirupsen/logrus"
 )
 
 // CopyFile copies the contents of the file named src to the file named
@@ -54,7 +55,7 @@ func CopyFile(src string, dst string) error {
 			return err
 		}
 
-		err = os.Chmod(dst, si.Mode())
+		err = util.Chmod(dst, si.Mode())
 		if err != nil {
 			return fmt.Errorf("failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
 		}
@@ -160,7 +161,7 @@ func PurgeDirectory(path string) error {
 	}
 
 	for _, file := range files {
-		err = os.Chmod(filepath.Join(path, file), 0777)
+		err = util.Chmod(filepath.Join(path, file), 0777)
 		if err != nil {
 			return err
 		}
@@ -538,4 +539,17 @@ func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {
 		}
 	}
 	return expanded, nil
+}
+
+// ShortHomeJoin returns the same result as filepath.Join() path with $HOME/ replaced by ~/
+func ShortHomeJoin(elem ...string) string {
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+	}
+	fullPath := filepath.Join(elem...)
+	if strings.HasPrefix(fullPath, userHome) {
+		return strings.Replace(fullPath, userHome, "~", 1)
+	}
+	return fullPath
 }
