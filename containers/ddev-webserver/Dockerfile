@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:v1.23.3 as ddev-webserver-base
+FROM ddev/ddev-php-base:20240704_stasadev_mariadb_11_4_client as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
