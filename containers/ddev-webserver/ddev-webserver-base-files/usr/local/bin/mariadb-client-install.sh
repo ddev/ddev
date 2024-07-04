@@ -16,14 +16,16 @@ MARIADB_VERSION=${DDEV_DATABASE#*:}
 # Search for CHANGE_MARIADB_CLIENT to update related code.
 # Add MariaDB versions that can have their own client here:
 if [ "${MARIADB_VERSION}" = "11.4" ]; then
-  # Configure the correct repository for mariadb
   set -x
-  timeout 30 mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}"
-  rm -f /etc/apt/sources.list.d/mariadb.list.old_*
-
+  # Configure the correct repository for mariadb
+  DEFAULT_MARIADB_VERSION="10.11"
+  sed -i "s|${DEFAULT_MARIADB_VERSION}|${MARIADB_VERSION}|g" /etc/apt/sources.list.d/mariadb.list
+  # update only mariadb.list to make it faster
+  timeout 30 apt-get update -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" \
+    -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit 2
   # Install the mariadb-client and mysql symlinks
   # MariaDB 11.x moved MySQL symlinks into separate packages
-  apt-get install -y mariadb-client mariadb-client-compat
+  apt-get install -y mariadb-client mariadb-client-compat || exit 3
 else
-  echo "This script is not intended to run with mariadb:${MARIADB_VERSION}" && exit 1
+  echo "This script is not intended to run with mariadb:${MARIADB_VERSION}" && exit 4
 fi
