@@ -43,9 +43,11 @@ RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch
     curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
+    percona_setup=pxb24; \
     xtrabackup_version=percona-xtrabackup-24 ; \
     if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi; \
-    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
+    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; percona_setup=pxb80; fi ; \
+    percona-release setup ${percona_setup}; \
     apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
 RUN apt-get -qq autoclean
