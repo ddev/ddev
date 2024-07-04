@@ -64,7 +64,7 @@ services:
       - LINES
       - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
       - MYSQLHOST=db
-      - MYSQL_PWD=db      
+      - MYSQL_PWD=db
       - PGDATABASE=db
       - PGHOST=127.0.0.1
       - PGPASSWORD=db
