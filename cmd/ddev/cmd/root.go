@@ -155,7 +155,9 @@ func init() {
 
 	setHelpFunc(RootCmd)
 
-	installAddonForUnknownCommand(RootCmd, os.Args[1])
+	if len(os.Args) > 1 {
+		installAddonForUnknownCommand(RootCmd, os.Args[1])
+	}
 }
 
 // checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
