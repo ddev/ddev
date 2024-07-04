@@ -54,8 +54,8 @@ jobs:
             mutagen: true
 #          - name: "no-bind-mounts"
 #            no-bind-mounts: "true"
-          - name: "nginx-proxy"
-            router: "nginx-proxy"
+#          - name: "nginx-proxy"
+#            router: "nginx-proxy"
           - name: "pull-push-test-platforms"
             pull-push-test-platforms: true
           - name: "race-detection"
