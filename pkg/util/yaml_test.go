@@ -80,11 +80,11 @@ func TestMergeYamlFiles(t *testing.T) {
 		content string
 		dir     string
 	}{
-		{"caServerOverride", "caServerOverride"},
-		{"Basic no-actual-merge, just using the base file", "basefileOnly"},
+		{"Basic no-actual-merge, just using the base file", "baseFileOnly"},
 		{"Basic file with a single file that only adds, no merging", "baseWithPlugins"},
 		{"certificates resolvers", "baseWithCertificatesResolvers"},
-		{"Overwrites", "Overwrites"},
+		{"Overrides", "Overrides"},
+		{"caServerOverride", "caServerOverride"},
 	}
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
