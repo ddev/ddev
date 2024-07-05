@@ -63,7 +63,7 @@ services:
       - IS_DDEV_PROJECT=true
       - LINES
       - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
-      - MYSQLHOST=db
+      - MYSQL_HOST=db
       - MYSQL_PWD=db
       - PGDATABASE=db
       - PGHOST=127.0.0.1
@@ -213,8 +213,8 @@ services:
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
-    - MYSQLHOST=db
-    - MYSQL_PWD=db    
+    - MYSQL_HOST=db
+    - MYSQL_PWD=db
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
     - npm_config_cache=/mnt/ddev-global-cache/npm
     - PGDATABASE=db

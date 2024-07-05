@@ -1240,7 +1240,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	// Test that MySQL + .my.cnf works on db container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@localhost'",
+		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@'",
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
