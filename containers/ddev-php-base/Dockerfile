@@ -81,11 +81,6 @@ RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
 RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
 http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
 
-# Install mariadb_repo_setup to get mariadb-client from them directly
-RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
-# Search for CHANGE_MARIADB_CLIENT to update related code.
-RUN /usr/local/bin/mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools
-
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb && rm -f /tmp/debsuryorg-archive-keyring.deb && \
     echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
@@ -101,7 +96,6 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     gunicorn \
     graphicsmagick \
     jq \
-    mariadb-client \
     msmtp \
     nginx \
     nodejs \
