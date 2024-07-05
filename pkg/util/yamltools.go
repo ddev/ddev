@@ -65,7 +65,7 @@ func MergeYamlFiles(baseFile string, extraFile ...string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		err = mergo.Merge(resultMap, m)
+		err = mergo.Merge(&resultMap, m, mergo.WithOverride)
 		if err != nil {
 			return "", err
 		}
