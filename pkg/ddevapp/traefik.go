@@ -101,8 +101,8 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 	return routingTable, nil
 }
 
-// pushGlobalTraefikConfig pushes the config into ddev-global-cache
-func pushGlobalTraefikConfig() error {
+// PushGlobalTraefikConfig pushes the config into ddev-global-cache
+func PushGlobalTraefikConfig() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	uid, _, _ := util.GetContainerUIDGid()
 	err := os.MkdirAll(globalTraefikDir, 0755)
