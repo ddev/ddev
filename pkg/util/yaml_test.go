@@ -97,6 +97,7 @@ func TestMergeYamlFiles(t *testing.T) {
 
 			expectedResultFile := filepath.Join(testDir, "expectation.yaml")
 			expectedResultString, err := fileutil.ReadFileIntoString(expectedResultFile)
+			require.NoError(t, err)
 			// Unmarshall the loaded result expectation so it will look the same as merged (without comments, etc)
 			var tmpMap map[string]interface{}
 			err = yaml.Unmarshal([]byte(expectedResultString), &tmpMap)

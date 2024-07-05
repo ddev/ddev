@@ -55,6 +55,7 @@ func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 
 // MergeYamlFiles merges yaml files extraFiles into the baseFile, returning the
 // result as a string
+// Merging is *override* based, so later files can override contents of others
 func MergeYamlFiles(baseFile string, extraFile ...string) (string, error) {
 	resultMap, err := YamlFileToMap(baseFile)
 	if err != nil {
