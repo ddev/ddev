@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -229,43 +228,38 @@ func pushGlobalTraefikConfig() error {
 		}
 	}
 
-	staticConfigPath := filepath.Join(globalTraefikDir, ".static_config.yaml")
+	staticConfigFinalPath := filepath.Join(globalTraefikDir, ".static_config.yaml")
 
-	staticConfigFile, err := os.Create(staticConfigPath)
+	staticConfigTemp, err := os.CreateTemp("", "static_config-")
 	if err != nil {
-		util.Failed("Failed to create Traefik config file: %v", err)
+		return err
 	}
-	defer staticConfigFile.Close()
+
 	t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 	if err != nil {
 		return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
 	}
 
-	err = t.Execute(staticConfigFile, templateData)
+	err = t.Execute(staticConfigTemp, templateData)
 	if err != nil {
 		return fmt.Errorf("could not parse traefik_static_config_template.yaml with templatedate='%v':: %v", templateData, err)
 	}
-
-	// Append contents of globalTraefikDir's `static_config.*.yaml` to the config file
+	tmpFileName := staticConfigTemp.Name()
+	err = staticConfigTemp.Close()
+	if err != nil {
+		return err
+	}
 	extraStaticConfigFiles, err := fileutil.GlobFilenames(globalTraefikDir, "static_config.*.yaml")
 	if err != nil {
-		return fmt.Errorf("could not GlobFilenames(%s, static_config.*.yaml): %v", globalTraefikDir, err)
+		return err
 	}
-
-	for _, extraFile := range extraStaticConfigFiles {
-		_, err = staticConfigFile.Write([]byte(fmt.Sprintf("\n# Appended content from file '%s'\n", extraFile)))
-		if err != nil {
-			return fmt.Errorf("could not append content from %s: %v", extraFile, err)
-		}
-		s, err := fileutil.ReadFileIntoString(extraFile)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(staticConfigFile, strings.NewReader(s))
-		if err != nil {
-			return err
-		}
-
+	resultYaml, err := util.MergeYamlFiles(tmpFileName, extraStaticConfigFiles...)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(staticConfigFinalPath, []byte(resultYaml), 0755)
+	if err != nil {
+		return err
 	}
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
