@@ -26,6 +26,7 @@ Here’s how to try it for yourself:
 9. Redirect HTTP to HTTPS. Edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
 10. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
 11. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
+
     ```yaml
     certificatesResolvers:
     acme-tlsChallenge:

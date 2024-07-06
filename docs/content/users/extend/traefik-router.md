@@ -25,6 +25,7 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
 * Additional static configuration may be added by adding `static_config.*.yaml` files, which will be merged into the generated `.static_config.yaml`. For example, a `static_config.plugin.yaml` might contain external Traefik plugins, or a `static_config.dnschallenge.yaml` might provide configuration for additional `certificatesResolvers`. Merging is done with an **override** strategy, meaning that the last file (highest alphanumeric filename) to touch a particular element of the YAML structure wins.
     Some examples of `static_config.*.yaml` files are:
     * `static_config.cloudflare.yaml`:
+
       ```yaml
       certificatesResolvers:
         acme-dnsChallenge:
@@ -33,7 +34,9 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
             dnsChallenge:
               provider: cloudflare
       ```
+
     * `static_config.fail2ban.yaml`
+
         ```yaml
         experimental:
           plugins:
