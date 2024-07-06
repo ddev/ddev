@@ -27,8 +27,9 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
     * `static_config.cloudflare.yaml`:
       ```yaml
       certificatesResolvers:
-        acmeresolver:
+        acme-dnsChallenge:
           acme:
+            email: admin@example.com
             dnsChallenge:
               provider: cloudflare
       ```
