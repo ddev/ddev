@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:v1.23.3 as ddev-webserver-base
+FROM ddev/ddev-php-base:20240704_stasadev_mariadb_11_4_client as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -24,8 +24,20 @@ RUN /sbin/mkhomedir_helper www-data
 # symfony cli
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
 
+# Install mariadb_repo_setup to get mariadb-client from them directly
+RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
+# Search for CHANGE_MARIADB_CLIENT to update related code.
+RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools
+
 RUN apt-get -qq update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all pv supervisor symfony-cli xz-utils
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
+    libcap2-bin \
+    locales-all \
+    mariadb-client \
+    pv \
+    supervisor \
+    symfony-cli \
+    xz-utils
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
