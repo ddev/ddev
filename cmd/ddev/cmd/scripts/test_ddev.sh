@@ -119,7 +119,7 @@ which -a docker
 echo
 
 printf "Docker provider: ${docker_platform}\n"
-if [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
+if [ "${WSL_DISTRO_NAME}" = "" ] && [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
 fi
 
