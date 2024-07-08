@@ -31,7 +31,7 @@ experimental:
       moduleName: github.com/tomMoulard/fail2ban
       version: v0.8.1
 global:
-  sendanonymoususage: false
+  sendAnonymousUsage: false
 log:
   level: DEBUG
 ping:

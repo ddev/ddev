@@ -32,7 +32,7 @@ providers:
     directory: /mnt/ddev-global-cache/traefik/config
     watch: true
 global:
-  sendanonymoususage: false
+  sendAnonymousUsage: false
 
 ping:
   entryPoint: "traefik"

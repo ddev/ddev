@@ -22,7 +22,7 @@ entryPoints:
   traefik:
     address: :10999
 global:
-  sendanonymoususage: false
+  sendAnonymousUsage: false
 log:
   level: INFO
 ping:

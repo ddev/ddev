@@ -32,7 +32,7 @@ experimental:
       moduleName: github.com/tomMoulard/fail2ban
       version: v0.8.1
 global:
-  sendanonymoususage: false
+  sendAnonymousUsage: false
 # Here the log has been overridden to INFO in extra_overwrites_1
 # and then to WARN in extra_overwrites_2
 log:
