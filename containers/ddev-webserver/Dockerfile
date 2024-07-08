@@ -30,7 +30,9 @@ RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/
 RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools
 
 # Set up Postgresql apt repository
-RUN sudo apt install -y postgresql-common && yes | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+RUN apt-get install -y postgresql-common && yes | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \

@@ -1196,13 +1196,15 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 
 		// For Postgres, install the relevant PostgreSQL clients
-		if app.Database.Type == nodeps.Postgres {
+		// PostgreSQL 9 is not supported by this approach, so skip it, and
+		// it will just get the default psql version.
+		if app.Database.Type == nodeps.Postgres && app.Database.Version != nodeps.Postgres9 {
 			contents = contents + fmt.Sprintf(`
 RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
-  apt-get remove -y postgresql-client* && \
+  apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} && \
   apt-get update >/dev/null && \
-  apt-get install -y postgresql-client-%s; \
+  apt-get install -y postgresql-client-%s || true; \
 fi`, app.Database.Version, app.Database.Version) + "\n\n"
 		}
 
