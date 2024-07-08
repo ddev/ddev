@@ -120,9 +120,9 @@ func TestComposerCreateCmd(t *testing.T) {
 				args = []string{"composer", "create", "--repository", repository, "--no-plugins", "--no-scripts", "test/ddev-composer-create"}
 			}
 
-			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
+			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
 			if composerCommandTypeCheck == "installation with --vvv --fake-flag" {
-				args = []string{"composer", "create", "--repository", repository, "-vvv", "--fake-flag", "test/ddev-composer-create"}
+				args = []string{"composer", "create", fmt.Sprintf("--repository=%s", repository), "-vvv", "--fake-flag", "test/ddev-composer-create"}
 			}
 
 			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-install test/ddev-composer-create
@@ -130,9 +130,9 @@ func TestComposerCreateCmd(t *testing.T) {
 				args = []string{"composer", "create", "--repository", repository, "--no-install", "test/ddev-composer-create"}
 			}
 
-			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev test/ddev-composer-create
+			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev test/ddev-composer-create
 			if composerCommandTypeCheck == "installation with --no-dev" {
-				args = []string{"composer", "create", "--repository", repository, "--no-dev", "test/ddev-composer-create"}
+				args = []string{"composer", "create", fmt.Sprintf("--repository=%s", repository), "--no-dev", "test/ddev-composer-create"}
 			}
 
 			// Test failure
@@ -165,10 +165,10 @@ func TestComposerCreateCmd(t *testing.T) {
 				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
 			}
 
-			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
+			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
 			if composerCommandTypeCheck == "installation with --vvv --fake-flag" {
 				// Check what was executed or not
-				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository %s -vvv test/ddev-composer-create --no-plugins --no-scripts --no-install`, repository))
+				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository=%s -vvv test/ddev-composer-create --no-plugins --no-scripts --no-install`, repository))
 				assert.Contains(out, "Executing Composer command: [composer run-script post-root-package-install -vvv]")
 				assert.Contains(out, "Executing Composer command: [composer install -vvv]")
 				assert.Contains(out, "Executing Composer command: [composer run-script post-create-project-cmd -vvv]")
@@ -196,10 +196,10 @@ func TestComposerCreateCmd(t *testing.T) {
 				assert.NoDirExists(filepath.Join(composerRoot, "vendor"))
 			}
 
-			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev test/ddev-composer-create
+			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev test/ddev-composer-create
 			if composerCommandTypeCheck == "installation with --no-dev" {
 				// Check what was executed or not
-				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository %s --no-dev test/ddev-composer-create --no-plugins --no-scripts --no-install`, repository))
+				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository=%s --no-dev test/ddev-composer-create --no-plugins --no-scripts --no-install`, repository))
 				assert.Contains(out, "Executing Composer command: [composer run-script post-root-package-install --no-dev]")
 				assert.Contains(out, "Executing Composer command: [composer install --no-dev]")
 				assert.Contains(out, "Executing Composer command: [composer run-script post-create-project-cmd --no-dev]")

@@ -122,8 +122,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// Function to check if a Composer option is valid for a given command
 		isValidComposerOption := func(command, option string) bool {
 			// We have to pass arguments and options to "create-project",
-			// but only options for other composer commands.
-			if command != "create-project" && !strings.HasPrefix(option, "-") {
+			// but only options for other composer commands,
+			// excluding options with "=", like "--repository=url".
+			if command != "create-project" && (!strings.HasPrefix(option, "-") || strings.Contains(option, "=")) {
 				return false
 			}
 			// Try each option with --dry-run to see if it is valid.
