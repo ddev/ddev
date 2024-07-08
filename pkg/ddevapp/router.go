@@ -80,7 +80,7 @@ func StartDdevRouter() error {
 		return err
 	}
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		err = pushGlobalTraefikConfig()
+		err = PushGlobalTraefikConfig()
 		if err != nil {
 			return fmt.Errorf("failed to push global Traefik config: %v", err)
 		}

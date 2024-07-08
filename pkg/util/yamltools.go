@@ -2,8 +2,10 @@ package util
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"github.com/imdario/mergo"
+	"gopkg.in/yaml.v3"
 )
 
 // YamlFileToMap() reads the named file into a map[string]interface{}
@@ -49,4 +51,30 @@ func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("yamlToDict: type %T not handled (%v)", topm, topm)
 	}
 	return res, nil
+}
+
+// MergeYamlFiles merges yaml files extraFiles into the baseFile, returning the
+// result as a string
+// Merging is *override* based, so later files can override contents of others
+func MergeYamlFiles(baseFile string, extraFile ...string) (string, error) {
+	resultMap, err := YamlFileToMap(baseFile)
+	if err != nil {
+		return "", err
+	}
+	for _, fileName := range extraFile {
+		m, err := YamlFileToMap(fileName)
+		if err != nil {
+			return "", err
+		}
+		err = mergo.Merge(&resultMap, m, mergo.WithOverride)
+		if err != nil {
+			return "", err
+		}
+	}
+	result, err := yaml.Marshal(resultMap)
+	if err != nil {
+		return "", err
+	}
+
+	return string(result), nil
 }

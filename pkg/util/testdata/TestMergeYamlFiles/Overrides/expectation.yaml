@@ -1,0 +1,45 @@
+accesslog: {}
+api:
+  dashboard: true
+  insecure: true
+certificatesResolvers:
+  acme-tlsChallenge:
+    acme:
+      email: ""
+      storage: /mnt/ddev-global-cache/traefik/acme.json
+      tlsChallenge: {}
+  acmeresolver:
+    acme:
+      dnsChallenge:
+        provider: cloudflare
+core:
+# defaultRuleSyntax overwritten to v3 in extra_overwrites_1
+  defaultRuleSyntax: v3
+entryPoints:
+  http-80:
+    address: :80
+  http-443:
+    address: :443
+  http-8025:
+    address: :8025
+  http-8026:
+    address: :8026
+  traefik:
+    address: :10999
+experimental:
+  plugins:
+    fail2ban:
+      moduleName: github.com/tomMoulard/fail2ban
+      version: v0.8.1
+global:
+  sendAnonymousUsage: false
+# Here the log has been overridden to INFO in extra_overwrites_1
+# and then to WARN in extra_overwrites_2
+log:
+  level: WARN
+ping:
+  entryPoint: traefik
+providers:
+  file:
+    directory: /mnt/ddev-global-cache/traefik/config
+    watch: true

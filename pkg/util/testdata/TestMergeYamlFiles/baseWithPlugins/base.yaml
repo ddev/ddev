@@ -18,7 +18,7 @@ core:
 certificatesResolvers:
   acme-tlsChallenge:
     acme:
-      email: "{{ .LetsEncryptEmail }}"
+      email: ""
       # To avoid Let's Encrypt rate-limiting,
       # we can uncomment `caServer` here to use the staging caServer and avoid messages like
       # rateLimited :: Error creating new order :: too many failed authorizations recently:
@@ -39,8 +39,16 @@ ping:
 
 entryPoints:
   traefik:
-    address: ":{{.TraefikMonitorPort}}"
-  {{ range $port := .RouterPorts }}
-  http-{{$port}}:
-    address: ":{{ $port }}"
-  {{ end }}
+    address: ":10999"
+
+  http-443:
+    address: ":443"
+
+  http-80:
+    address: ":80"
+
+  http-8025:
+    address: ":8025"
+
+  http-8026:
+    address: ":8026"
