@@ -2065,9 +2065,9 @@ func TestDdevExportDB(t *testing.T) {
 	runTime()
 }
 
-// TestWebserverDBClient tests functionality of database clients
-// in the ddev-webserver
-func TestWebserverDBClient(t *testing.T) {
+// TestWebserverMariaMySQLDBClient tests functionality of mysql/mariadb
+// database clients in the ddev-webserver
+func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
 	// TODO: Add MySQL84 when it gets added to DDEV
@@ -2184,6 +2184,108 @@ func TestWebserverDBClient(t *testing.T) {
 
 		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 			Cmd: `mysql -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`,
+		})
+		require.NoError(t, err)
+		stdout = strings.Trim(stdout, "\n")
+		require.Equal(t, "2", stdout)
+	}
+	runTime()
+}
+
+// TestWebserverPostgresDBClient tests functionality of Postgres
+// database clients in the ddev-webserver
+func TestWebserverPostgresDBClient(t *testing.T) {
+	assert := asrt.New(t)
+
+	serverVersions := []string{"postgres:16", "postgres:15", "postgres:14"}
+
+	app := &ddevapp.DdevApp{}
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
+	// Existing DB type in volume should be empty
+	dbType, err := app.GetExistingDBType()
+	assert.NoError(err)
+	assert.Equal("", strings.Trim(dbType, " \n\r\t"))
+
+	// Make sure there isn't an old database volume laying around
+	_ = dockerutil.RemoveVolume(app.Name + "-postgres")
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "users.sql"))
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "dbdump.sql"))
+		// Make sure we leave the config.yaml in expected state
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	for _, dbTypeVersion := range serverVersions {
+		t.Logf("Testing postgres client functionality of %s", dbTypeVersion)
+		parts := strings.Split(dbTypeVersion, ":")
+		dbType := parts[0]
+		dbVersion := parts[1]
+		require.Len(t, parts, 2)
+
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		app.Database.Type = dbType
+		app.Database.Version = dbVersion
+		err = app.WriteConfig()
+		require.NoError(t, err)
+
+		startErr := app.Start()
+		require.NoError(t, startErr)
+
+		for _, tool := range []string{"psql", "pg_dump", "pg_restore"} {
+			cmd := tool + " --version"
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Cmd: cmd,
+			})
+			require.NoError(t, err, "%s --version with dbTypeVersion=%s, stdout=%s, stderr=%s", tool, dbTypeVersion, stdout, stderr)
+			parts := strings.Fields(stdout)
+			require.True(t, len(parts) >= 5, "parts is %v, expected > 5 parts")
+			expectedClientVersion := dbVersion
+
+			// Output might be "pg_restore (PostgreSQL) 16.3 (Debian 16.3-1.pgdg120+1)"
+			require.True(t, strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
+		}
+
+		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
+		err = fileutil.CopyFile(importPath, filepath.Join(app.AppRoot, "users.sql"))
+		require.NoError(t, err)
+		err = app.MutagenSyncFlush()
+		require.NoError(t, err)
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: "psql -d db -f users.sql",
+		})
+		require.NoError(t, err, "psql -d db -f users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+
+		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "pg_dump db > dbdump.sql",
+		})
+		require.NoError(t, err, "pg_dump failed, stdout=%s, stderr=%s", stdout, stderr)
+
+		err = app.MutagenSyncFlush()
+		require.NoError(t, err)
+
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: `psql -d db -tA -c "SELECT COUNT(*) FROM users;"`,
 		})
 		require.NoError(t, err)
 		stdout = strings.Trim(stdout, "\n")
