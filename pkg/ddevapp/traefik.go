@@ -370,11 +370,11 @@ func configureTraefikForApp(app *DdevApp) error {
 		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 	}
 
-	// Convert externalHostnames wildcards like `*.<anything>` to `{subdomain:.+}.wild.ddev.site`
+	// Convert externalHostnames wildcards like `*.<anything>` to `[a-zA-Z0-9-]+.wild.ddev.site`
 	for i, v := range routingTable {
 		for j, h := range v.ExternalHostnames {
 			if strings.HasPrefix(h, `*.`) {
-				h = `{subdomain:.+}` + strings.TrimPrefix(h, `*`)
+				h = `[a-zA-Z0-9-]+` + strings.TrimPrefix(h, `*`)
 				routingTable[i].ExternalHostnames[j] = h
 			}
 		}

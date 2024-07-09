@@ -11,11 +11,12 @@ http:
       entrypoints:
         - http-{{$s.ExternalPort}}
       {{- if not $.UseLetsEncrypt -}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
-      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      rule: {{ range $i, $h := $s.ExternalHostnames }}{{if $i}}|| {{end}}HostRegexp(`^{{$h | replace "." "\\."}}$`){{end}}
       {{ else }}
-      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`^{{$h | replace "." "\\."}}$`{{end}})
       {{ end }}
       service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
+      ruleSyntax: v3
       tls: false
       # middlewares:
       #   - "{{ $.App.Name }}-redirectHttps"
@@ -26,11 +27,12 @@ http:
       entrypoints:
         - http-{{$s.ExternalPort}}
       {{- if not $.UseLetsEncrypt -}}{{/* Let's Encrypt only works with Host(), but we need HostRegexp() for wildcards*/}}
-      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{ if $i }}, {{ end }}`{{$h}}`{{ end }})
+      rule: {{ range $i, $h := $s.ExternalHostnames }}{{ if $i }} || {{ end }}HostRegexp(`^{{$h | replace "." "\\."}}$`){{ end }}
       {{ else }}
-      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{- if $i -}}, {{- end -}}`{{$h}}`{{end}})
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{- if $i -}}, {{- end -}}`^{{$h | replace "." "\\."}}$`{{end}})
       {{ end }}
       service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
+      ruleSyntax: v3
       {{ if not $.UseLetsEncrypt }}
       tls: true
       {{ else }}
