@@ -1037,7 +1037,7 @@ redirect_stderr=true
 		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
+	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
 	}
@@ -1070,7 +1070,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 `
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
+	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
 
 	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
 	// because that deletes the .dbimageBuild directory
@@ -1086,7 +1086,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 	}
 
 	// SSH agent needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
+	err = WriteBuildDockerfile(app, filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
 	}
@@ -1111,7 +1111,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 // WriteBuildDockerfile writes a Dockerfile to be used in the
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
-func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
+func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
 
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
@@ -1194,6 +1194,22 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 ### DDEV-injected composer update
 RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
+
+		// For Postgres, install the relevant PostgreSQL clients
+		if app.Database.Type == nodeps.Postgres {
+			psqlVersion := app.Database.Version
+			if psqlVersion == nodeps.Postgres9 {
+				psqlVersion = "9.6"
+			}
+			contents = contents + fmt.Sprintf(`
+RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
+if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
+  apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} && \
+  apt-get update >/dev/null && \
+  apt-get install -y postgresql-client-%s || true; \
+fi`, app.Database.Version, psqlVersion) + "\n\n"
+		}
+
 	}
 
 	// If there are user dockerfiles, appends their contents

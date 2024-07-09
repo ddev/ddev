@@ -99,7 +99,6 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     msmtp \
     nginx \
     nodejs \
-    postgresql-client \
     sqlite3
 
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
