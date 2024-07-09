@@ -106,7 +106,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			if docRoot == "" {
 				composerCommandTypeCheck = "installation with --no-plugins --no-scripts"
 				if projectType == nodeps.AppTypePHP {
-					composerCommandTypeCheck = "installation with --vvv --fake-flag"
+					composerCommandTypeCheck = "installation with -vvv --fake-flag"
 				}
 			} else {
 				composerCommandTypeCheck = "installation with --no-install"
@@ -121,7 +121,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			}
 
 			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
-			if composerCommandTypeCheck == "installation with --vvv --fake-flag" {
+			if composerCommandTypeCheck == "installation with -vvv --fake-flag" {
 				args = []string{"composer", "create", fmt.Sprintf("--repository=%s", repository), "-vvv", "--fake-flag", "test/ddev-composer-create"}
 			}
 
@@ -166,7 +166,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			}
 
 			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
-			if composerCommandTypeCheck == "installation with --vvv --fake-flag" {
+			if composerCommandTypeCheck == "installation with -vvv --fake-flag" {
 				// Check what was executed or not
 				assert.Contains(out, fmt.Sprintf(`Executing Composer command: [composer create-project --repository=%s -vvv test/ddev-composer-create --no-plugins --no-scripts --no-install`, repository))
 				assert.Contains(out, "Executing Composer command: [composer run-script post-root-package-install -vvv]")
@@ -211,6 +211,9 @@ func TestComposerCreateCmd(t *testing.T) {
 				assert.FileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
 				assert.NoFileExists(filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
 			}
+
+			assert.Contains(out, "Moving install to Composer root")
+			assert.Contains(out, "ddev composer create was successful")
 
 			// Check that resulting composer.json (copied from testdata) has post-root-package-install and post-create-project-cmd scripts
 			composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, "composer.json"))
