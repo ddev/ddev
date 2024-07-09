@@ -2197,7 +2197,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 func TestWebserverPostgresDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	serverVersions := []string{"postgres:16", "postgres:15", "postgres:14"}
+	serverVersions := []string{"postgres:16", "postgres:15", "postgres:14", "postgres:9"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -2259,11 +2259,13 @@ func TestWebserverPostgresDBClient(t *testing.T) {
 			})
 			require.NoError(t, err, "%s --version with dbTypeVersion=%s, stdout=%s, stderr=%s", tool, dbTypeVersion, stdout, stderr)
 			parts := strings.Fields(stdout)
-			require.True(t, len(parts) >= 5, "parts is %v, expected > 5 parts")
 			expectedClientVersion := dbVersion
+			require.True(t, len(parts) >= 3, "parts is %v but expected 3+ parts")
 
 			// Output might be "pg_restore (PostgreSQL) 16.3 (Debian 16.3-1.pgdg120+1)"
+			// Or for postgres 9: "pg_dump (PostgreSQL) 9.6.24"
 			require.True(t, strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
+
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")

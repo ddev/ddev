@@ -1196,7 +1196,6 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 
 		// For Postgres, install the relevant PostgreSQL clients
-		// For Postgres, install the relevant PostgreSQL clients
 		if app.Database.Type == nodeps.Postgres {
 			psqlVersion := app.Database.Version
 			if psqlVersion == nodeps.Postgres9 {
