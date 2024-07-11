@@ -4,6 +4,7 @@ tasks:
     init: |
       # Compile ddev
       make
+      ddev config global --omit-containers=ddev-router
       ddev debug download-images
       mkcert -install
     command: |
