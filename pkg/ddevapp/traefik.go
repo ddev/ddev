@@ -454,7 +454,9 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 # this file, as there is now a dynamic merge mechanism. To use it,
 # create <project>/.ddev/traefik/dynamic_config.*.yaml files which
 # will then be merged in alphanumeric order. See the readme in the
-# /traefik directory for more information` + extraConfigProcessedYAML.String()
+# /traefik directory for more information
+
+` + extraConfigProcessedYAML.String()
 
 		// write baseConfig to /project/.ddev/traefik/config/<project>.yaml
 		err = os.WriteFile(traefikYamlFile, []byte(finalYaml), 0755)
@@ -477,14 +479,14 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 				return fmt.Errorf("failed to create Traefik config middlewares example file: %v", err)
 			}
 
-			t, err := template.New("traefik_config_middlewares_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_middlewares_template.yaml")
+			t, err := template.New("traefik_dynamic_config_example_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_dynamic_config_example_template.yaml")
 			if err != nil {
-				return fmt.Errorf("could not create template from traefik_config_middlewares_template.yaml: %v", err)
+				return fmt.Errorf("could not create template from traefik_dynamic_config_example_template.yaml: %v", err)
 			}
 
 			err = t.Execute(f, templateData)
 			if err != nil {
-				return fmt.Errorf("could not parse traefik_config_middlewares_template.yaml with templatedate='%v':: %v", templateData, err)
+				return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
 			}
 		}
 	}
