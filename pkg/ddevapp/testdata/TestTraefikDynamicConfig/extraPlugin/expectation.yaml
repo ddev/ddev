@@ -11,28 +11,32 @@ http:
             entrypoints:
                 - http-80
             middlewares: []
-            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            rule: HostRegexp(`^{{ $appName }}\.ddev\.site$`)
+            ruleSyntax: v3
             service: {{ .App.Name }}-web-80
             tls: false
         {{ .App.Name }}-web-80-https:
             entrypoints:
                 - http-443
             middlewares: []
-            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            rule: HostRegexp(`^{{ $appName }}\.ddev\.site$`)
+            ruleSyntax: v3
             service: {{ .App.Name }}-web-80
             tls: true
         {{ .App.Name }}-web-8025-http:
             entrypoints:
                 - http-8025
             middlewares: []
-            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            rule: HostRegexp(`^{{ $appName }}\.ddev\.site$`)
+            ruleSyntax: v3
             service: {{ .App.Name }}-web-8025
             tls: false
         {{ .App.Name }}-web-8025-https:
             entrypoints:
                 - http-8026
             middlewares: []
-            rule: HostRegexp(`{{ $appName }}.ddev.site`)
+            rule: HostRegexp(`^{{ $appName }}\.ddev\.site$`)
+            ruleSyntax: v3
             service: {{ .App.Name }}-web-8025
             tls: true
     services:
