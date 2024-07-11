@@ -446,7 +446,15 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 		}
 
 		// convert the output to a string and prepend "#ddev-generated" to the string
-		finalYaml := "#ddev-generated\n" + extraConfigProcessedYAML.String()
+		finalYaml := `#ddev-generated
+# If you remove the ddev-generated line above you
+# are responsible for maintaining this file. DDEV will not then
+# update it, for example if you add 'additional_hostnames', etc.
+# However, it is now unnecessary and imprudent to take control of
+# this file, as there is now a dynamic merge mechanism. To use it,
+# create <project>/.ddev/traefik/dynamic_config.*.yaml files which
+# will then be merged in alphanumeric order. See the readme in the
+# /traefik directory for more information` + extraConfigProcessedYAML.String()
 
 		// write baseConfig to /project/.ddev/traefik/config/<project>.yaml
 		err = os.WriteFile(traefikYamlFile, []byte(finalYaml), 0755)
