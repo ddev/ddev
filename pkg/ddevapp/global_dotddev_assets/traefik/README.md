@@ -9,7 +9,7 @@ The `certs` directory contains default certs, and the `config` directory normall
 default dynamic configuration in the `config/default_config.yaml` file, which is available
 to all projects.
 
-Additional static configuration can be added to the DDEV-generated .static_config.yaml by
+Additional static configuration can be added to the DDEV-generated .static_config.yaml by 
 adding `static_config.*.yaml` files. For example, a `static_config.test.yaml` with the contents:
 
 ```
@@ -18,4 +18,4 @@ adding `static_config.*.yaml` files. For example, a `static_config.test.yaml` wi
 
 would be appended to the `.static_config.yaml`
 
-A more significant example (a Traefik plugin) is shown in the `static_config.plugins.yaml.example`.
+A more significant example (a Traefik plugin) is shown in the `static_config.fail2ban.yaml.example`.
