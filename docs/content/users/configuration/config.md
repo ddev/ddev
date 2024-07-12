@@ -465,7 +465,7 @@ Specific docker-compose version for download.
 If set to `v2.8.0`, for example, it will download and use that version instead of the expected version for docker-compose.
 
 !!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. Best avoided otherwise.
+    This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
 
 ## `router`
 

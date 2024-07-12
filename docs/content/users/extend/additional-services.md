@@ -5,7 +5,7 @@ search:
 
 # Additional Service Configurations & Add-ons
 
-DDEV projects can be extended to provide additional add-ons, including services. You can define these add-ons using docker-compose files in the project’s `.ddev` directory.
+DDEV projects can be extended to provide additional add-ons, including services. You can define these add-ons using `docker-compose.*.yaml` files in the project’s `.ddev` directory.
 
 Anyone can create their own services with a `.ddev/docker-compose.*.yaml` file, and a growing number of popular services are supported and tested, and can be installed using the [`ddev get`](../usage/commands.md#get) command.
 
