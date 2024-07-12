@@ -11,7 +11,7 @@
 {{- $appName := .App.Name | toLower }}
 http:
     middlewares:
-        redirectHttps:
+        redirectHttps-{{ .App.Name }}:
             redirectScheme:
                 permanent: true
                 scheme: https

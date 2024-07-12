@@ -1,7 +1,7 @@
 #ddev-generated
 http:
   middlewares:
-    redirectHttps:
+    redirectHttps-{{.App.Name}}:
       redirectScheme:
         scheme: https
         permanent: true
