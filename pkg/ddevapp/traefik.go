@@ -473,33 +473,6 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 
 		} else {
 
-			// if there aren't any dynamic_config.*.yaml files defined, then check if there's at least a dynamic_config.middlewares.yaml.example file.
-			// If not, create it from the go template, populating {{.App.Name}} where appropriate (e.g for router namespacing)
-			// This is needed because using dotddev_assets/traefik/ to inject the example file does not really allow for filling out the templates,
-			// which is desired so that users don't have to see or touch go templates
-			// Also, the example should only be created if there aren't any extra config files in use already, to avoid it being recreated on each start
-
-			dynamicExampleFile := filepath.Join(projectTraefikDir, "dynamic_config.middlewares.yaml.example")
-			fi, err := os.Stat(dynamicExampleFile)
-			// Don't use simple fileutil.FileExists() because of the danger of an empty file
-			if err != nil || fi.Size() > 0 {
-
-				f, err := os.Create(dynamicExampleFile)
-				if err != nil {
-					return fmt.Errorf("failed to create Traefik config middlewares example file: %v", err)
-				}
-
-				t, err := template.New("traefik_dynamic_config_example_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_dynamic_config_example_template.yaml")
-				if err != nil {
-					return fmt.Errorf("could not create template from traefik_dynamic_config_example_template.yaml: %v", err)
-				}
-
-				err = t.Execute(f, templateData)
-				if err != nil {
-					return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
-				}
-			}
-
 			// Since there weren't any dynamic_config.*.yaml files, we can just write the contents of the base temp file to .ddev/traefik/<project.yaml>
 			finalYaml, err = os.ReadFile(tmpFileName)
 			if err != nil {
@@ -512,6 +485,29 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 		err = os.WriteFile(traefikYamlFile, finalYaml, 0755)
 		if err != nil {
 			return fmt.Errorf("could not write to traefikYamlFile: %v", err)
+		}
+
+		// Recreate the example config file on each ddev start, so as to both keep it up to date if we change things, as well as to always have
+		// an example available there to be modified.
+		// It is created from a template file, populating {{.App.Name}} where appropriate (e.g for router namespacing)
+		// This is needed because using dotddev_assets/traefik/ to inject the example file does not really allow for filling out the templates,
+		// which is desired so that users don't have to see or touch go templates
+
+		dynamicExampleFile := filepath.Join(projectTraefikDir, "dynamic_config.middlewares.yaml.example")
+
+		f, err := os.Create(dynamicExampleFile)
+		if err != nil {
+			return fmt.Errorf("failed to create Traefik config middlewares example file: %v", err)
+		}
+
+		t, err = template.New("traefik_dynamic_config_example_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_dynamic_config_example_template.yaml")
+		if err != nil {
+			return fmt.Errorf("could not create template from traefik_dynamic_config_example_template.yaml: %v", err)
+		}
+
+		err = t.Execute(f, templateData)
+		if err != nil {
+			return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
 		}
 	}
 
