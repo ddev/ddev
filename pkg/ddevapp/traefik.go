@@ -467,7 +467,6 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 # /traefik directory for more information
 
 ` + extraConfigProcessedYAML.String()
-
 			// write baseConfig to /project/.ddev/traefik/config/<project>.yaml
 			err = os.WriteFile(traefikYamlFile, []byte(finalYaml), 0755)
 			if err != nil {
@@ -498,6 +497,17 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 				if err != nil {
 					return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
 				}
+			}
+
+			// Since there weren't any dynamic_config.*.yaml files, we can just write the contents of the base temp file to .ddev/traefik/<project.yaml>
+			tmpFileContent, err := os.ReadFile(tmpFileName)
+			if err != nil {
+				return fmt.Errorf("could not read tmpFileName: %v", err)
+			}
+
+			err = os.WriteFile(traefikYamlFile, tmpFileContent, 0755)
+			if err != nil {
+				return fmt.Errorf("could not write to traefikYamlFile: %v", err)
 			}
 		}
 	}
