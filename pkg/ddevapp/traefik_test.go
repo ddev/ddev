@@ -208,7 +208,13 @@ func TestTraefikStaticConfig(t *testing.T) {
 			// Now read result config and compare
 			renderedStaticConfig, err := fileutil.ReadFileIntoString(staticConfigFinalPath)
 			require.NoError(t, err)
-			require.Equal(t, string(unmarshalledExpectationString), renderedStaticConfig)
+			// Need to unmarshall and remarshal to get rid of #ddev-generated comment
+			err = yaml.Unmarshal([]byte(renderedStaticConfig), &tmpMap)
+			require.NoError(t, err)
+			unmarshalledActualString, err := yaml.Marshal(tmpMap)
+			require.NoError(t, err)
+			
+			require.Equal(t, string(unmarshalledExpectationString), string(unmarshalledActualString))
 		})
 	}
 }
