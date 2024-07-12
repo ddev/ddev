@@ -1535,9 +1535,9 @@ func (app *DdevApp) PullContainerImages() error {
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
-// We always need web image and busybox for housekeeping.
+// We always need web image, busybox, and ddev-utilities for housekeeping.
 func PullBaseContainerImages() error {
-	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage}
+	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage, versionconstants.UtilitiesImage}
 	images = append(images, FindNotOmittedImages(nil)...)
 
 	for _, i := range images {

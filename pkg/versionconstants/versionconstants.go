@@ -31,6 +31,9 @@ var SSHAuthTag = "v1.23.3"
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
 
+// UtilitiesImage is used in bash scripts
+var UtilitiesImage = "ddev/ddev-utilities"
+
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
