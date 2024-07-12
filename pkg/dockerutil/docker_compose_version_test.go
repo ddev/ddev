@@ -67,11 +67,6 @@ func TestDockerComposeDownload(t *testing.T) {
 		assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), activeVersion)
 	}
 
-	// Test using docker-compose from path.
-	// Make sure our Required/Expected DockerComposeVersion is not something we'd find on the machine
-	globalconfig.DockerComposeVersion = ""
-	globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = "v2.5.1"
-	globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = true
 	activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
 	assert.NoError(err)
 	path, err := exec.LookPath("docker-compose")

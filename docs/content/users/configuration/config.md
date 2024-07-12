@@ -588,7 +588,7 @@ Whether to use the system-installed docker-compose. You can otherwise use [`requ
 When `true`, DDEV will use the docker-compose found in on your system’s path instead of using its private, known-good, docker-compose version.
 
 !!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. Best avoided otherwise.
+    This should only be used in specific cases like troubleshooting. (It is used in the Docker Compose automated tests.)
 
 ## `use_hardened_images`
 
