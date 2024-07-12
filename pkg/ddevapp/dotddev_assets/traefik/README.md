@@ -10,7 +10,7 @@ adding `dynamic_config.*.yaml` files to the `traefik` directory. As with the glo
 merging is done with an **override** strategy, meaning that the final file in alphanumeric sort to touch a
 particular element of the YAML structure wins.
 
-The `dynamic_config.middleware.yaml.example` can be used as a starting point for adding
+The `dynamic_config.middlewares.yaml.example` can be used as a starting point for adding
 middlewares - be they built-in (https://doc.traefik.io/traefik/middlewares/overview/) or 3rd party plugins
 (https://plugins.traefik.io/plugins). For plugins, it is important to click Install Plugin on any plugin page
 to receive the plugin's configuration, as the configuration provided in the body of the page tends to be outdated.

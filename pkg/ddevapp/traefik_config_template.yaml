@@ -3,7 +3,7 @@
 # are responsible for maintaining this file. DDEV will not then
 # update it, for example if you add `additional_hostnames`, etc.
 # However, it is now unnecessary and imprudent to take control of
-# this file, as there is now a dynamic merge mechanism. To use it
+# this file, as there is now a dynamic merge mechanism. To use it,
 # create <project>/.ddev/traefik/dynamic_config.*.yaml files which
 # will then be merged in alphanumeric order. See the readme in the
 # /traefik directory for more information
