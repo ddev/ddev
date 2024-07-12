@@ -34,42 +34,15 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
-	Run: func(cmd *cobra.Command, _ []string) {
-		// We only want to pass all flags and args to Composer
-		// cobra does not seem to allow direct access to everything predictably
-		var osargs []string
-		if len(os.Args) > 3 {
-			osargs = os.Args[3:]
-			var expandedOsargs []string
-			for _, osarg := range osargs {
-				// If this is a combined short option like "-test", split it into "-t -e -s -t"
-				// This is necessary, because each of these options will be checked for validity
-				if strings.HasPrefix(osarg, "-") && !strings.HasPrefix(osarg, "--") && len(osarg) > 2 {
-					// -vvv and -vv are exceptions, that should not be split
-					if strings.HasPrefix(osarg, "-vvv") {
-						expandedOsargs = append(expandedOsargs, "-vvv")
-						continue
-					}
-					if strings.HasPrefix(osarg, "-vv") {
-						expandedOsargs = append(expandedOsargs, "-vv")
-						continue
-					}
-					for _, char := range osarg[1:] {
-						expandedOsargs = append(expandedOsargs, "-"+string(char))
-					}
-				} else {
-					expandedOsargs = append(expandedOsargs, osarg)
-				}
-			}
-			osargs = expandedOsargs
-		} else {
-			_ = cmd.Help()
-			return
-		}
-
+	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
+		}
+
+		if len(args) < 1 {
+			_ = cmd.Help()
+			return
 		}
 
 		// Ensure project is running
@@ -121,22 +94,33 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		// Function to check if a Composer option is valid for a given command
 		isValidComposerOption := func(command, option string) bool {
-			// We have to pass arguments and options to "create-project",
-			// but only options for other composer commands.
-			if command != "create-project" && !strings.HasPrefix(option, "-") {
-				return false
+			// All arguments are valid for "create-project" and not valid for other commands.
+			if !strings.HasPrefix(option, "-") {
+				return command == "create-project"
 			}
 			// Try each option with --dry-run to see if it is valid.
 			validateCmd := []string{"composer", command, option, "--dry-run"}
 			userOutFunc := util.CaptureUserOut()
-			_, _, _ = app.Exec(&ddevapp.ExecOpts{
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Dir:     app.GetComposerRoot(true, false),
 				RawCmd:  validateCmd,
 			})
 			out := userOutFunc()
-			// If there is an error from symfony/console, it is an invalid option
-			return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
+			if err == nil {
+				return true
+			}
+			// If it's an error for the "--dry-run" we use in validateCmd, then the option is valid.
+			if option != "--dry-run" && strings.Contains(out, `"--dry-run" option does not exist`) {
+				return true
+			}
+			// We only care about the "option does not exist" error for "create-project",
+			// and if there are other errors, the user should see them.
+			if command == "create-project" {
+				return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
+			}
+			// The option is not valid for other commands on any error.
+			return false
 		}
 
 		// Add some args to avoid troubles while cloning the project.
@@ -144,9 +128,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// These options make the difference between "composer create-project" and "ddev composer create".
 		var createArgs []string
 
-		for _, osarg := range osargs {
-			if isValidComposerOption("create-project", osarg) {
-				createArgs = append(createArgs, osarg)
+		for _, arg := range args {
+			if isValidComposerOption("create-project", arg) {
+				createArgs = append(createArgs, arg)
 			}
 		}
 
