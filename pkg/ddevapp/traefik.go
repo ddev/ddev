@@ -428,9 +428,8 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 		if err != nil {
 			return err
 		}
-
-		// Check if extra config files were found - this is needed so that the else condition can create a dynamic_config.middlewares.yaml.example
-		// file if needed. This is because using dotddev_assets/traefik/ to inject the example file was not permitted to be used
+		var finalYaml []byte
+		// Check if extra config files were found. If not, no need to proceed.
 		if len(extraDynamicConfigFiles) > 0 {
 
 			// convert config files to maps and merge them, returning a yaml string
@@ -440,9 +439,6 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 			}
 
 			// In the event that any of the extra configs contained go template {{ }} placeholders, create a new template and parse the YAML string into it.
-			// Importantly, template {{ }} placeholders cannot go at the start of a key (e.g. `{{.App.Name}}-web-80-http`).
-			// They must be preceded by any character, or used in YAML values. This means that if a middleware needs to be namespaced with the app's name,
-			// it will either need to be done manually or pre-namespaced when an add-on creates its dynamic_config.*.yaml file from its own go template.
 			tmpl, err := template.New("dynamic_config_extras").Funcs(getTemplateFuncMap()).Parse(string(resultYaml))
 			if err != nil {
 				return fmt.Errorf("error parsing template: %s", err)
@@ -455,8 +451,8 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 				return fmt.Errorf("error executing template: %s", err)
 			}
 
-			// convert the output to a string and prepend "#ddev-generated" to the string
-			finalYaml := `#ddev-generated
+			// convert the output to a string and prepend "#ddev-generated" to the string, and then convert all of it to []byte to be written to file
+			finalYaml = []byte(`#ddev-generated
 # If you remove the ddev-generated line above you
 # are responsible for maintaining this file. DDEV will not then
 # update it, for example if you add 'additional_hostnames', etc.
@@ -466,17 +462,14 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 # will then be merged in alphanumeric order. See the readme in the
 # /traefik directory for more information
 
-` + extraConfigProcessedYAML.String()
-			// write baseConfig to /project/.ddev/traefik/config/<project>.yaml
-			err = os.WriteFile(traefikYamlFile, []byte(finalYaml), 0755)
-			if err != nil {
-				return err
-			}
+` + extraConfigProcessedYAML.String())
 
 		} else {
 
 			// if there aren't any dynamic_config.*.yaml files defined, then check if there's at least a dynamic_config.middlewares.yaml.example file.
 			// If not, create it from the go template, populating App.Name where appropriate (e.g for router namespacing)
+			// This is needed because using dotddev_assets/traefik/ to inject the example file was not permitted to be used, and the example
+			// should only be created if there aren't any extra config files in use already
 
 			dynamicExampleFile := filepath.Join(projectTraefikDir, "dynamic_config.middlewares.yaml.example")
 			fi, err := os.Stat(dynamicExampleFile)
@@ -500,15 +493,17 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 			}
 
 			// Since there weren't any dynamic_config.*.yaml files, we can just write the contents of the base temp file to .ddev/traefik/<project.yaml>
-			tmpFileContent, err := os.ReadFile(tmpFileName)
+			finalYaml, err = os.ReadFile(tmpFileName)
 			if err != nil {
 				return fmt.Errorf("could not read tmpFileName: %v", err)
 			}
 
-			err = os.WriteFile(traefikYamlFile, tmpFileContent, 0755)
-			if err != nil {
-				return fmt.Errorf("could not write to traefikYamlFile: %v", err)
-			}
+		}
+		
+		// write the <project>.yaml file to the project's .ddev/traefik/config directory
+		err = os.WriteFile(traefikYamlFile, finalYaml, 0755)
+		if err != nil {
+			return fmt.Errorf("could not write to traefikYamlFile: %v", err)
 		}
 	}
 

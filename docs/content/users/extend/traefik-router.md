@@ -56,6 +56,7 @@ Project-specific configuration is automatically generated in the project’s `.d
 * The `config/<projectname>.yaml` file contains the configuration for the project, including information about routers, services, and certificates.
     * You can modify a project's dynamic configuration by adding `dynamic_config.*.yaml` files to `.ddev/traefik/`. These will be merged with an alphanumeric sort **override** strategy, so anything that is needed can be added or replaced.
     * An example `.ddev/traefik/dynamic_config.middlewares.yaml.example` file is provided in `.ddev/traefik/`. It can be modified to define and assign different middlewares, as well as overriding any default parameters. Please see `.ddev/traefik/README.md` file for more details.
+    * The extra config files may contain Go template placeholders, for injecting App-specific data into the config. But this is an advanced option that most can ignore. If you use them, note that template {{ }} placeholders cannot go at the start of a key (e.g. `{{.App.Name}}-web-80-http`). They must be preceded by any character, or used in YAML values. This means that if a middleware needs to be namespaced with the app's name, it will either need to be done manually or pre-namespaced when an add-on creates its dynamic_config.*.yaml file from its own go template.
 
 ## Debugging Traefik Routing
 
