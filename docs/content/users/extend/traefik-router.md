@@ -22,7 +22,7 @@ All Traefik configuration uses the *file* provider, not the *Docker* provider. E
 Static configuration is automatically generated in the `~/.ddev/traefik` directory. "Static" configuration means Traefik configuration which is only read when the router is started.
 
 * `.static_config.yaml` (a hidden file) is the configuration that gets used. It is not to be edited; it is generated from DDEV's base configuration while merging any files named `static_config.*.yaml`. It is read on router startup, and does not change until the router starts again (normally after `ddev poweroff`).
-* Additional static configuration may be added by adding `static_config.*.yaml` files, which will be merged into the generated `.static_config.yaml`. For example, a `static_config.plugin.yaml` might contain external Traefik plugins, or a `static_config.dnschallenge.yaml` might provide configuration for additional `certificatesResolvers`. Merging is done with an **override** strategy, meaning that the final file in alphanumeric sort to touch a particular element of the YAML structure wins.
+* Additional static configuration may be added by adding `static_config.*.yaml` files, which will be merged into the generated `.static_config.yaml`. For example, a `static_config.plugins.yaml` might contain external Traefik plugins, or a `static_config.dnschallenge.yaml` might provide configuration for additional `certificatesResolvers`. Merging is done with an **override** strategy, meaning that the final file in alphanumeric sort to touch a particular element of the YAML structure wins.
     Some examples of `static_config.*.yaml` files are:
     * `static_config.cloudflare.yaml`:
 
@@ -35,7 +35,7 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
               provider: cloudflare
       ```
 
-    * `static_config.fail2ban.yaml`
+    * `static_config.plugins.yaml`
 
         ```yaml
         experimental:
