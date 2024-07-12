@@ -12,51 +12,51 @@ Before continuing, it's important to note that **very few users ever experiment 
 
 You can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/getting-started/configuration-overview/). (DDEV uses the Traefik `v2` rule syntax by default, `defaultRuleSyntax: v2`. However, any custom router configuration can use `ruleSyntax: v3` to override this.)
 
-All Traefik configuration uses the *file* provider, not the *Docker* provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
+All Traefik configuration uses the _file_ provider, not the _Docker_ provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
 
 !!!tip
-    Like other DDEV configuration, any file with `#ddev-generated` will be overwritten unless you choose to “take over” it yourself. You can do this by removing the `#ddev-generated` line. DDEV will stop making changes to that file and you’ll be responsible for updating it.
+Like other DDEV configuration, any file with `#ddev-generated` will be overwritten unless you choose to “take over” it yourself. You can do this by removing the `#ddev-generated` line. DDEV will stop making changes to that file and you’ll be responsible for updating it.
 
 ### Traefik Static Configuration
 
 Static configuration is automatically generated in the `~/.ddev/traefik` directory. "Static" configuration means Traefik configuration which is only read when the router is started.
 
-* `.static_config.yaml` (a hidden file) is the configuration that gets used. It is not to be edited; it is generated from DDEV's base configuration while merging any files named `static_config.*.yaml`. It is read on router startup, and does not change until the router starts again (normally after `ddev poweroff`).
-* Additional static configuration may be added by adding `static_config.*.yaml` files, which will be merged into the generated `.static_config.yaml`. For example, a `static_config.plugins.yaml` might contain external Traefik plugins, or a `static_config.dnschallenge.yaml` might provide configuration for additional `certificatesResolvers`. Merging is done with an **override** strategy, meaning that the final file in alphanumeric sort to touch a particular element of the YAML structure wins.
-    Some examples of `static_config.*.yaml` files are:
-    * `static_config.cloudflare.yaml`:
+- `.static_config.yaml` (a hidden file) is the configuration that gets used. It is not to be edited; it is generated from DDEV's base configuration while merging any files named `static_config.*.yaml`. It is read on router startup, and does not change until the router starts again (normally after `ddev poweroff`).
+- Additional static configuration may be added by adding `static_config.*.yaml` files, which will be merged into the generated `.static_config.yaml`. For example, a `static_config.plugins.yaml` might contain external Traefik plugins, or a `static_config.dnschallenge.yaml` might provide configuration for additional `certificatesResolvers`. Merging is done with an **override** strategy, meaning that the final file in alphanumeric sort to touch a particular element of the YAML structure wins.
+  Some examples of `static_config.*.yaml` files are:
 
-      ```yaml
-      certificatesResolvers:
-        acme-dnsChallenge:
-          acme:
-            email: admin@example.com
-            dnsChallenge:
-              provider: cloudflare
-      ```
+  - `static_config.cloudflare.yaml`:
 
-    * `static_config.plugins.yaml`
+    ```yaml
+    certificatesResolvers:
+      acme-dnsChallenge:
+        acme:
+          email: admin@example.com
+          dnsChallenge:
+            provider: cloudflare
+    ```
 
-        ```yaml
-        experimental:
-          plugins:
-            fail2ban:
-              moduleName: "github.com/tomMoulard/fail2ban"
-              version: "v0.8.1"
-      ```
+  - `static_config.plugins.yaml`
 
-* `certs/default_cert.*` files are the default DDEV-generated certificates, normally created by `mkcert`.
-* `config/default_config.yaml` contains global *dynamic* configuration, including pointers to the default certificates. It is possible to add other Traefik configuration in the `config` directory, which will apply to all projects. For example, a `config/router_middlewares.yaml` file might provide middleware implementations that would apply to all projects.
+    ```yaml
+    experimental:
+      plugins:
+        fail2ban:
+          moduleName: "github.com/tomMoulard/fail2ban"
+          version: "v0.8.1"
+    ```
+
+- `certs/default_cert.*` files are the default DDEV-generated certificates, normally created by `mkcert`.
+- `config/default_config.yaml` contains global _dynamic_ configuration, including pointers to the default certificates. It is possible to add other Traefik configuration in the `config` directory, which will apply to all projects. For example, a `config/router_middlewares.yaml` file might provide middleware implementations that would apply to all projects.
 
 ### Project Traefik Configuration
 
 Project-specific configuration is automatically generated in the project’s `.ddev/traefik/config` directory. For example, a project named `example` will have a `.ddev/traefik/config/example.yaml` which describes the routers, middlewares, and services generated by default for that project. These are based on the base hostname, `additional_hostnames`, and `additional_fqdns` defined for the project. They also include support for add-ons and services that use `HTTP_EXPOSE`, `HTTPS_EXPOSE`, and `VIRTUAL_HOST` configurations.
 
-* The `certs` directory contains the `<projectname>.crt` and `<projectname>.key` certificate generated for the project.
-* The `config/<projectname>.yaml` file contains the configuration for the project, including information about routers, services, and certificates.
-    * You can modify a project's dynamic configuration by adding `dynamic_config.*.yaml` files to `.ddev/traefik/`. These will be merged with an alphanumeric sort **override** strategy, so anything that is needed can be added or replaced.
-    * An example `.ddev/traefik/dynamic_config.middlewares.yaml.example` file is provided in `.ddev/traefik/`. It can be modified to define and assign different middlewares, as well as overriding any default parameters. Please see `.ddev/traefik/README.md` file for more details.
-    * The extra config files may contain Go template placeholders, for injecting App-specific data into the config. But this is an advanced option that most can ignore. If you use them, note that template `{{ }}` placeholders cannot go at the start of a key (e.g. `{{.App.Name}}-web-80-http`). They must be preceded by any character, or used in YAML values. This means that if a middleware needs to be prefixed with the app's name, it will either need to be done manually or prefixed when an add-on creates its `dynamic_config.*.yaml` file from its own go template.
+- The `certs` directory contains the `<projectname>.crt` and `<projectname>.key` certificate generated for the project.
+- The `config/<projectname>.yaml` file contains the configuration for the project, including information about routers, services, and certificates.
+  - You can modify a project's dynamic configuration by adding `dynamic_config.*.yaml` files to `.ddev/traefik/`. These will be merged with an alphanumeric sort **override** strategy, so anything that is needed can be added or replaced.
+  - An example `.ddev/traefik/dynamic_config.middlewares.yaml.example` file is provided in `.ddev/traefik/`. It can be modified to define and assign different middlewares, as well as overriding any default parameters. Please see `.ddev/traefik/README.md` file for more details.
 
 ## Debugging Traefik Routing
 

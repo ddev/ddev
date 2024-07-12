@@ -1,7 +1,7 @@
 #ddev-generated
-# This example file will be regenerated on each ddev start
-# Please see the adjacent `<project>/.ddev/traefik/README.md` or the the docs at
-# https://ddev.readthedocs.io/en/stable/users/extend/traefik-router/ for more details on how to use this
+# # Please see the `README.md` in this directory or the docs at
+# https://ddev.readthedocs.io/en/stable/users/extend/traefik-router/
+# for more details on how to use this
 
 http:
   routers:
