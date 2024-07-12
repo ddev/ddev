@@ -291,7 +291,6 @@ func TestTraefikDynamicConfig(t *testing.T) {
 			var tmpMap map[string]interface{}
 			err = yaml.Unmarshal([]byte(resultString), &tmpMap)
 			require.NoError(t, err)
-
 			unmarshalledExpectationString, err := yaml.Marshal(tmpMap)
 			require.NoError(t, err)
 
@@ -299,10 +298,10 @@ func TestTraefikDynamicConfig(t *testing.T) {
 			err = ddevapp.ConfigureTraefikForApp(app)
 			require.NoError(t, err)
 			// Now read result config and compare
-			renderedStaticConfig, err := fileutil.ReadFileIntoString(dynamicConfigFinalPath)
+			renderedDynamicConfig, err := fileutil.ReadFileIntoString(dynamicConfigFinalPath)
 			require.NoError(t, err)
 			// Need to unmarshall and remarshal to get rid of #ddev-generated comment
-			err = yaml.Unmarshal([]byte(renderedStaticConfig), &tmpMap)
+			err = yaml.Unmarshal([]byte(renderedDynamicConfig), &tmpMap)
 			require.NoError(t, err)
 			unmarshalledActualString, err := yaml.Marshal(tmpMap)
 			require.NoError(t, err)
