@@ -55,7 +55,7 @@ Project-specific configuration is automatically generated in the project’s `.d
 * The `certs` directory contains the `<projectname>.crt` and `<projectname>.key` certificate generated for the project.
 * The `config/<projectname>.yaml` file contains the configuration for the project, including information about routers, services, and certificates.
     * You can modify a project's dynamic configuration by adding `dynamic_config.*.yaml` files to `.ddev/traefik/`. These will be merged with an alphanumeric sort **override** strategy, so anything that is needed can be added or replaced.
-    * An example `.ddev/traefik/dynamic_config.middlewares.yaml.example` file is provided in `.ddev/traefik/. It can be modified to define and assign different middlewares, as well as overriding any default parameters. Please see `.ddev/traefik/README.md` file for more details.
+    * An example `.ddev/traefik/dynamic_config.middlewares.yaml.example` file is provided in `.ddev/traefik/`. It can be modified to define and assign different middlewares, as well as overriding any default parameters. Please see `.ddev/traefik/README.md` file for more details.
 
 ## Debugging Traefik Routing
 
