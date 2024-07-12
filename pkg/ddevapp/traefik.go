@@ -394,59 +394,69 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 	if !sigExists {
 		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
 	} else {
-		f, err := os.Create(traefikYamlFile)
+
+		//create a temp file to hold the base traefik config while we merge and process it with the dynamic_config.*.yaml files
+		dynamicConfigTemp, err := os.CreateTemp("", "dynamic_config-")
 		if err != nil {
-			return fmt.Errorf("failed to create Traefik config file: %v", err)
+			return err
 		}
+
 		t, err := template.New("traefik_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
 		}
 
-		err = t.Execute(f, templateData)
+		err = t.Execute(dynamicConfigTemp, templateData)
 		if err != nil {
 			return fmt.Errorf("could not parse traefik_config_template.yaml with templatedate='%v':: %v", templateData, err)
 		}
-	}
 
-	/* The following section reads the project/.ddev/traefik/dynamic_config.*.yaml files, fills any template placeholders in them with the
-	App's templateData (for	targeting the appropriate routers (e.g. {projectname}-web-80-http) or for rewriting the App's URL in the
-	response body), then merges their content into the base dynamic config YAML generated above, and is finally written to /project/.ddev/
-	traefik/config/<project>.yaml. Allows for adding middlewares, overriding settings, etc...
-	*/
-
-	extraDynamicConfigFiles, err := fileutil.GlobFilenames(projectTraefikDir, "dynamic_config.*.yaml")
-	if err != nil {
-		return err
-	}
-
-	// Only proceed if extra config files were found
-	if len(extraDynamicConfigFiles) > 0 {
-
-		// convert config files to maps and merge them, returning a yaml string
-		resultYaml, err := util.MergeYamlFiles(traefikYamlFile, extraDynamicConfigFiles...)
+		tmpFileName := dynamicConfigTemp.Name()
+		err = dynamicConfigTemp.Close()
 		if err != nil {
 			return err
 		}
 
-		// In the event that any of the extra configs contained go template {{ }} placeholders, create a new template and parse the YAML
-		// string into it. Importantly, template {{ }} placeholders can only go in the values of the YAML, not the keys. This means that
-		// if a middleware needs to be namespaced with the app's name, it will either need to be done manually or pre-namespaced when an
-		// add-on creates its dynamic_config.*.yaml file from its own go template.
-		tmpl, err := template.New("dynamic_config_extras").Funcs(getTemplateFuncMap()).Parse(string(resultYaml))
+		/* The following section reads the project/.ddev/traefik/dynamic_config.*.yaml files, fills any template placeholders in them with the
+		App's templateData (for	targeting the appropriate routers (e.g. {projectname}-web-80-http) or for rewriting the App's URL in the
+		response body), then merges their content into the base dynamic config YAML generated above, and is finally written to /project/.ddev/
+		traefik/config/<project>.yaml. Allows for adding middlewares, overriding settings, etc...
+		*/
+
+		// find all dynamic_config.*.yaml files in the project's .ddev/traefik directory
+		extraDynamicConfigFiles, err := fileutil.GlobFilenames(projectTraefikDir, "dynamic_config.*.yaml")
 		if err != nil {
-			return fmt.Errorf("error parsing template: %s", err)
+			return err
 		}
 
-		// Execute the template with the app's templateData
-		var extraConfigProcessedYAML strings.Builder
-		err = tmpl.Execute(&extraConfigProcessedYAML, templateData)
-		if err != nil {
-			return fmt.Errorf("error executing template: %s", err)
-		}
+		// Check if extra config files were found - this is needed so that the else condition can create a dynamic_config.middlewares.yaml.example
+		// file if needed. This is because using dotddev_assets/traefik/ to inject the example file was not permitted to be used
+		if len(extraDynamicConfigFiles) > 0 {
 
-		// convert the output to a string and prepend "#ddev-generated" to the string
-		finalYaml := `#ddev-generated
+			// convert config files to maps and merge them, returning a yaml string
+			resultYaml, err := util.MergeYamlFiles(tmpFileName, extraDynamicConfigFiles...)
+			if err != nil {
+				return err
+			}
+
+			// In the event that any of the extra configs contained go template {{ }} placeholders, create a new template and parse the YAML string into it.
+			// Importantly, template {{ }} placeholders cannot go at the start of a key (e.g. `{{.App.Name}}-web-80-http`).
+			// They must be preceded by any character, or used in YAML values. This means that if a middleware needs to be namespaced with the app's name,
+			// it will either need to be done manually or pre-namespaced when an add-on creates its dynamic_config.*.yaml file from its own go template.
+			tmpl, err := template.New("dynamic_config_extras").Funcs(getTemplateFuncMap()).Parse(string(resultYaml))
+			if err != nil {
+				return fmt.Errorf("error parsing template: %s", err)
+			}
+
+			// Execute the template with the app's templateData
+			var extraConfigProcessedYAML strings.Builder
+			err = tmpl.Execute(&extraConfigProcessedYAML, templateData)
+			if err != nil {
+				return fmt.Errorf("error executing template: %s", err)
+			}
+
+			// convert the output to a string and prepend "#ddev-generated" to the string
+			finalYaml := `#ddev-generated
 # If you remove the ddev-generated line above you
 # are responsible for maintaining this file. DDEV will not then
 # update it, for example if you add 'additional_hostnames', etc.
@@ -458,35 +468,36 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 
 ` + extraConfigProcessedYAML.String()
 
-		// write baseConfig to /project/.ddev/traefik/config/<project>.yaml
-		err = os.WriteFile(traefikYamlFile, []byte(finalYaml), 0755)
-		if err != nil {
-			return err
-		}
-
-	} else {
-
-		// if there aren't any dynamic_config.*.yaml files defined, then check if there's at least a
-		// dynamic_config.middlewares.yaml.example file. If not, create it from the go template, populating App.Name where appropriate
-
-		dynamicExampleFile := filepath.Join(projectTraefikDir, "dynamic_config.middlewares.yaml.example")
-		fi, err := os.Stat(dynamicExampleFile)
-		// Don't use simple fileutil.FileExists() because of the danger of an empty file
-		if err != nil || fi.Size() > 0 {
-
-			f, err := os.Create(dynamicExampleFile)
+			// write baseConfig to /project/.ddev/traefik/config/<project>.yaml
+			err = os.WriteFile(traefikYamlFile, []byte(finalYaml), 0755)
 			if err != nil {
-				return fmt.Errorf("failed to create Traefik config middlewares example file: %v", err)
+				return err
 			}
 
-			t, err := template.New("traefik_dynamic_config_example_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_dynamic_config_example_template.yaml")
-			if err != nil {
-				return fmt.Errorf("could not create template from traefik_dynamic_config_example_template.yaml: %v", err)
-			}
+		} else {
 
-			err = t.Execute(f, templateData)
-			if err != nil {
-				return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
+			// if there aren't any dynamic_config.*.yaml files defined, then check if there's at least a dynamic_config.middlewares.yaml.example file.
+			// If not, create it from the go template, populating App.Name where appropriate (e.g for router namespacing)
+
+			dynamicExampleFile := filepath.Join(projectTraefikDir, "dynamic_config.middlewares.yaml.example")
+			fi, err := os.Stat(dynamicExampleFile)
+			// Don't use simple fileutil.FileExists() because of the danger of an empty file
+			if err != nil || fi.Size() > 0 {
+
+				f, err := os.Create(dynamicExampleFile)
+				if err != nil {
+					return fmt.Errorf("failed to create Traefik config middlewares example file: %v", err)
+				}
+
+				t, err := template.New("traefik_dynamic_config_example_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_dynamic_config_example_template.yaml")
+				if err != nil {
+					return fmt.Errorf("could not create template from traefik_dynamic_config_example_template.yaml: %v", err)
+				}
+
+				err = t.Execute(f, templateData)
+				if err != nil {
+					return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
+				}
 			}
 		}
 	}
