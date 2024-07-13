@@ -20,3 +20,9 @@ case with the middleware definitions, which can be finicky. If it isn't working,
 middlewares at http://localhost:10999/dashboard/, where they will show you an error if something was ill-defined.
 
 You can also add other files to override any other aspect of the `<project>.yaml`
+
+The extra config files may also contain Go template placeholders, for injecting App-specific data into the config.
+But this is an advanced option that most can ignore. If you use them, note that template `{{ }}` placeholders cannot
+go at the start of a key (e.g. `{{.App.Name}}-web-80-http`). They must be preceded by any character, or used in YAML
+values. This means that if a middleware needs to be prefixed with the app's name, it will either need to be done
+manually or prefixed when an add-on creates its `dynamic_config.*.yaml` file from its own go template.
