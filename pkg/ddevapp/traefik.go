@@ -410,6 +410,7 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 			return err
 		}
 
+		// it must be parsed through a template in order to be able to be unmarshaled while merging
 		t, err := template.New("traefik_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
