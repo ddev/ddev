@@ -16,10 +16,28 @@ func YamlFileToMap(fname string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("unable to read file %s (%v)", fname, err)
 	}
 
+	return YamlToMap(contents)
+}
+
+// YamlFileToMap() reads the passed string or []byte into a map[string]interface{}
+func YamlToMap(yamlInput interface{}) (map[string]interface{}, error) {
+
 	itemMap := make(map[string]interface{})
-	err = yaml.Unmarshal(contents, &itemMap)
+
+	var yamlBytes []byte
+
+	switch v := yamlInput.(type) {
+	case string:
+		yamlBytes = []byte(v)
+	case []byte:
+		yamlBytes = v
+	default:
+		return nil, fmt.Errorf("input must be string or []byte")
+	}
+
+	err := yaml.Unmarshal(yamlBytes, &itemMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal %s: %v", contents, err)
+		return nil, fmt.Errorf("unable to unmarshal YAML: %v", err)
 	}
 	return itemMap, nil
 }
@@ -63,6 +81,33 @@ func MergeYamlFiles(baseFile string, extraFile ...string) (string, error) {
 	}
 	for _, fileName := range extraFile {
 		m, err := YamlFileToMap(fileName)
+		if err != nil {
+			return "", err
+		}
+		err = mergo.Merge(&resultMap, m, mergo.WithOverride)
+		if err != nil {
+			return "", err
+		}
+	}
+	result, err := yaml.Marshal(resultMap)
+	if err != nil {
+		return "", err
+	}
+
+	return string(result), nil
+}
+
+// MergeYamlStrings merges extraFiles strings into the baseFile, returning the result as a string
+// Useful when a template file has been processed into a YAML string
+// Merging is *override* based, so later files can override contents of others
+func MergeYamlStrings(baseFile string, extraFile []string) (string, error) {
+
+	resultMap, err := YamlToMap(baseFile)
+	if err != nil {
+		return "", err
+	}
+	for _, fileName := range extraFile {
+		m, err := YamlToMap(fileName)
 		if err != nil {
 			return "", err
 		}

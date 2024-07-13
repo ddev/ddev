@@ -404,70 +404,47 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
 	} else {
 
-		//create a temp file to hold the base traefik config while we merge and process it with the dynamic_config.*.yaml files
-		dynamicConfigTemp, err := os.CreateTemp("", "dynamic_config-")
+		// Parse base config template into a string
+		baseConfigString, err := ParseBundledTemplateFileToString("traefik_config_template.yaml", templateData)
 		if err != nil {
 			return err
 		}
 
-		// it must be parsed through a template in order to be able to be unmarshaled while merging
-		t, err := template.New("traefik_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
-		if err != nil {
-			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
-		}
-
-		err = t.Execute(dynamicConfigTemp, templateData)
-		if err != nil {
-			return fmt.Errorf("could not parse traefik_config_template.yaml with templatedate='%v':: %v", templateData, err)
-		}
-
-		tmpFileName := dynamicConfigTemp.Name()
-		err = dynamicConfigTemp.Close()
-		if err != nil {
-			return err
-		}
-
-		/* The following section reads the project/.ddev/traefik/dynamic_config.*.yaml files, fills any template placeholders in them with the
-		App's templateData (for	targeting the appropriate routers (e.g. {projectname}-web-80-http) or for rewriting the App's URL in the
-		response body), then merges their content into the base dynamic config YAML generated above, and is finally written to /project/.ddev/
-		traefik/config/<project>.yaml. Allows for adding middlewares, overriding settings, etc...
-		*/
-
+		//The following section merges in extra traefik dynamic config files into the base config. It allows for adding middlewares, overriding settings, etc...
 		// find all dynamic_config.*.yaml files in the project's .ddev/traefik directory
 		extraDynamicConfigFiles, err := fileutil.GlobFilenames(projectTraefikDir, "dynamic_config.*.yaml")
 		if err != nil {
 			return err
 		}
-		var finalYaml []byte
 
-		// convert config files to maps and merge them, returning a yaml string
-		resultYaml, err := util.MergeYamlFiles(tmpFileName, extraDynamicConfigFiles...)
+		// Loop through extra configs and parse any templates contained in them.
+		// This is for targeting the appropriate routers (e.g. {projectname}-web-80-http) or for rewriting the App's URL in the response body
+		var extraConfigStrings []string
+		for _, fileName := range extraDynamicConfigFiles {
+
+			extraConfigString, err := ParseYamlTemplateFileToString(fileName, templateData)
+			if err != nil {
+				return err
+			}
+
+			extraConfigStrings = append(extraConfigStrings, extraConfigString)
+		}
+
+		// Merge processed extra configs into base config
+		resultYaml, err := util.MergeYamlStrings(baseConfigString, extraConfigStrings)
 		if err != nil {
 			return err
 		}
 
-		// In the event that any of the extra configs contained go template {{ }} placeholders, create a new template and parse the YAML string into it.
-		tmpl, err := template.New("dynamic_config_extras").Funcs(getTemplateFuncMap()).Parse(string(resultYaml))
-		if err != nil {
-			return fmt.Errorf("error parsing template: %s", err)
-		}
-
-		// Execute the template with the app's templateData
-		var extraConfigProcessedYAML strings.Builder
-		err = tmpl.Execute(&extraConfigProcessedYAML, templateData)
-		if err != nil {
-			return fmt.Errorf("error executing template: %s", err)
-		}
-
 		// convert the output to a string and prepend "#ddev-generated" to the string, and then convert all of it to []byte to be written to file
-		finalYaml = []byte(`#ddev-generated
+		finalYaml := []byte(`#ddev-generated
 # If you remove the ddev-generated line above you
 # are responsible for maintaining this file. DDEV will not then
 # update it, for example if you add 'additional_hostnames', etc.
 # Rather than editing this file, please see the README in the parent
 # directory, or the docs at https://ddev.readthedocs.io/en/stable/users/extend/traefik-router/
 
-` + extraConfigProcessedYAML.String())
+` + resultYaml)
 
 		// write the <project>.yaml file to the project's .ddev/traefik/config directory
 		err = os.WriteFile(traefikYamlFile, finalYaml, 0755)
@@ -475,27 +452,14 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 			return fmt.Errorf("could not write to traefikYamlFile: %v", err)
 		}
 
-		// Recreate the example config file on each ddev start, so as to both keep it up to date if we change things, as well as to always have
-		// an example available there to be modified.
-		// It is created from a template file, populating {{.App.Name}} where appropriate (e.g for router namespacing)
+		// Recreate the example config file on each ddev start, so that user always has an up-to-date reference available
 		// This is needed because using dotddev_assets/traefik/ to inject the example file does not really allow for filling out the templates,
 		// which is desired so that users don't have to see or touch go templates
 
 		dynamicExampleFile := filepath.Join(projectTraefikDir, "dynamic_config.middlewares.yaml.example")
-
-		f, err := os.Create(dynamicExampleFile)
+		err = CreateDynamicConfigFile(dynamicExampleFile, templateData)
 		if err != nil {
-			return fmt.Errorf("failed to create Traefik config middlewares example file: %v", err)
-		}
-
-		t, err = template.New("traefik_dynamic_config_example_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_dynamic_config_example_template.yaml")
-		if err != nil {
-			return fmt.Errorf("could not create template from traefik_dynamic_config_example_template.yaml: %v", err)
-		}
-
-		err = t.Execute(f, templateData)
-		if err != nil {
-			return fmt.Errorf("could not parse traefik_dynamic_config_example_template.yaml with templatedate='%v':: %v", templateData, err)
+			return err
 		}
 	}
 
@@ -515,5 +479,59 @@ func ConfigureTraefikForApp(app *DdevApp) error {
 			util.Debug("Copied custom certs in %s to ddev-global-cache/traefik", sourceCertsPath)
 		}
 	}
+	return nil
+}
+
+// ParseYamlTemplateFileToString takes a file path to a yaml file that contains {{ go templates }}
+// Executes the template and returns a plain yaml string
+func ParseYamlTemplateFileToString(filePath string, templateData interface{}) (string, error) {
+	fileBytes, err := fileutil.ReadFileIntoString(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file %v: %v", filePath, err)
+	}
+
+	t, err := template.New(filepath.Base(filePath)).Funcs(getTemplateFuncMap()).Parse(fileBytes)
+	if err != nil {
+		return "", fmt.Errorf("error parsing template: %s", err)
+	}
+
+	var stringBuilder strings.Builder
+	err = t.Execute(&stringBuilder, templateData)
+	if err != nil {
+		return "", fmt.Errorf("error executing template: %s", err)
+	}
+
+	return stringBuilder.String(), nil
+}
+
+// ParseBundledTemplateFileToString takes a path to a yaml file that contains {{ go templates }},
+// that was included in go:embed filesystem. Executes the template and returns a plain yaml string
+func ParseBundledTemplateFileToString(filePath string, templateData interface{}) (string, error) {
+	t, err := template.New(filepath.Base(filePath)).Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, filePath)
+	if err != nil {
+		return "", fmt.Errorf("error parsing template: %s", err)
+	}
+
+	var stringBuilder strings.Builder
+	err = t.Execute(&stringBuilder, templateData)
+	if err != nil {
+		return "", fmt.Errorf("could not parse traefik_config_template.yaml with templatedate='%v':: %v", templateData, err)
+	}
+
+	return stringBuilder.String(), nil
+}
+
+// Creates a dynamic config file for traefik based on the template file and the App's templateData
+func CreateDynamicConfigFile(filePath string, templateData interface{}) error {
+	dynamicExampleContent, err := ParseBundledTemplateFileToString("traefik_dynamic_config_example_template.yaml", templateData)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filePath, []byte(dynamicExampleContent), 0755)
+	if err != nil {
+		return fmt.Errorf("could not write to file %s: %v", filePath, err)
+	}
+
 	return nil
 }
