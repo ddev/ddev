@@ -135,8 +135,6 @@ type DdevApp struct {
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
-	EphemeralRouterHTTPPort   string                 `yaml:"-"`
-	EphemeralRouterHTTPSPort  string                 `yaml:"-"`
 }
 
 // Global variable that's set from --skip-hooks global flag.
@@ -200,6 +198,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Cont
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
+	setEphemeralPorts(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), false)
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -512,31 +511,29 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // GetRouterHTTPPort returns app's router http port
-// Start with global config and then override with project config
 func (app *DdevApp) GetRouterHTTPPort() string {
-	port := globalconfig.DdevGlobalConfig.RouterHTTPPort
-	if app.RouterHTTPPort != "" {
-		port = app.RouterHTTPPort
+	if ephemeralRouterHTTPPort != "" {
+		return ephemeralRouterHTTPPort
 	}
 
-	if app.EphemeralRouterHTTPPort != "" {
-		port = app.EphemeralRouterHTTPPort
+	if app.RouterHTTPPort != "" {
+		return app.RouterHTTPPort
 	}
-	return port
+
+	return globalconfig.DdevGlobalConfig.RouterHTTPPort
 }
 
 // GetRouterHTTPSPort returns app's router https port
-// Start with global config and then override with project config
 func (app *DdevApp) GetRouterHTTPSPort() string {
-	port := globalconfig.DdevGlobalConfig.RouterHTTPSPort
-	if app.RouterHTTPSPort != "" {
-		port = app.RouterHTTPSPort
+	if ephemeralRouterHTTPSPort != "" {
+		return ephemeralRouterHTTPSPort
 	}
 
-	if app.EphemeralRouterHTTPSPort != "" {
-		port = app.EphemeralRouterHTTPSPort
+	if app.RouterHTTPSPort != "" {
+		return app.RouterHTTPSPort
 	}
-	return port
+
+	return globalconfig.DdevGlobalConfig.RouterHTTPSPort
 }
 
 // GetMailpitHTTPPort returns app's router http port
@@ -1073,6 +1070,8 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
+	setEphemeralPorts(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), true)
+
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 	// The project network may have duplicates, we can remove them here.
@@ -1495,7 +1494,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting ddev-router if necessary...")
+		output.UserOut.Printf("Starting %s if necessary...", RouterProjectName)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
@@ -2180,30 +2179,6 @@ func (app *DdevApp) DockerEnv() {
 	if app.Database.Type == "postgres" {
 		// 'postgres' & 'postgresql' are both valid, but we'll go with the shorter one.
 		dbFamily = "postgres"
-	}
-
-	// Find out if ephemeral router ports are in use.
-	status, _ := GetRouterStatus()
-	if status == "healthy" {
-		c, err := dockerutil.InspectContainer(RouterProjectName)
-		if err == nil {
-			for _, e := range c.Config.Env {
-				if strings.Contains(e, "DDEV_EPHEMERAL_ROUTER_HTTP_PORT") {
-					parts := strings.Split(e, "=")
-					if len(parts) == 2 {
-						app.EphemeralRouterHTTPPort = parts[1]
-						util.Warning("Eph HTTP is %s", parts[1])
-					}
-				}
-				if strings.Contains(e, "DDEV_EPHEMERAL_ROUTER_HTTPS_PORT") {
-					parts := strings.Split(e, "=")
-					if len(parts) == 2 {
-						app.EphemeralRouterHTTPSPort = parts[1]
-						util.Warning("Eph HTTPS is %s", parts[1])
-					}
-				}
-			}
-		}
 	}
 
 	envVars := map[string]string{

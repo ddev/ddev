@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -16,12 +17,17 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	dockerTypes "github.com/docker/docker/api/types"
 )
 
 // RouterProjectName is the "machine name" of the router docker-compose
 const RouterProjectName = "ddev-router"
+
+var (
+	originalRouterHTTPPort, originalRouterHTTPSPort, ephemeralRouterHTTPPort, ephemeralRouterHTTPSPort string
+)
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -101,7 +107,7 @@ func StartDdevRouter() error {
 	}
 
 	// Ensure we have a happy router
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	label := map[string]string{"com.docker.compose.service": RouterProjectName}
 	// Normally the router comes right up, but when
 	// it has to do let's encrypt updates, it can take
 	// some time.
@@ -137,51 +143,29 @@ func generateRouterCompose() (string, error) {
 
 	uid, gid, username := util.GetContainerUIDGid()
 
-	// Check for 80 and 443 ports availability
-	var ephemeralHttp, ephemeralHttps bool
-	var ephemeralHttpPort, ephemeralHttpsPort string
-	for i := range exposedPorts {
-		portPtr := &exposedPorts[i]
-		if *portPtr == globalconfig.DdevGlobalConfig.RouterHTTPPort {
-			if !RouterPortIsAvailable(*portPtr) {
-				httpPort, ok := FindEphemeralRouterPort(8080, 8130)
-				if ok {
-					ephemeralHttp = true
-					ephemeralHttpPort = fmt.Sprint(httpPort)
-					util.Warning("Port %s is occupied. Using %s instead.", globalconfig.DdevGlobalConfig.RouterHTTPPort, ephemeralHttpPort)
-					*portPtr = ephemeralHttpPort
-				}
-			}
-		} else if *portPtr == globalconfig.DdevGlobalConfig.RouterHTTPSPort {
-			if !RouterPortIsAvailable(*portPtr) {
-				httpsPort, ok := FindEphemeralRouterPort(8443, 8493)
-				if ok {
-					ephemeralHttps = true
-					ephemeralHttpsPort = fmt.Sprint(httpsPort)
-					util.Warning("Port %s is occupied. Using %s instead.", globalconfig.DdevGlobalConfig.RouterHTTPSPort, ephemeralHttpsPort)
-					*portPtr = ephemeralHttpsPort
-				}
-			}
-		}
+	var ephemeralPorts []string
+	if ephemeralRouterHTTPPort != "" && originalRouterHTTPPort != "" {
+		ephemeralPorts = append(ephemeralPorts, strings.Join([]string{originalRouterHTTPPort, ephemeralRouterHTTPPort}, ":"))
 	}
+	if ephemeralRouterHTTPSPort != "" && originalRouterHTTPSPort != "" {
+		ephemeralPorts = append(ephemeralPorts, strings.Join([]string{originalRouterHTTPSPort, ephemeralRouterHTTPSPort}, ":"))
+	}
+	ephemeralPortsStr := strings.Join(ephemeralPorts, ",")
 
 	templateVars := map[string]interface{}{
-		"Username":                     username,
-		"UID":                          uid,
-		"GID":                          gid,
-		"router_image":                 ddevImages.GetRouterImage(),
-		"ports":                        exposedPorts,
-		"router_bind_all_interfaces":   globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
-		"dockerIP":                     dockerIP,
-		"disable_http2":                globalconfig.DdevGlobalConfig.DisableHTTP2,
-		"letsencrypt":                  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
-		"letsencrypt_email":            globalconfig.DdevGlobalConfig.LetsEncryptEmail,
-		"Router":                       globalconfig.DdevGlobalConfig.Router,
-		"TraefikMonitorPort":           globalconfig.DdevGlobalConfig.TraefikMonitorPort,
-		"DdevEphemeralRouterHttp":      ephemeralHttp,
-		"DdevEphemeralRouterHttps":     ephemeralHttps,
-		"DdevEphemeralRouterHttpPort":  ephemeralHttpPort,
-		"DdevEphemeralRouterHttpsPort": ephemeralHttpsPort,
+		"Username":                   username,
+		"UID":                        uid,
+		"GID":                        gid,
+		"router_image":               ddevImages.GetRouterImage(),
+		"ports":                      exposedPorts,
+		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"dockerIP":                   dockerIP,
+		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
+		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		"Router":                     globalconfig.DdevGlobalConfig.Router,
+		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
+		"ephemeral_ports":            ephemeralPortsStr,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -307,7 +291,7 @@ func determineRouterPorts() []string {
 
 			for _, exposePortPair := range exposePorts {
 				// Ports defined as hostPort:containerPort allow for router to configure upstreams
-				// for containerPort, with server listening on hostPort. exposed ports for router
+				// for containerPort, with server listening on hostPort. Exposed ports for router
 				// should be hostPort:hostPort so router can determine what port a request came from
 				// and route the request to the correct upstream
 				exposePort := ""
@@ -369,9 +353,7 @@ func CheckRouterPorts() error {
 			continue
 		}
 		if netutil.IsPortActive(port) {
-			if port != globalconfig.DdevGlobalConfig.RouterHTTPPort && port != globalconfig.DdevGlobalConfig.RouterHTTPSPort {
-				return fmt.Errorf("port %s is already in use", port)
-			}
+			return fmt.Errorf("port %s is already in use", port)
 		}
 	}
 	return nil
@@ -393,4 +375,68 @@ func FindEphemeralRouterPort(start, upTo int) (int, bool) {
 	}
 
 	return 0, false
+}
+
+// GetEphemeralRouterPort finds a free port in the local host machine.
+// The range goes from given port + 8000 up to given port + 8050
+// Returns the port found, and a boolean that determines if the
+// port is ephemeral (true) or not (false)
+func GetEphemeralRouterPort(port string) (string, string, bool) {
+	status, _ := GetRouterStatus()
+	if status == "healthy" {
+		r, err := FindDdevRouter()
+		if err != nil {
+			return port, "", false
+		}
+		// Check if the router is already using ephemeral port
+		ephemeralPorts := dockerutil.GetContainerEnv("DDEV_EPHEMERAL_PORTS", *r)
+		// Search through the ephemeral ports, and return if found
+		for _, ephemeralPortPair := range strings.Split(ephemeralPorts, ",") {
+			ports := strings.Split(ephemeralPortPair, ":")
+			if len(ports) == 2 {
+				originalPort, ephemeralPort := ports[0], ports[1]
+				if originalPort == port {
+					return originalPort, ephemeralPort, true
+				}
+			}
+		}
+	} else if RouterPortIsAvailable(port) {
+		return port, "", false
+	} else {
+		p, err := strconv.Atoi(port)
+		if err != nil {
+			return port, "", false
+		}
+
+		ephemeralPort, ok := FindEphemeralRouterPort(p+8000, p+8050)
+		if !ok {
+			return port, "", false
+		}
+
+		return port, strconv.Itoa(ephemeralPort), true
+	}
+
+	return port, "", false
+}
+
+// If ephemeral ports are needed, updates the variables that keep the ephemeral ports values
+func setEphemeralPorts(httpPort, httpsPort string, verbose bool) {
+	originalPort, ephemeralPort, isEphemeral := GetEphemeralRouterPort(httpPort)
+	if isEphemeral {
+		ephemeralRouterHTTPPort = ephemeralPort
+		originalRouterHTTPPort = originalPort
+		if verbose {
+			output.UserOut.Printf("HTTP port %s is busy, using %s instead.", originalPort, ephemeralPort)
+		}
+	}
+
+	isEphemeral = false
+	originalPort, ephemeralPort, isEphemeral = GetEphemeralRouterPort(httpsPort)
+	if isEphemeral {
+		ephemeralRouterHTTPSPort = ephemeralPort
+		originalRouterHTTPSPort = originalPort
+		if verbose {
+			output.UserOut.Printf("HTTPS port %s is busy, using %s instead.", originalPort, ephemeralPort)
+		}
+	}
 }
