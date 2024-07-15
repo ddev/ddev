@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Prompt downloading phpMyAdmin if it is not installed.
+## Usage: phpmyadmin
+## Example: "ddev phpmyadmin"
+
+if [ "${DDEV_NONINTERACTIVE:-}" != "" ]; then
+    echo "Nothing has been changed."
+    exit 0
+fi
+
+echo "The phpMyAdmin add-on is not installed."
+read -p "Would you like to install it? [Y/n] (yes): " answer
+if [ -z "$answer" ]; then
+    answer="Y"
+fi
+
+case "$answer" in
+    [Yy] | [Yy][Ee][Ss])
+        ddev get ddev/ddev-phpmyadmin
+        echo "The phpMyAdmin add-on has been installed and requires a restart."
+        read -p "Would you like to restart DDEV now? [Y/n] (yes): " answerrestart
+        if [ -z "$answerrestart" ]; then
+            answerrestart="Y"
+        fi
+        case "$answerrestart" in
+            [Yy] | [Yy][Ee][Ss])
+                ddev restart
+                echo "Run 'ddev phpmyadmin' again to use it."
+                ;;
+            *)
+                echo "You must run 'ddev restart' to finish configuring the phpMyAdmin add-on."
+                ;;
+        esac
+        ;;
+    *)
+        echo "Nothing has been changed."
+        ;;
+esac
