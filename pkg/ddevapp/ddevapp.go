@@ -2061,6 +2061,12 @@ func (app *DdevApp) DockerEnv() {
 	// * provide default host-side port bindings, assuming only one project running,
 	//   as is usual on Gitpod, but if more than one project, can override with normal
 	//   config.yaml settings.
+	// Codespaces stumbles if not on a "standard" port like port 80
+	if nodeps.IsCodespaces() {
+		if app.HostWebserverPort == "" {
+			app.HostWebserverPort = "80"
+		}
+	}
 	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "8080"
@@ -2076,6 +2082,7 @@ func (app *DdevApp) DockerEnv() {
 		}
 		app.BindAllInterfaces = true
 	}
+
 	isWSL2 := "false"
 	if nodeps.IsWSL2() {
 		isWSL2 = "true"
