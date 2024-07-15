@@ -2871,7 +2871,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	return app, nil
 }
 
-// Lowercase and replace underscores in the site name with hyphens.
+// NormalizeProjectName replaces underscores in the site name with hyphens.
 func NormalizeProjectName(siteName string) string {
 	return strings.ReplaceAll(siteName, "_", "-")
 }

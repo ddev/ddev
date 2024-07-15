@@ -279,7 +279,7 @@ func TestConfigCommand(t *testing.T) {
 		// hyphen for the project name.
 		// One of the test directories has a capital letter to ensure that the site
 		// name is lowercased.
-		assert.Equal(ddevapp.NormalizeProjectName(projectRoot), app.Name)
+		assert.Equal(strings.ReplaceAll(projectRoot, "_", "-"), app.Name)
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal("docroot", app.Docroot)
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for apptype %v (expected %s got %s) (%v)", app.Type, testValues[phpVersionPos], app.PHPVersion, app)
