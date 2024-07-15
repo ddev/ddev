@@ -68,13 +68,14 @@ type GlobalConfig struct {
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
-	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
-	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
-	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
-	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
-	WebEnvironment                   []string                    `yaml:"web_environment"`
-	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
-	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info,omitempty"`
+	// This may still be used in Docker Compose automated tests
+	UseDockerComposeFromPath bool                    `yaml:"use_docker_compose_from_path,omitempty"`
+	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
+	WebEnvironment           []string                `yaml:"web_environment"`
+	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
+	ProjectList              map[string]*ProjectInfo `yaml:"project_info,omitempty"`
 }
 
 // New returns a default GlobalConfig
@@ -454,12 +455,6 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # required_docker_compose_version: ""
 # This can be used to override the default required docker-compose version
 # It should normally be left alone, but can be set to, for example, "v2.1.1"
-
-# use_docker_compose_from_path: false
-# This can be set to true to allow DDEV to use whatever docker-compose is
-# found in the $PATH instead of using the private docker-compose downloaded
-# to ~/.ddev/bin/docker-compose.
-# Please don't use this unless directed to do so
 
 # messages:
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
