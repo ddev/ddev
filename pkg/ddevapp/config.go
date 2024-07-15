@@ -1283,7 +1283,6 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 func (app *DdevApp) promptForName() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
-		// If working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(NormalizeProjectName(filepath.Base(dir))) {
 			app.Name = NormalizeProjectName(filepath.Base(dir))
 		}
