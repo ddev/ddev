@@ -1198,10 +1198,17 @@ RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		assert.NoError(err)
 	}
 
-	// Make sure that DDEV_PHP_VERSION gets into the build
+	// Make sure that DDEV_PHP_VERSION gets into the web build
+	// and that TARGETARCH and friends are working
 	err = ddevapp.WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.ddev-php-version"), []byte(`
-ARG DDEV_PHP_VERSION
 RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
+RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFORM}"
+`))
+	require.NoError(t, err)
+
+	// Make sure that TARGETARCH and friends working on db container
+	err = ddevapp.WriteImageDockerfile(app.GetConfigPath("db-build/Dockerfile.targets"), []byte(`
+RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFORM}"
 `))
 	require.NoError(t, err)
 
@@ -1236,11 +1243,19 @@ RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test3.txt >/dev/null",
 		})
 		assert.NoError(err)
+
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Service: item,
+			Cmd:     fmt.Sprintf("ls -d /var/tmp/my-arch-info-is-%s-%s-%s/%s", "linux", runtime.GOARCH, "linux", runtime.GOARCH),
+		})
+		require.NoError(t, err, "out=%s stderr=%s", out, stderr)
+
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt 2>/dev/null",
 		})
 		assert.Error(err)
+
 	}
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
