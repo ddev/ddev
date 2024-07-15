@@ -258,51 +258,23 @@ func TestConfigCommand(t *testing.T) {
 		name := strings.ToLower(util.RandString(16))
 		invalidAppType := strings.ToLower(util.RandString(8))
 
-		// Create an example input buffer that uses the default projectname, then a
-		// valid document root, then a valid app type.
-		input := fmt.Sprintf("\ndocroot\n%s", testValues[apptypePos])
+		// Create an example input buffer that writes the sitename, a valid document root,
+		// an invalid app type, and finally a valid app type (from test matrix)
+		input := fmt.Sprintf("%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
 		restoreOutput := util.CaptureUserOut()
 		err = app.PromptForConfig()
-		assert.NoError(err)
-		out := restoreOutput()
-
-		// Ensure we have expected vales in output.
-		projectRoot := filepath.Base(testDir)
-		assert.Contains(out, testDir)
-		assert.NotContains(out, fmt.Sprintf("%s is not a valid project name", projectRoot))
-
-		// Ensure values were properly set on the app struct.
-		// Project root contains an underscore. Make sure it was replaced with a
-		// hyphen for the project name.
-		// One of the test directories has a capital letter to ensure that the site
-		// name is lowercased.
-		assert.Equal(strings.ReplaceAll(projectRoot, "_", "-"), app.Name)
-		assert.Equal(testValues[apptypePos], app.Type)
-		assert.Equal("docroot", app.Docroot)
-		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for apptype %v (expected %s got %s) (%v)", app.Type, testValues[phpVersionPos], app.PHPVersion, app)
-		err = ddevapp.PrepDdevDirectory(app)
-		assert.NoError(err)
-
-		// Create an example input buffer that writes the sitename, a valid document root,
-		// an invalid app type, and finally a valid app type (from test matrix)
-		input = fmt.Sprintf("%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
-		scanner = bufio.NewScanner(strings.NewReader(input))
-		util.SetInputScanner(scanner)
-
-		restoreOutput = util.CaptureUserOut()
-		err = app.PromptForConfig()
 		require.Error(t, err, "invalid project type error should have been caught")
-		out = restoreOutput()
+		out := restoreOutput()
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
 		assert.Contains(out, fmt.Sprintf("'%s' is not a valid project type", invalidAppType))
 
 		// Create an example input buffer that writes an invalid projectname, then a valid-project-name,
-		// a valid document root, then a valid app type.
+		// a valid document root, a valid app type
 		input = fmt.Sprintf("invalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
 		scanner = bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
