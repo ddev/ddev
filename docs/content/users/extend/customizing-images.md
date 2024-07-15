@@ -166,6 +166,7 @@ An example of using `$TARGETARCH` would be:
 ```dockerfile
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}"
 ```
+
 ## Installing into the home directory
 
 The in-container home directory is rebuilt when you run `ddev restart`, so if you have something that installs into the home directory (like `~/.cache`) you'll want to switch users in the Dockerfile. In this example, `npx playwright install` installs a number of things into `~/.cache`, so we'll switch to the proper user before executing it, and switch back to the `root` user after installation to avoid surprises with any other Dockerfile that may follow.
