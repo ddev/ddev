@@ -2062,7 +2062,7 @@ func (app *DdevApp) DockerEnv() {
 	//   as is usual on Gitpod, but if more than one project, can override with normal
 	//   config.yaml settings.
 	// Codespaces stumbles if not on a "standard" port like port 80
-	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
+	if nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "80"
 		}
