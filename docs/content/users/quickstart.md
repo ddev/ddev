@@ -148,7 +148,7 @@ ddev launch
 * DDEV will install everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
 * DDEV appends a stanza to your settings file which includes the DDEV settings only if running in DDEV context.
 * You can watch the `pip install` in real time on that first slow startup with `ddev logs -f` in another window.
-* If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
+* If your `requirements.txt` or `pyproject.toml` includes `psycopg2` or `psycopg` it requires build tools, so either set `ddev config --webimage-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
 
 ## Drupal
 
