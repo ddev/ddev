@@ -364,10 +364,10 @@ func RouterPortIsAvailable(port string) bool {
 	return !netutil.IsPortActive(port)
 }
 
-// Finds a free port in the local machine, in the range provided.
+// Finds an available port in the local machine, in the range provided.
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false)
-func FindEphemeralRouterPort(start, upTo int) (int, bool) {
+func FindAvailableRouterPort(start, upTo int) (int, bool) {
 	for p := start; p <= upTo; p++ {
 		if RouterPortIsAvailable(fmt.Sprint(p)) {
 			return p, true
@@ -377,20 +377,47 @@ func FindEphemeralRouterPort(start, upTo int) (int, bool) {
 	return 0, false
 }
 
-// GetEphemeralRouterPort finds a free port in the local host machine.
+// GetEphemeralRouterPort gets the ephemeral port when needed.
+//
+// The function first checks if the given port is available, returning
+// if that's the case.
+// Then checks if the router is already active. There's a high chance that the
+// router is already using the port, so there's not need for an ephemeral port.
+// Also, it may be that the router is already using the port as an ephemeral port,
+// which is then returned.
+// Finally, if the port is not available and the router is not using it, create a new
+// ephemeral port and return it.
+//
 // The range goes from given port + 8000 up to given port + 8050
-// Returns the port found, and a boolean that determines if the
+//
+// Returns the original port, the ephemeral port found, and a boolean that determines if the
 // port is ephemeral (true) or not (false)
 func GetEphemeralRouterPort(port string) (string, string, bool) {
+	if RouterPortIsAvailable(port) {
+		// If the port is available, there will not be ephemeral port.
+		return port, "", false
+	}
+
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
 		r, err := FindDdevRouter()
 		if err != nil {
 			return port, "", false
 		}
+
+		// Check if the port is already being used by the router.
+		exposedPorts, err := dockerutil.GetExposedContainerPorts(r.ID)
+		if err != nil {
+			return port, "", false
+		}
+		if nodeps.ArrayContainsString(exposedPorts, port) {
+			// If the port is already used by the router, there will not be ephemeral port.
+			return port, "", false
+		}
+
 		// Check if the router is already using ephemeral port
 		ephemeralPorts := dockerutil.GetContainerEnv("DDEV_EPHEMERAL_PORTS", *r)
-		// Search through the ephemeral ports, and return if found
+		// Search through the ephemeral ports, and return it if found
 		for _, ephemeralPortPair := range strings.Split(ephemeralPorts, ",") {
 			ports := strings.Split(ephemeralPortPair, ":")
 			if len(ports) == 2 {
@@ -400,27 +427,24 @@ func GetEphemeralRouterPort(port string) (string, string, bool) {
 				}
 			}
 		}
-	} else if RouterPortIsAvailable(port) {
-		return port, "", false
-	} else {
-		p, err := strconv.Atoi(port)
-		if err != nil {
-			return port, "", false
-		}
-
-		ephemeralPort, ok := FindEphemeralRouterPort(p+8000, p+8050)
-		if !ok {
-			return port, "", false
-		}
-
-		return port, strconv.Itoa(ephemeralPort), true
 	}
 
-	return port, "", false
+	// Finally, if the port is not available and the router is not using it, create a new ephemeral port.
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return port, "", false
+	}
+
+	ephemeralPort, ok := FindAvailableRouterPort(p+8000, p+8050)
+	if !ok {
+		return port, "", false
+	}
+
+	return port, strconv.Itoa(ephemeralPort), true
 }
 
 // If ephemeral ports are needed, updates the variables that keep the ephemeral ports values
-func setEphemeralPorts(httpPort, httpsPort string, verbose bool) {
+func setEphemeralPortsVariables(httpPort, httpsPort string, verbose bool) {
 	originalPort, ephemeralPort, isEphemeral := GetEphemeralRouterPort(httpPort)
 	if isEphemeral {
 		ephemeralRouterHTTPPort = ephemeralPort
