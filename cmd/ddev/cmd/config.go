@@ -543,11 +543,21 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 			app.AdditionalHostnames = []string{} // Initialize as empty slice if no hostnames are specified
 		} else {
 			// Split the argument string by commas to get the list of additional hostnames
-		app.AdditionalHostnames = strings.Split(additionalHostnamesArg, ",")
+			app.AdditionalHostnames = strings.Split(additionalHostnamesArg, ",")
+		}
 	}
 
-	if additionalFQDNsArg != "" {
-		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
+	// Check if the 'additional-fqdns' flag has been set and not default
+	if cmd.Flag("additional-fqdns").Changed {
+		// Remove all spaces from the argument
+		additionalFQDNsArg = strings.Replace(additionalFQDNsArg, " ", "", -1)
+
+		if additionalFQDNsArg == "" {
+			app.AdditionalFQDNs = []string{} // Initialize as empty slice if no FQDNs are specified
+		} else {
+			// Split the argument string by commas to get the list of additional FQDNs
+			app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
+		}
 	}
 
 	// Check if the 'omit-containers' flag has been set and not default
