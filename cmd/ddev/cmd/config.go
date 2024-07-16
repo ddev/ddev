@@ -547,10 +547,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		// Remove all spaces from the argument
 		omitContainersArg = strings.Replace(omitContainersArg, " ", "", -1)
 
-		app.OmitContainers = []string{} // Initialize as empty slice
-
-		if omitContainersArg != "" {
-			// Split the argument string by commas
+		if omitContainersArg == "" {
+			app.OmitContainers = []string{} // Initialize as empty slice if no containers are specified
+		} else {
+			// Split the argument string by commas to get the list of containers to omit
 			app.OmitContainers = strings.Split(omitContainersArg, ",")
 		}
 	}
