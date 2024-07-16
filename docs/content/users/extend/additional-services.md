@@ -34,9 +34,15 @@ For example,
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
 │ ddev/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                     │
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-ioncube                    │ IonCube loaders for DDEV*                          │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
 │ ddev/ddev-memcached                  │ Install Memcached as an extra service in DDEV*     │
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-minio                      │ MinIO addon for DDEV*                              │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
 │ ddev/ddev-mongo                      │ MongoDB add-on for DDEV*                           │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-opensearch                 │ OpenSearch add-on for DDEV*                        │
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
 │ ddev/ddev-pdfreactor                 │ PDFreactor service for DDEV*                       │
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
@@ -58,9 +64,14 @@ For example,
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
 │ ddev/ddev-sqlsrv                     │ MS SQL server add-on for DDEV*                     │
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-typo3-solr                 │ Use Apache Solr (standalone) in your DDEV project  │
+│                                      │ *                                                  │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
 │ ddev/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*             │
+├──────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ ddev/ddev-xhgui                      │ XHGui service for a DDEV project*                  │
 └──────────────────────────────────────┴────────────────────────────────────────────────────┘
-20 repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.
+25 repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.
 ```
 
 !!!tip
