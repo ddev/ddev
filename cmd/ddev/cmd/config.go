@@ -534,7 +534,15 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.MailpitHTTPSPort = mailpitHTTPSPortArg
 	}
 
-	if additionalHostnamesArg != "" {
+	// Check if the 'additional-hostnames' flag has been set and not default
+	if cmd.Flag("additional-hostnames").Changed {
+		// Remove all spaces from the argument
+		additionalHostnamesArg = strings.Replace(additionalHostnamesArg, " ", "", -1)
+
+		if additionalHostnamesArg == "" {
+			app.AdditionalHostnames = []string{} // Initialize as empty slice if no hostnames are specified
+		} else {
+			// Split the argument string by commas to get the list of additional hostnames
 		app.AdditionalHostnames = strings.Split(additionalHostnamesArg, ",")
 	}
 
