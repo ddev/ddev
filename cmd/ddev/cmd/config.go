@@ -738,9 +738,9 @@ func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []s
 
 		if arg == "" {
 			return []string{} // Initialize as empty slice if no values are specified
-		} else {
-			return strings.Split(arg, ",")
 		}
+		return strings.Split(arg, ",")
+
 	}
 	return currentValue
 }
