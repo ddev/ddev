@@ -198,7 +198,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Cont
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
-	setEphemeralPorts(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), false)
+	setEphemeralPortsVariables(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), false)
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -1070,7 +1070,7 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
-	setEphemeralPorts(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), true)
+	setEphemeralPortsVariables(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), true)
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()

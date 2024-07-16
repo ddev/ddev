@@ -290,10 +290,10 @@ func TestFindEphemeralPort(t *testing.T) {
 	require.NoError(t, err)
 	defer l2.Close()
 
-	_, ok := ddevapp.FindEphemeralRouterPort(startPort, badEndPort)
+	_, ok := ddevapp.FindAvailableRouterPort(startPort, badEndPort)
 	assert.Exactly(false, ok)
 
-	port, ok := ddevapp.FindEphemeralRouterPort(startPort, goodEndPort)
+	port, ok := ddevapp.FindAvailableRouterPort(startPort, goodEndPort)
 	assert.Exactly(true, ok)
 	assert.Exactly(startPort+3, port)
 }
@@ -329,9 +329,9 @@ func TestUseEphemeralPort(t *testing.T) {
 	require.NoError(t, err)
 	defer l1.Close()
 
-	ephemeralHttpPort, ok := ddevapp.FindEphemeralRouterPort(8080, 8130)
+	ephemeralHttpPort, ok := ddevapp.FindAvailableRouterPort(8080, 8130)
 	assert.Exactly(true, ok)
-	ephemeralHttpsPort, ok := ddevapp.FindEphemeralRouterPort(8443, 8493)
+	ephemeralHttpsPort, ok := ddevapp.FindAvailableRouterPort(8443, 8493)
 	assert.Exactly(true, ok)
 
 	err = app.Restart()
@@ -351,8 +351,6 @@ func TestRouterPort(t *testing.T) {
 
 	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8080"
 	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8443"
-
-	fmt.Print("Number of test sites is ", len(TestSites))
 
 	site := TestSites[0]
 
