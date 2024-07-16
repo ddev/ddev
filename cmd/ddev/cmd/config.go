@@ -732,15 +732,21 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	return nil
 }
 
+// processFlag checks if a flag has changed and processes its value accordingly.
 func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []string {
-	if cmd.Flag(flagName).Changed {
-		arg := strings.Replace(cmd.Flag(flagName).Value.String(), " ", "", -1)
-
-		if arg == "" {
-			return []string{} // Initialize as empty slice if no values are specified
-		}
-		return strings.Split(arg, ",")
-
+	// If the flag hasn't changed, return the current value.
+	if !cmd.Flag(flagName).Changed {
+		return currentValue
 	}
-	return currentValue
+
+	// Remove all spaces from the flag value.
+	arg := strings.Replace(cmd.Flag(flagName).Value.String(), " ", "", -1)
+
+	// If the flag value is an empty string, return an empty slice.
+	if arg == "" {
+		return []string{}
+	}
+
+	// If the flag value is not an empty string, split it by commas and return the resulting slice.
+	return strings.Split(arg, ",")
 }
