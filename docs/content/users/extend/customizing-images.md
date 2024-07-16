@@ -135,15 +135,18 @@ ENV COMPOSER_HOME=""
 
 The following environment variables are available for the web Dockerfile to use at build time:
 
-* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.21.4`
+* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.23.3`
 * `$username`: the username inferred from your host-side username
 * `$uid`: the user ID inferred from your host-side user ID
 * `$gid`: the group ID inferred from your host-side group ID
-* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration (provided in versions after v1.21.4)
+* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration
+* `$TARGETARCH`: The build target architecture, like `arm64` or `amd64`
+* `$TARGETOS`: The build target operating system (always `linux`)
+* `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
 
-For example, a Dockerfile might want to build an extension for the configured PHP version like this:
+For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
 
-```Dockerfile
+```dockerfile
 ENV extension=xhprof
 ENV extension_repo=https://github.com/longxinH/xhprof
 ENV extension_version=v2.3.8
@@ -156,6 +159,12 @@ RUN phpize
 RUN ./configure
 RUN make install
 RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
+```
+
+An example of using `$TARGETARCH` would be:
+
+```dockerfile
+RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}"
 ```
 
 ## Installing into the home directory
