@@ -535,43 +535,13 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	// Check if the 'additional-hostnames' flag has been set and not default
-	if cmd.Flag("additional-hostnames").Changed {
-		// Remove all spaces from the argument
-		additionalHostnamesArg = strings.Replace(additionalHostnamesArg, " ", "", -1)
-
-		if additionalHostnamesArg == "" {
-			app.AdditionalHostnames = []string{} // Initialize as empty slice if no hostnames are specified
-		} else {
-			// Split the argument string by commas to get the list of additional hostnames
-			app.AdditionalHostnames = strings.Split(additionalHostnamesArg, ",")
-		}
-	}
+	app.AdditionalHostnames = processFlag(cmd, "additional-hostnames", app.AdditionalHostnames)
 
 	// Check if the 'additional-fqdns' flag has been set and not default
-	if cmd.Flag("additional-fqdns").Changed {
-		// Remove all spaces from the argument
-		additionalFQDNsArg = strings.Replace(additionalFQDNsArg, " ", "", -1)
-
-		if additionalFQDNsArg == "" {
-			app.AdditionalFQDNs = []string{} // Initialize as empty slice if no FQDNs are specified
-		} else {
-			// Split the argument string by commas to get the list of additional FQDNs
-			app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
-		}
-	}
+	app.AdditionalFQDNs = processFlag(cmd, "additional-fqdns", app.AdditionalFQDNs)
 
 	// Check if the 'omit-containers' flag has been set and not default
-	if cmd.Flag("omit-containers").Changed {
-		// Remove all spaces from the argument
-		omitContainersArg = strings.Replace(omitContainersArg, " ", "", -1)
-
-		if omitContainersArg == "" {
-			app.OmitContainers = []string{} // Initialize as empty slice if no containers are specified
-		} else {
-			// Split the argument string by commas to get the list of containers to omit
-			app.OmitContainers = strings.Split(omitContainersArg, ",")
-		}
-	}
+	app.OmitContainers = processFlag(cmd, "omit-containers", app.OmitContainers)
 
 	if cmd.Flag("web-environment").Changed {
 		env := strings.TrimSpace(webEnvironmentLocal)
@@ -760,4 +730,17 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	return nil
+}
+
+func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []string {
+	if cmd.Flag(flagName).Changed {
+		arg := strings.Replace(cmd.Flag(flagName).Value.String(), " ", "", -1)
+
+		if arg == "" {
+			return []string{} // Initialize as empty slice if no values are specified
+		} else {
+			return strings.Split(arg, ",")
+		}
+	}
+	return currentValue
 }
