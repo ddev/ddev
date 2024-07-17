@@ -2845,7 +2845,6 @@ func GetActiveAppRoot(siteName string) (string, error) {
 // To use the current working directory, siteName should be ""
 func GetActiveApp(siteName string) (*DdevApp, error) {
 	app := &DdevApp{}
-	siteName = NormalizeProjectName(siteName)
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
