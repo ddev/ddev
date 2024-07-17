@@ -623,6 +623,7 @@ Flags:
 * `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--list`: List official add-ons. (default `true`)
 * `--installed`: List installed add-ons
+* `--environment <values>`: Set the environment variables during the add-on install: `--environment="VERSION=stable,SOMEENV=someval"`
 * `--remove <add-on>`: Remove an installed add-on
 * `--version <version>`: Specify a version to download
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)

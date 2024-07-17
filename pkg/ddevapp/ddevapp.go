@@ -964,7 +964,7 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error
 
 // ComposeFiles returns a list of compose files for a project.
 // It has to put the .ddev/docker-compose.*.y*ml first
-// It has to put the docker-compose.override.y*l last
+// It has to put the .ddev/docker-compose.override.y*ml last
 func (app *DdevApp) ComposeFiles() ([]string, error) {
 	origDir, _ := os.Getwd()
 	defer func() {
@@ -1004,6 +1004,49 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 		orderedFiles = append(orderedFiles, app.GetConfigPath(overrides[0]))
 	}
 	return orderedFiles, nil
+}
+
+// EnvFiles returns a list of env files for a project.
+// It has to put the .ddev/.env first
+// It has to put the .ddev/.env.* second
+// It has to put the .ddev/.env.override last
+// Env files ending with .example are ignored.
+func (app *DdevApp) EnvFiles() ([]string, error) {
+	origDir, _ := os.Getwd()
+	defer func() {
+		_ = os.Chdir(origDir)
+	}()
+	err := os.Chdir(app.AppConfDir())
+	if err != nil {
+		return nil, err
+	}
+	envFiles, err := filepath.Glob(".env.*")
+	if err != nil {
+		return []string{}, fmt.Errorf(".env.* in %s: err=%v", app.AppConfDir(), err)
+	}
+
+	orderedEnvFiles := []string{}
+
+	mainEnvFile := app.GetConfigPath(".env")
+	if fileutil.FileExists(mainEnvFile) {
+		orderedEnvFiles = append(orderedEnvFiles, mainEnvFile)
+	}
+	overrideEnvFile := app.GetConfigPath(".env.override")
+
+	for _, file := range envFiles {
+		// We'll add the override later, so skip it.
+		// And ignore .example files.
+		if app.GetConfigPath(file) == overrideEnvFile || strings.HasSuffix(file, ".example") {
+			continue
+		}
+		orderedEnvFiles = append(orderedEnvFiles, app.GetConfigPath(file))
+	}
+
+	if fileutil.FileExists(overrideEnvFile) {
+		orderedEnvFiles = append(orderedEnvFiles, overrideEnvFile)
+	}
+
+	return orderedEnvFiles, nil
 }
 
 // ProcessHooks executes Tasks defined in Hooks

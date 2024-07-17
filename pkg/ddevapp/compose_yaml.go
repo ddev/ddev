@@ -46,9 +46,17 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+	envFiles, err := app.EnvFiles()
+	if err != nil {
+		return err
+	}
+	var action []string
+	for _, envFile := range envFiles {
+		action = append(action, "--env-file", envFile)
+	}
 	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
-		Action:       []string{"config"},
+		Action:       append(action, "config"),
 	})
 	if err != nil {
 		return err
