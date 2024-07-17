@@ -75,8 +75,15 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 22. Run `ngrok authtoken <token>` with token for free account.
 23. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
 24. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
-25. Turn off the settings that cause the "windows experience" prompts after new upgrades:
+25. Turn off the `System` -> `Notifications` -> `Additional settings` that cause the "Windows experience" prompts after upgrades:
     ![disable_windows_experience](../images/disable_windows_experience.png)
+26. Edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
+
+    ```
+    memory=12GB
+    [experimental]
+    autoMemoryReclaim=dropcache
+    ```
 
 ## Windows Setup for WSL2+Docker Desktop
 
