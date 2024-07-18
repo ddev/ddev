@@ -49,7 +49,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	}
 	if cmd.Flag("omit-containers").Changed {
 		omitContainers = strings.Replace(omitContainers, " ", "", -1)
-		if omitContainers == "" {
+		if omitContainers == "" || omitContainers == `""` || omitContainers == `''` {
 			globalconfig.DdevGlobalConfig.OmitContainersGlobal = []string{}
 		} else {
 			globalconfig.DdevGlobalConfig.OmitContainersGlobal = strings.Split(omitContainers, ",")
@@ -58,7 +58,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	}
 	if cmd.Flag("web-environment").Changed {
 		env := strings.TrimSpace(webEnvironmentGlobal)
-		if env == "" {
+		if env == "" || env == `""` || env == `''` {
 			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
 		} else {
 			globalconfig.DdevGlobalConfig.WebEnvironment = strings.Split(env, ",")
