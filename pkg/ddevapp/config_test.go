@@ -230,7 +230,7 @@ func TestConfigCommand(t *testing.T) {
 	testMatrix := map[string][]string{
 		"magentophpversion": {nodeps.AppTypeMagento, nodeps.PHPDefault},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP82},
-		"drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
+		"Drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -295,6 +295,47 @@ func TestConfigCommand(t *testing.T) {
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for apptype %v (expected %s got %s) (%v)", app.Type, testValues[phpVersionPos], app.PHPVersion, app)
 		err = ddevapp.PrepDdevDirectory(app)
 		assert.NoError(err)
+	}
+}
+
+// TestConfigCommandProjectNormalization tests behavior when normalizing project names.
+// For example, a directory like "some_dir" should result in project name "some-dir"
+func TestConfigCommandProjectNormalization(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+
+	testMatrix := []struct {
+		name        string
+		expectation string
+	}{
+		{"normalname", "normalname"},
+		{"with-hyphen", "with-hyphen"},
+		{"with_underscore", "with-underscore"},
+		{"with.dot", "with.dot"},
+	}
+
+	for _, tc := range testMatrix {
+		t.Run(tc.name, func(t *testing.T) {
+
+			baseTestDir := t.TempDir()
+			testDir := filepath.Join(baseTestDir, tc.name)
+			err := os.Mkdir(testDir, 0755)
+			require.NoError(t, err)
+
+			// Create the app we'll use for testing.
+			app, err := ddevapp.NewApp(testDir, false)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectation, app.Name)
+
+			t.Cleanup(func() {
+				_ = app.Stop(true, false)
+				_ = os.Chdir(origDir)
+			})
+
+			err = ddevapp.PrepDdevDirectory(app)
+			assert.NoError(err)
+		})
 	}
 }
 

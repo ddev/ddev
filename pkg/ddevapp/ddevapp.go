@@ -2870,6 +2870,11 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	return app, nil
 }
 
+// NormalizeProjectName replaces underscores in the site name with hyphens.
+func NormalizeProjectName(siteName string) string {
+	return strings.ReplaceAll(siteName, "_", "-")
+}
+
 // restoreApp recreates an AppConfig's Name and returns an error
 // if it cannot restore them.
 func restoreApp(app *DdevApp, siteName string) error {
