@@ -536,7 +536,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	// Check if the 'additional-hostnames' flag has been set and not default
 	app.AdditionalHostnames = processFlag(cmd, "additional-hostnames", app.AdditionalHostnames)
-	util.Debug("app.AdditionalHostnames='%v'", app.AdditionalHostnames)
 
 	// Check if the 'additional-fqdns' flag has been set and not default
 	app.AdditionalFQDNs = processFlag(cmd, "additional-fqdns", app.AdditionalFQDNs)
@@ -546,7 +545,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("web-environment").Changed {
 		env := strings.TrimSpace(webEnvironmentLocal)
-		if env == "" {
+		if env == "" || env == `""` || env == `''` {
 			app.WebEnvironment = []string{}
 		} else {
 			app.WebEnvironment = strings.Split(env, ",")
@@ -735,25 +734,18 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 // processFlag checks if a flag has changed and processes its value accordingly.
 func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []string {
-	util.Debug("processFlag(%s): changed=%v currentValue=%v", flagName, cmd.Flag(flagName).Changed, currentValue)
-
 	// If the flag hasn't changed, return the current value.
 	if !cmd.Flag(flagName).Changed {
 		return currentValue
 	}
 
 	arg := cmd.Flag(flagName).Value.String()
-	if arg == `""` || arg == `''` {
-		return []string{}
-	}
 
 	// Remove all spaces from the flag value.
 	arg = strings.Replace(arg, " ", "", -1)
 
-	util.Debug("processFlag(%s) arg=%v", flagName, arg)
-
 	// If the flag value is an empty string, return an empty slice.
-	if arg == "" {
+	if arg == "" || arg == `""` || arg == `''` {
 		return []string{}
 	}
 

@@ -487,7 +487,6 @@ func (app *DdevApp) ValidateConfig() error {
 		return nil
 	}
 
-	util.Debug("app.AdditionalHostnames='%v' app.AdditionalFQDNs='%v' app.GetHostnames()='%v'", app.AdditionalHostnames, app.AdditionalFQDNs, app.GetHostnames())
 	// Validate hostnames
 	for _, hn := range app.GetHostnames() {
 		// If they have provided "*.<hostname>" then ignore the *. part.
@@ -495,7 +494,6 @@ func (app *DdevApp) ValidateConfig() error {
 		if hn == nodeps.DdevDefaultTLD {
 			return fmt.Errorf("wildcarding the full hostname\nor using 'ddev.site' as FQDN for the project %s is not allowed\nbecause other projects would not work in that case", app.Name)
 		}
-		util.Debug("Checking hostname validity of '%v' in app.GetHostnames=%v", hn, app.GetHostnames())
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("the %s project has an invalid hostname: '%s', see https://en.wikipedia.org/wiki/Hostname#Syntax for valid hostname requirements", app.Name, hn).(invalidHostname)
 		}

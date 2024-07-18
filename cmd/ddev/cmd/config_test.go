@@ -220,9 +220,9 @@ func TestConfigSetValues(t *testing.T) {
 		"--timezone", timezone,
 		"--disable-upload-dirs-warning",
 	}
-	args = []string{"-c", DdevBin + " " + strings.Join(args, " ")}
-	out, err := exec.RunHostCommand("bash", args...)
-	require.NoError(t, err, "error running bash %v: %v, output=%s", args, err, out)
+
+	out, err := exec.RunHostCommand(DdevBin, args...)
+	require.NoError(t, err, "error running ddev %v: %v, output=%s", args, err, out)
 
 	// The second run of the config should not change the unspecified options,
 	// using the auto option here should not change the config at all
@@ -279,10 +279,10 @@ func TestConfigSetValues(t *testing.T) {
 		`--omit-containers=""`,
 		`--additional-hostnames=""`,
 		`--additional-fqdns=""`,
-		//`--webimage-extra-packages=""`,
-		//`--dbimage-extra-packages=""`,
-		//`--upload-dirs=""`,
-		//`--web-environment=""`,
+		`--webimage-extra-packages=""`,
+		`--dbimage-extra-packages=""`,
+		`--upload-dirs=""`,
+		`--web-environment=""`,
 	}
 
 	out, err = exec.RunHostCommand(DdevBin, args...)
@@ -301,6 +301,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Empty(app.AdditionalHostnames)
 	assert.Empty(app.AdditionalFQDNs)
 	assert.Empty(app.OmitContainers)
+	assert.Empty(app.UploadDirs)
+	assert.Empty(app.WebEnvironment)
 
 	// Test that all container images and working dirs can each be unset with single default images flag
 	args = []string{
