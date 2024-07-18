@@ -189,8 +189,8 @@ ddev config --webserver-type=apache-fpm
 
 Flags:
 
-* `--additional-fqdns`: Comma-delimited list of project FQDNs.
-* `--additional-hostnames`: Comma-delimited list of project hostnames.
+* `--additional-fqdns`: Comma-delimited list of project FQDNs or `--additional-fqdns=""` to remoe any configured FQDNs.
+* `--additional-hostnames`: Comma-delimited list of project hostnames or `--additional-hostnames=""` to remove any configured additional hostnames.
 * `--auto`: Automatically run config without prompting.
 * `--bind-all-interfaces`: Bind host ports on all interfaces, not only on localhost network interface.
 * `--composer-root`: Overrides the default Composer root directory for the web service.
@@ -201,7 +201,7 @@ Flags:
 * `--db-image-default`: Sets the default db container image for this DDEV version.
 * `--db-working-dir`: Overrides the default working directory for the db service.
 * `--db-working-dir-default`: Unsets a db service working directory override.
-* `--dbimage-extra-packages`: A comma-delimited list of Debian packages that should be added to db container when the project is started.
+* `--dbimage-extra-packages`: A comma-delimited list of Debian packages that should be added to db container when the project is started or `--dbimage-extra-packages=""` to remove previously configured packages.
 * `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start. (default `120`)
 * `--disable-settings-management`: Prevent DDEV from creating or updating CMS settings files.
 * `--disable-upload-dirs-warning`: Suppresses warning when a project is using `performance_mode: mutagen` but does not have `upload_dirs` set.
@@ -228,15 +228,15 @@ Flags:
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
 * `--update`: Automatically detect and update settings by inspecting the code.
-* `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
+* `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command, or `--upload-dirs=""` to remove previously configured values.
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible. (default `true`)
-* `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove previously configured values.
 * `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 * `--web-image`: Sets the web container image.
 * `--web-image-default`: Sets the default web container image for this DDEV version.
 * `--web-working-dir`: Overrides the default working directory for the web service.
 * `--web-working-dir-default`: Unsets a web service working directory override.
-* `--webimage-extra-packages`: A comma-delimited list of Debian packages that should be added to web container when the project is started.
+* `--webimage-extra-packages`: A comma-delimited list of Debian packages that should be added to web container when the project is started or `--webimage-extra-packages=""` to remove any previously configured packages.
 * `--webserver-type`: Sets the project’s desired web server type: `nginx-fpm`, `nginx-gunicorn`, or `apache-fpm`.
 * `--working-dir-defaults`: Unsets all service working directory overrides.
 * `--xdebug-enabled`: Whether or not Xdebug is enabled in the web container.
@@ -261,7 +261,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--mailpit-http-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
 * `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
-* `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
+* `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""".
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--project-tld`: Set the default top-level domain to be used for all projects. (default `"ddev.site"`). Note that this will be overridden in a project that defines `project_tld`.
