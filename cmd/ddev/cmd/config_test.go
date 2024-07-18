@@ -142,7 +142,7 @@ func TestConfigSetValues(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", strings.ToLower(t.Name()))
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", projectName)
 		assert.NoError(err, "output=%s", out)
 		_ = os.RemoveAll(tmpDir)
 	})
@@ -300,9 +300,11 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(len(app.WorkingDir), 0)
 	assert.Empty(app.AdditionalHostnames)
 	assert.Empty(app.AdditionalFQDNs)
+	assert.Empty(app.DBImageExtraPackages)
 	assert.Empty(app.OmitContainers)
 	assert.Empty(app.UploadDirs)
 	assert.Empty(app.WebEnvironment)
+	assert.Empty(app.WebImageExtraPackages)
 
 	// Test that all container images and working dirs can each be unset with single default images flag
 	args = []string{

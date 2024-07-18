@@ -189,7 +189,7 @@ ddev config --webserver-type=apache-fpm
 
 Flags:
 
-* `--additional-fqdns`: Comma-delimited list of project FQDNs or `--additional-fqdns=""` to remoe any configured FQDNs.
+* `--additional-fqdns`: Comma-delimited list of project FQDNs or `--additional-fqdns=""` to remove any configured FQDNs.
 * `--additional-hostnames`: Comma-delimited list of project hostnames or `--additional-hostnames=""` to remove any configured additional hostnames.
 * `--auto`: Automatically run config without prompting.
 * `--bind-all-interfaces`: Bind host ports on all interfaces, not only on localhost network interface.
@@ -261,7 +261,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--mailpit-http-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
 * `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
-* `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""".
+* `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--project-tld`: Set the default top-level domain to be used for all projects. (default `"ddev.site"`). Note that this will be overridden in a project that defines `project_tld`.
