@@ -572,18 +572,20 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {
-		if cmd.Flag("webimage-extra-packages").Value.String() == "" {
+		val := cmd.Flag("webimage-extra-packages").Value.String()
+		if val == "" || val == `""` || val == `''` {
 			app.WebImageExtraPackages = nil
 		} else {
-			app.WebImageExtraPackages = strings.Split(cmd.Flag("webimage-extra-packages").Value.String(), ",")
+			app.WebImageExtraPackages = strings.Split(val, ",")
 		}
 	}
 
 	if cmd.Flag("dbimage-extra-packages").Changed {
-		if cmd.Flag("dbimage-extra-packages").Value.String() == "" {
+		val := cmd.Flag("dbimage-extra-packages").Value.String()
+		if val == "" || val == `""` || val == `''` {
 			app.DBImageExtraPackages = nil
 		} else {
-			app.DBImageExtraPackages = strings.Split(cmd.Flag("dbimage-extra-packages").Value.String(), ",")
+			app.DBImageExtraPackages = strings.Split(val, ",")
 		}
 	}
 
