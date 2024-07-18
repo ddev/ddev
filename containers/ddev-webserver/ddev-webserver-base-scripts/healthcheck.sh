@@ -31,6 +31,7 @@ done
 phpstatus="false"
 htmlaccess="false"
 mailpit="false"
+nodestatus="false"
 
 if ls /var/www/html >/dev/null; then
     htmlaccess="true"
@@ -58,7 +59,13 @@ if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm" ]; then
   fi
 fi
 
-if [ "${phpstatus}" = "true" ] && [ "${mailpit}" = "true" ]; then
+if [ "${DDEV_WEBSERVER_TYPE#*-}" = "nodejs" ]; then
+  gunicornstatus="true"
+  phpstatus="true"
+  nodestatus="true"
+fi
+
+if [ "${phpstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] && [ "${mailpit}" = "true" ]; then
     touch /tmp/healthy
     exit 0
 fi
