@@ -162,9 +162,6 @@ fi
 
 set -x
 
-# We don't want any docker volumes to be existing and changing behavior
-docker volume prune -a -f >/dev/null 2>&1 || true
-
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
 bash "$(dirname $0)/testbot_maintenance.sh" || true
@@ -175,7 +172,8 @@ ddev poweroff || true
 if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
-docker system prune --volumes --force >/dev/null || true
+docker system prune --volumes --force || true
+docker volume prune -a -f || true
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
