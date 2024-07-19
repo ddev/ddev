@@ -17,7 +17,7 @@ var WebTag = "20240708_rfay_postgresql_client_version" // Note that this can be 
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20240703_fix_xtrabackup"
+var BaseDBTag = "20240719_rfay_innodb_doublewrite"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.3"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20240616_traefik_3"
