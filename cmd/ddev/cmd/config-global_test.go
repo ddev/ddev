@@ -155,4 +155,13 @@ func TestCmdGlobalConfig(t *testing.T) {
 
 	assert.False(globalconfig.DdevGlobalConfig.IsMutagenEnabled())
 	assert.True(globalconfig.DdevGlobalConfig.IsNFSMountEnabled())
+
+	// Test that we can remove array elements with `--item=""`
+	args = []string{"config", "global", `--web-environment=""`, `--omit-containers=""`}
+	out, err = exec.RunCommand(DdevBin, args)
+	require.NoError(t, err, "output=%s", out)
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	require.Empty(t, globalconfig.DdevGlobalConfig.WebEnvironment)
+	require.Empty(t, globalconfig.DdevGlobalConfig.OmitContainersGlobal)
 }

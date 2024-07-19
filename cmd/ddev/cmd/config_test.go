@@ -129,34 +129,30 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 func TestConfigSetValues(t *testing.T) {
 	assert := asrt.New(t)
 
+	projectName := strings.ToLower(t.Name())
 	origDir, _ := os.Getwd()
+	_, _ = exec.RunHostCommand(DdevBin, "stop", "--unlist", projectName)
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())
-	err := os.Chdir(tmpDir)
-	assert.NoError(err)
+	_ = os.Chdir(tmpDir)
+
+	var err error
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", projectName)
 		assert.NoError(err, "output=%s", out)
 		_ = os.RemoveAll(tmpDir)
 	})
 
-	// Create an existing docroot
-	docroot := "web"
-	if err = os.MkdirAll(filepath.Join(tmpDir, docroot), 0755); err != nil {
-		t.Errorf("Could not create docroot %s in %s", docroot, tmpDir)
-	}
-
-	err = os.Chdir(tmpDir)
-	assert.NoError(err)
+	_ = os.Chdir(tmpDir)
 
 	// Build config args
-	projectName := t.Name()
-	projectType := nodeps.AppTypeTYPO3
-	phpVersion := nodeps.PHP71
+	docroot := "web"
+	projectType := nodeps.AppTypePHP
+	phpVersion := nodeps.PHP81
 	routerHTTPPort := "81"
 	routerHTTPSPort := "444"
 	hostDBPort := "60001"
@@ -225,25 +221,21 @@ func TestConfigSetValues(t *testing.T) {
 		"--disable-upload-dirs-warning",
 	}
 
-	t.Logf("command=\n%s", strings.Join(args, " "))
 	out, err := exec.RunHostCommand(DdevBin, args...)
-	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
+	require.NoError(t, err, "error running ddev %v: %v, output=%s", args, err, out)
 
 	// The second run of the config should not change the unspecified options,
 	// using the auto option here should not change the config at all
 	out, err = exec.RunHostCommand(DdevBin, "config", "--auto")
-	assert.NoError(err, "error running ddev config --auto: %s", out)
+	require.NoError(t, err, "error running ddev config --auto: '%s'", out)
 
 	configFile := filepath.Join(tmpDir, ".ddev", "config.yaml")
 	configContents, err := os.ReadFile(configFile)
-	if err != nil {
-		t.Errorf("Unable to read %s: %v", configFile, err)
-	}
+	require.NoError(t, err, "Unable to read '%s'", configFile)
 
 	app := &ddevapp.DdevApp{}
-	if err = yaml.Unmarshal(configContents, app); err != nil {
-		t.Errorf("Could not unmarshal %s: %v", configFile, err)
-	}
+	err = yaml.Unmarshal(configContents, app)
+	require.NoError(t, err, "Could not unmarshal '%s'", configFile)
 
 	assert.Equal(projectName, app.Name)
 	assert.Equal(docroot, app.Docroot)
@@ -284,21 +276,35 @@ func TestConfigSetValues(t *testing.T) {
 		"--db-image-default",
 		"--web-working-dir-default",
 		"--db-working-dir-default",
+		`--omit-containers=""`,
+		`--additional-hostnames=""`,
+		`--additional-fqdns=""`,
+		`--webimage-extra-packages=""`,
+		`--dbimage-extra-packages=""`,
+		`--upload-dirs=""`,
+		`--web-environment=""`,
 	}
 
-	_, err = exec.RunHostCommand(DdevBin, args...)
-	assert.NoError(err)
+	out, err = exec.RunHostCommand(DdevBin, args...)
+	require.NoError(t, err, "args=%v, output=%s", args, out)
 
 	configContents, err = os.ReadFile(configFile)
-	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+	require.NoError(t, err, "Unable to read %s: %v", configFile, err)
 
 	app = &ddevapp.DdevApp{}
 	err = yaml.Unmarshal(configContents, app)
-	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+	require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(app.ComposerRoot, "")
 	assert.Equal(app.WebImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
+	assert.Empty(app.AdditionalHostnames)
+	assert.Empty(app.AdditionalFQDNs)
+	assert.Empty(app.DBImageExtraPackages)
+	assert.Empty(app.OmitContainers)
+	assert.Empty(app.UploadDirs)
+	assert.Empty(app.WebEnvironment)
+	assert.Empty(app.WebImageExtraPackages)
 
 	// Test that all container images and working dirs can each be unset with single default images flag
 	args = []string{
@@ -309,7 +315,7 @@ func TestConfigSetValues(t *testing.T) {
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	args = []string{
 		"config",
@@ -318,14 +324,14 @@ func TestConfigSetValues(t *testing.T) {
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	configContents, err = os.ReadFile(configFile)
-	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+	require.NoError(t, err, "Unable to read %s: %v", configFile, err)
 
 	app = &ddevapp.DdevApp{}
 	err = yaml.Unmarshal(configContents, app)
-	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+	require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(app.WebImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
@@ -337,14 +343,14 @@ func TestConfigSetValues(t *testing.T) {
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	configContents, err = os.ReadFile(configFile)
-	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+	require.NoError(t, err, "Unable to read %s: %v", configFile, err)
 
 	app = &ddevapp.DdevApp{}
 	err = yaml.Unmarshal(configContents, app)
-	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+	require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(1, len(app.WebEnvironment))
 	assert.Equal([]string{webEnv}, app.WebEnvironment)
@@ -355,14 +361,14 @@ func TestConfigSetValues(t *testing.T) {
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	configContents, err = os.ReadFile(configFile)
-	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+	require.NoError(t, err, "Unable to read %s: %v", configFile, err)
 
 	app = &ddevapp.DdevApp{}
 	err = yaml.Unmarshal(configContents, app)
-	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+	require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(4, len(app.WebEnvironment))
 	assert.Equal("BAR=baz", app.WebEnvironment[0])
