@@ -1595,9 +1595,9 @@ func FindNotOmittedImages(app *DdevApp) []string {
 }
 
 // FindMaxTimeout looks through all services and returns the max timeout found
-// Defaults to 120
+// Defaults to DefaultContainerTimeout (usually 120 unless configured)
 func (app *DdevApp) FindMaxTimeout() int {
-	const defaultContainerTimeout = 120
+	defaultContainerTimeout, _ := strconv.Atoi(app.DefaultContainerTimeout)
 	maxTimeout := defaultContainerTimeout
 	if app.ComposeYaml == nil {
 		return defaultContainerTimeout
