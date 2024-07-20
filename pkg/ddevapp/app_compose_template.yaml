@@ -78,11 +78,11 @@ services:
       {{ if eq .DBType "postgres" }}
       test: ["CMD-SHELL", "/postgres_healthcheck.sh"]
       {{ end }}
-      interval: 1s
+      interval: "1s"
       retries: 120
       start_period: "{{ .DefaultContainerTimeout }}s"
       {{ if templateCanUse "healthcheck.start_interval" }}
-      start_interval: 1s
+      start_interval: "1s"
       {{ end }}
       timeout: "70s"
   {{ end }} {{/* end if not .OmitDB */}}
@@ -245,11 +245,11 @@ services:
       {{ end }}
       {{ end }}
     healthcheck:
-      interval: 1s
+      interval: "1s"
       retries: 120
       start_period: "{{ .DefaultContainerTimeout }}s"
       {{ if templateCanUse "healthcheck.start_interval" }}
-      start_interval: 1s
+      start_interval: "1s"
       {{ end }}
       timeout: "70s"
 
