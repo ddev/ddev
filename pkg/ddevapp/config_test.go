@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -1517,4 +1518,41 @@ func TestConfigFunctionality(t *testing.T) {
 	// Make sure that the db port is configured
 	_, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
 	require.NoError(t, err)
+}
+
+// TestConfigDefaultContainerTimeout verifies that `default_container_timeout` works
+// properly
+func TestConfigDefaultContainerTimeout(t *testing.T) {
+
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(TestSites[0].Dir)
+	app, err := ddevapp.NewApp("", true)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+		_ = app.WriteConfig()
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+	})
+
+	testMatrix := []struct {
+		description string
+		timeout     int
+		expectation int
+	}{
+		{"base", 30, 70},
+		{"large", 1200, 1200},
+	}
+
+	for _, tc := range testMatrix {
+		t.Run(tc.description, func(t *testing.T) {
+			app.DefaultContainerTimeout = strconv.Itoa(tc.timeout)
+			app.DockerEnv()
+			err = app.WriteDockerComposeYAML()
+			require.NoError(t, err)
+			maxTimeout := app.FindMaxTimeout()
+			require.Equal(t, tc.expectation, maxTimeout, "for tc=%v expected maxTimeout to be %v but it was %v", tc, tc.expectation, maxTimeout)
+		})
+	}
 }
