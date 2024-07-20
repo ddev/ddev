@@ -84,7 +84,7 @@ services:
       {{ if templateCanUse "healthcheck.start_interval" }}
       start_interval: 1s
       {{ end }}
-      timeout: "{{ if lt (atoi .DefaultContainerTimeout) 70 }}{{ .DefaultContainerTimeout }}s{{ else }}70s{{ end }}"
+      timeout: "70s"
   {{ end }} {{/* end if not .OmitDB */}}
 
   web:
@@ -251,7 +251,7 @@ services:
       {{ if templateCanUse "healthcheck.start_interval" }}
       start_interval: 1s
       {{ end }}
-      timeout: {{ if lt (atoi .DefaultContainerTimeout) 70 }}{{ .DefaultContainerTimeout}}s{{ else }}70s{{ end }}
+      timeout: "70s"
 
 networks:
   ddev_default:
