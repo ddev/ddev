@@ -22,6 +22,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var ephemeralTestSites [2]testcommon.TestSite
+
+func init() {
+	ephemeralTestSites = [2]testcommon.TestSite{TestSites[0], TestSites[1]}
+}
+
 // TestGlobalPortOverride tests global router_http_port and router_https_port
 func TestGlobalPortOverride(t *testing.T) {
 	assert := asrt.New(t)
@@ -308,7 +314,7 @@ func TestUseEphemeralPort(t *testing.T) {
 	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8080"
 	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8443"
 
-	site := TestSites[0]
+	site := ephemeralTestSites[0]
 
 	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
@@ -329,9 +335,9 @@ func TestUseEphemeralPort(t *testing.T) {
 	require.NoError(t, err)
 	defer l1.Close()
 
-	ephemeralHttpPort, ok := ddevapp.FindAvailableRouterPort(8080, 8130)
+	ephemeralHttpPort, ok := ddevapp.FindAvailableRouterPort(16080, 16130)
 	assert.Exactly(true, ok)
-	ephemeralHttpsPort, ok := ddevapp.FindAvailableRouterPort(8443, 8493)
+	ephemeralHttpsPort, ok := ddevapp.FindAvailableRouterPort(16443, 16493)
 	assert.Exactly(true, ok)
 
 	err = app.Restart()
@@ -341,49 +347,23 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	require.Equal(t, fmt.Sprint(ephemeralHttpPort), app.GetRouterHTTPPort())
 	require.Equal(t, fmt.Sprint(ephemeralHttpsPort), app.GetRouterHTTPSPort())
-}
 
-func TestRouterPort(t *testing.T) {
-	assert := asrt.New(t)
-
-	origGlobalHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
-	origGlobalHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
-
-	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8080"
-	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8443"
-
-	site := TestSites[0]
-
-	app, err := ddevapp.NewApp(site.Dir, false)
+	// Now start a second app which will also try to use same original ports, so it will
+	// also use the same ephemeral ports.
+	site2 := ephemeralTestSites[1]
+	app2, err := ddevapp.NewApp(site2.Dir, false)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = app.Stop(true, false)
+		err = app2.Stop(true, false)
 		assert.NoError(err)
 		globalconfig.DdevGlobalConfig.RouterHTTPPort = origGlobalHTTPPort
 		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origGlobalHTTPSPort
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 	})
-
-	l0, err := net.Listen("tcp", "127.0.0.1:"+globalconfig.DdevGlobalConfig.RouterHTTPPort)
-	require.NoError(t, err)
-	defer l0.Close()
-	l1, err := net.Listen("tcp", "127.0.0.1:"+globalconfig.DdevGlobalConfig.RouterHTTPSPort)
-	require.NoError(t, err)
-	defer l1.Close()
-
-	app.Start()
-
-	site = TestSites[1]
-	app2, err := ddevapp.NewApp(site.Dir, false)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		globalconfig.DdevGlobalConfig.RouterHTTPPort = origGlobalHTTPPort
-		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origGlobalHTTPSPort
-		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		assert.NoError(err)
-	})
+	app2.RouterHTTPPort = globalconfig.DdevGlobalConfig.RouterHTTPPort
+	app2.RouterHTTPSPort = globalconfig.DdevGlobalConfig.RouterHTTPSPort
 	app2.Start()
+	require.Equal(t, fmt.Sprint(ephemeralHttpPort), app2.GetRouterHTTPPort())
+	require.Equal(t, fmt.Sprint(ephemeralHttpsPort), app2.GetRouterHTTPSPort())
 }
