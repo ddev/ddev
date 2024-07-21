@@ -176,7 +176,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// For mariadb/mysql restart container and wait for restore
 	if status == SiteRunning || status == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotFile)
-		util.Success("With large snapshots this may take a long time.\nThis may time out after %d seconds (max of all container timeouts)\nbut you can increase it by changing default_container_timeout.", app.FindMaxTimeout())
+		util.Success("With large snapshots this may take a long time.\nThis may time out after %d seconds (max of all container timeouts)\nbut you can increase it by changing default_container_timeout.", app.GetMaxContainerWaitTime())
 		dbContainer, err := GetContainer(app, "db")
 		if err != nil || dbContainer == nil {
 			return fmt.Errorf("no container found for db; err=%v", err)

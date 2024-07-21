@@ -1551,7 +1551,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 			app.DockerEnv()
 			err = app.WriteDockerComposeYAML()
 			require.NoError(t, err)
-			maxTimeout := app.FindMaxTimeout()
+			maxTimeout := app.GetMaxContainerWaitTime()
 			require.Equal(t, tc.expectation, maxTimeout, "for tc=%v expected maxTimeout to be %v but it was %v", tc, tc.expectation, maxTimeout)
 		})
 	}
