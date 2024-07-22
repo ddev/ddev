@@ -1600,6 +1600,7 @@ func FindNotOmittedImages(app *DdevApp) []string {
 func (app *DdevApp) GetMaxContainerWaitTime() int {
 	defaultContainerTimeout, _ := strconv.Atoi(app.DefaultContainerTimeout)
 	maxWaitTime := defaultContainerTimeout
+
 	if app.ComposeYaml == nil {
 		return defaultContainerTimeout
 	}
@@ -1618,7 +1619,8 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 				} else { /* In this case we didn't have a specified start_period, so guess at one */
 					interval := 1
 					retries := 3
-					startPeriod = 15 /* Use a generic default for start_period based on 3*5 */
+					maxWaitTime = 15 /* Use a generic default for start_period/maxWaitTime based on 3*5 */
+
 					if intervalStr, ok := i.(map[string]interface{})["interval"]; ok {
 						intervalInt, err := time.ParseDuration(intervalStr.(string))
 						if err == nil {

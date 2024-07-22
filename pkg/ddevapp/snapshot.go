@@ -223,9 +223,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
 	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
-	// Allow extra time by default for the snapshot restore. This is arbitrary but may help.
+	// If the default_container_timeout does not already specify a longer period
+	// then allow extra time by default for the snapshot restore. This is arbitrary but may help.
 	origTimeout := app.DefaultContainerTimeout
-	app.DefaultContainerTimeout = "600"
+	if t, _ := strconv.Atoi(app.DefaultContainerTimeout); t <= 600 {
+		app.DefaultContainerTimeout = "600"
+	}
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
@@ -234,7 +237,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// On mysql/mariadb the snapshot restore doesn't actually complete right away after
 	// the mariabackup/xtrabackup returns.
 	if app.Database.Type != nodeps.Postgres {
-		output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
+		output.UserOut.Printf("Waiting up to %ss for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.DefaultContainerTimeout, app.Name)
 		// Now it's up, but we need to find out when it finishes loading.
 		for {
 			// We used to use killall -1 mysqld here
