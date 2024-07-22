@@ -1619,7 +1619,9 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 				} else { /* In this case we didn't have a specified start_period, so guess at one */
 					interval := 1
 					retries := 3
-					maxWaitTime = 15 /* Use a generic default for start_period/maxWaitTime based on 3*5 */
+					// Use a generic default for start_period/maxWaitTime based on
+					// `retries` (3) * default `interval` (5)
+					maxWaitTime = 15
 
 					if intervalStr, ok := i.(map[string]interface{})["interval"]; ok {
 						intervalInt, err := time.ParseDuration(intervalStr.(string))
