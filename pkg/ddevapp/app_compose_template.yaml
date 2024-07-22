@@ -75,7 +75,7 @@ services:
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
-      {{- if eq .DBType "postgres" -}}
+      {{- if eq .DBType "postgres" }}
       test: ["CMD-SHELL", "/postgres_healthcheck.sh"]
       {{- end }}
       interval: "1s"
