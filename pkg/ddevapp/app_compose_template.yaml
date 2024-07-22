@@ -79,7 +79,7 @@ services:
       test: ["CMD-SHELL", "/postgres_healthcheck.sh"]
       {{ end }}
       interval: "1s"
-      retries: 120
+      retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
       {{ if templateCanUse "healthcheck.start_interval" }}
       start_interval: "1s"
@@ -246,7 +246,7 @@ services:
       {{ end }}
     healthcheck:
       interval: "1s"
-      retries: 120
+      retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
       {{ if templateCanUse "healthcheck.start_interval" }}
       start_interval: "1s"
