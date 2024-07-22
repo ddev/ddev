@@ -1628,7 +1628,11 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 					if retriesSpecified, ok := i.(map[string]interface{})["retries"]; ok {
 						retries = retriesSpecified.(int)
 					}
-					maxWaitTime = retries * interval
+					// If the guessed maxWaitTime is greater than what we've found before
+					// then use it. This will be unusual.
+					if retries*interval > maxWaitTime {
+						maxWaitTime = retries * interval
+					}
 				}
 			}
 		}

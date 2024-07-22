@@ -1529,27 +1529,45 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 	app, err := ddevapp.NewApp("", true)
 	require.NoError(t, err)
 	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+	defaultTimeoutInt, _ := strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
+	tName := t.Name()
 
 	t.Cleanup(func() {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 		_ = app.WriteConfig()
 		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose." + tName + ".yaml"))
 		_ = os.Chdir(origDir)
 	})
 
 	simpleWaitTimeMatrix := []struct {
 		description string
-		waitTime    int
+		maxWaitTime int
 		expectation int
 	}{
-		{"lowWaitTime", 30, 30},
-		{"highWaitTime", 1200, 1200},
+		{"nospec", defaultTimeoutInt, defaultTimeoutInt},
+		{"nospec", 30, 30},
+		{"nohealthcheck", defaultTimeoutInt, defaultTimeoutInt},
+		{"nohealthcheck", 1200, 1200},
+		{"longtimeout", defaultTimeoutInt, defaultTimeoutInt},
+		{"longtimeout", 1200, 1200},
+		{"withshortstartperiod", defaultTimeoutInt, defaultTimeoutInt},
+		{"withshortstartperiod", 1200, 1200},
+		{"withlongstartperiod", defaultTimeoutInt, 1350},
+		{"withlongstartperiod", 1200, 1350},
+		{"intervalset", defaultTimeoutInt, 135},
+		{"intervalset", 1200, 1200},
+		{"intervalandretriesset", defaultTimeoutInt, 660},
+		{"intervalandretriesset", 1200, 1200},
 	}
 
 	for _, tc := range simpleWaitTimeMatrix {
 		t.Run(tc.description, func(t *testing.T) {
-			app.DefaultContainerTimeout = strconv.Itoa(tc.waitTime)
+			app.DefaultContainerTimeout = strconv.Itoa(tc.maxWaitTime)
 			app.DockerEnv()
+			dockerComposeFile := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
+			err = copy2.Copy(dockerComposeFile, app.GetConfigPath("docker-compose."+tName+".yaml"))
+			require.NoError(t, err)
 			err = app.WriteDockerComposeYAML()
 			require.NoError(t, err)
 			maxWaitTime := app.GetMaxContainerWaitTime()
@@ -1557,7 +1575,8 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		})
 	}
 
-	// More things to do
-	// - docker-compose.*.yaml with various start_period
-	// - Mix those with changed default_container_timeout
+	// Try snapshot restore with and without increased wait time
+	// Inspect db container start_period
+	// Inspect output of snapshot restore
+
 }
