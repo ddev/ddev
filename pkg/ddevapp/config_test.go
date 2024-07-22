@@ -1567,8 +1567,10 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			app.DefaultContainerTimeout = strconv.Itoa(tc.maxWaitTime)
 			app.DockerEnv()
-			dockerComposeFile := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
-			err = copy2.Copy(dockerComposeFile, app.GetConfigPath("docker-compose."+tName+".yaml"))
+			dockerComposeSource := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
+			dockerComposeTarget := app.GetConfigPath("docker-compose." + tName + ".yaml")
+			_ = os.RemoveAll(dockerComposeTarget)
+			err = copy2.Copy(dockerComposeSource, dockerComposeTarget, copy2.Options{})
 			require.NoError(t, err)
 			err = app.WriteDockerComposeYAML()
 			require.NoError(t, err)
