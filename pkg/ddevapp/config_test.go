@@ -1528,6 +1528,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 	_ = os.Chdir(TestSites[0].Dir)
 	app, err := ddevapp.NewApp("", true)
 	require.NoError(t, err)
+	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 
 	t.Cleanup(func() {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
@@ -1536,23 +1537,27 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		_ = os.Chdir(origDir)
 	})
 
-	testMatrix := []struct {
+	simpleWaitTimeMatrix := []struct {
 		description string
-		timeout     int
+		waitTime    int
 		expectation int
 	}{
-		{"base", 30, 70},
-		{"large", 1200, 1200},
+		{"lowWaitTime", 30, 30},
+		{"highWaitTime", 1200, 1200},
 	}
 
-	for _, tc := range testMatrix {
+	for _, tc := range simpleWaitTimeMatrix {
 		t.Run(tc.description, func(t *testing.T) {
-			app.DefaultContainerTimeout = strconv.Itoa(tc.timeout)
+			app.DefaultContainerTimeout = strconv.Itoa(tc.waitTime)
 			app.DockerEnv()
 			err = app.WriteDockerComposeYAML()
 			require.NoError(t, err)
-			maxTimeout := app.GetMaxContainerWaitTime()
-			require.Equal(t, tc.expectation, maxTimeout, "for tc=%v expected maxTimeout to be %v but it was %v", tc, tc.expectation, maxTimeout)
+			maxWaitTime := app.GetMaxContainerWaitTime()
+			require.Equal(t, tc.expectation, maxWaitTime, "for tc=%v expected maxWaitTime to be %v but it was %v", tc, tc.expectation, maxWaitTime)
 		})
 	}
+
+	// More things to do
+	// - docker-compose.*.yaml with various start_period
+	// - Mix those with changed default_container_timeout
 }
