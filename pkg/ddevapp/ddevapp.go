@@ -1620,7 +1620,8 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 					interval := 1
 					retries := 3
 					// Use a generic default for start_period/maxWaitTime based on
-					// `retries` (3) * default `interval` (5)
+					// https://docs.docker.com/reference/dockerfile/#healthcheck
+					// `retries` (3) * default `start_interval` (5)
 					maxWaitTime = 15
 
 					if intervalStr, ok := i.(map[string]interface{})["interval"]; ok {
