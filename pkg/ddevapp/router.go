@@ -454,7 +454,6 @@ func setEphemeralPortsVariables(httpPort, httpsPort string, verbose bool) {
 		}
 	}
 
-	isEphemeral = false
 	originalPort, ephemeralPort, isEphemeral = GetEphemeralRouterPort(httpsPort)
 	if isEphemeral {
 		ephemeralRouterHTTPSPort = ephemeralPort
