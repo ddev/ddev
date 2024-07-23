@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,20 +40,34 @@ func TestNodeJSVersions(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), ".nvmrc"), nvmrcFile)
+	require.NoError(t, err)
+	nvmrcFileContents, err := os.ReadFile(nvmrcFile)
+	require.NoError(t, err, "Unable to read %s: %v", nvmrcFile, err)
+	nvmrcVersion := strings.TrimSpace(string(nvmrcFileContents))
+
+	packageJSONFile := filepath.Join(app.AppRoot, "package.json")
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "package.json"), packageJSONFile)
+	require.NoError(t, err)
+	packageJSONFileContents, err := os.ReadFile(packageJSONFile)
+	require.NoError(t, err, "Unable to read %s: %v", packageJSONFile, err)
+	var packageJSON map[string]interface{}
+	err = json.Unmarshal(packageJSONFileContents, &packageJSON)
+	require.NoError(t, err, "Unable to unmarshal %s: %v", packageJSONFile, err)
+	engines := packageJSON["engines"].(map[string]interface{})
+	packageJSONVersion := engines["node"].(string)
+
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Testing some random versions, both complete and incomplete
-	for _, v := range []string{"6", "10", "14.20", "16.0.0", "20", "auto"} {
+	// Testing some random versions, complete, incomplete, and labels
+	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20"} {
 		app.NodeJSVersion = v
 		if app.NodeJSVersion == "auto" {
-			nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
-			err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), ".nvmrc"), nvmrcFile)
-			require.NoError(t, err)
-			nvmrcFileContents, err := os.ReadFile(nvmrcFile)
-			require.NoError(t, err, "Unable to read %s: %v", nvmrcFile, err)
-			v = strings.TrimSpace(string(nvmrcFileContents))
-			app.NodeJSVersion = v
+			v = nvmrcVersion
+		} else if app.NodeJSVersion == "engine" {
+			v = packageJSONVersion
 		}
 		err = app.Restart()
 		assert.NoError(err)
