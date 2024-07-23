@@ -93,11 +93,14 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
-sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 
-if [ "${N_INSTALL_VERSION:-}" != "" ]; then
-  sudo n install "${N_INSTALL_VERSION}"
+if command -v n >/dev/null 2>&1 && [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
+  ln -sf /mnt/ddev-global-cache/n_prefix/${HOSTNAME} "${N_PREFIX}"
+  # try a normal install that also uses cache and try again offline if it fails
+  n install "${N_INSTALL_VERSION}" || n install "${N_INSTALL_VERSION}" --offline
+  ln -sf ${N_PREFIX}/bin/node ${N_PREFIX}/bin/nodejs
 fi
 
 # The following ensures a persistent and shared "global" cache for

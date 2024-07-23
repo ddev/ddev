@@ -90,10 +90,13 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
-if [ "${N_INSTALL_VERSION:-}" != "" ]; then
-  sudo n install "${N_INSTALL_VERSION}"
+if command -v n >/dev/null 2>&1 && [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
+  ln -sf /mnt/ddev-global-cache/n_prefix/${HOSTNAME} "${N_PREFIX}"
+  # try a normal install that also uses cache and try again offline if it fails
+  n install "${N_INSTALL_VERSION}" || n install "${N_INSTALL_VERSION}" --offline
+  ln -sf ${N_PREFIX}/bin/node ${N_PREFIX}/bin/nodejs
 fi
 
 # The following ensures a persistent and shared "global" cache for
