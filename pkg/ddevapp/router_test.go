@@ -335,18 +335,18 @@ func TestUseEphemeralPort(t *testing.T) {
 	require.NoError(t, err)
 	defer l1.Close()
 
-	ephemeralHttpPort, ok := ddevapp.FindAvailableRouterPort(16080, 16130)
+	ephemeralHTTPPort, ok := ddevapp.FindAvailableRouterPort(16080, 16130)
 	assert.Exactly(true, ok)
-	ephemeralHttpsPort, ok := ddevapp.FindAvailableRouterPort(16443, 16493)
+	ephemeralHTTPSPort, ok := ddevapp.FindAvailableRouterPort(16443, 16493)
 	assert.Exactly(true, ok)
 
-	err = app.Restart()
+	err = app.Start()
 	require.NoError(t, err)
 	require.NotEqual(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, app.GetRouterHTTPPort())
 	require.NotEqual(t, globalconfig.DdevGlobalConfig.RouterHTTPSPort, app.GetRouterHTTPSPort())
 
-	require.Equal(t, fmt.Sprint(ephemeralHttpPort), app.GetRouterHTTPPort())
-	require.Equal(t, fmt.Sprint(ephemeralHttpsPort), app.GetRouterHTTPSPort())
+	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app.GetRouterHTTPPort())
+	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app.GetRouterHTTPSPort())
 
 	// Now start a second app which will also try to use same original ports, so it will
 	// also use the same ephemeral ports.
@@ -363,7 +363,8 @@ func TestUseEphemeralPort(t *testing.T) {
 	})
 	app2.RouterHTTPPort = globalconfig.DdevGlobalConfig.RouterHTTPPort
 	app2.RouterHTTPSPort = globalconfig.DdevGlobalConfig.RouterHTTPSPort
-	app2.Start()
-	require.Equal(t, fmt.Sprint(ephemeralHttpPort), app2.GetRouterHTTPPort())
-	require.Equal(t, fmt.Sprint(ephemeralHttpsPort), app2.GetRouterHTTPSPort())
+	err = app2.Start()
+	require.NoError(t, err)
+	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app2.GetRouterHTTPPort())
+	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app2.GetRouterHTTPSPort())
 }
