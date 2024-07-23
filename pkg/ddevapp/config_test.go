@@ -1605,8 +1605,8 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		c, err = dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
 		require.NoError(t, err)
 		require.NotEqual(t, dockerTypes.ContainerJSON{}, c)
-		expectedWaitTime = 600
-		// If the maxWaitTime was set to greater than the expected 600
+		expectedWaitTime = ddevapp.SnapshotRestoreDefaultWaitTime
+		// If the maxWaitTime was set to greater than the expected 600/SnapshotRestoreDefaultWaitTime
 		// (which is set in the snapshot restore code) then use the maxWaitTime value
 		if maxWaitTimeInt, _ := strconv.Atoi(maxWaitTime); maxWaitTimeInt > expectedWaitTime {
 			expectedWaitTime = maxWaitTimeInt
