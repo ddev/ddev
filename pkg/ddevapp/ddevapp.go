@@ -1617,12 +1617,10 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 						maxWaitTime = t
 					}
 				} else { /* In this case we didn't have a specified start_period, so guess at one */
-					interval := 1
-					retries := 3
-					// Use a generic default for start_period/maxWaitTime based on
+					// Use defaults for interval and retries
 					// https://docs.docker.com/reference/dockerfile/#healthcheck
-					// `retries` (3) * default `start_interval` (5)
-					maxWaitTime = 15
+					interval := 5
+					retries := 3
 
 					if intervalStr, ok := i.(map[string]interface{})["interval"]; ok {
 						intervalInt, err := time.ParseDuration(intervalStr.(string))
@@ -1633,7 +1631,7 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 					if retriesSpecified, ok := i.(map[string]interface{})["retries"]; ok {
 						retries = retriesSpecified.(int)
 					}
-					// If the guessed maxWaitTime is greater than what we've found before
+					// If the retries*interval is greater than what we've found before
 					// then use it. This will be unusual.
 					if retries*interval > maxWaitTime {
 						maxWaitTime = retries * interval

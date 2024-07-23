@@ -1547,27 +1547,29 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		maxWaitTime int
 		expectation int
 	}{
-		{"nospec", defaultTimeoutInt, defaultTimeoutInt},
-		{"nospec", 30, 30},
-		{"nohealthcheck", defaultTimeoutInt, defaultTimeoutInt},
-		{"nohealthcheck", 1200, 1200},
-		{"longtimeout", defaultTimeoutInt, defaultTimeoutInt},
-		{"longtimeout", 1200, 1200},
-		{"withshortstartperiod", defaultTimeoutInt, defaultTimeoutInt},
-		{"withshortstartperiod", 1200, 1200},
-		{"withlongstartperiod", defaultTimeoutInt, 1350},
-		{"withlongstartperiod", 1200, 1350},
-		{"intervalset", defaultTimeoutInt, 135},
-		{"intervalset", 1200, 1200},
-		{"intervalandretriesset", defaultTimeoutInt, 660},
-		{"intervalandretriesset", 1200, 1200},
+		{"nospec-default", defaultTimeoutInt, defaultTimeoutInt},
+		{"nospec-30", 30, 30},
+		{"nohealthcheck-default", defaultTimeoutInt, defaultTimeoutInt},
+		{"nohealthcheck-1200", 1200, 1200},
+		{"longtimeout-default", defaultTimeoutInt, defaultTimeoutInt},
+		{"longtimeout-1200", 1200, 1200},
+		{"withshortstartperiod-default", defaultTimeoutInt, defaultTimeoutInt},
+		{"withshortstartperiod-1200", 1200, 1200},
+		{"withlongstartperiod-default", defaultTimeoutInt, 1350},
+		{"withlongstartperiod-1200", 1200, 1350},
+		{"intervalset-default", defaultTimeoutInt, 135},
+		{"intervalset-1200", 1200, 1200},
+		{"intervalandretriesset-default", defaultTimeoutInt, 660},
+		{"intervalandretriesset-1200", 1200, 1200},
 	}
 
 	for _, tc := range simpleWaitTimeMatrix {
 		t.Run(tc.description, func(t *testing.T) {
+			parts := strings.Split(tc.description, "-")
+			tcDesc := parts[0]
 			app.DefaultContainerTimeout = strconv.Itoa(tc.maxWaitTime)
 			app.DockerEnv()
-			dockerComposeSource := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
+			dockerComposeSource := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tcDesc))
 			dockerComposeTarget := app.GetConfigPath("docker-compose." + tName + ".yaml")
 			_ = os.RemoveAll(dockerComposeTarget)
 			err = copy2.Copy(dockerComposeSource, dockerComposeTarget, copy2.Options{})
@@ -1575,6 +1577,9 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 			err = app.WriteDockerComposeYAML()
 			require.NoError(t, err)
 			maxWaitTime := app.GetMaxContainerWaitTime()
+			if tc.expectation != maxWaitTime {
+				t.Logf("oops - not equal")
+			}
 			require.Equal(t, tc.expectation, maxWaitTime, "for tc=%v expected maxWaitTime to be %v but it was %v", tc, tc.expectation, maxWaitTime)
 		})
 	}
