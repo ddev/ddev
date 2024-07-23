@@ -68,12 +68,24 @@ const ConfigInstructions = `
 
 # nodejs_version: "20"
 # change from the default system Node.js version to any other version.
-# Numeric version numbers can be complete (i.e. 18.15.0) or
-# incomplete (18, 17.2, 16). 'lts' and 'latest' can be used as well along with
-# other named releases, 'auto' reads the version from a file such as '.nvmrc' or 'package.json'.
-# see https://www.npmjs.com/package/n#specifying-nodejs-versions
-# Note that you can continue using 'ddev nvm' or nvm inside the web container
-# to change the project's installed node version if you need to.
+#
+# See https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
+# below are the most used options for the "nodejs_version":
+#
+# Numeric version numbers can be complete "4.9.1" or incomplete "8", with an optional leading v "v6.1".
+# "lts" is the newest Long Term Support official release; "latest" and "current" are the newest official release.
+#
+# There is an "auto" label to read the target version from a file in the DDEV_APPROOT directory,
+# or any parent directory. 'n' looks for in order:
+#   - ".n-node-version": version on single line. Custom to 'n'.
+#   - ".node-version": version on single line. Used by multiple tools https://github.com/shadowspawn/node-version-usage
+#   - ".nvmrc": version on single line. Used by 'nvm'.
+#   - if no version file found, look for "engine" as below.
+#
+# The "engine" label looks for a 'package.json' file and reads the engines field to determine compatible Node.js.
+#
+# Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
+# can specify any version, and is more robust than using 'nvm'.
 
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
