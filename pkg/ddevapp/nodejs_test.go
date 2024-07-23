@@ -2,11 +2,13 @@ package ddevapp_test
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -41,8 +43,17 @@ func TestNodeJSVersions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Testing some random versions, both complete and incomplete
-	for _, v := range []string{"6", "10", "14.20", "16.0.0", "20"} {
+	for _, v := range []string{"6", "10", "14.20", "16.0.0", "20", "auto"} {
 		app.NodeJSVersion = v
+		if app.NodeJSVersion == "auto" {
+			nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
+			err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), ".nvmrc"), nvmrcFile)
+			require.NoError(t, err)
+			nvmrcFileContents, err := os.ReadFile(nvmrcFile)
+			require.NoError(t, err, "Unable to read %s: %v", nvmrcFile, err)
+			v = strings.TrimSpace(string(nvmrcFileContents))
+			app.NodeJSVersion = v
+		}
 		err = app.Restart()
 		assert.NoError(err)
 		out, _, err := app.Exec(&ddevapp.ExecOpts{

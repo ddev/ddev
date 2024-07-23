@@ -70,7 +70,7 @@ const ConfigInstructions = `
 # change from the default system Node.js version to any other version.
 # Numeric version numbers can be complete (i.e. 18.15.0) or
 # incomplete (18, 17.2, 16). 'lts' and 'latest' can be used as well along with
-# other named releases.
+# other named releases, 'auto' reads the version from a file such as '.nvmrc' or 'package.json'.
 # see https://www.npmjs.com/package/n#specifying-nodejs-versions
 # Note that you can continue using 'ddev nvm' or nvm inside the web container
 # to change the project's installed node version if you need to.

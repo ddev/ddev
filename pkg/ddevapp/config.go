@@ -974,7 +974,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN npm install -g n"
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
+		if app.NodeJSVersion == "auto" {
+			extraWebContent = extraWebContent + fmt.Sprintf("\nENV N_INSTALL_VERSION=%s", app.NodeJSVersion)
+		} else {
+			extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s", app.NodeJSVersion)
+		}
+		extraWebContent = extraWebContent + "\nRUN ln -sf /usr/local/bin/node /usr/local/bin/nodejs"
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"

@@ -393,6 +393,9 @@ Node.js version for the web container’s “system” version.
 
 There is no need to configure `nodejs_version` unless you want a version other than the default version.
 
+!!!tip "Select the Node.js version from a file such as `.nvmrc` or `package.json`"
+    `nodejs_version` can be set to `auto`, which will use `n install auto` under the hood.
+
 !!!note "Switching from `nvm` to `nodejs_version`"
     If switching from using `nvm` to using `nodejs_version`, you may find that the container continues to use the previously specified version. If this happens, use `ddev nvm alias default system` or `ddev ssh` into the container (`ddev ssh`) and run `rm -rf /mnt/ddev-global-cache/nvm_dir/${DDEV_PROJECT}-web`, then `ddev restart`.
 

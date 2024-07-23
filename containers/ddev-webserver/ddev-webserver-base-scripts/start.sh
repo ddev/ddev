@@ -95,6 +95,11 @@ sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
+
+if [ "${N_INSTALL_VERSION:-}" != "" ]; then
+  sudo n install "${N_INSTALL_VERSION}"
+fi
+
 # The following ensures a persistent and shared "global" cache for
 # yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache
 # will only be used if the project is configured to use it through it's own
