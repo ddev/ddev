@@ -1497,7 +1497,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 	containerNames := dockerutil.GetContainerNames(containersAwaited)
-	output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", 600, containerNames)
+	output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
 	err = app.WaitByLabels(waitLabels)
 	if err != nil {
 		return err
