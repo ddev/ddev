@@ -1,0 +1,11 @@
+services:
+  longtimeout:
+    container_name: "ddev-${DDEV_SITENAME}-longtimeout"
+    image: debian:12
+    command: sleep infinity
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    healthcheck:
+      interval: "60s"
+      retries: 11

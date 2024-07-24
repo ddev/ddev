@@ -8,9 +8,11 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
+	dockerTypes "github.com/docker/docker/api/types"
 	copy2 "github.com/otiai10/copy"
 
 	"github.com/Masterminds/semver/v3"
@@ -1517,4 +1519,98 @@ func TestConfigFunctionality(t *testing.T) {
 	// Make sure that the db port is configured
 	_, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
 	require.NoError(t, err)
+}
+
+// TestConfigDefaultContainerTimeout verifies that `default_container_timeout` works
+// properly
+func TestConfigDefaultContainerTimeout(t *testing.T) {
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	_ = os.Chdir(site.Dir)
+	app, err := ddevapp.NewApp("", true)
+	require.NoError(t, err)
+	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+	defaultTimeoutInt, _ := strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
+	tName := t.Name()
+
+	t.Cleanup(func() {
+		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+		_ = app.WriteConfig()
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose." + tName + ".yaml"))
+		_ = os.Chdir(origDir)
+	})
+
+	simpleWaitTimeMatrix := []struct {
+		description string
+		maxWaitTime int
+		expectation int
+	}{
+		{"nospec", defaultTimeoutInt, defaultTimeoutInt},
+		{"nospec", 30, 30},
+		{"nohealthcheck", defaultTimeoutInt, defaultTimeoutInt},
+		{"nohealthcheck", 1200, 1200},
+		{"longtimeout", defaultTimeoutInt, defaultTimeoutInt},
+		{"longtimeout", 1200, 1200},
+		{"withshortstartperiod", defaultTimeoutInt, defaultTimeoutInt},
+		{"withshortstartperiod", 1200, 1200},
+		{"withlongstartperiod", defaultTimeoutInt, 1350},
+		{"withlongstartperiod", 1200, 1350},
+		{"intervalset", defaultTimeoutInt, 135},
+		{"intervalset", 1200, 1200},
+		{"intervalandretriesset", defaultTimeoutInt, 660},
+		{"intervalandretriesset", 1200, 1200},
+	}
+
+	for _, tc := range simpleWaitTimeMatrix {
+		t.Run(tc.description, func(t *testing.T) {
+			app.DefaultContainerTimeout = strconv.Itoa(tc.maxWaitTime)
+			app.DockerEnv()
+			dockerComposeSource := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
+			dockerComposeTarget := app.GetConfigPath("docker-compose." + tName + ".yaml")
+			err = copy2.Copy(dockerComposeSource, dockerComposeTarget, copy2.Options{})
+			require.NoError(t, err)
+			err = app.WriteDockerComposeYAML()
+			require.NoError(t, err)
+			maxWaitTime := app.GetMaxContainerWaitTime()
+			require.Equal(t, tc.expectation, maxWaitTime, "for tc=%v expected maxWaitTime to be %v but it was %v", tc, tc.expectation, maxWaitTime)
+		})
+	}
+
+	// Try snapshot restore with and without increased wait time
+	// Inspect db container start_period
+	// Inspect output of snapshot restore
+	_ = os.RemoveAll(app.GetConfigPath("docker-compose." + tName + ".yaml"))
+	for _, maxWaitTime := range []string{nodeps.DefaultDefaultContainerTimeout, "850"} {
+		app.DefaultContainerTimeout = maxWaitTime
+		app.DockerEnv()
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Restart()
+		require.NoError(t, err)
+
+		// Inspect db container for correct healthcheck
+		c, err := dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
+		require.NoError(t, err)
+		require.NotEqual(t, dockerTypes.ContainerJSON{}, c)
+		expectedWaitTime, _ := strconv.Atoi(maxWaitTime)
+		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
+		_, err = app.Snapshot(t.Name() + maxWaitTime)
+		require.NoError(t, err)
+		err = app.RestoreSnapshot(t.Name() + maxWaitTime)
+		require.NoError(t, err)
+
+		// Inspect container that results from snapshot restore
+		c, err = dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
+		require.NoError(t, err)
+		require.NotEqual(t, dockerTypes.ContainerJSON{}, c)
+		expectedWaitTime = ddevapp.SnapshotRestoreDefaultWaitTime
+		// If the maxWaitTime was set to greater than the expected 600/SnapshotRestoreDefaultWaitTime
+		// (which is set in the snapshot restore code) then use the maxWaitTime value
+		if maxWaitTimeInt, _ := strconv.Atoi(maxWaitTime); maxWaitTimeInt > expectedWaitTime {
+			expectedWaitTime = maxWaitTimeInt
+		}
+		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
+	}
 }
