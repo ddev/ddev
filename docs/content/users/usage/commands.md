@@ -81,6 +81,8 @@ Flags:
 
 ## `artisan`
 
+*Aliases: `art`.*
+
 Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
 
 ```shell

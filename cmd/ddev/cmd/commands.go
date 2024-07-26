@@ -153,6 +153,18 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 		}
 
+		var aliases []string
+		if val, ok := directives["Aliases"]; ok {
+			for _, alias := range strings.Split(val, ",") {
+				alias = strings.TrimSpace(alias)
+				if foundCmd, _, err := rootCmd.Find([]string{alias}); err != nil {
+					aliases = append(aliases, alias)
+				} else {
+					util.Warning("Command '%s' cannot have alias '%s' that is already in use by command '%s', skipping it", commandName, alias, foundCmd.Name())
+				}
+			}
+		}
+
 		autocompleteTerms := []string{}
 		if val, ok := directives["AutocompleteTerms"]; ok {
 			if err = json.Unmarshal([]byte(val), &autocompleteTerms); err != nil {
@@ -263,6 +275,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			Use:                usage,
 			Short:              description + descSuffix,
 			Example:            example,
+			Aliases:            aliases,
 			DisableFlagParsing: disableFlags,
 			FParseErrWhitelist: cobra.FParseErrWhitelist{
 				UnknownFlags: true,
