@@ -988,11 +988,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
 ### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
 ARG SQLITE_VERSION=%s
-RUN mkdir -p /tmp/sqlite3 && \
+RUN ( mkdir -p /tmp/sqlite3 && \
 wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 apt-get install -y /tmp/sqlite3/*.deb && \
-rm -rf /tmp/sqlite3
+rm -rf /tmp/sqlite3 ) || true
 			`, versionconstants.Drupal11RequiredSqlite3Version)
 		}
 	}
