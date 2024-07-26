@@ -590,7 +590,7 @@ func DownloadMutagenIfNeeded() error {
 		}
 	}
 	// Also make sure the mutagen-agents.tar.gz is in place
-	agentsFile := filepath.Join(globalconfig.GetGlobalDdevDirLocation(), "mutagen-agents.tar.gz")
+	agentsFile := filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz")
 	if !fileutil.FileExists(agentsFile) {
 		err = DownloadMutagen()
 		if err != nil {
