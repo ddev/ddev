@@ -23,7 +23,13 @@ import (
 )
 
 // RouterProjectName is the "machine name" of the router docker-compose
-const RouterProjectName = "ddev-router"
+const (
+	RouterProjectName     = "ddev-router"
+	MinEphemeralHTTPPort  = 50080
+	MaxEphemeralHTTPPort  = 50442
+	MinEphemeralHTTPSPort = 50443
+	MaxEphemeralHTTPSPort = 50500
+)
 
 var (
 	originalRouterHTTPPort, originalRouterHTTPSPort, ephemeralRouterHTTPPort, ephemeralRouterHTTPSPort string
@@ -388,11 +394,9 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 // Finally, if the port is not available and the router is not using it, create a new
 // ephemeral port and return it.
 //
-// The range goes from given port + 8000 up to given port + 8050
-//
 // Returns the original port, the ephemeral port found, and a boolean that determines if the
 // port is ephemeral (true) or not (false)
-func GetEphemeralRouterPort(port string) (string, string, bool) {
+func GetEphemeralRouterPort(port string, minPort, maxPort int) (string, string, bool) {
 	if RouterPortIsAvailable(port) {
 		// If the port is available, there will not be ephemeral port.
 		return port, "", false
@@ -429,13 +433,7 @@ func GetEphemeralRouterPort(port string) (string, string, bool) {
 		}
 	}
 
-	// Finally, if the port is not available and the router is not using it, create a new ephemeral port.
-	p, err := strconv.Atoi(port)
-	if err != nil {
-		return port, "", false
-	}
-
-	ephemeralPort, ok := FindAvailableRouterPort(p+8000, p+8050)
+	ephemeralPort, ok := FindAvailableRouterPort(minPort, maxPort)
 	if !ok {
 		return port, "", false
 	}
@@ -445,7 +443,7 @@ func GetEphemeralRouterPort(port string) (string, string, bool) {
 
 // If ephemeral ports are needed, updates the variables that keep the ephemeral ports values
 func setEphemeralPortsVariables(httpPort, httpsPort string, verbose bool) {
-	originalPort, ephemeralPort, isEphemeral := GetEphemeralRouterPort(httpPort)
+	originalPort, ephemeralPort, isEphemeral := GetEphemeralRouterPort(httpPort, MinEphemeralHTTPPort, MaxEphemeralHTTPPort)
 	if isEphemeral {
 		ephemeralRouterHTTPPort = ephemeralPort
 		originalRouterHTTPPort = originalPort
@@ -454,7 +452,7 @@ func setEphemeralPortsVariables(httpPort, httpsPort string, verbose bool) {
 		}
 	}
 
-	originalPort, ephemeralPort, isEphemeral = GetEphemeralRouterPort(httpsPort)
+	originalPort, ephemeralPort, isEphemeral = GetEphemeralRouterPort(httpsPort, MinEphemeralHTTPSPort, MaxEphemeralHTTPSPort)
 	if isEphemeral {
 		ephemeralRouterHTTPSPort = ephemeralPort
 		originalRouterHTTPSPort = originalPort
