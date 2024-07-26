@@ -138,9 +138,11 @@ The `install.yaml` is a simple YAML file with a few main sections:
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
 * `ddev_version_constraint` (available with DDEV v1.23.4+): a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent add-on from being installed if it doesn't validate. For example:
+
     ```yaml
     ddev_version_constraint: '>= v1.23.4'
     ```
+
 * `dependencies`: an array of add-ons that this add-on depends on.
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`.
