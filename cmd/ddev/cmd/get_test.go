@@ -2,17 +2,18 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	copy2 "github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"regexp"
-	"runtime"
-	"testing"
 
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -243,6 +244,39 @@ func TestCmdGetDependencies(t *testing.T) {
 
 	// Now depender_recipe should succeed
 	out, err = exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
+	require.NoError(t, err, "out=%s", out)
+}
+
+// TestCmdGetDdevVersionConstraint tests the ddev_version_constraint behavior is correct
+func TestCmdGetDdevVersionConstraint(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	err = copy2.Copy(filepath.Join(origDir, "testdata", t.Name(), "project"), app.GetAppRoot())
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		out, err := exec.RunHostCommand(DdevBin, "get", "--remove", "invalid_constraint_recipe")
+		assert.Error(err, "output='%s'", out)
+		out, err = exec.RunHostCommand(DdevBin, "get", "--remove", "valid_constraint_recipe")
+		assert.NoError(err, "output='%s'", out)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Add-on with invalid constraint should not be installed
+	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "invalid_constraint_recipe"))
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "constraint is not valid")
+
+	// Add-on with valid constraint should be installed
+	out, err = exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "valid_constraint_recipe"))
 	require.NoError(t, err, "out=%s", out)
 }
 
