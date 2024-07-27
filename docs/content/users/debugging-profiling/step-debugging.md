@@ -66,6 +66,9 @@ Click on the local repository path and add `/var/www/html` as the *Absolute path
 6. Start debugging by clicking the “debug” button, which will launch a page in your browser:
     ![PhpStorm debug start](../../images/phpstorm-config-debug-button.png)
 
+!!!tip "If you’re using [additional_hostnames](../usage/extend/additional-hostnames.md)"
+    If you also want xdebug to run on additional hostnames. Simply create a copy of the server with the current settings and change the host and name to the desired ones. This will tell PHP Storm to listen to that hostname with the appropriate mapping.
+
 #### PhpStorm and Command-Line Debugging
 
 If you need to debug command-line PHP processes, especially code that’s outside the docroot, the environment variable `PHP_IDE_CONFIG` is already set inside the web container, so you don’t have to do much more.
