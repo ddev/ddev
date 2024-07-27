@@ -375,6 +375,13 @@ func TestUseEphemeralPort(t *testing.T) {
 	assert.NoError(err)
 	err = app2.Stop(true, false)
 	assert.NoError(err)
+
+	// Restore back the traefik .static_config.yaml so later test do not fail.
+	// We do it restarting the router and stopping it again.
+	l0.Close()
+	l1.Close()
+	ddevapp.StartDdevRouter()
+
 	router, err := ddevapp.FindDdevRouter()
 	if router != nil && err == nil && router.State != "running" {
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
