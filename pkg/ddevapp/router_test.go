@@ -380,7 +380,8 @@ func TestUseEphemeralPort(t *testing.T) {
 	// We do it restarting the router and stopping it again.
 	l0.Close()
 	l1.Close()
-	ddevapp.StartDdevRouter()
+	err = ddevapp.StartDdevRouter()
+	require.NoError(t, err)
 
 	router, err := ddevapp.FindDdevRouter()
 	if router != nil && err == nil && router.State != "running" {
