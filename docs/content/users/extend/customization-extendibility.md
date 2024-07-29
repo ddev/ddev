@@ -1,11 +1,68 @@
 ---
 search:
-  boost: 2
+  boost: 3
 ---
 
 # Extending and Customizing Environments
 
 DDEV provides several ways to customize and extend project environments.
+
+## Environment Variables for Containers and Services
+
+You can set custom environment variables in several places:
+
+1. An optional, project-level `.ddev/.env` file provides environment variables to all DDEV containers, including any additional services or add-ons. It can look something like this:
+
+    ```
+    MY_ENV_VAR='someval'
+    MY_OTHER_ENV_VAR='someotherval'
+    ```
+
+2. The global `web_environment` setting in `.ddev/global_config.yaml`.
+
+    ```yaml
+    web_environment:
+    - MY_ENV_VAR=someval
+    - MY_OTHER_ENV_VAR=someotherval
+    ```
+
+3. The project’s [`web_environment`](../configuration/config.md#web_environment) setting in `.ddev/config.yaml` or `.ddev/config.*.yaml`:
+
+    ```yaml
+    web_environment:
+    - MY_ENV_VAR=someval
+    - MY_OTHER_ENV_VAR=someotherval
+    ```
+
+If you’d rather use the CLI to set the project or global `web_environment` value, you can use the [`ddev config`](../usage/commands.md#config) command:
+
+```sh
+# Set MY_ENV_VAR for the project
+ddev config --web-environment-add="MY_ENV_VAR=someval"
+
+# Set MY_ENV_VAR globally
+ddev config global --web-environment-add="MY_ENV_VAR=someval
+```
+
+You can use the `--web-environment` flag to overwrite existing values rather than adding them.
+
+!!!warning "Don’t check in sensitive values!"
+Sensitive variables like API keys should not be checked in with your project. Typically you might use an `.env` file and _not_ check that in, but offer `.env.example` with expected keys that don’t have values. Some use global configuration for sensitive values, as that’s not normally checked in either.
+
+### Altering the In-Container `$PATH`
+
+Sometimes it’s easiest to put the command you need into the existing `$PATH` using a symbolic link rather than changing the in-container `$PATH`. For example, the project `bin` directory is already included the `$PATH`. So if you have a command you want to run that’s not already in the `$PATH`, you can add a symlink.
+
+Examples:
+
+* On Craft CMS, the `craft` script is often in the project root, which is not in the `$PATH`. But if you `mkdir bin && ln -s craft bin/craft` you should be able to run `ddev exec craft`. (Note however that `ddev craft` takes care of this for you.)
+* On projects where the `vendor` directory is not in the project root (Acquia projects, for example, have `composer.json` and `vendor` in the `docroot` directory), you can `mkdir bin && ln -s docroot/vendor/bin/drush bin/drush` to put `drush` in your `$PATH`. (With projects like this, make sure to set `composer_root: docroot` so that `ddev composer` works properly.)
+
+You can also modify the `PATH` environment variable by adding a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/`. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh`:
+
+```bash
+export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
+```
 
 ## Changing PHP Version
 
@@ -145,57 +202,6 @@ services:
 ```
 
 If multiple projects declare the same port, only the first project will be able to start successfully. Consider making services like this disabled by default, especially if they aren't needed in day to day use.
-
-## Providing Custom Environment Variables to a Container
-
-You can set custom environment variables in several places:
-
-* The project’s [`web_environment`](../configuration/config.md#web_environment) setting in `.ddev/config.yaml` or `.ddev/config.*.yaml`:
-
-    ```yaml
-    web_environment:
-    - MY_ENV_VAR=someval
-    - MY_OTHER_ENV_VAR=someotherval
-    ```
-
-* The global `web_environment` setting in `.ddev/global_config.yaml`.
-
-* An optional, project-level `.ddev/.env` file, which could look something like this:
-
-    ```
-    MY_ENV_VAR='someval'
-    MY_OTHER_ENV_VAR='someotherval'
-    ```
-
-If you’d rather use the CLI to set the project or global `web_environment` value, you can use the [`ddev config`](../usage/commands.md#config) command:
-
-```sh
-# Set MY_ENV_VAR for the project
-ddev config --web-environment-add="MY_ENV_VAR=someval"
-
-# Set MY_ENV_VAR globally
-ddev config global --web-environment-add="MY_ENV_VAR=someval
-```
-
-You can use the `--web-environment` flag to overwrite existing values rather than adding them.
-
-!!!warning "Don’t check in sensitive values!"
-    Sensitive variables like API keys should not be checked in with your project. Typically you might use an `.env` file and _not_ check that in, but offer `.env.example` with expected keys that don’t have values. Some use global configuration for sensitive values, as that’s not normally checked in either.
-
-### Altering the In-Container `$PATH`
-
-Sometimes it’s easiest to put the command you need into the existing `$PATH` using a symbolic link rather than changing the in-container `$PATH`. For example, the project `bin` directory is already included the `$PATH`. So if you have a command you want to run that’s not already in the `$PATH`, you can add a symlink.
-
-Examples:
-
-* On Craft CMS, the `craft` script is often in the project root, which is not in the `$PATH`. But if you `mkdir bin && ln -s craft bin/craft` you should be able to run `ddev exec craft`. (Note however that `ddev craft` takes care of this for you.)
-* On projects where the `vendor` directory is not in the project root (Acquia projects, for example, have `composer.json` and `vendor` in the `docroot` directory), you can `mkdir bin && ln -s docroot/vendor/bin/drush bin/drush` to put `drush` in your `$PATH`. (With projects like this, make sure to set `composer_root: docroot` so that `ddev composer` works properly.)
-
-You can also modify the `PATH` environment variable by adding a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/`. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh`:
-
-```bash
-export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
-```
 
 ## Custom nginx Configuration
 
