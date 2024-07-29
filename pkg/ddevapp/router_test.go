@@ -327,11 +327,39 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	app, err := ddevapp.NewApp(site1.Dir, false)
 	require.NoError(t, err)
-	app.RouterHTTPPort = targetHTTPPort
-	app.RouterHTTPSPort = targetHTTPSPort
+	app2, err := ddevapp.NewApp(site2.Dir, false)
+	require.NoError(t, err)
+
+	// Configure both apps to use the same target ports. Keep original configured ports for undoing the configuration later.
+	appHTTPPort, appHTTPSPort := app.RouterHTTPPort, app.RouterHTTPSPort
+	app.RouterHTTPPort, app.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	app2HTTPPort, app2HTTPSPort := app.RouterHTTPPort, app.RouterHTTPSPort
+	app2.RouterHTTPPort, app2.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = app2.Stop(true, false)
+		assert.NoError(err)
+
+		// Undo the configuration of the ports.
+		app.RouterHTTPPort, app.RouterHTTPSPort = appHTTPPort, appHTTPSPort
+		app2.RouterHTTPPort, app2.RouterHTTPSPort = app2HTTPPort, app2HTTPSPort
+
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app2.WriteConfig()
+		assert.NoError(err)
+
+		// Finally reset the router configuration, so it does not interfere other tests.
+		err = ddevapp.StartDdevRouter()
+		require.NoError(t, err)
+
+		router, err := ddevapp.FindDdevRouter()
+		if router != nil && err == nil && router.State == "running" {
+			err = dockerutil.RemoveContainer(nodeps.RouterContainer)
+			assert.NoError(err)
+		}
 	})
 
 	// Occupy target router ports:
@@ -342,6 +370,7 @@ func TestUseEphemeralPort(t *testing.T) {
 	require.NoError(t, err)
 	defer l1.Close()
 
+	// Find out which ephemeral ports the apps will use.
 	ephemeralHTTPPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralHTTPPort, ddevapp.MaxEphemeralHTTPPort)
 	assert.Exactly(true, ok)
 	ephemeralHTTPSPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralHTTPSPort, ddevapp.MaxEphemeralHTTPSPort)
@@ -349,43 +378,16 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
+
+	// First app does not use the target ports, but the ephemeral ports.
 	require.NotEqual(t, targetHTTPPort, app.GetRouterHTTPPort())
 	require.NotEqual(t, targetHTTPSPort, app.GetRouterHTTPSPort())
-
 	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app.GetRouterHTTPPort())
 	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app.GetRouterHTTPSPort())
 
-	// Now start a second app which will also try to use same original ports, so it will
-	// also use the same ephemeral ports.
-	app2, err := ddevapp.NewApp(site2.Dir, false)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = app2.Stop(true, false)
-		assert.NoError(err)
-	})
-	app2.RouterHTTPPort = targetHTTPPort
-	app2.RouterHTTPSPort = targetHTTPSPort
+	// Second app does not use either the target ports, but the ephemeral ports being used by first app.
 	err = app2.Start()
 	require.NoError(t, err)
 	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app2.GetRouterHTTPPort())
 	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app2.GetRouterHTTPSPort())
-
-	// Stop the apps and stop the router, so it cleans up its ephemeral ports.
-	err = app.Stop(true, false)
-	assert.NoError(err)
-	err = app2.Stop(true, false)
-	assert.NoError(err)
-
-	// Restore back the traefik .static_config.yaml so later test do not fail.
-	// We do it restarting the router and stopping it again.
-	l0.Close()
-	l1.Close()
-	err = ddevapp.StartDdevRouter()
-	require.NoError(t, err)
-
-	router, err := ddevapp.FindDdevRouter()
-	if router != nil && err == nil && router.State != "running" {
-		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
-		assert.NoError(err)
-	}
 }
