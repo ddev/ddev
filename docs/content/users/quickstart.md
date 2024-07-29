@@ -422,13 +422,21 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```bash
     mkdir my-magento2-site && cd my-magento2-site
     ddev config --project-type=magento2 --docroot=pub --disable-settings-management \
-    --upload-dirs=media --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
+    --upload-dirs=media
 
     ddev get ddev/ddev-elasticsearch
     ddev start
-    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
+
+    # if the Magento auth is not found in the Composer global config, save it at the project level
+    if ! ddev exec "composer config --list --global 2>/dev/null | grep -q repo.magento.com" 2>/dev/null; then
+        ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
+        mkdir -p .ddev/homeadditions/.composer
+        echo "*\n\!.gitignore" >.ddev/homeadditions/.composer/.gitignore
+        ddev restart
+    fi
+
+    ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
-    echo "/auth.json" >.ddev/homeadditions/.composer/.gitignore
 
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
