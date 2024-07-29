@@ -61,9 +61,9 @@ RUN pecl channel-update pecl.php.net && \
 FROM base AS ddev-php-base
 ARG PHP_DEFAULT_VERSION="8.2"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
-ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2 php8.3"
+ARG PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2 php8.3 php8.4"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
-ENV DRUSH_VERSION=8.4.12
+ARG DRUSH_VERSION=8.4.12
 ENV NODE_VERSION=20
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -107,34 +107,40 @@ RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
-ENV php56_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
-ENV php56_arm64="apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xml xhprof xmlrpc zip"
-ENV php70_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
-ENV php70_arm64=$php70_amd64
-ENV php71_amd64=$php70_amd64
-ENV php71_arm64=$php70_arm64
-ENV php72_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
-ENV php72_arm64=$php72_amd64
-ENV php73_amd64=$php72_amd64
-ENV php73_arm64=$php72_arm64
-ENV php74_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
-ENV php74_arm64=$php74_amd64
+ARG php56_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ARG php56_arm64="apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xml xhprof xmlrpc zip"
+ARG php70_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ARG php70_arm64=$php70_amd64
+ARG php71_amd64=$php70_amd64
+ARG php71_arm64=$php70_arm64
+ARG php72_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ARG php72_arm64=$php72_amd64
+ARG php73_amd64=$php72_amd64
+ARG php73_arm64=$php72_arm64
+ARG php74_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ARG php74_arm64=$php74_amd64
 
 # As of php8.0 json is now part of core package and xmlrpc has been removed from PECL
-ENV php80_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
-ENV php80_arm64=$php80_amd64
+ARG php80_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ARG php80_arm64=$php80_amd64
 
-ENV php81_amd64=$php80_amd64
-ENV php81_arm64=$php81_amd64
-ENV php82_amd64=$php81_amd64
-ENV php82_arm64=$php82_amd64
-ENV php83_amd64=$php82_amd64
-ENV php83_arm64=$php83_amd64
+ARG php81_amd64=$php80_amd64
+ARG php81_arm64=$php81_amd64
+ARG php82_amd64=$php81_amd64
+ARG php82_arm64=$php82_amd64
+ARG php83_amd64=$php82_amd64
+ARG php83_arm64=$php83_amd64
+# TODO: Update 8.4 packages available as they mature, hopefully end up with same as previous
+ARG php84_amd64="bcmath bz2 cli common curl fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip"
+ARG php84_arm64=$php84_amd64
 
+RUN echo php84_arm64=${php84_arm64}
 RUN for v in $PHP_VERSIONS; do \
+    echo "INSTALLING $v"; \
     targetarch=${TARGETPLATFORM#linux/}; \
     pkgvar=${v//.}_${targetarch}; \
     pkgs=$(echo ${!pkgvar} | awk -v v="$v" ' BEGIN {RS=" "; }  { printf "%s-%s ",v,$0 ; }' ); \
+    echo pkgs=$pkgs; \
     [[ ${pkgs// } != "" ]] && (apt-get -qq install --no-install-recommends --no-install-suggests -y $pkgs || exit $?) \
 done
 ### ---------------------------ddev-xdebug-build--------------------------------------
@@ -149,7 +155,7 @@ RUN apt-get -qq autoremove -y
 RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer
 RUN curl -L --fail -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
 RUN curl --fail -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -sf /usr/local/bin/wp-cli /usr/local/bin/wp
-RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -O /usr/bin/yq && chmod +x /usr/bin/yq
+RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
