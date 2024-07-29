@@ -427,8 +427,8 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev get ddev/ddev-elasticsearch
     ddev start
 
-    # if the Magento auth is not found in the Composer config, save it at the project level
-    if ! ddev exec "composer config --list 2>/dev/null | grep -q repo.magento.com || composer config --list --global 2>/dev/null | grep -q repo.magento.com" 2>/dev/null; then
+    # if the Magento auth is not found in the Composer global config, save it at the project level
+    if ! ddev exec "composer config --list --global 2>/dev/null | grep -q repo.magento.com" 2>/dev/null; then
         ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
         mkdir -p .ddev/homeadditions/.composer
         echo "*\n\!.gitignore" >.ddev/homeadditions/.composer/.gitignore
