@@ -304,12 +304,25 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
 
-	site1 := TestSites[0]
-	site1.Dir = testcommon.CreateTmpDir(t.Name() + "_1")
-
 	// This is copied from ddevapp_test.go
+	site1 := testcommon.TestSite{
+		Name:                          "TestEphemeralPort1", // Drupal D7
+		SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.90.tar.gz",
+		ArchiveInternalExtractionPath: "drupal-7.90/",
+		FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
+		DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
+		FullSiteTarballURL:            "",
+		Dir:                           testcommon.CreateTmpDir(t.Name() + "_1"),
+		Docroot:                       "",
+		Type:                          nodeps.AppTypeDrupal7,
+		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+		DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
+		FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
+		FullSiteArchiveExtPath:        "docroot/sites/default/files",
+	}
+
 	site2 := testcommon.TestSite{
-		Name:                          "TestPkgDrupal8",
+		Name:                          "TestEphemeralPort2",
 		SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.20.tar.gz",
 		ArchiveInternalExtractionPath: "drupal-8.9.20/",
 		FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
@@ -350,6 +363,8 @@ func TestUseEphemeralPort(t *testing.T) {
 		assert.NoError(err)
 		err = app2.WriteConfig()
 		assert.NoError(err)
+		app.RemoveGlobalProjectInfo()
+		app2.RemoveGlobalProjectInfo()
 
 		// Finally reset the router configuration, so it does not interfere other tests.
 		err = ddevapp.StartDdevRouter()

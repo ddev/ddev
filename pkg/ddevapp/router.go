@@ -461,3 +461,14 @@ func setEphemeralPortsVariables(httpPort, httpsPort string, verbose bool) {
 		}
 	}
 }
+
+// Unset the variables, specially useful when running a test suite.
+func unsetEphemeralPortsVariables() {
+	if ephemeralRouterHTTPPort != "" {
+		ephemeralRouterHTTPPort = ""
+	}
+
+	if ephemeralRouterHTTPSPort != "" {
+		ephemeralRouterHTTPSPort = ""
+	}
+}
