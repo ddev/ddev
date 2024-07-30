@@ -68,22 +68,8 @@ const ConfigInstructions = `
 
 # nodejs_version: "20"
 # change from the default system Node.js version to any other version.
-#
-# See https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
-# below are the most used options for the "nodejs_version":
-#
-# Numeric version numbers can be complete "4.9.1" or incomplete "8", with an optional leading v "v6.1".
-# "lts" is the newest Long Term Support official release; "latest" and "current" are the newest official release.
-#
-# There is an "auto" label to read the target version from a file in the DDEV_APPROOT directory,
-# or any parent directory. 'n' looks for in order:
-#   - ".n-node-version": version on single line. Custom to 'n'.
-#   - ".node-version": version on single line. Used by multiple tools https://github.com/shadowspawn/node-version-usage
-#   - ".nvmrc": version on single line. Used by 'nvm'.
-#   - if no version file found, look for "engine" as below.
-#
-# The "engine" label looks for a 'package.json' file and reads the engines field to determine compatible Node.js.
-#
+# See https://ddev.readthedocs.io/en/stable/users/configuration/config/#nodejs_version for more information
+# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
 # Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
 # can specify any version, and is more robust than using 'nvm'.
 

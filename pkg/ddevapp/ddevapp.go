@@ -1473,6 +1473,16 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Something is wrong with your Docker provider and /mnt/ddev_config is not mounted from the project .ddev folder. Your project cannot normally function successfully with this situation. Is your project in your home directory?")
 	}
 
+	if app.NodeJSVersion != nodeps.NodeJSDefault {
+		util.Debug(`checking nodejs_version: "%s" install for errors`, app.NodeJSVersion)
+		nInstallStderr, _, _ := app.Exec(&ExecOpts{
+			Cmd: "cat /tmp/n-install-stderr.txt || true",
+		})
+		if nInstallStderr != "" {
+			util.Warning("Unable to install nodejs_version: \"%s\", error output from `n install %s`:\n%s", app.NodeJSVersion, app.NodeJSVersion, nInstallStderr)
+		}
+	}
+
 	if !IsRouterDisabled(app) {
 		output.UserOut.Printf("Starting ddev-router if necessary...")
 		err = StartDdevRouter()

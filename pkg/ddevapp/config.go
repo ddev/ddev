@@ -974,7 +974,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + fmt.Sprintf(`
-RUN npm install -g n
 ENV N_PREFIX=/home/$username/.n
 ENV N_INSTALL_VERSION="%s"
 `, app.NodeJSVersion)

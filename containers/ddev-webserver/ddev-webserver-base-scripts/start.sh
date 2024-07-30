@@ -96,11 +96,23 @@ sudo mkdir -p ${TERMINUS_CACHE_DIR}
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 
-if command -v n >/dev/null 2>&1 && [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
+if [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
   ln -sf /mnt/ddev-global-cache/n_prefix/${HOSTNAME} "${N_PREFIX}"
   # try a normal install that also uses cache and try again offline if it fails
-  n install "${N_INSTALL_VERSION}" || n install "${N_INSTALL_VERSION}" --offline || true
-  ln -sf ${N_PREFIX}/bin/node ${N_PREFIX}/bin/nodejs
+  n_install_result=true
+  timeout 30 n install "${N_INSTALL_VERSION}" 2> >(tee /tmp/n-install-stderr.txt >&2) || n_install_result=false
+  if [ "${n_install_result}" = "false" ]; then
+    timeout 30 n install "${N_INSTALL_VERSION}" --offline 2> >(tee -a /tmp/n-install-stderr.txt >&2) && n_install_result=true
+  fi
+  if [ "${n_install_result}" = "true" ]; then
+    ln -sf ${N_PREFIX}/bin/node ${N_PREFIX}/bin/nodejs
+    # we don't need this file if everything is fine
+    rm -f /tmp/n-install-stderr.txt
+  else
+    # remove the symlink on error so that the system Node.js can be used
+    rm -f ${N_PREFIX}
+  fi
+  hash -r
 fi
 
 # The following ensures a persistent and shared "global" cache for
