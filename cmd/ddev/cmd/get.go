@@ -267,6 +267,21 @@ ddev get --remove ddev-someaddonname
 				}
 			}
 		}
+
+		origDir, _ := os.Getwd()
+
+		defer func() {
+			err = os.Chdir(origDir)
+			if err != nil {
+				util.Failed("Unable to chdir to %v: %v", origDir, err)
+			}
+		}()
+
+		err = os.Chdir(app.GetConfigPath(""))
+		if err != nil {
+			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
+		}
+
 		if len(s.PreInstallActions) > 0 {
 			util.Success("\nExecuting pre-install actions:")
 		}
@@ -328,19 +343,6 @@ ddev get --remove ddev-someaddonname
 			} else {
 				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use DDEV get again if you want it to be replaced: %v", dest, err)
 			}
-		}
-		origDir, _ := os.Getwd()
-
-		defer func() {
-			err = os.Chdir(origDir)
-			if err != nil {
-				util.Failed("Unable to chdir to %v: %v", origDir, err)
-			}
-		}()
-
-		err = os.Chdir(app.GetConfigPath(""))
-		if err != nil {
-			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
 		}
 
 		if len(s.PostInstallActions) > 0 {
