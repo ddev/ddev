@@ -133,7 +133,7 @@ Anyone can create an add-on for `ddev get`. See [this screencast](https://www.yo
 
 The `install.yaml` is a simple YAML file with a few main sections:
 
-* `name`: The add-on name. This will be used in `ddev get --remove` and similar commands. If the repository name is `ddev-solr`, for example, a good `name` will be `solr`. 
+* `name`: The add-on name. This will be used in `ddev get --remove` and similar commands. If the repository name is `ddev-solr`, for example, a good `name` will be `solr`.
 * `pre_install_actions`: an array of Bash statements or scripts to be executed before `project_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
