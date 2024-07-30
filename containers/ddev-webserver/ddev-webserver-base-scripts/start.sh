@@ -28,9 +28,9 @@ DDEV_WEBSERVER_TYPE="${DDEV_WEBSERVER_TYPE:-nginx-fpm}"
 # Update the default PHP and FPM versions a DDEV_PHP_VERSION like '5.6' or '7.0' is provided
 # Otherwise it will use the default version configured in the Dockerfile
 if [ -n "$DDEV_PHP_VERSION" ] ; then
-	update-alternatives --set php /usr/bin/php${DDEV_PHP_VERSION}
-	ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
-	export PHP_INI=/etc/php/${DDEV_PHP_VERSION}/fpm/php.ini
+  update-alternatives --set php /usr/bin/php${DDEV_PHP_VERSION}
+  ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
+  export PHP_INI=/etc/php/${DDEV_PHP_VERSION}/fpm/php.ini
 fi
 
 # Set PHP timezone to configured $TZ if there is one
@@ -97,22 +97,7 @@ sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOS
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 
 if [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
-  ln -sf /mnt/ddev-global-cache/n_prefix/${HOSTNAME} "${N_PREFIX}"
-  # try a normal install that also uses cache and try again offline if it fails
-  n_install_result=true
-  timeout 30 n install "${N_INSTALL_VERSION}" 2> >(tee /tmp/n-install-stderr.txt >&2) || n_install_result=false
-  if [ "${n_install_result}" = "false" ]; then
-    timeout 30 n install "${N_INSTALL_VERSION}" --offline 2> >(tee -a /tmp/n-install-stderr.txt >&2) && n_install_result=true
-  fi
-  if [ "${n_install_result}" = "true" ]; then
-    ln -sf ${N_PREFIX}/bin/node ${N_PREFIX}/bin/nodejs
-    # we don't need this file if everything is fine
-    rm -f /tmp/n-install-stderr.txt
-  else
-    # remove the symlink on error so that the system Node.js can be used
-    rm -f ${N_PREFIX}
-  fi
-  hash -r
+  sudo n-install.sh || true
 fi
 
 # The following ensures a persistent and shared "global" cache for

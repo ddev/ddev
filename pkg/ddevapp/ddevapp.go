@@ -1479,7 +1479,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			Cmd: "cat /tmp/n-install-stderr.txt || true",
 		})
 		if nInstallStderr != "" {
-			util.Warning("Unable to install nodejs_version: \"%s\", error output from `n install %s`:\n%s", app.NodeJSVersion, app.NodeJSVersion, nInstallStderr)
+			util.Warning("Unable to install nodejs_version: \"%s\".\nError output from `n install %s`:\n%s", app.NodeJSVersion, app.NodeJSVersion, nInstallStderr)
 		}
 	}
 
