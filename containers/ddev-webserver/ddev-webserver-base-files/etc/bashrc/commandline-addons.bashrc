@@ -1,4 +1,4 @@
-PATH="$PATH:/var/www/html/vendor/bin:/var/www/html/bin:$DDEV_COMPOSER_ROOT/vendor/bin"
+PATH="${PATH}:/var/www/html/vendor/bin:/var/www/html/bin:${DDEV_COMPOSER_ROOT}/vendor/bin"
 [ "${N_PREFIX:-}" != "" ] && PATH="$N_PREFIX/bin:$PATH"
 export PATH="~/bin:$PATH"
 

@@ -95,7 +95,7 @@ mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME
 if command -v n >/dev/null 2>&1 && [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
   ln -sf /mnt/ddev-global-cache/n_prefix/${HOSTNAME} "${N_PREFIX}"
   # try a normal install that also uses cache and try again offline if it fails
-  n install "${N_INSTALL_VERSION}" || n install "${N_INSTALL_VERSION}" --offline
+  n install "${N_INSTALL_VERSION}" || n install "${N_INSTALL_VERSION}" --offline || true
   ln -sf ${N_PREFIX}/bin/node ${N_PREFIX}/bin/nodejs
 fi
 
