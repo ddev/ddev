@@ -91,7 +91,7 @@
     ;;
   8.4)
     # TODO: Update this list as more become available
-    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli opcache pgsql readline soap sqlite3 xml zip"
+    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
     ;;
 
   esac
