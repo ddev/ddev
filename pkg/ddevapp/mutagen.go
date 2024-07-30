@@ -582,8 +582,9 @@ func DownloadMutagenIfNeeded() error {
 	if err != nil {
 		return err
 	}
+	agentsFile := filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz")
 	curVersion, err := version.GetLiveMutagenVersion()
-	if err != nil || curVersion != versionconstants.RequiredMutagenVersion {
+	if err != nil || curVersion != versionconstants.RequiredMutagenVersion || !fileutil.FileExists(agentsFile) {
 		err = DownloadMutagen()
 		if err != nil {
 			return err
