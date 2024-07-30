@@ -1476,7 +1476,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		util.Debug(`checking nodejs_version: "%s" install for errors`, app.NodeJSVersion)
 		nInstallStderr, _, _ := app.Exec(&ExecOpts{
-			Cmd: "cat /tmp/n-install-stderr.txt || true",
+			Cmd: "cat /tmp/n-install-stderr.txt 2>/dev/null || true",
 		})
 		if nInstallStderr != "" {
 			util.Warning("Unable to install nodejs_version: \"%s\".\nError output from `n install %s`:\n%s", app.NodeJSVersion, app.NodeJSVersion, nInstallStderr)

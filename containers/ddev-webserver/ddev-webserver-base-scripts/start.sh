@@ -97,7 +97,7 @@ sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOS
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 
 if [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
-  sudo n-install.sh || true
+  n-install.sh || true
 fi
 
 # The following ensures a persistent and shared "global" cache for
