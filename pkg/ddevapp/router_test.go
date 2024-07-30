@@ -275,7 +275,7 @@ func TestFindEphemeralPort(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Get a random port number in the dynamic port range
-	startPort := rand.Intn(65535 - 49152 + 1)
+	startPort := 49152 + rand.Intn(65535-49152+1)
 	goodEndPort := startPort + 3
 	badEndPort := startPort + 2
 
