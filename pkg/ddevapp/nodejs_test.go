@@ -125,7 +125,7 @@ func TestCorepackEnable(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: `ls -l /usr/bin/yarn`,
+		Cmd: `ls -l /usr/local/bin/yarn`,
 	})
 	require.NoError(t, err)
 	require.NotContains(t, out, "corepack")
@@ -139,7 +139,7 @@ func TestCorepackEnable(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: `ls -l /usr/bin/yarn`,
+		Cmd: `ls -l /usr/local/bin/yarn`,
 	})
 	require.NoError(t, err)
 	require.Contains(t, out, "corepack")
