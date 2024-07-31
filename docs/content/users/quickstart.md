@@ -417,32 +417,32 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
 
-    !!!tip "Reuse the existing `auth.json` from the Composer installed on the host side"
+    !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
         If you already have Composer installed on you system you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
 
         ```
         mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json
         ```
 
-    !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config" 
-        You can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again:
-
-        ```bash
-        # enter your username/password and agree to store your credentials
-        ddev_dir="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
-        mkdir -p $ddev_dir/homeadditions/.composer
-        docker_command=("docker" "run" "-it" "--rm" "-v" "$ddev_dir/homeadditions/.composer:/composer" "--workdir=/tmp" "-e" "COMPOSER_HOME=/composer" "--user" "$(id -u):$(id -g)")
-        auth_json_path="$ddev_dir/homeadditions/.composer/auth.json"
-        if [ -L "$auth_json_path" ]; then
-            # If auth.json is a symlink, add the optional mount
-            auth_json_dir=$(dirname "$(readlink -f "$auth_json_path")")
-            docker_command+=("-v" "$auth_json_dir:$auth_json_dir")
-        fi
-        image="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null)"
-        docker_command+=("$image" "bash" "-c" "composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install")
-        # Execute the command to store credentials
-        "${docker_command[@]}"
-        ```
+        Alternatively, you can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again (see below):
+    
+        ??? "Script to store Adobe/Magento Composer credentials (click me)"
+            ```bash
+            # Enter your username/password and agree to store your credentials
+            ddev_dir="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+            mkdir -p $ddev_dir/homeadditions/.composer
+            docker_command=("docker" "run" "-it" "--rm" "-v" "$ddev_dir/homeadditions/.composer:/composer" "--workdir=/tmp" "-e" "COMPOSER_HOME=/composer" "--user" "$(id -u):$(id -g)")
+            auth_json_path="$ddev_dir/homeadditions/.composer/auth.json"
+            if [ -L "$auth_json_path" ]; then
+                # If auth.json is a symlink, add the optional mount
+                auth_json_dir=$(dirname "$(readlink -f "$auth_json_path")")
+                docker_command+=("-v" "$auth_json_dir:$auth_json_dir")
+            fi
+            image="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null)"
+            docker_command+=("$image" "bash" "-c" "composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install")
+            # Execute the command to store credentials
+            "${docker_command[@]}"
+            ```
 
     ```bash
     mkdir my-magento2-site && cd my-magento2-site
