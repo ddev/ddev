@@ -44,21 +44,22 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 ## Web Server Ports Already Occupied
 
-DDEV may notify you about port conflicts with this message about port 80 or 443:
+By default, DDEV uses ports 80 and 443 (for the webserver), ports 8025 and 8026 (for Mailpit) and 10999 (for traefik) in your host.
+DDEV may notify you about conflicts with these ports, with a message like this:
 
-> Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use
+> Failed to start yoursite: Unable to listen on required ports, localhost port XX is in use
 
-DDEV sometimes also has this error message that will alert you to port conflicts:
+If the default ports 80 or 443 are occupied by other process in your host, DDEV will create ephemeral ports for serving the http and https traffic. If later on these default ports are available again and you want to use them in your project, you will need to poweroff DDEV and start your project again.
+
+For other ports, DDEV sometimes also has this error message that will alert you to port conflicts:
 
 > ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.
 
 or
 
-> Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:443 -> 0.0.0.0:0: listen tcp 127.0.0.1:443: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+> Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:8025 -> 0.0.0.0:0: listen tcp 127.0.0.1:8025: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
 
-This means there’s another process or web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
-
-In some cases, the conflict could be over Mailpit’s port 8025 or 8026.
+This means there’s another process is listening in that port and DDEV cannot use them.
 
 To resolve this conflict, choose one of these methods:
 
