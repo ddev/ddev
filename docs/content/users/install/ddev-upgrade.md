@@ -13,6 +13,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Upgrade DDEV to the latest version
+    brew tap ddev/ddev
     brew upgrade ddev/ddev/ddev
     ```
 
