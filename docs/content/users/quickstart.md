@@ -421,20 +421,14 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ```bash
     mkdir my-magento2-site && cd my-magento2-site
-    ddev config --project-type=magento2 --docroot=pub --disable-settings-management \
-    --upload-dirs=media
+    ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
+
+    # a one-time action to save your Magento credentials in the global DDEV config
+    # enter your username/password and agree to store your credentials
+    ddev_dir="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)" && mkdir -p $ddev_dir/homeadditions/.composer && docker run -it --rm -v "$ddev_dir/homeadditions/.composer:/composer" --workdir=/composer -e COMPOSER_HOME=/composer --user $(id -u):$(id -g) $(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null) bash -c "cd /tmp && composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install"
 
     ddev get ddev/ddev-elasticsearch
     ddev start
-
-    # if the Magento auth is not found in the Composer global config, save it at the project level
-    if ! ddev exec "composer config --list --global 2>/dev/null | grep -q repo.magento.com" 2>/dev/null; then
-        ddev config --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
-        mkdir -p .ddev/homeadditions/.composer
-        echo "*\n\!.gitignore" >.ddev/homeadditions/.composer/.gitignore
-        ddev restart
-    fi
-
     ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
 
@@ -448,7 +442,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
-    ddev php bin/magento info:adminuri
+    ddev magento info:adminuri
     # Append the URI returned by the previous command either to ddev launch, like for example ddev launch /admin_XXXXXXX, or just run ddev launch and append the URI to the path in the browser
     ddev launch
     ```
