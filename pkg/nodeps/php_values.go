@@ -12,6 +12,7 @@ const (
 	PHP81 = "8.1"
 	PHP82 = "8.2"
 	PHP83 = "8.3"
+	PHP84 = "8.4"
 )
 
 // PHPDefault is the default PHP version, overridden by $DDEV_PHP_VERSION
@@ -30,6 +31,7 @@ var ValidPHPVersions = map[string]bool{
 	PHP81: true,
 	PHP82: true,
 	PHP83: true,
+	PHP84: true,
 }
 
 // Composer version default - will get latest Composer v2

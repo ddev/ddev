@@ -903,9 +903,6 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
-	//if (dockerutil.IsColima() || dockerutil.IsLima()) && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
-	//	t.Skip("Skipping on Lima/Colima because this test doesn't work although manual testing works")
-	//}
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
@@ -960,6 +957,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	phpKeys := []string{}
 	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
 	for k := range nodeps.ValidPHPVersions {
+		// TODO: Remove when xdebug available for php8.4
+		if k == nodeps.PHP84 {
+			continue
+		}
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
 		}
@@ -1124,6 +1125,10 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	phpKeys := []string{}
 	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
 	for k := range nodeps.ValidPHPVersions {
+		// TODO: Remove when xhprof available for php8.4
+		if k == nodeps.PHP84 {
+			continue
+		}
 		if !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
 		}
