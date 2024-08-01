@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	dockerTypes "github.com/docker/docker/api/types"
+	dockerNetwork "github.com/docker/docker/api/types/network"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +25,7 @@ func TestNetworkDuplicates(t *testing.T) {
 		err := dockerutil.RemoveNetwork(networkName)
 		assert.NoError(err)
 
-		networks, err := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+		networks, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 		assert.NoError(err)
 
 		// Ensure the network is not in the list
@@ -35,7 +35,7 @@ func TestNetworkDuplicates(t *testing.T) {
 	})
 
 	labels := map[string]string{"com.ddev.platform": "ddev"}
-	netOptions := dockerTypes.NetworkCreate{
+	netOptions := dockerNetwork.CreateOptions{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   labels,
@@ -57,6 +57,6 @@ func TestNetworkDuplicates(t *testing.T) {
 	assert.NoError(err)
 
 	// This check would fail if there is a network duplicate
-	_, err = client.NetworkInspect(ctx, networkName, dockerTypes.NetworkInspectOptions{})
+	_, err = client.NetworkInspect(ctx, networkName, dockerNetwork.InspectOptions{})
 	assert.NoError(err)
 }
