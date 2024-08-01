@@ -2,9 +2,6 @@ name: sample_get
 
 pre_install_actions:
 - |
-  #ddev-nodisplay
-  echo "This action should not have any output"
-- |
   {{ $ddev := (env "DDEV_BINARY_FULLPATH") }}
   {{ if not $ddev }} {{ $ddev = `ddev` }} {{end}}
   if ! ( which {{ $ddev }} && {{ $ddev }} debug capabilities 2>/dev/null | grep ddev-get-yaml-interpolation >/dev/null 2>&1 ) ; then

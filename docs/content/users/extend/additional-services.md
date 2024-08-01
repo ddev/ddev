@@ -150,7 +150,6 @@ The `install.yaml` is a simple YAML file with a few main sections:
 
 In any stanza of `pre_install_actions` and `post_install_actions` you can:
 
-* Use `#ddev-nodisplay` on a line to suppress any output.
 * Use `#ddev-description:<some description of what stanza is doing>` to instruct DDEV to output a description of the action it's taking.
 
 You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/ddev/ddev-addon-template/blob/main/install.yaml).
