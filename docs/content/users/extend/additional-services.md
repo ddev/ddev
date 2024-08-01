@@ -133,9 +133,16 @@ Anyone can create an add-on for `ddev get`. See [this screencast](https://www.yo
 
 The `install.yaml` is a simple YAML file with a few main sections:
 
+* `name`: The add-on name. This will be used in `ddev get --remove` and similar commands. If the repository name is `ddev-solr`, for example, a good `name` will be `solr`.
 * `pre_install_actions`: an array of Bash statements or scripts to be executed before `project_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
+* `ddev_version_constraint` (available with DDEV v1.23.4+): a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent add-on from being installed if it doesn't validate. For example:
+
+    ```yaml
+    ddev_version_constraint: '>= v1.23.4'
+    ```
+
 * `dependencies`: an array of add-ons that this add-on depends on.
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s `.ddev` directory.
 * `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`. The actions are executed in the context of the target project’s `.ddev` directory.
@@ -143,7 +150,6 @@ The `install.yaml` is a simple YAML file with a few main sections:
 
 In any stanza of `pre_install_actions` and `post_install_actions` you can:
 
-* Use `#ddev-nodisplay` on a line to suppress any output.
 * Use `#ddev-description:<some description of what stanza is doing>` to instruct DDEV to output a description of the action it's taking.
 
 You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/ddev/ddev-addon-template/blob/main/install.yaml).

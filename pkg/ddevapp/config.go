@@ -13,7 +13,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -453,24 +452,9 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
-		constraint := app.DdevVersionConstraint
-		if !strings.Contains(constraint, "-") {
-			// Allow pre-releases to be included in the constraint validation
-			// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
-			constraint += "-0"
-		}
-		c, err := semver.NewConstraint(constraint)
+		err := CheckDdevVersionConstraint(app.DdevVersionConstraint, fmt.Sprintf("unable to start the '%s' project", app.Name), "or update the `ddev_version_constraint` in your .ddev/config.yaml file")
 		if err != nil {
-			return fmt.Errorf("the %s project has '%s' constraint that is not valid. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.Name, app.DdevVersionConstraint).(invalidConstraint)
-		}
-
-		// Make sure we do this check with valid released versions
-		v, err := semver.NewVersion(versionconstants.DdevVersion)
-		if err == nil {
-			if !c.Check(v) {
-				return fmt.Errorf("the %s project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint",
-					app.Name, app.DdevVersionConstraint, versionconstants.DdevVersion)
-			}
+			return err
 		}
 	}
 

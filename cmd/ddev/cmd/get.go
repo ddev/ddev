@@ -267,6 +267,14 @@ ddev get --remove ddev-someaddonname
 				}
 			}
 		}
+
+		if s.DdevVersionConstraint != "" {
+			err := ddevapp.CheckDdevVersionConstraint(s.DdevVersionConstraint, fmt.Sprintf("Unable to install the '%s' add-on", s.Name), "")
+			if err != nil {
+				util.Failed(err.Error())
+			}
+		}
+
 		if len(s.PreInstallActions) > 0 {
 			util.Success("\nExecuting pre-install actions:")
 		}

@@ -531,79 +531,40 @@ func TestConfigValidate(t *testing.T) {
 		t.Fatalf("Failed to app.ValidateConfig(), err=%v", err)
 	}
 
-	app.DdevVersionConstraint = ">= 1.twentythree"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "constraint that is not valid")
-	app.DdevVersionConstraint = ""
+	testCases := []struct {
+		description       string
+		ddevVersion       string
+		versionConstraint string
+		error             string
+	}{
+		{"Invalid constraint", ddevVersion, ">= 1.twentythree", "constraint is not valid"},
+		{"Lower version", "v1.22.0", ">= 1.23", "your DDEV version 'v1.22.0' doesn't meet the constraint '>= 1.23'"},
+		{"Equal version", "v1.23.0", ">= 1.23", ""},
+		{"Not semver version", "2134asdf-dirty", ">= 1.23", ""},
+		{"Lower semver version with suffix", "v1.22.3-11-g8baef014e", ">= 1.23", "your DDEV version 'v1.22.3-11-g8baef014e' doesn't meet the constraint '>= 1.23'"},
+		{"Equal semver version with suffix", "v1.22.3-11-g8baef014e", ">= 1.22", ""},
+		{"Constraint with suffix", "v1.22.3-11-g8baef014e", ">= 1.23.0-0", "your DDEV version 'v1.22.3-11-g8baef014e' doesn't meet the constraint '>= 1.23.0-0'"},
+		{"Lower prerelease version", "v1.22.3-alpha2", ">= v1.22.3-alpha3", "your DDEV version 'v1.22.3-alpha2' doesn't meet the constraint '>= v1.22.3-alpha3'"},
+		{"Greater prerelease version", "v1.22.3-beta1", ">= v1.22.3-alpha3", ""},
+		{"Compare with suffixes", "v1.22.3-11-g8baef014e", ">= 1.22.0-0", ""},
+	}
 
-	versionconstants.DdevVersion = "v1.22.0"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.0') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.23.0"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "2134asdf-dirty"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	// Testing out pre-releases and built PRs versions
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.22"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.23.0-0"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23.0-0' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-alpha2"
-	app.DdevVersionConstraint = ">= v1.22.3-alpha3"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= v1.22.3-alpha3' and the version of DDEV you are using ('v1.22.3-alpha2') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-beta1"
-	app.DdevVersionConstraint = ">= v1.22.3-alpha3"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.22.0-0"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			assert := asrt.New(t)
+			versionconstants.DdevVersion = tc.ddevVersion
+			app.DdevVersionConstraint = tc.versionConstraint
+			err = app.ValidateConfig()
+			if tc.error == "" {
+				assert.NoError(err)
+			} else {
+				assert.Error(err)
+				assert.Contains(err.Error(), tc.error)
+			}
+			app.DdevVersionConstraint = ""
+			versionconstants.DdevVersion = ddevVersion
+		})
+	}
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()

@@ -24,14 +24,15 @@ const AddonMetadataDir = "addon-metadata"
 // Format of install.yaml
 type InstallDesc struct {
 	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
-	Name               string            `yaml:"name"`
-	ProjectFiles       []string          `yaml:"project_files"`
-	GlobalFiles        []string          `yaml:"global_files,omitempty"`
-	Dependencies       []string          `yaml:"dependencies,omitempty"`
-	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
-	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
-	RemovalActions     []string          `yaml:"removal_actions,omitempty"`
-	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
+	Name                  string            `yaml:"name"`
+	ProjectFiles          []string          `yaml:"project_files"`
+	GlobalFiles           []string          `yaml:"global_files,omitempty"`
+	DdevVersionConstraint string            `yaml:"ddev_version_constraint,omitempty"`
+	Dependencies          []string          `yaml:"dependencies,omitempty"`
+	PreInstallActions     []string          `yaml:"pre_install_actions,omitempty"`
+	PostInstallActions    []string          `yaml:"post_install_actions,omitempty"`
+	RemovalActions        []string          `yaml:"removal_actions,omitempty"`
+	YamlReadFiles         map[string]string `yaml:"yaml_read_files"`
 }
 
 // format of the add-on manifest file

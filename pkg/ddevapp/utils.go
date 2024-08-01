@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -17,6 +18,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerVersions "github.com/docker/docker/api/types/versions"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -533,4 +535,29 @@ func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
 		nameMap[app.Name] = app
 	}
 	return nameMap
+}
+
+// CheckDdevVersionConstraint returns an error if the given constraint does not match the current DDEV version
+func CheckDdevVersionConstraint(constraint string, errorPrefix string, errorSuffix string) error {
+	normalizedConstraint := constraint
+	if !strings.Contains(normalizedConstraint, "-") {
+		// Allow pre-releases to be included in the constraint validation
+		// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
+		normalizedConstraint += "-0"
+	}
+	if errorPrefix == "" {
+		errorPrefix = "error"
+	}
+	c, err := semver.NewConstraint(normalizedConstraint)
+	if err != nil {
+		return fmt.Errorf("%s: the '%s' constraint is not valid. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", errorPrefix, constraint).(invalidConstraint)
+	}
+	// Make sure we do this check with valid released versions
+	v, err := semver.NewVersion(versionconstants.DdevVersion)
+	if err == nil {
+		if !c.Check(v) {
+			return fmt.Errorf("%s: your DDEV version '%s' doesn't meet the constraint '%s'. Please update to a DDEV version that meets this constraint %s", errorPrefix, versionconstants.DdevVersion, constraint, strings.TrimSpace(errorSuffix))
+		}
+	}
+	return nil
 }
