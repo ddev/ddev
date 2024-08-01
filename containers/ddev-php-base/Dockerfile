@@ -98,11 +98,11 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     nginx \
     sqlite3
 
-RUN curl -fsSL https://raw.githubusercontent.com/tj/n/master/bin/n | bash -s "${NODE_VERSION}"
-# Install n to manage nodejs_version
-RUN npm install -g n
-# Make a symlink for nodejs
-RUN ln -sf "$(which node)" "$(which node)js"
+# Install n to manage nodejs_version, make a symlink for nodejs
+RUN curl -fsSL https://raw.githubusercontent.com/tj/n/master/bin/n | bash -s "${NODE_VERSION}" && \
+    npm install -g n && \
+    n rm "${NODE_VERSION}" && \
+    ln -sf "$(which node)" "$(which node)js"
 
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
