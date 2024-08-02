@@ -33,6 +33,7 @@ import (
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
+	dockerNetwork "github.com/docker/docker/api/types/network"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
@@ -57,7 +58,7 @@ var NoHealthCheck = dockerContainer.HealthConfig{
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
-func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string, netOptions dockerTypes.NetworkCreate) error {
+func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string, netOptions dockerNetwork.CreateOptions) error {
 	// Pre-check for network duplicates
 	RemoveNetworkDuplicates(ctx, client, name)
 
@@ -76,7 +77,7 @@ func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
 	ctx, client := GetDockerClient()
-	netOptions := dockerTypes.NetworkCreate{
+	netOptions := dockerNetwork.CreateOptions{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   map[string]string{"com.ddev.platform": "ddev"},
@@ -99,7 +100,7 @@ func NetworkExists(netName string) bool {
 // netName can also be network's ID
 func RemoveNetwork(netName string) error {
 	ctx, client := GetDockerClient()
-	networks, _ := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	// the loop below may not contain such a network
 	var err = errdefs.NotFound(errors.New("not found"))
 	// loop through all networks because there may be duplicates
@@ -127,7 +128,7 @@ func RemoveNetworkWithWarningOnError(netName string) {
 // This means that if there is only one network with this name - no action,
 // and if there are several such networks, then we leave the first one, and delete the others
 func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, netName string) {
-	networks, _ := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	networkMatchFound := false
 	for _, network := range networks {
 		if network.Name == netName || network.ID == netName {
@@ -345,7 +346,7 @@ func FindContainersWithLabel(label string) ([]dockerTypes.Container, error) {
 
 // NetExists checks to see if the Docker network for DDEV exists.
 func NetExists(ctx context.Context, client *dockerClient.Client, name string) bool {
-	nets, _ := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	nets, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	for _, n := range nets {
 		if n.Name == name {
 			return true
@@ -356,14 +357,14 @@ func NetExists(ctx context.Context, client *dockerClient.Client, name string) bo
 
 // FindNetworksWithLabel returns all networks with the given label
 // It ignores the value of the label, is only interested that the label exists.
-func FindNetworksWithLabel(label string) ([]dockerTypes.NetworkResource, error) {
+func FindNetworksWithLabel(label string) ([]dockerNetwork.Inspect, error) {
 	ctx, client := GetDockerClient()
-	networks, err := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	networks, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	var matchingNetworks []dockerTypes.NetworkResource
+	var matchingNetworks []dockerNetwork.Inspect
 	for _, network := range networks {
 		if network.Labels != nil {
 			if _, exists := network.Labels[label]; exists {
@@ -1295,7 +1296,7 @@ func GetNFSServerAddr() (string, error) {
 		// We can't use the Docker host because that's for inside the container,
 		// and this is for setting up the network interface
 		ctx, client := GetDockerClient()
-		n, err := client.NetworkInspect(ctx, "bridge", dockerTypes.NetworkInspectOptions{})
+		n, err := client.NetworkInspect(ctx, "bridge", dockerNetwork.InspectOptions{})
 		if err != nil {
 			return "", err
 		}
@@ -1449,7 +1450,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	if uid == "" {
 		uid = "0"
 	}
-	execCreate, err := client.ContainerExecCreate(ctx, containerID, dockerTypes.ExecConfig{
+	execCreate, err := client.ContainerExecCreate(ctx, containerID, dockerContainer.ExecOptions{
 		Cmd:          []string{"sh", "-c", command},
 		AttachStdout: true,
 		AttachStderr: true,
@@ -1460,7 +1461,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	}
 
 	var stdout, stderr bytes.Buffer
-	execAttach, err := client.ContainerExecAttach(ctx, execCreate.ID, dockerTypes.ExecStartCheck{
+	execAttach, err := client.ContainerExecAttach(ctx, execCreate.ID, dockerContainer.ExecStartOptions{
 		Detach: false,
 	})
 	if err != nil {
@@ -1708,7 +1709,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	// nolint: errcheck
 	defer t.Close()
 
-	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, dockerTypes.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
+	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, dockerContainer.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
 	if err != nil {
 		return err
 	}
