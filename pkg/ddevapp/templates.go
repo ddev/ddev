@@ -68,12 +68,10 @@ const ConfigInstructions = `
 
 # nodejs_version: "20"
 # change from the default system Node.js version to any other version.
-# Numeric version numbers can be complete (i.e. 18.15.0) or
-# incomplete (18, 17.2, 16). 'lts' and 'latest' can be used as well along with
-# other named releases.
-# see https://www.npmjs.com/package/n#specifying-nodejs-versions
-# Note that you can continue using 'ddev nvm' or nvm inside the web container
-# to change the project's installed node version if you need to.
+# See https://ddev.readthedocs.io/en/stable/users/configuration/config/#nodejs_version for more information
+# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
+# Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
+# can specify any version, and is more robust than using 'nvm'.
 
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm

@@ -1,12 +1,15 @@
 package ddevapp_test
 
 import (
+	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -37,12 +40,35 @@ func TestNodeJSVersions(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), ".nvmrc"), nvmrcFile)
+	require.NoError(t, err)
+	nvmrcFileContents, err := os.ReadFile(nvmrcFile)
+	require.NoError(t, err, "Unable to read %s: %v", nvmrcFile, err)
+	nvmrcVersion := strings.TrimSpace(string(nvmrcFileContents))
+
+	packageJSONFile := filepath.Join(app.AppRoot, "package.json")
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "package.json"), packageJSONFile)
+	require.NoError(t, err)
+	packageJSONFileContents, err := os.ReadFile(packageJSONFile)
+	require.NoError(t, err, "Unable to read %s: %v", packageJSONFile, err)
+	var packageJSON map[string]interface{}
+	err = json.Unmarshal(packageJSONFileContents, &packageJSON)
+	require.NoError(t, err, "Unable to unmarshal %s: %v", packageJSONFile, err)
+	engines := packageJSON["engines"].(map[string]interface{})
+	packageJSONVersion := engines["node"].(string)
+
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Testing some random versions, both complete and incomplete
-	for _, v := range []string{"6", "10", "14.20", "16.0.0", "20"} {
+	// Testing some random versions, complete, incomplete, and labels
+	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20"} {
 		app.NodeJSVersion = v
+		if app.NodeJSVersion == "auto" {
+			v = nvmrcVersion
+		} else if app.NodeJSVersion == "engine" {
+			v = packageJSONVersion
+		}
 		err = app.Restart()
 		assert.NoError(err)
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -99,7 +125,7 @@ func TestCorepackEnable(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: `ls -l /usr/bin/yarn`,
+		Cmd: `ls -l /usr/local/bin/yarn`,
 	})
 	require.NoError(t, err)
 	require.NotContains(t, out, "corepack")
@@ -113,7 +139,7 @@ func TestCorepackEnable(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: `ls -l /usr/bin/yarn`,
+		Cmd: `ls -l /usr/local/bin/yarn`,
 	})
 	require.NoError(t, err)
 	require.Contains(t, out, "corepack")

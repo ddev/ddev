@@ -385,13 +385,39 @@ Whether to skip mounting project into web container.
 
 ## `nodejs_version`
 
-Node.js version for the web container’s “system” version.
+Node.js version for the web container’s “system” version. [`n`](https://www.npmjs.com/package/n) tool is under the hood.
+
+There is no need to reconfigure `nodejs_version` unless you want a version other than the version already specified, which will be the default version at the time the project was configured.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
-There is no need to configure `nodejs_version` unless you want a version other than the default version.
+!!!tip "How to install the Node.js version from a file"
+    Your project team may specify the Node.js version in a more general way than in the `.ddev/config.yaml`. For example, you may use a `.nvmrc` file, the `package.json`, or a similar technique. In that case, DDEV can use the external configuration provided by that file.
+
+    There is an `auto` label (see [full documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions)):
+
+    ```bash
+    ddev config --nodejs-version=auto
+    ```
+
+    It reads the target version from a file in the [DDEV_APPROOT](../extend/custom-commands.md#environment-variables-provided) directory, or any parent directory.
+
+    `n` looks for in order:
+
+    * `.n-node-version` : version on single line. Custom to `n`.
+    * `.node-version` : version on single line. Used by [multiple tools](https://github.com/shadowspawn/node-version-usage).
+    * `.nvmrc` : version on single line. Used by `nvm`.
+    * if no version file found, look for `engine` as below.
+
+    The `engine` label looks for a `package.json` file and reads the engines field to determine compatible Node.js.
+
+    If your file is not in the `DDEV_APPROOT` directory, you can create a link to the parent folder, so that `n` can find it. For example, if you have `frontend/.nvmrc`, create a `.ddev/web-build/Dockerfile.nvmrc` file:
+
+    ```dockerfile
+    RUN ln -sf /var/www/html/frontend/.nvmrc /var/www/.nvmrc
+    ```
 
 !!!note "Switching from `nvm` to `nodejs_version`"
     If switching from using `nvm` to using `nodejs_version`, you may find that the container continues to use the previously specified version. If this happens, use `ddev nvm alias default system` or `ddev ssh` into the container (`ddev ssh`) and run `rm -rf /mnt/ddev-global-cache/nvm_dir/${DDEV_PROJECT}-web`, then `ddev restart`.
