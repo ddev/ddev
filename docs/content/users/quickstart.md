@@ -463,21 +463,11 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     tag=$(curl -L "https://api.github.com/repos/OpenMage/magento-lts/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/OpenMage/magento-lts/releases/download/$tag/openmage-$tag.zip" -o openmage.zip
     unzip ./openmage.zip && rm -f openmage.zip
     ddev config --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
-
-    # Install sample data. (See below.)
-
     ddev start
-    ddev launch
+    # Install sample data
+    ddev openmage-install
+    ddev launch /admin
     ```
-
-    You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
-
-    * Download Magento [1.9.2.4 Sample Data](https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz).
-    * Extract the download:
-        `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
-    * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --file=~/Downloads/magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
-
-    OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#mutagen) on macOS and traditional Windows.
 
 ## Moodle
 
