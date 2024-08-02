@@ -1477,6 +1477,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	stderrOut, _, _ := app.Exec(&ExecOpts{
 		Cmd: "(ls -r /tmp/ddev-log-stderr-*.txt | xargs cat) 2>/dev/null || true",
 	})
+	stderrOut = strings.TrimSpace(stderrOut)
 	if stderrOut != "" {
 		util.Warning(stderrOut)
 	}
