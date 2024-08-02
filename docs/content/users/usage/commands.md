@@ -60,6 +60,15 @@ Two flags are available for every command:
 
 ---
 
+## `aliases`
+
+Shows all aliases for each command in the current context (global or project).
+
+```shell
+# Print a list of all available command aliases
+ddev aliases
+```
+
 ## `auth`
 
 Authentication commands.
