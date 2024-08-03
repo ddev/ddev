@@ -154,6 +154,22 @@ ddev launch
 
 For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is "drupal".
 
+=== "Drupal 11"
+
+    ```bash
+    mkdir my-drupal-site && cd my-drupal-site
+    ddev config --project-type=drupal --php-version=8.3 --docroot=web
+    ddev start
+    ddev composer create drupal/recommended-project:^11
+    ddev composer require drush/drush
+    ddev config --update
+    ddev restart
+    ddev drush site:install --account-name=admin --account-pass=admin -y
+    ddev launch
+    # or automatically log in with
+    ddev launch $(ddev drush uli)
+    ```
+
 === "Drupal 10"
 
     ```bash
@@ -164,25 +180,9 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --update
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
-    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
-    ddev drush uli
     ddev launch
-    ```
-
-=== "Drupal 11 (dev)"
-
-    ```bash
-    mkdir my-drupal-site && cd my-drupal-site
-    ddev config --project-type=drupal --php-version=8.3 --docroot=web
-    ddev start
-    ddev composer create drupal/recommended-project:^11.x-dev
-    ddev config --update
-    ddev restart
-    ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
-    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
-    ddev drush uli
-    ddev launch
+    # or automatically log in with
+    ddev launch $(ddev drush uli)
     ```
 
 === "Drupal 9 (EOL)"
@@ -195,9 +195,9 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
     ddev config --update
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
-    # use the one-time link (CTRL/CMD + Click) from the command below to edit your admin account details.
-    ddev drush uli
     ddev launch
+    # or automatically log in with
+    ddev launch $(ddev drush uli)
     ```
 
 === "Drupal 6/7"
