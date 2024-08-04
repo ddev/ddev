@@ -462,10 +462,12 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     mkdir my-magento1-site && cd my-magento1-site
     tag=$(curl -L "https://api.github.com/repos/OpenMage/magento-lts/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/OpenMage/magento-lts/releases/download/$tag/openmage-$tag.zip" -o openmage.zip
     unzip ./openmage.zip && rm -f openmage.zip
-    ddev config --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev config --project-type=magento --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
     ddev start
-    # Install sample data
+    # Install openmage and optionally install sample data
     ddev openmage-install
+    
+    # Note that openmage itself provides the `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`, and `php-cs-fixer` DDEV custom commands.
     ddev launch /admin
     ```
 
