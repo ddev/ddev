@@ -466,9 +466,11 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev start
     # Install openmage and optionally install sample data
     ddev openmage-install
-    
-    # Note that openmage itself provides the `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`, and `php-cs-fixer` DDEV custom commands.
     ddev launch /admin
+
+    # Note that openmage itself provides several custom DDEV commands, including
+    # `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`, 
+    # and `php-cs-fixer`.
     ```
 
 ## Moodle
