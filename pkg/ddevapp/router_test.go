@@ -135,7 +135,7 @@ func TestLetsEncrypt(t *testing.T) {
 	dest := ddevapp.RouterComposeYAMLPath()
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{dest},
-		Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+		Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
 	})
 	assert.NoError(err)
 
@@ -153,7 +153,7 @@ func TestLetsEncrypt(t *testing.T) {
 		assert.NoError(err)
 		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{dest},
-			Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+			Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
 		})
 		assert.NoError(err)
 		err = app.Stop(true, false)

@@ -1494,7 +1494,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting %s if necessary...", RouterProjectName)
+		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
@@ -1605,8 +1605,8 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 func FindNotOmittedImages(app *DdevApp) []string {
 	var images []string
 	containerImageMap := map[string]func() string{
-		SSHAuthName:       ddevImages.GetSSHAuthImage,
-		RouterProjectName: ddevImages.GetRouterImage,
+		SSHAuthName:            ddevImages.GetSSHAuthImage,
+		nodeps.RouterContainer: ddevImages.GetRouterImage,
 	}
 
 	for containerName, getImage := range containerImageMap {

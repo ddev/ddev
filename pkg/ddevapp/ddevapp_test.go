@@ -3240,7 +3240,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	dest := ddevapp.RouterComposeYAMLPath()
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{dest},
-		Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+		Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
 	})
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
