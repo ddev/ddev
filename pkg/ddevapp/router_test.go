@@ -274,28 +274,33 @@ func TestDisableHTTP2(t *testing.T) {
 func TestFindEphemeralPort(t *testing.T) {
 	assert := asrt.New(t)
 
+	localIP, _ := dockerutil.GetDockerIP()
+
 	// Get a random port number in the dynamic port range
 	startPort := 49152 + rand.Intn(65535-49152+1)
 	goodEndPort := startPort + 3
 	badEndPort := startPort + 2
 
 	// Listen in the first 3 ports
-	l0, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(startPort))
+	l0, err := net.Listen("tcp", localIP+":"+strconv.Itoa(startPort))
 	require.NoError(t, err)
-	defer l0.Close()
-	l1, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(startPort+1))
+	l1, err := net.Listen("tcp", localIP+":"+strconv.Itoa(startPort+1))
 	require.NoError(t, err)
-	defer l1.Close()
-	l2, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(startPort+2))
+	l2, err := net.Listen("tcp", localIP+":"+strconv.Itoa(startPort+2))
 	require.NoError(t, err)
-	defer l2.Close()
 
+	t.Cleanup(func() {
+		for i, p := range []net.Listener{l0, l1, l2} {
+			err = p.Close()
+			assert.NoError(err, "failed to close listener %v", i)
+		}
+	})
 	_, ok := ddevapp.FindAvailableRouterPort(startPort, badEndPort)
 	assert.Exactly(false, ok)
 
 	port, ok := ddevapp.FindAvailableRouterPort(startPort, goodEndPort)
-	assert.Exactly(true, ok)
-	assert.Exactly(startPort+3, port)
+	require.True(t, ok)
+	require.Equal(t, startPort+3, port)
 }
 
 // Test that the app assigns an ephemeral port if the default one is not available.
