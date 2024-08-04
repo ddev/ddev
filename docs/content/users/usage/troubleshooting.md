@@ -44,7 +44,7 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 ## Web Server Ports Already Occupied
 
-By default, DDEV uses ports 80 and 443 (for the webserver), ports 8025 and 8026 (for Mailpit) and 10999 (for traefik) in your host.
+By default, DDEV uses ports 80 and 443 (for the web server), ports 8025 and 8026 (for Mailpit) and 10999 (for the Traefik router dashboard) on your host.
 DDEV may notify you about conflicts with these ports, with a message like this:
 
 > Failed to start yoursite: Unable to listen on required ports, localhost port XX is in use
