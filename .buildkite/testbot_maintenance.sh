@@ -29,10 +29,12 @@ case $os in
 darwin)
     brew pin buildkite-agent
     brew upgrade
-    for item in ddev/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
+    brew uninstall -f mysql-client || true
+    for item in ddev/ddev/ddev golang golangci-lint libpq mkcert mkdocs mysql-client@8.0; do
         brew install $item || true
     done
     brew link --force libpq
+    brew link mysql-client@8.0
     ;;
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true

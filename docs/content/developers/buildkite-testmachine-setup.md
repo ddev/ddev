@@ -138,7 +138,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mysql-client mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
 14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
