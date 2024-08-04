@@ -22,13 +22,13 @@ import (
 	dockerTypes "github.com/docker/docker/api/types"
 )
 
-// RouterProjectName is the "machine name" of the router docker-compose
+// RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
 const (
-	RouterProjectName     = "ddev-router"
-	MinEphemeralHTTPPort  = 50080
-	MaxEphemeralHTTPPort  = 50442
-	MinEphemeralHTTPSPort = 50443
-	MaxEphemeralHTTPSPort = 50500
+	RouterComposeProjectName = "ddev-router"
+	MinEphemeralHTTPPort     = 50080
+	MaxEphemeralHTTPPort     = 50442
+	MinEphemeralHTTPSPort    = 50443
+	MaxEphemeralHTTPSPort    = 50500
 )
 
 var (
@@ -106,14 +106,14 @@ func StartDdevRouter() error {
 	// Run docker-compose up -d against the ddev-router full compose file
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{routerComposeFullPath},
-		Action:       []string{"-p", RouterProjectName, "up", "--build", "-d"},
+		Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
 
 	// Ensure we have a happy router
-	label := map[string]string{"com.docker.compose.service": RouterProjectName}
+	label := map[string]string{"com.docker.compose.service": nodeps.RouterContainer}
 	// Normally the router comes right up, but when
 	// it has to do let's encrypt updates, it can take
 	// some time.
@@ -217,7 +217,7 @@ func generateRouterCompose() (string, error) {
 // return it.
 func FindDdevRouter() (*dockerTypes.Container, error) {
 	containerQuery := map[string]string{
-		"com.docker.compose.service": RouterProjectName,
+		"com.docker.compose.service": nodeps.RouterContainer,
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
