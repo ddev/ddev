@@ -303,106 +303,63 @@ func TestUseEphemeralPort(t *testing.T) {
 	assert := asrt.New(t)
 
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
-
-	// This is copied from ddevapp_test.go
-	site1 := testcommon.TestSite{
-		Name:                          "TestEphemeralPort1", // Drupal D7
-		SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.90.tar.gz",
-		ArchiveInternalExtractionPath: "drupal-7.90/",
-		FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
-		DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
-		FullSiteTarballURL:            "",
-		Dir:                           testcommon.CreateTmpDir(t.Name() + "_1"),
-		Docroot:                       "",
-		Type:                          nodeps.AppTypeDrupal7,
-		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
-		DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
-		FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
-		FullSiteArchiveExtPath:        "docroot/sites/default/files",
-	}
-
-	site2 := testcommon.TestSite{
-		Name:                          "TestEphemeralPort2",
-		SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.20.tar.gz",
-		ArchiveInternalExtractionPath: "drupal-8.9.20/",
-		FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
-		FilesZipballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.zip",
-		DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
-		DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.zip",
-		FullSiteTarballURL:            "",
-		Dir:                           testcommon.CreateTmpDir(t.Name() + "_2"),
-		Type:                          nodeps.AppTypeDrupal,
-		Docroot:                       "",
-		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
-		DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "Vegan chocolate and nut brownies"},
-		FilesImageURI:                 "/sites/default/files/vegan-chocolate-nut-brownies.jpg",
-	}
-
-	app, err := ddevapp.NewApp(site1.Dir, false)
-	require.NoError(t, err)
-	app2, err := ddevapp.NewApp(site2.Dir, false)
+	const testString = "Hello from TestUseEphemeralPort"
+	testSite := filepath.Join(testcommon.CreateTmpDir(t.Name()), t.Name()+"-testSite")
+	_ = os.MkdirAll(testSite, 0755)
+	err := fileutil.TemplateStringToFile(testString, nil, filepath.Join(testSite, "index.html"))
 	require.NoError(t, err)
 
-	// Configure both apps to use the same target ports. Keep original configured ports for undoing the configuration later.
-	appHTTPPort, appHTTPSPort := app.RouterHTTPPort, app.RouterHTTPSPort
-	app.RouterHTTPPort, app.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
-	app2HTTPPort, app2HTTPSPort := app.RouterHTTPPort, app.RouterHTTPSPort
-	app2.RouterHTTPPort, app2.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	app1, err := ddevapp.NewApp(testSite, false)
+	require.NoError(t, err)
+	err = app1.WriteConfig()
+	require.NoError(t, err)
+
+	// Configure both apps to use the same target ports.
+	// Keep original configured ports for undoing the configuration later.
+	app1.RouterHTTPPort, app1.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+
+	// Occupy target router ports so that app1 will be forced
+	// to use the ephemeral ports
+	targetHTTPListener, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPPort)
+	require.NoError(t, err)
+	targetHTTPSListener, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPSPort)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = app2.Stop(true, false)
+		err = targetHTTPListener.Close()
+		assert.NoError(err, "failed to close targetHTTPListener")
+		err = targetHTTPSListener.Close()
+		assert.NoError(err, "failed to close targetHTTPSListener")
+
+		err = app1.Stop(true, false)
 		assert.NoError(err)
 
-		// Undo the configuration of the ports.
-		app.RouterHTTPPort, app.RouterHTTPSPort = appHTTPPort, appHTTPSPort
-		app2.RouterHTTPPort, app2.RouterHTTPSPort = app2HTTPPort, app2HTTPSPort
+		// Stop the router, to prevent additional config from interfering with other tests.
+		// We shouldn't have to do this when app.Stop() properly pushes new config to ddev-router
+		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
 
-		err = app.WriteConfig()
-		assert.NoError(err)
-		err = app2.WriteConfig()
-		assert.NoError(err)
-		app.RemoveGlobalProjectInfo()
-		app2.RemoveGlobalProjectInfo()
+		_ = os.RemoveAll(testSite)
 
-		// Finally reset the router configuration, so it does not interfere other tests.
-		err = ddevapp.StartDdevRouter()
-		require.NoError(t, err)
-
-		router, err := ddevapp.FindDdevRouter()
-		if router != nil && err == nil && router.State == "running" {
-			err = dockerutil.RemoveContainer(nodeps.RouterContainer)
-			assert.NoError(err)
-		}
+		// TODO: Verify after stop that ddev-router has forgotten all about the extra ports
 	})
-
-	// Occupy target router ports:
-	l0, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPPort)
-	require.NoError(t, err)
-	defer l0.Close()
-	l1, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPSPort)
-	require.NoError(t, err)
-	defer l1.Close()
 
 	// Find out which ephemeral ports the apps will use.
 	ephemeralHTTPPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralHTTPPort, ddevapp.MaxEphemeralHTTPPort)
-	assert.Exactly(true, ok)
+	require.True(t, ok)
 	ephemeralHTTPSPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralHTTPSPort, ddevapp.MaxEphemeralHTTPSPort)
-	assert.Exactly(true, ok)
+	require.True(t, ok)
 
-	err = app.Start()
+	err = app1.Start()
 	require.NoError(t, err)
 
-	// First app does not use the target ports, but the ephemeral ports.
-	require.NotEqual(t, targetHTTPPort, app.GetRouterHTTPPort())
-	require.NotEqual(t, targetHTTPSPort, app.GetRouterHTTPSPort())
-	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app.GetRouterHTTPPort())
-	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app.GetRouterHTTPSPort())
+	// app1 will not use the target ports, but the uses the discovered ephemeral ports.
+	require.NotEqual(t, targetHTTPPort, app1.GetRouterHTTPPort())
+	require.NotEqual(t, targetHTTPSPort, app1.GetRouterHTTPSPort())
+	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app1.GetRouterHTTPPort())
+	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app1.GetRouterHTTPSPort())
 
-	// Second app does not use either the target ports, but the ephemeral ports being used by first app.
-	err = app2.Start()
-	require.NoError(t, err)
-	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app2.GetRouterHTTPPort())
-	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app2.GetRouterHTTPSPort())
+	// Make sure that both http and https URLs have proper content
+	_, err = testcommon.EnsureLocalHTTPContent(t, app1.GetHTTPURL(), testString, 0)
+	_, err = testcommon.EnsureLocalHTTPContent(t, app1.GetHTTPSURL(), testString, 0)
+
 }
