@@ -417,18 +417,40 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
 
-    Note that you can install the Adobe/Magento composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to find them again. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md).
+    !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
+        If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
+
+        ```
+        mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json
+        ```
+
+        Alternately, you can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
+    
+        ??? "Script to store Adobe/Magento Composer credentials (click me)"
+            ```bash
+            # Enter your username/password and agree to store your credentials
+            ddev_dir="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+            mkdir -p $ddev_dir/homeadditions/.composer
+            docker_command=("docker" "run" "-it" "--rm" "-v" "$ddev_dir/homeadditions/.composer:/composer" "--workdir=/tmp" "-e" "COMPOSER_HOME=/composer" "--user" "$(id -u):$(id -g)")
+            auth_json_path="$ddev_dir/homeadditions/.composer/auth.json"
+            if [ -L "$auth_json_path" ]; then
+                # If auth.json is a symlink, add the optional mount
+                auth_json_dir=$(dirname "$(readlink -f "$auth_json_path")")
+                docker_command+=("-v" "$auth_json_dir:$auth_json_dir")
+            fi
+            image="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null)"
+            docker_command+=("$image" "bash" "-c" "composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install")
+            # Execute the command to store credentials
+            "${docker_command[@]}"
+            ```
 
     ```bash
     mkdir my-magento2-site && cd my-magento2-site
-    ddev config --project-type=magento2 --docroot=pub --disable-settings-management \
-    --upload-dirs=media --web-environment-add=COMPOSER_HOME="/var/www/html/.ddev/homeadditions/.composer"
-
+    ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
     ddev get ddev/ddev-elasticsearch
     ddev start
-    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
+    ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
-    echo "/auth.json" >.ddev/homeadditions/.composer/.gitignore
 
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
@@ -440,7 +462,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
-    ddev php bin/magento info:adminuri
+    ddev magento info:adminuri
     # Append the URI returned by the previous command either to ddev launch, like for example ddev launch /admin_XXXXXXX, or just run ddev launch and append the URI to the path in the browser
     ddev launch
     ```
