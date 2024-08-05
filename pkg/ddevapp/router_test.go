@@ -349,9 +349,9 @@ func TestUseEphemeralPort(t *testing.T) {
 	})
 
 	// Find out which ephemeral ports the apps will use.
-	ephemeralHTTPPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralHTTPPort, ddevapp.MaxEphemeralHTTPPort)
+	ephemeralHTTPPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
 	require.True(t, ok)
-	ephemeralHTTPSPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralHTTPSPort, ddevapp.MaxEphemeralHTTPSPort)
+	ephemeralHTTPSPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
 	require.True(t, ok)
 
 	err = app1.Start()
