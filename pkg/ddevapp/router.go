@@ -29,10 +29,6 @@ const (
 	MaxEphemeralPort         = 50442
 )
 
-var (
-	originalRouterHTTPPort, originalRouterHTTPSPort, ephemeralRouterHTTPPort, ephemeralRouterHTTPSPort string
-)
-
 // EphemeralRouterPortsAssigned is used when we have assigned an ephemeral port
 // but it may not yet be occupied. A map is used just to make it easy
 // to detect if it's there, the value in the map is not used.
@@ -152,15 +148,6 @@ func generateRouterCompose() (string, error) {
 
 	uid, gid, username := util.GetContainerUIDGid()
 
-	var ephemeralPorts []string
-	if ephemeralRouterHTTPPort != "" && originalRouterHTTPPort != "" {
-		ephemeralPorts = append(ephemeralPorts, strings.Join([]string{originalRouterHTTPPort, ephemeralRouterHTTPPort}, ":"))
-	}
-	if ephemeralRouterHTTPSPort != "" && originalRouterHTTPSPort != "" {
-		ephemeralPorts = append(ephemeralPorts, strings.Join([]string{originalRouterHTTPSPort, ephemeralRouterHTTPSPort}, ":"))
-	}
-	ephemeralPortsStr := strings.Join(ephemeralPorts, ",")
-
 	templateVars := map[string]interface{}{
 		"Username":                   username,
 		"UID":                        uid,
@@ -174,7 +161,6 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
-		"ephemeral_ports":            ephemeralPortsStr,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -408,10 +394,6 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 // and a bool which is true if the proposedPort has been
 // replaced with an ephemeralPort
 func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
-	if RouterPortIsAvailable(proposedPort) {
-		// If the proposedPort is available, there will not be ephemeral proposedPort.
-		return proposedPort, "", false
-	}
 
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
@@ -426,21 +408,9 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 			return proposedPort, "", false
 		}
 		if nodeps.ArrayContainsString(exposedPorts, proposedPort) {
-			// If the proposedPort is already used by the router, there will not be ephemeral proposedPort.
+			// If the proposedPort is already bound by the router,
+			// there's no need to go find an ephemeral port.
 			return proposedPort, "", false
-		}
-
-		// Check if the router is already using ephemeral proposedPort
-		ephemeralPorts := dockerutil.GetContainerEnv("DDEV_EPHEMERAL_PORTS", *r)
-		// Search through the ephemeral ports, and return it if found
-		for _, ephemeralPortPair := range strings.Split(ephemeralPorts, ",") {
-			ports := strings.Split(ephemeralPortPair, ":")
-			if len(ports) == 2 {
-				originalPort, ephemeralPort := ports[0], ports[1]
-				if originalPort == proposedPort {
-					return originalPort, ephemeralPort, true
-				}
-			}
 		}
 	}
 
@@ -452,14 +422,13 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
 
-// setEphemeralPortsVariables() sets global variables needed for
+// GetEphemeralPortsIfNeeded() sets global variables needed for
 // router_http_port and router_https_port
-func setEphemeralPortsVariables(ports []*string, verbose bool) {
+func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
 		proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
 		if portChangeRequired {
 			*port = replacementPort
-			originalRouterHTTPPort = proposedPort
 			if verbose {
 				output.UserOut.Printf("port %s is busy, using %s instead.", proposedPort, replacementPort)
 			}
