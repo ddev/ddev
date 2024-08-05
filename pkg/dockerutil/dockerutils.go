@@ -598,7 +598,7 @@ func GetContainerHealth(container *dockerTypes.Container) (string, string) {
 	if status != "" {
 		numLogs := len(inspect.State.Health.Log)
 		if numLogs > 0 {
-			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1])
+			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
 		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
@@ -611,7 +611,7 @@ func GetContainerHealth(container *dockerTypes.Container) (string, string) {
 		}
 	}
 
-	return status, logOutput
+	return status, strings.TrimSpace(logOutput)
 }
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
