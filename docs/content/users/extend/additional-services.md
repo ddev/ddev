@@ -105,25 +105,24 @@ If you have add-ons that were installed before v1.22, update them with `ddev get
 
 ## Adding Custom Configuration to an Add-on
 
-Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis`](https://github.com/ddev/ddev-redis) the `image` is set to `image: redis:${REDIS_VERSION:-6-bullseye}`. If you wanted to change this to use `7.0-alpine` instead, you would have three choices:
+Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis`](https://github.com/ddev/ddev-redis) the `image` is set to `image: redis:${REDIS_VERSION:-6-bullseye}`. If you wanted to change this to use `7.0-bookworm` instead, you would have two choices:
 
-1. With DDEV v1.23.4+, the override can be done using a special `.ddev/.env.*` file, where `*` is the name of the add-on, in this case `.ddev/.env.redis`:
+1. With DDEV v1.23.5+, the override can be done using a special `.ddev/.env.*` file, where `*` is the name of the add-on, in this case `.ddev/.env.redis`:
 
     ```bash
     ddev get ddev/ddev-redis --environment="REDIS_VERSION=7.0-alpine"
     ddev restart
     ```
 
-2. Remove the `#ddev-generated` line in `.ddev/docker-compose.redis.yaml` and edit the relevant line.
-3. Add a `.ddev/docker-compose.redis_extra.yaml` with the contents:
+2. Add a `.ddev/docker-compose.redis_extra.yaml` with the contents:
 
     ```yaml
     services:
       redis:
-        image: redis:7.0-alpine
+        image: redis:7.0-bookworm
     ```
 
-Using the first (`.env.redis`) and the third option (`docker-compose.redis_extra.yaml`) allows you to update to future versions of `ddev-redis` without losing your configuration, and without the upgrade being blocked because you removed the `#ddev-generated` line from the upstream `docker-compose.redis.yaml`.
+Using the options here allow you to update to future versions of `ddev-redis` without losing your configuration, and without the upgrade being blocked because you removed the `#ddev-generated` line from the upstream `docker-compose.redis.yaml`.
 
 ## Creating an Additional Service for `ddev get`
 
