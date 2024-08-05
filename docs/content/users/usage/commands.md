@@ -60,6 +60,15 @@ Two flags are available for every command:
 
 ---
 
+## `aliases`
+
+Shows all aliases for each command in the current context (global or project).
+
+```shell
+# Print a list of all available command aliases
+ddev aliases
+```
+
 ## `auth`
 
 Authentication commands.
@@ -80,6 +89,8 @@ Flags:
 * `--ssh-key-path`, `-d`: Full path to SSH key directory.
 
 ## `artisan`
+
+*Aliases: `art`.*
 
 Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
 

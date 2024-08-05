@@ -164,6 +164,14 @@ Usage: `## Example: <command-example>`
 
 Example: `## Example: commandname\ncommandname -h`
 
+### `Aliases` Annotation
+
+If your command should have one or more aliases, add the `Aliases` annotation. Multiple aliases are separated by a comma:
+
+Usage: `## Aliases: <list-of-aliases>`
+
+Example: `## Aliases: cacheclear,cache-clear,cache:clear`
+
 ### `Flags` Annotation
 
 `Flags` should explain any available flags, including their shorthand when relevant, for the help message. It has to be encoded according the following definition:
