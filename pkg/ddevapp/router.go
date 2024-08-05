@@ -383,7 +383,8 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 	return 0, false
 }
 
-// GetEphemeralRouterPort gets the ephemeral port when needed.
+// GetEphemeralRouterPort gets an ephemeral replacement port when the
+// proposedPort is not available.
 //
 // The function first checks if the given port is available, returning
 // if that's the case.
@@ -394,39 +395,40 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 // Finally, if the port is not available and the router is not using it, create a new
 // ephemeral port and return it.
 //
-// Returns the original port, the ephemeral port found, and a boolean that determines if the
-// port is ephemeral (true) or not (false)
-func GetEphemeralRouterPort(port string, minPort, maxPort int) (string, string, bool) {
-	if RouterPortIsAvailable(port) {
-		// If the port is available, there will not be ephemeral port.
-		return port, "", false
+// Returns the original proposedPort, the ephemeral port found,
+// and a bool which is true if the proposedPort has been
+// replaced with an ephemeralPort
+func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
+	if RouterPortIsAvailable(proposedPort) {
+		// If the proposedPort is available, there will not be ephemeral proposedPort.
+		return proposedPort, "", false
 	}
 
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
 		r, err := FindDdevRouter()
 		if err != nil {
-			return port, "", false
+			return proposedPort, "", false
 		}
 
-		// Check if the port is already being used by the router.
+		// Check if the proposedPort is already being used by the router.
 		exposedPorts, err := dockerutil.GetExposedContainerPorts(r.ID)
 		if err != nil {
-			return port, "", false
+			return proposedPort, "", false
 		}
-		if nodeps.ArrayContainsString(exposedPorts, port) {
-			// If the port is already used by the router, there will not be ephemeral port.
-			return port, "", false
+		if nodeps.ArrayContainsString(exposedPorts, proposedPort) {
+			// If the proposedPort is already used by the router, there will not be ephemeral proposedPort.
+			return proposedPort, "", false
 		}
 
-		// Check if the router is already using ephemeral port
+		// Check if the router is already using ephemeral proposedPort
 		ephemeralPorts := dockerutil.GetContainerEnv("DDEV_EPHEMERAL_PORTS", *r)
 		// Search through the ephemeral ports, and return it if found
 		for _, ephemeralPortPair := range strings.Split(ephemeralPorts, ",") {
 			ports := strings.Split(ephemeralPortPair, ":")
 			if len(ports) == 2 {
 				originalPort, ephemeralPort := ports[0], ports[1]
-				if originalPort == port {
+				if originalPort == proposedPort {
 					return originalPort, ephemeralPort, true
 				}
 			}
@@ -435,29 +437,30 @@ func GetEphemeralRouterPort(port string, minPort, maxPort int) (string, string, 
 
 	ephemeralPort, ok := FindAvailableRouterPort(minPort, maxPort)
 	if !ok {
-		return port, "", false
+		return proposedPort, "", false
 	}
 
-	return port, strconv.Itoa(ephemeralPort), true
+	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
 
-// If ephemeral ports are needed, updates the variables that keep the ephemeral ports values
-func setEphemeralPortsVariables(httpPort, httpsPort string, verbose bool) {
-	originalPort, ephemeralPort, isEphemeral := GetEphemeralRouterPort(httpPort, MinEphemeralHTTPPort, MaxEphemeralHTTPPort)
-	if isEphemeral {
-		ephemeralRouterHTTPPort = ephemeralPort
-		originalRouterHTTPPort = originalPort
+// setEphemeralPortsVariables() sets global variables needed for
+// router_http_port and router_https_port
+func setEphemeralPortsVariables(proposedHTTPPort, proposedHTTPSPort string, verbose bool) {
+	proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(proposedHTTPPort, MinEphemeralHTTPPort, MaxEphemeralHTTPPort)
+	if portChangeRequired {
+		ephemeralRouterHTTPPort = replacementPort
+		originalRouterHTTPPort = proposedPort
 		if verbose {
-			output.UserOut.Printf("HTTP port %s is busy, using %s instead.", originalPort, ephemeralPort)
+			output.UserOut.Printf("HTTP port %s is busy, using %s instead.", proposedPort, replacementPort)
 		}
 	}
 
-	originalPort, ephemeralPort, isEphemeral = GetEphemeralRouterPort(httpsPort, MinEphemeralHTTPSPort, MaxEphemeralHTTPSPort)
-	if isEphemeral {
-		ephemeralRouterHTTPSPort = ephemeralPort
-		originalRouterHTTPSPort = originalPort
+	proposedPort, replacementPort, portChangeRequired = GetEphemeralRouterPort(proposedHTTPSPort, MinEphemeralHTTPSPort, MaxEphemeralHTTPSPort)
+	if portChangeRequired {
+		ephemeralRouterHTTPSPort = replacementPort
+		originalRouterHTTPSPort = proposedPort
 		if verbose {
-			output.UserOut.Printf("HTTPS port %s is busy, using %s instead.", originalPort, ephemeralPort)
+			output.UserOut.Printf("HTTPS port %s is busy, using %s instead.", proposedPort, replacementPort)
 		}
 	}
 }
