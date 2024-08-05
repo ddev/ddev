@@ -149,7 +149,7 @@ func TestGetContainerHealth(t *testing.T) {
 		assert.NotNil(container)
 
 		status, healthDetail := dockerutil.GetContainerHealth(container)
-		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK ")
+		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK")
 		assert.Equal("healthy", status)
 	})
 
