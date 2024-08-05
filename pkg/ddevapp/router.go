@@ -25,15 +25,18 @@ import (
 // RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
 const (
 	RouterComposeProjectName = "ddev-router"
-	MinEphemeralHTTPPort     = 50080
-	MaxEphemeralHTTPPort     = 50442
-	MinEphemeralHTTPSPort    = 50443
-	MaxEphemeralHTTPSPort    = 50500
+	MinEphemeralPort         = 50080
+	MaxEphemeralPort         = 50442
 )
 
 var (
 	originalRouterHTTPPort, originalRouterHTTPSPort, ephemeralRouterHTTPPort, ephemeralRouterHTTPSPort string
 )
+
+// EphemeralRouterPortsAssigned is used when we have assigned an ephemeral port
+// but it may not yet be occupied. A map is used just to make it easy
+// to detect if it's there, the value in the map is not used.
+var EphemeralRouterPortsAssigned = make(map[int]bool)
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -365,17 +368,23 @@ func CheckRouterPorts() error {
 	return nil
 }
 
-// Returns true if the port is available to use by the router, false otherwise.
+// RouterPortIsAvailable returns true if the port is available to use by the router, false otherwise.
 func RouterPortIsAvailable(port string) bool {
 	return !netutil.IsPortActive(port)
 }
 
-// Finds an available port in the local machine, in the range provided.
+// FindAvailableRouterPort finds an available port in the local machine, in the range provided.
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false)
 func FindAvailableRouterPort(start, upTo int) (int, bool) {
 	for p := start; p <= upTo; p++ {
+		// If we have already assigned this port, continue looking
+		if _, portAlreadyUsed := EphemeralRouterPortsAssigned[p]; portAlreadyUsed {
+			continue
+		}
+		// But if we find the port is still available, use it, after marking it as assigned
 		if RouterPortIsAvailable(fmt.Sprint(p)) {
+			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
 	}
@@ -389,7 +398,7 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 // The function first checks if the given port is available, returning
 // if that's the case.
 // Then checks if the router is already active. There's a high chance that the
-// router is already using the port, so there's not need for an ephemeral port.
+// router is already using the port, so there's no need for an ephemeral port.
 // Also, it may be that the router is already using the port as an ephemeral port,
 // which is then returned.
 // Finally, if the port is not available and the router is not using it, create a new
@@ -446,7 +455,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 // setEphemeralPortsVariables() sets global variables needed for
 // router_http_port and router_https_port
 func setEphemeralPortsVariables(proposedHTTPPort, proposedHTTPSPort string, verbose bool) {
-	proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(proposedHTTPPort, MinEphemeralHTTPPort, MaxEphemeralHTTPPort)
+	proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(proposedHTTPPort, MinEphemeralPort, MaxEphemeralPort)
 	if portChangeRequired {
 		ephemeralRouterHTTPPort = replacementPort
 		originalRouterHTTPPort = proposedPort
@@ -455,7 +464,7 @@ func setEphemeralPortsVariables(proposedHTTPPort, proposedHTTPSPort string, verb
 		}
 	}
 
-	proposedPort, replacementPort, portChangeRequired = GetEphemeralRouterPort(proposedHTTPSPort, MinEphemeralHTTPSPort, MaxEphemeralHTTPSPort)
+	proposedPort, replacementPort, portChangeRequired = GetEphemeralRouterPort(proposedHTTPSPort, MinEphemeralPort, MaxEphemeralPort)
 	if portChangeRequired {
 		ephemeralRouterHTTPSPort = replacementPort
 		originalRouterHTTPSPort = proposedPort
