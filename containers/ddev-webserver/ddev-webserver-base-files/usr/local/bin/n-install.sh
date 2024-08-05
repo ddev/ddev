@@ -31,28 +31,29 @@ fi
 
 ln -sf "/mnt/ddev-global-cache/n_prefix/${HOSTNAME}" "${N_PREFIX}"
 
-# try normal install that also uses cache
+# try online install that also uses cache
 n_install_result=true
-timeout 30 n install "${N_INSTALL_VERSION}" 2> >(tee /tmp/n-install-stderr.txt >&2) || n_install_result=false
+log-stderr.sh --timeout 30 n install "${N_INSTALL_VERSION}" || n_install_result=false
 
-# try offline install on fail, but only if there is no error for invalid ${N_INSTALL_VERSION}
-if [ "${n_install_result}" = "false" ] && ! grep -q "invalid version" /tmp/n-install-stderr.txt; then
-  timeout 30 n install "${N_INSTALL_VERSION}" --offline 2> >(tee -a /tmp/n-install-stderr.txt >&2) && n_install_result=true
+# try offline install on fail
+if [ "${n_install_result}" = "false" ] && timeout 30 n install "${N_INSTALL_VERSION}" --offline; then
+  n_install_result=true
+  # remove stderr log from the previous command
+  log-stderr.sh --remove n install "${N_INSTALL_VERSION}" || true
 fi
 
-if [ "${n_install_result}" = "true" ]; then
-  # create symlinks on success
-  for node_binary in "${N_PREFIX}/bin/"*; do
-    if [ -f "${node_binary}" ]; then
-      ln -sf "${node_binary}" "${system_node_dir}"
-    fi
-  done
-  ln -sf "${system_node_dir}/node" "${system_node_dir}/nodejs"
-  # we don't need this file if everything is fine
-  rm -f /tmp/n-install-stderr.txt
-else
-  # remove the symlink on error so that the system Node.js can be used
-  rm -f "${N_PREFIX}"
+# remove the symlink on error so that the system Node.js can be used
+if [ "${n_install_result}" = "false" ]; then
+  rm -f "${N_PREFIX}" && exit 6
 fi
+
+# create symlinks on success
+for node_binary in "${N_PREFIX}/bin/"*; do
+  if [ -f "${node_binary}" ]; then
+    ln -sf "${node_binary}" "${system_node_dir}"
+  fi
+done
+
+ln -sf "${system_node_dir}/node" "${system_node_dir}/nodejs"
 
 hash -r

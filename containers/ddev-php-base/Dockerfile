@@ -98,12 +98,9 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     nginx \
     sqlite3
 
-# Install n to manage nodejs_version, make a symlink for nodejs
-RUN curl -fsSL https://raw.githubusercontent.com/tj/n/master/bin/n | bash -s "${NODE_VERSION}" && \
-    npm install -g n && \
-    n rm "${NODE_VERSION}" && \
-    ln -sf "$(which node)" "$(which node)js"
-
+RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj/n/master/bin/n && chmod ugo+wx /usr/local/bin/n
+# Install node, remove it from cache, make a symlink for nodejs
+RUN n install "${NODE_VERSION}" && n rm "${NODE_VERSION}" && ln -sf "$(which node)" "$(which node)js"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
 RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh

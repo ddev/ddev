@@ -7,6 +7,7 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 # GOTEST_SHORT=12 means drupal10
 export GOTEST_SHORT=12
+export DDEV_SKIP_NODEJS_TEST=true
 
 export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
