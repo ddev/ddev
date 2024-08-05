@@ -198,7 +198,8 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Cont
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
-	setEphemeralPortsVariables(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), false)
+	portsToCheck := []*string{&app.RouterHTTPSPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
+	setEphemeralPortsVariables(portsToCheck, true)
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -1070,7 +1071,9 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
-	setEphemeralPortsVariables(app.GetRouterHTTPPort(), app.GetRouterHTTPSPort(), true)
+	// Ports to check for ephemeralport need
+	portsToCheck := []*string{&app.RouterHTTPSPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
+	setEphemeralPortsVariables(portsToCheck, true)
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
@@ -2548,8 +2551,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
 
-	unsetEphemeralPortsVariables()
-
+	EphemeralRouterPortsAssigned = map[int]bool{}
 	if app.Name == "" {
 		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
 	}
