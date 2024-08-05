@@ -198,8 +198,15 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Cont
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
-	portsToCheck := []*string{&app.RouterHTTPSPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
-	setEphemeralPortsVariables(portsToCheck, true)
+
+	// Set up ports to be replaced with ephemeral ports if needed
+	app.RouterHTTPPort = app.GetRouterHTTPPort()
+	app.RouterHTTPSPort = app.GetRouterHTTPSPort()
+	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
+	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
+	GetEphemeralPortsIfNeeded(portsToCheck, true)
+
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -513,10 +520,6 @@ func (app *DdevApp) GetWebserverType() string {
 
 // GetRouterHTTPPort returns app's router http port
 func (app *DdevApp) GetRouterHTTPPort() string {
-	if ephemeralRouterHTTPPort != "" {
-		return ephemeralRouterHTTPPort
-	}
-
 	if app.RouterHTTPPort != "" {
 		return app.RouterHTTPPort
 	}
@@ -526,9 +529,6 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 
 // GetRouterHTTPSPort returns app's router https port
 func (app *DdevApp) GetRouterHTTPSPort() string {
-	if ephemeralRouterHTTPSPort != "" {
-		return ephemeralRouterHTTPSPort
-	}
 
 	if app.RouterHTTPSPort != "" {
 		return app.RouterHTTPSPort
@@ -1071,9 +1071,13 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
-	// Ports to check for ephemeralport need
-	portsToCheck := []*string{&app.RouterHTTPSPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
-	setEphemeralPortsVariables(portsToCheck, true)
+	// Set up ports to be replaced with ephemeral ports if needed
+	app.RouterHTTPPort = app.GetRouterHTTPPort()
+	app.RouterHTTPSPort = app.GetRouterHTTPSPort()
+	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
+	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
+	GetEphemeralPortsIfNeeded(portsToCheck, true)
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
