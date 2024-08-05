@@ -1473,13 +1473,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Something is wrong with your Docker provider and /mnt/ddev_config is not mounted from the project .ddev folder. Your project cannot normally function successfully with this situation. Is your project in your home directory?")
 	}
 
-	util.Debug("checking /tmp/ddev-log-stderr-*.txt")
-	stderrOut, _, _ := app.Exec(&ExecOpts{
-		Cmd: "(ls -r /tmp/ddev-log-stderr-*.txt | xargs cat) 2>/dev/null || true",
+	util.Debug("Getting stderr output from 'log-stderr.sh --show'")
+	logStderr, _, _ := app.Exec(&ExecOpts{
+		Cmd: "log-stderr.sh --show 2>/dev/null || true",
 	})
-	stderrOut = strings.TrimSpace(stderrOut)
-	if stderrOut != "" {
-		util.Warning(stderrOut)
+	logStderr = strings.TrimSpace(logStderr)
+	if logStderr != "" {
+		util.Warning(logStderr)
 	}
 
 	if !IsRouterDisabled(app) {
