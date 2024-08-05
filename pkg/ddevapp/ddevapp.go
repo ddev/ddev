@@ -1491,7 +1491,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	output.UserOut.Printf("Waiting for additional project containers to become ready...")
-	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
+	waitLabels := map[string]string{"com.ddev.site-name": app.GetName()}
+	containersAwaited, err := dockerutil.FindContainersByLabels(waitLabels)
+	if err != nil {
+		return err
+	}
+	containerNames := dockerutil.GetContainerNames(containersAwaited)
+	output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
+	err = app.WaitByLabels(waitLabels)
 	if err != nil {
 		return err
 	}
@@ -2318,7 +2325,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	waitTime := app.GetMaxContainerWaitTime()
 	err := dockerutil.ContainersWait(waitTime, labels)
 	if err != nil {
-		return fmt.Errorf("container(s) failed to become healthy before their configured timeout or in %d seconds. This might be a problem with the healthcheck and not a functional problem. (%v)", waitTime, err)
+		return fmt.Errorf("container(s) failed to become healthy before their configured timeout or in %d seconds.\nThis might be a problem with the healthcheck and not a functional problem.\nThe error was '%v'", waitTime, err.Error())
 	}
 	return nil
 }

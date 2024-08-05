@@ -400,7 +400,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				health, _ := GetContainerHealth(container)
 				if health != "healthy" {
 					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+					desc = desc + fmt.Sprintf(" %s:%s\nTroubleshoot this with these commands:\n%s", name, health, suggestedCommand)
 				}
 			}
 			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v, detail=%s ", durationWait, labels, status, desc)
@@ -417,10 +417,10 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return logOutput, nil
 			case "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy, log=%s\nTroubleshoot this with these commands: \n%s", name, logOutput, suggestedCommand)
 			case "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited,\nTroubleshoot this with these commands:\n%s", name, suggestedCommand)
 			}
 		}
 	}
@@ -451,7 +451,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					health, _ := GetContainerHealth(&container)
 					if health != "healthy" {
 						name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-						desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+						desc = desc + fmt.Sprintf(" %s:%s\nTroubleshoot this with these commands:\n%s", name, health, suggestedCommand)
 					}
 				}
 			}
@@ -471,10 +471,10 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					continue
 				case "unhealthy":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
+					return fmt.Errorf("%s container is unhealthy, log=%s\nTroubleshoot this with these commands:\n%s", name, logOutput, suggestedCommand)
 				case "exited":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
+					return fmt.Errorf("%s container exited.\nTroubleshoot this with these commands:\n%s", name, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -512,7 +512,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 				health, _ := GetContainerHealth(container)
 				if health != "healthy" {
 					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+					desc = desc + fmt.Sprintf(" %s:%s\nTroubleshoot this with these commands:\n%s", name, health, suggestedCommand)
 				}
 			}
 			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
@@ -529,10 +529,10 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 				return logOutput, nil
 			case status == "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy, log=%s\nTroubleshoot this with these commands:\n%s", name, logOutput, suggestedCommand)
 			case status == "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited\nTroubleshoot this with these commands:\n%s", name, suggestedCommand)
 			}
 		}
 	}
@@ -598,7 +598,7 @@ func GetContainerHealth(container *dockerTypes.Container) (string, string) {
 	if status != "" {
 		numLogs := len(inspect.State.Health.Log)
 		if numLogs > 0 {
-			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1])
+			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
 		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
@@ -611,7 +611,7 @@ func GetContainerHealth(container *dockerTypes.Container) (string, string) {
 		}
 	}
 
-	return status, logOutput
+	return status, strings.TrimSpace(logOutput)
 }
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
@@ -1869,6 +1869,19 @@ func GetLiveDockerComposeVersion() (string, error) {
 
 	globalconfig.DockerComposeVersion = v
 	return globalconfig.DockerComposeVersion, nil
+}
+
+// GetContainerNames takes an array of Container
+// and returns an array of strings with container names
+func GetContainerNames(containers []dockerTypes.Container) []string {
+	var names []string
+	for _, container := range containers {
+		if len(container.Names) > 0 {
+			name := container.Names[0][1:] // Trimming the leading '/' from the container name
+			names = append(names, name)
+		}
+	}
+	return names
 }
 
 // IsErrNotFound returns true if the error is a NotFound error, which is returned
