@@ -454,33 +454,15 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 
 // setEphemeralPortsVariables() sets global variables needed for
 // router_http_port and router_https_port
-func setEphemeralPortsVariables(proposedHTTPPort, proposedHTTPSPort string, verbose bool) {
-	proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(proposedHTTPPort, MinEphemeralPort, MaxEphemeralPort)
-	if portChangeRequired {
-		ephemeralRouterHTTPPort = replacementPort
-		originalRouterHTTPPort = proposedPort
-		if verbose {
-			output.UserOut.Printf("HTTP port %s is busy, using %s instead.", proposedPort, replacementPort)
+func setEphemeralPortsVariables(ports []*string, verbose bool) {
+	for _, port := range ports {
+		proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
+		if portChangeRequired {
+			*port = replacementPort
+			originalRouterHTTPPort = proposedPort
+			if verbose {
+				output.UserOut.Printf("port %s is busy, using %s instead.", proposedPort, replacementPort)
+			}
 		}
-	}
-
-	proposedPort, replacementPort, portChangeRequired = GetEphemeralRouterPort(proposedHTTPSPort, MinEphemeralPort, MaxEphemeralPort)
-	if portChangeRequired {
-		ephemeralRouterHTTPSPort = replacementPort
-		originalRouterHTTPSPort = proposedPort
-		if verbose {
-			output.UserOut.Printf("HTTPS port %s is busy, using %s instead.", proposedPort, replacementPort)
-		}
-	}
-}
-
-// Unset the variables, specially useful when running a test suite.
-func unsetEphemeralPortsVariables() {
-	if ephemeralRouterHTTPPort != "" {
-		ephemeralRouterHTTPPort = ""
-	}
-
-	if ephemeralRouterHTTPSPort != "" {
-		ephemeralRouterHTTPSPort = ""
 	}
 }
