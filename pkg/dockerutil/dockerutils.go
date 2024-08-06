@@ -1629,7 +1629,21 @@ func IsLima() bool {
 		util.Warning("IsLima(): Unable to get Docker info, err=%v", err)
 		return false
 	}
-	if strings.HasPrefix(info.Name, "lima") {
+	if info.Name != "lima-rancher-desktop" && strings.HasPrefix(info.Name, "lima") {
+		return true
+	}
+	return false
+}
+
+// IsRancherDesktop detects if running on Rancher Desktop
+func IsRancherDesktop() bool {
+	ctx, client := GetDockerClient()
+	info, err := client.Info(ctx)
+	if err != nil {
+		util.Warning("IsRancherDesktop(): Unable to get Docker info, err=%v", err)
+		return false
+	}
+	if strings.HasPrefix(info.Name, "lima-rancher-desktop") {
 		return true
 	}
 	return false
