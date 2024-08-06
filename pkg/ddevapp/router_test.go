@@ -18,6 +18,7 @@ import (
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,6 +47,8 @@ func TestGlobalPortOverride(t *testing.T) {
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 	})
+
+	util.Debug("app.RouterHTTPPort=%s, app.RouterHTTPSPort=%s", app.RouterHTTPPort, app.RouterHTTPSPort)
 	err = app.Restart()
 	require.NoError(t, err)
 	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, app.GetRouterHTTPPort())
@@ -297,10 +300,10 @@ func TestFindEphemeralPort(t *testing.T) {
 			assert.NoError(err, "failed to close listener %v", i)
 		}
 	})
-	_, ok := ddevapp.FindAvailablePortForRouter(startPort, badEndPort)
+	_, ok := ddevapp.AllocateAvailablePortForRouter(startPort, badEndPort)
 	assert.Exactly(false, ok)
 
-	port, ok := ddevapp.FindAvailablePortForRouter(startPort, goodEndPort)
+	port, ok := ddevapp.AllocateAvailablePortForRouter(startPort, goodEndPort)
 	require.True(t, ok)
 	require.Equal(t, startPort+3, port)
 }
@@ -311,19 +314,21 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
 	const testString = "Hello from TestUseEphemeralPort"
-	testSite := filepath.Join(testcommon.CreateTmpDir(t.Name()), t.Name()+"-testSite")
-	_ = os.MkdirAll(testSite, 0755)
-	err := fileutil.TemplateStringToFile(testString, nil, filepath.Join(testSite, "index.html"))
-	require.NoError(t, err)
 
-	app1, err := ddevapp.NewApp(testSite, false)
-	require.NoError(t, err)
-	err = app1.WriteConfig()
-	require.NoError(t, err)
+	apps := []*ddevapp.DdevApp{}
+	for _, s := range []string{"site1", "site2"} {
+		site := filepath.Join(testcommon.CreateTmpDir(t.Name()), t.Name()+s)
+		_ = os.MkdirAll(site, 0755)
+		err := fileutil.TemplateStringToFile(testString, nil, filepath.Join(site, "index.html"))
+		require.NoError(t, err)
 
-	// Configure both apps to use the same target ports.
-	// Keep original configured ports for undoing the configuration later.
-	app1.RouterHTTPPort, app1.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+		a, err := ddevapp.NewApp(site, false)
+		require.NoError(t, err)
+		err = a.WriteConfig()
+		require.NoError(t, err)
+		apps = append(apps, a)
+		a.RouterHTTPPort, a.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	}
 
 	// Occupy target router ports so that app1 will be forced
 	// to use the ephemeral ports
@@ -337,36 +342,36 @@ func TestUseEphemeralPort(t *testing.T) {
 		assert.NoError(err, "failed to close targetHTTPListener")
 		err = targetHTTPSListener.Close()
 		assert.NoError(err, "failed to close targetHTTPSListener")
-
-		err = app1.Stop(true, false)
-		assert.NoError(err)
+		for _, a := range apps {
+			err = a.Stop(true, false)
+			assert.NoError(err)
+			_ = os.RemoveAll(a.AppRoot)
+		}
 
 		// Stop the router, to prevent additional config from interfering with other tests.
 		// We shouldn't have to do this when app.Stop() properly pushes new config to ddev-router
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
-
-		_ = os.RemoveAll(testSite)
-
 		// TODO: Verify after stop that ddev-router has forgotten all about the extra ports
 	})
 
-	// Find out which ephemeral ports the apps will use.
-	ephemeralHTTPPort, ok := ddevapp.FindAvailablePortForRouter(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
-	require.True(t, ok)
-	ephemeralHTTPSPort, ok := ddevapp.FindAvailablePortForRouter(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
-	require.True(t, ok)
+	for i, app := range apps {
+		// Predict which ephemeral ports the apps will use by using guess from starting point
+		expectedEphemeralHTTPPort := ddevapp.MinEphemeralPort + i*2
+		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*2 + 1
 
-	err = app1.Start()
-	require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err)
 
-	// app1 will not use the target ports, but the uses the discovered ephemeral ports.
-	require.NotEqual(t, targetHTTPPort, app1.GetRouterHTTPPort())
-	require.NotEqual(t, targetHTTPSPort, app1.GetRouterHTTPSPort())
-	require.Equal(t, fmt.Sprint(ephemeralHTTPPort), app1.GetRouterHTTPPort())
-	require.Equal(t, fmt.Sprint(ephemeralHTTPSPort), app1.GetRouterHTTPSPort())
+		// app1 will not use the target ports, but the uses the discovered ephemeral ports.
+		require.NotEqual(t, targetHTTPPort, app.GetRouterHTTPPort())
+		require.NotEqual(t, targetHTTPSPort, app.GetRouterHTTPSPort())
 
-	// Make sure that both http and https URLs have proper content
-	_, err = testcommon.EnsureLocalHTTPContent(t, app1.GetHTTPURL(), testString, 0)
-	_, err = testcommon.EnsureLocalHTTPContent(t, app1.GetHTTPSURL(), testString, 0)
+		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPPort), app.GetRouterHTTPPort())
+		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPSPort), app.GetRouterHTTPSPort())
+
+		// Make sure that both http and https URLs have proper content
+		_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
+		_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
+	}
 
 }

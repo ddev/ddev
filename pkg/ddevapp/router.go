@@ -367,10 +367,10 @@ func PortIsAvailable(port string) bool {
 	return !netutil.IsPortActive(port)
 }
 
-// FindAvailablePortForRouter finds an available port in the local machine, in the range provided.
+// AllocateAvailablePortForRouter finds an available port in the local machine, in the range provided.
 // Returns the port found, and a boolean that determines if the
-// port is valid (true) or not (false)
-func FindAvailablePortForRouter(start, upTo int) (int, bool) {
+// port is valid (true) or not (false), and the port is marked as allocated
+func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 	for p := start; p <= upTo; p++ {
 		// If we have already assigned this port, continue looking
 		if _, portAlreadyUsed := EphemeralRouterPortsAssigned[p]; portAlreadyUsed {
@@ -434,10 +434,10 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		return proposedPort, "", false
 	}
 
-	ephemeralPort, ok := FindAvailablePortForRouter(minPort, maxPort)
+	ephemeralPort, ok := AllocateAvailablePortForRouter(minPort, maxPort)
 	if !ok {
 		// Unlikely
-		util.Debug("GetEphemeralRouterPort():unable to FindAvailablePortForRouter()")
+		util.Debug("GetEphemeralRouterPort():unable to AllocateAvailablePortForRouter()")
 		return proposedPort, "", false
 	}
 
