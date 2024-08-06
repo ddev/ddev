@@ -518,14 +518,19 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 		util.Debug("GetRouterHTTPPort(): HTTP_EXPOSE=%s", httpExpose)
 		httpPort := app.PortFromExposeVariable(httpExpose, "80")
 		if httpPort != "" {
+			util.Debug("GetRouterHTTPPort(): returning httpPort=%s found from HTTP_EXPOSE=%s", httpPort, httpExpose)
 			return httpPort
 		}
 	}
 
 	if app.RouterHTTPPort != "" {
+		// TODO: We should be able to get rid of this debug statement
+		util.Debug("GetRouterHTTPPort(): returning app.RouterHTTPPort=%s", app.RouterHTTPPort)
 		return app.RouterHTTPPort
 	}
 
+	// TODO: We should be able to get rid of this debug statement
+	util.Debug("GetRouterHTTPPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	return globalconfig.DdevGlobalConfig.RouterHTTPPort
 }
 
@@ -572,14 +577,17 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 		util.Debug("GetRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
 		httpsPort := app.PortFromExposeVariable(httpsExpose, "80")
 		if httpsPort != "" {
+			util.Debug("GetRouterHTTPSPort(): returning httpsPort=%s derived from HTTPS_EXPOSE=%s", httpsPort, httpsExpose)
 			return httpsPort
 		}
 	}
 
 	if app.RouterHTTPSPort != "" {
+		util.Debug("GetRouterHTTPSPort(): app.RouterHTTPSPort=%s", app.RouterHTTPSPort)
 		return app.RouterHTTPSPort
 	}
 
+	util.Debug("GetRouterHTTPSPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPSPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 	return globalconfig.DdevGlobalConfig.RouterHTTPSPort
 }
 

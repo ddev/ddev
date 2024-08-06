@@ -4329,11 +4329,10 @@ func TestCustomCerts(t *testing.T) {
 func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	origDDEVDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Setenv("DDEV_DEBUG", "")
-	origDir, _ := os.Getwd()
-	pwd, _ := os.Getwd()
-	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
+	customCmd := filepath.Join(origDir, "testdata", t.Name(), "showhostenvvar")
 	site := TestSites[0]
 
 	app, err := ddevapp.NewApp(site.Dir, false)
