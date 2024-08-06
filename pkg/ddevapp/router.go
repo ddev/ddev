@@ -394,6 +394,10 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 // and a bool which is true if the proposedPort has been
 // replaced with an ephemeralPort
 func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
+	if RouterPortIsAvailable(proposedPort) {
+		// If the proposedPort is available, there will not be ephemeral proposedPort.
+		return proposedPort, "", false
+	}
 
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
@@ -411,6 +415,19 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find an ephemeral port.
 			return proposedPort, "", false
+		}
+
+		// Check if the router is already using ephemeral proposedPort
+		ephemeralPorts := dockerutil.GetContainerEnv("DDEV_EPHEMERAL_PORTS", *r)
+		// Search through the ephemeral ports, and return it if found
+		for _, ephemeralPortPair := range strings.Split(ephemeralPorts, ",") {
+			ports := strings.Split(ephemeralPortPair, ":")
+			if len(ports) == 2 {
+				originalPort, ephemeralPort := ports[0], ports[1]
+				if originalPort == proposedPort {
+					return originalPort, ephemeralPort, true
+				}
+			}
 		}
 	}
 
