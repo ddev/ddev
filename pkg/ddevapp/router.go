@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -64,12 +65,18 @@ func StopRouterIfNoContainers() error {
 	}
 
 	if !containersRunning {
+		util.Debug("stopping ddev-router because all project containers are stopped")
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			if ok := dockerutil.IsErrNotFound(err); !ok {
 				return err
 			}
 		}
+	}
+	// Colima and Lima don't release ports very fast after container is removed
+	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
+		util.Debug("sleeping on Lima-built systems because ports aren't released immediately")
+		time.Sleep(time.Second * 2)
 	}
 	return nil
 }
