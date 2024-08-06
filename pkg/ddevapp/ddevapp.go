@@ -199,14 +199,6 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Cont
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
-	// Set up ports to be replaced with ephemeral ports if needed
-	app.RouterHTTPPort = app.GetRouterHTTPPort()
-	app.RouterHTTPSPort = app.GetRouterHTTPSPort()
-	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
-	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
-	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
-	GetEphemeralPortsIfNeeded(portsToCheck, true)
-
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -520,6 +512,14 @@ func (app *DdevApp) GetWebserverType() string {
 
 // GetRouterHTTPPort returns app's router http port
 func (app *DdevApp) GetRouterHTTPPort() string {
+
+	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
+		httpPort := app.PortFromExposeVariable(httpExpose, "80")
+		if httpPort != "" {
+			return httpPort
+		}
+	}
+
 	if app.RouterHTTPPort != "" {
 		return app.RouterHTTPPort
 	}
@@ -527,8 +527,50 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 	return globalconfig.DdevGlobalConfig.RouterHTTPPort
 }
 
+// GetWebEnvVar() gets an environment variable from app.ComposeYaml["services"]["web"]["environment"]
+func (app *DdevApp) GetWebEnvVar(name string) string {
+	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
+		if v, ok := s["web"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
+			return v.(string)
+		}
+	}
+	return ""
+}
+
+// PortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// comma-delimted list of colon-delimited port-pairs
+// Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
+// the related port to be exposed on the router.
+func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort string) string {
+	// Get the var
+	// split it via comma
+	// split it via colon into a map? rhs is the key, lhs is the value
+	portMap := make(map[string]string)
+	items := strings.Split(exposeEnvVar, ",")
+	for _, item := range items {
+		portPair := strings.Split(item, ":")
+		if len(portPair) == 2 {
+			portMap[portPair[1]] = portPair[0]
+		}
+	}
+	if w, ok := portMap[targetPort]; ok {
+		return w
+	}
+	return ""
+}
+
 // GetRouterHTTPSPort returns app's router https port
+// It has to choose from (highest to lowest priority):
+// 1. The actual port configured into running container via HTTPS_EXPOSE
+// 2. The project router_http_port
+// 3. The global router_http_port
 func (app *DdevApp) GetRouterHTTPSPort() string {
+	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
+		httpsPort := app.PortFromExposeVariable(httpsExpose, "80")
+		if httpsPort != "" {
+			return httpsPort
+		}
+	}
 
 	if app.RouterHTTPSPort != "" {
 		return app.RouterHTTPSPort
@@ -537,9 +579,17 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 	return globalconfig.DdevGlobalConfig.RouterHTTPSPort
 }
 
-// GetMailpitHTTPPort returns app's router http port
+// GetMailpitHTTPPort returns app's mailpit router http port
 // Start with global config and then override with project config
 func (app *DdevApp) GetMailpitHTTPPort() string {
+
+	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
+		httpPort := app.PortFromExposeVariable(httpExpose, "8025")
+		if httpPort != "" {
+			return httpPort
+		}
+	}
+
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort
 	if port == "" {
 		port = nodeps.DdevDefaultMailpitHTTPPort
@@ -553,6 +603,14 @@ func (app *DdevApp) GetMailpitHTTPPort() string {
 // GetMailpitHTTPSPort returns app's router https port
 // Start with global config and then override with project config
 func (app *DdevApp) GetMailpitHTTPSPort() string {
+
+	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
+		httpsPort := app.PortFromExposeVariable(httpsExpose, "8025")
+		if httpsPort != "" {
+			return httpsPort
+		}
+	}
+
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort
 	if port == "" {
 		port = nodeps.DdevDefaultMailpitHTTPSPort
