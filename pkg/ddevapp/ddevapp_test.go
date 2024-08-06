@@ -4329,6 +4329,8 @@ func TestCustomCerts(t *testing.T) {
 func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDDEVDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Setenv("DDEV_DEBUG", "")
 	origDir, _ := os.Getwd()
 	pwd, _ := os.Getwd()
 	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
@@ -4378,6 +4380,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		_ = os.Setenv("DDEV_DEBUG", origDDEVDebug)
 	})
 
 	app.DockerEnv()
