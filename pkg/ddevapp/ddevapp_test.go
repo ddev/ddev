@@ -4288,7 +4288,7 @@ func TestCustomCerts(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
 	})
 	require.NoError(t, err, "failed to run openssl command, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
@@ -4315,7 +4315,7 @@ func TestCustomCerts(t *testing.T) {
 	_ = app.MutagenSyncFlush()
 
 	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
 	})
 	require.NoError(t, err, "openssl command failed, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
