@@ -4262,16 +4262,16 @@ func TestCustomCerts(t *testing.T) {
 	}
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
+	_ = os.Chdir(site.Dir)
 
 	app, err := ddevapp.NewApp(site.Dir, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	certDir := app.GetConfigPath("custom_certs")
 	err = os.MkdirAll(certDir, 0755)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		_ = os.RemoveAll(certDir)
@@ -4281,21 +4281,23 @@ func TestCustomCerts(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		_ = os.Chdir(origDir)
 	})
 
 	// Start without cert and make sure normal DNS names are there
 	err = app.Start()
-	assert.NoError(err)
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
+	require.NoError(t, err)
+	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
 	})
-	out = strings.Trim(out, "\r\n")
+	require.NoError(t, err, "failed to run openssl command, stdout='%s', stderr='%s'", stdout, stderr)
+	stdout = strings.Trim(stdout, "\r\n")
 	// This should be our regular wildcard cert
-	assert.Contains(out, "*.ddev.site")
+	require.Contains(t, stdout, "*.ddev.site")
 
 	// Now stop it so we can install new custom cert.
 	err = app.Stop(true, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Generate a certfile/key in .ddev/custom_certs with one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
@@ -4305,19 +4307,21 @@ func TestCustomCerts(t *testing.T) {
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 		baseCertName = app.Name
 	}
-	out, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
-	assert.NoError(err, "mkcert command failed, out=%s", out)
+	stdout, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
+	require.NoError(t, err, "mkcert command failed, stdout=%s", stdout)
 
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
+	_ = app.MutagenSyncFlush()
 
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
 	})
-	out = strings.Trim(out, "\r\n")
+	require.NoError(t, err, "openssl command failed, stdout='%s', stderr='%s'", stdout, stderr)
+	stdout = strings.Trim(stdout, "\r\n")
 	// If we had the regular cert, there would be several things here including *.ddev.site
 	// But we should only see the hostname listed.
-	assert.Equal(app.GetHostname(), out)
+	require.Equal(t, app.GetHostname(), stdout, "stdout does not contain hostname, stdout='%s', stderr='%s'", stdout, stderr)
 }
 
 // TestEnvironmentVariables tests to make sure that documented environment variables appear
