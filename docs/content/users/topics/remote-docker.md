@@ -17,7 +17,7 @@ You can use remote Docker instances, whether on the internet, inside your networ
 
 ## Continuous Integration (CI)
 
-A number of people have found it easy to test their projects using DDEV on a CI system like [GitHub Actions](https://github.com/features/actions), [Travis CI](https://www.travis-ci.com), or [CircleCI](https://circleci.com). Instead of setting up a hosting environment for testing, they start the project using DDEV and run their tests.
+A number of people have found it easy to test their projects using DDEV on a CI system like GitHub Actions, Travis CI, or CircleCI. Instead of setting up a hosting environment for testing, they start the project using DDEV and run their tests.
 
 Examples of this approach are demonstrated in [Codeception Tests in Travis CI with DDEV and Selenium](https://dev.to/tomasnorre/codeception-tests-in-travis-ci-with-ddev-and-selenium-1607) and [Setup DDEV in GitHub Workflows](https://github.com/marketplace/actions/setup-ddev-in-github-workflows).
 
