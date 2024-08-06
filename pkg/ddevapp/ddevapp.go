@@ -2614,7 +2614,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
 
-	EphemeralRouterPortsAssigned = map[int]bool{}
+	clear(EphemeralRouterPortsAssigned)
 	if app.Name == "" {
 		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
 	}

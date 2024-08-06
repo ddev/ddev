@@ -405,6 +405,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	// If the router is alive and well, we can see if it's already handling the proposedPort
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
+		util.Debug("GetEphemeralRouterPort(): Router is healthy and running")
 		r, err := FindDdevRouter()
 		if err != nil {
 			return proposedPort, "", false
@@ -415,6 +416,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		if err != nil {
 			return proposedPort, "", false
 		}
+		util.Debug("GetEphemeralRouterPort(): Router port %s already bound", proposedPort)
 		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find an ephemeral port.
@@ -427,10 +429,13 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		existingRouterPorts := determineRouterPorts()
 		util.Success("%v", existingRouterPorts)
 	}
+
 	// Here we do not have a working router, so have complete freedom
 	// to choose an available port
 	if PortIsAvailable(proposedPort) {
 		// If the proposedPort is available for use, just let the router use it
+
+		util.Debug("GetEphemeralRouterPort(): Router is not yet running, proposedPort is available, use proposedPort=%s", proposedPort)
 		return proposedPort, "", false
 	}
 
@@ -438,6 +443,8 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	if !ok {
 		return proposedPort, "", false
 	}
+
+	util.Debug("GetEphemeralRouterPort(): Router is not yet running, proposedPort is not available, epheneralPort=%d is available, use it", ephemeralPort)
 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
