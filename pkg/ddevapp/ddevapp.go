@@ -514,6 +514,8 @@ func (app *DdevApp) GetWebserverType() string {
 func (app *DdevApp) GetRouterHTTPPort() string {
 
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
+		// TODO: We should be able to get rid of this debug statement
+		util.Debug("GetRouterHTTPPort(): HTTP_EXPOSE=%s", httpExpose)
 		httpPort := app.PortFromExposeVariable(httpExpose, "80")
 		if httpPort != "" {
 			return httpPort
@@ -566,6 +568,8 @@ func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort strin
 // 3. The global router_http_port
 func (app *DdevApp) GetRouterHTTPSPort() string {
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
+		// TODO: We should be able to get rid of this debug statement
+		util.Debug("GetRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
 		httpsPort := app.PortFromExposeVariable(httpsExpose, "80")
 		if httpsPort != "" {
 			return httpsPort
