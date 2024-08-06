@@ -407,45 +407,41 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	if status == "healthy" {
 		util.Debug("GetEphemeralRouterPort(): Router is healthy and running")
 		r, err := FindDdevRouter()
+		// If we have error getting router (Impossible, because we just got healthy status)
 		if err != nil {
 			return proposedPort, "", false
 		}
 
 		// Check if the proposedPort is already being handled by the router.
 		routerPortsAlreadyBound, err := dockerutil.GetExposedContainerPorts(r.ID)
+		// If error getting ports (mostly impossible)
 		if err != nil {
 			return proposedPort, "", false
 		}
-		util.Debug("GetEphemeralRouterPort(): Router port %s already bound", proposedPort)
 		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find an ephemeral port.
+			util.Debug("GetEphemeralRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
 			return proposedPort, "", false
 		}
-
-		// At this point, we prefer to use an existing router-bound port (traefik `entrypoint`)
-		// But it needs to be of the same type (HTTP or HTTPS) or it won't work out.
-		// So the question is... how do we determine which traefik ports are HTTPS?
-		existingRouterPorts := determineRouterPorts()
-		// TODO: Handle or report this case, remove below
-		util.Debug("%v", existingRouterPorts)
 	}
 
-	// Here we do not have a working router, so have complete freedom
-	// to choose an available port
+	// At this point, the router may or may not be running, but we
+	// have not found it already having the proposedPort bound
 	if PortIsAvailable(proposedPort) {
-		// If the proposedPort is available for use, just let the router use it
-
-		util.Debug("GetEphemeralRouterPort(): Router is not yet running, proposedPort is available, use proposedPort=%s", proposedPort)
+		// If the proposedPort is available for use, just have the router use it
+		util.Debug("GetEphemeralRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
 		return proposedPort, "", false
 	}
 
 	ephemeralPort, ok := FindAvailablePortForRouter(minPort, maxPort)
 	if !ok {
+		// Unlikely
+		util.Debug("GetEphemeralRouterPort():unable to FindAvailablePortForRouter()")
 		return proposedPort, "", false
 	}
 
-	util.Debug("GetEphemeralRouterPort(): Router is not yet running, proposedPort is not available, epheneralPort=%d is available, use it", ephemeralPort)
+	util.Debug("GetEphemeralRouterPort(): proposedPort %s is not available, epheneralPort=%d is available, use it", proposedPort, ephemeralPort)
 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
