@@ -1124,7 +1124,8 @@ func (app *DdevApp) GetDBImage() string {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
-
+	// We don't yet know the ComposeYaml values
+	app.ComposeYaml = nil
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
