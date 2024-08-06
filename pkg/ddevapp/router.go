@@ -354,22 +354,23 @@ func CheckRouterPorts() error {
 	return nil
 }
 
-// RouterPortIsAvailable returns true if the port is available to use by the router, false otherwise.
-func RouterPortIsAvailable(port string) bool {
+// PortIsAvailable returns true if the port is available to use by the router, false otherwise.
+// This is just a wrapper on netutil.IsPortActive()
+func PortIsAvailable(port string) bool {
 	return !netutil.IsPortActive(port)
 }
 
-// FindAvailableRouterPort finds an available port in the local machine, in the range provided.
+// FindAvailablePortForRouter finds an available port in the local machine, in the range provided.
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false)
-func FindAvailableRouterPort(start, upTo int) (int, bool) {
+func FindAvailablePortForRouter(start, upTo int) (int, bool) {
 	for p := start; p <= upTo; p++ {
 		// If we have already assigned this port, continue looking
 		if _, portAlreadyUsed := EphemeralRouterPortsAssigned[p]; portAlreadyUsed {
 			continue
 		}
 		// But if we find the port is still available, use it, after marking it as assigned
-		if RouterPortIsAvailable(fmt.Sprint(p)) {
+		if PortIsAvailable(fmt.Sprint(p)) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
@@ -394,11 +395,7 @@ func FindAvailableRouterPort(start, upTo int) (int, bool) {
 // and a bool which is true if the proposedPort has been
 // replaced with an ephemeralPort
 func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
-	if RouterPortIsAvailable(proposedPort) {
-		// If the proposedPort is available, there will not be ephemeral proposedPort.
-		return proposedPort, "", false
-	}
-
+	// If the router is alive and well, we can see if it's already handling the proposedPort
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
 		r, err := FindDdevRouter()
@@ -406,32 +403,31 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 			return proposedPort, "", false
 		}
 
-		// Check if the proposedPort is already being used by the router.
-		exposedPorts, err := dockerutil.GetExposedContainerPorts(r.ID)
+		// Check if the proposedPort is already being handled by the router.
+		routerPortsAlreadyBound, err := dockerutil.GetExposedContainerPorts(r.ID)
 		if err != nil {
 			return proposedPort, "", false
 		}
-		if nodeps.ArrayContainsString(exposedPorts, proposedPort) {
+		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find an ephemeral port.
 			return proposedPort, "", false
 		}
 
-		// Check if the router is already using ephemeral proposedPort
-		ephemeralPorts := dockerutil.GetContainerEnv("DDEV_EPHEMERAL_PORTS", *r)
-		// Search through the ephemeral ports, and return it if found
-		for _, ephemeralPortPair := range strings.Split(ephemeralPorts, ",") {
-			ports := strings.Split(ephemeralPortPair, ":")
-			if len(ports) == 2 {
-				originalPort, ephemeralPort := ports[0], ports[1]
-				if originalPort == proposedPort {
-					return originalPort, ephemeralPort, true
-				}
-			}
-		}
+		// At this point, we prefer to use an existing router-bound port (traefik `entrypoint`)
+		// But it needs to be of the same type (HTTP or HTTPS) or it won't work out.
+		// So the question is... how do we determine which traefik ports are HTTPS?
+		existingRouterPorts := determineRouterPorts()
+		util.Success("%v", existingRouterPorts)
+	}
+	// Here we do not have a working router, so have complete freedom
+	// to choose an available port
+	if PortIsAvailable(proposedPort) {
+		// If the proposedPort is available for use, just let the router use it
+		return proposedPort, "", false
 	}
 
-	ephemeralPort, ok := FindAvailableRouterPort(minPort, maxPort)
+	ephemeralPort, ok := FindAvailablePortForRouter(minPort, maxPort)
 	if !ok {
 		return proposedPort, "", false
 	}

@@ -295,10 +295,10 @@ func TestFindEphemeralPort(t *testing.T) {
 			assert.NoError(err, "failed to close listener %v", i)
 		}
 	})
-	_, ok := ddevapp.FindAvailableRouterPort(startPort, badEndPort)
+	_, ok := ddevapp.FindAvailablePortForRouter(startPort, badEndPort)
 	assert.Exactly(false, ok)
 
-	port, ok := ddevapp.FindAvailableRouterPort(startPort, goodEndPort)
+	port, ok := ddevapp.FindAvailablePortForRouter(startPort, goodEndPort)
 	require.True(t, ok)
 	require.Equal(t, startPort+3, port)
 }
@@ -349,9 +349,9 @@ func TestUseEphemeralPort(t *testing.T) {
 	})
 
 	// Find out which ephemeral ports the apps will use.
-	ephemeralHTTPPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
+	ephemeralHTTPPort, ok := ddevapp.FindAvailablePortForRouter(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
 	require.True(t, ok)
-	ephemeralHTTPSPort, ok := ddevapp.FindAvailableRouterPort(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
+	ephemeralHTTPSPort, ok := ddevapp.FindAvailablePortForRouter(ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
 	require.True(t, ok)
 
 	err = app1.Start()
