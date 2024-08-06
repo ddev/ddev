@@ -31,6 +31,8 @@ func TestGlobalPortOverride(t *testing.T) {
 
 	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8553"
 	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8554"
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
 
 	site := TestSites[0]
 

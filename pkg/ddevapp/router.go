@@ -427,7 +427,8 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		// But it needs to be of the same type (HTTP or HTTPS) or it won't work out.
 		// So the question is... how do we determine which traefik ports are HTTPS?
 		existingRouterPorts := determineRouterPorts()
-		util.Success("%v", existingRouterPorts)
+		// TODO: Handle or report this case, remove below
+		util.Debug("%v", existingRouterPorts)
 	}
 
 	// Here we do not have a working router, so have complete freedom
