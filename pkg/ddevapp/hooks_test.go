@@ -43,7 +43,7 @@ func TestProcessHooks(t *testing.T) {
 		_ = os.RemoveAll(filepath.Join(app.AppRoot, "composer.json"))
 		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
 	})
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	// Create a composer.json so we can do actions on it.
@@ -101,7 +101,7 @@ func TestProcessHooks(t *testing.T) {
 	err = app.Restart()
 	require.NoError(t, err)
 
-	require.FileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
+	require.FileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("%s%s.txt", t.Name(), app.GetRouterHTTPSPort())))
 	require.FileExists(t, filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	// Make sure skip hooks work
