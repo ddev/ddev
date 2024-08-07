@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -72,13 +73,47 @@ func StopRouterIfNoContainers() error {
 				return err
 			}
 		}
-	}
-	// Colima and Lima don't release ports very fast after container is removed
-	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
-		util.Debug("sleeping on Lima-built systems because ports aren't released immediately")
-		time.Sleep(time.Second * 2)
+		routerPorts := determineRouterPorts()
+		// Colima and Lima don't release ports very fast after container is removed
+		// see https://github.com/lima-vm/lima/issues/2536 and
+		// https://github.com/abiosoft/colima/issues/644
+		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
+			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
+			waitForPortsToBeReleased(routerPorts, time.Second*5)
+		}
 	}
 	return nil
+}
+
+// waitForPortsToBeReleased waits until the specified ports are released or the timeout is reached.
+func waitForPortsToBeReleased(ports []string, timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(500 * time.Millisecond) // Check every 500 milliseconds
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			util.Debug("Timeout reached, stopping check.")
+			return
+		case <-ticker.C:
+			allReleased := true
+			for _, port := range ports {
+				if netutil.IsPortActive(port) {
+					util.Debug("Port %s is still in use.", port)
+					allReleased = false
+				} else {
+					util.Debug("Port %s is released.", port)
+				}
+			}
+			if allReleased {
+				util.Debug("All ports are released.")
+				return
+			}
+		}
+	}
 }
 
 // StartDdevRouter ensures the router is running.
