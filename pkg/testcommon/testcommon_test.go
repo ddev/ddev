@@ -146,8 +146,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		app.RouterHTTPSPort = "443"
-		app.RouterHTTPPort = "80"
+		app.RouterHTTPSPort = ""
+		app.RouterHTTPPort = ""
 		err = app.WriteConfig()
 		assert.NoError(err)
 

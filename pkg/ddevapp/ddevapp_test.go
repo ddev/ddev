@@ -3250,8 +3250,8 @@ func TestRouterPortsCheck(t *testing.T) {
 	// of the port by the time it comes up.
 	portBinding := map[nat.Port][]nat.PortBinding{
 		"80/tcp": {
-			{HostPort: "80"},
-			{HostPort: "443"},
+			{HostPort: app.GetRouterHTTPPort()},
+			{HostPort: app.GetRouterHTTPSPort()},
 		},
 	}
 
