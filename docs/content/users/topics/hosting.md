@@ -34,6 +34,8 @@ Here’s how to try it for yourself:
             caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
     ```
 
+You'll need to regularly renew the Let's Encrypt certificates. This is often done on a system reboot, but that may not be soon enough. A cron with the command docker exec ddev-router bash -c "certbot renew && nginx -s reload" will do the renewals.
+
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs -f ddev-router` to see Let’s Encrypt activity.)
 
 ## Additional Server Setup
