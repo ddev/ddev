@@ -113,9 +113,12 @@ func TestCmdMutagen(t *testing.T) {
 	assert.Contains(out, "Alpha:")
 	testcommon.CheckGoroutineOutput(t, out)
 
+	// This assertion requires DDEV_DEBUG
+	_ = os.Setenv("DDEV_DEBUG", "true")
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "reset")
 	assert.NoError(err)
 	assert.Contains(out, fmt.Sprintf("Removed Docker volume %s", ddevapp.GetMutagenVolumeName(app)))
+	_ = os.Unsetenv("DDEV_DEBUG")
 	testcommon.CheckGoroutineOutput(t, out)
 
 	status, statusDesc := app.SiteStatus()
