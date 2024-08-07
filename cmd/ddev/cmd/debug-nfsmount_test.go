@@ -1,24 +1,22 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/testcommon"
-	asrt "github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestDebugNFSMount tries out the `ddev debug nfsmount` command.
 // It requires nfsd running of course.
 func TestDebugNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsOrbstack() {
-		t.Skip("Skipping on WSL2/Lima/Colima since NFS is not used there")
-	}
+	t.Skip("Skipping because NFS is deprecated")
 	assert := asrt.New(t)
 
 	oldDir, err := os.Getwd()
