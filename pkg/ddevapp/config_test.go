@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	dockerTypes "github.com/docker/docker/api/types"
 	copy2 "github.com/otiai10/copy"
@@ -1053,13 +1054,20 @@ func TestTimezoneConfig(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	// Without timezone set, we should find Etc/UTC
+	// Without timezone set, we should find Etc/UTC on Windows
+	hostTimezoneAbbr := "UTC"
+	hostTimezone := "UTC"
+	// Without timezone set, we should automatically detect local timezone on Linux, WSL2 and macOS
+	if runtime.GOOS != "windows" {
+		hostTimezoneAbbr, _ = time.Now().In(time.Local).Zone()
+		hostTimezone, _ = app.GetLocalTimezone()
+	}
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=UTC\nphptz=UTC", stdout)
+	assert.Equal(fmt.Sprintf("timezone=%s\nphptz=%s", hostTimezoneAbbr, hostTimezone), stdout)
 
 	// Make sure db container is also working
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1067,7 +1075,7 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=UTC", stdout)
+	assert.Equal(fmt.Sprintf("timezone=%s", hostTimezoneAbbr), stdout)
 
 	// With timezone set, we the correct timezone operational
 	app.Timezone = "Europe/Paris"

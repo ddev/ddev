@@ -1055,6 +1055,36 @@ func (app *DdevApp) GetDBImage() string {
 	return dbImage
 }
 
+// GetLocalTimezone tries to find local timezone from /etc/localtime symlink
+func (app *DdevApp) GetLocalTimezone() (string, error) {
+	// the code below doesn't work for Windows
+	if runtime.GOOS == "windows" {
+		return "", fmt.Errorf("unable to read /etc/localtime on Windows")
+	}
+	bash := util.FindBashPath()
+	timezone, err := exec.RunHostCommand(bash, "-c", "[ ! -e /etc/localtime ] || /usr/bin/readlink -f /etc/localtime 2>/dev/null || /bin/readlink -f /etc/localtime 2>/dev/null")
+	if err != nil {
+		return "", err
+	}
+	// /etc/localtime is a symlink to a file, for example:
+	// /usr/share/zoneinfo/Europe/London on Linux and WSL2
+	// /var/db/timezone/zoneinfo/Europe/London on macOS (the exact path to /zoneinfo/ may differ)
+	// We can search for anything after /zoneinfo/ in the file path
+	parts := strings.Split(strings.TrimSpace(timezone), "/zoneinfo/")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("unable to read /etc/localtime symlink")
+	}
+	timezone = parts[1]
+	if timezone == "" {
+		return "", fmt.Errorf("unable to read /etc/localtime timezone")
+	}
+	_, err = time.LoadLocation(timezone)
+	if err != nil {
+		return "", fmt.Errorf("failed to load timezone '%s': %v", timezone, err)
+	}
+	return timezone, nil
+}
+
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
