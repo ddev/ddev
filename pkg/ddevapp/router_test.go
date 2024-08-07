@@ -30,8 +30,8 @@ func TestGlobalPortOverride(t *testing.T) {
 	origGlobalHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
 	origGlobalHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
 
-	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8553"
-	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8554"
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8555"
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8556"
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
