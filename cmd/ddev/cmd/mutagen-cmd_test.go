@@ -23,9 +23,8 @@ func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
 	_ = os.Setenv("DDEV_GOROUTINES", "true")
-
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Setenv(`DDEV_DEBUG`, `true`) // test requires DDEV_DEBUG to see removal of docker volume
+	_ = os.Unsetenv("DDEV_DEBUG")
 
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because Mutagen on by default")
@@ -66,6 +65,7 @@ func TestCmdMutagen(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
