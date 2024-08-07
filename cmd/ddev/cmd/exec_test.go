@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
@@ -32,6 +33,8 @@ func TestCmdExec(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, err := os.Getwd()
 	require.NoError(t, err)
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
 
 	site := TestSites[0]
 	err = os.Chdir(site.Dir)
@@ -40,6 +43,7 @@ func TestCmdExec(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 	app, err := ddevapp.GetActiveApp(site.Name)
 	assert.NoError(err)
