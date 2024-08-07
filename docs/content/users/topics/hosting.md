@@ -34,8 +34,6 @@ Here’s how to try it for yourself:
             caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
     ```
 
-You'll need to regularly renew the Let's Encrypt certificates. This is often done on a system reboot, but that may not be soon enough. A cron with the command docker exec ddev-router bash -c "certbot renew && nginx -s reload" will do the renewals.
-
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs -f ddev-router` to see Let’s Encrypt activity.)
 
 ## Additional Server Setup
@@ -91,6 +89,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * DDEV does not provide outgoing SMTP mail handling service, and the development-focused Mailpit feature is disabled if you’re using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to use SMTP in your application via a third-party transactional email service such as [SendGrid](https://sendgrid.com), [Postmark](https://postmarkapp.com), or [Mailgun](https://www.mailgun.com). This is the best way to ensure mail is actually delivered.
 * You may need an external cron trigger for some CMSes.
 * Debugging Let’s Encrypt failures requires viewing the `ddev-router` logs with `docker logs ddev-router`.
+* If using the legacy `router: nginx-proxy` config, you'll need to regularly renew the Let's Encrypt certificates. This is often done on a system reboot, but that may not be soon enough. A cron with the command docker exec ddev-router bash -c "certbot renew && nginx -s reload" will do the renewals.
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
 
 When `use_hardened_images` is enabled, Docker runs the web image as an unprivileged user, and the container does not have sudo. However, any Docker server hosted on the internet is a potential vulnerability. Keep your packages up to date and make sure your firewall does not allow access to ports other than (normally) 22, 80, and 443.
