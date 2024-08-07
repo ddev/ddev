@@ -4352,6 +4352,19 @@ func TestEnvironmentVariables(t *testing.T) {
 		dbFamily = "postgres"
 	}
 
+	t.Cleanup(func() {
+		err = os.RemoveAll(customCmdDest)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.Setenv("DDEV_DEBUG", origDDEVDebug)
+	})
+
+	err = app.Restart()
+	require.NoError(t, err)
+
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
 		"DDEV_DOCROOT":           app.GetDocroot(),
@@ -4369,18 +4382,6 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_DATABASE_FAMILY":   dbFamily,
 		"DDEV_DATABASE":          app.Database.Type + ":" + app.Database.Version,
 	}
-
-	err = app.Start()
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = os.RemoveAll(customCmdDest)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		_ = os.Setenv("DDEV_DEBUG", origDDEVDebug)
-	})
 
 	app.DockerEnv()
 	for k, v := range webContainerExpectations {
@@ -4431,6 +4432,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_TLD":                 app.ProjectTLD,
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
 	}
+
 	for k, v := range hostExpectations {
 		envVal, err := exec.RunHostCommand(DdevBin, "showhostenvvar", k)
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
