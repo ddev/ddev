@@ -20,6 +20,8 @@ import (
 func TestCmdList(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
 
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -32,6 +34,7 @@ func TestCmdList(t *testing.T) {
 		assert.NoError(err)
 		globalconfig.DdevGlobalConfig.SimpleFormatting = false
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 	// This gratuitous ddev start -a repopulates the ~/.ddev/project_list.yaml
 	// project list, which has been damaged by other tests which use
