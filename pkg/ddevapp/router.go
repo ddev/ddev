@@ -16,6 +16,7 @@ import (
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -78,8 +79,14 @@ func StopRouterIfNoContainers() error {
 		// see https://github.com/lima-vm/lima/issues/2536 and
 		// https://github.com/abiosoft/colima/issues/644
 		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
+			if globalconfig.DdevDebug {
+				out, err := exec.RunHostCommand("docker", "ps", "-a")
+				util.Debug("output of docker ps -a: '%v', err=%v", out, err)
+			}
 			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
 			waitForPortsToBeReleased(routerPorts, time.Second*5)
+			// Wait another couple of seconds
+			time.Sleep(time.Second * 2)
 		}
 	}
 	return nil
