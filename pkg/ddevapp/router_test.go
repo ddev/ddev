@@ -48,8 +48,10 @@ func TestGlobalPortOverride(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	util.Debug("app.RouterHTTPPort=%s, app.RouterHTTPSPort=%s", app.RouterHTTPPort, app.RouterHTTPSPort)
+	util.Debug("Before app.Restart(): app.RouterHTTPPort=%s, app.RouterHTTPSPort=%s, app.GetRouterHTTPPort()=%s app.GetRouterHTTPSPort=%s", app.RouterHTTPPort, app.RouterHTTPSPort, app.GetRouterHTTPPort(), app.GetRouterHTTPSPort())
 	err = app.Restart()
+	util.Debug("after app.Restart(): app.RouterHTTPPort=%s, app.RouterHTTPSPort=%s, app.GetRouterHTTPPort()=%s app.GetRouterHTTPSPort=%s", app.RouterHTTPPort, app.RouterHTTPSPort, app.GetRouterHTTPPort(), app.GetRouterHTTPSPort())
+
 	require.NoError(t, err)
 	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, app.GetRouterHTTPPort())
 	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPSPort, app.GetRouterHTTPSPort())
