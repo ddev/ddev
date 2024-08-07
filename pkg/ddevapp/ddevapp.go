@@ -358,11 +358,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					continue
 				}
 
+				// If the HTTP port is 80 (default), it doesn't get included in URL
 				portDefault := "80"
 				attributeName := "http_url"
 				protocol := "http://"
 
 				if name == "HTTPS_EXPOSE" {
+					// If the HTTPS port is 443 (default), it doesn't get included in URL
 					portDefault = "443"
 					attributeName = "https_url"
 					protocol = "https://"
@@ -2692,6 +2694,7 @@ func (app *DdevApp) GetHTTPURL() string {
 	url := ""
 	if !IsRouterDisabled(app) {
 		url = "http://" + app.GetHostname()
+		// If the HTTP port is the default "80", it's not included in the URL
 		if app.GetRouterHTTPPort() != "80" {
 			url = url + ":" + app.GetRouterHTTPPort()
 		}
@@ -2707,6 +2710,7 @@ func (app *DdevApp) GetHTTPSURL() string {
 	if !IsRouterDisabled(app) {
 		url = "https://" + app.GetHostname()
 		p := app.GetRouterHTTPSPort()
+		// If the HTTPS port is 443 (default), it doesn't get included in URL
 		if p != "443" {
 			url = url + ":" + p
 		}
@@ -2741,6 +2745,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		if app.GetRouterHTTPPort() != "80" {
 			httpPort = ":" + app.GetRouterHTTPPort()
 		}
+		// If the HTTPS port is 443 (default), it doesn't get included in URL
 		if app.GetRouterHTTPSPort() != "443" {
 			httpsPort = ":" + app.GetRouterHTTPSPort()
 		}
