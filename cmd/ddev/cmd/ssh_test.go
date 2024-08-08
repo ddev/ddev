@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -18,10 +20,12 @@ import (
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping TestCmdSSH on Mac M1 because of useless Docker Desktop failures to connect")
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
+		t.Skip("Skipping TestCmdSSH on Apple Silicon because of Docker Desktop failures to connect")
 	}
 	assert := asrt.New(t)
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
 
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir(t.Name())
@@ -42,6 +46,7 @@ func TestCmdSSH(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	err = fileutil.AppendStringToFile("index.php", `
