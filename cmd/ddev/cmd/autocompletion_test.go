@@ -13,6 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,9 +26,11 @@ func TestAutocompletionForStopCmd(t *testing.T) {
 	if len(TestSites) < 2 {
 		t.Skip("Must have at least two test sites to test autocompletion")
 	}
+	origDir, _ := os.Getwd()
 
 	t.Cleanup(func() {
 		removeSites()
+		_ = os.Chdir(origDir)
 	})
 
 	// Make sure we have some sites.
@@ -100,8 +103,11 @@ func TestAutocompletionForStartCmd(t *testing.T) {
 		t.Skip("Must have at least two test sites to test autocompletion")
 	}
 
+	origDir, _ := os.Getwd()
+
 	t.Cleanup(func() {
 		removeSites()
+		_ = os.Chdir(origDir)
 	})
 
 	// Make sure we have some sites.
@@ -164,7 +170,7 @@ func TestAutocompletionForStartCmd(t *testing.T) {
 	assert.Empty(filteredOut)
 }
 
-// TestAutocompletionForStartCmd checks autocompletion of project names for ddev describe
+// TestAutocompletionForDescribeCmd checks autocompletion of project names for ddev describe
 func TestAutocompletionForDescribeCmd(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -172,9 +178,13 @@ func TestAutocompletionForDescribeCmd(t *testing.T) {
 	if len(TestSites) < 2 {
 		t.Skip("Must have at least two test sites to test autocompletion")
 	}
+	origDir, _ := os.Getwd()
 
 	t.Cleanup(func() {
 		removeSites()
+		pwd, err := os.Getwd()
+		util.Debug("pwd=%s, err=%v", pwd, err)
+		_ = os.Chdir(origDir)
 	})
 
 	// Make sure we have some sites.
@@ -235,12 +245,11 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		_ = os.Chdir(origDir)
 	})
 	err = app.Start()
 	require.NoError(t, err)
@@ -301,12 +310,11 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		_ = os.Chdir(origDir)
 	})
 	err = app.Start()
 	require.NoError(t, err)

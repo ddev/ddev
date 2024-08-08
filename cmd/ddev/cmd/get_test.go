@@ -159,6 +159,8 @@ func TestCmdGetInstalled(t *testing.T) {
 	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
 		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
 	}
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -175,6 +177,7 @@ func TestCmdGetInstalled(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	out, err := exec.RunHostCommand(DdevBin, "get", "ddev/ddev-memcached", "--json-output")

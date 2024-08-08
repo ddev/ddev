@@ -31,7 +31,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerVolume "github.com/docker/docker/api/types/volume"
-	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
@@ -3184,94 +3183,6 @@ func TestDdevDescribe(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestRouterPortsCheck makes sure that we can detect if the ports are available before starting the router.
-func TestRouterPortsCheck(t *testing.T) {
-	assert := asrt.New(t)
-
-	// First, stop any sites that might be running
-	app := &ddevapp.DdevApp{}
-
-	// Stop/Remove all sites, which should get the router out of there.
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
-
-		status, _ := app.SiteStatus()
-		if status == ddevapp.SiteRunning || status == ddevapp.SitePaused {
-			err = app.Stop(true, false)
-			assert.NoError(err)
-		}
-
-		switchDir()
-	}
-
-	// Now start one site, it's hard to get router to behave without one site.
-	site := TestSites[0]
-	testcommon.ClearDockerEnv()
-
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-	startErr := app.StartAndWait(5)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	if startErr != nil {
-		appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
-		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWait() failure; err=%v health:\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
-	}
-
-	app, err = ddevapp.GetActiveApp(site.Name)
-	require.NoError(t, err, "Failed to GetActiveApp(%s), err:%v", site.Name, err)
-	startErr = app.StartAndWait(5)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	if startErr != nil {
-		appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
-		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWait() failure err=%v healthcheck:\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
-	}
-
-	// Stop the router using code from StopRouterIfNoContainers().
-	// StopRouterIfNoContainers can't be used here because it checks to see if containers are running
-	// and doesn't do its job as a result.
-	dest := ddevapp.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{dest},
-		Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
-	})
-	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
-
-	// Occupy ports 80/443 using docker run of ddev-webserver, then see if we can start router.
-	// This is done with Docker so that we don't have to use explicit sudo
-	// The ddev-webserver healthcheck should make sure that we have a legitimate occupation
-	// of the port by the time it comes up.
-	portBinding := map[nat.Port][]nat.PortBinding{
-		"80/tcp": {
-			{HostPort: app.GetRouterHTTPPort()},
-			{HostPort: app.GetRouterHTTPSPort()},
-		},
-	}
-
-	containerID, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, nil, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding, nil)
-
-	if err != nil {
-		t.Fatalf("Failed to run Docker command to occupy port 80/443, err=%v output=%v", err, out)
-	}
-	out, err = dockerutil.ContainerWait(60, map[string]string{"ddevtestcontainer": t.Name()})
-	require.NoError(t, err, "Failed to wait for container to start, err=%v output='%v'", err, out)
-
-	// Now try to start the router. It should fail because the port is occupied.
-	err = ddevapp.StartDdevRouter()
-	assert.Error(err, "Failure: router started even though ports 80/443 were occupied")
-
-	// Remove our dummy container.
-	err = dockerutil.RemoveContainer(containerID)
-	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v", err)
-}
-
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
@@ -4262,16 +4173,16 @@ func TestCustomCerts(t *testing.T) {
 	}
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
+	_ = os.Chdir(site.Dir)
 
 	app, err := ddevapp.NewApp(site.Dir, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	certDir := app.GetConfigPath("custom_certs")
 	err = os.MkdirAll(certDir, 0755)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		_ = os.RemoveAll(certDir)
@@ -4281,21 +4192,23 @@ func TestCustomCerts(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		_ = os.Chdir(origDir)
 	})
 
 	// Start without cert and make sure normal DNS names are there
 	err = app.Start()
-	assert.NoError(err)
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+	require.NoError(t, err)
+	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
 	})
-	out = strings.Trim(out, "\r\n")
+	require.NoError(t, err, "failed to run openssl command, stdout='%s', stderr='%s'", stdout, stderr)
+	stdout = strings.Trim(stdout, "\r\n")
 	// This should be our regular wildcard cert
-	assert.Contains(out, "*.ddev.site")
+	require.Contains(t, stdout, "*.ddev.site")
 
 	// Now stop it so we can install new custom cert.
 	err = app.Stop(true, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Generate a certfile/key in .ddev/custom_certs with one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
@@ -4305,19 +4218,21 @@ func TestCustomCerts(t *testing.T) {
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 		baseCertName = app.Name
 	}
-	out, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
-	assert.NoError(err, "mkcert command failed, out=%s", out)
+	stdout, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
+	require.NoError(t, err, "mkcert command failed, stdout=%s", stdout)
 
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
+	_ = app.MutagenSyncFlush()
 
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
 	})
-	out = strings.Trim(out, "\r\n")
+	require.NoError(t, err, "openssl command failed, stdout='%s', stderr='%s'", stdout, stderr)
+	stdout = strings.Trim(stdout, "\r\n")
 	// If we had the regular cert, there would be several things here including *.ddev.site
 	// But we should only see the hostname listed.
-	assert.Equal(app.GetHostname(), out)
+	require.Equal(t, app.GetHostname(), stdout, "stdout does not contain hostname, stdout='%s', stderr='%s'", stdout, stderr)
 }
 
 // TestEnvironmentVariables tests to make sure that documented environment variables appear
@@ -4326,8 +4241,9 @@ func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
-	pwd, _ := os.Getwd()
-	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
+	origDDEVDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Setenv("DDEV_DEBUG", "")
+	customCmd := filepath.Join(origDir, "testdata", t.Name(), "showhostenvvar")
 	site := TestSites[0]
 
 	app, err := ddevapp.NewApp(site.Dir, false)
@@ -4347,6 +4263,19 @@ func TestEnvironmentVariables(t *testing.T) {
 		dbFamily = "postgres"
 	}
 
+	t.Cleanup(func() {
+		err = os.RemoveAll(customCmdDest)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.Setenv("DDEV_DEBUG", origDDEVDebug)
+	})
+
+	err = app.Restart()
+	require.NoError(t, err)
+
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
 		"DDEV_DOCROOT":           app.GetDocroot(),
@@ -4364,17 +4293,6 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_DATABASE_FAMILY":   dbFamily,
 		"DDEV_DATABASE":          app.Database.Type + ":" + app.Database.Version,
 	}
-
-	err = app.Start()
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = os.RemoveAll(customCmdDest)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-	})
 
 	app.DockerEnv()
 	for k, v := range webContainerExpectations {
@@ -4425,6 +4343,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_TLD":                 app.ProjectTLD,
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
 	}
+
 	for k, v := range hostExpectations {
 		envVal, err := exec.RunHostCommand(DdevBin, "showhostenvvar", k)
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)

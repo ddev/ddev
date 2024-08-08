@@ -200,6 +200,12 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
 	}
+	if appcopy.RouterHTTPPort == nodeps.DdevDefaultRouterHTTPPort {
+		appcopy.RouterHTTPPort = ""
+	}
+	if appcopy.RouterHTTPSPort == nodeps.DdevDefaultRouterHTTPSPort {
+		appcopy.RouterHTTPSPort = ""
+	}
 	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitHTTPPort {
 		appcopy.MailpitHTTPPort = ""
 	}

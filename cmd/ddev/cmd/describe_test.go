@@ -1,15 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
+	"os"
 	"strings"
 	"testing"
 
-	"encoding/json"
-
-	"os"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -50,8 +49,17 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
-	assert := asrt.New(t)
 
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
+	origDir, _ := os.Getwd()
+	tmpDir := testcommon.CreateTmpDir("")
+
+	t.Cleanup(func() {
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(tmpDir)
+	})
 	out, err := exec.RunHostCommand(DdevBin, "config", "global", "--simple-formatting=false", "--table-style=default")
 	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
 	t.Logf("ddev config global output: '%s'", out)
@@ -65,34 +73,30 @@ func TestCmdDescribe(t *testing.T) {
 		require.NoError(t, err)
 
 		// First, try to do a describe from another directory.
-		tmpdir := testcommon.CreateTmpDir("")
-		cleanup := testcommon.Chdir(tmpdir)
-		defer testcommon.CleanupDir(tmpdir)
+		err = os.Chdir(tmpDir)
+		require.NoError(t, err)
 
-		out, err := exec.RunHostCommand(DdevBin, "describe", v.Name)
-		assert.NoError(err)
-		assert.Contains(string(out), "SERVICE")
-		assert.Contains(string(out), "STAT")
-		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), "OK")
+		out, err = exec.RunHostCommand(DdevBin, "describe", v.Name)
+		require.NoError(t, err, "output=%s", out)
+		require.Contains(t, string(out), "SERVICE")
+		require.Contains(t, string(out), "STAT")
+		require.Contains(t, string(out), v.Name)
+		require.Contains(t, string(out), "OK")
 
-		cleanup()
-
-		cleanup = v.Chdir()
-		defer cleanup()
-
+		err = os.Chdir(v.Dir)
+		require.NoError(t, err)
 		out, err = exec.RunHostCommand(DdevBin, "describe")
-		assert.NoError(err)
-		assert.Contains(string(out), "SERVICE")
-		assert.Contains(string(out), "STAT")
-		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), "OK")
+		require.NoError(t, err, "output=%s", out)
+		require.Contains(t, string(out), "SERVICE")
+		require.Contains(t, string(out), "STAT")
+		require.Contains(t, string(out), v.Name)
+		require.Contains(t, string(out), "OK")
 
 		// Test describe in current directory with json flag
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
-		assert.NoError(err)
+		require.NoError(t, err, "output=%s", out)
 		logItems, err := unmarshalJSONLogs(out)
-		require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", logItems)
+		require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", out)
 
 		// The description log should be next last item; there may be a warning
 		// or other info before that.
@@ -107,13 +111,13 @@ func TestCmdDescribe(t *testing.T) {
 			}
 		}
 		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===\n%s\n===\n", out)
-		assert.EqualValues("running", raw["status"])
-		assert.EqualValues("running", raw["status_desc"])
-		assert.EqualValues(v.Name, raw["name"])
-		assert.Equal(ddevapp.RenderHomeRootedDir(v.Dir), raw["shortroot"].(string))
-		assert.EqualValues(v.Dir, raw["approot"].(string))
+		require.EqualValues(t, "running", raw["status"])
+		require.EqualValues(t, "running", raw["status_desc"])
+		require.EqualValues(t, v.Name, raw["name"])
+		require.Equal(t, ddevapp.RenderHomeRootedDir(v.Dir), raw["shortroot"].(string))
+		require.EqualValues(t, v.Dir, raw["approot"].(string))
 
-		assert.NotEmpty(item["msg"])
+		require.NotEmpty(t, item["msg"])
 	}
 }
 
