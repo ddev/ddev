@@ -35,7 +35,11 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 			envText = exp.ReplaceAllString(envText, fmt.Sprintf(`$1$2="%s"`, v))
 		} else {
 			envText = strings.TrimSuffix(envText, "\n")
-			envText = fmt.Sprintf("%s\n%s=%s\n", envText, k, v)
+			if envText != "" {
+				envText = fmt.Sprintf("%s\n%s=\"%s\"\n", envText, k, v)
+			} else {
+				envText = fmt.Sprintf("%s=\"%s\"\n", k, v)
+			}
 		}
 	}
 	err := fileutil.TemplateStringToFile(envText, nil, envFilePath)

@@ -34,6 +34,7 @@ var Get = &cobra.Command{
 	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official DDEV add-ons. To list installed add-ons, 'ddev get --installed', to remove an add-on 'ddev get --remove <add-on>'.`,
 	Example: `ddev get ddev/ddev-redis
 ddev get ddev/ddev-redis --version v1.0.4
+ddev get ddev/ddev-redis --environment="REDIS_VERSION=7"
 ddev get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
 ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
@@ -233,6 +234,10 @@ ddev get --remove ddev-someaddonname
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
+		environment, _ := cmd.Flags().GetString("environment")
+		envFile := app.GetConfigPath(".env." + s.Name)
+		injectedEnv := injectedEnvironment(environment, envFile)
+
 		yamlMap := make(map[string]interface{})
 		for name, f := range s.YamlReadFiles {
 			f := os.ExpandEnv(string(f))
@@ -279,7 +284,7 @@ ddev get --remove ddev-someaddonname
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
@@ -355,7 +360,7 @@ ddev get --remove ddev-someaddonname
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
 			desc := ddevapp.GetAddonDdevDescription(action)
 			if err != nil {
 				if !verbose {
@@ -417,6 +422,41 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		util.Failed("Error writing manifest file: %v", err)
 	}
 	return manifest, nil
+}
+
+func injectedEnvironment(environment string, envFile string) string {
+	injectedEnv := "true"
+	_, envText, err := ddevapp.ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		util.Failed("Unable to read %s file: %v", envFile, err)
+	}
+	if environment != "" {
+		envSlice := strings.Split(strings.TrimSpace(environment), ",")
+		envMap := map[string]string{}
+		for _, v := range envSlice {
+			split := strings.Split(v, "=")
+			if len(split) != 2 {
+				util.Failed("Unable to parse environment variable setting: %v", v)
+			}
+			envMap[split[0]] = split[1]
+		}
+		err = ddevapp.WriteProjectEnvFile(envFile, envMap, envText)
+		if err != nil {
+			util.Failed("Error writing .env file: %v", err)
+		}
+	}
+	envMap, _, err := ddevapp.ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		util.Failed("Unable to read %s file: %v", envFile, err)
+	}
+	if len(envMap) > 0 {
+		injectedEnv = "export"
+		for k, v := range envMap {
+			v = strings.Replace(v, " ", `\ `, -1)
+			injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
+		}
+	}
+	return injectedEnv
 }
 
 // ListInstalledAddons() show the add-ons that have a manifest file
@@ -497,6 +537,7 @@ func init() {
 	Get.Flags().Bool("list", true, `List available add-ons for 'ddev get'`)
 	Get.Flags().Bool("all", true, `List unofficial add-ons for 'ddev get' in addition to the official ones`)
 	Get.Flags().Bool("installed", true, `Show installed ddev-get add-ons`)
+	Get.Flags().String("environment", "", "Override environment variables for add-on install: --environment=\"VERSION=stable,SOMEENV=someval\"")
 	Get.Flags().String("remove", "", `Remove a ddev-get add-on`)
 	Get.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
