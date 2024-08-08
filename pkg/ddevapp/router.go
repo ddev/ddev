@@ -479,7 +479,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	ephemeralPort, ok := AllocateAvailablePortForRouter(minPort, maxPort)
 	if !ok {
 		// Unlikely
-		util.Debug("GetEphemeralRouterPort():unable to AllocateAvailablePortForRouter()")
+		util.Debug("GetEphemeralRouterPort(): unable to AllocateAvailablePortForRouter()")
 		return proposedPort, "", false
 	}
 

@@ -548,7 +548,7 @@ func (app *DdevApp) GetWebEnvVar(name string) string {
 func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort string) string {
 	// Get the var
 	// split it via comma
-	// split it via colon into a map? rhs is the key, lhs is the value
+	// split it via colon into a map: rhs is the key, lhs is the value
 	portMap := make(map[string]string)
 	items := strings.Split(exposeEnvVar, ",")
 	for _, item := range items {
