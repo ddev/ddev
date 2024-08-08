@@ -44,7 +44,7 @@ var DebugTestCmdCmd = &cobra.Command{
 
 		util.Success("Please make sure you have already looked at troubleshooting guide:")
 		util.Success("https://ddev.readthedocs.io/en/stable/users/usage/troubleshooting/")
-		util.Success("Simple things to check:\n* ddev poweroff\n* Restart Docker Provider\n* Reboot computer\n* Temporarily disable VPN and firewall\n* Remove customizations like 'docker-compose.*.yaml' and PHP/Apache/Nginx config while debugging.")
+		util.Success("Simple things to check:\n* Use latest stable DDEV version\n* ddev poweroff\n* Restart Docker Provider\n* Reboot computer\n* Temporarily disable VPN and firewall\n* Remove customizations like 'docker-compose.*.yaml' and PHP/Apache/Nginx config while debugging.")
 
 		output.UserOut.Printf("Resulting output will be written to:\n%s\nfile://%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename, outputFilename)
 
