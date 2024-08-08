@@ -559,7 +559,7 @@ Timezone for container and PHP configuration.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `UTC` | Can be any [valid timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), like `Europe/Dublin` or `MST7MDT`.
+| :octicons-file-directory-16: project | Automatic detection or `UTC` | Can be any [valid timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), like `Europe/Dublin` or `MST7MDT`.
 
 ## `traefik_monitor_port`
 

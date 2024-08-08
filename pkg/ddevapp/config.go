@@ -825,6 +825,16 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
+	timezone := app.Timezone
+	if timezone == "" {
+		timezone, err = app.GetLocalTimezone()
+		if err != nil {
+			util.Debug("Unable to autodetect timezone: %v", err.Error())
+		} else {
+			util.Debug("Using automatically detected timezone: TZ=%s", timezone)
+		}
+	}
+
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
 		Plugin:                    "ddev",
@@ -852,7 +862,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		MountType:          "bind",
 		WebMount:           "../",
 		Hostnames:          app.GetHostnames(),
-		Timezone:           app.Timezone,
+		Timezone:           timezone,
 		ComposerVersion:    app.ComposerVersion,
 		Username:           username,
 		UID:                uid,

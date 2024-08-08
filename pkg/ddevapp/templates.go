@@ -45,6 +45,7 @@ const ConfigInstructions = `
 # webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn
 
 # timezone: Europe/Berlin
+# If this value is not set, the timezone is mapped from the host (with UTC fallback).
 # This is the timezone used in the containers and by PHP;
 # it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
