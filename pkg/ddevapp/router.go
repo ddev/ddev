@@ -403,12 +403,6 @@ func CheckRouterPorts() error {
 	return nil
 }
 
-// PortIsAvailable returns true if the port is available to use by the router, false otherwise.
-// This is just a wrapper on netutil.IsPortActive()
-func PortIsAvailable(port string) bool {
-	return !netutil.IsPortActive(port)
-}
-
 // AllocateAvailablePortForRouter finds an available port in the local machine, in the range provided.
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false), and the port is marked as allocated
@@ -419,7 +413,7 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 			continue
 		}
 		// But if we find the port is still available, use it, after marking it as assigned
-		if PortIsAvailable(fmt.Sprint(p)) {
+		if !netutil.IsPortActive(fmt.Sprint(p)) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
@@ -470,7 +464,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 
 	// At this point, the router may or may not be running, but we
 	// have not found it already having the proposedPort bound
-	if PortIsAvailable(proposedPort) {
+	if !netutil.IsPortActive(proposedPort) {
 		// If the proposedPort is available for use, just have the router use it
 		util.Debug("GetEphemeralRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
 		return proposedPort, "", false
