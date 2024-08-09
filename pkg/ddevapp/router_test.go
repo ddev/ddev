@@ -289,7 +289,7 @@ func TestFindEphemeralPort(t *testing.T) {
 	localIP, _ := dockerutil.GetDockerIP()
 
 	// Get a random port number in the dynamic port range
-	startPort := 49152 + rand.Intn(65535-49152+1)
+	startPort := 49152 + rand.Intn(65535-3-49152+1)
 	goodEndPort := startPort + 3
 	badEndPort := startPort + 2
 
