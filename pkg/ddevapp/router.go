@@ -425,14 +425,8 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 // GetEphemeralRouterPort gets an ephemeral replacement port when the
 // proposedPort is not available.
 //
-// The function first checks if the given port is available, returning
-// if that's the case.
-// Then checks if the router is already active. There's a high chance that the
-// router is already using the port, so there's no need for an ephemeral port.
-// Also, it may be that the router is already using the port as an ephemeral port,
-// which is then returned.
-// Finally, if the port is not available and the router is not using it, create a new
-// ephemeral port and return it.
+// The function returns an ephemeral port if the proposedPort is bound by a process
+// in the host other than the running router.
 //
 // Returns the original proposedPort, the ephemeral port found,
 // and a bool which is true if the proposedPort has been
@@ -450,8 +444,8 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 
 		// Check if the proposedPort is already being handled by the router.
 		routerPortsAlreadyBound, err := dockerutil.GetExposedContainerPorts(r.ID)
-		// If error getting ports (mostly impossible)
 		if err != nil {
+			// If error getting ports (mostly impossible)
 			return proposedPort, "", false
 		}
 		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
@@ -465,7 +459,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	// At this point, the router may or may not be running, but we
 	// have not found it already having the proposedPort bound
 	if !netutil.IsPortActive(proposedPort) {
-		// If the proposedPort is available for use, just have the router use it
+		// If the proposedPort is available (not active) for use, just have the router use it
 		util.Debug("GetEphemeralRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
 		return proposedPort, "", false
 	}
@@ -482,15 +476,14 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
 
-// GetEphemeralPortsIfNeeded() sets global variables needed for
-// router_http_port and router_https_port
+// GetEphemeralPortsIfNeeded() replaces the provided ports with an ephemeral version if they need it.
 func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
 		proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
 		if portChangeRequired {
 			*port = replacementPort
 			if verbose {
-				output.UserOut.Printf("port %s is busy, using %s instead.", proposedPort, replacementPort)
+				output.UserOut.Printf("Port %s is busy, using %s instead.", proposedPort, replacementPort)
 			}
 		}
 	}
