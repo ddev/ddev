@@ -28,8 +28,8 @@ import (
 // RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
 const (
 	RouterComposeProjectName = "ddev-router"
-	MinEphemeralPort         = 50080
-	MaxEphemeralPort         = 50442
+	MinEphemeralPort         = 33000
+	MaxEphemeralPort         = 35000
 )
 
 // EphemeralRouterPortsAssigned is used when we have assigned an ephemeral port
