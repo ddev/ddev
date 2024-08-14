@@ -63,8 +63,8 @@ The PostgreSQL database container includes normal `pg` commands like `pg_dump`.
 
 If you’d like to use a GUI database client, you’ll need the right connection details and there may even be a command to launch it for you:
 
-* phpMyAdmin, formerly built into DDEV core, can be installed by running `ddev get ddev/ddev-phpmyadmin`.
-* Adminer can be installed with `ddev get ddev/ddev-adminer`
+* phpMyAdmin, formerly built into DDEV core, can be installed by running `ddev add-on get ddev/ddev-phpmyadmin`.
+* Adminer can be installed with `ddev add-on get ddev/ddev-adminer`
 * The [`ddev describe`](../usage/commands.md#describe) command displays the `Host:` details you’ll need to connect to the `db` container externally, for example if you're using an on-host database browser like SequelAce.
 * macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../usage/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), [`ddev querious`](../usage/commands.md#querious) to launch [Querious](https://www.araelium.com/querious), [`ddev dbeaver`](../usage/commands.md#dbeaver) to launch [DBeaver](https://dbeaver.io/), and the obsolete Sequel Pro is also supported with `ddev sequelpro`. (Each must be installed for the command to exist.)
 * WSL2 and Linux users can use [`ddev dbeaver`](../usage/commands.md#dbeaver) to launch [DBeaver](https://dbeaver.io/). (Must be installed for the command to exist.)

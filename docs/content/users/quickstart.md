@@ -447,7 +447,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```bash
     mkdir my-magento2-site && cd my-magento2-site
     ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
-    ddev get ddev/ddev-elasticsearch
+    ddev add-on get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
