@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // DebugMutagenCmd implements the ddev debug mutagen command
@@ -31,7 +32,7 @@ ddev d mutagen sync list
 			return
 		}
 		out, err := exec.RunHostCommand(mutagenPath, os.Args[3:]...)
-		output.UserOut.Printf(out)
+		output.UserOut.Printf("%s", out)
 		if err != nil {
 			util.Failed("Error running '%s %v': %v", globalconfig.GetMutagenPath(), args, err)
 		}
