@@ -841,7 +841,7 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
 	}
 
-	_, err = fmt.Fprintf(os.Stderr, confMsg+".\n")
+	_, err = fmt.Fprintf(os.Stderr, "%s.\n", confMsg)
 
 	return err
 }

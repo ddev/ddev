@@ -111,7 +111,7 @@ func RunInteractiveCommandWithOutput(command string, args []string, output io.Wr
 // combined stdout/stderr results and error
 func RunHostCommand(command string, args ...string) (string, error) {
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommand: " + command + " " + strings.Join(args, " "))
+		output.UserOut.Printf("RunHostCommand: %s %v", command, strings.Join(args, " "))
 	}
 	c := HostCommand(command, args...)
 	c.Stdin = os.Stdin
@@ -148,7 +148,7 @@ func RunHostCommandWithEnv(command string, env []string, args ...string) (string
 // stdout and error
 func RunHostCommandSeparateStreams(command string, args ...string) (string, error) {
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommandSeparateStreams: " + command + " " + strings.Join(args, " "))
+		output.UserOut.Printf("RunHostCommandSeparateStreams: %s %v", command, strings.Join(args, " "))
 	}
 	c := HostCommand(command, args...)
 	c.Stdin = os.Stdin

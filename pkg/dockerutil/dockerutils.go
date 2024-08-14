@@ -795,7 +795,7 @@ func CheckDockerVersion(versionConstraint string) error {
 		for _, err := range errs {
 			msgs = fmt.Sprint(msgs, err, "\n")
 		}
-		return fmt.Errorf(msgs)
+		return fmt.Errorf("%s", msgs)
 	}
 	return nil
 }
@@ -835,7 +835,7 @@ func CheckDockerCompose() error {
 		for _, err := range errs {
 			msgs = fmt.Sprint(msgs, err, "\n")
 		}
-		return fmt.Errorf(msgs)
+		return fmt.Errorf("%s", msgs)
 	}
 
 	return nil

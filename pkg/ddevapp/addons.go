@@ -174,7 +174,7 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 			if resp != nil {
 				msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
 			}
-			return nil, fmt.Errorf(msg)
+			return nil, fmt.Errorf("%s", msg)
 		}
 		allRepos = append(allRepos, repos.Repositories...)
 		if resp.NextPage == 0 {
