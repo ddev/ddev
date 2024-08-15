@@ -167,6 +167,7 @@ WSL
 WSL2
 WantedBy
 Webhosting
+Xcode
 XDebug
 XDG
 Xhprof

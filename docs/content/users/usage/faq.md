@@ -150,6 +150,21 @@ Probably! You’ll need to install an older, unsupported version of Docker Deskt
 
 Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
 
+### How to access DDEV sites HTTPS URLs on iOS Simulator?
+
+When using the iOS Simulator (provided with Xcode), you may encounter issues accessing DDEV sites that use SSL.
+
+This is because the iOS Simulator does not trust the self-signed SSL certificates that DDEV uses by default.
+
+To resolve this issue, you need to install the DDEV root certificate on the iOS Simulator.
+
+Here’s how to do it:
+
+1. Open iOS Simulator and keep it on the home screen.
+2. On your Mac, open Finder and navigate to `~/Library/Application Support/mkcert/`.
+3. Drag the `rootCA.pem` file into the iOS Simulator window.
+4. Still on iOS Simulator, let's confirm the certificate was installed and will work properly.  Go to `Settings` > `General` > `About` > `Certificate Trust Settings` and confirm that the DDEV root certificate is listed and enabled on the `Enable full trust for root certificates` section.
+
 ## Performance & Troubleshooting
 
 ### How can I get the best performance?
