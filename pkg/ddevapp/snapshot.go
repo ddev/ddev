@@ -20,6 +20,11 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
+type Snapshot struct {
+	Name    string
+	Created time.Time
+}
+
 // SnapshotRestoreDefaultWaitTime is the max time we'll wait for snapshot restore.
 // If default_container_timeout is set higher than that it can be more
 const SnapshotRestoreDefaultWaitTime = 600
@@ -56,11 +61,11 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	return nil
 }
 
-// GetLatestSnapshot returns the latest created snapshot of a project
+// GetLatestSnapshot returns the name of the latest created snapshot of a project
 func (app *DdevApp) GetLatestSnapshot() (string, error) {
 	var snapshots []string
 
-	snapshots, err := app.ListSnapshots()
+	snapshots, err := app.ListSnapshotNames()
 	if err != nil {
 		return "", err
 	}
@@ -73,9 +78,21 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 }
 
 // ListSnapshots returns a list of the names of all project snapshots
-func (app *DdevApp) ListSnapshots() ([]string, error) {
+func (app *DdevApp) ListSnapshotNames() ([]string, error) {
+	var names []string
+	snapshots, err := app.ListSnapshots()
+
+	for _, snapshot := range snapshots {
+		names = append(names, snapshot.Name)
+	}
+
+	return names, err
+}
+
+// ListSnapshots returns a list of all project snapshots
+func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 	var err error
-	var snapshots []string
+	var snapshots []Snapshot
 
 	snapshotDir := app.GetConfigPath("db_snapshots")
 
@@ -109,7 +126,11 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	for _, f := range files {
 		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") {
 			n := m.ReplaceAll([]byte(f.Name()), []byte(""))
-			snapshots = append(snapshots, string(n))
+			snapshot := Snapshot{
+				Name:    string(n),
+				Created: f.ModTime(),
+			}
+			snapshots = append(snapshots, snapshot)
 		}
 	}
 
