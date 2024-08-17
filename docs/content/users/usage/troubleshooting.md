@@ -99,7 +99,7 @@ sudo systemctl stop apache2 && sudo systemctl disable apache2
 
 **Common tools that use port 80 and port 443:**
 
-Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports for their projects, and these work fine whenver some other process is not using them. All of the DDEV projects on a given computer can use them at the same time. However, if you are not getting the default ports, here are some of the other common processes that could be using ports 80/443 and methods to stop them.
+Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports for their projects, and these work fine whenever some other process is not using them. All of the DDEV projects on a given computer can use ports 80 and 443 at the same time. However, if you are not getting the default ports, here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
 * macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
 * macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.
