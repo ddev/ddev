@@ -44,9 +44,11 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 ## Web Server Ports Already Occupied
 
-By default, DDEV uses ports 80 and 443 (for the web server), ports 8025 and 8026 (for Mailpit) and 10999 (for the Traefik router dashboard) on your host. If DDEV can't find alternate ports to use it might give a message like "Unable to listen on required ports, localhost port XX is in use", see descriptions below.
+By default, DDEV uses ports 80 and 443 (for the web server), ports 8025 and 8026 (for Mailpit) and 10999 (for the Traefik router dashboard) on your host. If DDEV can't find alternate ports to use it might give a message like:
 
-However, in general DDEV will find alternate ports to use temporarily in this case.
+> Port 443 is busy, using 33000 instead
+
+In general, this automatic use of an alternate port will work for most people. If you want to figure out what is using the default ports, use the techniques listed below to stop the competing application or to change the default ports.
 
 If you do get messages like:
 
@@ -72,19 +74,12 @@ Consider `lando poweroff` for Lando, or `fin system stop` for Docksal, or stop M
 To configure a project to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
 
 ```
-ddev config --router-http-port="" --router-https-port=""
 ddev config global --router-http-port=8080 --router-https-port=8443
-ddev start
+ddev config --router-http-port="" --router-https-port=""
+ddev restart
 ```
 
-This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
-
-If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port:
-
-```
-ddev config --mailpit-http-port="" --mailpit-https-port=""
-ddev config global --mailpit-http-port=8301 --mailpit-https-port=8302
-```
+This changes all projects' HTTP URLs to `http://yoursite.ddev.site:8080` and the HTTPS URLs to `https://yoursite.ddev.site:8443`.
 
 ### Method 3: Fix port conflicts by stopping the competing application
 
@@ -94,6 +89,12 @@ Probably the most common conflicting application is Apache running locally. It c
 
 ```
 sudo apachectl stop
+```
+
+or
+
+```bash
+sudo systemctl stop apache2 && sudo systemctl disable apache2
 ```
 
 **Common tools that use port 80 and port 443:**
