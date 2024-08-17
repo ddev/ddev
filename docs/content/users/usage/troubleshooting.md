@@ -44,14 +44,11 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 ## Web Server Ports Already Occupied
 
-By default, DDEV uses ports 80 and 443 (for the web server), ports 8025 and 8026 (for Mailpit) and 10999 (for the Traefik router dashboard) on your host.
-DDEV may notify you about conflicts with these ports, with a message like this:
+By default, DDEV uses ports 80 and 443 (for the web server), ports 8025 and 8026 (for Mailpit) and 10999 (for the Traefik router dashboard) on your host. If DDEV can't find alternate ports to use it might give a message like "Unable to listen on required ports, localhost port XX is in use", see descriptions below.
 
-> Failed to start yoursite: Unable to listen on required ports, localhost port XX is in use
+However, in general DDEV will find alternate ports to use temporarily in this case.
 
-If the default ports 80 or 443 are occupied by other process in your host, DDEV will create ephemeral ports for serving the http and https traffic. If later on these default ports are available again and you want to use them in your project, you will need to poweroff DDEV and start your project again.
-
-For other ports, DDEV sometimes also has this error message that will alert you to port conflicts:
+If you do get messages like:
 
 > ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.
 
@@ -59,9 +56,7 @@ or
 
 > Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:8025 -> 0.0.0.0:0: listen tcp 127.0.0.1:8025: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
 
-This means there’s another process is listening in that port and DDEV cannot use them.
-
-To resolve this conflict, choose one of these methods:
+it means that some other process is using a needed port, and use a number of techniques to sort this out, although this is rarely necessary now the DDEV can use alternate ports.
 
 1. Stop all Docker containers that might be using the port by running `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
 2. If you’re using another local development environment that uses these ports (MAMP, WAMP, Lando, etc.), consider stopping it.
@@ -103,7 +98,7 @@ sudo apachectl stop
 
 **Common tools that use port 80 and port 443:**
 
-Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
+Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports for their projects, and these work fine whenver some other process is not using them. All of the DDEV projects on a given computer can use them at the same time. However, if you are not getting the default ports, here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
 * macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
 * macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.

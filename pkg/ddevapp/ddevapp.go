@@ -513,6 +513,8 @@ func (app *DdevApp) GetWebserverType() string {
 // GetRouterHTTPPort returns app's router http port
 func (app *DdevApp) GetRouterHTTPPort() string {
 
+	// If the web container is running and HTTP_EXPOSE has a mapping,
+	// return the host-side mapped port
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
 		//util.Debug("GetRouterHTTPPort(): HTTP_EXPOSE=%s", httpExpose)
 		httpPort := app.PortFromExposeVariable(httpExpose, "80")
@@ -522,16 +524,25 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 		}
 	}
 
+	// If the project-level RouterHTTPPort is set, it takes priority
+	// over the global RouterHTTPPort, so return that
 	if app.RouterHTTPPort != "" {
 		//util.Debug("GetRouterHTTPPort(): returning app.RouterHTTPPort=%s", app.RouterHTTPPort)
 		return app.RouterHTTPPort
 	}
 
+	// Finally, return whatever is in the global RouterHTTPPort,
+	// which will be port 80 by default, but could be something else
+	// if configured there
+
 	//util.Debug("GetRouterHTTPPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	return globalconfig.DdevGlobalConfig.RouterHTTPPort
 }
 
-// GetWebEnvVar() gets an environment variable from app.ComposeYaml["services"]["web"]["environment"]
+// GetWebEnvVar() gets an environment variable from
+// app.ComposeYaml["services"]["web"]["environment"]
+// It returns empty string if there is no var or the ComposeYaml
+// is just not set.
 func (app *DdevApp) GetWebEnvVar(name string) string {
 	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
 		if v, ok := s["web"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
@@ -545,6 +556,8 @@ func (app *DdevApp) GetWebEnvVar(name string) string {
 // comma-delimted list of colon-delimited port-pairs
 // Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related port to be exposed on the router.
+// It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
+// found or no valid port mapping is found.
 func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort string) string {
 	// Get the var
 	// split it via comma
@@ -588,7 +601,8 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 }
 
 // GetMailpitHTTPPort returns app's mailpit router http port
-// Start with global config and then override with project config
+// If HTTP_EXPOSE has a mapping to port 8025 in the container, use that
+// If not, use the global or project MailpitHTTPPort
 func (app *DdevApp) GetMailpitHTTPPort() string {
 
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
@@ -608,8 +622,9 @@ func (app *DdevApp) GetMailpitHTTPPort() string {
 	return port
 }
 
-// GetMailpitHTTPSPort returns app's router https port
-// Start with global config and then override with project config
+// GetMailpitHTTPSPort returns app's mailpit router https port
+// If HTTPS_EXPOSE has a mapping to port 8025 in the container, use that
+// If not, use the global or project MailpitHTTPSPort
 func (app *DdevApp) GetMailpitHTTPSPort() string {
 
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
@@ -1136,7 +1151,8 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
-	// We don't yet know the ComposeYaml values
+	// We don't yet know the ComposeYaml values, so make sure they're
+	// not set.
 	app.ComposeYaml = nil
 
 	// Set up ports to be replaced with ephemeral ports if needed

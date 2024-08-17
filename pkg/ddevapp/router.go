@@ -78,10 +78,10 @@ func StopRouterIfNoContainers() error {
 		// Colima and Lima don't release ports very fast after container is removed
 		// see https://github.com/lima-vm/lima/issues/2536 and
 		// https://github.com/abiosoft/colima/issues/644
-		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
+		if dockerutil.IsLima() || dockerutil.IsColima() {
 			if globalconfig.DdevDebug {
 				out, err := exec.RunHostCommand("docker", "ps", "-a")
-				util.Debug("output of docker ps -a: '%v', err=%v", out, err)
+				util.Debug("Lima/Colima stopping router, output of docker ps -a: '%v', err=%v", out, err)
 			}
 			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
 			waitForPortsToBeReleased(routerPorts, time.Second*5)
@@ -335,8 +335,9 @@ func determineRouterPorts() []string {
 
 			for _, exposePortPair := range exposePorts {
 				// Ports defined as hostPort:containerPort allow for router to configure upstreams
-				// for containerPort, with server listening on hostPort. Exposed ports for router
-				// should be hostPort:hostPort so router can determine what port a request came from
+				// for containerPort, with server listening on hostPort.
+				// Exposed ports for router should be hostPort:hostPort so router
+				// can determine on which port a request came in
 				// and route the request to the correct upstream
 				exposePort := ""
 				var ports []string
@@ -422,7 +423,7 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 	return 0, false
 }
 
-// GetEphemeralRouterPort gets an ephemeral replacement port when the
+// GetAvailableRouterPort gets an ephemeral replacement port when the
 // proposedPort is not available.
 //
 // The function returns an ephemeral port if the proposedPort is bound by a process
@@ -431,11 +432,11 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 // Returns the original proposedPort, the ephemeral port found,
 // and a bool which is true if the proposedPort has been
 // replaced with an ephemeralPort
-func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
+func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
 	// If the router is alive and well, we can see if it's already handling the proposedPort
 	status, _ := GetRouterStatus()
 	if status == "healthy" {
-		util.Debug("GetEphemeralRouterPort(): Router is healthy and running")
+		util.Debug("GetAvailableRouterPort(): Router is healthy and running")
 		r, err := FindDdevRouter()
 		// If we have error getting router (Impossible, because we just got healthy status)
 		if err != nil {
@@ -451,7 +452,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find an ephemeral port.
-			util.Debug("GetEphemeralRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
+			util.Debug("GetAvailableRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
 			return proposedPort, "", false
 		}
 	}
@@ -460,18 +461,18 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	// have not found it already having the proposedPort bound
 	if !netutil.IsPortActive(proposedPort) {
 		// If the proposedPort is available (not active) for use, just have the router use it
-		util.Debug("GetEphemeralRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
+		util.Debug("GetAvailableRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
 		return proposedPort, "", false
 	}
 
 	ephemeralPort, ok := AllocateAvailablePortForRouter(minPort, maxPort)
 	if !ok {
 		// Unlikely
-		util.Debug("GetEphemeralRouterPort(): unable to AllocateAvailablePortForRouter()")
+		util.Debug("GetAvailableRouterPort(): unable to AllocateAvailablePortForRouter()")
 		return proposedPort, "", false
 	}
 
-	util.Debug("GetEphemeralRouterPort(): proposedPort %s is not available, epheneralPort=%d is available, use it", proposedPort, ephemeralPort)
+	util.Debug("GetAvailableRouterPort(): proposedPort %s is not available, epheneralPort=%d is available, use it", proposedPort, ephemeralPort)
 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
@@ -479,7 +480,7 @@ func GetEphemeralRouterPort(proposedPort string, minPort, maxPort int) (string, 
 // GetEphemeralPortsIfNeeded() replaces the provided ports with an ephemeral version if they need it.
 func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
-		proposedPort, replacementPort, portChangeRequired := GetEphemeralRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
+		proposedPort, replacementPort, portChangeRequired := GetAvailableRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
 		if portChangeRequired {
 			*port = replacementPort
 			if verbose {

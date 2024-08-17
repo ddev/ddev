@@ -28,7 +28,7 @@ func TestGlobalPortOverride(t *testing.T) {
 	if dockerutil.IsLima() || dockerutil.IsColima() {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Lima and Colima allocate another port, so skip")
+		t.Skip("Lima and Colima often allocate another port, so skip")
 	}
 	assert := asrt.New(t)
 
@@ -282,8 +282,8 @@ func TestDisableHTTP2(t *testing.T) {
 
 }
 
-// Test the function FindEphemeralPort
-func TestFindEphemeralPort(t *testing.T) {
+// TestAllocateAvailablePortForRouter tests AllocateAvailablePortForRouter()
+func TestAllocateAvailablePortForRouter(t *testing.T) {
 	assert := asrt.New(t)
 
 	localIP, _ := dockerutil.GetDockerIP()
@@ -383,7 +383,9 @@ func TestUseEphemeralPort(t *testing.T) {
 
 		// Make sure that both http and https URLs have proper content
 		_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
-		_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
+		if globalconfig.GetCAROOT() != "" {
+			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
+		}
 	}
 
 }
