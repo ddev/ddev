@@ -26,3 +26,7 @@ If you’re using a browser on Windows and accessing a DDEV project in WSL2, Win
 !!!note "Administrative Privileges Required"
 
     You must have administrative privileges to save the hosts file on any OS.
+
+!!!note "Oddities of using `buildx` `docker-container` driver"
+
+    This is an unusual situation, mostly encountered by DDEV developers who have been pushing images, but you may not be able to work offline if your `docker buildx inspect` shows the `docker-container` driver, and you'll need to switch to a builder that has the `docker` driver. `docker buildx ls` will show available drivers, or you can switch to one with `docker buildx create --name docker-driver --driver docker --use`. This is reported in [docker buildx issue](https://github.com/moby/buildkit/issues/5214).
