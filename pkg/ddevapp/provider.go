@@ -360,7 +360,7 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 		return nil, err
 	}
 
-	sqlTarballs, err := fileutil.ListFilesInDirFullPath(p.getDownloadDir())
+	sqlTarballs, err := fileutil.ListFilesInDirNoSubdirsFullPath(p.getDownloadDir())
 	if err != nil || sqlTarballs == nil {
 		return nil, fmt.Errorf("failed to find downloaded files in %s: %v", p.getDownloadDir(), err)
 	}

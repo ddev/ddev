@@ -227,6 +227,23 @@ func ListFilesInDirFullPath(path string) ([]string, error) {
 	return fileList, nil
 }
 
+// ListFilesInDirNoSubdirsFullPath returns an array of full path of files found in a directory, but not subdirectories
+func ListFilesInDirNoSubdirsFullPath(path string) ([]string, error) {
+	var fileList []string
+	dirEntrySlice, err := os.ReadDir(path)
+	if err != nil {
+		return fileList, err
+	}
+
+	for _, de := range dirEntrySlice {
+		if de.IsDir() {
+			continue
+		}
+		fileList = append(fileList, filepath.Join(path, de.Name()))
+	}
+	return fileList, nil
+}
+
 // RandomFilenameBase generates a temporary filename for use in testing or whatever.
 // From https://stackoverflow.com/a/28005931/215713
 func RandomFilenameBase() string {
