@@ -329,6 +329,11 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	if err != nil {
 		return nil, err
 	}
+	// Make sure the deletion is synced before we recreate
+	err = p.app.MutagenSyncFlush()
+	if err != nil {
+		return nil, err
+	}
 	err = os.Mkdir(p.getDownloadDir(), 0755)
 	if err != nil {
 		return nil, err
