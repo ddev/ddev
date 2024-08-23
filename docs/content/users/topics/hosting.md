@@ -1,11 +1,11 @@
-# Non-traditional Hosting (Formerly "Casual Hosting")
+# Hosting with DDEV
 
 !!!warning "Experimental Feature!"
-    This is not a replacement for scalable, managed hosting. It’s unknown how much traffic it can handle in a given environment. Lots of people really like it for a number of uses though.
+    Hosting with DDEV is not a replacement for scalable, managed hosting. It is not known how much traffic can be handled this way. Lots of people really like it for a number of uses though.
 
-One of DDEV’s features is lightweight hosting with Let’s Encrypt for HTTPS support. You can run DDEV on a public web server, point DNS to it, and use it as a hosting environment.
+Lightweight hosting with Let’s Encrypt for HTTPS support is a popular DDEV feature. You can run DDEV on a public web server, point DNS to it, and use it as a hosting environment.
 
-This can be appropriate for many sites with limited traffic expectations, and works great for sites with special requirements like old versions of PHP that aren’t supported elsewhere. Many teams use it for continuous integration (CI) and for staging and demonstration sites.
+This can be appropriate for many sites with modest traffic expectations, and works great for sites with special requirements (old versions of PHP, old database servers, etc.) A number of teams use it for continuous integration (CI) and for staging and demonstration sites.
 
 There is no security team behind this approach, although efforts have been made to secure the approach with hardened Docker images and removal of tools like `sudo`.
 
