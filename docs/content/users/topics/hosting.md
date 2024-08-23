@@ -1,11 +1,13 @@
-# Casual Hosting
+# Hosting with DDEV
 
 !!!warning "Experimental Feature!"
-    This is not a replacement for scalable, managed hosting. It’s unknown how much traffic it can handle in a given environment.
+    Hosting with DDEV is not a replacement for scalable, managed hosting. It is not known how much traffic can be handled this way. Lots of people really like it for a number of uses though.
 
-One of DDEV’s experimental features is lightweight hosting with Let’s Encrypt for HTTPS support. You can run DDEV on a public web server, point DNS to it, and use it as a limited hosting environment.
+Lightweight hosting with Let’s Encrypt for HTTPS support is a popular DDEV feature. You can run DDEV on a public web server, point DNS to it, and use it as a hosting environment.
 
-This may be appropriate for small or abandoned sites that have special requirements like old versions of PHP that aren’t supported elsewhere.
+This can be appropriate for many sites with modest traffic expectations, and works great for sites with special requirements (old versions of PHP, old database servers, etc.) A number of teams use it for continuous integration (CI) and for staging and demonstration sites.
+
+There is no security team behind this approach, although efforts have been made to secure the approach with hardened Docker images and removal of tools like `sudo`.
 
 Here’s how to try it for yourself:
 
@@ -16,16 +18,39 @@ Here’s how to try it for yourself:
 4. Before proceeding, your system and your project must be accessible on the internet on port 80 and your project DNS name (`myproject.example.com`) must resolve to the appropriate server.
 5. Configure your project with [`ddev config`](../usage/commands.md#config).
 6. Import your database and files using [`ddev import-db`](../usage/commands.md#import-db) and [`ddev import-files`](../usage/commands.md#import-files).
-7. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
+7. Save all databases with `ddev snapshot --all` before beginning, so you can restore your database if you have to change the name of the project.
+8. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
 
     ```
     ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
     ```
 
-8. Create your DDEV project as you normally would, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`.
-9. Redirect HTTP to HTTPS. Edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
-10. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
-11. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
+9. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
+
+    !!!warning "Complex configuration with apex domains"
+
+        Unfortunately, the `traefik` integration with Let's Encrypt does not work if you have hostnames specified that are not resolvable, so all hostnames referenced must be resolvable in DNS. (You can use `additional_fqdns` as well as `additional_hostnames`, but all combinations must be resolvable in DNS.) Some examples:
+
+        **Project name = example, URL = `example.com`, also serving `www.example.com` and `mysite.com`**
+        ```yaml
+        project_tld: com
+        name: example
+        additional_hostnames:
+        - www.example
+        additional_fqdns:
+        - mysite.com
+        ```
+
+        **Project name = `stories`, URL = `stories.example.org`**
+
+        ```yaml
+        name: stories
+        project_tld: example.org
+        ```
+
+10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
+11. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
+12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
 
     ```yaml
     certificatesResolvers:

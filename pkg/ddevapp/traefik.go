@@ -84,7 +84,7 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 			ports = append(ports, ports[0])
 		}
 		if ports[1] == "8025" && (globalconfig.DdevGlobalConfig.UseHardenedImages || globalconfig.DdevGlobalConfig.UseLetsEncrypt) {
-			util.Debug("skipping port 8025 (mailpit) because not appropriate in casual hosting environment")
+			util.Debug("skipping port 8025 (mailpit) because not appropriate in hosting environment")
 			continue
 		}
 		routingTable = append(routingTable, TraefikRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0],
