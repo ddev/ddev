@@ -13,6 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestComposerCmdCreateConfigInstall(t *testing.T) {
@@ -165,33 +166,29 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 }
 
 func TestComposerAutocomplete(t *testing.T) {
-	assert := asrt.New(t)
-
 	// Change to the directory for the project to test.
 	// We don't really care what the project is, they should
 	// all have composer installed in the web container.
-	origDir, err := os.Getwd()
-	assert.NoError(err)
-	err = os.Chdir(TestSites[0].Dir)
-	assert.NoError(err)
+	origDir, _ := os.Getwd()
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
+	err := os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	// Make sure the sites exist and are running
 	err = addSites()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Pressing tab after `composer completion` should result in the completion "bash"
 	out, err := exec.RunHostCommand(DdevBin, "__complete", "composer", "completion", "")
-	assert.NoError(err)
+	require.NoError(t, err)
 	// Completions are terminated with ":4", so just grab the stuff before that
 	completions, _, found := strings.Cut(out, ":")
-	assert.True(found)
-	assert.Equal(strings.TrimSpace(completions), "bash")
-
-	err = os.Chdir(origDir)
-	assert.NoError(err)
+	require.True(t, found)
+	require.Equal(t, "bash", strings.TrimSpace(completions))
 }

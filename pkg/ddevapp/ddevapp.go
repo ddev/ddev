@@ -198,6 +198,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Cont
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
+
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -510,28 +511,107 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // GetRouterHTTPPort returns app's router http port
-// Start with global config and then override with project config
 func (app *DdevApp) GetRouterHTTPPort() string {
-	port := globalconfig.DdevGlobalConfig.RouterHTTPPort
-	if app.RouterHTTPPort != "" {
-		port = app.RouterHTTPPort
+
+	// If the web container is running and HTTP_EXPOSE has a mapping,
+	// return the host-side mapped port
+	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
+		//util.Debug("GetRouterHTTPPort(): HTTP_EXPOSE=%s", httpExpose)
+		httpPort := app.PortFromExposeVariable(httpExpose, "80")
+		if httpPort != "" {
+			//util.Debug("GetRouterHTTPPort(): returning httpPort=%s found from HTTP_EXPOSE=%s", httpPort, httpExpose)
+			return httpPort
+		}
 	}
-	return port
+
+	// If the project-level RouterHTTPPort is set, it takes priority
+	// over the global RouterHTTPPort, so return that
+	if app.RouterHTTPPort != "" {
+		//util.Debug("GetRouterHTTPPort(): returning app.RouterHTTPPort=%s", app.RouterHTTPPort)
+		return app.RouterHTTPPort
+	}
+
+	// Finally, return whatever is in the global RouterHTTPPort,
+	// which will be port 80 by default, but could be something else
+	// if configured there
+
+	//util.Debug("GetRouterHTTPPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPPort)
+	return globalconfig.DdevGlobalConfig.RouterHTTPPort
+}
+
+// GetWebEnvVar() gets an environment variable from
+// app.ComposeYaml["services"]["web"]["environment"]
+// It returns empty string if there is no var or the ComposeYaml
+// is just not set.
+func (app *DdevApp) GetWebEnvVar(name string) string {
+	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
+		if v, ok := s["web"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
+			return v.(string)
+		}
+	}
+	return ""
+}
+
+// PortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// comma-delimted list of colon-delimited port-pairs
+// Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
+// the related port to be exposed on the router.
+// It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
+// found or no valid port mapping is found.
+func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort string) string {
+	// Get the var
+	// split it via comma
+	// split it via colon into a map: rhs is the key, lhs is the value
+	portMap := make(map[string]string)
+	items := strings.Split(exposeEnvVar, ",")
+	for _, item := range items {
+		portPair := strings.Split(item, ":")
+		if len(portPair) == 2 {
+			portMap[portPair[1]] = portPair[0]
+		}
+	}
+	if w, ok := portMap[targetPort]; ok {
+		return w
+	}
+	return ""
 }
 
 // GetRouterHTTPSPort returns app's router https port
-// Start with global config and then override with project config
+// It has to choose from (highest to lowest priority):
+// 1. The actual port configured into running container via HTTPS_EXPOSE
+// 2. The project router_http_port
+// 3. The global router_http_port
 func (app *DdevApp) GetRouterHTTPSPort() string {
-	port := globalconfig.DdevGlobalConfig.RouterHTTPSPort
-	if app.RouterHTTPSPort != "" {
-		port = app.RouterHTTPSPort
+	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
+		//util.Debug("GetRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
+		httpsPort := app.PortFromExposeVariable(httpsExpose, "80")
+		if httpsPort != "" {
+			//util.Debug("GetRouterHTTPSPort(): returning httpsPort=%s derived from HTTPS_EXPOSE=%s", httpsPort, httpsExpose)
+			return httpsPort
+		}
 	}
-	return port
+
+	if app.RouterHTTPSPort != "" {
+		//util.Debug("GetRouterHTTPSPort(): app.RouterHTTPSPort=%s", app.RouterHTTPSPort)
+		return app.RouterHTTPSPort
+	}
+
+	//util.Debug("GetRouterHTTPSPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPSPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
+	return globalconfig.DdevGlobalConfig.RouterHTTPSPort
 }
 
-// GetMailpitHTTPPort returns app's router http port
-// Start with global config and then override with project config
+// GetMailpitHTTPPort returns app's mailpit router http port
+// If HTTP_EXPOSE has a mapping to port 8025 in the container, use that
+// If not, use the global or project MailpitHTTPPort
 func (app *DdevApp) GetMailpitHTTPPort() string {
+
+	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
+		httpPort := app.PortFromExposeVariable(httpExpose, "8025")
+		if httpPort != "" {
+			return httpPort
+		}
+	}
+
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort
 	if port == "" {
 		port = nodeps.DdevDefaultMailpitHTTPPort
@@ -542,9 +622,18 @@ func (app *DdevApp) GetMailpitHTTPPort() string {
 	return port
 }
 
-// GetMailpitHTTPSPort returns app's router https port
-// Start with global config and then override with project config
+// GetMailpitHTTPSPort returns app's mailpit router https port
+// If HTTPS_EXPOSE has a mapping to port 8025 in the container, use that
+// If not, use the global or project MailpitHTTPSPort
 func (app *DdevApp) GetMailpitHTTPSPort() string {
+
+	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
+		httpsPort := app.PortFromExposeVariable(httpsExpose, "8025")
+		if httpsPort != "" {
+			return httpsPort
+		}
+	}
+
 	port := globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort
 	if port == "" {
 		port = nodeps.DdevDefaultMailpitHTTPSPort
@@ -1089,10 +1178,21 @@ func (app *DdevApp) GetLocalTimezone() (string, error) {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
-
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
+
+	// We don't yet know the ComposeYaml values, so make sure they're
+	// not set.
+	app.ComposeYaml = nil
+
+	// Set up ports to be replaced with ephemeral ports if needed
+	app.RouterHTTPPort = app.GetRouterHTTPPort()
+	app.RouterHTTPSPort = app.GetRouterHTTPSPort()
+	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
+	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
+	GetEphemeralPortsIfNeeded(portsToCheck, true)
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
@@ -1516,7 +1616,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting ddev-router if necessary...")
+		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
@@ -1627,8 +1727,8 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 func FindNotOmittedImages(app *DdevApp) []string {
 	var images []string
 	containerImageMap := map[string]func() string{
-		SSHAuthName:       ddevImages.GetSSHAuthImage,
-		RouterProjectName: ddevImages.GetRouterImage,
+		SSHAuthName:            ddevImages.GetSSHAuthImage,
+		nodeps.RouterContainer: ddevImages.GetRouterImage,
 	}
 
 	for containerName, getImage := range containerImageMap {
@@ -2570,6 +2670,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
 
+	clear(EphemeralRouterPortsAssigned)
 	if app.Name == "" {
 		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
 	}

@@ -1,6 +1,9 @@
 package ddevapp_test
 
 import (
+	"fmt"
+	"math/rand"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,19 +18,27 @@ import (
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestGlobalPortOverride tests global router_http_port and router_https_port
 func TestGlobalPortOverride(t *testing.T) {
+	if dockerutil.IsLima() || dockerutil.IsColima() {
+		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
+		// Expected port is not available, so it allocates another one.
+		t.Skip("Lima and Colima often allocate another port, so skip")
+	}
 	assert := asrt.New(t)
 
 	origGlobalHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
 	origGlobalHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
 
-	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8553"
-	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8554"
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8555"
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8556"
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
 
 	site := TestSites[0]
 
@@ -41,7 +52,11 @@ func TestGlobalPortOverride(t *testing.T) {
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 	})
+
+	util.Debug("Before app.Restart(): app.RouterHTTPPort=%s, app.RouterHTTPSPort=%s, app.GetRouterHTTPPort()=%s app.GetRouterHTTPSPort=%s", app.RouterHTTPPort, app.RouterHTTPSPort, app.GetRouterHTTPPort(), app.GetRouterHTTPSPort())
 	err = app.Restart()
+	util.Debug("After app.Restart(): app.RouterHTTPPort=%s, app.RouterHTTPSPort=%s, app.GetRouterHTTPPort()=%s app.GetRouterHTTPSPort=%s", app.RouterHTTPPort, app.RouterHTTPSPort, app.GetRouterHTTPPort(), app.GetRouterHTTPSPort())
+
 	require.NoError(t, err)
 	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, app.GetRouterHTTPPort())
 	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPSPort, app.GetRouterHTTPSPort())
@@ -132,7 +147,7 @@ func TestLetsEncrypt(t *testing.T) {
 	dest := ddevapp.RouterComposeYAMLPath()
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{dest},
-		Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+		Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
 	})
 	assert.NoError(err)
 
@@ -150,7 +165,7 @@ func TestLetsEncrypt(t *testing.T) {
 		assert.NoError(err)
 		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{dest},
-			Action:       []string{"-p", ddevapp.RouterProjectName, "down"},
+			Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
 		})
 		assert.NoError(err)
 		err = app.Stop(true, false)
@@ -264,5 +279,113 @@ func TestDisableHTTP2(t *testing.T) {
 	out, err = exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
 	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
 	assert.Equal("HTTP/1.1 200 OK\r\n", out)
+
+}
+
+// TestAllocateAvailablePortForRouter tests AllocateAvailablePortForRouter()
+func TestAllocateAvailablePortForRouter(t *testing.T) {
+	assert := asrt.New(t)
+
+	localIP, _ := dockerutil.GetDockerIP()
+
+	// Get a random port number in the dynamic port range
+	startPort := ddevapp.MinEphemeralPort + rand.Intn(500)
+	goodEndPort := startPort + 3
+	badEndPort := startPort + 2
+
+	// Listen in the first 3 ports
+	l0, err := net.Listen("tcp", localIP+":"+strconv.Itoa(startPort))
+	require.NoError(t, err)
+	l1, err := net.Listen("tcp", localIP+":"+strconv.Itoa(startPort+1))
+	require.NoError(t, err)
+	l2, err := net.Listen("tcp", localIP+":"+strconv.Itoa(startPort+2))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		for i, p := range []net.Listener{l0, l1, l2} {
+			err = p.Close()
+			assert.NoError(err, "failed to close listener %v", i)
+		}
+	})
+	_, ok := ddevapp.AllocateAvailablePortForRouter(startPort, badEndPort)
+	assert.Exactly(false, ok)
+
+	port, ok := ddevapp.AllocateAvailablePortForRouter(startPort, goodEndPort)
+	require.True(t, ok)
+	require.Equal(t, startPort+3, port)
+}
+
+// Test that the app assigns an ephemeral port if the default one is not available.
+func TestUseEphemeralPort(t *testing.T) {
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
+		// Expected port is not available, so it allocates another one.
+		t.Skip("Skipping on Lima/Colima as ports don't seem to be released properly in a timely fashion")
+	}
+	assert := asrt.New(t)
+
+	targetHTTPPort, targetHTTPSPort := "28080", "28443"
+	const testString = "Hello from TestUseEphemeralPort"
+
+	apps := []*ddevapp.DdevApp{}
+	for _, s := range []string{"site1", "site2"} {
+		site := filepath.Join(testcommon.CreateTmpDir(t.Name()), t.Name()+s)
+		_ = os.MkdirAll(site, 0755)
+		err := fileutil.TemplateStringToFile(testString, nil, filepath.Join(site, "index.html"))
+		require.NoError(t, err)
+
+		a, err := ddevapp.NewApp(site, false)
+		require.NoError(t, err)
+		err = a.WriteConfig()
+		require.NoError(t, err)
+		apps = append(apps, a)
+		a.RouterHTTPPort, a.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	}
+
+	// Occupy target router ports so that app1 will be forced
+	// to use the ephemeral ports
+	targetHTTPListener, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPPort)
+	require.NoError(t, err)
+	targetHTTPSListener, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPSPort)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = targetHTTPListener.Close()
+		assert.NoError(err, "failed to close targetHTTPListener")
+		err = targetHTTPSListener.Close()
+		assert.NoError(err, "failed to close targetHTTPSListener")
+		for _, a := range apps {
+			err = a.Stop(true, false)
+			assert.NoError(err)
+			_ = os.RemoveAll(a.AppRoot)
+		}
+
+		// Stop the router, to prevent additional config from interfering with other tests.
+		// We shouldn't have to do this when app.Stop() properly pushes new config to ddev-router
+		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
+		// TODO: Verify after stop that ddev-router has forgotten all about the extra ports
+	})
+
+	for i, app := range apps {
+		// Predict which ephemeral ports the apps will use by using guess from starting point
+		expectedEphemeralHTTPPort := ddevapp.MinEphemeralPort + i*2
+		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*2 + 1
+
+		err = app.Start()
+		require.NoError(t, err)
+
+		// app1 will not use the target ports, but the uses the discovered ephemeral ports.
+		require.NotEqual(t, targetHTTPPort, app.GetRouterHTTPPort())
+		require.NotEqual(t, targetHTTPSPort, app.GetRouterHTTPSPort())
+
+		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPPort), app.GetRouterHTTPPort())
+		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPSPort), app.GetRouterHTTPSPort())
+
+		// Make sure that both http and https URLs have proper content
+		_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
+		if globalconfig.GetCAROOT() != "" {
+			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
+		}
+	}
 
 }

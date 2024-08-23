@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
+	"os"
+	"strings"
 	"testing"
 
-	"strings"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -36,10 +37,17 @@ func TestCmdRestart(t *testing.T) {
 func TestCmdRestartJSON(t *testing.T) {
 	assert := asrt.New(t)
 	site := TestSites[0]
-	cleanup := site.Chdir()
-	defer cleanup()
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
+	origDir, _ := os.Getwd()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
+	})
 
-	_, err := ddevapp.GetActiveApp("")
+	_, err = ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active DDEV configuration: %v", err)
 	}

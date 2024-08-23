@@ -2,26 +2,40 @@ package ddevapp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	dockerTypes "github.com/docker/docker/api/types"
 )
 
-// RouterProjectName is the "machine name" of the router docker-compose
-const RouterProjectName = "ddev-router"
+// RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
+const (
+	RouterComposeProjectName = "ddev-router"
+	MinEphemeralPort         = 33000
+	MaxEphemeralPort         = 35000
+)
+
+// EphemeralRouterPortsAssigned is used when we have assigned an ephemeral port
+// but it may not yet be occupied. A map is used just to make it easy
+// to detect if it's there, the value in the map is not used.
+var EphemeralRouterPortsAssigned = make(map[int]bool)
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -53,14 +67,60 @@ func StopRouterIfNoContainers() error {
 	}
 
 	if !containersRunning {
+		util.Debug("stopping ddev-router because all project containers are stopped")
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			if ok := dockerutil.IsErrNotFound(err); !ok {
 				return err
 			}
 		}
+		routerPorts := determineRouterPorts()
+		// Colima and Lima don't release ports very fast after container is removed
+		// see https://github.com/lima-vm/lima/issues/2536 and
+		// https://github.com/abiosoft/colima/issues/644
+		if dockerutil.IsLima() || dockerutil.IsColima() {
+			if globalconfig.DdevDebug {
+				out, err := exec.RunHostCommand("docker", "ps", "-a")
+				util.Debug("Lima/Colima stopping router, output of docker ps -a: '%v', err=%v", out, err)
+			}
+			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
+			waitForPortsToBeReleased(routerPorts, time.Second*5)
+			// Wait another couple of seconds
+			time.Sleep(time.Second * 2)
+		}
 	}
 	return nil
+}
+
+// waitForPortsToBeReleased waits until the specified ports are released or the timeout is reached.
+func waitForPortsToBeReleased(ports []string, timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	ticker := time.NewTicker(500 * time.Millisecond) // Check every 500 milliseconds
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			util.Debug("Timeout reached, stopping check.")
+			return
+		case <-ticker.C:
+			allReleased := true
+			for _, port := range ports {
+				if netutil.IsPortActive(port) {
+					util.Debug("Port %s is still in use.", port)
+					allReleased = false
+				} else {
+					util.Debug("Port %s is released.", port)
+				}
+			}
+			if allReleased {
+				util.Debug("All ports are released.")
+				return
+			}
+		}
+	}
 }
 
 // StartDdevRouter ensures the router is running.
@@ -94,14 +154,14 @@ func StartDdevRouter() error {
 	// Run docker-compose up -d against the ddev-router full compose file
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{routerComposeFullPath},
-		Action:       []string{"-p", RouterProjectName, "up", "--build", "-d"},
+		Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
 
 	// Ensure we have a happy router
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	label := map[string]string{"com.docker.compose.service": nodeps.RouterContainer}
 	// Normally the router comes right up, but when
 	// it has to do let's encrypt updates, it can take
 	// some time.
@@ -195,7 +255,7 @@ func generateRouterCompose() (string, error) {
 // return it.
 func FindDdevRouter() (*dockerTypes.Container, error) {
 	containerQuery := map[string]string{
-		"com.docker.compose.service": RouterProjectName,
+		"com.docker.compose.service": nodeps.RouterContainer,
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
@@ -275,8 +335,9 @@ func determineRouterPorts() []string {
 
 			for _, exposePortPair := range exposePorts {
 				// Ports defined as hostPort:containerPort allow for router to configure upstreams
-				// for containerPort, with server listening on hostPort. exposed ports for router
-				// should be hostPort:hostPort so router can determine what port a request came from
+				// for containerPort, with server listening on hostPort.
+				// Exposed ports for router should be hostPort:hostPort so router
+				// can determine on which port a request came in
 				// and route the request to the correct upstream
 				exposePort := ""
 				var ports []string
@@ -341,4 +402,90 @@ func CheckRouterPorts() error {
 		}
 	}
 	return nil
+}
+
+// AllocateAvailablePortForRouter finds an available port in the local machine, in the range provided.
+// Returns the port found, and a boolean that determines if the
+// port is valid (true) or not (false), and the port is marked as allocated
+func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
+	for p := start; p <= upTo; p++ {
+		// If we have already assigned this port, continue looking
+		if _, portAlreadyUsed := EphemeralRouterPortsAssigned[p]; portAlreadyUsed {
+			continue
+		}
+		// But if we find the port is still available, use it, after marking it as assigned
+		if !netutil.IsPortActive(fmt.Sprint(p)) {
+			EphemeralRouterPortsAssigned[p] = true
+			return p, true
+		}
+	}
+
+	return 0, false
+}
+
+// GetAvailableRouterPort gets an ephemeral replacement port when the
+// proposedPort is not available.
+//
+// The function returns an ephemeral port if the proposedPort is bound by a process
+// in the host other than the running router.
+//
+// Returns the original proposedPort, the ephemeral port found,
+// and a bool which is true if the proposedPort has been
+// replaced with an ephemeralPort
+func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
+	// If the router is alive and well, we can see if it's already handling the proposedPort
+	status, _ := GetRouterStatus()
+	if status == "healthy" {
+		util.Debug("GetAvailableRouterPort(): Router is healthy and running")
+		r, err := FindDdevRouter()
+		// If we have error getting router (Impossible, because we just got healthy status)
+		if err != nil {
+			return proposedPort, "", false
+		}
+
+		// Check if the proposedPort is already being handled by the router.
+		routerPortsAlreadyBound, err := dockerutil.GetExposedContainerPorts(r.ID)
+		if err != nil {
+			// If error getting ports (mostly impossible)
+			return proposedPort, "", false
+		}
+		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
+			// If the proposedPort is already bound by the router,
+			// there's no need to go find an ephemeral port.
+			util.Debug("GetAvailableRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
+			return proposedPort, "", false
+		}
+	}
+
+	// At this point, the router may or may not be running, but we
+	// have not found it already having the proposedPort bound
+	if !netutil.IsPortActive(proposedPort) {
+		// If the proposedPort is available (not active) for use, just have the router use it
+		util.Debug("GetAvailableRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
+		return proposedPort, "", false
+	}
+
+	ephemeralPort, ok := AllocateAvailablePortForRouter(minPort, maxPort)
+	if !ok {
+		// Unlikely
+		util.Debug("GetAvailableRouterPort(): unable to AllocateAvailablePortForRouter()")
+		return proposedPort, "", false
+	}
+
+	util.Debug("GetAvailableRouterPort(): proposedPort %s is not available, epheneralPort=%d is available, use it", proposedPort, ephemeralPort)
+
+	return proposedPort, strconv.Itoa(ephemeralPort), true
+}
+
+// GetEphemeralPortsIfNeeded() replaces the provided ports with an ephemeral version if they need it.
+func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
+	for _, port := range ports {
+		proposedPort, replacementPort, portChangeRequired := GetAvailableRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
+		if portChangeRequired {
+			*port = replacementPort
+			if verbose {
+				output.UserOut.Printf("Port %s is busy, using %s instead.", proposedPort, replacementPort)
+			}
+		}
+	}
 }

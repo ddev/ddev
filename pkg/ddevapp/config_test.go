@@ -1510,8 +1510,8 @@ func TestConfigFunctionality(t *testing.T) {
 	}
 
 	// Make sure that the db port is configured
-	_, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
-	require.NoError(t, err)
+	out, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
+	require.NoError(t, err, "failed host-side mysql command, output='%v'", out)
 }
 
 // TestConfigDefaultContainerTimeout verifies that `default_container_timeout` works

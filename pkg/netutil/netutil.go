@@ -37,7 +37,7 @@ func IsPortActive(port string) bool {
 			return false
 		}
 	}
-	// Otherwise, hmm, something else happened. It's not a fatal or anything.
+	// Otherwise, hmm, something else happened. It's not a fatal but can be reported.
 	util.Warning("Unable to properly check port status: %v", oe)
 	return false
 }
