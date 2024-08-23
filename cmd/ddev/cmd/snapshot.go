@@ -1,12 +1,17 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -40,13 +45,16 @@ ddev snapshot --all`,
 			instrumentationApp = apps[0]
 		}
 
+		if snapshotList {
+			listSnapshots(apps)
+			return
+		}
+
 		for _, app := range apps {
 			if app.Database.Type == nodeps.Postgres && app.Database.Version == nodeps.Postgres9 {
 				util.Failed("Snapshots are not supported for postgres:9")
 			}
 			switch {
-			case snapshotList:
-				listAppSnapshots(app)
 			case snapshotCleanup:
 				deleteAppSnapshot(app)
 			default:
@@ -56,16 +64,55 @@ ddev snapshot --all`,
 	},
 }
 
-func listAppSnapshots(app *ddevapp.DdevApp) {
-	if snapshotNames, err := app.ListSnapshots(); err != nil {
-		util.Failed("Failed to list snapshots %s: %v", app.GetName(), err)
-	} else {
-		if len(snapshotNames) > 0 {
-			util.Success("Snapshots of project %s: %s", app.GetName(), strings.Join(snapshotNames, ", "))
+func listSnapshots(apps []*ddevapp.DdevApp) {
+	var columns table.Row
+	var out bytes.Buffer
+	t := table.NewWriter()
+	t.SetOutputMirror(&out)
+	styles.SetGlobalTableStyle(t)
+
+	if len(apps) > 1 {
+		columns = append(columns, "Project")
+	}
+	columns = append(columns, "Snapshot", "Created")
+
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		var colConfig []table.ColumnConfig
+		for _, col := range columns {
+			colConfig = append(colConfig, table.ColumnConfig{
+				Name: fmt.Sprint(col),
+			})
+		}
+		t.SetColumnConfigs(colConfig)
+	}
+	t.AppendHeader(columns)
+
+	allSnapshots := make(map[string][]ddevapp.Snapshot)
+	for _, app := range apps {
+		if snapshots, err := app.ListSnapshots(); err != nil {
+			util.Failed("Failed to list snapshots %s: %v", app.GetName(), err)
 		} else {
-			util.Success("There are no snapshots for project %s", app.GetName())
+			allSnapshots[app.GetName()] = snapshots
+			if len(snapshots) > 0 {
+				for _, snapshot := range snapshots {
+					if len(apps) > 1 {
+						t.AppendRow(table.Row{app.GetName(), snapshot.Name, snapshot.Created.Format("2006-01-02")})
+					} else {
+						t.AppendRow(table.Row{snapshot.Name, snapshot.Created.Format("2006-01-02")})
+					}
+				}
+			} else {
+				if len(apps) > 1 {
+					t.AppendRow(table.Row{app.GetName(), text.Italic.Sprint("No snapshots"), ""})
+				} else {
+					t.AppendRow(table.Row{text.Italic.Sprint("No snapshots"), ""})
+				}
+			}
 		}
 	}
+
+	t.Render()
+	output.UserOut.WithField("raw", allSnapshots).Println(out.String())
 }
 
 func createAppSnapshot(app *ddevapp.DdevApp) {
@@ -124,7 +171,7 @@ func deleteAppSnapshot(app *ddevapp.DdevApp) {
 	}
 
 	if snapshotName == "" {
-		snapshotsToDelete, err = app.ListSnapshots()
+		snapshotsToDelete, err = app.ListSnapshotNames()
 		if err != nil {
 			util.Failed("Failed to detect snapshots %s: %v", app.GetName(), err)
 		}

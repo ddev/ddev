@@ -2419,7 +2419,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	snapshotFile := snapshotName + "-" + app.Database.Type + "_" + app.Database.Version + ".gz"
 
-	existingSnapshots, err := app.ListSnapshots()
+	existingSnapshots, err := app.ListSnapshotNames()
 	if err != nil {
 		return "", err
 	}
