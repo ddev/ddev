@@ -1,0 +1,17 @@
+networks:
+  dummy:
+    name: dummy_name
+  ddev_default:
+    name: this_name_and_external_false_should_be_ignored_by_ddev
+    external: false
+  default:
+    name: this_name_and_external_true_should_be_ignored_by_ddev
+    external: true
+
+services:
+  web:
+    networks:
+      default:
+        priority: 1
+      dummy:
+        priority: 2

@@ -1198,10 +1198,8 @@ func (app *DdevApp) Start() error {
 	dockerutil.EnsureDdevNetwork()
 	// The project network may have duplicates, we can remove them here.
 	// See https://github.com/ddev/ddev/pull/5508
-	if os.Getenv("COMPOSE_PROJECT_NAME") != "" {
-		ctx, client := dockerutil.GetDockerClient()
-		dockerutil.RemoveNetworkDuplicates(ctx, client, os.Getenv("COMPOSE_PROJECT_NAME")+"_default")
-	}
+	ctx, client := dockerutil.GetDockerClient()
+	dockerutil.RemoveNetworkDuplicates(ctx, client, app.GetDefaultNetworkName())
 
 	if err = dockerutil.CheckDockerCompose(); err != nil {
 		util.Failed(`Your docker-compose version does not exist or is set to an invalid version.
@@ -2306,7 +2304,7 @@ func (app *DdevApp) DockerEnv() {
 
 	envVars := map[string]string{
 		// The compose project name can no longer contain dots; must be lower-case
-		"COMPOSE_PROJECT_NAME":           strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1)),
+		"COMPOSE_PROJECT_NAME":           app.GetComposeProjectName(),
 		"COMPOSE_REMOVE_ORPHANS":         "true",
 		"COMPOSE_CONVERT_WINDOWS_PATHS":  "true",
 		"COMPOSER_EXIT_ON_PATCH_FAILURE": "1",
@@ -3134,6 +3132,16 @@ func (app *DdevApp) GetMariaDBVolumeName() string {
 // For historical reasons this isn't lowercased.
 func (app *DdevApp) GetPostgresVolumeName() string {
 	return app.Name + "-postgres"
+}
+
+// GetComposeProjectName returns the name of the docker-compose project
+func (app *DdevApp) GetComposeProjectName() string {
+	return strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1))
+}
+
+// GetDefaultNetworkName returns the default project network name
+func (app *DdevApp) GetDefaultNetworkName() string {
+	return app.GetComposeProjectName() + "_default"
 }
 
 // StartAppIfNotRunning is intended to replace much-duplicated code in the commands.
