@@ -561,6 +561,8 @@ Timezone for container and PHP configuration.
 | -- | -- | --
 | :octicons-file-directory-16: project | Automatic detection or `UTC` | Can be any [valid timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), like `Europe/Dublin` or `MST7MDT`.
 
+If `timezone` is unset, DDEV will attempt to derive it from the host system timezone.
+
 ## `traefik_monitor_port`
 
 Specify an alternate port for the Traefik (ddev-router) monitor port. This defaults to 10999 and rarely needs to be changed, but can be changed in cases of port conflicts.
