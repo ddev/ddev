@@ -1051,6 +1051,9 @@ func TestTimezoneConfig(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// Start test with empty timezone env
+	t.Setenv("TZ", "")
+
 	err = app.Start()
 	assert.NoError(err)
 
@@ -1077,7 +1080,8 @@ func TestTimezoneConfig(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(fmt.Sprintf("timezone=%s", hostTimezoneAbbr), stdout)
 
-	// With timezone set, we the correct timezone operational
+	// With timezone set, app.Timezone should be used first
+	t.Setenv("TZ", "Europe/Rome")
 	app.Timezone = "Europe/Paris"
 	err = app.Start()
 	require.NoError(t, err)
@@ -1087,6 +1091,26 @@ func TestTimezoneConfig(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Paris"), stdout)
+
+	// Make sure db container is also working with CET
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "echo -n timezone=$(date +%Z)",
+	})
+	assert.NoError(err)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T"), stdout)
+
+	// With timezone set, TZ env should be used if app.Timezone is empty
+	t.Setenv("TZ", "Europe/Rome")
+	app.Timezone = ""
+	err = app.Start()
+	require.NoError(t, err)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+	})
+	assert.NoError(err)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Rome"), stdout)
 
 	// Make sure db container is also working with CET
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
