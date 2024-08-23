@@ -1,6 +1,6 @@
 # Using DDEV Offline
 
-!!!warning "Make sure to do a `ddev start` on every project you want to use before doing offline"
+!!!warning "Make sure to do a `ddev start` on every project you want to use before going offline"
 
     To work offline, you have to already have any needed Docker images pulled. That means you should do a `ddev start` on all of the projects before going offline. 
 
@@ -14,7 +14,7 @@ You have some general options as well:
 
 In `.ddev/config.yaml`, [`use_dns_when_possible: false`](../configuration/config.md#use_dns_when_possible) will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
 
-You can also set up a local DNS server like [dnsmasq](https://dnsmasq.org) (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work fine. You’ll likely want a wildcard A record pointing to 127.0.0.1 on most DDEV installations. If you use dnsmasq, you must configure it to allow DNS rebinding.
+You can also set up a local DNS server like [dnsmasq](https://dnsmasq.org) (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the `project_tld` that you choose, and DNS resolution will work fine. You’ll likely want a wildcard A record pointing to `127.0.0.1` on most DDEV installations. If you use dnsmasq, you must configure it to allow DNS rebinding.
 
 !!!note "Administrative Privileges Required"
 
