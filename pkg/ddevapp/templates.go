@@ -45,6 +45,8 @@ const ConfigInstructions = `
 # webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn
 
 # timezone: Europe/Berlin
+# If timezone is unset, DDEV will attempt to derive it from the host system timezone
+# using the $TZ environment variable or the /etc/localtime symlink.
 # This is the timezone used in the containers and by PHP;
 # it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
