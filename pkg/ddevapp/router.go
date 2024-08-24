@@ -67,6 +67,10 @@ func StopRouterIfNoContainers() error {
 	}
 
 	if !containersRunning {
+		routerPorts, err := GetRouterBoundPorts()
+		if err != nil {
+			return err
+		}
 		util.Debug("stopping ddev-router because all project containers are stopped")
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
@@ -74,7 +78,7 @@ func StopRouterIfNoContainers() error {
 				return err
 			}
 		}
-		routerPorts := determineRouterPorts()
+
 		// Colima and Lima don't release ports very fast after container is removed
 		// see https://github.com/lima-vm/lima/issues/2536 and
 		// https://github.com/abiosoft/colima/issues/644
@@ -93,7 +97,8 @@ func StopRouterIfNoContainers() error {
 }
 
 // waitForPortsToBeReleased waits until the specified ports are released or the timeout is reached.
-func waitForPortsToBeReleased(ports []string, timeout time.Duration) {
+func waitForPortsToBeReleased(ports []uint16, timeout time.Duration) {
+	util.Debug("starting port release for ports: %v", ports)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -107,7 +112,8 @@ func waitForPortsToBeReleased(ports []string, timeout time.Duration) {
 			return
 		case <-ticker.C:
 			allReleased := true
-			for _, port := range ports {
+			for _, portInt := range ports {
+				port := fmt.Sprintf("%d", portInt)
 				if netutil.IsPortActive(port) {
 					util.Debug("Port %s is still in use.", port)
 					allReleased = false
@@ -267,6 +273,20 @@ func FindDdevRouter() (*dockerTypes.Container, error) {
 	return container, nil
 }
 
+// GetRouterBoundPorts() returns the currently bound ports on ddev-router
+func GetRouterBoundPorts() ([]uint16, error) {
+	boundPorts := []uint16{}
+	r, err := FindDdevRouter()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, p := range r.Ports {
+		boundPorts = append(boundPorts, p.PublicPort)
+	}
+	return boundPorts, nil
+}
+
 // RenderRouterStatus returns a user-friendly string showing router-status
 func RenderRouterStatus() string {
 	var renderedStatus string
@@ -305,7 +325,9 @@ func GetRouterStatus() (string, string) {
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site
-// containers defining VIRTUAL_PORT env var
+// containers defining HTTP_EXPOSE and HTTPS_EXPOSE env var
+// It is only useful to call this when containers are actually running, before
+// starting ddev-router (so that we can bind the port mappings needed
 func determineRouterPorts() []string {
 	var routerPorts []string
 	containers, err := dockerutil.FindContainersWithLabel("com.ddev.site-name")
