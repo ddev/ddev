@@ -66,7 +66,8 @@ func TestArchiveTar(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
-	tarballFile, err := os.CreateTemp("", t.Name()+"_*.tar.gz")
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	tarballFile, err := os.CreateTemp(tmpDir, t.Name()+"_*.tar.gz")
 	require.NoError(t, err)
 
 	tarSrc := filepath.Join(origDir, "testdata", t.Name())
@@ -83,16 +84,13 @@ func TestArchiveTar(t *testing.T) {
 	err = archive.Tar(tarSrc, tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
 	require.NoError(t, err)
 
-	tmpDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = tarballFile.Close()
 
-	t.Cleanup(
-		func() {
-			err := os.Chdir(origDir)
-			assert.NoError(err)
-
-			_ = os.Remove(tarballFile.Name())
-			_ = os.RemoveAll(tmpDir)
-		})
+		_ = os.Remove(tarballFile.Name())
+		_ = os.RemoveAll(tmpDir)
+	})
 
 	_ = os.Chdir(tmpDir)
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
@@ -111,7 +109,7 @@ func TestArchiveTar(t *testing.T) {
 	require.NoFileExists(t, filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
 }
 
-// TestArchiveTar tests creation of a simple tarball
+// TestArchiveTarGz tests creation of a simple gzipped tarball
 func TestArchiveTarGz(t *testing.T) {
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
@@ -125,9 +123,8 @@ func TestArchiveTarGz(t *testing.T) {
 
 	t.Cleanup(
 		func() {
-			// Could not figure out what causes this not to be removable
-			//err = os.Remove(tarballFile.Name())
-			//assert.NoError(err)
+			_ = tarballFile.Close()
+			_ = os.Remove(tarballFile.Name())
 			_ = os.RemoveAll(tmpDir)
 		})
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
