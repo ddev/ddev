@@ -137,10 +137,9 @@ func TestListFilesInDir(t *testing.T) {
 // TestReplaceStringInFile tests the ReplaceStringInFile utility function.
 func TestReplaceStringInFile(t *testing.T) {
 	assert := asrt.New(t)
-	tmp, err := os.MkdirTemp("", "")
-	assert.NoError(err)
-	newFilePath := filepath.Join(tmp, "newfile.txt")
-	err = fileutil.ReplaceStringInFile("some needle we're looking for", "specialJUNKPattern", "testdata/fgrep_has_positive_contents.txt", newFilePath)
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	newFilePath := filepath.Join(tmpDir, "newfile.txt")
+	err := fileutil.ReplaceStringInFile("some needle we're looking for", "specialJUNKPattern", "testdata/fgrep_has_positive_contents.txt", newFilePath)
 	assert.NoError(err)
 	found, err := fileutil.FgrepStringInFile(newFilePath, "specialJUNKPattern")
 	assert.NoError(err)

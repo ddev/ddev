@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
@@ -315,11 +316,10 @@ func TestComposeWithStreams(t *testing.T) {
 
 	// Use the current actual web container for this, so replace in base docker-compose file
 	composeBase := filepath.Join("testdata", "TestComposeWithStreams", "test-compose-with-streams.yaml")
-	tmp, err := os.MkdirTemp("", "")
-	assert.NoError(err)
-	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	realComposeFile := filepath.Join(tmpDir, "replaced-compose-with-streams.yaml")
 
-	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", versionconstants.WebImg+":"+versionconstants.WebTag, composeBase, realComposeFile)
+	err := fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", versionconstants.WebImg+":"+versionconstants.WebTag, composeBase, realComposeFile)
 	assert.NoError(err)
 
 	composeFiles := []string{realComposeFile}
@@ -716,7 +716,7 @@ func TestCopyFromContainer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
-	targetDir, err := os.MkdirTemp("", t.Name())
+	targetDir := testcommon.CreateTmpDir(t.Name())
 	require.NoError(t, err)
 
 	err = dockerutil.CopyFromContainer(testContainerName, containerSourceDir, targetDir)

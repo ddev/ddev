@@ -2599,10 +2599,10 @@ func TestDdevImportFilesDir(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
+	var err error
 
 	// Create a dummy directory to test non-archive imports
-	importDir, err := os.MkdirTemp("", t.Name())
-	assert.NoError(err)
+	importDir := testcommon.CreateTmpDir(t.Name())
 	fileNames := make([]string, 0)
 	for i := 0; i < 5; i++ {
 		fileName := uuid.New().String()
