@@ -2332,8 +2332,8 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Windows/Lima/Colima as this is tested adequately elsewhere")
+	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2378,7 +2378,8 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate Mailpit is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":"+app.GetMailpitHTTPPort()+"/api/v1/messages", `"total":0`)
+		mailpitAPIURL := "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort() + "/api/v1/messages"
+		_, _ = testcommon.EnsureLocalHTTPContent(t, mailpitAPIURL, `"total":0`)
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
