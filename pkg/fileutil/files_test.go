@@ -136,7 +136,7 @@ func TestListFilesInDir(t *testing.T) {
 
 // TestListFilesInDirNoSubdirsFullPath tests ListFilesInDirNoSubdirsFullPath()
 func TestListFilesInDirNoSubdirsFullPath(t *testing.T) {
-	fileList, err := fileutil.ListFilesInDirNoSubdirsFullPath(filepath.Join("testdata", t.Name()))
+	fileList, err := fileutil.ListFilesInDirFullPath(filepath.Join("testdata", t.Name()), true)
 	require.NoError(t, err)
 	require.Len(t, fileList, 2)
 	require.Contains(t, fileList[0], "one.txt")

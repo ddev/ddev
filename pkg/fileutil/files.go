@@ -213,8 +213,8 @@ func ListFilesInDir(path string) ([]string, error) {
 	return fileList, nil
 }
 
-// ListFilesInDirFullPath returns an array of full path of files found in a directory
-func ListFilesInDirFullPath(path string) ([]string, error) {
+// ListFilesInDirFullPath returns an array of full path of files found in a directory. If excludeDirectories is set, it skips subdirectories.
+func ListFilesInDirFullPath(path string, excludeDirectories bool) ([]string, error) {
 	var fileList []string
 	dirEntrySlice, err := os.ReadDir(path)
 	if err != nil {
@@ -222,21 +222,7 @@ func ListFilesInDirFullPath(path string) ([]string, error) {
 	}
 
 	for _, de := range dirEntrySlice {
-		fileList = append(fileList, filepath.Join(path, de.Name()))
-	}
-	return fileList, nil
-}
-
-// ListFilesInDirNoSubdirsFullPath returns an array of full path of files found in a directory, but not subdirectories
-func ListFilesInDirNoSubdirsFullPath(path string) ([]string, error) {
-	var fileList []string
-	dirEntrySlice, err := os.ReadDir(path)
-	if err != nil {
-		return fileList, err
-	}
-
-	for _, de := range dirEntrySlice {
-		if de.IsDir() {
+		if excludeDirectories && de.IsDir() {
 			continue
 		}
 		fileList = append(fileList, filepath.Join(path, de.Name()))
