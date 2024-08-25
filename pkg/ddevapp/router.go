@@ -274,11 +274,12 @@ func FindDdevRouter() (*dockerTypes.Container, error) {
 }
 
 // GetRouterBoundPorts() returns the currently bound ports on ddev-router
+// or an empty array if router not running
 func GetRouterBoundPorts() ([]uint16, error) {
 	boundPorts := []uint16{}
 	r, err := FindDdevRouter()
 	if err != nil {
-		return nil, err
+		return []uint16{}, nil
 	}
 
 	for _, p := range r.Ports {
