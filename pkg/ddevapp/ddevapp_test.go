@@ -3286,7 +3286,7 @@ func TestRouterNotRunning(t *testing.T) {
 }
 
 type URLRedirectExpectations struct {
-	scheme              string
+	url                 string
 	uri                 string
 	expectedRedirectURI string
 }
@@ -3352,7 +3352,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
 	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+		t.Skip("Skipping on Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because MkcertCARoot is not set, no https")
@@ -3372,7 +3372,8 @@ func TestHttpsRedirection(t *testing.T) {
 	app, err := ddevapp.NewApp(appDir, true)
 	assert.NoError(err)
 
-	_ = app.Stop(true, false)
+	err = app.Restart()
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -3383,12 +3384,16 @@ func TestHttpsRedirection(t *testing.T) {
 	})
 
 	expectations := []URLRedirectExpectations{
-		{"https", "/subdir", "/subdir/"},
-		{"https", "/redir_abs.php", "/landed.php"},
-		{"https", "/redir_relative.php", "/landed.php"},
-		{"http", "/subdir", "/subdir/"},
-		{"http", "/redir_abs.php", "/landed.php"},
-		{"http", "/redir_relative.php", "/landed.php"},
+		{app.GetHTTPSURL(), "/redir_relative.php", "/landed.php"},
+		{app.GetHTTPURL(), "/redir_relative.php", "/landed.php"},
+	}
+
+	// The simple redirect logic in `landed.php` and /subdir can only handle default ports 80 and 443
+	if app.GetRouterHTTPSPort() == "443" && app.GetRouterHTTPPort() == "80" {
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
 	types := ddevapp.GetValidAppTypesWithoutAliases()
@@ -3421,7 +3426,7 @@ func TestHttpsRedirection(t *testing.T) {
 			}
 			// Test for directory redirects under https and http
 			for _, parts := range expectations {
-				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
+				reqURL := parts.url + parts.uri
 				// t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				// Add extra hit to avoid occasional nil result
 				_, _, _ = testcommon.GetLocalHTTPResponse(t, reqURL, 60)
@@ -3434,21 +3439,17 @@ func TestHttpsRedirection(t *testing.T) {
 					expectedRedirect := parts.expectedRedirectURI
 					// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
 					if strings.Contains(parts.uri, "redir_abs.php") || webserverType != nodeps.WebserverNginxFPM {
-						expectedRedirect = parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.expectedRedirectURI
+						expectedRedirect = parts.url + parts.expectedRedirectURI
 					}
 					// Except the php relative redirect is always relative.
 					if strings.Contains(parts.uri, "redir_relative.php") {
 						expectedRedirect = parts.expectedRedirectURI
 					}
-					assert.EqualValues(locHeader, expectedRedirect, "For project type=%s webserver_type=%s url=%s expected redirect %s != actual %s", projectType, webserverType, reqURL, expectedRedirect, locHeader)
+					assert.EqualValues(expectedRedirect, locHeader, "For project type=%s webserver_type=%s url='%s' expected redirect '%s' != actual '%s'", projectType, webserverType, reqURL, expectedRedirect, locHeader)
 				}
 			}
 		}
 	}
-	// Change back to package dir. Lots of things will have to be cleaned up
-	// in defers, and for windows we have to not be sitting in them.
-	err = os.Chdir(packageDir)
-	assert.NoError(err)
 }
 
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
