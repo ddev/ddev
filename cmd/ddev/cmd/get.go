@@ -26,7 +26,7 @@ ddev get --remove ddev-someaddonname
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Create deprecation notice.
-		// Not we don't just set this as the "Deprecated" property of the cobra.Command
+		// Note we don't just set this as the "Deprecated" property of the cobra.Command
 		// because that breaks JSON output
 		if !output.JSONOutput {
 			var replaceCommand string
