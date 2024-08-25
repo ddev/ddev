@@ -2127,9 +2127,16 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		err = app.WriteConfig()
 		require.NoError(t, err)
 
+		// After stop, ports may not be properly released yet on Lima-based systems
+		if dockerutil.IsRancherDesktop() || dockerutil.IsColima() || dockerutil.IsLima() {
+			time.Sleep(time.Second * 2)
+		}
 		startErr := app.Start()
-		require.NoError(t, startErr)
-
+		if err != nil {
+			existingContainers, _ := exec.RunHostCommand("docker", "ps", "-a")
+			existingProjects, _ := exec.RunHostCommand("ddev", "list")
+			require.NoError(t, startErr, "failed to start %s:%s, existing projects:'%s', existing containers=%s", dbType, dbVersion, existingProjects, existingContainers)
+		}
 		for _, tool := range []string{"mysql", "mysqladmin", "mysqldump"} {
 			cmd := tool + " --version"
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
