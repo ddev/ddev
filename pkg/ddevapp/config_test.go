@@ -759,7 +759,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
 func TestPHPOverrides(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Apple Silicon/Lima/Colima to ignore problems with 'connection reset by peer or connection refused'")
 	}
 
@@ -818,7 +818,7 @@ func TestPHPOverrides(t *testing.T) {
 
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err, "failed to flush Mutagen sync")
-	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
 
 }
 
