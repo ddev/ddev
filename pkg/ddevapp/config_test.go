@@ -824,8 +824,8 @@ func TestPHPOverrides(t *testing.T) {
 
 // TestPHPConfig checks some key PHP configuration items
 func TestPHPConfig(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("skipping on Lima/Colima because of unpredictable behavior, unable to connect")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("skipping on Lima/Colima/Rancher because of unpredictable behavior, unable to connect")
 	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
@@ -847,7 +847,7 @@ func TestPHPConfig(t *testing.T) {
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80}
+	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -862,7 +862,7 @@ func TestPHPConfig(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		err = app.Start()
+		err = app.Restart()
 		require.NoError(t, err)
 
 		t.Logf("============= PHP version=%s ================", v)
@@ -882,7 +882,7 @@ func TestPHPConfig(t *testing.T) {
 		require.Equal(t, `float(0.6)`, out)
 
 		// Verify that environment variables are available in php-fpm
-		out, _, err = testcommon.GetLocalHTTPResponse(t, "http://"+app.GetHostname()+"/phpinfo.php")
+		out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/phpinfo.php")
 		require.NoError(t, err)
 		assert.Contains(out, "phpversion="+v)
 		// Make sure that php-fpm isn't clearing environment variables
