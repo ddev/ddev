@@ -2132,7 +2132,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 			time.Sleep(time.Second * 2)
 		}
 		startErr := app.Start()
-		if err != nil {
+		if startErr != nil {
 			existingContainers, _ := exec.RunHostCommand("docker", "ps", "-a")
 			existingProjects, _ := exec.RunHostCommand("ddev", "list")
 			require.NoError(t, startErr, "failed to start %s:%s, existing projects:'%s', existing containers=%s", dbType, dbVersion, existingProjects, existingContainers)
@@ -3373,15 +3373,14 @@ func TestHttpsRedirection(t *testing.T) {
 	testDir := testcommon.CreateTmpDir(t.Name())
 	appDir := filepath.Join(testDir, t.Name())
 	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", t.Name()), appDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = os.Chdir(appDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(appDir, true)
-	assert.NoError(err)
-
-	err = app.Restart()
 	require.NoError(t, err)
+
+	_ = app.Stop(true, false)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -3424,13 +3423,13 @@ func TestHttpsRedirection(t *testing.T) {
 
 			// Do a start on the configured site.
 			app, err = ddevapp.GetActiveApp("")
-			assert.NoError(err)
-			startErr := app.StartAndWait(5)
-			assert.NoError(startErr, "app.Start() failed with projectType=%s, webserverType=%s", projectType, webserverType)
-			if startErr != nil {
-				appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+			require.NoError(t, err)
+			err = app.StartAndWait(5)
+			if err != nil {
+				t.Logf("app.Start() failed with projectType=%s, webserverType=%s, err=%v", projectType, webserverType, err)
+				appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWait failure; err=%v \nhealthchecks:\n%s\n\n===== container logs ==\n%s\n", startErr, health, appLogs)
+				require.NoError(t, err, "app.StartAndWait failure; err=%v \nhealthchecks:\n%s\n\n===== container logs ==\n%s\n", err, health, appLogs)
 			}
 			// Test for directory redirects under https and http
 			for _, parts := range expectations {
