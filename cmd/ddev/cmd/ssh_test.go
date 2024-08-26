@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -20,8 +19,8 @@ import (
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
-	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
-		t.Skip("Skipping TestCmdSSH on Apple Silicon because of Docker Desktop failures to connect")
+	if nodeps.IsAppleSilicon() {
+		t.Skip("Skipping TestCmdSSH on Apple Silicon because of intermittent failures to connect")
 	}
 	assert := asrt.New(t)
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
