@@ -134,6 +134,15 @@ func TestListFilesInDir(t *testing.T) {
 	assert.Contains(fileList[1], "two.txt")
 }
 
+// TestListFilesInDirNoSubdirsFullPath tests ListFilesInDirNoSubdirsFullPath()
+func TestListFilesInDirNoSubdirsFullPath(t *testing.T) {
+	fileList, err := fileutil.ListFilesInDirFullPath(filepath.Join("testdata", t.Name()), true)
+	require.NoError(t, err)
+	require.Len(t, fileList, 2)
+	require.Contains(t, fileList[0], "one.txt")
+	require.Contains(t, fileList[1], "two.txt")
+}
+
 // TestReplaceStringInFile tests the ReplaceStringInFile utility function.
 func TestReplaceStringInFile(t *testing.T) {
 	assert := asrt.New(t)

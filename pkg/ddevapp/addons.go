@@ -271,7 +271,7 @@ func GatherAllManifests(app *DdevApp) (map[string]AddonManifest, error) {
 		return nil, err
 	}
 
-	dirs, err := fileutil.ListFilesInDirFullPath(metadataDir)
+	dirs, err := fileutil.ListFilesInDirFullPath(metadataDir, false)
 	if err != nil {
 		return nil, err
 	}
