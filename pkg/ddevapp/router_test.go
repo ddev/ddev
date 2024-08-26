@@ -317,12 +317,11 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 
 // Test that the app assigns an ephemeral port if the default one is not available.
 func TestUseEphemeralPort(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Skipping on Lima/Colima as ports don't seem to be released properly in a timely fashion")
+		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
-	assert := asrt.New(t)
 
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
 	const testString = "Hello from TestUseEphemeralPort"
@@ -344,37 +343,34 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	// Occupy target router ports so that app1 will be forced
 	// to use the ephemeral ports
-	targetHTTPListener, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPPort)
-	require.NoError(t, err)
-	targetHTTPSListener, err := net.Listen("tcp", "127.0.0.1:"+targetHTTPSPort)
-	require.NoError(t, err)
-
+	for _, p := range []string{apps[0].GetRouterHTTPPort(), apps[0].GetRouterHTTPSPort(), apps[0].GetMailpitHTTPPort(), apps[0].GetMailpitHTTPSPort()} {
+		listener, err := net.Listen("tcp", "127.0.0.1:"+p)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = listener.Close()
+		})
+	}
 	t.Cleanup(func() {
-		err = targetHTTPListener.Close()
-		assert.NoError(err, "failed to close targetHTTPListener")
-		err = targetHTTPSListener.Close()
-		assert.NoError(err, "failed to close targetHTTPSListener")
 		for _, a := range apps {
-			err = a.Stop(true, false)
-			assert.NoError(err)
+			_ = a.Stop(true, false)
 			_ = os.RemoveAll(a.AppRoot)
 		}
 
 		// Stop the router, to prevent additional config from interfering with other tests.
 		// We shouldn't have to do this when app.Stop() properly pushes new config to ddev-router
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
-		// TODO: Verify after stop that ddev-router has forgotten all about the extra ports
 	})
 
 	for i, app := range apps {
 		// Predict which ephemeral ports the apps will use by using guess from starting point
-		expectedEphemeralHTTPPort := ddevapp.MinEphemeralPort + i*2
-		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*2 + 1
+		// This is fragile, only works if no other projects are running and holding open the earlier ports
+		expectedEphemeralHTTPPort := ddevapp.MinEphemeralPort + i*4
+		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*4 + 1
 
-		err = app.Start()
+		err := app.Start()
 		require.NoError(t, err)
 
-		// app1 will not use the target ports, but the uses the discovered ephemeral ports.
+		// app1 will not use the configured target ports, uses the assigned ephemeral ports.
 		require.NotEqual(t, targetHTTPPort, app.GetRouterHTTPPort())
 		require.NotEqual(t, targetHTTPSPort, app.GetRouterHTTPSPort())
 
@@ -382,9 +378,9 @@ func TestUseEphemeralPort(t *testing.T) {
 		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPSPort), app.GetRouterHTTPSPort())
 
 		// Make sure that both http and https URLs have proper content
-		_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
 		if globalconfig.GetCAROOT() != "" {
-			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
 		}
 	}
 

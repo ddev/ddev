@@ -2127,9 +2127,16 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		err = app.WriteConfig()
 		require.NoError(t, err)
 
+		// After stop, ports may not be properly released yet on Lima-based systems
+		if dockerutil.IsRancherDesktop() || dockerutil.IsColima() || dockerutil.IsLima() {
+			time.Sleep(time.Second * 2)
+		}
 		startErr := app.Start()
-		require.NoError(t, startErr)
-
+		if startErr != nil {
+			existingContainers, _ := exec.RunHostCommand("docker", "ps", "-a")
+			existingProjects, _ := exec.RunHostCommand("ddev", "list")
+			require.NoError(t, startErr, "failed to start %s:%s, existing projects:'%s', existing containers=%s", dbType, dbVersion, existingProjects, existingContainers)
+		}
 		for _, tool := range []string{"mysql", "mysqladmin", "mysqldump"} {
 			cmd := tool + " --version"
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -2325,8 +2332,8 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Windows/Lima/Colima as this is tested adequately elsewhere")
+	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2371,7 +2378,8 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate Mailpit is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/api/v1/messages", `"total":0`)
+		mailpitAPIURL := "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort() + "/api/v1/messages"
+		_, _ = testcommon.EnsureLocalHTTPContent(t, mailpitAPIURL, `"total":0`)
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -3286,7 +3294,7 @@ func TestRouterNotRunning(t *testing.T) {
 }
 
 type URLRedirectExpectations struct {
-	scheme              string
+	url                 string
 	uri                 string
 	expectedRedirectURI string
 }
@@ -3352,7 +3360,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
 	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+		t.Skip("Skipping on Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because MkcertCARoot is not set, no https")
@@ -3365,12 +3373,12 @@ func TestHttpsRedirection(t *testing.T) {
 	testDir := testcommon.CreateTmpDir(t.Name())
 	appDir := filepath.Join(testDir, t.Name())
 	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", t.Name()), appDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = os.Chdir(appDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(appDir, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	_ = app.Stop(true, false)
 
@@ -3383,12 +3391,16 @@ func TestHttpsRedirection(t *testing.T) {
 	})
 
 	expectations := []URLRedirectExpectations{
-		{"https", "/subdir", "/subdir/"},
-		{"https", "/redir_abs.php", "/landed.php"},
-		{"https", "/redir_relative.php", "/landed.php"},
-		{"http", "/subdir", "/subdir/"},
-		{"http", "/redir_abs.php", "/landed.php"},
-		{"http", "/redir_relative.php", "/landed.php"},
+		{app.GetHTTPSURL(), "/redir_relative.php", "/landed.php"},
+		{app.GetHTTPURL(), "/redir_relative.php", "/landed.php"},
+	}
+
+	// The simple redirect logic in `landed.php` and /subdir can only handle default ports 80 and 443
+	if app.GetRouterHTTPSPort() == "443" && app.GetRouterHTTPPort() == "80" {
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
 	types := ddevapp.GetValidAppTypesWithoutAliases()
@@ -3411,17 +3423,17 @@ func TestHttpsRedirection(t *testing.T) {
 
 			// Do a start on the configured site.
 			app, err = ddevapp.GetActiveApp("")
-			assert.NoError(err)
-			startErr := app.StartAndWait(5)
-			assert.NoError(startErr, "app.Start() failed with projectType=%s, webserverType=%s", projectType, webserverType)
-			if startErr != nil {
-				appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+			require.NoError(t, err)
+			err = app.StartAndWait(5)
+			if err != nil {
+				t.Logf("app.Start() failed with projectType=%s, webserverType=%s, err=%v", projectType, webserverType, err)
+				appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWait failure; err=%v \nhealthchecks:\n%s\n\n===== container logs ==\n%s\n", startErr, health, appLogs)
+				require.NoError(t, err, "app.StartAndWait failure; err=%v \nhealthchecks:\n%s\n\n===== container logs ==\n%s\n", err, health, appLogs)
 			}
 			// Test for directory redirects under https and http
 			for _, parts := range expectations {
-				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
+				reqURL := parts.url + parts.uri
 				// t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				// Add extra hit to avoid occasional nil result
 				_, _, _ = testcommon.GetLocalHTTPResponse(t, reqURL, 60)
@@ -3434,21 +3446,17 @@ func TestHttpsRedirection(t *testing.T) {
 					expectedRedirect := parts.expectedRedirectURI
 					// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
 					if strings.Contains(parts.uri, "redir_abs.php") || webserverType != nodeps.WebserverNginxFPM {
-						expectedRedirect = parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.expectedRedirectURI
+						expectedRedirect = parts.url + parts.expectedRedirectURI
 					}
 					// Except the php relative redirect is always relative.
 					if strings.Contains(parts.uri, "redir_relative.php") {
 						expectedRedirect = parts.expectedRedirectURI
 					}
-					assert.EqualValues(locHeader, expectedRedirect, "For project type=%s webserver_type=%s url=%s expected redirect %s != actual %s", projectType, webserverType, reqURL, expectedRedirect, locHeader)
+					assert.EqualValues(expectedRedirect, locHeader, "For project type=%s webserver_type=%s url='%s' expected redirect '%s' != actual '%s'", projectType, webserverType, reqURL, expectedRedirect, locHeader)
 				}
 			}
 		}
 	}
-	// Change back to package dir. Lots of things will have to be cleaned up
-	// in defers, and for windows we have to not be sitting in them.
-	err = os.Chdir(packageDir)
-	assert.NoError(err)
 }
 
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
