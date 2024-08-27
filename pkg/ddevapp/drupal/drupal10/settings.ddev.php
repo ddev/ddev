@@ -48,3 +48,8 @@ $config['symfony_mailer.mailer_transport.sendmail']['configuration']['port'] = '
 // Enable verbose logging for errors.
 // https://www.drupal.org/forum/support/post-installation/2018-07-18/enable-drupal-8-backend-errorlogdebugging-mode
 $config['system.logging']['error_level'] = 'verbose';
+
+// Execute the timestamp field update hook fixing the Y2K38 bug with no timeout
+//https://www.drupal.org/node/3397596
+$settings['timestamp_field_update_y2038'] = TRUE;
+$settings['timestamp_field_update_y2038_timeout'] = 0;
