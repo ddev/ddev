@@ -82,7 +82,7 @@ func StopRouterIfNoContainers() error {
 		// Colima and Lima don't release ports very fast after container is removed
 		// see https://github.com/lima-vm/lima/issues/2536 and
 		// https://github.com/abiosoft/colima/issues/644
-		if dockerutil.IsLima() || dockerutil.IsColima() {
+		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
 			if globalconfig.DdevDebug {
 				out, err := exec.RunHostCommand("docker", "ps", "-a")
 				util.Debug("Lima/Colima stopping router, output of docker ps -a: '%v', err=%v", out, err)
