@@ -134,8 +134,8 @@ func init() {
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
-	// ddev --version may be called without Docker available.
-	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
+
+	if err != nil && dockerutil.CanRunWithoutDocker() {
 		util.Failed("Could not connect to a Docker provider. Please start or install a Docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/stable/users/install/docker-installation/")
 	}
 

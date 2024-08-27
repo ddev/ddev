@@ -1290,7 +1290,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// This is done early here so users won't see gitignored contents of .ddev for too long
 	// It also gets done by `ddev config`
-	err = PrepDdevDirectory(app)
+	err = PrepDdevDirectory(app, true)
 	if err != nil {
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}

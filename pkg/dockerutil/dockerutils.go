@@ -159,7 +159,7 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 	if DockerHost == "" {
 		DockerContext, DockerHost, err = GetDockerContext()
 		// ddev --version may be called without Docker client or context available, ignore err
-		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
+		if err != nil && !CanRunWithoutDocker() {
 			util.Failed("Unable to get Docker context: %v", err)
 		}
 		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
@@ -1903,4 +1903,20 @@ func GetContainerNames(containers []dockerTypes.Container) []string {
 // Used as a wrapper to avoid direct import for docker client.
 func IsErrNotFound(err error) bool {
 	return dockerClient.IsErrNotFound(err)
+}
+
+// CanRunWithoutDocker returns true if the command or flag can run without Docker.
+func CanRunWithoutDocker() bool {
+	if len(os.Args) < 2 {
+		return true
+	}
+	commands := map[string]bool{
+		"-v":        true,
+		"--version": true,
+		"-h":        true,
+		"--help":    true,
+		"help":      true,
+		"hostname":  true,
+	}
+	return commands[os.Args[1]]
 }

@@ -243,7 +243,7 @@ func (app *DdevApp) WriteConfig() error {
 		}
 	}
 
-	err = PrepDdevDirectory(&appcopy)
+	err = PrepDdevDirectory(&appcopy, true)
 	if err != nil {
 		return err
 	}
@@ -1422,7 +1422,7 @@ func (app *DdevApp) AppTypePrompt() error {
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
-func PrepDdevDirectory(app *DdevApp) error {
+func PrepDdevDirectory(app *DdevApp, showWarnings bool) error {
 	var err error
 	dir := app.GetConfigPath("")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -1444,7 +1444,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 
 	// Some of the listed items are wildcards or directories, and if they are, there's an error
 	// opening them and they innately get added to the .gitignore.
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, showWarnings, "**/*.example", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

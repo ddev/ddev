@@ -430,7 +430,7 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		err = ddevapp.PrepDdevDirectory(app)
+		err = ddevapp.PrepDdevDirectory(app, true)
 		if err != nil {
 			testRun = -1
 			log.Errorf("TestMain startup: ddevapp.PrepDdevDirectory() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)

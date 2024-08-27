@@ -52,6 +52,11 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 		return nil
 	}
 
+	err = PrepDdevDirectory(app, false)
+	if err != nil {
+		return err
+	}
+
 	err = fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""), GetInstalledAddonProjectFiles(app))
 	if err != nil {
 		return err
