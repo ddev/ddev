@@ -62,4 +62,4 @@ The following official add-ons are available:
 - [`ddev/ddev-mongo`](https://github.com/ddev/ddev-mongo)
 - [`ddev/ddev-sqlsrv`](https://github.com/ddev/ddev-sqlsrv)
 
-Use `ddev get --list --all` to see a list of all add-ons, including additional community-supported database types.
+Use `ddev add-on list --all` to see a list of all add-ons, including additional community-supported database types.

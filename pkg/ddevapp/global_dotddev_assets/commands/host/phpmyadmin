@@ -18,7 +18,7 @@ fi
 
 case "$answer" in
     [Yy] | [Yy][Ee][Ss])
-        ddev get ddev/ddev-phpmyadmin
+        ddev add-on get ddev/ddev-phpmyadmin
         echo "The phpMyAdmin add-on has been installed and requires a restart."
         read -p "Would you like to restart DDEV now? [Y/n] (yes): " answerrestart
         if [ -z "$answerrestart" ]; then

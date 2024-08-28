@@ -7,14 +7,14 @@ search:
 
 DDEV projects can be extended to provide additional add-ons, including services. You can define these add-ons using `docker-compose.*.yaml` files in the project’s `.ddev` directory.
 
-Anyone can create their own services with a `.ddev/docker-compose.*.yaml` file, and a growing number of popular services are supported and tested, and can be installed using the [`ddev get`](../usage/commands.md#get) command.
+Anyone can create their own services with a `.ddev/docker-compose.*.yaml` file, and a growing number of popular services are supported and tested, and can be installed using the [`ddev add-on get`](../usage/commands.md#add-on-get) command.
 
-Use `ddev get --list` to see available add-ons. To see all possible add-ons (not necessarily supported or tested), use `ddev get --list --all`.
+Use `ddev add-on list` to see available add-ons. To see all possible add-ons (not necessarily supported or tested), use `ddev add-on list --all`.
 
 For example,
 
 ```
-→  ddev get --list
+→  ddev add-on list
 ┌──────────────────────────────────────┬────────────────────────────────────────────────────┐
 │ ADD-ON                               │ DESCRIPTION                                        │
 ├──────────────────────────────────────┼────────────────────────────────────────────────────┤
@@ -79,29 +79,29 @@ For example,
 
 Officially-supported add-ons:
 
-* [Adminer](https://github.com/ddev/ddev-adminer): `ddev get ddev/ddev-adminer`.
-* [Apache Solr for Drupal](https://github.com/ddev/ddev-drupal-solr): `ddev get ddev/ddev-drupal-solr`.
-* [Beanstalkd](https://github.com/ddev/ddev-beanstalkd): `ddev get ddev/ddev-beanstalkd`.
-* [Browsersync](https://github.com/ddev/ddev-browsersync): `ddev get ddev/ddev-browsersync`.
-* [cron](https://github.com/ddev/ddev-cron): `ddev get ddev/ddev-cron`.
-* [Elasticsearch](https://github.com/ddev/ddev-elasticsearch): `ddev get ddev/ddev-elasticsearch`.
-* [Memcached](https://github.com/ddev/ddev-memcached): `ddev get ddev/ddev-memcached`.
-* [MongoDB](https://github.com/ddev/ddev-mongo): `ddev get ddev/ddev-mongo`.
-* [PDFreactor](https://github.com/ddev/ddev-pdfreactor): `ddev get ddev/ddev-pdfreactor`
-* [Platform.sh](https://github.com/ddev/ddev-platformsh): `ddev get ddev/ddev-platformsh`
-* [Proxy Support](https://github.com/ddev/ddev-proxy-support): `ddev get ddev/ddev-proxy-support`.
-* [Redis Commander](https://github.com/ddev/ddev-redis-commander): `ddev get ddev/ddev-redis-commander`.
-* [Redis](https://github.com/ddev/ddev-redis): `ddev get ddev/ddev-redis`.
-* [Selenium Standalone Chrome](https://github.com/ddev/ddev-selenium-standalone-chrome): `ddev get ddev/ddev-selenium-standalone-chrome`.
-* [Varnish](https://github.com/ddev/ddev-varnish): `ddev get ddev/ddev-varnish`.
+* [Adminer](https://github.com/ddev/ddev-adminer): `ddev add-on get ddev/ddev-adminer`.
+* [Apache Solr for Drupal](https://github.com/ddev/ddev-drupal-solr): `ddev add-on get ddev/ddev-drupal-solr`.
+* [Beanstalkd](https://github.com/ddev/ddev-beanstalkd): `ddev add-on get ddev/ddev-beanstalkd`.
+* [Browsersync](https://github.com/ddev/ddev-browsersync): `ddev add-on get ddev/ddev-browsersync`.
+* [cron](https://github.com/ddev/ddev-cron): `ddev add-on get ddev/ddev-cron`.
+* [Elasticsearch](https://github.com/ddev/ddev-elasticsearch): `ddev add-on get ddev/ddev-elasticsearch`.
+* [Memcached](https://github.com/ddev/ddev-memcached): `ddev add-on get ddev/ddev-memcached`.
+* [MongoDB](https://github.com/ddev/ddev-mongo): `ddev add-on get ddev/ddev-mongo`.
+* [PDFreactor](https://github.com/ddev/ddev-pdfreactor): `ddev add-on get ddev/ddev-pdfreactor`
+* [Platform.sh](https://github.com/ddev/ddev-platformsh): `ddev add-on get ddev/ddev-platformsh`
+* [Proxy Support](https://github.com/ddev/ddev-proxy-support): `ddev add-on get ddev/ddev-proxy-support`.
+* [Redis Commander](https://github.com/ddev/ddev-redis-commander): `ddev add-on get ddev/ddev-redis-commander`.
+* [Redis](https://github.com/ddev/ddev-redis): `ddev add-on get ddev/ddev-redis`.
+* [Selenium Standalone Chrome](https://github.com/ddev/ddev-selenium-standalone-chrome): `ddev add-on get ddev/ddev-selenium-standalone-chrome`.
+* [Varnish](https://github.com/ddev/ddev-varnish): `ddev add-on get ddev/ddev-varnish`.
 
 ## Managing Installed Add-Ons
 
-Add-ons installed in DDEV v1.22+ are versioned and can be viewed by running `ddev get --installed`.
+Installed add-ons are versioned and can be viewed by running `ddev add-on list --installed`.
 
-You can update an add-on by running `ddev get <addonname>`, or remove it by running `ddev get --remove <addonname>`.
+You can update an add-on by running `ddev add-on get <addonname>`, or remove it by running `ddev add-on remove <addonname>`.
 
-If you have add-ons that were installed before v1.22, update them with `ddev get <addonname>` and they will be versioned and available in `ddev get --installed`.
+If you have add-ons that were installed before v1.22, update them with `ddev add-on get <addonname>` and they will be versioned and available in `ddev add-on list --installed`.
 
 ## Adding Custom Configuration to an Add-on
 
@@ -118,9 +118,9 @@ Sometimes it's necessary to add custom configuration to an add-on. For example, 
 
 Using the second option (`docker-compose.redis-7_extra.yaml`) allows you to update to future versions of `ddev-redis-7` without losing your configuration, and without the upgrade being blocked because you removed the `#ddev-generated` line from the upstream `docker-compose.redis-7.yaml`.
 
-## Creating an Additional Service for `ddev get`
+## Creating an Additional Service for `ddev add-on`
 
-Anyone can create an add-on for `ddev get`. See [this screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template):
+Anyone can create an add-on for `ddev add-on`. See [this screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template):
 
 1. Click “Use this template” on [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template).
 2. Create a new repository.
@@ -133,7 +133,7 @@ Anyone can create an add-on for `ddev get`. See [this screencast](https://www.yo
 
 The `install.yaml` is a simple YAML file with a few main sections:
 
-* `name`: The add-on name. This will be used in `ddev get --remove` and similar commands. If the repository name is `ddev-solr`, for example, a good `name` will be `solr`.
+* `name`: The add-on name. This will be used in the various `ddev add-on` commands. If the repository name is `ddev-solr`, for example, a good `name` will be `solr`.
 * `pre_install_actions`: an array of Bash statements or scripts to be executed before `project_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
@@ -145,7 +145,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
 
 * `dependencies`: an array of add-ons that this add-on depends on.
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s `.ddev` directory.
-* `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`. The actions are executed in the context of the target project’s `.ddev` directory.
+* `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev add-on remove`. The actions are executed in the context of the target project’s `.ddev` directory.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
 
 In any stanza of `pre_install_actions` and `post_install_actions` you can:

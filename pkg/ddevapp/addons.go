@@ -211,7 +211,7 @@ func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, ba
 	var ok bool
 
 	if manifestData, ok = manifests[addonName]; !ok {
-		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev get --installed to see installed add-ons.\nIf yours is not there it may have been installed before DDEV v1.22.0.\nUse 'ddev get' to update it.", addonName)
+		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev add-on list --installed` to see installed add-ons.\n", addonName)
 	}
 
 	// Execute any removal actions

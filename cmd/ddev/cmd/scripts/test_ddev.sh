@@ -52,7 +52,7 @@ grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen
 
 header "installed DDEV add-ons"
 
-ddev get --installed
+ddev add-on list --installed
 
 header "mutagen situation"
 
