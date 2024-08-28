@@ -57,19 +57,12 @@
   docker run --rm $DOCKER_IMAGE bash -c 'php --version | grep -v "with Xdebug"'
 }
 
-@test "verify apt keys are not expiring" {
-    DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90}
+@test "verify apt keys are not expiring within ${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90} days" {
   if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
   fi
-  docker exec -e "max=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} bash -c '
-    dates=$(apt-key list 2>/dev/null | awk "/\[expires/ { gsub(/[\[\]]/, \"\"); print \$6;}")
-    for item in ${dates}; do
-      today=$(date -I)
-      let diff=($(date +%s -d ${item})-$(date +%s -d ${today}))/86400
-      if [ ${diff} -le ${max} ]; then
-        exit 1
-      fi
-    done
-  '
+  docker cp ${TEST_SCRIPT_DIR}/check_key_expirations.sh ${CONTAINER_NAME}:/tmp
+  docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} /tmp/check_key_expirations.sh
+
 }
+

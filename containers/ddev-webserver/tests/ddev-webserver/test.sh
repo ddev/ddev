@@ -12,6 +12,10 @@ if [[ "${DOCKER_REPO}" == "*prod*" ]]; then
   IS_HARDENED=true
 fi
 
+# Find the directory of this script
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+export TEST_SCRIPT_DIR=${DIR}/../../../testscripts
+
 export HOST_HTTP_PORT="8080"
 export HOST_HTTPS_PORT="8443"
 export CONTAINER_HTTP_PORT="80"
@@ -71,7 +75,7 @@ if ! containerwait; then
     echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
     exit 100
 fi
-bats tests/ddev-webserver/general.bats
+bats --show-output-of-passing-tests tests/ddev-webserver/general.bats
 
 cleanup
 
