@@ -151,7 +151,7 @@ func TestPrepDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	// Prep the directory.
-	err = ddevapp.PrepDdevDirectory(app, true)
+	err = ddevapp.PrepDdevDirectory(app)
 	assert.NoError(err)
 
 	// Read directory info an ensure it exists.
@@ -296,7 +296,7 @@ func TestConfigCommand(t *testing.T) {
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal("docroot", app.Docroot)
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for apptype %v (expected %s got %s) (%v)", app.Type, testValues[phpVersionPos], app.PHPVersion, app)
-		err = ddevapp.PrepDdevDirectory(app, true)
+		err = ddevapp.PrepDdevDirectory(app)
 		assert.NoError(err)
 	}
 }
@@ -336,7 +336,7 @@ func TestConfigCommandProjectNormalization(t *testing.T) {
 				_ = os.Chdir(origDir)
 			})
 
-			err = ddevapp.PrepDdevDirectory(app, true)
+			err = ddevapp.PrepDdevDirectory(app)
 			assert.NoError(err)
 		})
 	}
@@ -392,7 +392,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		assert.Equal(name, app.Name)
 		assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 		assert.Equal(testDocrootName, app.Docroot)
-		err = ddevapp.PrepDdevDirectory(app, true)
+		err = ddevapp.PrepDdevDirectory(app)
 		assert.NoError(err)
 	}
 }
@@ -451,7 +451,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	assert.Equal(name, app.Name)
 	assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
-	err = ddevapp.PrepDdevDirectory(app, true)
+	err = ddevapp.PrepDdevDirectory(app)
 	assert.NoError(err)
 }
 

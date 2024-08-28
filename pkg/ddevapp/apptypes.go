@@ -227,7 +227,7 @@ func init() {
 // provided app is the apptype has a settingsCreator function.
 // It also preps the ddev directory, including setting up the .ddev gitignore
 func (app *DdevApp) CreateSettingsFile() (string, error) {
-	err := PrepDdevDirectory(app, false)
+	err := PrepDdevDirectory(app)
 	if err != nil {
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
@@ -279,7 +279,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		// Don't create gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
-			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), true, filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
+			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 			}
 		}

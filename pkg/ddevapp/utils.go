@@ -227,7 +227,7 @@ type ignoreTemplateContents struct {
 
 // CreateGitIgnore will create a .gitignore file in the target directory if one does not exist.
 // Each value in ignores will be added as a new line to the .gitignore.
-func CreateGitIgnore(targetDir string, showWarnings bool, ignores ...string) error {
+func CreateGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
 	existingContent := ""
 
@@ -239,9 +239,7 @@ func CreateGitIgnore(targetDir string, showWarnings bool, ignores ...string) err
 
 		// If we sigFound the file and did not find the signature in .ddev/.gitignore, warn about it.
 		if !sigFound {
-			if showWarnings {
-				util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
-			}
+			util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
 			return nil
 		}
 		// Read the existing content for future comparison.
