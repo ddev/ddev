@@ -2,6 +2,7 @@
 
 # Find the directory of this script
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+export TEST_SCRIPT_DIR=${DIR}/../../testscripts
 
 set -o errexit
 set -o pipefail
@@ -20,5 +21,5 @@ export CURRENT_ARCH=$(../get_arch.sh)
 
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
-bats test || (echo "bats tests failed for DB_TYPE ${DB_TYPE} DB_VERSION=${DB_VERSION} TAG=${TAG}" && exit 2)
+bats --show-output-of-passing-tests test || (echo "bats tests failed for DB_TYPE ${DB_TYPE} DB_VERSION=${DB_VERSION} TAG=${TAG}" && exit 2)
 printf "Test successful for DB_TYPE ${DB_TYPE} DB_VERSION=${DB_VERSION} TAG=${TAG}\n\n"

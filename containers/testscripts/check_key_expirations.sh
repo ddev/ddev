@@ -11,7 +11,7 @@ directories=("/etc/apt/trusted.gpg.d/" "/usr/share/keyrings/")
 today=$(date +%s)
 # Days ahead to check for expiration
 days_ahead=${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90}
-printf "Checking key expirations for ${days_ahead} days ahead"
+printf "Checking key expirations for ${days_ahead} days ahead\n"
 # Seconds ahead (DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION days)
 seconds_ahead=$((days_ahead * 24 * 3600))
 
@@ -26,7 +26,7 @@ for dir in "${directories[@]}"; do
     shopt -s nullglob
     for keyring in *.{gpg,asc}; do
         # Skip specific keyrings
-        if [[ "$keyring" == "debian-archive-removed-keys.gpg" ]]; then
+        if [[ "$keyring" =~ -removed-keys\.gpg$ ]]; then
             continue
         fi
 
@@ -42,20 +42,26 @@ for dir in "${directories[@]}"; do
         fi
 
         echo "Checking keyring: $keyring"
-        # List keys using GPG, parse with AWK
         gpg --no-default-keyring --keyring "$keyring_to_check" --list-keys --with-colons --fixed-list-mode | \
         awk -F: -v today="$today" -v seconds_ahead="$seconds_ahead" '
             /^pub/ {keyid = $5; expiry_date = $7}
             /^uid/ && keyid {
-                # Calculate the time until expiration
-                time_to_expire = expiry_date - today;
-                # print "Key ID:", keyid, "Name:", $10, "Expires in:", int(time_to_expire / 86400), "days"
-                # Check if the key expires within DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION days
-                if (expiry_date != "" && expiry_date > 0 && time_to_expire <= seconds_ahead) {
-                    print "Key ID:", keyid, "Name:", $10, "Expires in:", int(time_to_expire / 86400), "days";
-                    exit 1;
+                # Calculate the time until expiration only if the key has an expiration date
+                if (expiry_date == 0 || expiry_date == "") {
+                    print "Key ID:", keyid, "Name:", $10, "has no expiration date"
+                } else if (expiry_date > 0) {
+                    time_to_expire = expiry_date - today;
+                    print "Key ID:", keyid, "Name:", $10, "Expires in:", int(time_to_expire / 86400), "days"
+                    # Check if the key expires within DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION days
+                    if (expiry_date != "" && expiry_date > 0 && time_to_expire <= seconds_ahead) {
+                        print "Key ID:", keyid, "Name:", $10, "Expires in:", int(time_to_expire / 86400), "days";
+                        exit 1;
+                    }
+                    keyid = ""; expiry_date = "";
+                } else {
+                    print "Error: Key MESSUP negative:", keyid, "Expiry date:", expiry_date, "Name:", $10, "Expires in:", int(time_to_expire / 86400), "days"
+                    exit 2
                 }
-                keyid = ""; expiry_date = "";
             }
         '
     done
