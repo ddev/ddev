@@ -18,5 +18,5 @@ export CURRENT_ARCH=$(../get_arch.sh)
 
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
-bats --verbose-run --show-output-of-passing-tests test || (echo "bats tests failed for IMAGE=${IMAGE}" && exit 2)
+bats --show-output-of-passing-tests test || (echo "bats tests failed for IMAGE=${IMAGE}" && exit 2)
 printf "Test successful for IMAGE=${IMAGE}\n\n"
