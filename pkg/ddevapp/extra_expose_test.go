@@ -2,12 +2,12 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/netutil"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -65,20 +65,10 @@ func TestExtraPortExpose(t *testing.T) {
 	}
 
 	for i, p := range portsToTest {
-		baseURL := getBaseURL(app.GetPrimaryURL())
+		baseURL := netutil.BaseURLFromFullURL(app.GetPrimaryURL())
 		url := fmt.Sprintf("%s:%s/testfile.html", baseURL, p)
 		out, resp, err := testcommon.GetLocalHTTPResponse(t, url)
 		require.NoError(t, err, "failed to get hit url %s, out=%s, resp=%v err=%v", url, out, resp, err)
 		require.Contains(t, out, fmt.Sprintf("this is test%d", i+1))
 	}
-}
-
-// getBaseURL returns the base url (http://hostname.example.com) from a URL, without port
-func getBaseURL(fullURL string) string {
-	parsedURL, err := url.Parse(fullURL)
-	if err != nil {
-		return ""
-	}
-	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Hostname())
-	return baseURL
 }
