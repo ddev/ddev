@@ -1,7 +1,9 @@
 package netutil
 
 import (
+	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"slices"
 	"syscall"
@@ -91,4 +93,14 @@ func GetLocalIPs() ([]string, error) {
 	}
 
 	return localIPs, nil
+}
+
+// BaseURLFromFullURL returns the base url (http://hostname.example.com) from a URL, without port
+func BaseURLFromFullURL(fullURL string) string {
+	parsedURL, err := url.Parse(fullURL)
+	if err != nil {
+		return ""
+	}
+	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Hostname())
+	return baseURL
 }
