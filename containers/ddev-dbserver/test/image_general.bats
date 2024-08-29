@@ -16,6 +16,10 @@ function setup {
   if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
   fi
+  if [ "${DB_TYPE:-}" = "mysql" ] && [[ ${DB_VERSION} =~ ^5.[56]$ ]]; then
+    skip "Skipping mysql:${DB_VERSION} as its keys are long since expired"
+  fi
+
   docker cp ${TEST_SCRIPT_DIR}/check_key_expirations.sh ${CONTAINER_NAME}:/tmp
   docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} /tmp/check_key_expirations.sh
 
