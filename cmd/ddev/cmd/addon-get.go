@@ -24,13 +24,14 @@ import (
 
 // AddonGetCmd is the "ddev add-on get" command
 var AddonGetCmd = &cobra.Command{
-	Use:     "get <addonOrURL> [project]",
+	Use:     "get <addonOrURL>",
 	Aliases: []string{"install"},
-	Args:    cobra.MinimumNArgs(1),
+	Args:    cobra.ExactArgs(1),
 	Short:   "Get/Download a 3rd party add-on (service, provider, etc.)",
 	Long:    `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev add-on get ddev/ddev-redis
 ddev add-on get ddev/ddev-redis --version v1.0.4
+ddev add-on get ddev/ddev-redis --project my-project
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
 ddev add-on get /path/to/package
 ddev add-on get /path/to/tarball.tar.gz
@@ -48,14 +49,10 @@ ddev add-on get /path/to/tarball.tar.gz
 			verbose = true
 		}
 
-		apps, err := getRequestedProjects(args[1:], false)
+		app, err := ddevapp.GetActiveApp(cmd.Flag("project").Value.String())
 		if err != nil {
-			util.Failed("Unable to get project(s) %v: %v", args, err)
+			util.Failed("Unable to get project %v: %v", cmd.Flag("project").Value.String(), err)
 		}
-		if len(apps) == 0 {
-			util.Failed("No project(s) found")
-		}
-		app := apps[0]
 		err = os.Chdir(app.AppRoot)
 		if err != nil {
 			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
@@ -349,6 +346,8 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
+	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
+	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 
 	AddonCmd.AddCommand(AddonGetCmd)
 }
