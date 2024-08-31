@@ -45,6 +45,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     environment:
       - COLUMNS
+      - BITNAMI_VOLUME_DIR=/var/lib
       - DDEV_DATABASE
       - DDEV_DATABASE_FAMILY
       - DDEV_GOARCH

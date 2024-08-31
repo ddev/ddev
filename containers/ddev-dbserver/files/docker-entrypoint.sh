@@ -3,7 +3,10 @@ set -x
 set -eu
 set -o pipefail
 
-DATADIR=/bitnami/mysql/data
+# DB_BASE_DIR is how bitnami specifies the datadir
+# DB_BASE_DIR=${DB_BASE_DIR:/var/lib/mysql}
+# Review this, or set via mysql settings
+DATADIR=${DB_BASE_DIR:/var/lib/mysql}
 
 SOCKET=/var/tmp/mysql.sock
 rm -f /tmp/healthy
@@ -134,8 +137,6 @@ fi
 echo $server_db_version >${DATADIR}/db_mariadb_version.txt
 
 # TODO: Why aren't we just doing this with /etc/skel?
-id -a
-echo HOME=$HOME
 cp -r /home/{.my.cnf,.bashrc} /home/$(whoami)
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
 
