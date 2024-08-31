@@ -3,6 +3,8 @@
 # Build a ddev-dbserver image for variety of mariadb/mysql
 # and per architecture, optionally push
 # By default loads to local docker
+# Example:
+# ./build_image.sh --db-type=mysql --db-major-version=8.4 --archs=linux/arm64 --tag=v1.23.4-22-gfe969a5bb-dirty --docker-args=
 
 set -eu -o pipefail
 
@@ -105,7 +107,6 @@ fi
 
 BASE_IMAGE=${DB_TYPE}
 
-# For mysql, we have to use our own base images at ddev/mysql
 set -x
 
 if [ ${DB_TYPE} = "mysql" ]; then
