@@ -109,6 +109,7 @@ BASE_IMAGE=${DB_TYPE}
 
 set -x
 
+# TODO: Use bitnami for all mysql, or for some?
 if [ ${DB_TYPE} = "mysql" ]; then
   BASE_IMAGE=bitnami/mysql
 fi
