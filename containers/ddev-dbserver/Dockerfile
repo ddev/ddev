@@ -63,6 +63,7 @@ RUN rm -rf /var/lib/mysql /etc/mysql
 RUN mkdir -p /var/lib/mysql
 
 ADD files /
+# TODO: Do this only if needed, or perhaps put these files elsewhere
 RUN mkdir -p /opt/bitnami/mysql/tmp && chmod 777 /opt/bitnami/mysql/tmp
 
 ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock

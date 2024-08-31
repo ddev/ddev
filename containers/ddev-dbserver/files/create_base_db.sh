@@ -34,6 +34,7 @@ else
     fi
     mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=/var/lib/mysql
 fi
+# TODO: Why was this changed to MYSQL_UNIX_PORT, review
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
 mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
@@ -77,13 +78,9 @@ mysqladmin -uroot --socket=${MYSQL_UNIX_PORT} password root
 
 if [[  "${mysqld_version%%%.*}" = ^8.[04]$ ]]; then
     mysql -uroot -proot --socket=${MYSQL_UNIX_PORT} <<EOF
-#         ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_PASSWORD';
-#         ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
-#         ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
-                ALTER USER 'db'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_PASSWORD';
-                ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
-                ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
-
+    ALTER USER 'db'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_PASSWORD';
+    ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
+    ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
 EOF
 fi
 
