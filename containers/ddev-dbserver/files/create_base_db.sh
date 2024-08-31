@@ -80,6 +80,10 @@ if [[  "${mysqld_version%%%.*}" = ^8.[04]$ ]]; then
         ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_PASSWORD';
         ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
         ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
+#                 ALTER USER 'db'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_PASSWORD';
+#                 ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
+#                 ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
+
 EOF
 fi
 

@@ -3,6 +3,8 @@ set -x
 set -eu
 set -o pipefail
 
+DATADIR=/bitnami/mysql/data
+
 SOCKET=/var/tmp/mysql.sock
 rm -f /tmp/healthy
 
@@ -50,14 +52,14 @@ if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
     mkdir -p "${target}"
     cd "${target}"
     gunzip -c ${snapshot} | ${STREAMTOOL} -x
-    rm -rf /var/lib/mysql/*
+    rm -rf ${DATADIR}/*
   # Otherwise use it as is from the directory
   elif [ -d "$snapshot" ] ; then
     echo "Restoring from snapshot directory $snapshot"
     target="${snapshot}"
     # Ugly macOS .DS_Store in this directory can break the restore
     find ${snapshot} -name .DS_Store -print0 | xargs rm -f
-    rm -rf /var/lib/mysql/*
+    rm -rf ${DATADIR}/*
   else
     echo "$snapshot does not exist, not attempting restore of snapshot"
     unset snapshot
@@ -82,7 +84,7 @@ fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase/base_db.gz)
 # or from a provided $snapshot_dir.
-if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
+if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
     if [ -z "${snapshot:-}" ] ; then
@@ -96,16 +98,16 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     fi
     name=$(basename $target)
 
-    rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*
-    ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
-    ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
-    echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
+    rm -rf ${DATADIR}/* ${DATADIR}/.[a-z]*
+    ${BACKUPTOOL} --datadir=${DATADIR} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
+    ${BACKUPTOOL} --datadir=${DATADIR} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
+    echo $server_db_version >${DATADIR}/db_mariadb_version.txt
     echo "Database initialized from ${target}"
     rm -f /tmp/initializing
 fi
 
 # db_mariadb_version.txt may be "mariadb_10.5" or "mysql_8.0" or old "10.0" or "8.0"
-database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
+database_db_version=$(cat ${DATADIR}/db_mariadb_version.txt)
 # If we have an old-style reference, like "10.5", prefix it with the database type
 if [ "${database_db_version#*_}" = "${database_db_version}" ]; then
   database_db_version="${server_db_version%_*}_${database_db_version}"
@@ -129,9 +131,12 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
 fi
 
 # And update the server db version we have here.
-echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
+echo $server_db_version >${DATADIR}/db_mariadb_version.txt
 
-cp -r /home/{.my.cnf,.bashrc} ~/
+# TODO: Why aren't we just doing this with /etc/skel?
+id -a
+echo HOME=$HOME
+cp -r /home/{.my.cnf,.bashrc} /home/$(whoami)
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
 
 echo
