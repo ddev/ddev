@@ -1,4 +1,4 @@
-FROM gitpod/workspace-base:latest as workspace-base
+FROM gitpod/workspace-base:latest AS workspace-base
 SHELL ["/bin/bash", "-c"]
 
 USER root

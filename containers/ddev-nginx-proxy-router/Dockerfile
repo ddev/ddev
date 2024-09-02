@@ -21,7 +21,7 @@ RUN apt-get -qq update && \
         ca-certificates certbot curl iputils-ping less python3-certbot-nginx procps telnet vim wget && \
     apt-get autoremove -y && \
     apt-get clean -y && \
-	rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 
 # Download docker-gen
 RUN set -eu -o pipefail && \
@@ -42,7 +42,7 @@ RUN set -eu -o pipefail && \
 
 # Configure Nginx and apply fix for very long server names
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
- && sed -i 's/worker_processes  1/worker_processes  auto/' /etc/nginx/nginx.conf
+    && sed -i 's/worker_processes  1/worker_processes  auto/' /etc/nginx/nginx.conf
 
 # We don't want the default.conf provided by nginx package
 RUN rm -f /etc/nginx/conf.d/default.conf
