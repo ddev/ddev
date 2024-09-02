@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:v1.23.4 as ddev-webserver-base
+FROM ddev/ddev-php-base:v1.23.4 AS ddev-webserver-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -74,7 +74,7 @@ RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariad
 
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
-FROM ddev-webserver-base as ddev-webserver-dev-base
+FROM ddev-webserver-base AS ddev-webserver-dev-base
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 
@@ -194,7 +194,7 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### This could be known as ddev-webserver-dev as it's development-env targeted
 ### But for historical reasons, it's just ddev-webserver
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
-FROM scratch as ddev-webserver
+FROM scratch AS ddev-webserver
 ENV PHP_DEFAULT_VERSION="8.2"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
@@ -221,7 +221,7 @@ CMD ["/start.sh"]
 ### ---------------------------ddev-webserver-prod-base--------------------------------------
 ### Build ddev-webserver-prod-base from ddev-webserver-base
 ### This image is aimed at actual hardened production environments
-FROM ddev-webserver-base as ddev-webserver-prod-base
+FROM ddev-webserver-base AS ddev-webserver-prod-base
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 ARG TARGETPLATFORM
@@ -304,7 +304,7 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### ---------------------------ddev-webserver-prod--------------------------------------
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
-FROM scratch as ddev-webserver-prod
+FROM scratch AS ddev-webserver-prod
 ENV PHP_DEFAULT_VERSION="8.2"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf

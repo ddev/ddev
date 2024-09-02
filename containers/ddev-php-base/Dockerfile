@@ -1,17 +1,17 @@
 ### ---------------------------base--------------------------------------
 ### Build the base Debian image that will be used in every other image
-FROM debian:bookworm-slim as base
+FROM debian:bookworm-slim AS base
 
 RUN ls -l $(which dpkg-split) && ls -l $(which dpkg-deb)
 RUN for item in dpkg-split dpkg-deb; do \
-  if [ ! -f /usr/sbin/$item ]; then \
-    ln -sf /usr/bin/$item /usr/sbin/$item; \
-  fi; \
+    if [ ! -f /usr/sbin/$item ]; then \
+        ln -sf /usr/bin/$item /usr/sbin/$item; \
+    fi; \
 done
 RUN for item in tar rm; do \
-  if [ ! -f /usr/sbin/$item ]; then \
-    ln -sf /bin/$item /usr/sbin/$item; \
-  fi; \
+    if [ ! -f /usr/sbin/$item ]; then \
+        ln -sf /bin/$item /usr/sbin/$item; \
+    fi; \
 done
 
 RUN ls -l /usr/sbin/dpkg-split /usr/sbin/dpkg-deb /usr/sbin/tar /usr/sbin/rm
@@ -37,7 +37,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 ### See https://github.com/ddev/ddev/issues/6159
 ### We don't need to recompile every Xdebug library https://xdebug.org/docs/compat (only PHP 8.0, 8.1, 8.2 can have Xdebug 3.2)
 ### PECL does not allow you to install multiple versions of Xdebug, so there is `rm -f xdebug.reg`
-FROM base as ddev-xdebug-build
+FROM base AS ddev-xdebug-build
 SHELL ["/bin/bash", "-c"]
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb && rm -f /tmp/debsuryorg-archive-keyring.deb && \
@@ -77,7 +77,7 @@ ARG BUILDPLATFORM
 SHELL ["/bin/bash", "-c"]
 
 RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-        | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
 RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
 http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
 
