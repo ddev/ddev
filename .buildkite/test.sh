@@ -26,8 +26,10 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     docker context use default
     # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
     if command -v orb 2>/dev/null ; then
+      docker context use orbstack
       echo "Starting orbstack" && (nohup orb start &)
     else
+      docker context use desktop-linux
       open -a Docker
     fi
     sleep 5
