@@ -21,7 +21,7 @@ function setup {
   fi
 
   docker cp ${TEST_SCRIPT_DIR}/check_key_expirations.sh ${CONTAINER_NAME}:/tmp
-  docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} /tmp/check_key_expirations.sh
+  docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} /tmp/check_key_expirations.sh >&3
 
 }
 
