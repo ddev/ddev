@@ -36,6 +36,7 @@ RUN apt-get install -y postgresql-common && yes | /usr/share/postgresql-common/p
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     libcap2-bin \
+    librsvg2-bin libmagickcore-6.q16-6-extra \
     locales-all \
     mariadb-client \
     postgresql-client \
