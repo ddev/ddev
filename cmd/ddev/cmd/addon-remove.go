@@ -15,12 +15,13 @@ var AddonRemoveCmd = &cobra.Command{
 	Short: "Remove a DDEV add-on which was previously installed in this project",
 	Example: `ddev add-on remove someaddonname,
 ddev add-on remove someowner/ddev-someaddonname,
-ddev add-on remove ddev-someaddonname
+ddev add-on remove ddev-someaddonname,
+ddev add-on remove ddev-someaddonname --project my-project
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp(cmd.Flag("project").Value.String())
 		if err != nil {
-			util.Failed("Unable to find active project: %v", err)
+			util.Failed("Unable to get project %v: %v", cmd.Flag("project").Value.String(), err)
 		}
 
 		origDir, _ := os.Getwd()
@@ -48,5 +49,7 @@ ddev add-on remove ddev-someaddonname
 
 func init() {
 	AddonRemoveCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
+	AddonRemoveCmd.Flags().String("project", "", "Name of the project to remove the add-on from")
+	_ = AddonRemoveCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 	AddonCmd.AddCommand(AddonRemoveCmd)
 }

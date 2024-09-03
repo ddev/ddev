@@ -633,6 +633,7 @@ Download an add-on (service, provider, etc.).
 
 Flags:
 
+* `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
 * `--version <version>`: Specify a version to download
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
 
@@ -656,6 +657,9 @@ ddev add-on get /path/to/package
 
 # Copy an add-on from a tarball in another directory
 ddev add-on get /path/to/tarball.tar.gz
+
+# Download the official Redis add-on and install it into a project named "my-project"
+ddev add-on get ddev/ddev-redis --project my-project
 ```
 
 In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
@@ -666,6 +670,7 @@ Remove an installed add-on. Accepts the full add-on name, the short name of the 
 
 Flags:
 
+* `--project <projectName>`: Specify a project to remove the add-on from. Defaults to checking for a project in the current directory.
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
 
 Example:
@@ -674,6 +679,7 @@ Example:
 ddev add-on remove redis
 ddev add-on remove ddev-redis
 ddev add-on remove ddev/ddev-redis
+ddev add-on remove ddev/ddev-redis --project my-project
 ```
 
 ### `add-on list`
@@ -684,6 +690,7 @@ Flags:
 
 * `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--installed`: List installed add-ons
+* `--project <projectName>`: Specify a project to remove the add-on from. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
 
 Example:
 
@@ -696,6 +703,9 @@ ddev add-on list --all
 
 # List installed add-ons
 ddev add-on list --installed
+
+# List installed add-ons for a specific project
+ddev add-on list --installed --project my-project
 ```
 
 ## `heidisql`

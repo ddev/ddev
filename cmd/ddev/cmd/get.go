@@ -66,8 +66,21 @@ ddev get --remove ddev-someaddonname
 		if len(args) < 1 {
 			util.Failed("You must specify an add-on to download")
 		}
+		if len(args) > 1 {
+			// Update --project flag if projects were passed as args.
+			apps, err := getRequestedProjects(args[1:], false)
+			if err != nil {
+				util.Failed("Unable to get project(s) %v: %v", args, err)
+			}
+			if len(apps) > 0 {
+				err = cmd.Flag("project").Value.Set(apps[0].GetName())
+				if err != nil {
+					util.Failed("Unable to set --project flag %v: %v", apps[0].GetName(), err)
+				}
+			}
+		}
 		// Hand off execution for ddev get <add-on>
-		AddonGetCmd.Run(cmd, args)
+		AddonGetCmd.Run(cmd, []string{args[0]})
 	},
 }
 
@@ -78,5 +91,6 @@ func init() {
 	Get.Flags().String("remove", "", `Remove a ddev-get add-on`)
 	Get.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
+	Get.Flags().String("project", "", "Name of the project to install the add-on in")
 	RootCmd.AddCommand(Get)
 }

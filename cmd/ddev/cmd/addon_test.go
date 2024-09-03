@@ -144,6 +144,48 @@ func TestCmdAddonInstalled(t *testing.T) {
 	assert.NoError(err, "unable to ddev add-on get redis: %v, output='%s'", err, out)
 }
 
+// TestCmdAddonProjectFlag tests the `--project` flag in `ddev add-on` subcommands
+func TestCmdAddonProjectFlag(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	// Explicitly don't chdir to the project
+
+	t.Cleanup(func() {
+		_, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "redis", "--project", site.Name)
+		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
+	})
+
+	// Install the add-on using the `--project` flag
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--project", site.Name, "--json-output")
+	require.NoError(t, err, "failed ddev add-on get ddev/ddev-redis --project %s --json-output: %v (output='%s')", site.Name, err, out)
+
+	redisManifest := getManifestFromLogs(t, out)
+	require.NoError(t, err)
+
+	installedOutput, err := exec.RunHostCommand(DdevBin, "add-on", "list", "--installed", "--project", site.Name, "--json-output")
+	require.NoError(t, err, "failed ddev add-on list --installed --project %s --json-output: %v (output='%s')", site.Name, err, installedOutput)
+	installedManifests := getManifestMapFromLogs(t, installedOutput)
+
+	require.NotEmptyf(t, redisManifest["Version"], "redis manifest is empty: %v", redisManifest)
+	assert.Equal(redisManifest["Version"], installedManifests["redis"]["Version"])
+
+	// Remove the add-on using the `--project` flag
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev/ddev-redis", "--project", site.Name)
+	require.NoError(t, err, "unable to ddev add-on remove ddev/ddev-redis --project %s: %v, output='%s'", site.Name, err, out)
+
+	// Now make sure we put it back so it can be removed in cleanup
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--project", site.Name)
+	assert.NoError(err, "unable to ddev add-on get ddev/ddev-redis --project %s: %v, output='%s'", site.Name, err, out)
+}
+
 // getManifestFromLogs returns the manifest built from 'raw' section of
 // ddev add-on get <project> -j output
 func getManifestFromLogs(t *testing.T, jsonOut string) map[string]interface{} {
