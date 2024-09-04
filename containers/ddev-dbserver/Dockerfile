@@ -35,7 +35,6 @@ RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
 # and remove it here
 USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
-RUN id -a
 RUN mkdir -p /var/lib/apt/lists/partial
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
 
@@ -52,11 +51,16 @@ RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch
     percona-release setup ${percona_setup}; \
     apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
-# TODO: This is just temp hack to get in here, it should either use repository
-# or use a curl from their download
-ADD /percona-xtrabackup-84_8.4.0-1-1.bookworm_arm64.deb /tmp
-RUN if ! command -v xtrabackup ; then apt install -y /tmp/percona-xtrabackup-84*; fi && rm /tmp/percona*deb
-
+# TODO: This is just temp hack to get in here, it should end up using their `percona-release setup pxb84-lts` tool
+# Currently broken due to https://perconadev.atlassian.net/issues/PXB-3361
+RUN <<EOF
+    arch=$(dpkg --print-architecture)
+    if [ "${DB_VERSION}" = "8.4" ] ; then
+    curl -L -s --fail -o /tmp/xtrabackup.deb https://repo.percona.com/pxb-84-lts/apt/pool/main/p/percona-xtrabackup-84/percona-xtrabackup-84_8.4.0-1-1.bookworm_${arch}.deb \
+    apt install -y /tmp/xtrabackup.deb
+    rm -f /tmp/xtrabackup.deb
+    fi
+EOF
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql /etc/mysql

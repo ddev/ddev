@@ -110,7 +110,7 @@ BASE_IMAGE=${DB_TYPE}
 set -x
 
 # TODO: Use bitnami for all mysql >= 5.7
-if [ ${DB_TYPE} = "mysql" ]; then
+if [ ${DB_TYPE} = "mysql" ] && [ ${DB_MAJOR_VERSION:-} != "5.5" ]; then
   BASE_IMAGE=bitnami/mysql
 fi
 printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
