@@ -12,7 +12,7 @@ mkdir -p ${OUTDIR}
 chown -R "$(id -u):$(id -g)" $OUTDIR
 
 chmod ugo+w /var/tmp
-mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
+mkdir -p ${DATADIR:-/var/lib/mysql} /mnt/ddev_config/mysql && rm -f ${DATADIR:-/var/lib/mysql}/* && chmod -R ugo+w ${DATADIR:-/var/lib/mysql}
 
 # On Github Actions, it seems that Apparmor prevents mysqld from having access to /etc/my.cnf, so
 # copy to a simpler directory
@@ -26,17 +26,17 @@ mysqld_version=${mysqld_version%.*}
 echo version=$mysqld_version
 # Oracle mysql 5.7+ deprecates mysql_install_db
 if [ "${mysqld_version}" = "5.7" ] || [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]]; then
-    mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=/var/lib/mysql --server-id=0
+    mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=0
 else
     # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
     if command -v mysqld | grep usr.local; then
         cd /usr/local/mysql
     fi
-    mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=/var/lib/mysql
+    mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=${DATADIR:-/var/lib/mysql}
 fi
 # TODO: Why was this changed to MYSQL_UNIX_PORT, review
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
-mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
@@ -91,7 +91,7 @@ rm -rf ${OUTDIR}/*
 backuptool="mariabackup --defaults-file=/var/tmp/my.cnf"
 streamtool=xbstream
 if command -v xtrabackup; then
-  backuptool="xtrabackup --defaults-file=/var/tmp/my.cnf --datadir=/var/lib/mysql";
+  backuptool="xtrabackup --defaults-file=/var/tmp/my.cnf --datadir=${DATADIR:-/var/lib/mysql}";
   streamtool=xbstream
 fi
 
@@ -101,7 +101,7 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 # 5.5.64-MariaDB-1~trusty for MariaDB. Detect database type and version and output
 # mysql-8.0 or mariadb-10.5.
 server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
-echo ${server_db_version} >/var/lib/mysql/db_mariadb_version.txt
+echo ${server_db_version} >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
 ${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT}  | gzip >${OUTDIR}/base_db.gz
 rm -f /tmp/raw_mysql_version.txt
 
