@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1910,13 +1911,17 @@ func CanRunWithoutDocker() bool {
 	if len(os.Args) < 2 {
 		return true
 	}
-	commands := map[string]bool{
-		"-v":        true,
-		"--version": true,
-		"-h":        true,
-		"--help":    true,
-		"help":      true,
-		"hostname":  true,
+	// Check the first arg
+	if slices.Contains([]string{"-v", "--version", "-h", "--help", "help", "hostname"}, os.Args[1]) {
+		return true
 	}
-	return commands[os.Args[1]]
+	// Check the last arg
+	if slices.Contains([]string{"-h", "--help"}, os.Args[len(os.Args)-1]) {
+		// Some commands don't support Cobra help, because they are wrappers
+		if slices.Contains([]string{"composer"}, os.Args[1]) {
+			return false
+		}
+		return true
+	}
+	return false
 }
