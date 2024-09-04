@@ -73,6 +73,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	}
 
 	for _, commandSet := range []string{projectCommandPath, globalCommandPath} {
+		// If the item isn't a directory, skip it.
+		if !fileutil.IsDirectory(commandSet) {
+			continue
+		}
 		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet, false)
 		if err != nil {
 			return err
