@@ -38,9 +38,9 @@ const (
 
 // Webserver types
 const (
-	WebserverNginxFPM      = "nginx-fpm"
-	WebserverApacheFPM     = "apache-fpm"
-	WebserverNginxNodeJS   = "nginx-nodejs"
+	WebserverNginxFPM    = "nginx-fpm"
+	WebserverApacheFPM   = "apache-fpm"
+	WebserverNginxNodeJS = "nginx-nodejs"
 )
 
 // ValidOmitContainers is the list of things that can be omitted
@@ -82,9 +82,9 @@ var GoroutineLimit = 10
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
-	WebserverNginxFPM:      true,
-	WebserverApacheFPM:     true,
-	WebserverNginxNodeJS:   true,
+	WebserverNginxFPM:    true,
+	WebserverApacheFPM:   true,
+	WebserverNginxNodeJS: true,
 }
 
 const AppTypeDrupalLatestStable = AppTypeDrupal11
