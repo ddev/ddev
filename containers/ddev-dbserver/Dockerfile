@@ -38,29 +38,38 @@ RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.l
 RUN mkdir -p /var/lib/apt/lists/partial
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
 
-# If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
-# Use http when connecting. This currently only affects MariaDB 5.5
-RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch) != "aarch64" ] ); then \
-    curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
-    dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
-    rm percona-release*.deb ; \
-    percona_setup=pxb24; \
-    xtrabackup_version=percona-xtrabackup-24 ; \
-    if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi; \
-    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; percona_setup=pxb80; fi ; \
-    percona-release setup ${percona_setup}; \
-    apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
-fi
-# TODO: This is just temp hack to get in here, it should end up using their `percona-release setup pxb84-lts` tool
-# Currently broken due to https://perconadev.atlassian.net/issues/PXB-3361
 RUN <<EOF
     arch=$(dpkg --print-architecture)
-    if [ "${DB_VERSION}" = "8.4" ] ; then
-    curl -L -s --fail -o /tmp/xtrabackup.deb https://repo.percona.com/pxb-84-lts/apt/pool/main/p/percona-xtrabackup-84/percona-xtrabackup-84_8.4.0-1-1.bookworm_${arch}.deb \
-    apt install -y /tmp/xtrabackup.deb
-    rm -f /tmp/xtrabackup.deb
+    set -x;
+    if ( ! command -v xtrabackup && ! command -v mariabackup ); then
+        curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o /tmp/percona-release_latest.deb
+        apt-get install -y /tmp/percona-release_latest.deb
+        rm /tmp/percona-release*.deb
+
+        # Use http when connecting. This only affects MariaDB 5.5
+        if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi
+
+        case ${DB_VERSION} in
+            "8.0")
+                xtrabackup_version=percona-xtrabackup-80; percona_setup=pxb80;
+                percona-release setup pxb80
+                apt-get -qq update && apt-get -qq install -y percona-xtrabackup-80
+                ;;
+            # TODO: This is just temp hack to get xtrabackup here, it should end up using their `percona-release setup pxb84-lts` tool
+            # Currently broken due to https://perconadev.atlassian.net/issues/PXB-3361
+            "8.4")
+                curl -L -s --fail -o /tmp/xtrabackup.deb https://repo.percona.com/pxb-84-lts/apt/pool/main/p/percona-xtrabackup-84/percona-xtrabackup-84_8.4.0-1-1.bookworm_${arch}.deb
+                apt-get update && apt-get -qq install -y /tmp/xtrabackup.deb
+                rm /tmp/xtrabackup.deb
+                ;;
+            *)
+                percona-release setup pxb24
+                apt-get update && apt-get install -qq -y percona-xtrabackup-24
+                ;;
+        esac
     fi
 EOF
+
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql /etc/mysql
