@@ -245,8 +245,9 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 		// Read the existing content for future comparison.
 		if gitIgnoreFileBytes, err := os.ReadFile(gitIgnoreFilePath); err == nil {
 			existingContent = string(gitIgnoreFileBytes)
-		} else {
-			// If we cannot read the file, remove it.
+		}
+		// Otherwise, remove the existing file to prevent surprising template results
+		if existingContent == "" {
 			err = os.Remove(gitIgnoreFilePath)
 			if err != nil {
 				return err
