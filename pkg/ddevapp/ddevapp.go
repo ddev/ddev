@@ -1295,14 +1295,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
 
-	// The .ddev directory may still need to be populated, especially in tests
-	err = PopulateExamplesCommandsHomeadditions(app.Name)
-	if err != nil {
-		return err
-	}
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
 	err = app.UpdateGlobalProjectList()
+	if err != nil {
+		return err
+	}
+
+	// The .ddev directory may still need to be populated, especially in tests
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -228,6 +229,7 @@ type ignoreTemplateContents struct {
 // Each value in ignores will be added as a new line to the .gitignore.
 func CreateGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
+	existingContent := ""
 
 	if fileutil.FileExists(gitIgnoreFilePath) {
 		sigFound, err := fileutil.FgrepStringInFile(gitIgnoreFilePath, nodeps.DdevFileSignature)
@@ -240,50 +242,61 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 			util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
 			return nil
 		}
+		// Read the existing content for future comparison.
+		if gitIgnoreFileBytes, err := os.ReadFile(gitIgnoreFilePath); err == nil {
+			existingContent = string(gitIgnoreFileBytes)
+		}
 		// Otherwise, remove the existing file to prevent surprising template results
-		err = os.Remove(gitIgnoreFilePath)
-		if err != nil {
-			return err
+		if existingContent == "" {
+			err = os.Remove(gitIgnoreFilePath)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	err := os.MkdirAll(targetDir, 0777)
 	if err != nil {
 		return err
 	}
 
-	generatedIgnores := []string{}
+	// Get the content for the .gitignore file.
+	var generatedIgnores []string
 	for _, p := range ignores {
 		pFullPath := filepath.Join(targetDir, p)
 		sigFound, err := fileutil.FgrepStringInFile(pFullPath, nodeps.DdevFileSignature)
-		//if err != nil {
-		//	util.Warning("file not found: %s: %v", p, err)
-		//}
 		if sigFound || err != nil {
 			generatedIgnores = append(generatedIgnores, p)
 		}
 	}
 
-	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
+	t, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer util.CheckClose(file)
-
-	parms := ignoreTemplateContents{
+	// Execute the template into the buffer.
+	var buf bytes.Buffer
+	ignoredItems := ignoreTemplateContents{
 		Signature:    nodeps.DdevFileSignature,
 		IgnoredItems: generatedIgnores,
 	}
-
-	//nolint: revive
-	if err = tmpl.Execute(file, parms); err != nil {
+	if err = t.Execute(&buf, ignoredItems); err != nil {
 		return err
 	}
+	// Only write the file if the generated content differs from the existing content.
+	if buf.String() != existingContent {
+		file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+		}
+		defer util.CheckClose(file)
 
+		// Write the new content to the file.
+		if _, err = buf.WriteTo(file); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -1437,9 +1437,16 @@ func PrepDdevDirectory(app *DdevApp) error {
 		}
 	}
 
-	err = os.MkdirAll(filepath.Join(dir, "web-entrypoint.d"), 0755)
-	if err != nil {
-		return err
+	// Pre-create a few dirs so we can be sure they are owned by the user and not root.
+	dirs := []string{
+		"web-entrypoint.d",
+		"xhprof",
+	}
+	for _, subdir := range dirs {
+		err = os.MkdirAll(filepath.Join(dir, subdir), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Some of the listed items are wildcards or directories, and if they are, there's an error

@@ -45,6 +45,12 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 		return err
 	}
 
+	// We don't want to populate the project's .ddev directory
+	// unless the project name is explicitly specified.
+	if appName == "" {
+		return nil
+	}
+
 	app, err := GetActiveApp(appName)
 	// If we have an error from GetActiveApp, it means we're not in a project directory
 	// That is not an error. It means we can not do this work, so return nil.
