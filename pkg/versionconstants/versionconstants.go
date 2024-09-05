@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20240830_saitho_imagemagick_svg" // Note that this can be overridden by make
+var WebTag = "20240904_rocketeerbkw_fix_lagoon_tests" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
