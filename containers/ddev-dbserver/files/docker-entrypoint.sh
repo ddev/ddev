@@ -6,7 +6,7 @@ set -o pipefail
 # DB_BASE_DIR is how bitnami specifies the datadir
 # DB_BASE_DIR=${DB_BASE_DIR:/var/lib/mysql}
 # Review this, or set via mysql settings
-export DATADIR=${DB_BASE_DIR:/var/lib/mysql}
+export DATADIR=${DB_BASE_DIR:-/var/lib/mysql}
 
 SOCKET=/var/tmp/mysql.sock
 rm -f /tmp/healthy
