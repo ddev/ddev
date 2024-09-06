@@ -4,7 +4,7 @@ set -eu
 set -o pipefail
 
 export DATADIR=${DB_BASE_DIR:-/var/lib/mysql}
-if [ "${BITNAMI_VOLUME_DIR}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
+if [ "${BITNAMI_VOLUME_DIR:-}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
 
 SOCKET=/var/tmp/mysql.sock
 rm -f /tmp/healthy

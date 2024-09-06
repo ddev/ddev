@@ -6,6 +6,11 @@ FROM ${BASE_IMAGE}:${DB_PINNED_VERSION}
 ARG BASE_IMAGE
 ARG DB_VERSION
 
+# TODO: This is temporary while we wait for built xtrabackup from Percona
+# Only used for mysql:8.0 arm64
+ARG XTRABACKUP_PACKAGE_VERSION=8.0.35-30-1
+
+
 ENV LANG=C.UTF-8
 ENV MYSQL_DATABASE=db
 ENV MYSQL_USER=db
@@ -51,9 +56,20 @@ RUN <<EOF
 
         case ${DB_VERSION} in
             "8.0")
-                xtrabackup_version=percona-xtrabackup-80; percona_setup=pxb80;
-                percona-release setup pxb80
-                apt-get -qq update && apt-get -qq install -y percona-xtrabackup-80
+                if [ "${arch}" = "amd64" ]; then
+                    percona-release setup pxb80
+                    apt-get -qq update && apt-get -qq install -y percona-xtrabackup-80
+                else
+                    # Get xtrabackup from our arm64 build (xtrabackup-build).
+                    # TODO: We can remove this when Percona provides arm64 build, which they promise soon.
+                    URL="https://github.com/ddev/xtrabackup-build/releases/download/${XTRABACKUP_PACKAGE_VERSION%-*}/xtrabackup-${XTRABACKUP_PACKAGE_VERSION%-*}-arm64.tar.gz" && \
+                    cd /tmp && \
+                    wget ${URL} && \
+                    wget ${URL}.sha256.txt && \
+                    shasum -a 256 xtrabackup-*.sha256.txt && \
+                    tar -C /usr/local -xzf xtrabackup-*-arm64.tar.gz && \
+                    rm -f xtrabackup-* ; \
+                fi
                 ;;
             # TODO: This is just temp hack to get xtrabackup here, it should end up using their `percona-release setup pxb84-lts` tool
             # Currently broken due to https://perconadev.atlassian.net/issues/PXB-3361
