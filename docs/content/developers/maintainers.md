@@ -42,6 +42,8 @@ There are cases like access to hosting provider integrations that have essential
 
 * **GitHub**: Maintainers should usually be added to the [DDEV organization](https://github.com/orgs/ddev/people), usually was "owner", but lesser privileges are possible, and some maintainers may want only access to the DDEV project, etc.
 * **Buildkite**: Maintainers should be added to the [DDEV Buildkite organization](https://buildkite.com/organizations/ddev/users) with "maintainer" privileges. This gives access to the Buildkite pipelines and the ability to add new pipelines. Do not require "SSO" or people won't be able to get in.
+* **Google Workspace**: Maintainers should usually be added to the Admin Console, have their own email `@ddev.com`, and be added to various email groups.
+* **YouTube**: Channel credentials are stored in 1Password.
 * **Chrome Remote Desktop**: This is the test runner login ("DDEV buildkite test-runners - remotedesktop.google.com") from 1Password, but it will need to be authorized via 2FA or a backup code from 1Password.
 * **CircleCI**: Maintainers automatically have some access via their GitHub team membership, but should probably get more.
 * **developer.apple.com**: Add to the DDEV team there so certificates can be managed.
@@ -50,6 +52,7 @@ There are cases like access to hosting provider integrations that have essential
 * **Read the Docs**: Add user to [Maintainers](https://readthedocs.org/dashboard/ddev/users/).
 * **Icinga monitoring system**: This is documented in [maintainer-info](https://github.com/ddev/maintainer-info).
 * **Discord**: Make admin in Discord.
+* **LinkedIn**: Add to the DDEV Foundation company page.
 * **Twitter (X)**: Posting is enabled by login in 1Password.
 * **Mastodon**: Posting is enabled by login in 1Password.
 * **Zoho Mail** is how `ddev.com` mail is routed; currently only Randy has an account, but we should consider adding others and making sure that more than one person can maintain it.
@@ -70,7 +73,34 @@ There are cases like access to hosting provider integrations that have essential
 * **Amplitude**: Invite new user at [team management](https://analytics.amplitude.com/ddev/settings/team).
 * **Stack Overflow**: Follow the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and answer or comment on questions there when possible.
 
-## Newmonitor.thefays.us use and maintenance
+## GitHub Notifications for Organization
+
+To receive emails from DDEV org to a specific email such as `@ddev.com`, maintainers should add it to `Settings > Emails` in their GitHub account and create routing for organization and email in `Settings > Notifications > Custom routing`.
+
+GitHub doesn't automatically send activity notifications for the entire organization, maintainers need to `Watch > All Activity` for each repository. It's also helpful to subscribe to other repositories outside the organization by asking the colleagues what they have in their [Watched repositories](https://github.com/watching).
+
+## GitHub Notifications for Scheduled Workflow Runs
+
+From GitHub documentation:
+
+> Notifications for scheduled workflows are sent to the user who initially created the workflow. If a different user updates the cron syntax in the workflow file, subsequent notifications will be sent to that user instead. If a scheduled workflow is disabled and then re-enabled, notifications will be sent to the user who re-enabled the workflow rather than the user who last modified the cron syntax.
+
+DDEV has a separate user for such scheduled workflows named `ddevactions` (credentials are stored in 1Password), which has the `member` role with `All-repository write` access to be able to manage GitHub Actions. Notifications from this account are forwarded to the team via an email group in Google Workspace.
+
+To make the user receive notifications about scheduled events:
+
+1. Go to the Actions tab of the GitHub repository.
+2. Filter by Event: select `schedule`. (If there are none, skip this repository.)
+3. Go through all the workflows and turn them off and on if they have scheduled events.
+4. Repeat the same with other repositories in the organization.
+
+How to understand who receives notifications about scheduled events:
+
+1. Go to the Actions tab of the GitHub repository.
+2. Filter by Event: select `schedule`. (If there are none, skip this repository.)
+3. Go through all the workflows and open the last workflow log for the job, it will show which user triggered the event.
+
+## Newmonitor.thefays.us Use and Maintenance
 
 [Newmonitor.thefays.us](https://newmonitor.thefays.us) is an Icinga instance that monitors our Buildkite test runners and a few other things like [ddev.com](https://ddev.com), etc. It also monitors some of Randy's small sites, but those can be ignored.
 
