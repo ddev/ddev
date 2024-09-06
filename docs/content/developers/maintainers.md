@@ -77,6 +77,8 @@ There are cases like access to hosting provider integrations that have essential
 
 To receive emails from DDEV org to a specific email such as `@ddev.com`, maintainers should add it to `Settings > Emails` in their GitHub account and create routing for organization and email in `Settings > Notifications > Custom routing`.
 
+GitHub doesn't automatically send activity notifications for the entire organization, maintainers need to `Watch > All Activity` for each repository. It's also helpful to subscribe to other repositories outside the organization by asking the colleagues what they have in their [Watched repositories](https://github.com/watching).
+
 ## GitHub Notifications for Scheduled Workflow Runs
 
 From GitHub documentation:

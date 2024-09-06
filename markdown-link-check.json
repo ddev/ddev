@@ -40,6 +40,9 @@
       "pattern": "^https://github.com/orgs/ddev"
     },
     {
+      "pattern": "^https://github.com/watching"
+    },
+    {
       "pattern": "^https://newmonitor.thefays.us/icingaweb2"
     },
     {
