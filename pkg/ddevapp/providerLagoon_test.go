@@ -27,7 +27,7 @@ const lagoonProjectName = "amazeeio-ddev"
 const lagoonPullTestSiteEnvironment = "pull"
 const lagoonPushTestSiteEnvironment = "push"
 
-// TODO: Change this to the actual dediicated pull environment
+// TODO: Change this to the actual dedicated pull environment
 const lagoonPullSiteURL = "https://nginx.pull.amazeeio-ddev.us2.amazee.io/"
 const lagoonSiteExpectation = "Super easy vegetarian pasta"
 
@@ -38,7 +38,6 @@ func lagoonSetupSSHKey(t *testing.T) string {
 	if sshkey = os.Getenv("DDEV_LAGOON_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_LAGOON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 	return sshkey + "\n"
 }
 

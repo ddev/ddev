@@ -48,8 +48,6 @@ func TestAcquiaPull(t *testing.T) {
 		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
-
 	require.True(t, isPullSiteValid(acquiaPullSiteURL, acquiaSiteExpectation), "acquiaPullSiteURL %s isn't working right", acquiaPullSiteURL)
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -142,7 +140,6 @@ func TestAcquiaPush(t *testing.T) {
 	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)

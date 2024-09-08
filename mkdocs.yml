@@ -224,3 +224,4 @@ nav:
       - developers/writing-style-guide.md
       - developers/remote-config.md
       - developers/maintainers.md
+      - developers/secret-management.md
