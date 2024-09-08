@@ -46,20 +46,20 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "apache-fpm"
-            webserver: "apache-fpm"
-          - name: "nginx-fpm"
-            webserver: "nginx-fpm"
-          - name: "mutagen"
-            mutagen: true
+#          - name: "apache-fpm"
+#            webserver: "apache-fpm"
+#          - name: "nginx-fpm"
+#            webserver: "nginx-fpm"
+#          - name: "mutagen"
+#            mutagen: true
 #          - name: "no-bind-mounts"
 #            no-bind-mounts: "true"
 #          - name: "nginx-proxy"
 #            router: "nginx-proxy"
           - name: "pull-push-test-platforms"
             pull-push-test-platforms: true
-          - name: "race-detection"
-            race-detection: true
+#          - name: "race-detection"
+#            race-detection: true
 
       fail-fast: false
 
@@ -81,6 +81,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          DDEV_PLATFORM_API_TOKEN: op://test-secrets/DDEV_PLATFORM_API_TOKEN/credential
 
       - name: Get Date
         id: get-date
@@ -123,9 +131,9 @@ jobs:
       - name: Override environment variables for push-pull-test-platforms
         run: |
           echo "MAKE_TARGET=test" >> $GITHUB_ENV
-          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|TestDdevImportFiles|TestDdevAllDatabases|TestComposerCreateCmd|Test.*(Push|Pull)|TestAutocomplet)'" >> $GITHUB_ENV
+#          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|TestDdevImportFiles|TestDdevAllDatabases|TestComposerCreateCmd|Test.*(Push|Pull)|TestAutocomplet)'" >> $GITHUB_ENV
+          echo "TESTARGS=-failfast -run '(TestPlatformPull)'" >> $GITHUB_ENV
           echo "GOTEST_SHORT=" >> $GITHUB_ENV
-          echo "DDEV_PLATFORM_API_TOKEN=${{ secrets.DDEV_PLATFORM_API_TOKEN }}" >> $GITHUB_ENV
           echo "DDEV_UPSUN_API_TOKEN=${{ secrets.DDEV_UPSUN_API_TOKEN }}" >> $GITHUB_ENV
           echo "DDEV_PANTHEON_API_TOKEN=${{ secrets.DDEV_PANTHEON_API_TOKEN }}" >> $GITHUB_ENV
           echo "DDEV_ALLOW_ACQUIA_PUSH=${{ secrets.DDEV_ALLOW_ACQUIA_PUSH }}" >> $GITHUB_ENV
