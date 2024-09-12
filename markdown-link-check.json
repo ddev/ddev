@@ -62,6 +62,9 @@
     },
     {
       "pattern": "^https://aur.archlinux.org"
+    },
+    {
+      "pattern": "^https://team-ddev.1password.com"
     }
   ],
   "httpHeaders": [
