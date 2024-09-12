@@ -30,7 +30,6 @@ env:
   GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
   DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
 jobs:
   build-most:
@@ -88,8 +87,6 @@ jobs:
   sign-windows:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
-    env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v2
@@ -213,6 +210,7 @@ jobs:
           DDEV_GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
           DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
           DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
           FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential"
           GORELEASER_KEY: "op://push-secrets/GORELEASER_KEY/credential"
 
