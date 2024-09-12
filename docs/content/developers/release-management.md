@@ -35,7 +35,6 @@ The following “Repository secret” environment variables must be added to <ht
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
-* `DDEV_MAIN_REPO_ORGNAME`: The organization to be used for testing, normally `ddev` but it may be `ddev-test` for the test organization.
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
 * `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
 * `DOCKERHUB_TOKEN`: Token for pushing to `hub.docker.com`. or updating image descriptions.
@@ -219,7 +218,7 @@ Prerequisites:
 * `export GORELEASER_KEY=<key>`
 
 ```bash
-export GITHUB_REPOSITORY_OWNER=ddev-test
+export REPOSITORY_OWNER=ddev-test
 git tag <tagname> # Try to include context like PR number, for example v1.22.8-PR5824
 make windows_amd64 windows_arm64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
 goreleaser release --prepare --nightly --clean
