@@ -29,7 +29,6 @@ env:
   DDEV_DEBUG: true
   GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
   DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -92,6 +91,14 @@ jobs:
     env:
       AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -131,6 +138,16 @@ jobs:
     runs-on: macos-latest
     needs: build-most
     steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
+          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+
       - name: "setup macOS"
         run: |
           brew install coreutils gnu-getopt jq
@@ -155,8 +172,6 @@ jobs:
 
       - name: Sign and notarize binaries (amd64 and arm64)
         env:
-          DDEV_MACOS_SIGNING_PASSWORD: ${{ secrets.DDEV_MACOS_SIGNING_PASSWORD }}
-          DDEV_MACOS_APP_PASSWORD: ${{ secrets.DDEV_MACOS_APP_PASSWORD }}
           TEAM_ID: "9HQ298V2BW"
         run: |
           set -o errexit -o pipefail
@@ -178,9 +193,6 @@ jobs:
     name: Upload artifacts
     runs-on: ubuntu-22.04
     needs: [build-most, sign-windows, notarize-macos]
-    env:
-      DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-      CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
     steps:
       - name: Setup tmate session
@@ -188,6 +200,21 @@ jobs:
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
+          AUR_SSH_PRIVATE_KEY: "op://test-secrets/AUR_SSH_PRIVATE_KEY/private key?ssh-format=openssh"
+          CHOCOLATEY_API_KEY: "op://push-secrets/CHOCOLATEY_API_KEY/credential"
+          DDEV_GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
+          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+          FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential"
+          GORELEASER_KEY: "op://push-secrets/GORELEASER_KEY/credential"
 
       - uses: actions/checkout@v4
         with:
@@ -245,11 +272,7 @@ jobs:
         env:
           CGO_ENABLED: 0
           DOCKER_ORG: ddev
-          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
           AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
 
@@ -297,7 +320,7 @@ jobs:
         run: echo ${{ github.ref }}
 
       - name: Chocolatey windows release
-        if: env.CHOCOLATEY_API_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
+        if: startsWith( github.ref, 'refs/tags/v1')
         run: |
           pushd .gotmp/bin/windows_amd64/chocolatey
           docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
