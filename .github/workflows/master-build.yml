@@ -267,9 +267,6 @@ jobs:
         env:
           CGO_ENABLED: 0
           DOCKER_ORG: ddev
-          FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
-          AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
-          AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
