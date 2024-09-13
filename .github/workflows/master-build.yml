@@ -36,9 +36,15 @@ jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-22.04
-    env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
+
       - uses: actions/checkout@v4
         with:
           # We need to get all branches and tags for git describe to work properly
