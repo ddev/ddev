@@ -24,6 +24,7 @@ on:
 #  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
+  AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
@@ -36,8 +37,6 @@ jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-22.04
-    env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
 
       - uses: actions/checkout@v4
@@ -89,13 +88,7 @@ jobs:
   sign-windows:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
-    env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
-      - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
 
       - uses: actions/checkout@v4
         with:
@@ -137,8 +130,6 @@ jobs:
     name: Sign and Notarize ddev on macOS
     runs-on: macos-latest
     needs: build-most
-    env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v2
@@ -194,7 +185,6 @@ jobs:
     name: Upload artifacts
     runs-on: ubuntu-22.04
     needs: [build-most, sign-windows, notarize-macos]
-
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -208,7 +198,6 @@ jobs:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
           AUR_SSH_PRIVATE_KEY: "op://test-secrets/AUR_SSH_PRIVATE_KEY/private key?ssh-format=openssh"
           CHOCOLATEY_API_KEY: "op://push-secrets/CHOCOLATEY_API_KEY/credential"
           DDEV_GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
