@@ -183,6 +183,8 @@ jobs:
 
   artifacts:
     env:
+      AUR_EDGE_GIT_URL: ${{ vars.AUR_EDGE_GIT_URL }}
+      AUR_STABLE_GIT_URL: ${{ vars.AUR_STABLE_GIT_URL }}
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
     name: Upload artifacts
     runs-on: ubuntu-22.04
