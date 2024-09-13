@@ -32,13 +32,16 @@ These are normally configured in the repository environment variables.
 * `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repo like be `ddev-test/homebrew-ddev-edge`.
 * `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repo like `ddev-test/homebrew-ddev`.
 
-### Actual secrets required
+### GitHub Actions Secrets Required
+
+* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`. Unfortunately, the `1password/load-secrets-action` does not work with Windows (see [issue](https://github.com/1Password/load-secrets-action/issues/46)).
+* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
+
+### 1Password secrets required
 
 <!-- markdown-link-check-disable-next-line -->
 The following “Repository secret” environment variables must be configured in 1Password:
 
-* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`.
-* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
 * `AUR_SSH_PRIVATE_KEY`: Private SSH key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.

@@ -36,14 +36,9 @@ jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-22.04
+    env:
+      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
-      - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
 
       - uses: actions/checkout@v4
         with:
@@ -94,14 +89,13 @@ jobs:
   sign-windows:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
+    env:
+      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v2
         with:
           export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
 
       - uses: actions/checkout@v4
         with:
@@ -143,6 +137,8 @@ jobs:
     name: Sign and Notarize ddev on macOS
     runs-on: macos-latest
     needs: build-most
+    env:
+      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v2
@@ -150,7 +146,6 @@ jobs:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-          AmplitudeAPIKey: "op://push-secrets/AmplitudeAPIKey/credential"
           DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
           DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
 
