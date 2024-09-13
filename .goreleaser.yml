@@ -146,7 +146,7 @@ checksum:
 release:
   prerelease: auto
   github:
-    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: ddev
 
 brews:
@@ -154,7 +154,7 @@ brews:
   ids:
   - ddev
   repository:
-    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
   directory: Formula
@@ -192,7 +192,7 @@ brews:
   ids:
   - ddev
   repository:
-    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
   directory: Formula
