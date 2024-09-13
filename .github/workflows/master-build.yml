@@ -182,6 +182,8 @@ jobs:
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
 
   artifacts:
+    env:
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
     name: Upload artifacts
     runs-on: ubuntu-22.04
     needs: [build-most, sign-windows, notarize-macos]
