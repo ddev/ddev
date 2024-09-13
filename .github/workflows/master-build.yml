@@ -200,7 +200,7 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
           AUR_SSH_PRIVATE_KEY: "op://push-secrets/AUR_SSH_PRIVATE_KEY/private key?ssh-format=openssh"
           CHOCOLATEY_API_KEY: "op://push-secrets/CHOCOLATEY_API_KEY/credential"
-          DDEV_GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
+          GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
           DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
           DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
           DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
