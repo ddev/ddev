@@ -29,8 +29,8 @@ These are normally configured in the repository environment variables.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
 * `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
-* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repo like be `ddev-test/homebrew-ddev-edge`.
-* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repo like `ddev-test/homebrew-ddev`.
+* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repository like be `ddev-test/homebrew-ddev-edge`.
+* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repository like `ddev-test/homebrew-ddev`.
 
 ### GitHub Actions Secrets Required
 
