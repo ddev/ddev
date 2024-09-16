@@ -990,11 +990,11 @@ ENV N_INSTALL_VERSION="%s"
 			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
 ### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
 ARG SQLITE_VERSION=%s
-RUN ( mkdir -p /tmp/sqlite3 && \
+RUN log-stderr.sh bash -c "mkdir -p /tmp/sqlite3 && \
 wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 apt-get install -y /tmp/sqlite3/*.deb && \
-rm -rf /tmp/sqlite3 ) || true
+rm -rf /tmp/sqlite3" || true
 			`, versionconstants.Drupal11RequiredSqlite3Version)
 		}
 	}
@@ -1196,7 +1196,7 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 		// selecting a branch instead of a major version only.
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected composer update
-RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
+RUN export XDEBUG_MODE=off; composer self-update --stable || log-stderr.sh composer self-update --stable || true; composer self-update %s || log-stderr.sh composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 
 		// For Postgres, install the relevant PostgreSQL clients
@@ -1208,9 +1208,9 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 			contents = contents + fmt.Sprintf(`
 RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
-  apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} && \
-  apt-get update >/dev/null && \
-  apt-get install -y postgresql-client-%s || true; \
+  log-stderr.sh bash -c "apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
+  apt-get install -y postgresql-client-%s && \
+  apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION}" || true; \
 fi`, app.Database.Version, psqlVersion) + "\n\n"
 		}
 
