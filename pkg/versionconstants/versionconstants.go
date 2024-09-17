@@ -17,7 +17,7 @@ var WebTag = "20240904_rocketeerbkw_fix_lagoon_tests" // Note that this can be o
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.23.4"
+var BaseDBTag = "20240917_innodb_page_size"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.4"
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.4"
