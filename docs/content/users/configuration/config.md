@@ -354,7 +354,7 @@ The URL-friendly name DDEV should use to reference the project.
 
 ## `ngrok_args`
 
-Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
+Extra flags for [configuring ngrok](https://ngrok.com/docs/agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
 
 | Type | Default | Usage
 | -- | -- | --
