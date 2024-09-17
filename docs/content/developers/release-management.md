@@ -21,29 +21,36 @@ search:
 * Discord
 * Docker
 
-### Actual secrets required
+### Environment variables required
 
-<!-- markdown-link-check-disable-next-line -->
-The following “Repository secret” environment variables must be added to <https://github.com/ddev/ddev/settings/secrets/actions>:
+These are normally configured in the repository environment variables.
 
-* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`.
-* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
+* `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
+* `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
+* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repository like be `ddev-test/homebrew-ddev-edge`.
+* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repository like `ddev-test/homebrew-ddev`.
+
+### GitHub Actions Secrets Required
+
+* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`. Unfortunately, the `1password/load-secrets-action` does not work with Windows (see [issue](https://github.com/1Password/load-secrets-action/issues/46)).
+* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
+
+### 1Password secrets required
+
+<!-- markdown-link-check-disable-next-line -->
+The following “Repository secret” environment variables must be configured in 1Password:
+
 * `AUR_SSH_PRIVATE_KEY`: Private SSH key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
-* `DDEV_MAIN_REPO_ORGNAME`: The organization to be used for testing, normally `ddev` but it may be `ddev-test` for the test organization.
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
-* `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
 * `DOCKERHUB_TOKEN`: Token for pushing to `hub.docker.com`. or updating image descriptions.
-* `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
 * `GORELEASER_KEY`: License key for GoReleaser Pro.
-* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev-test/homebrew-ddev-edge`.
-* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev/homebrew-ddev-edge`.
 
 ## Creating a Release
 
@@ -219,7 +226,7 @@ Prerequisites:
 * `export GORELEASER_KEY=<key>`
 
 ```bash
-export GITHUB_REPOSITORY_OWNER=ddev-test
+export REPOSITORY_OWNER=ddev-test
 git tag <tagname> # Try to include context like PR number, for example v1.22.8-PR5824
 make windows_amd64 windows_arm64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
 goreleaser release --prepare --nightly --clean

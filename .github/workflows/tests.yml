@@ -140,6 +140,7 @@ jobs:
           DDEV_PLATFORM_API_TOKEN: "op://test-secrets/DDEV_PLATFORM_API_TOKEN/credential"
           DDEV_UPSUN_API_TOKEN: "op://test-secrets/DDEV_UPSUN_API_TOKEN/credential"
         if: ${{ matrix.pull-push-test-platforms && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner) }}
+
       - name: Override environment variables for plain nginx
         run: |
           echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
