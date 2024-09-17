@@ -3500,7 +3500,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
 	require.NotEmpty(t, files)
-	assert.Equal(4, len(files))
+	assert.Equal(5, len(files))
 	require.Equal(t, app.GetConfigPath(".ddev-docker-compose-base.yaml"), files[0])
 	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
 
@@ -3521,12 +3521,67 @@ func TestMultipleComposeFiles(t *testing.T) {
 			} else {
 				t.Error("Failed to parse environment")
 			}
+			// Verify that users can add and override network properties
+			if networks, ok := w["networks"].(map[string]interface{}); ok {
+				assert.Nil(networks["ddev_default"])
+				if network, ok := networks["default"].(map[string]interface{}); ok {
+					assert.Equal(1, network["priority"])
+				} else {
+					t.Error("Failed to parse default network")
+				}
+				if network, ok := networks["dummy"].(map[string]interface{}); ok {
+					assert.Equal(2, network["priority"])
+				} else {
+					t.Error("Failed to parse dummy network")
+				}
+			} else {
+				t.Error("Failed to parse web service networks")
+			}
 		} else {
 			t.Error("failed to parse web service")
 		}
 
 	} else {
 		t.Error("Unable to access ComposeYaml[services]")
+	}
+
+	// Verify that networks are properly set up
+	if networks, ok := app.ComposeYaml["networks"].(map[string]interface{}); ok {
+		assert.Len(networks, 3)
+		for name, network := range networks {
+			networkMap, ok := network.(map[string]interface{})
+			if !ok {
+				t.Errorf("failed to parse network %s", name)
+			} else {
+				if name == "ddev_default" {
+					assert.Equal("ddev_default", networkMap["name"])
+					if _, ok := networkMap["external"].(bool); !ok {
+						t.Errorf("failed to parse external network %s", name)
+					} else {
+						assert.True(networkMap["external"].(bool))
+					}
+				} else if name == "default" {
+					assert.Equal(app.GetDefaultNetworkName(), networkMap["name"])
+					if _, ok := networkMap["external"].(bool); ok {
+						t.Errorf("default network cannot be external")
+					}
+				} else if name == "dummy" {
+					assert.Equal("dummy_name", networkMap["name"])
+				} else {
+					t.Errorf("Unexpected network name %s", name)
+				}
+				if external, ok := networkMap["external"].(bool); !ok || !external {
+					labels, ok := networkMap["labels"].(map[string]interface{})
+					if !ok {
+						t.Errorf("failed to parse labels for network %s", name)
+					} else {
+						assert.Equal("ddev", labels["com.ddev.platform"])
+					}
+				}
+			}
+		}
+	} else {
+		t.Error("Unable to access ComposeYaml[networks]")
 	}
 
 	_, err = app.ComposeFiles()

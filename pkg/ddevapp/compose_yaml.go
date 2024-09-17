@@ -81,11 +81,38 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
-func fixupComposeYaml(yamlStr string, _ *DdevApp) (map[string]interface{}, error) {
+func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, error) {
 	tempMap := make(map[string]interface{})
 	err := yaml.Unmarshal([]byte(yamlStr), &tempMap)
 	if err != nil {
 		return nil, err
+	}
+
+	// Ensure that some important network properties are not overridden by users
+	for name, network := range tempMap["networks"].(map[string]interface{}) {
+		if network == nil {
+			continue
+		}
+		networkMap := network.(map[string]interface{})
+		// Default networks don't allow to override these properties
+		if name == "ddev_default" {
+			networkMap["name"] = dockerutil.NetName
+			networkMap["external"] = true
+		}
+		if name == "default" {
+			networkMap["name"] = app.GetDefaultNetworkName()
+			// If "external" was added by user, remove it
+			delete(networkMap, "external")
+		}
+		// Add labels that are used to clean up internal networks when the project is stopped
+		if external, ok := networkMap["external"].(bool); !ok || !external {
+			labels, ok := networkMap["labels"].(map[string]interface{})
+			if !ok {
+				labels = make(map[string]interface{})
+				networkMap["labels"] = labels
+			}
+			labels["com.ddev.platform"] = "ddev"
+		}
 	}
 
 	// Make sure that all services have the `ddev_default` and `default` networks
@@ -96,10 +123,19 @@ func fixupComposeYaml(yamlStr string, _ *DdevApp) (map[string]interface{}, error
 		serviceMap := service.(map[string]interface{})
 
 		// Make sure all services have our networks stanza
-		serviceMap["networks"] = map[string]interface{}{
-			"ddev_default": nil,
-			"default":      nil,
+		networks, ok := serviceMap["networks"].(map[string]interface{})
+		if !ok {
+			networks = make(map[string]interface{})
 		}
+		// Add default networks if they don't exist
+		if _, exists := networks["ddev_default"]; !exists {
+			networks["ddev_default"] = nil
+		}
+		if _, exists := networks["default"]; !exists {
+			networks["default"] = nil
+		}
+		// Update the serviceMap with the networks
+		serviceMap["networks"] = networks
 	}
 
 	return tempMap, nil
