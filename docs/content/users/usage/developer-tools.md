@@ -15,6 +15,8 @@ Hundreds of useful developer tools are included inside the containers and can be
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command-line tool for “PHAR Installation and Verification Environment”.
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as `wp` and as `wp-cli`.
+* [n98-magerun](https://github.com/netz98/n98-magerun) - Command-line tool for Magento 1 / OpenMage installations, available as `magerun`.
+* [n98-magerun2](https://github.com/netz98/n98-magerun2) - Command-line tool for Magento Open Source / Mage-OS / Adobe Commerce installations, available as `magerun2`.
 * `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
 * `node`
 * `sqlite3`
