@@ -94,5 +94,4 @@
   <!-- Enable processing of PDF files to ensure TYPO3 is able to create thumbnails and previews -->
   <!-- <policy domain="coder" rights="none" pattern="PDF" /> -->
   <policy domain="coder" rights="none" pattern="XPS" />
-  <policy domain="coder" rights="none" pattern="SVG" />
 </policymap>
