@@ -118,5 +118,10 @@ bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=8.0" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+containerwait
+bats tests/ddev-webserver/imagemagick.bats
+
+cleanup
 
 echo "Test successful"
