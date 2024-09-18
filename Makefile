@@ -9,7 +9,7 @@ BUILD_BASE_DIR ?= $(PWD)
 GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
-GOFILES = $(shell find $(SRC_DIRS) -type f)
+GOFILES = $(shell find $(SRC_DIRS) -type f ! -path "*/testdata/*")
 GORACE = "halt_on_error=1"
 CGO_ENABLED = 0
 .PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 setup

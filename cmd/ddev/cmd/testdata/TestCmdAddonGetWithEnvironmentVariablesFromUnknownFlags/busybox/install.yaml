@@ -1,0 +1,10 @@
+name: busybox
+
+project_files:
+  - docker-compose.busybox.yaml
+
+pre_install_actions:
+  - echo "PRE_INSTALL_VARIABLE=${PRE_INSTALL_VARIABLE:-notset}"
+
+post_install_actions:
+  - echo "POST_INSTALL_VARIABLE=${POST_INSTALL_VARIABLE:-notset}"

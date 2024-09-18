@@ -1,0 +1,22 @@
+services:
+  busybox:
+    container_name: ddev-${DDEV_SITENAME}-busybox
+    image: busybox:${BUSYBOX_TAG:-stable}
+    command: tail -f /dev/null
+    restart: "no"
+    # These labels ensure this service is discoverable by ddev.
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+      # This variable can be overridden with .env.busybox file
+      - THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV=true
+      # This variable cannot have the value from the .env.busybox.example file because we don't parse .example files
+      - BUSYBOX_EXAMPLE_VARIABLE=${BUSYBOX_EXAMPLE_VARIABLE:-notset}
+      # REDIS_TAG from .env.redis can be passed here during the 'docker-compose config' step,
+      # when all .env.* files are passed to 'docker-compose config'
+      - CAN_READ_FROM_ALL_ENV_FILES=${REDIS_TAG:-notset}
+
+    volumes:
+      - ".:/mnt/ddev_config"
+      - "ddev-global-cache:/mnt/ddev-global-cache"

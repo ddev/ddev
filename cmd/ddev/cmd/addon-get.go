@@ -31,11 +31,15 @@ var AddonGetCmd = &cobra.Command{
 	Long:    `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev add-on get ddev/ddev-redis
 ddev add-on get ddev/ddev-redis --version v1.0.4
+ddev add-on get ddev/ddev-redis --redis-tag 7-bookworm
 ddev add-on get ddev/ddev-redis --project my-project
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
 ddev add-on get /path/to/package
 ddev add-on get /path/to/tarball.tar.gz
 `,
+	FParseErrWhitelist: cobra.FParseErrWhitelist{
+		UnknownFlags: true,
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := false
 		bash := util.FindBashPath()
@@ -157,6 +161,8 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
+		injectedEnv := saveUnknownLongFlagsToEnvFile(cmd, app.GetConfigPath(".env."+s.Name), verbose)
+
 		yamlMap := make(map[string]interface{})
 		for name, f := range s.YamlReadFiles {
 			f := os.ExpandEnv(string(f))
@@ -203,7 +209,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
@@ -279,7 +285,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
 			desc := ddevapp.GetAddonDdevDescription(action)
 			if err != nil {
 				if !verbose {
@@ -341,6 +347,52 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		util.Failed("Error writing manifest file: %v", err)
 	}
 	return manifest, nil
+}
+
+// saveUnknownLongFlagsToEnvFile saves unknown flags to .env file
+// returns bash export string for env variables that will be used in PreInstallActions and PostInstallActions
+func saveUnknownLongFlagsToEnvFile(cmd *cobra.Command, envFile string, verbose bool) string {
+	injectedEnv := "true"
+	_, envText, err := ddevapp.ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		util.Failed("Unable to read %s file: %v", envFile, err)
+	}
+	envSlice := GetUnknownFlags(cmd)
+	envMap := map[string]string{}
+	for flag, value := range envSlice {
+		// Skip short flags
+		if strings.HasPrefix(flag, "--") {
+			// Convert flags to env variables, e.g. "--redis-tag" -> "REDIS_TAG"
+			envName := strings.ToUpper(strings.ReplaceAll(strings.TrimLeft(flag, "-"), "-", "_"))
+			// Remove double quotes because we wrap the value in double quotes.
+			envMap[envName] = strings.ReplaceAll(value, `"`, "")
+		}
+
+	}
+	if len(envMap) > 0 {
+		err = ddevapp.WriteProjectEnvFile(envFile, envMap, envText)
+		if err != nil {
+			util.Failed("Error writing .env file: %v", err)
+		}
+	}
+	envMap, _, err = ddevapp.ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		util.Failed("Unable to read %s file: %v", envFile, err)
+	}
+	if len(envMap) > 0 {
+		if verbose {
+			util.Warning("Using env file %s", envFile)
+		}
+		injectedEnv = "export"
+		for k, v := range envMap {
+			v = strings.Replace(v, " ", `\ `, -1)
+			injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
+			if verbose {
+				util.Warning(`%s="%s"`, k, v)
+			}
+		}
+	}
+	return injectedEnv
 }
 
 func init() {

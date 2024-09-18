@@ -100,9 +100,6 @@ services:
         DDEV_DATABASE: ${DDEV_DATABASE}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
-    {{ if .EnvFile }}
-    env_file: '{{ .EnvFile }}'
-    {{ end }}
 
     networks: ["default", "ddev_default"]
     cap_add:

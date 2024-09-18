@@ -105,18 +105,32 @@ If you have add-ons that were installed before v1.22, update them with `ddev add
 
 ## Adding Custom Configuration to an Add-on
 
-Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis-7`](https://github.com/ddev/ddev-redis-7) the `image` is set to `image: redis:7.2-alpine`. If you wanted to change this to use `7.0-alpine` instead, you would have two choices:
+Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis`](https://github.com/ddev/ddev-redis) the `image` is set to `image: redis:${REDIS_TAG:-6-bullseye}` (it is important to have the default value for `$REDIS_TAG`). If you wanted to change this to use `7-bookworm` instead, you would have two choices:
 
-1. Remove the `#ddev-generated` line in `docker-compose.redis-7.yaml` and edit the relevant line.
-2. Add a `.ddev/docker-compose.redis-7_extra.yaml` with the contents:
+1. With DDEV v1.23.5+, the override can be done using a special `.ddev/.env.*` file, where `*` is the name of the add-on, in this case `.ddev/.env.redis` (file is created automatically):
 
-```yaml
-  services:
-    redis:
-      image: redis:7.0-alpine
-```
+    ```bash
+    ddev add-on get ddev/ddev-redis --redis-tag 7-bookworm
+    ddev restart
+    ```
 
-Using the second option (`docker-compose.redis-7_extra.yaml`) allows you to update to future versions of `ddev-redis-7` without losing your configuration, and without the upgrade being blocked because you removed the `#ddev-generated` line from the upstream `docker-compose.redis-7.yaml`.
+    This works because `--redis-tag 7-bookworm` is converted to `REDIS_TAG="7-bookworm"`, which is written to `.ddev/.env.redis` and then used on `ddev start`.
+
+    !!!tip "Give the add-on variables a unique name"
+        The variable name should be unique enough not to conflict with other variables from different `.ddev/.env.*` files, for example, if the add-on name is `foo` and you want to have a variable `BAR=TEST`, include the add-on name in the variable name, i.e. `--foo-bar TEST`, which will be converted to `FOO_BAR="TEST"` in the `.ddev/.env.foo` file.
+
+2. Or add a `.ddev/docker-compose.redis_extra.yaml` with the contents:
+
+    ```yaml
+    services:
+      redis:
+        image: redis:7-bookworm
+    ```
+
+Using the options here allow you to update to future versions of `ddev-redis` without losing your configuration, and without the upgrade being blocked because you removed the `#ddev-generated` line from the upstream `docker-compose.redis.yaml`.
+
+!!!note
+    Changing the image version to a different version will not necessarily work for any add-on or additional service. In this case, adjusting the Redis version often works.
 
 ## Creating an Additional Service for `ddev add-on`
 
@@ -134,7 +148,7 @@ Anyone can create an add-on for `ddev add-on`. See [this screencast](https://www
 The `install.yaml` is a simple YAML file with a few main sections:
 
 * `name`: The add-on name. This will be used in the various `ddev add-on` commands. If the repository name is `ddev-solr`, for example, a good `name` will be `solr`.
-* `pre_install_actions`: an array of Bash statements or scripts to be executed before `project_files` are installed. The actions are executed in the context of the target project’s root directory.
+* `pre_install_actions`: an array of Bash statements or scripts to be executed before `project_files` are installed. The actions are executed in the context of the target project’s root directory. With DDEV v1.23.5+, variables from the `.ddev/.env.name` file, where `name` is the name of the add-on, are available in this context.
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
 * `ddev_version_constraint` (available with DDEV v1.23.4+): a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent add-on from being installed if it doesn't validate. For example:
@@ -144,7 +158,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
     ```
 
 * `dependencies`: an array of add-ons that this add-on depends on.
-* `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s `.ddev` directory.
+* `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s `.ddev` directory. With DDEV v1.23.5+, variables from the `.ddev/.env.name` file, where `name` is the name of the add-on, are available in this context.
 * `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev add-on remove`. The actions are executed in the context of the target project’s `.ddev` directory.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
 

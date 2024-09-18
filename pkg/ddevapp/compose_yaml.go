@@ -5,6 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -44,9 +45,17 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+	envFiles, err := app.EnvFiles()
+	if err != nil {
+		return err
+	}
+	var action []string
+	for _, envFile := range envFiles {
+		action = append(action, "--env-file", envFile)
+	}
 	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
-		Action:       []string{"config"},
+		Action:       append(action, "config"),
 	})
 	if err != nil {
 		return err
@@ -87,6 +96,10 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
+	envFiles, err := app.EnvFiles()
+	if err != nil {
+		return nil, err
+	}
 
 	// Ensure that some important network properties are not overridden by users
 	for name, network := range tempMap["networks"].(map[string]interface{}) {
@@ -116,7 +129,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	}
 
 	// Make sure that all services have the `ddev_default` and `default` networks
-	for _, service := range tempMap["services"].(map[string]interface{}) {
+	for name, service := range tempMap["services"].(map[string]interface{}) {
 		if service == nil {
 			continue
 		}
@@ -136,6 +149,29 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		}
 		// Update the serviceMap with the networks
 		serviceMap["networks"] = networks
+
+		// Add environment variables from .env files to services
+		for _, envFile := range envFiles {
+			filename := filepath.Base(envFile)
+			// Variables from .ddev/.env should be available in all containers,
+			// and variables from .ddev/.env.* should only be available in a specific container.
+			if filename == ".env" || filename == ".env."+name {
+				envMap, _, err := ReadProjectEnvFile(envFile)
+				if err != nil && !os.IsNotExist(err) {
+					util.Failed("Unable to read %s file: %v", envFile, err)
+				}
+				if len(envMap) > 0 {
+					if serviceMap["environment"] == nil {
+						serviceMap["environment"] = map[string]interface{}{}
+					}
+					if environmentMap, ok := serviceMap["environment"].(map[string]interface{}); ok {
+						for envKey, envValue := range envMap {
+							environmentMap[envKey] = envValue
+						}
+					}
+				}
+			}
+		}
 	}
 
 	return tempMap, nil
