@@ -95,6 +95,7 @@ Magento's
 Mailpit
 Mailpit's
 Mailgun
+Magerun
 Manage
 MariaDB
 Matthias
@@ -461,6 +462,8 @@ mysite
 mysql
 mysqldump
 mysqlworkbench
+n98-magerun
+n98-magerun2
 namlen
 natively
 netstat
