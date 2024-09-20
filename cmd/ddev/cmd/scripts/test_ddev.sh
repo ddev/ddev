@@ -50,6 +50,11 @@ ddev debug configyaml | grep -v web_environment
 header "existing project customizations"
 grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres 2>/dev/null
 
+if ls .ddev/nginx >/dev/null 2>&1 ; then
+  echo "Customizations in .ddev/nginx:"
+  ls -l .ddev/nginx
+fi
+
 header "installed DDEV add-ons"
 
 ddev add-on list --installed
