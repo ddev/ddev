@@ -53,12 +53,12 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 8. `curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg`
 9. `echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list`
 10. `sudo apt-get update && sudo apt-get install -y buildkite-agent`
-11. `buildkite-agent` should have home directory `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
+11. Change `buildkite-agent` home directory to `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
 12. Configure buildkite agent in /etc/buildkite-agent:
      * `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"`
      * token="xxx"
 13. `sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent`
-14. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it does require escalation.
+14. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it may require escalation.
 15. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 16. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 17. Configure brew in PATH with:

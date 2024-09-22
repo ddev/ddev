@@ -39,17 +39,7 @@ darwin)
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
     ;;
-# linux is currently WSL2 only
-linux)
-    # homebrew is only on amd64
-    if [ "$(arch)" = "x86_64" ]; then
-      for item in libpq mkdocs; do
-        brew upgrade $item || brew install $item || true
-      done
-      brew link --force libpq
-    fi
-    ;;
-
+# linux no longer needs homebrew
 esac
 
 echo "Deleting unused images with ddev delete images"
