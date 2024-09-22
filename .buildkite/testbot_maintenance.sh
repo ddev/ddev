@@ -18,9 +18,6 @@ if ! command -v ngrok >/dev/null; then
     windows)
         (yes | choco install -y ngrok) || true
         ;;
-    linux)
-        curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
-        ;;
     esac
 fi
 
@@ -39,7 +36,9 @@ darwin)
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
     ;;
-# linux no longer needs homebrew
+linux)
+    sudo apt update && sudo apt upgrade -y
+    # linux no longer needs homebrew
 esac
 
 echo "Deleting unused images with ddev delete images"
@@ -48,11 +47,6 @@ ddev delete images -y || true
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null 2>&1 || true
 docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&1 || true
-
-# Make sure there aren't any dangling NFS volumes
-if docker volume ls | grep '[Tt]est.*_nfsmount'; then
-  docker volume rm -f $(docker volume ls | awk '/[Tt]est.*_nfsmount/ { print $2; }') || true
-fi
 
 # Clean the docker build cache
 docker buildx prune -f -a || true
