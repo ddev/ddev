@@ -344,9 +344,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## GitHub Codespaces
 
-    ??? "Codespaces may not work predictably; Gitpod is more reliable"
-        Unfortunately "your mileage may vary" with Codespaces. and we haven't been able to adequately keep it supported. See [various](https://github.com/ddev/ddev/issues/6102) [issues](https://github.com/ddev/ddev/pull/6101) as well as [postCreateCommand issues](https://github.com/devcontainers/features/issues/977).
-
     You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally; you only need a browser and an internet connection.
 
     Start by creating a `.devcontainer/devcontainer.json` file in your GitHub repository:
@@ -356,7 +353,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      }
+      },
+      "postCreateCommand": "echo 'it should all be set up'"
     }
     ```
 
@@ -456,11 +454,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
                 "label": "web https"
             }
         },
-        "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+        "postCreateCommand": "bash .devcontainer/setup_project.sh"
     }
     ``` 
     
-    ```
+    ```bash
     #!/bin/bash
     set -ex
 
