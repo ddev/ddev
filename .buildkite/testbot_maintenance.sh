@@ -36,9 +36,6 @@ darwin)
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
     ;;
-linux)
-    sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get -qq upgrade -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests
-    # linux no longer needs homebrew
 esac
 
 echo "Deleting unused images with ddev delete images"
