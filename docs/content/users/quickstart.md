@@ -830,7 +830,7 @@ There are several easy ways to use DDEV with WordPress:
 
     ```php
     // Include for DDEV-managed settings in wp-config-ddev.php.
-    $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
+    $ddev_settings = __DIR__ . '/wp-config-ddev.php';
     if (is_readable($ddev_settings) && !defined('DB_USER')) {
     require_once($ddev_settings);
     }
