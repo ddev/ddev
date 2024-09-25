@@ -1469,6 +1469,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	buildDuration := util.FormatDuration(buildDurationStart())
 	util.Success("Project images built in %s.", buildDuration)
 
+	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
+	danglingImages, err := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
+	if err != nil {
+		return fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), err)
+	}
+	for _, danglingImage := range danglingImages {
+		_ = dockerutil.RemoveImage(danglingImage.ID)
+	}
+
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},

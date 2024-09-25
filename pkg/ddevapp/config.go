@@ -1196,7 +1196,7 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 		// selecting a branch instead of a major version only.
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected composer update
-RUN export XDEBUG_MODE=off; composer self-update --stable || log-stderr.sh composer self-update --stable || true; composer self-update %s || log-stderr.sh composer self-update %s || true
+RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || log-stderr.sh composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 
 		// For Postgres, install the relevant PostgreSQL clients
