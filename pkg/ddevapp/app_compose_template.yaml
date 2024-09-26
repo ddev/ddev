@@ -198,7 +198,6 @@ services:
     {{ if not .DisableSettingsManagement }}
     - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
     {{ end }}
-    - DRUSH_ALLOW_XDEBUG=1
     - DOCKER_IP={{ .DockerIP }}
     - GOARCH
     - GOOS
