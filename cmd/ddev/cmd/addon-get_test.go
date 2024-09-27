@@ -201,12 +201,13 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	busyboxEnvFile := filepath.Join(site.Dir, ".ddev/.env.busybox")
 	require.NoFileExists(t, busyboxEnvFile, ".ddev/.env.busybox file should not exist at this point")
 
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--post-install-variable", "post", "-A", "short_flag_VALUE", "--force-run", "-yes", "--force-UPPERCASE=true")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--pre-install-variable2=pre2", "--post-install-variable", "post", "-A", "short_flag_VALUE", "--force-run", "-yes", "--force-UPPERCASE=true")
 	require.NoError(t, err, "out=%s", out)
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
 	require.NoError(t, err, "out=%s", out)
 	// These variables are used in pre_install_actions and post_install_actions
 	require.Contains(t, out, "PRE_INSTALL_VARIABLE=pre")
+	require.Contains(t, out, "PRE_INSTALL_VARIABLE2=pre2")
 	require.Contains(t, out, "POST_INSTALL_VARIABLE=post")
 
 	// .env.busybox file should exist and contain the expected environment variable
