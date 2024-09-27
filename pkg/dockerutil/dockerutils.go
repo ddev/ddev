@@ -1888,13 +1888,17 @@ func GetLiveDockerComposeVersion() (string, error) {
 
 // GetContainerNames takes an array of Container
 // and returns an array of strings with container names
-func GetContainerNames(containers []dockerTypes.Container) []string {
+func GetContainerNames(containers []dockerTypes.Container, excludeContainerNames []string) []string {
 	var names []string
 	for _, container := range containers {
-		if len(container.Names) > 0 {
-			name := container.Names[0][1:] // Trimming the leading '/' from the container name
-			names = append(names, name)
+		if len(container.Names) == 0 {
+			continue
 		}
+		name := container.Names[0][1:] // Trimming the leading '/' from the container name
+		if slices.Contains(excludeContainerNames, name) {
+			continue
+		}
+		names = append(names, name)
 	}
 	return names
 }
