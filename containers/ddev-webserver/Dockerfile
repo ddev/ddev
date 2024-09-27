@@ -38,13 +38,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     bash-completion \
     libcap2-bin \
     libmagickcore-6.q16-6-extra \
-    locales-all \
+    locales \
     mariadb-client \
     postgresql-client \
     pv \
     supervisor \
     symfony-cli \
     xz-utils
+
+RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
@@ -102,7 +104,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     libpcre3 \
     libpq-dev \
     libpython3-dev \
-    locales-all \
+    locales \
     nano \
     ncurses-bin \
     netcat-traditional \
@@ -120,6 +122,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     vim-tiny \
     zip
+
+RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
@@ -248,7 +252,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     iputils-ping \
     jq \
     libpcre3 \
-    locales-all \
+    locales \
     nano \
     ncurses-bin \
     netcat-traditional \
@@ -258,6 +262,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     sqlite3 \
     unzip \
     zip
+
+RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
