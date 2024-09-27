@@ -2208,7 +2208,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 func TestWebserverPostgresDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	serverVersions := []string{"postgres:16", "postgres:15", "postgres:14", "postgres:9"}
+	serverVersions := []string{"postgres:17", "postgres:16", "postgres:14", "postgres:9"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()

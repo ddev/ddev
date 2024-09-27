@@ -5,6 +5,7 @@ const PostgresDefaultVersion = Postgres14
 
 // ValidPostgresVersions is the versions of PostgreSQL that are valid
 var ValidPostgresVersions = map[string]bool{
+	Postgres17: true,
 	Postgres16: true,
 	Postgres15: true,
 	Postgres14: true,
@@ -17,6 +18,7 @@ var ValidPostgresVersions = map[string]bool{
 
 // PostgreSQL Versions
 const (
+	Postgres17 = "17"
 	Postgres16 = "16"
 	Postgres15 = "15"
 	Postgres14 = "14"
