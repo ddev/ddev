@@ -28,7 +28,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     lsb-release \
     procps \
     tree \
-    vim \
+    vim-tiny \
     wget
 #END base
 
