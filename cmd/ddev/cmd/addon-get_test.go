@@ -160,9 +160,11 @@ func TestCmdAddonDdevVersionConstraint(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 }
 
-// TestCmdAddonGetWithEnvironmentVariablesFromUnknownFlags tests that unknown flags in `ddev add-on get`
-// are passed through and converted to environment variables in .ddev/.env.* files
-func TestCmdAddonGetWithEnvironmentVariablesFromUnknownFlags(t *testing.T) {
+// TestCmdAddonGetWithDotEnv tests that `ddev add-on get` can read .ddev/.env.* files,
+// `ddev dotenv set` can write to .ddev/.env.* files,
+// env vars are injected in PreInstallActions and PostInstallActions for add-ons,
+// env vars are expanded in .ddev/docker-compose.*.yaml files.
+func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
 		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
 	}
@@ -196,11 +198,12 @@ func TestCmdAddonGetWithEnvironmentVariablesFromUnknownFlags(t *testing.T) {
 
 	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
 	require.NoError(t, err, "out=%s", out)
-	// .env.busybox file should not exist at this point
 	busyboxEnvFile := filepath.Join(site.Dir, ".ddev/.env.busybox")
-	require.NoFileExists(t, busyboxEnvFile, ".ddev/.env.busybox file should not exist after add-on install without any flags")
+	require.NoFileExists(t, busyboxEnvFile, ".ddev/.env.busybox file should not exist at this point")
 
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"), "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--post-install-variable", "post", "-A", "short_flag_VALUE", "--force-run", "-yes", "--force-UPPERCASE=true")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--post-install-variable", "post", "-A", "short_flag_VALUE", "--force-run", "-yes", "--force-UPPERCASE=true")
+	require.NoError(t, err, "out=%s", out)
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
 	require.NoError(t, err, "out=%s", out)
 	// These variables are used in pre_install_actions and post_install_actions
 	require.Contains(t, out, "PRE_INSTALL_VARIABLE=pre")
@@ -208,7 +211,7 @@ func TestCmdAddonGetWithEnvironmentVariablesFromUnknownFlags(t *testing.T) {
 
 	// .env.busybox file should exist and contain the expected environment variable
 	busyboxEnvFile = filepath.Join(site.Dir, ".ddev/.env.busybox")
-	require.FileExists(t, busyboxEnvFile, "unable to find .ddev/.env.busybox file after add-on install")
+	require.FileExists(t, busyboxEnvFile, "unable to find .ddev/.env.busybox file, but it should be here")
 	busyboxEnvFileContents, err := os.ReadFile(busyboxEnvFile)
 	require.NoError(t, err, "unable to read .ddev/.env.busybox file after add-on install")
 	require.Contains(t, string(busyboxEnvFileContents), `BUSYBOX_TAG="1.36.0"`)
@@ -223,14 +226,13 @@ func TestCmdAddonGetWithEnvironmentVariablesFromUnknownFlags(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "bare-busybox"))
 	require.NoError(t, err, "out=%s", out)
-	// .env.bare-busybox file should not exist at this point
 	bareBusyboxEnvFile := filepath.Join(site.Dir, ".ddev/.env.bare-busybox")
-	require.NoFileExists(t, bareBusyboxEnvFile, ".ddev/.env.bare-busybox file should not exist after add-on install without any flags")
+	require.NoFileExists(t, bareBusyboxEnvFile, ".ddev/.env.bare-busybox file should not exist at this point")
 
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "bare-busybox"), "--bare-busybox-foo=bar")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.bare-busybox", "--bare-busybox-foo=bar")
 	require.NoError(t, err, "out=%s", out)
 	bareBusyboxEnvFile = filepath.Join(site.Dir, ".ddev/.env.bare-busybox")
-	require.FileExists(t, bareBusyboxEnvFile, "unable to find .ddev/.env.bare-busybox file after add-on install")
+	require.FileExists(t, bareBusyboxEnvFile, "unable to find .ddev/.env.bare-busybox file, but it should be here")
 
 	out, err = exec.RunHostCommand(DdevBin, "restart")
 	require.NoError(t, err, "unable to ddev restart: %v, output='%s'", err, out)
@@ -268,7 +270,7 @@ func TestCmdAddonGetWithEnvironmentVariablesFromUnknownFlags(t *testing.T) {
 
 	// Update the busybox image in .ddev/.env.busybox
 	// And update the value for THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"), "--busybox-tag", "1.36.1", "--this-variable-can-be-changed-from-env=changed")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag", "1.36.1", "--this-variable-can-be-changed-from-env=changed")
 	require.NoError(t, err, "out=%s", out)
 
 	out, err = exec.RunHostCommand(DdevBin, "restart")

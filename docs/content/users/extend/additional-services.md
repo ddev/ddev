@@ -107,14 +107,16 @@ If you have add-ons that were installed before v1.22, update them with `ddev add
 
 Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis`](https://github.com/ddev/ddev-redis) the `image` is set to `image: redis:${REDIS_TAG:-6-bullseye}` (it is important to have the default value for `$REDIS_TAG`). If you wanted to change this to use `7-bookworm` instead, you would have two choices:
 
-1. With DDEV v1.23.5+, the override can be done using a special `.ddev/.env.*` file, where `*` is the name of the add-on, in this case `.ddev/.env.redis` (file is created automatically):
+1. With DDEV v1.23.5+, the override can be done using a special `.ddev/.env.*` file, where `*` can be anything, in this case `.ddev/.env.redis`:
 
     ```bash
-    ddev add-on get ddev/ddev-redis --redis-tag 7-bookworm
+    ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
     ddev restart
     ```
 
-    This works because `--redis-tag 7-bookworm` is converted to `REDIS_TAG="7-bookworm"`, which is written to `.ddev/.env.redis` and then used on `ddev start`.
+    This will set the variable `REDIS_TAG="7-bookworm"`, which is written to `.ddev/.env.redis` and then used on `ddev start`.
+
+    Variables in the `.ddev/.env.*` files are passed to Docker service containers with the same name (e.g. `redis`). If this is not desired or the service does not exist, use a different filename, for example, `.ddev/.env.redis-build`, so that it is only expanded during the parsing of `.ddev/docker-compose.*.yaml` files.
 
     !!!tip "Give the add-on variables a unique name"
         The variable name should be unique enough not to conflict with other variables from different `.ddev/.env.*` files, for example, if the add-on name is `foo` and you want to have a variable `BAR=TEST`, include the add-on name in the variable name, i.e. `--foo-bar TEST`, which will be converted to `FOO_BAR="TEST"` in the `.ddev/.env.foo` file.

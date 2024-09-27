@@ -22,8 +22,16 @@ You can set custom environment variables in several places:
 
     ```dotenv
     REDIS_TAG="7-bookworm"
-    MY_ENV_VAR="redisvariable"
+    REDIS_FOO="bar"
     ```
+
+    Use the [`ddev dotenv set`](../usage/commands.md#dotenv-set) command to set environment variables from command line:
+
+    ```bash
+    ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm --redis-foo bar
+    ```
+
+    If variables should be expanded only in `.ddev/docker-compose.*.yaml` files, use a different filename, for example, `.ddev/.env.redis-build`.
 
 3. The global `web_environment` setting in `.ddev/global_config.yaml`.
 
