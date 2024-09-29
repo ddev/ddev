@@ -55,24 +55,14 @@ RUN <<EOF
         if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi
 
         case ${DB_VERSION} in
-            "8.0")
-                if [ "${arch}" = "amd64" ]; then
-                    percona-release setup pxb80
-                    apt-get -qq update && apt-get -qq install -y percona-xtrabackup-80
-                else
-                    # Get xtrabackup from our arm64 build (xtrabackup-build).
-                    # TODO: We can remove this when Percona provides arm64 build, which they promise soon.
-                    URL="https://github.com/ddev/xtrabackup-build/releases/download/${XTRABACKUP_PACKAGE_VERSION%-*}/xtrabackup-${XTRABACKUP_PACKAGE_VERSION%-*}-arm64.tar.gz" && \
-                    cd /tmp && \
-                    wget ${URL} && \
-                    wget ${URL}.sha256.txt && \
-                    shasum -a 256 xtrabackup-*.sha256.txt && \
-                    tar -C /usr/local -xzf xtrabackup-*-arm64.tar.gz && \
-                    rm -f xtrabackup-* ; \
-                fi
-                ;;
             # TODO: This is just temp hack to get xtrabackup here, it should end up using their `percona-release setup pxb84-lts` tool
             # Currently broken due to https://perconadev.atlassian.net/issues/PXB-3361
+            "8.0")
+            curl -L -s --fail -o /tmp/xtrabackup.deb https://downloads.percona.com/downloads/Percona-XtraBackup-8.0/Percona-XtraBackup-8.0.35-31/binary/debian/bookworm/x86_64/percona-xtrabackup-80_8.0.35-31-1.bookworm_${arch}.deb
+            apt-get update && apt-get -qq install -y /tmp/xtrabackup.deb
+            rm /tmp/xtrabackup.deb
+            ;;
+
             "8.4")
                 curl -L -s --fail -o /tmp/xtrabackup.deb https://repo.percona.com/pxb-84-lts/apt/pool/main/p/percona-xtrabackup-84/percona-xtrabackup-84_8.4.0-1-1.bookworm_${arch}.deb
                 apt-get update && apt-get -qq install -y /tmp/xtrabackup.deb
