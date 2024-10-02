@@ -39,7 +39,14 @@ func TestDebugRefreshCmd(t *testing.T) {
 	err = fileutil.AppendStringToFile(app.GetConfigPath("web-build/Dockerfile"), `
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-RUN shuf -i 0-99999 -n1 > /random.txt
+RUN shuf -i 0-99999 -n1 > /random-web.txt
+`)
+	require.NoError(t, err)
+
+	err = fileutil.AppendStringToFile(app.GetConfigPath("db-build/Dockerfile"), `
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN shuf -i 0-99999 -n1 > /random-db.txt
 `)
 	require.NoError(t, err)
 
@@ -50,19 +57,32 @@ RUN shuf -i 0-99999 -n1 > /random.txt
 	err = app.Start()
 	require.NoError(t, err)
 
-	origRandom, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "cat /random.txt",
+	origRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+
+	origRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
 	})
 	require.NoError(t, err)
 
 	// Make sure that in the ordinary case, the original cache/Dockerfile is same
 	err = app.Restart()
 	require.NoError(t, err)
-	newRandom, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "cat /random.txt",
+	newRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
 	})
 	require.NoError(t, err)
-	assert.Equal(origRandom, newRandom)
+	assert.Equal(origRandomWeb, newRandomWeb)
+
+	newRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	assert.Equal(origRandomDb, newRandomDb)
 
 	// Now run ddev debug refresh to blow away the Docker cache
 	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh")
@@ -71,9 +91,63 @@ RUN shuf -i 0-99999 -n1 > /random.txt
 	// Now with refresh having been done, we should see a new value for random
 	err = app.Restart()
 	require.NoError(t, err)
-	freshRandom, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "cat /random.txt",
+	freshRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
 	})
 	require.NoError(t, err)
-	assert.NotEqual(origRandom, freshRandom)
+	assert.NotEqual(origRandomWeb, freshRandomWeb)
+
+	// And it should remain the same for db
+	freshRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	assert.Equal(origRandomDb, freshRandomDb)
+
+	// Now run ddev debug refresh to blow away the Docker cache for db
+	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh", "--service", "db")
+	require.NoError(t, err)
+
+	// It should remain the same for web
+	err = app.Restart()
+	require.NoError(t, err)
+	freshRandomWebNew, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	assert.Equal(freshRandomWeb, freshRandomWebNew)
+
+	// And we should see a new value for db
+	err = app.Restart()
+	require.NoError(t, err)
+	freshRandomDbNew, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	assert.NotEqual(freshRandomDb, freshRandomDbNew)
+
+	// Repeat the same with all services, but use cache
+	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh", "--all", "--cache")
+	require.NoError(t, err)
+
+	// It should remain the same for web
+	err = app.Restart()
+	require.NoError(t, err)
+	cachedRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	assert.Equal(cachedRandomWeb, freshRandomWebNew)
+
+	// And it should remain the same for db
+	err = app.Restart()
+	require.NoError(t, err)
+	cachedRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	assert.Equal(cachedRandomDb, freshRandomDbNew)
 }
