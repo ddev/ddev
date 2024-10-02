@@ -96,6 +96,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     iproute2 \
     iputils-ping \
     jq \
+    less \
     libldap-common \
     libpcre3 \
     libpq-dev \
@@ -114,7 +115,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     sqlite3 \
     sudo \
     telnet \
+    tree \
     unzip \
+    vim-tiny \
     zip
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
