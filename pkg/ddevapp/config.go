@@ -1125,7 +1125,7 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 
 ### DDEV-injected base Dockerfile contents
-ARG BASE_IMAGE
+ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `

@@ -1,5 +1,5 @@
-ARG BASE_IMAGE
-ARG DB_PINNED_VERSION
+ARG BASE_IMAGE="scratch"
+ARG DB_PINNED_VERSION="latest"
 FROM ${BASE_IMAGE}:${DB_PINNED_VERSION}
 
 # This must be reiterated because everything is emptied on FROM
