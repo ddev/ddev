@@ -6,7 +6,7 @@ The following database types are currently supported:
 
 - MariaDB 5.5-10.8, 10.11, and 11.4
 - MySQL 5.5-8.0
-- Postgres 9-16
+- Postgres 9-17
 
 The default database type is MariaDB, and the default version is currently 10.11.
 New LTS versions of each of these are typically added soon after they are released. The very old versions are kept for compatibility with older projects.

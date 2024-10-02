@@ -27,7 +27,7 @@ const ConfigInstructions = `
 #   version: <version> # database version, like "10.11" or "8.0"
 #   MariaDB versions can be 5.5-10.8, 10.11, and 11.4.
 #   MySQL versions can be 5.5-8.0.
-#   PostgreSQL versions can be 9-16.
+#   PostgreSQL versions can be 9-17.
 
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
