@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:v1.23.4 AS ddev-webserver-base
+FROM ddev/ddev-php-base:20241002_deviantintegral_vim_tiny AS ddev-webserver-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
