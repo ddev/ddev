@@ -444,9 +444,11 @@ Example:
 ddev debug nfsmount
 ```
 
-### `debug refresh`
+### `debug rebuild`
 
-Refreshes the project’s Docker cache with verbose output.
+*Aliases: `debug refresh`.*
+
+Rebuilds the project’s Docker cache with verbose output.
 
 Flags:
 
@@ -457,17 +459,17 @@ Flags:
 Example:
 
 ```shell
-# Refresh the current project’s web service without cache
-ddev debug refresh
+# Rebuild the current project’s web service without cache
+ddev debug rebuild
 
-# Refresh the current project’s web service with cache
-ddev debug refresh --cache
+# Rebuild the current project’s web service with cache
+ddev debug rebuild --cache
 
-# Refresh the current project’s db service without cache
-ddev debug refresh --service db
+# Rebuild the current project’s db service without cache
+ddev debug rebuild --service db
 
-# Refresh the current project’s all services without cache
-ddev debug refresh --all
+# Rebuild the current project’s all services without cache
+ddev debug rebuild --all
 ```
 
 ### `debug router-nginx-config`

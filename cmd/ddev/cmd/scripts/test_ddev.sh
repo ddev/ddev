@@ -178,8 +178,8 @@ cat <<END >web/index.php
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 
-header "ddev debug refresh"
-ddev debug refresh
+header "ddev debug rebuild"
+ddev debug rebuild
 
 header "Project startup"
 DDEV_DEBUG=true ddev start -y || ( \

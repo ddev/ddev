@@ -18,11 +18,12 @@ var (
 	service  string
 )
 
-// DebugRefreshCmd implements the ddev debug refresh command
-var DebugRefreshCmd = &cobra.Command{
+// DebugRebuildCmd implements the ddev debug rebuild command
+var DebugRebuildCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
-	Use:               "refresh",
-	Short:             "Refreshes Docker cache for project with verbose output",
+	Use:               "rebuild",
+	Short:             "Rebuilds Docker cache for project with verbose output",
+	Aliases:           []string{"refresh"},
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 
@@ -79,7 +80,7 @@ var DebugRefreshCmd = &cobra.Command{
 			util.Failed("Failed to execute `%s %v`: %v", composeBinaryPath, strings.Join(buildArgs, " "), err)
 		}
 		buildDuration := util.FormatDuration(buildDurationStart())
-		util.Success("Refreshed Docker cache for project %s in %s", app.Name, buildDuration)
+		util.Success("Rebuilt Docker cache for project %s in %s", app.Name, buildDuration)
 
 		err = app.Restart()
 		if err != nil {
@@ -89,8 +90,8 @@ var DebugRefreshCmd = &cobra.Command{
 }
 
 func init() {
-	DebugCmd.AddCommand(DebugRefreshCmd)
-	DebugRefreshCmd.Flags().BoolVarP(&buildAll, "all", "a", false, "Rebuild all services")
-	DebugRefreshCmd.Flags().Bool("cache", false, "Keep Docker cache")
-	DebugRefreshCmd.Flags().StringVarP(&service, "service", "s", "web", "Rebuild specified service")
+	DebugCmd.AddCommand(DebugRebuildCmd)
+	DebugRebuildCmd.Flags().BoolVarP(&buildAll, "all", "a", false, "Rebuild all services")
+	DebugRebuildCmd.Flags().Bool("cache", false, "Keep Docker cache")
+	DebugRebuildCmd.Flags().StringVarP(&service, "service", "s", "web", "Rebuild specified service")
 }

@@ -12,8 +12,8 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 )
 
-// TestDebugRefreshCmd tests that ddev debug refresh actually clears Docker cache
-func TestDebugRefreshCmd(t *testing.T) {
+// TestDebugRebuildCmd tests that ddev debug rebuild actually clears Docker cache
+func TestDebugRebuildCmd(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it.
@@ -84,11 +84,11 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	require.NoError(t, err)
 	assert.Equal(origRandomDb, newRandomDb)
 
-	// Now run ddev debug refresh to blow away the Docker cache
-	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh")
+	// Now run ddev debug rebuild to blow away the Docker cache
+	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild")
 	require.NoError(t, err)
 
-	// Now with refresh having been done, we should see a new value for random
+	// Now with rebuild having been done, we should see a new value for random
 	err = app.Restart()
 	require.NoError(t, err)
 	freshRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -105,8 +105,8 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	require.NoError(t, err)
 	assert.Equal(origRandomDb, freshRandomDb)
 
-	// Now run ddev debug refresh to blow away the Docker cache for db
-	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh", "--service", "db")
+	// Now run ddev debug rebuild to blow away the Docker cache for db
+	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--service", "db")
 	require.NoError(t, err)
 
 	// It should remain the same for web
@@ -129,7 +129,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	assert.NotEqual(freshRandomDb, freshRandomDbNew)
 
 	// Repeat the same with all services, but use cache
-	_, err = exec.RunHostCommand(DdevBin, "debug", "refresh", "--all", "--cache")
+	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--all", "--cache")
 	require.NoError(t, err)
 
 	// It should remain the same for web
