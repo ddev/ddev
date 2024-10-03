@@ -1677,6 +1677,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
+	if logStderr != "" {
+		util.Warning(`Some components of the project %s were not installed properly.
+The project is running anyway, but see the warnings above for details.
+If offline, run 'ddev restart' once you are back online.
+If online, check your connection and run 'ddev restart' later.
+If this seems to be a config issue, update it accordingly.`, app.Name)
+	}
+
 	return nil
 }
 
