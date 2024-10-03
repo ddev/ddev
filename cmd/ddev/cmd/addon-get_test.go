@@ -18,10 +18,6 @@ import (
 
 // TestCmdAddonComplex tests advanced usages
 func TestCmdAddonComplex(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
-	}
-
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -85,10 +81,6 @@ func TestCmdAddonComplex(t *testing.T) {
 
 // TestCmdAddonDependencies tests the dependency behavior is correct
 func TestCmdAddonDependencies(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
-	}
-
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -125,10 +117,6 @@ func TestCmdAddonDependencies(t *testing.T) {
 
 // TestCmdAddonDdevVersionConstraint tests the ddev_version_constraint behavior is correct
 func TestCmdAddonDdevVersionConstraint(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
-	}
-
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -165,10 +153,6 @@ func TestCmdAddonDdevVersionConstraint(t *testing.T) {
 // env vars are injected in PreInstallActions and PostInstallActions for add-ons,
 // env vars are expanded in .ddev/docker-compose.*.yaml files.
 func TestCmdAddonGetWithDotEnv(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
-	}
-
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
