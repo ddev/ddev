@@ -99,7 +99,7 @@ jobs:
           DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN is not true"; fi
-          make windows_install
+          make windows_amd64_install windows_arm64_install
       - name: Show github.ref
         run: echo ${{ github.ref }}
       - name: Build chocolatey on release
