@@ -105,7 +105,7 @@
   !define ARCH "amd64"
 !endif
 
-OutFile "..\.gotmp\bin\windows_${ARCH}\ddev_windows_installer${ARCH_SUFFIX}.exe"
+OutFile "..\.gotmp\bin\windows_${ARCH}\ddev_windows_${ARCH}_installer.exe"
 Unicode true
 SetCompressor /SOLID lzma
 
