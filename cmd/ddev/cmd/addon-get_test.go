@@ -74,9 +74,9 @@ func TestCmdAddonComplex(t *testing.T) {
 	require.NoError(t, err, "stat of no-ddev-generated.txt failed")
 	assert.True(info.Size() == 0)
 
-	assert.Contains(out, "👍 extra/has-ddev-generated.txt")
-	assert.NotContains(out, "👍 extra/no-ddev-generated.txt")
-	assert.Regexp(regexp.MustCompile(`NOT overwriting [^ ]*`+"extra/no-ddev-generated.txt"), out)
+	assert.Contains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "has-ddev-generated.txt")))
+	assert.NotContains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
+	assert.Regexp(regexp.MustCompile(`NOT overwriting [^ ]*`+filepath.Join("extra", "no-ddev-generated.txt")), out)
 }
 
 // TestCmdAddonDependencies tests the dependency behavior is correct
