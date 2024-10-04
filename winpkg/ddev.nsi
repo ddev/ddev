@@ -704,6 +704,18 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
  * with `un.`
  */
 
+Function GetOSArch
+    System::Call 'kernel32::IsWow64Process(p 1, *i .r0)'
+    ${If} $0 == 0
+        StrCpy $ARCH "x86"
+    ${Else}
+        System::Call 'kernel32::GetNativeSystemInfo(p .r0)'
+        System::Int64Op $0 & 0xFFFF00000000C0000 R0
+        IntCmp $0 9 +2
+        StrCpy $ARCH "arm64"
+    ${EndIf}
+FunctionEnd
+
 /**
  * Initialization, called on installer start
  */
