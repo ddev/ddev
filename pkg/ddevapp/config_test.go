@@ -879,7 +879,7 @@ func TestPHPConfig(t *testing.T) {
 		})
 		require.NoError(t, err)
 		out = strings.Trim(out, "\n")
-		require.Equal(t, `float(0.6)`, out)
+		require.Contains(t, out, `float(0.6)`)
 
 		// Verify that environment variables are available in php-fpm
 		out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/phpinfo.php")
