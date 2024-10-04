@@ -98,6 +98,8 @@
  *
  * Has to be done before including headers
  */
+ Var ARCH
+ Var ARCH_SUFFIX
 !ifdef NSIS_ARM64
   !define ARCH "arm64"
   !define ARCH_SUFFIX "_arm64"
@@ -626,14 +628,19 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
  */
 
 Function GetOSArch
-    System::Call 'kernel32::IsWow64Process(p 1, *i .r0)'
+    System::Call 'kernel32::IsWow64Process(p -1, *i .r0)'
     ${If} $0 == 0
         StrCpy $ARCH "x86"
     ${Else}
-        System::Call 'kernel32::GetNativeSystemInfo(p .r0)'
-        System::Int64Op $0 & 0xFFFF00000000C0000 R0
-        IntCmp $0 9 +2
-        StrCpy $ARCH "arm64"
+        System::Call 'kernel32::GetNativeSystemInfo(*i .r1)'
+        System::Call '*$1(i .r2)'
+        ${If} $2 == 9 ; IMAGE_FILE_MACHINE_AMD64
+            StrCpy $ARCH "amd64"
+        ${ElseIf} $2 == 12 ; IMAGE_FILE_MACHINE_ARM64
+            StrCpy $ARCH "arm64"
+        ${Else}
+            StrCpy $ARCH "unknown"
+        ${EndIf}
     ${EndIf}
 FunctionEnd
 
@@ -642,15 +649,12 @@ FunctionEnd
  */
 Function .onInit
   ; Check OS architecture
-  System::Call "kernel32::GetNativeSystemInfo(i .r0)"
-  System::Call "*$0(i .r1, i .r2, i .r3, i .r4, i .r5, i .r6, i .r7, i .r8, i .r9)"
-  ${If} $9 == 12 ; IMAGE_FILE_MACHINE_ARM64
-    StrCpy $ARCH "arm64"
-  ${ElseIf} $9 == 9 ; IMAGE_FILE_MACHINE_AMD64
-    StrCpy $ARCH "amd64"
-  ${Else}
-    MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64-bit ARM or AMD only."
+  Call GetOSArch
+  ${If} $ARCH == "x86"
+    MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64-bit only."
     Abort "Unsupported CPU architecture!"
+  ${ElseIf} $ARCH == "unknown"
+    MessageBox MB_ICONSTOP|MB_OK "Unknown CPU architecture, $(^Name) may not function correctly."
   ${EndIf}
 
   ; Check Windows version
