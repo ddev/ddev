@@ -40,8 +40,6 @@
  */
 !addincludedir include
 
-
-
 /**
  * Version fallback for manual compilation
  */
@@ -51,8 +49,6 @@
 !else
   !define RELEASE_TAG "tag/${VERSION}"
 !endif
-
-
 
 /**
  * Product Settings
@@ -82,8 +78,6 @@
 !define PRODUCT_PROJECT "${PRODUCT_NAME} GitHub"
 !define PRODUCT_PROJECT_URL "https://github.com/ddev/ddev#readme"
 
-
-
 /**
  * Registry Settings
  */
@@ -92,32 +86,33 @@
 !define REG_UNINST_ROOT "HKLM"
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 
-
-
 /**
  * Third Party Applications
  */
 !define GSUDO_NAME "gsudo"
 !define GSUDO_SETUP "sudo.exe"
-# TODO: Use a current version with correct architecture
-!define GSUDO_URL "https://github.com/ddev/gsudo/releases/download/v0.7.3/gsudo.exe"
+!define GSUDO_VERSION "v2.4.0"
 
 /**
  * Configuration
  *
  * Has to be done before including headers
  */
-// TODO: use defined architecture instead of amd64
-OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.exe"
+!ifdef NSIS_ARM64
+  !define ARCH "arm64"
+  !define ARCH_SUFFIX "_arm64"
+!else
+  !define ARCH "amd64"
+  !define ARCH_SUFFIX ""
+!endif
+
+OutFile "..\.gotmp\bin\windows_${ARCH}\ddev_windows_installer${ARCH_SUFFIX}.exe"
 Unicode true
 SetCompressor /SOLID lzma
 
 InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
 
 RequestExecutionLevel admin
-;ManifestSupportedOS
-
-
 
 /**
  * Installer Types
@@ -126,23 +121,18 @@ InstType "Full"
 InstType "Simple"
 InstType "Minimal"
 
-
-
 /**
  * Include Headers
  */
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 !include "LogicLib.nsh"
-;!include "Memento.nsh"
 !include "Sections.nsh"
 !include "x64.nsh"
+!include "ARM64.nsh"
 !include "WinVer.nsh"
 
 !include "ddev.nsh"
-
-
-
 
 /**
  * Local macros
@@ -153,8 +143,6 @@ Var ChocolateyMode
 !macroend
 !define Chocolatey `"" Chocolatey ""`
 
-
-
 /**
  * Names
  */
@@ -164,8 +152,6 @@ Var InstallerMode
 Var InstallerModeCaption
 Name "${PRODUCT_NAME_FULL}"
 Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
-
-
 
 /**
  * Interface Configuration
@@ -181,8 +167,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 
 !define MUI_CUSTOMFUNCTION_GUIINIT onGUIInit
 
-
-
 /**
  * Language Selection Dialog Settings
  *
@@ -191,8 +175,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_LANGDLL_REGISTRY_ROOT ${REG_UNINST_ROOT}
 !define MUI_LANGDLL_REGISTRY_KEY "${REG_UNINST_KEY}"
 !define MUI_LANGDLL_REGISTRY_VALUENAME "NSIS:Language"
-
-
 
 /**
  * Installer Pages
@@ -213,7 +195,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${ARCH}\sudo_license.txt"
 
 ; Components page
 Var MkcertSetup
@@ -225,7 +207,7 @@ Var MkcertSetup
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing mkcert."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE mkcertLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE mkcertLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${ARCH}\mkcert_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -248,11 +230,7 @@ Var ICONS_GROUP
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Review the release notes"
 !define MUI_FINISHPAGE_LINK "${PRODUCT_PROJECT} (${PRODUCT_PROJECT_URL})"
 !define MUI_FINISHPAGE_LINK_LOCATION ${PRODUCT_PROJECT_URL}
-; To build a version that shows the details on the final page
-; uncomment the following MUI_PAGE_FINISH line
 !insertmacro MUI_PAGE_FINISH
-
-
 
 /**
  * Uninstaller Pages
@@ -264,8 +242,6 @@ Var ICONS_GROUP
 ; Instfiles page
 !insertmacro MUI_UNPAGE_INSTFILES
 
-
-
 /**
  * Language Files
  *
@@ -274,8 +250,6 @@ Var ICONS_GROUP
  * `Language Strings`.
  */
 !insertmacro MUI_LANGUAGE "English"
-
-
 
 /**
  * Reserve Files
@@ -287,38 +261,6 @@ Var ICONS_GROUP
 ReserveFile /plugin EnVar.dll
 ReserveFile /plugin nsExec.dll
 ReserveFile /plugin INetC.dll
-
-
-
-/**
- * Version Information
- *
- * To use version information the VERSION constant has to be splitted into
- * the 4 version parts.
- */
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "ProductName" "${PRODUCT_NAME_FULL}"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "Comments" "A test comment"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "CompanyName" "${PRODUCT_PUBLISHER}"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalTrademarks" "Test Application is a trademark of Fake company"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "https://github.com/ddev/ddev/raw/master/LICENSE"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Windows Installer of ${PRODUCT_NAME_FULL}"
-;ProductName
-;Comments
-;CompanyName
-;LegalCopyright
-;FileDescription
-;FileVersion
-;ProductVersion
-;InternalName
-;LegalTrademarks
-;OriginalFilename
-;PrivateBuild
-;SpecialBuild
-;StrCpy
-;VIProductVersion 1.2.3.4
-;VIFileVersion 1.2.3.4
-
-
 
 /**
  * Installer Sections
@@ -342,8 +284,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
     SetOverwrite on
 
     ; Copy files
-    // TODO: Use correct architecture
-    File "..\.gotmp\bin\windows_amd64\ddev.exe"
+    File "..\.gotmp\bin\windows_${ARCH}\ddev.exe"
     File /oname=license.txt "..\LICENSE"
 
     ; Install icons
@@ -407,24 +348,18 @@ SectionGroupEnd
  */
 
 Section "${GSUDO_NAME}" SecSudo
-
-
   ; Force installation
   SectionIn 1 2 3 RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
   ; Set URL and temporary file name
-  // TODO: Why are we showing 2.4.0 here and 0.x up above?
-  !define GSUDO_VERSION "v2.4.0"
-  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
+  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable_${ARCH}.zip"
   !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
-  // TODO: Use gsudo with the correct architecture
-  // TODO: Make sure gsudo is optional, for those that can't install it.
-  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
-  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable.zip.sha256"
+  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${ARCH}.zip.sha256"
+  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable_${ARCH}.zip.sha256"
 
   ; Download license file
   INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
@@ -440,22 +375,19 @@ Section "${GSUDO_NAME}" SecSudo
   ${EndIf}
 
   ; Download zip file
-  // TODO: Use the correct architecture for gsudo
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${ARCH}.zip" "${GSUDO_ZIP_DEST}" /END
   Pop $R0 ; return value = exit code, "OK" if OK
 
   ; Check download result
   ${If} $R0 != "OK"
     ; Download failed, show message and continue
     SetDetailsView show
-    // TODO: use correct URL in message
-    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
+    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${ARCH}.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
     MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${Else}
     ; Download SHA-256 hash
     INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_SHA256_URL}" "${GSUDO_SHA256_DEST}" /END
     Pop $R0 ; return value = exit code, "OK" if OK
-
 
     ; Check download result
     ${If} $R0 != "OK"
@@ -474,7 +406,6 @@ Section "${GSUDO_NAME}" SecSudo
       DetailPrint "R0 exit code='$R0'"
       DetailPrint "R1 stdout='$R1'"
       DetailPrint "R2 stderr='$R2'"
-
 
       ; Copy the hash (R2) into $R9
       StrCpy $R9 $R2
@@ -525,8 +456,7 @@ Section "${GSUDO_NAME}" SecSudo
             DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
-            ;nsUnzip::Extract "C:\Program Files\DDEV\gsudo.portable.zip"
-            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            nsUnzip::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
 
             Pop $0
             DetailPrint "Unzip results: $0"
@@ -569,9 +499,8 @@ SectionGroup /e "mkcert"
       SetOverwrite try
 
       ; Copy files
-      // TODO: Use the correct architecture for mkcert
-      File "..\.gotmp\bin\windows_amd64\mkcert.exe"
-      File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+      File "..\.gotmp\bin\windows_${ARCH}\mkcert.exe"
+      File "..\.gotmp\bin\windows_${ARCH}\mkcert_license.txt"
 
       ; Install icons
       SetOutPath "$INSTDIR\Icons"
@@ -649,8 +578,6 @@ Section -Post
   !insertmacro MUI_STARTMENU_WRITE_END
 SectionEnd
 
-
-
 /**
  * Language Strings
  *
@@ -661,7 +588,6 @@ LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo)
 LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/gerardog/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
-
 
 /**
  * Section Descriptions
@@ -675,8 +601,6 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcert} $(DESC_SecMkcert)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcertSetup} $(DESC_SecMkcertSetup)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
-
-
 
 /**
  * Installer Macros
@@ -694,8 +618,6 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
   ;!insertmacro _FileExists `${_a}` `${_b}\ddev.exe` `${_t}` `${_f}`
 !macroend
 !define IsUpdateMode `"" IsUpdateMode ""`
-
-
 
 /**
  * Installer Functions
@@ -721,7 +643,6 @@ FunctionEnd
  */
 Function .onInit
   ; Check OS architecture, 64 bit supported only
-  // TODO: Use each arch as needed
   ${IfNot} ${IsNativeAMD64}
     MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64 bit only."
     Abort "Unsupported CPU architecture!"
@@ -987,8 +908,6 @@ Section Uninstall
   ; Close uninstaller window
   SetAutoClose true
 SectionEnd
-
-
 
 /**
  * Uninstaller Functions
