@@ -76,7 +76,7 @@ func TestCmdAddonComplex(t *testing.T) {
 
 	assert.Contains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "has-ddev-generated.txt")))
 	assert.NotContains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
-	assert.Regexp(regexp.MustCompile(`NOT overwriting [^ ]*`+filepath.Join("extra", "no-ddev-generated.txt")), out)
+	assert.Regexp(regexp.MustCompile(fmt.Sprintf(`NOT overwriting [^ ]*%s`, regexp.QuoteMeta(filepath.Join("extra", "no-ddev-generated.txt")))), out)
 }
 
 // TestCmdAddonDependencies tests the dependency behavior is correct
