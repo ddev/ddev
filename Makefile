@@ -19,7 +19,6 @@ SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
 
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
 
-WINDOWS_GSUDO_VERSION=v0.7.3
 WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
 

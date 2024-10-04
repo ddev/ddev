@@ -91,7 +91,7 @@
  */
 !define GSUDO_NAME "gsudo"
 !define GSUDO_SETUP "sudo.exe"
-!define GSUDO_VERSION "v2.4.0"
+!define GSUDO_VERSION "v2.5.1"
 
 /**
  * Configuration
@@ -351,12 +351,12 @@ Section "${GSUDO_NAME}" SecSudo
   SetOverwrite try
 
   ; Set URL and temporary file name
-  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable_${TARGET_ARCH}.zip"
+  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
   !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
-  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${TARGET_ARCH}.zip.sha256"
-  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable_${TARGET_ARCH}.zip.sha256"
+  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
+  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable.zip.sha256"
 
   ; Download license file
   INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
@@ -372,14 +372,14 @@ Section "${GSUDO_NAME}" SecSudo
   ${EndIf}
 
   ; Download zip file
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${TARGET_ARCH}.zip" "${GSUDO_ZIP_DEST}" /END
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
   Pop $R0 ; return value = exit code, "OK" if OK
 
   ; Check download result
   ${If} $R0 != "OK"
     ; Download failed, show message and continue
     SetDetailsView show
-    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${TARGET_ARCH}.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
+    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
     MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${Else}
     ; Download SHA-256 hash
@@ -453,7 +453,12 @@ Section "${GSUDO_NAME}" SecSudo
             DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
-            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            ${If} ${TARGET_ARCH} != "arm64"
+              nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            ${Else}
+               nsisunz::UnzipToLog /file "arm64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            ${EndIf}
+
 
             Pop $0
             DetailPrint "Unzip results: $0"
