@@ -99,7 +99,7 @@
  */
 !define GSUDO_NAME "gsudo"
 !define GSUDO_SETUP "sudo.exe"
-# TODO: Use a current one with correct architecture
+# TODO: Use a current version with correct architecture
 !define GSUDO_URL "https://github.com/ddev/gsudo/releases/download/v0.7.3/gsudo.exe"
 
 /**
@@ -107,6 +107,7 @@
  *
  * Has to be done before including headers
  */
+// TODO: use defined architecture instead of amd64
 OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.exe"
 Unicode true
 SetCompressor /SOLID lzma
@@ -341,6 +342,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
     SetOverwrite on
 
     ; Copy files
+    // TODO: Use correct architecture
     File "..\.gotmp\bin\windows_amd64\ddev.exe"
     File /oname=license.txt "..\LICENSE"
 
@@ -413,11 +415,14 @@ Section "${GSUDO_NAME}" SecSudo
   SetOverwrite try
 
   ; Set URL and temporary file name
+  // TODO: Why are we showing 2.4.0 here and 0.x up above?
   !define GSUDO_VERSION "v2.4.0"
   !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
   !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
+  // TODO: Use gsudo with the correct architecture
+  // TODO: Make sure gsudo is optional, for those that can't install it.
   !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
   !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable.zip.sha256"
 
@@ -435,6 +440,7 @@ Section "${GSUDO_NAME}" SecSudo
   ${EndIf}
 
   ; Download zip file
+  // TODO: Use the correct architecture for gsudo
   INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
   Pop $R0 ; return value = exit code, "OK" if OK
 
@@ -442,6 +448,7 @@ Section "${GSUDO_NAME}" SecSudo
   ${If} $R0 != "OK"
     ; Download failed, show message and continue
     SetDetailsView show
+    // TODO: use correct URL in message
     DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
     MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${Else}
@@ -562,6 +569,7 @@ SectionGroup /e "mkcert"
       SetOverwrite try
 
       ; Copy files
+      // TODO: Use the correct architecture for mkcert
       File "..\.gotmp\bin\windows_amd64\mkcert.exe"
       File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
 
@@ -701,6 +709,7 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
  */
 Function .onInit
   ; Check OS architecture, 64 bit supported only
+  // TODO: Use each arch as needed
   ${IfNot} ${IsNativeAMD64}
     MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64 bit only."
     Abort "Unsupported CPU architecture!"
