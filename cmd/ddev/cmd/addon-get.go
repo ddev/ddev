@@ -157,6 +157,8 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
+		injectedEnv := getInjectedEnv(app.GetConfigPath(".env."+s.Name), verbose)
+
 		yamlMap := make(map[string]interface{})
 		for name, f := range s.YamlReadFiles {
 			f := os.ExpandEnv(string(f))
@@ -203,7 +205,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
@@ -279,7 +281,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
 			desc := ddevapp.GetAddonDdevDescription(action)
 			if err != nil {
 				if !verbose {
@@ -341,6 +343,30 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		util.Failed("Error writing manifest file: %v", err)
 	}
 	return manifest, nil
+}
+
+// getInjectedEnv returns bash export string for env variables
+// that will be used in PreInstallActions and PostInstallActions
+func getInjectedEnv(envFile string, verbose bool) string {
+	injectedEnv := "true"
+	envMap, _, err := ddevapp.ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		util.Failed("Unable to read %s file: %v", envFile, err)
+	}
+	if len(envMap) > 0 {
+		if verbose {
+			util.Warning("Using env file %s", envFile)
+		}
+		injectedEnv = "export"
+		for k, v := range envMap {
+			v = strings.Replace(v, " ", `\ `, -1)
+			injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
+			if verbose {
+				util.Warning(`%s="%s"`, k, v)
+			}
+		}
+	}
+	return injectedEnv
 }
 
 func init() {

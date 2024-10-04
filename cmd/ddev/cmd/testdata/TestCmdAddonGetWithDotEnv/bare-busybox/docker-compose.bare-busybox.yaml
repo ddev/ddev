@@ -1,0 +1,18 @@
+services:
+  bare-busybox:
+    container_name: ddev-${DDEV_SITENAME}-bare-busybox
+    image: busybox:stable
+    command: tail -f /dev/null
+    restart: "no"
+    # These labels ensure this service is discoverable by ddev.
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    # This service checks if env variables from .env.* files are added to environment
+    # when the "environment" section is not defined in the yaml file
+    #environment:
+    #  - SOMEENV=true
+
+    volumes:
+      - ".:/mnt/ddev_config"
+      - "ddev-global-cache:/mnt/ddev-global-cache"

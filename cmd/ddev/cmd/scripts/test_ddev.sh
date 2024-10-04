@@ -48,7 +48,7 @@ echo
 ddev debug configyaml | grep -v web_environment
 
 header "existing project customizations"
-grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres 2>/dev/null
+grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres .ddev/.env .ddev/.env.* 2>/dev/null | grep -v '\.example$' 2>/dev/null
 
 if ls .ddev/nginx >/dev/null 2>&1 ; then
   echo "Customizations in .ddev/nginx:"

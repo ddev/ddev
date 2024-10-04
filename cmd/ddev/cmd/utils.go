@@ -2,6 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"os"
+	"regexp"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -80,4 +85,54 @@ func getRequestedProjectsExtended(names []string, all bool, withNonExisting bool
 	}
 
 	return requestedProjects, nil
+}
+
+// GetUnknownFlags returns a map of unknown flags (short and long) passed to cmd and their values.
+// If there is no value passed to the flag, it will be an empty string.
+// Works only with this config in Cobra: FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true}
+// If Cobra implements handling of unknown flags, this function can be removed/refactored.
+// See https://github.com/spf13/cobra/issues/739
+func GetUnknownFlags(cmd *cobra.Command) map[string]string {
+	unknownFlags := make(map[string]string)
+	if len(os.Args) < 1 {
+		return unknownFlags
+	}
+
+	// Known flags tracking
+	knownFlags := make(map[string]bool)
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		knownFlags["--"+f.Name] = true
+		if f.Shorthand != "" {
+			knownFlags["-"+f.Shorthand] = true
+		}
+	})
+	// Match only:
+	// 1. short lowercase flags, such as `-a`
+	// 2. short lowercase flags with a value, such as `-a=anything`
+	// 3. long lowercase flags, such as `--flag-123-name`
+	// 4. long lowercase flags with a value, such as `--flag-123-name=anything`
+	flagRegex := regexp.MustCompile(`^-[a-z]$|^-[a-z]=.*|^--[a-z][a-z0-9-]*$|^--[a-z][a-z0-9-]*=.*`)
+
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		// Skip if the argument is not a valid flag or a known flag
+		if !flagRegex.MatchString(arg) || knownFlags[arg] {
+			continue
+		}
+
+		// Handle `--flag=value` or `-f=value` case
+		if strings.Contains(arg, "=") {
+			parts := strings.SplitN(arg, "=", 2)
+			unknownFlags[parts[0]] = parts[1]
+		} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+			// Handle `--flag value` or `-f value` case
+			unknownFlags[arg] = args[i+1]
+			i++ // Skip the value
+		} else {
+			// Handle flags without value
+			unknownFlags[arg] = ""
+		}
+	}
+	return unknownFlags
 }
