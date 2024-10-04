@@ -99,19 +99,8 @@
  */
 !define GSUDO_NAME "gsudo"
 !define GSUDO_SETUP "sudo.exe"
+# TODO: Use a current one with correct architecture
 !define GSUDO_URL "https://github.com/ddev/gsudo/releases/download/v0.7.3/gsudo.exe"
-
-!define WINNFSD_NAME "WinNFSd"
-!define WINNFSD_VERSION "2.4.0"
-!define WINNFSD_SETUP "WinNFSd.exe"
-!define WINNFSD_URL "https://github.com/winnfsd/winnfsd/releases/download/${WINNFSD_VERSION}/WinNFSd.exe"
-
-!define NSSM_NAME "NSSM"
-!define NSSM_VERSION "2.24-101-g897c7ad"
-!define NSSM_SETUP "nssm.exe"
-!define NSSM_URL "https://github.com/ddev/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
-
-
 
 /**
  * Configuration
@@ -236,13 +225,6 @@ Var MkcertSetup
 !define MUI_PAGE_CUSTOMFUNCTION_PRE mkcertLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE mkcertLicLeave
 !insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
-
-; License page WinNFSd
-!define MUI_PAGE_HEADER_TEXT "License Agreement for WinNFSd"
-!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing WinNFSd."
-!define MUI_PAGE_CUSTOMFUNCTION_PRE winNFSdLicPre
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE winNFSdLicLeave
-!insertmacro MUI_PAGE_LICENSE "licenses\winnfsd_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -623,72 +605,6 @@ SectionGroup /e "mkcert"
 SectionGroupEnd
 
 /**
- * WinNFSd group
- */
-SectionGroup /e "WinNFSd (deprecated)"
-  /**
-   * WinNFSd application install
-   */
-  Section /o "${WINNFSD_NAME}" SecWinNFSd
-    SectionIn 1
-    SetOutPath "$INSTDIR"
-    SetOverwrite off
-
-    ; Copy files
-    File "licenses\winnfsd_license.txt"
-    File "..\scripts\windows_ddev_nfs_setup.sh"
-
-    ; Set URL and temporary file name
-    !define WINNFSD_DEST "$INSTDIR\${WINNFSD_SETUP}"
-
-    ; Download installer
-    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${WINNFSD_URL}" "${WINNFSD_DEST}" /END
-    Pop $R0 ; return value = exit code, "OK" if OK
-
-    ; Check download result
-    ${If} $R0 != "OK"
-      ; Download failed, show message and continue
-      SetDetailsView show
-      DetailPrint "Download of `${WINNFSD_NAME}` failed:"
-      DetailPrint " $R0"
-      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
-    ${EndIf}
-
-    !undef WINNFSD_DEST
-  SectionEnd
-
-  /**
-   * NSSM application install
-   */
-  Section /o "${NSSM_NAME}" SecNSSM
-    ; Install in non choco mode only
-    ${IfNot} ${Chocolatey}
-      SectionIn 1
-      SetOutPath "$INSTDIR"
-      SetOverwrite try
-
-      ; Set URL and temporary file name
-      !define NSSM_DEST "$INSTDIR\${NSSM_SETUP}"
-
-      ; Download installer
-      INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${NSSM_URL}" "${NSSM_DEST}" /END
-      Pop $R0 ; return value = exit code, "OK" if OK
-
-      ; Check download result
-      ${If} $R0 != "OK"
-        ; Download failed, show message and continue
-        SetDetailsView show
-        DetailPrint "Download of `${NSSM_NAME}` failed:"
-        DetailPrint " $R0"
-        MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
-      ${EndIf}
-
-      !undef NSSM_DEST
-    ${EndIf}
-  SectionEnd
-SectionGroupEnd
-
-/**
  * Last processed section
  *
  * Insert new section groups and sections before this point!
@@ -737,9 +653,6 @@ LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo)
 LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/gerardog/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
-LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL} (deprecated)"
-LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install services, specifically WinNFSd for NFS (deprecated)"
-
 
 
 /**
@@ -753,8 +666,6 @@ LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install servi
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSudo} $(DESC_SecSudo)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcert} $(DESC_SecMkcert)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcertSetup} $(DESC_SecMkcertSetup)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecWinNFSd} $(DESC_SecWinNFSd)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecNSSM} $(DESC_SecNSSM)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 
@@ -951,24 +862,6 @@ Function mkcertLicLeave
 FunctionEnd
 
 /**
- * Disable WinNFSd license page if component is not selected or already accepted before
- */
-Function winNFSdLicPre
-  ReadRegDWORD $R0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:WinNFSdLicenseAccepted"
-  ${If} $R0 = 1
-  ${OrIfNot} ${SectionIsSelected} ${SecWinNFSd}
-    Abort
-  ${EndIf}
-FunctionEnd
-
-/**
- * Set WinNFSd license accepted flag
- */
-Function winNFSdLicLeave
-  WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:WinNFSdLicenseAccepted" 0x00000001
-FunctionEnd
-
-/**
  * Disable on updates
  */
 Function DirectoryPre
@@ -1040,12 +933,6 @@ Section Uninstall
 
   ; Remove installed files
   Delete "$INSTDIR\ddev_uninstall.exe"
-
-  Delete "$INSTDIR\${NSSM_SETUP}"
-
-  Delete "$INSTDIR\windows_ddev_nfs_setup.sh"
-  Delete "$INSTDIR\winnfsd_license.txt"
-  Delete "$INSTDIR\${WINNFSD_SETUP}"
 
   Delete "$INSTDIR\mkcert uninstall.lnk"
   Delete "$INSTDIR\mkcert install.lnk"
