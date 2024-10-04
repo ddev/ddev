@@ -94,7 +94,7 @@ builds:
     path: .gotmp/bin/completions/ddev_fish_completion.sh
   binary: ddev_fish_completion.sh
 
-- id: ddev-windows-installer
+- id: ddev-windows-amd64-installer
   builder: prebuilt
   goos:
   - windows
@@ -103,8 +103,20 @@ builds:
   goamd64:
   - v1
   prebuilt:
-    path: .gotmp/bin/windows_amd64/ddev_windows_installer.exe
-  binary: ddev-windows-installer
+    path: .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
+  binary: ddev-windows-amd64-installer
+
+- id: ddev-windows-arm64-installer
+  builder: prebuilt
+  goos:
+  - windows
+  goarch:
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/windows_amd64/ddev_windows_arm64_installer.exe
+  binary: ddev-windows-arm64-installer
 
 ###### Archives ######
 archives:
@@ -132,11 +144,17 @@ archives:
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
-- id: ddev-windows-installer
+- id: ddev-windows-amd64-installer
   builds:
-  - ddev-windows-installer
+  - ddev-windows-amd64-installer
   format: binary
-  name_template: "ddev_windows_installer.v{{.Version}}"
+  name_template: "ddev_windows_amd64_installer.v{{.Version}}"
+
+- id: ddev-windows-arm64-installer
+  builds:
+  - ddev-windows-arm64-installer
+  format: binary
+  name_template: "ddev_windows_arm64_installer.v{{.Version}}"
 
 checksum:
   name_template: "checksums.txt"
