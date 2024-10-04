@@ -455,7 +455,7 @@ Section "${GSUDO_NAME}" SecSudo
             DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
-            nsUnzip::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
 
             Pop $0
             DetailPrint "Unzip results: $0"
@@ -1386,7 +1386,7 @@ Section "${GSUDO_NAME}" SecSudo
             DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
-            nsUnzip::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
 
             Pop $0
             DetailPrint "Unzip results: $0"
