@@ -624,9 +624,6 @@ ddev export-db --gzip=false --file /tmp/db.sql
 # Dump and compress the current project’s `foo` database instead of `db`
 ddev export-db --database=foo --file=/tmp/db.sql.gz
 
-# Output the current project’s database and use `>` to write to `/tmp/db.sql.gz`
-ddev export-db > /tmp/db.sql.gz
-
 # Dump my-project’s database, without compressing it, to `/tmp/my-project.sql`
 ddev export-db my-project --gzip=false --file=/tmp/my-project.sql
 ```
@@ -827,12 +824,6 @@ ddev import-db --file=.tarballs/db.sql.gz
 
 # Import the compressed `.tarballs/db.sql.gz` dump to a `other_db` database
 ddev import-db --database=additional_db --file=.tarballs/db.sql.gz
-
-# Import the `db.sql` dump to the project database
-ddev import-db < db.sql
-
-# Import the `db.sql` dump to the `my-project` default database
-ddev import-db my-project < db.sql
 
 # Uncompress `db.sql.gz` and pipe the result to the `import-db` command
 gzip -dc db.sql.gz | ddev import-db
