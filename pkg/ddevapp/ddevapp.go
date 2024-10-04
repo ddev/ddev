@@ -1685,19 +1685,19 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	output.UserOut.Printf("Waiting for additional project containers to become ready...")
 	waitLabels := map[string]string{"com.ddev.site-name": app.GetName()}
 	containersAwaited, err := dockerutil.FindContainersByLabels(waitLabels)
 	if err != nil {
 		return err
 	}
-	containerNames := dockerutil.GetContainerNames(containersAwaited)
-	output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
+	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")})
+	if len(containerNames) > 0 {
+		output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
+	}
 	err = app.WaitByLabels(waitLabels)
 	if err != nil {
 		return err
 	}
-	output.UserOut.Printf("All project containers are now ready.")
 
 	if _, err = app.CreateSettingsFile(); err != nil {
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
