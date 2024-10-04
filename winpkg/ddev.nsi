@@ -98,14 +98,13 @@
  *
  * Has to be done before including headers
  */
- Var ARCH
-!ifdef NSIS_ARM64
-  !define ARCH "arm64"
-!else
-  !define ARCH "amd64"
+!ifndef TARGET_ARCH # passed on command-line
+  !error "TARGET_ARCH define is missing!"
 !endif
+Var TARGET_ARCH
+Var INSTALL_ARCH /* Architecture where installation is happening */
 
-OutFile "..\.gotmp\bin\windows_${ARCH}\ddev_windows_${ARCH}_installer.exe"
+OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 Unicode true
 SetCompressor /SOLID lzma
 
@@ -193,7 +192,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${ARCH}\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\sudo_license.txt"
 
 ; Components page
 Var MkcertSetup
@@ -205,7 +204,7 @@ Var MkcertSetup
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing mkcert."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE mkcertLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE mkcertLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${ARCH}\mkcert_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -282,7 +281,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
     SetOverwrite on
 
     ; Copy files
-    File "..\.gotmp\bin\windows_${ARCH}\ddev.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
     File /oname=license.txt "..\LICENSE"
 
     ; Install icons
@@ -352,12 +351,12 @@ Section "${GSUDO_NAME}" SecSudo
   SetOverwrite try
 
   ; Set URL and temporary file name
-  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable_${ARCH}.zip"
+  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable_${TARGET_ARCH}.zip"
   !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
-  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${ARCH}.zip.sha256"
-  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable_${ARCH}.zip.sha256"
+  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${TARGET_ARCH}.zip.sha256"
+  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable_${TARGET_ARCH}.zip.sha256"
 
   ; Download license file
   INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
@@ -373,14 +372,14 @@ Section "${GSUDO_NAME}" SecSudo
   ${EndIf}
 
   ; Download zip file
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${ARCH}.zip" "${GSUDO_ZIP_DEST}" /END
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${TARGET_ARCH}.zip" "${GSUDO_ZIP_DEST}" /END
   Pop $R0 ; return value = exit code, "OK" if OK
 
   ; Check download result
   ${If} $R0 != "OK"
     ; Download failed, show message and continue
     SetDetailsView show
-    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${ARCH}.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
+    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable_${TARGET_ARCH}.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
     MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${Else}
     ; Download SHA-256 hash
@@ -497,8 +496,8 @@ SectionGroup /e "mkcert"
       SetOverwrite try
 
       ; Copy files
-      File "..\.gotmp\bin\windows_${ARCH}\mkcert.exe"
-      File "..\.gotmp\bin\windows_${ARCH}\mkcert_license.txt"
+      File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
+      File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
       ; Install icons
       SetOutPath "$INSTDIR\Icons"
@@ -623,23 +622,29 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
  * Place functions used in the installer here. Function names must not start
  * with `un.`
  */
-
 Function GetOSArch
-    System::Call 'kernel32::IsWow64Process(p -1, *i .r0)'
-    ${If} $0 == 0
-        StrCpy $ARCH "x86"
+    ; Get TARGET_ARCH into a variable from the argument/define
+    StrCpy $TARGET_ARCH ${TARGET_ARCH}
+
+    ; First, check the PROCESSOR_ARCHITEW6432 environment variable (used in 32-bit processes on 64-bit systems)
+    ReadEnvStr $INSTALL_ARCH "PROCESSOR_ARCHITEW6432"
+
+    ${If} $INSTALL_ARCH == ""
+        ; If PROCESSOR_ARCHITEW6432 is not set, fall back to PROCESSOR_ARCHITECTURE
+        ReadEnvStr $INSTALL_ARCH "PROCESSOR_ARCHITECTURE"
+    ${EndIf}
+
+    ; Check for common architectures
+    ${If} $INSTALL_ARCH == "AMD64"
+        StrCpy $INSTALL_ARCH "amd64"
+    ${ElseIf} $INSTALL_ARCH == "ARM64"
+        StrCpy $INSTALL_ARCH "arm64"
     ${Else}
-        System::Call 'kernel32::GetNativeSystemInfo(*i .r1)'
-        System::Call '*$1(i .r2)'
-        ${If} $2 == 9 ; IMAGE_FILE_MACHINE_AMD64
-            StrCpy $ARCH "amd64"
-        ${ElseIf} $2 == 12 ; IMAGE_FILE_MACHINE_ARM64
-            StrCpy $ARCH "arm64"
-        ${Else}
-            StrCpy $ARCH "unknown"
-        ${EndIf}
+        StrCpy $INSTALL_ARCH "unknown"
     ${EndIf}
 FunctionEnd
+
+
 
 /**
  * Initialization, called on installer start
@@ -647,11 +652,11 @@ FunctionEnd
 Function .onInit
   ; Check OS architecture
   Call GetOSArch
-  ${If} $ARCH == "x86"
-    MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64-bit only."
+
+  ; Compare detected architecture ($ARCH) with the target architecture ($NSIS_ARCH)
+  ${If} $INSTALL_ARCH != $TARGET_ARCH
+    MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture: $INSTALL_ARCH . This installer is built for ${TARGET_ARCH}."
     Abort "Unsupported CPU architecture!"
-  ${ElseIf} $ARCH == "unknown"
-    MessageBox MB_ICONSTOP|MB_OK "Unknown CPU architecture, $(^Name) may not function correctly."
   ${EndIf}
 
   ; Check Windows version
@@ -708,6 +713,7 @@ Function .onInit
   ${Else}
     StrCpy $ChocolateyMode "0"
   ${EndIf}
+
 FunctionEnd
 
 /**
