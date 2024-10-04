@@ -444,15 +444,32 @@ Example:
 ddev debug nfsmount
 ```
 
-### `debug refresh`
+### `debug rebuild`
 
-Refreshes the project’s Docker cache.
+*Aliases: `debug refresh`.*
+
+Rebuilds the project’s Docker cache with verbose output.
+
+Flags:
+
+* `--all`, `-a`: Rebuild all services.
+* `--cache`: Keep Docker cache.
+* `--service`, `-s`: Rebuild specified service. (default `web`)
 
 Example:
 
 ```shell
-# Refresh the current project’s Docker cache
-ddev debug refresh
+# Rebuild the current project’s web service without cache
+ddev debug rebuild
+
+# Rebuild the current project’s web service with cache
+ddev debug rebuild --cache
+
+# Rebuild the current project’s db service without cache
+ddev debug rebuild --service db
+
+# Rebuild the current project’s all services without cache
+ddev debug rebuild --all
 ```
 
 ### `debug router-nginx-config`

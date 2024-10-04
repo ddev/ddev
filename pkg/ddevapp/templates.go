@@ -66,7 +66,7 @@ const ConfigInstructions = `
 #   - preview
 #   - snapshot
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
-# To reinstall Composer after the image was built, run "ddev debug refresh".
+# To reinstall Composer after the image was built, run "ddev debug rebuild".
 
 # nodejs_version: "20"
 # change from the default system Node.js version to any other version.

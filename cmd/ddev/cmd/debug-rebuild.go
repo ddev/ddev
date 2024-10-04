@@ -3,6 +3,7 @@ package cmd
 import (
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -12,12 +13,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugRefreshCmd implements the ddev debug refresh command
-var DebugRefreshCmd = &cobra.Command{
+var (
+	buildAll bool
+	service  string
+)
+
+// DebugRebuildCmd implements the ddev debug rebuild command
+var DebugRebuildCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
-	Use:               "refresh",
-	Short:             "Refreshes Docker cache for project",
-	Run: func(_ *cobra.Command, args []string) {
+	Use:               "rebuild",
+	Short:             "Rebuilds Docker cache for project with verbose output",
+	Aliases:           []string{"refresh"},
+	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 
 		if len(args) > 1 {
@@ -26,6 +33,10 @@ var DebugRefreshCmd = &cobra.Command{
 
 		if len(args) == 1 {
 			projectName = args[0]
+		}
+
+		if cmd.Flags().Changed("all") && cmd.Flags().Changed("service") {
+			util.Failed("--all flag cannot be used with --service flag")
 		}
 
 		_, err := dockerutil.DownloadDockerComposeIfNeeded()
@@ -50,14 +61,26 @@ var DebugRefreshCmd = &cobra.Command{
 		output.UserOut.Printf("Rebuilding project images...")
 		buildDurationStart := util.ElapsedDuration(time.Now())
 		composeRenderedPath := app.DockerComposeFullRenderedYAMLPath()
-		util.Success("Rebuilding web image with `%s -f %s build web --no-cache`", composeBinaryPath, composeRenderedPath)
+		withoutCache := !cmd.Flags().Changed("cache")
 
-		err = exec2.RunInteractiveCommand(composeBinaryPath, []string{"-f", composeRenderedPath, "build", "web", "--no-cache"})
+		buildArgs := []string{"-f", composeRenderedPath, "--progress", "plain", "build"}
+
+		if !buildAll {
+			buildArgs = append(buildArgs, cmd.Flag("service").Value.String())
+		}
+
+		if withoutCache {
+			buildArgs = append(buildArgs, "--no-cache")
+		}
+
+		util.Success("Rebuilding project %s with `%s %v`", app.Name, composeBinaryPath, strings.Join(buildArgs, " "))
+
+		err = exec2.RunInteractiveCommand(composeBinaryPath, buildArgs)
 		if err != nil {
-			util.Failed("Failed to execute %s -f %s build web --no-cache: %v", composeBinaryPath, composeRenderedPath, err)
+			util.Failed("Failed to execute `%s %v`: %v", composeBinaryPath, strings.Join(buildArgs, " "), err)
 		}
 		buildDuration := util.FormatDuration(buildDurationStart())
-		util.Success("Refreshed Docker cache for project %s in %s", app.Name, buildDuration)
+		util.Success("Rebuilt Docker cache for project %s in %s", app.Name, buildDuration)
 
 		err = app.Restart()
 		if err != nil {
@@ -67,5 +90,8 @@ var DebugRefreshCmd = &cobra.Command{
 }
 
 func init() {
-	DebugCmd.AddCommand(DebugRefreshCmd)
+	DebugCmd.AddCommand(DebugRebuildCmd)
+	DebugRebuildCmd.Flags().BoolVarP(&buildAll, "all", "a", false, "Rebuild all services")
+	DebugRebuildCmd.Flags().Bool("cache", false, "Keep Docker cache")
+	DebugRebuildCmd.Flags().StringVarP(&service, "service", "s", "web", "Rebuild specified service")
 }
