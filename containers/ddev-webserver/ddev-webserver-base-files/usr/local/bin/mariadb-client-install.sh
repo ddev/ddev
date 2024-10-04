@@ -18,7 +18,7 @@ MARIADB_VERSION=${DDEV_DATABASE#*:}
 if [ "${MARIADB_VERSION}" = "11.4" ]; then
   # Configure the correct repository for mariadb
   set -x
-  timeout 30 mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import || exit 2
+  log-stderr.sh --timeout 30 mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import || exit 2
   rm -f /etc/apt/sources.list.d/mariadb.list.old_*
   # --skip-key-import flag doesn't download the existing key again and omits "apt-get -qq update",
   # so we can run "apt-get -qq update" manually only for mariadb repo to make it faster

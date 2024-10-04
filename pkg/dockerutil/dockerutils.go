@@ -345,6 +345,37 @@ func FindContainersWithLabel(label string) ([]dockerTypes.Container, error) {
 	return containers, nil
 }
 
+// FindImagesByLabels takes a map of label names and values and returns any Docker images which match all labels.
+// danglingOnly is used to return only dangling images, otherwise return all of them, including dangling.
+func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]dockerImage.Summary, error) {
+	if len(labels) < 1 {
+		return []dockerImage.Summary{{}}, fmt.Errorf("the provided list of labels was empty")
+	}
+	filterList := dockerFilters.NewArgs()
+	for k, v := range labels {
+		label := fmt.Sprintf("%s=%s", k, v)
+		// If no value is specified, filter any value by the key.
+		if v == "" {
+			label = k
+		}
+		filterList.Add("label", label)
+	}
+
+	if danglingOnly {
+		filterList.Add("dangling", "true")
+	}
+
+	ctx, client := GetDockerClient()
+	images, err := client.ImageList(ctx, dockerImage.ListOptions{
+		All:     true,
+		Filters: filterList,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
+}
+
 // NetExists checks to see if the Docker network for DDEV exists.
 func NetExists(ctx context.Context, client *dockerClient.Client, name string) bool {
 	nets, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
