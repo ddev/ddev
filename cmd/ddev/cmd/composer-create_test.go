@@ -56,7 +56,10 @@ func TestComposerCreateCmd(t *testing.T) {
 			composerDirOnHost := tmpDir
 			if docRoot != "" {
 				arguments = append(arguments, "--docroot", docRoot)
-				// For Drupal, we test that the composer root is the same as the created root
+				// For Drupal, we arbitrarily place the composer root to be the docroot
+				// Normally for Drupal the docroot would be web, and the composer root would be the
+				// project root (default). But here we're making sure we can use the docroot
+				// as the composer_root. Acquia sites often do this...
 				if projectType == nodeps.AppTypeDrupal {
 					arguments = append(arguments, "--composer-root", docRoot)
 					composerDirOnHost = filepath.Join(tmpDir, docRoot)
