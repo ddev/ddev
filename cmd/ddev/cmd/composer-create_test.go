@@ -18,6 +18,11 @@ import (
 )
 
 func TestComposerCreateCmd(t *testing.T) {
+	// Skip this
+	//runTestComposerCreateCmd := os.Getenv("DDEV_RUN_TEST_COMPOSER_CREATE_CMD")
+	//if runTestComposerCreateCmd != "true" {
+	//	t.Skip("Skipping: DDEV_RUN_TEST_COMPOSER_CREATE_CMD is not set, turn it back on when composer bug is fixed")
+	//}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
@@ -78,6 +83,12 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.NoError(t, err)
 				_ = os.RemoveAll(tmpDir)
 			})
+
+			// Until https://github.com/ddev/ddev/issues/6586 is fixed (composer 2.8.1 breaks it all)
+			// then use 2.8.0
+			// TODO: Remove this when possible
+			out, err = exec.RunHostCommand(DdevBin, "config", "--composer-version=2.8.0")
+			require.NoError(t, err)
 
 			err = app.StartAndWait(5)
 			require.NoError(t, err)
