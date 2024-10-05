@@ -13,23 +13,15 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestComposerCreateCmd(t *testing.T) {
-	// Skip this
-	//runTestComposerCreateCmd := os.Getenv("DDEV_RUN_TEST_COMPOSER_CREATE_CMD")
-	//if runTestComposerCreateCmd != "true" {
-	//	t.Skip("Skipping: DDEV_RUN_TEST_COMPOSER_CREATE_CMD is not set, turn it back on when composer bug is fixed")
-	//}
-	assert := asrt.New(t)
-
-	// TODO: Change to just "2" or to global default when bug in 2.8.1 is fixed
+	// TODO: Change to global default when bug in 2.8.1 is fixed
 	// https://github.com/composer/composer/issues/12150
 	// https://github.com/ddev/ddev/issues/6586
-	//defaultComposerVersion := "2"
-	defaultComposerVersion := "2.8.0"
+	//composerVersionForThisTest := nodeps.ComposerDefault
+	composerVersionForThisTest := "2.8.0"
 
 	origDir, err := os.Getwd()
 	require.NoError(t, err)
@@ -59,7 +51,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.NoError(t, err)
 
 			// Prepare arguments
-			arguments := []string{"config", "--project-type", projectType, "--composer-version", defaultComposerVersion}
+			arguments := []string{"config", "--project-type", projectType, "--composer-version", composerVersionForThisTest}
 
 			composerRoot := tmpDir
 			if docRoot != "" {
@@ -86,7 +78,7 @@ func TestComposerCreateCmd(t *testing.T) {
 
 			t.Cleanup(func() {
 				err = app.Stop(true, false)
-				assert.NoError(err)
+				require.NoError(t, err)
 				err = os.Chdir(origDir)
 				require.NoError(t, err)
 				_ = os.RemoveAll(tmpDir)
@@ -97,7 +89,7 @@ func TestComposerCreateCmd(t *testing.T) {
 
 			out, err = exec.RunHostCommand(DdevBin, "composer", "--version")
 			require.NoError(t, err)
-			require.Contains(t, out, fmt.Sprintf("Composer version %s", defaultComposerVersion))
+			require.Contains(t, out, fmt.Sprintf("Composer version %s", composerVersionForThisTest))
 
 			// This is a local package that we can use to test composer create
 			repository := `{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}`
@@ -228,9 +220,9 @@ func TestComposerCreateCmd(t *testing.T) {
 			// Check that resulting composer.json (copied from testdata) has post-root-package-install and post-create-project-cmd scripts
 			composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, "composer.json"))
 			require.NoError(t, err)
-			assert.True(composerManifest != nil)
-			assert.True(composerManifest.HasPostRootPackageInstallScript())
-			assert.True(composerManifest.HasPostCreateProjectCmdScript())
+			require.True(t, composerManifest != nil)
+			require.True(t, composerManifest.HasPostRootPackageInstallScript())
+			require.True(t, composerManifest.HasPostCreateProjectCmdScript())
 
 			err = app.Stop(true, false)
 			require.NoError(t, err)
