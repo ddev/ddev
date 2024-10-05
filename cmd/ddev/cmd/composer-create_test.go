@@ -25,6 +25,12 @@ func TestComposerCreateCmd(t *testing.T) {
 	//}
 	assert := asrt.New(t)
 
+	// TODO: Change to just "2" or to global default when bug in 2.8.1 is fixed
+	// https://github.com/composer/composer/issues/12150
+	// https://github.com/ddev/ddev/issues/6586
+	//defaultComposerVersion := "2"
+	defaultComposerVersion := "2.8.0"
+
 	origDir, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -53,7 +59,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.NoError(t, err)
 
 			// Prepare arguments
-			arguments := []string{"config", "--project-type", projectType}
+			arguments := []string{"config", "--project-type", projectType, "--composer-version", defaultComposerVersion}
 
 			composerRoot := tmpDir
 			if docRoot != "" {
@@ -70,28 +76,28 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.NoError(t, err)
 
 			// Test trivial command
-			out, err := exec.RunHostCommand(DdevBin, "composer")
+			out, err := exec.RunHostCommand(DdevBin, "composer", "--version")
 			require.NoError(t, err)
-			require.Contains(t, out, "Available commands:")
+			require.Contains(t, out, "Composer version")
 
 			// Get an app so we can do waits
 			app, err := ddevapp.NewApp(tmpDir, true)
 			require.NoError(t, err)
 
 			t.Cleanup(func() {
+				err = app.Stop(true, false)
+				assert.NoError(err)
 				err = os.Chdir(origDir)
 				require.NoError(t, err)
 				_ = os.RemoveAll(tmpDir)
 			})
 
-			// Until https://github.com/ddev/ddev/issues/6586 is fixed (composer 2.8.1 breaks it all)
-			// then use 2.8.0
-			// TODO: Remove this when possible
-			out, err = exec.RunHostCommand(DdevBin, "config", "--composer-version=2.8.0")
+			err = app.Start()
 			require.NoError(t, err)
 
-			err = app.StartAndWait(5)
+			out, err = exec.RunHostCommand(DdevBin, "composer", "--version")
 			require.NoError(t, err)
+			require.Contains(t, out, fmt.Sprintf("Composer version %s", defaultComposerVersion))
 
 			// This is a local package that we can use to test composer create
 			repository := `{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}`
