@@ -115,6 +115,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				}
 			}
 
+			t.Logf("Attempting composerCommandTypeCheck='%s' with docroot='%s' projectType=%s", composerCommandTypeCheck, docRoot, projectType)
 			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-plugins --no-scripts test/ddev-composer-create
 			if composerCommandTypeCheck == "installation with --no-plugins --no-scripts" {
 				args = []string{"composer", "create", "--repository", repository, "--no-plugins", "--no-scripts", "test/ddev-composer-create"}
@@ -145,7 +146,7 @@ func TestComposerCreateCmd(t *testing.T) {
 
 			// Test success
 			out, err = exec.RunHostCommand(DdevBin, args...)
-			require.NoError(t, err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+			require.NoError(t, err, "['%s'] failed to run %v: err=%v, output=\n=====\n%s\n=====\n", composerCommandTypeCheck, args, err, out)
 			require.Contains(t, out, "Created project in ")
 			require.FileExists(t, filepath.Join(composerRoot, "composer.json"))
 
