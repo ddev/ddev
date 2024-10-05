@@ -102,4 +102,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-arm64-installer
-          path: .gotmp/bin/windows_amd64/ddev_windows_arm64_installer*.exe
+          path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer*.exe
