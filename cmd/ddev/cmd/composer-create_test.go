@@ -53,13 +53,13 @@ func TestComposerCreateCmd(t *testing.T) {
 			// Prepare arguments
 			arguments := []string{"config", "--project-type", projectType, "--composer-version", composerVersionForThisTest}
 
-			composerRoot := tmpDir
+			composerDirOnHost := tmpDir
 			if docRoot != "" {
 				arguments = append(arguments, "--docroot", docRoot)
 				// For Drupal, we test that the composer root is the same as the created root
 				if projectType == nodeps.AppTypeDrupal {
 					arguments = append(arguments, "--composer-root", docRoot)
-					composerRoot = filepath.Join(tmpDir, docRoot)
+					composerDirOnHost = filepath.Join(tmpDir, docRoot)
 				}
 			}
 
@@ -137,19 +137,19 @@ func TestComposerCreateCmd(t *testing.T) {
 				args = []string{"composer", "create", fmt.Sprintf("--repository=%s", repository), "--no-dev", "test/ddev-composer-create"}
 			}
 
-			// Test failure
-			file, err := os.Create(filepath.Join(composerRoot, "touch1.txt"))
+			// If a file exists in the composer root then composer create should fail
+			file, err := os.Create(filepath.Join(composerDirOnHost, "touch1.txt"))
 			out, err = exec.RunHostCommand(DdevBin, args...)
 			require.Error(t, err)
 			require.Contains(t, out, "touch1.txt")
 			_ = file.Close()
-			_ = os.Remove(filepath.Join(composerRoot, "touch1.txt"))
+			_ = os.Remove(filepath.Join(composerDirOnHost, "touch1.txt"))
 
 			// Test success
 			out, err = exec.RunHostCommand(DdevBin, args...)
 			require.NoError(t, err, "['%s'] failed to run %v: err=%v, output=\n=====\n%s\n=====\n", composerCommandTypeCheck, args, err, out)
 			require.Contains(t, out, "Created project in ")
-			require.FileExists(t, filepath.Join(composerRoot, "composer.json"))
+			require.FileExists(t, filepath.Join(composerDirOnHost, "composer.json"))
 
 			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-plugins --no-scripts test/ddev-composer-create
 			if composerCommandTypeCheck == "installation with --no-plugins --no-scripts" {
@@ -159,12 +159,12 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.Contains(t, out, "Executing Composer command: [composer install --no-plugins --no-scripts]")
 				require.NotContains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd")
 				// Check the actual result of executing composer scripts
-				require.NoFileExists(t, filepath.Join(composerRoot, "created-by-post-root-package-install"))
-				require.NoFileExists(t, filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				require.NoFileExists(t, filepath.Join(composerDirOnHost, "created-by-post-root-package-install"))
+				require.NoFileExists(t, filepath.Join(composerDirOnHost, "created-by-post-create-project-cmd"))
 				// Check vendor directory
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "autoload.php"))
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "autoload.php"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "test", "ddev-require", "composer.json"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "test", "ddev-require-dev", "composer.json"))
 			}
 
 			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' -vvv --fake-flag test/ddev-composer-create
@@ -176,12 +176,12 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd -vvv]")
 				require.NotContains(t, out, "--fake-flag")
 				// Check the actual result of executing composer scripts
-				require.FileExists(t, filepath.Join(composerRoot, "created-by-post-root-package-install"))
-				require.FileExists(t, filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-root-package-install"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-create-project-cmd"))
 				// Check vendor directory
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "autoload.php"))
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "autoload.php"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "test", "ddev-require", "composer.json"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "test", "ddev-require-dev", "composer.json"))
 			}
 
 			// ddev composer create --repository '{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-install test/ddev-composer-create
@@ -192,10 +192,10 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.NotContains(t, out, "Executing Composer command: [composer install")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd]")
 				// Check the actual result of executing composer scripts
-				require.FileExists(t, filepath.Join(composerRoot, "created-by-post-root-package-install"))
-				require.FileExists(t, filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-root-package-install"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-create-project-cmd"))
 				// Check vendor directory
-				require.NoDirExists(t, filepath.Join(composerRoot, "vendor"))
+				require.NoDirExists(t, filepath.Join(composerDirOnHost, "vendor"))
 			}
 
 			// ddev composer create --repository='{"type": "path", "url": ".ddev/test-ddev-composer-create", "options": {"symlink": false}}' --no-dev test/ddev-composer-create
@@ -206,19 +206,19 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.Contains(t, out, "Executing Composer command: [composer install --no-dev]")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd --no-dev]")
 				// Check the actual result of executing composer scripts
-				require.FileExists(t, filepath.Join(composerRoot, "created-by-post-root-package-install"))
-				require.FileExists(t, filepath.Join(composerRoot, "created-by-post-create-project-cmd"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-root-package-install"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-create-project-cmd"))
 				// Check vendor directory
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "autoload.php"))
-				require.FileExists(t, filepath.Join(composerRoot, "vendor", "test", "ddev-require", "composer.json"))
-				require.NoFileExists(t, filepath.Join(composerRoot, "vendor", "test", "ddev-require-dev", "composer.json"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "autoload.php"))
+				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "test", "ddev-require", "composer.json"))
+				require.NoFileExists(t, filepath.Join(composerDirOnHost, "vendor", "test", "ddev-require-dev", "composer.json"))
 			}
 
 			require.Contains(t, out, "Moving install to Composer root")
 			require.Contains(t, out, "ddev composer create was successful")
 
 			// Check that resulting composer.json (copied from testdata) has post-root-package-install and post-create-project-cmd scripts
-			composerManifest, err := composer.NewManifest(filepath.Join(composerRoot, "composer.json"))
+			composerManifest, err := composer.NewManifest(filepath.Join(composerDirOnHost, "composer.json"))
 			require.NoError(t, err)
 			require.True(t, composerManifest != nil)
 			require.True(t, composerManifest.HasPostRootPackageInstallScript())
