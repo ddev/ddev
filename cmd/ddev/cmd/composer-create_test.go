@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/composer"
-	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -19,13 +18,6 @@ import (
 )
 
 func TestComposerCreateCmd(t *testing.T) {
-	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
-	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
-	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
-	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
-		t.Skip("Composer has strange behavior in NFS context, so skipping")
-	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
