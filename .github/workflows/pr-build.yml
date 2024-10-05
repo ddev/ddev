@@ -88,6 +88,11 @@ jobs:
         with:
           name: ddev-linux-amd64
           path: .gotmp/bin/linux_amd64/ddev
+      - name: Upload windows-amd64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-arm64
+          path: .gotmp/bin/windows_amd64/ddev.exe
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v4
         with:
