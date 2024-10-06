@@ -106,7 +106,7 @@ jobs:
         if: startsWith( github.ref, 'refs/tags/v1')
         run: make chocolatey
 
-      - name: "Verify that intrumentation is working (Windows)"
+      - name: "Verify that instrumentation is working (Windows)"
         run: |
           export PATH=".gotmp/bin/windows_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
