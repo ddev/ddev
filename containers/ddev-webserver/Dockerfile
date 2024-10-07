@@ -4,7 +4,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 FROM ddev/ddev-php-base:20241002_deviantintegral_vim_tiny AS ddev-webserver-base
-
+SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
@@ -31,7 +31,7 @@ RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
 
-RUN apt-get install -y postgresql-common && yes | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+RUN apt-get install -y postgresql-common && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
@@ -77,6 +77,8 @@ RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariad
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
 FROM ddev-webserver-base AS ddev-webserver-dev-base
+SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
+
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 
@@ -84,7 +86,6 @@ RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/b
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
 
-SHELL ["/bin/bash", "-c"]
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire \
@@ -227,6 +228,8 @@ CMD ["/start.sh"]
 ### Build ddev-webserver-prod-base from ddev-webserver-base
 ### This image is aimed at actual hardened production environments
 FROM ddev-webserver-base AS ddev-webserver-prod-base
+SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
+
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.2"
 ARG TARGETPLATFORM
@@ -235,7 +238,6 @@ RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/b
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
 
-SHELL ["/bin/bash", "-c"]
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire-php \
