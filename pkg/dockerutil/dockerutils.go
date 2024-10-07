@@ -919,9 +919,9 @@ func GetDockerIP() (string, error) {
 				addr := net.ParseIP(hostPart)
 				if addr == nil {
 					// If it wasn't an IP address, look it up to get IP address
-					ip, err := net.LookupHost(hostPart)
+					ip, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", hostPart)
 					if err == nil && len(ip) > 0 {
-						hostPart = ip[0]
+						hostPart = ip[0].String()
 					} else {
 						return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
 					}

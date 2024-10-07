@@ -132,8 +132,8 @@ type internetActiveNetResolverStub struct {
 	err       error
 }
 
-// LookupHost is a custom version of net.LookupHost that wastes some time and then returns
-func (t internetActiveNetResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
+// LookupIP is a custom version of net.LookupIP that wastes some time and then returns
+func (t internetActiveNetResolverStub) LookupIP(ctx context.Context, _, _ string) ([]net.IP, error) {
 	select {
 	case <-time.After(t.sleepTime):
 	case <-ctx.Done():
@@ -150,7 +150,7 @@ func internetActiveResetVariables() {
 	globalconfig.DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 }
 
-// TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupHost returns an error
+// TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupIP returns an error
 func TestIsInternetActiveErrorOccurred(t *testing.T) {
 	internetActiveResetVariables()
 
@@ -184,8 +184,8 @@ func TestIsInternetActiveAlreadyChecked(t *testing.T) {
 	asrt.True(t, globalconfig.IsInternetActive())
 }
 
-// TestIsInternetActive tests if IsInternetActive() returns true, when the LookupHost call goes well
-// and if it properly sets the globals so it won't execute the LookupHost again.
+// TestIsInternetActive tests if IsInternetActive() returns true, when the LookupIP call goes well
+// and if it properly sets the globals so it won't execute the LookupIP again.
 func TestIsInternetActive(t *testing.T) {
 	internetActiveResetVariables()
 
