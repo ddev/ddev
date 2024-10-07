@@ -6,7 +6,7 @@ search:
 
 DDEV provides lots of flexibility for managing your databases between your local, staging and production environments. You may commonly use the [`ddev import-db`](../usage/commands.md#import-db) and [`ddev export-db`](../usage/commands.md#export-db) commands, but there are plenty of other adaptable ways to work with your databases.
 
-If your project does _not_ require a database, you can exclude it with the the ["omit_containers" configuration option](https://ddev.readthedocs.io/en/stable/users/configuration/config/#omit_containers).
+If your project does _not_ require a database, you can exclude it with the the [`omit_containers` configuration option](../configuration/config.md#omit_containers).
 
 !!!tip
     You can run `ddev [command] --help` for more info on many of the topics below.
