@@ -90,7 +90,7 @@
  * Third Party Applications
  */
 !define GSUDO_NAME "gsudo"
-!define GSUDO_SETUP "sudo.exe"
+!define GSUDO_SETUP "gsudo.exe"
 !define GSUDO_VERSION "v2.5.1"
 
 /**
@@ -352,7 +352,7 @@ Section "${GSUDO_NAME}" SecSudo
 
   ; Set URL and temporary file name
   !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
-  !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
+  !define GSUDO_EXE_DEST "$INSTDIR\gsudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
   !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
