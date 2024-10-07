@@ -16,6 +16,7 @@ ENV CAROOT=/mnt/ddev-global-cache/mkcert
 # BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
+ENV DEFAULT_LOCALES="en_CA.UTF-8\nen_US.UTF-8 UTF-8\nen_GB.UTF-8 UTF-8\nde_DE.UTF-8 UTF-8\nde_AT.UTF-8 UTF-8\nfr_CA.UTF-8\nfr_FR.UTF-8 UTF-8\nja_JP.UTF-8 UTF-8\nru_RU.UTF-8 UTF-8"
 
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
@@ -46,7 +47,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     symfony-cli \
     xz-utils
 
-RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
+RUN echo "${DEFAULT_LOCALES}" >> /etc/locale.gen && locale-gen && dpkg-reconfigure locales
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
@@ -104,7 +105,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     libpcre3 \
     libpq-dev \
     libpython3-dev \
-    locales \
     nano \
     ncurses-bin \
     netcat-traditional \
@@ -122,8 +122,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     vim-tiny \
     zip
-
-RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
@@ -252,7 +250,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     iputils-ping \
     jq \
     libpcre3 \
-    locales \
     nano \
     ncurses-bin \
     netcat-traditional \
@@ -262,8 +259,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     sqlite3 \
     unzip \
     zip
-
-RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
