@@ -103,6 +103,8 @@
 !endif
 Var TARGET_ARCH
 Var INSTALL_ARCH /* Architecture where installation is happening */
+Var GsudoExtractionSourceDir /* Used in extraction from the gsudo portable zipfile; x86 or arm64 */
+
 
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 Unicode true
@@ -450,15 +452,16 @@ Section "${GSUDO_NAME}" SecSudo
             MessageBox MB_ICONEXCLAMATION|MB_OK "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash. Continue with the rest of the installation."
           ${Else}
             ; Extract gsudo.exe from the zip file
-            DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
-            ${If} ${TARGET_ARCH} != "arm64"
-              nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            ${If} ${TARGET_ARCH} == "arm64"
+              StrCpy $GsudoExtractionSourceDir "arm64"
             ${Else}
-               nsisunz::UnzipToLog /file "arm64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+              StrCpy $GsudoExtractionSourceDir "x64"
             ${EndIf}
+            DetailPrint "extracting the file $GsudoExtractionSourceDir/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
+            nsisunz::UnzipToLog /file "$GsudoExtractionSourceDir/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
 
             Pop $0
             DetailPrint "Unzip results: $0"
@@ -468,8 +471,8 @@ Section "${GSUDO_NAME}" SecSudo
                 MessageBox MB_OK|MB_ICONSTOP "Failed to extract gsudo.exe from the zip archive. Error code: $0"
             ${EndIf}
 
-            DetailPrint "CopyFiles $PLUGINSDIR\x64\gsudo.exe ${GSUDO_EXE_DEST}"
-            CopyFiles   "$PLUGINSDIR\x64\gsudo.exe" "${GSUDO_EXE_DEST}"
+            DetailPrint "CopyFiles $PLUGINSDIR\$GsudoExtractionSourceDir\gsudo.exe ${GSUDO_EXE_DEST}"
+            CopyFiles   "$PLUGINSDIR\$GsudoExtractionSourceDir\gsudo.exe" "${GSUDO_EXE_DEST}"
 
             ; Since temp files were extracted in $PLUGINSDIR they automatically get cleaned up
           ${EndIf}
