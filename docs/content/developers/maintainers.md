@@ -48,6 +48,8 @@ There are cases like access to hosting provider integrations that have essential
 * **CircleCI**: Maintainers automatically have some access via their GitHub team membership, but should probably get more.
 * **developer.apple.com**: Add to the DDEV team there so certificates can be managed.
 * **hub.docker.com**: Add user to owners team in DDEV org.
+* **AUR**: Add user to Co-maintainers (account should be created first) for `ddev-bin` and `ddev-edge-bin`.
+* **Packagist**: Add user to Maintainers (login with GitHub) for `ddev/ddev-test-composer-create`.
 * **Chocolatey**: Add user to [Manage maintainers](https://community.chocolatey.org/packages/ddev/ManagePackageOwners).
 * **Read the Docs**: Add user to [Maintainers](https://readthedocs.org/dashboard/ddev/users/).
 * **Icinga monitoring system**: This is documented in [maintainer-info](https://github.com/ddev/maintainer-info).
