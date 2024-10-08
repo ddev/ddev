@@ -88,6 +88,8 @@ jobs:
   sign-windows:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
+    env:
+      DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
     steps:
 
       - uses: actions/checkout@v4
@@ -95,10 +97,8 @@ jobs:
           fetch-depth: 0
       - name: Build and sign windows amd64/arm64 binaries and installers
         shell: bash
-        env:
-          DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
         run: |
-          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN is not true"; fi
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; fi
           make windows_amd64_install windows_arm64_install
       - name: Show github.ref
         run: echo ${{ github.ref }}
@@ -115,6 +115,13 @@ jobs:
           ddev config global | grep instrumentation-opt-in=true
           ddev version | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
+
+      - name: Verify that binaries and installers were signed
+        run: |
+          signtool verify -pa .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
+          signtool verify -pa .gotmp/bin/windows_amd64/ddev.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/ddev.exe
 
       - name: Cache signed binaries
         # After 3.0.5 they were using zstdmt which is not available on Windows
