@@ -144,7 +144,7 @@ ddev start --all`,
 }
 
 func emitReachProjectMessage(project *ddevapp.DdevApp) {
-	util.Success("Project can be reached at %s - see ddev describe for alternate URLs", project.GetPrimaryURL())
+	util.Success("Your project can be reached at %s - see ddev describe for alternate URLs", project.GetPrimaryURL())
 }
 
 func init() {

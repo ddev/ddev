@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
@@ -24,12 +26,19 @@ func TestCmdRestart(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	_, err = ddevapp.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active DDEV configuration: %v", err)
 	}
 
 	assert.Contains(string(out), "Your project can be reached at")
+	switch slices.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-router") {
+	case true:
+		assert.Contains(string(out), "127.0.0.1")
+	case false:
+		assert.NotContains(string(out), "127.0.0.1")
+		assert.Contains(string(out), app.GetPrimaryURL())
+	}
 	cleanup()
 }
 

@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
+	"slices"
 	"testing"
 
 	"os"
@@ -44,11 +46,19 @@ func TestCmdStart(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, startMultipleArgs)
 	assert.NoError(err, "ddev start with multiple project names should have succeeded, but failed, err: %v, output %s", err, out)
 	testcommon.CheckGoroutineOutput(t, out)
-
+	// If we omit the router, we should see the 127.0.0.1 URL.
+	// Whether we have the router or not is not up to us, since it is omitted on gitpod and codespaces.
+	if slices.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-router") {
+		// Assert that the output contains the 127.0.0.1 URL
+		assert.Contains(out, "127.0.0.1", "The output should contain the 127.0.0.1 URL, but it does not: %s", out)
+	}
 	// Confirm all sites are running
 	for _, app := range apps {
 		status, statusDesc := app.SiteStatus()
 		assert.Equal(ddevapp.SiteRunning, status, "All sites should be running, but project=%s status=%s statusDesc=%s", app.GetName(), status, statusDesc)
 		assert.Equal(ddevapp.SiteRunning, statusDesc, `The status description should be "running", but project %s status  is: %s`, app.GetName(), statusDesc)
+		if len(globalconfig.DdevGlobalConfig.OmitContainersGlobal) == 0 {
+			assert.Contains(out, app.GetPrimaryURL(), "The output should contain the primary URL, but it does not: %s", out)
+		}
 	}
 }
