@@ -368,8 +368,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # You can inject environment variables into the web container with:
 # web_environment:
-# - SOMEENV=somevalue
-# - SOMEOTHERENV=someothervalue
+#     - SOMEENV=somevalue
+#     - SOMEOTHERENV=someothervalue
 
 # Adjust the default table style used in ddev list and describe
 # table_style: default

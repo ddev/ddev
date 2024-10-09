@@ -9,12 +9,13 @@ DDEV’s Pantheon integration pulls an existing backup from an existing Pantheon
 If you have DDEV installed, and have an active Pantheon account with an active site, you can follow this guide to spin up a Pantheon project locally.
 
 1. Get your Pantheon machine token:
-   a. Log in to your Pantheon Dashboard and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for DDEV to use.
-   b. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`.<!-- markdownlint-disable-next-line -->
-   ```
-   web_environment:
-   - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
-   ```
+    1. Log in to your Pantheon Dashboard and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for DDEV to use.
+    2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`.
+
+        ```yaml
+        web_environment:
+            - TERMINUS_MACHINE_TOKEN=your_token
+        ```
 
 2. Choose a Pantheon site and environment you want to use with DDEV. You can usually use the site name, but in some environments you may need the site ID, which is the long third component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
 

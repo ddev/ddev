@@ -93,10 +93,10 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
 
         ```yaml
         web_environment:
-          # Make DDEV Drush shell PIDs last for entire life of the container
-          # so `ddev drush site:set @alias` persists for all Drush connections.
-          # https://chrisfromredfin.dev/posts/drush-use-ddev/
-          - DRUSH_SHELL_PID=PERMANENT
+            # Make DDEV Drush shell PIDs last for entire life of the container
+            # so `ddev drush site:set @alias` persists for all Drush connections.
+            # https://chrisfromredfin.dev/posts/drush-use-ddev/
+            - DRUSH_SHELL_PID=PERMANENT
         ```
 
 ### TYPO3 Specifics
@@ -111,7 +111,7 @@ Since TYPO3 9.5 you have to setup a `Site Configuration` for each site you like 
 
 ```yaml
 web_environment:
-- TYPO3_CONTEXT=Development/DDEV
+    - TYPO3_CONTEXT=Development/DDEV
 ```
 
 This variable will be available after the project start or restart.

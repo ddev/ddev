@@ -194,8 +194,8 @@ const ConfigInstructions = `
 
 # You can inject environment variables into the web container with:
 # web_environment:
-# - SOMEENV=somevalue
-# - SOMEOTHERENV=someothervalue
+#     - SOMEENV=somevalue
+#     - SOMEOTHERENV=someothervalue
 
 # no_project_mount: false
 # (Experimental) If true, DDEV will not mount the project into the web container;
