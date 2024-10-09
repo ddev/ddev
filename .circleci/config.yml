@@ -22,7 +22,7 @@ jobs:
           - /home/linuxbrew
     - run:
         command: |
-          make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+          make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_arm64_install windows_amd64_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - run:
         command: ./.ci-scripts/generate_artifacts.sh ~/artifacts
@@ -438,7 +438,7 @@ jobs:
         name: RELEASE BUILD (macOS) Circle VM setup
     - run: echo "version=$(make version)  CIRCLE_TAG=${CIRCLE_TAG}"
     - run:
-        command: make -s linux_amd64 linux_arm64 windows_amd64 windows_arm64 windows_install chocolatey
+        command: make -s linux_amd64 linux_arm64 windows_amd64 windows_arm64 windows_amd64_install windows_arm64_install chocolatey
     - run:
         command: make -s darwin_amd64_notarized darwin_arm64_notarized
         no_output_timeout: 30m

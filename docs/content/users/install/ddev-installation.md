@@ -289,9 +289,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     If you must use traditional Windows, then Docker Desktop is your only choice of a Docker provider. DDEV is supported in this configuration but it's not as performant as the WSL2 options.
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
-    * Each [DDEV release](https://github.com/ddev/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
+    * Each [DDEV release](https://github.com/ddev/ddev/releases) includes Windows installers for AMD64 and ARM64 Windows (`ddev_windows_<architecture>_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
 
-    Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
+    Most people interact with DDEV on traditional Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
 
     !!!note "Windows Firefox Trusted CA"
 

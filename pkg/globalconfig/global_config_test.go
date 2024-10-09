@@ -27,8 +27,6 @@ func init() {
 // ports reserved in DdevGlobalConfig.UsedHostPorts
 // and that the port can actually be bound.
 func TestGetFreePort(t *testing.T) {
-	assert := asrt.New(t)
-
 	dockerIP, err := dockerutil.GetDockerIP()
 	require.NoError(t, err)
 
@@ -48,7 +46,7 @@ func TestGetFreePort(t *testing.T) {
 	// Make sure we have a global config set up.
 	_ = globalconfig.ReadGlobalConfig()
 	err = globalconfig.ReservePorts(t.Name(), ports)
-	assert.NoError(err)
+	require.NoError(t, err)
 	t.Cleanup(func() {
 		_ = globalconfig.RemoveProjectInfo(t.Name())
 	})
@@ -56,13 +54,13 @@ func TestGetFreePort(t *testing.T) {
 	for try := 0; try < 5; try++ {
 		port, err := globalconfig.GetFreePort(dockerIP)
 		require.NoError(t, err)
-		assert.NotContains(globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
+		require.NotContains(t, globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
 		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, versionconstants.BusyboxImage}
-		_, err = exec.RunCommand("docker", dockerCommand)
+		out, err := exec.RunCommand("docker", dockerCommand)
 
-		assert.NoError(err, "failed to 'docker %v': %v", dockerCommand, err)
+		require.NoError(t, err, "failed to 'docker %v': %v, output='%v'", dockerCommand, err, out)
 	}
 }
 

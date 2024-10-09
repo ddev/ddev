@@ -40,8 +40,6 @@
  */
 !addincludedir include
 
-
-
 /**
  * Version fallback for manual compilation
  */
@@ -51,8 +49,6 @@
 !else
   !define RELEASE_TAG "tag/${VERSION}"
 !endif
-
-
 
 /**
  * Product Settings
@@ -82,8 +78,6 @@
 !define PRODUCT_PROJECT "${PRODUCT_NAME} GitHub"
 !define PRODUCT_PROJECT_URL "https://github.com/ddev/ddev#readme"
 
-
-
 /**
  * Registry Settings
  */
@@ -92,42 +86,33 @@
 !define REG_UNINST_ROOT "HKLM"
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 
-
-
 /**
  * Third Party Applications
  */
 !define GSUDO_NAME "gsudo"
-!define GSUDO_SETUP "sudo.exe"
-!define GSUDO_URL "https://github.com/ddev/gsudo/releases/download/v0.7.3/gsudo.exe"
-
-!define WINNFSD_NAME "WinNFSd"
-!define WINNFSD_VERSION "2.4.0"
-!define WINNFSD_SETUP "WinNFSd.exe"
-!define WINNFSD_URL "https://github.com/winnfsd/winnfsd/releases/download/${WINNFSD_VERSION}/WinNFSd.exe"
-
-!define NSSM_NAME "NSSM"
-!define NSSM_VERSION "2.24-101-g897c7ad"
-!define NSSM_SETUP "nssm.exe"
-!define NSSM_URL "https://github.com/ddev/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
-
-
+!define GSUDO_SETUP "gsudo.exe"
+!define GSUDO_VERSION "v2.5.1"
 
 /**
  * Configuration
  *
  * Has to be done before including headers
  */
-OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.exe"
+!ifndef TARGET_ARCH # passed on command-line
+  !error "TARGET_ARCH define is missing!"
+!endif
+Var TARGET_ARCH
+Var INSTALL_ARCH /* Architecture where installation is happening */
+Var GsudoExtractionSourceDir /* Used in extraction from the gsudo portable zipfile; x86 or arm64 */
+
+
+OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 Unicode true
 SetCompressor /SOLID lzma
 
 InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
 
 RequestExecutionLevel admin
-;ManifestSupportedOS
-
-
 
 /**
  * Installer Types
@@ -136,23 +121,17 @@ InstType "Full"
 InstType "Simple"
 InstType "Minimal"
 
-
-
 /**
  * Include Headers
  */
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 !include "LogicLib.nsh"
-;!include "Memento.nsh"
 !include "Sections.nsh"
 !include "x64.nsh"
 !include "WinVer.nsh"
 
 !include "ddev.nsh"
-
-
-
 
 /**
  * Local macros
@@ -163,8 +142,6 @@ Var ChocolateyMode
 !macroend
 !define Chocolatey `"" Chocolatey ""`
 
-
-
 /**
  * Names
  */
@@ -174,8 +151,6 @@ Var InstallerMode
 Var InstallerModeCaption
 Name "${PRODUCT_NAME_FULL}"
 Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
-
-
 
 /**
  * Interface Configuration
@@ -191,8 +166,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 
 !define MUI_CUSTOMFUNCTION_GUIINIT onGUIInit
 
-
-
 /**
  * Language Selection Dialog Settings
  *
@@ -201,8 +174,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_LANGDLL_REGISTRY_ROOT ${REG_UNINST_ROOT}
 !define MUI_LANGDLL_REGISTRY_KEY "${REG_UNINST_KEY}"
 !define MUI_LANGDLL_REGISTRY_VALUENAME "NSIS:Language"
-
-
 
 /**
  * Installer Pages
@@ -223,7 +194,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\sudo_license.txt"
 
 ; Components page
 Var MkcertSetup
@@ -235,14 +206,7 @@ Var MkcertSetup
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing mkcert."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE mkcertLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE mkcertLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
-
-; License page WinNFSd
-!define MUI_PAGE_HEADER_TEXT "License Agreement for WinNFSd"
-!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing WinNFSd."
-!define MUI_PAGE_CUSTOMFUNCTION_PRE winNFSdLicPre
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE winNFSdLicLeave
-!insertmacro MUI_PAGE_LICENSE "licenses\winnfsd_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -265,11 +229,7 @@ Var ICONS_GROUP
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Review the release notes"
 !define MUI_FINISHPAGE_LINK "${PRODUCT_PROJECT} (${PRODUCT_PROJECT_URL})"
 !define MUI_FINISHPAGE_LINK_LOCATION ${PRODUCT_PROJECT_URL}
-; To build a version that shows the details on the final page
-; uncomment the following MUI_PAGE_FINISH line
 !insertmacro MUI_PAGE_FINISH
-
-
 
 /**
  * Uninstaller Pages
@@ -281,8 +241,6 @@ Var ICONS_GROUP
 ; Instfiles page
 !insertmacro MUI_UNPAGE_INSTFILES
 
-
-
 /**
  * Language Files
  *
@@ -291,8 +249,6 @@ Var ICONS_GROUP
  * `Language Strings`.
  */
 !insertmacro MUI_LANGUAGE "English"
-
-
 
 /**
  * Reserve Files
@@ -304,38 +260,6 @@ Var ICONS_GROUP
 ReserveFile /plugin EnVar.dll
 ReserveFile /plugin nsExec.dll
 ReserveFile /plugin INetC.dll
-
-
-
-/**
- * Version Information
- *
- * To use version information the VERSION constant has to be splitted into
- * the 4 version parts.
- */
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "ProductName" "${PRODUCT_NAME_FULL}"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "Comments" "A test comment"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "CompanyName" "${PRODUCT_PUBLISHER}"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalTrademarks" "Test Application is a trademark of Fake company"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "https://github.com/ddev/ddev/raw/master/LICENSE"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Windows Installer of ${PRODUCT_NAME_FULL}"
-;ProductName
-;Comments
-;CompanyName
-;LegalCopyright
-;FileDescription
-;FileVersion
-;ProductVersion
-;InternalName
-;LegalTrademarks
-;OriginalFilename
-;PrivateBuild
-;SpecialBuild
-;StrCpy
-;VIProductVersion 1.2.3.4
-;VIFileVersion 1.2.3.4
-
-
 
 /**
  * Installer Sections
@@ -359,7 +283,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
     SetOverwrite on
 
     ; Copy files
-    File "..\.gotmp\bin\windows_amd64\ddev.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
     File /oname=license.txt "..\LICENSE"
 
     ; Install icons
@@ -423,17 +347,14 @@ SectionGroupEnd
  */
 
 Section "${GSUDO_NAME}" SecSudo
-
-
   ; Force installation
-  SectionIn 1 2 3 RO
+  SectionIn 1 2 3
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
   ; Set URL and temporary file name
-  !define GSUDO_VERSION "v2.4.0"
   !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
-  !define GSUDO_EXE_DEST "$INSTDIR\sudo.exe"
+  !define GSUDO_EXE_DEST "$INSTDIR\gsudo.exe"
   !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
   !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
   !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
@@ -467,7 +388,6 @@ Section "${GSUDO_NAME}" SecSudo
     INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_SHA256_URL}" "${GSUDO_SHA256_DEST}" /END
     Pop $R0 ; return value = exit code, "OK" if OK
 
-
     ; Check download result
     ${If} $R0 != "OK"
       ; Download failed, show message and continue
@@ -485,7 +405,6 @@ Section "${GSUDO_NAME}" SecSudo
       DetailPrint "R0 exit code='$R0'"
       DetailPrint "R1 stdout='$R1'"
       DetailPrint "R2 stderr='$R2'"
-
 
       ; Copy the hash (R2) into $R9
       StrCpy $R9 $R2
@@ -533,11 +452,16 @@ Section "${GSUDO_NAME}" SecSudo
             MessageBox MB_ICONEXCLAMATION|MB_OK "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash. Continue with the rest of the installation."
           ${Else}
             ; Extract gsudo.exe from the zip file
-            DetailPrint "extracting the file x64/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
 
             ; Extract the ZIP file
-            ;nsUnzip::Extract "C:\Program Files\DDEV\gsudo.portable.zip"
-            nsisunz::UnzipToLog /file "x64/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
+            ${If} ${TARGET_ARCH} == "arm64"
+              StrCpy $GsudoExtractionSourceDir "arm64"
+            ${Else}
+              StrCpy $GsudoExtractionSourceDir "x64"
+            ${EndIf}
+            DetailPrint "extracting the file $GsudoExtractionSourceDir/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
+
+            nsisunz::UnzipToLog /file "$GsudoExtractionSourceDir/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
 
             Pop $0
             DetailPrint "Unzip results: $0"
@@ -547,8 +471,8 @@ Section "${GSUDO_NAME}" SecSudo
                 MessageBox MB_OK|MB_ICONSTOP "Failed to extract gsudo.exe from the zip archive. Error code: $0"
             ${EndIf}
 
-            DetailPrint "CopyFiles $PLUGINSDIR\x64\gsudo.exe ${GSUDO_EXE_DEST}"
-            CopyFiles   "$PLUGINSDIR\x64\gsudo.exe" "${GSUDO_EXE_DEST}"
+            DetailPrint "CopyFiles $PLUGINSDIR\$GsudoExtractionSourceDir\gsudo.exe ${GSUDO_EXE_DEST}"
+            CopyFiles   "$PLUGINSDIR\$GsudoExtractionSourceDir\gsudo.exe" "${GSUDO_EXE_DEST}"
 
             ; Since temp files were extracted in $PLUGINSDIR they automatically get cleaned up
           ${EndIf}
@@ -580,8 +504,8 @@ SectionGroup /e "mkcert"
       SetOverwrite try
 
       ; Copy files
-      File "..\.gotmp\bin\windows_amd64\mkcert.exe"
-      File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+      File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
+      File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
       ; Install icons
       SetOutPath "$INSTDIR\Icons"
@@ -623,72 +547,6 @@ SectionGroup /e "mkcert"
 SectionGroupEnd
 
 /**
- * WinNFSd group
- */
-SectionGroup /e "WinNFSd (deprecated)"
-  /**
-   * WinNFSd application install
-   */
-  Section /o "${WINNFSD_NAME}" SecWinNFSd
-    SectionIn 1
-    SetOutPath "$INSTDIR"
-    SetOverwrite off
-
-    ; Copy files
-    File "licenses\winnfsd_license.txt"
-    File "..\scripts\windows_ddev_nfs_setup.sh"
-
-    ; Set URL and temporary file name
-    !define WINNFSD_DEST "$INSTDIR\${WINNFSD_SETUP}"
-
-    ; Download installer
-    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${WINNFSD_URL}" "${WINNFSD_DEST}" /END
-    Pop $R0 ; return value = exit code, "OK" if OK
-
-    ; Check download result
-    ${If} $R0 != "OK"
-      ; Download failed, show message and continue
-      SetDetailsView show
-      DetailPrint "Download of `${WINNFSD_NAME}` failed:"
-      DetailPrint " $R0"
-      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
-    ${EndIf}
-
-    !undef WINNFSD_DEST
-  SectionEnd
-
-  /**
-   * NSSM application install
-   */
-  Section /o "${NSSM_NAME}" SecNSSM
-    ; Install in non choco mode only
-    ${IfNot} ${Chocolatey}
-      SectionIn 1
-      SetOutPath "$INSTDIR"
-      SetOverwrite try
-
-      ; Set URL and temporary file name
-      !define NSSM_DEST "$INSTDIR\${NSSM_SETUP}"
-
-      ; Download installer
-      INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${NSSM_URL}" "${NSSM_DEST}" /END
-      Pop $R0 ; return value = exit code, "OK" if OK
-
-      ; Check download result
-      ${If} $R0 != "OK"
-        ; Download failed, show message and continue
-        SetDetailsView show
-        DetailPrint "Download of `${NSSM_NAME}` failed:"
-        DetailPrint " $R0"
-        MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
-      ${EndIf}
-
-      !undef NSSM_DEST
-    ${EndIf}
-  SectionEnd
-SectionGroupEnd
-
-/**
  * Last processed section
  *
  * Insert new section groups and sections before this point!
@@ -725,8 +583,6 @@ Section -Post
   !insertmacro MUI_STARTMENU_WRITE_END
 SectionEnd
 
-
-
 /**
  * Language Strings
  *
@@ -734,13 +590,9 @@ SectionEnd
  */
 LangString DESC_SecDDEV ${LANG_ENGLISH} "Install ${PRODUCT_NAME_FULL} (required)"
 LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo) directory to the global PATH"
-LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/gerardog/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
+LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/gerardog/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
-LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL} (deprecated)"
-LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install services, specifically WinNFSd for NFS (deprecated)"
-
-
 
 /**
  * Section Descriptions
@@ -753,11 +605,7 @@ LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install servi
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSudo} $(DESC_SecSudo)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcert} $(DESC_SecMkcert)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcertSetup} $(DESC_SecMkcertSetup)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecWinNFSd} $(DESC_SecWinNFSd)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecNSSM} $(DESC_SecNSSM)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
-
-
 
 /**
  * Installer Macros
@@ -776,23 +624,53 @@ LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install servi
 !macroend
 !define IsUpdateMode `"" IsUpdateMode ""`
 
-
-
 /**
  * Installer Functions
  *
  * Place functions used in the installer here. Function names must not start
  * with `un.`
  */
+Function GetOSArch
+    ; Get TARGET_ARCH into a variable from the argument/define
+    StrCpy $TARGET_ARCH ${TARGET_ARCH}
+
+    ; First, check the PROCESSOR_ARCHITEW6432 environment variable (used in 32-bit processes on 64-bit systems)
+    ReadEnvStr $INSTALL_ARCH "PROCESSOR_ARCHITEW6432"
+
+    ${If} $INSTALL_ARCH == ""
+        ; If PROCESSOR_ARCHITEW6432 is not set, fall back to PROCESSOR_ARCHITECTURE
+        ReadEnvStr $INSTALL_ARCH "PROCESSOR_ARCHITECTURE"
+    ${EndIf}
+
+    ; Check for common architectures
+    ${If} $INSTALL_ARCH == "AMD64"
+        StrCpy $INSTALL_ARCH "amd64"
+    ${ElseIf} $INSTALL_ARCH == "ARM64"
+        StrCpy $INSTALL_ARCH "arm64"
+    ${Else}
+        StrCpy $INSTALL_ARCH "unknown"
+    ${EndIf}
+FunctionEnd
+
+
 
 /**
  * Initialization, called on installer start
  */
 Function .onInit
-  ; Check OS architecture, 64 bit supported only
-  ${IfNot} ${IsNativeAMD64}
-    MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture, $(^Name) runs on 64 bit only."
+  ; Check OS architecture
+  Call GetOSArch
+
+  ; Compare detected architecture ($ARCH) with the target architecture ($NSIS_ARCH)
+  ${If} $INSTALL_ARCH != $TARGET_ARCH
+    MessageBox MB_ICONSTOP|MB_OK "Unsupported CPU architecture: $INSTALL_ARCH . This installer is built for ${TARGET_ARCH}."
     Abort "Unsupported CPU architecture!"
+  ${EndIf}
+
+  ; Check Windows version
+  ${IfNot} ${AtLeastWin10}
+    MessageBox MB_ICONSTOP|MB_OK "Unsupported Windows version, $(^Name) requires Windows 10 or later."
+    Abort "Unsupported Windows version!"
   ${EndIf}
 
   InitPluginsDir
@@ -843,6 +721,7 @@ Function .onInit
   ${Else}
     StrCpy $ChocolateyMode "0"
   ${EndIf}
+
 FunctionEnd
 
 /**
@@ -951,24 +830,6 @@ Function mkcertLicLeave
 FunctionEnd
 
 /**
- * Disable WinNFSd license page if component is not selected or already accepted before
- */
-Function winNFSdLicPre
-  ReadRegDWORD $R0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:WinNFSdLicenseAccepted"
-  ${If} $R0 = 1
-  ${OrIfNot} ${SectionIsSelected} ${SecWinNFSd}
-    Abort
-  ${EndIf}
-FunctionEnd
-
-/**
- * Set WinNFSd license accepted flag
- */
-Function winNFSdLicLeave
-  WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:WinNFSdLicenseAccepted" 0x00000001
-FunctionEnd
-
-/**
  * Disable on updates
  */
 Function DirectoryPre
@@ -1041,12 +902,6 @@ Section Uninstall
   ; Remove installed files
   Delete "$INSTDIR\ddev_uninstall.exe"
 
-  Delete "$INSTDIR\${NSSM_SETUP}"
-
-  Delete "$INSTDIR\windows_ddev_nfs_setup.sh"
-  Delete "$INSTDIR\winnfsd_license.txt"
-  Delete "$INSTDIR\${WINNFSD_SETUP}"
-
   Delete "$INSTDIR\mkcert uninstall.lnk"
   Delete "$INSTDIR\mkcert install.lnk"
   Delete "$INSTDIR\mkcert_license.txt"
@@ -1079,7 +934,6 @@ Section Uninstall
   ; Close uninstaller window
   SetAutoClose true
 SectionEnd
-
 
 
 /**
