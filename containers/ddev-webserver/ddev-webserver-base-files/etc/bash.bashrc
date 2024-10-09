@@ -6,7 +6,7 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-export PATH="${DDEV_COMPOSER_ROOT}/vendor/bin:${PATH}"
+export PATH="${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin:${PATH}"
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
