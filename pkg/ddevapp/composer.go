@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/mattn/go-isatty"
@@ -17,10 +18,11 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-composer hooks: %v", err)
 	}
 
+	argString := strings.Join(args, " ")
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
 		Dir:     app.GetComposerRoot(true, true),
-		RawCmd:  append([]string{"composer"}, args...),
+		Cmd:     "composer " + argString,
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		// Prevent Composer from debugging when Xdebug is enabled
 		Env: []string{"XDEBUG_MODE=off"},
