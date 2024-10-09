@@ -7,6 +7,13 @@
 # 2. Configure an SSH key for your Lagoon user https://docs.lagoon.sh/using-lagoon-advanced/ssh/
 # 3. `ddev auth ssh`.
 # 4. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'
+#    ```yaml
+#    web_environment:
+#        - LAGOON_PROJECT=<project-name>
+#        - LAGOON_ENVIRONMENT=<environment-name>
+#    ```
+#    You can also do this with `ddev config --web-environment-add="LAGOON_PROJECT=<project-name>,LAGOON_ENVIRONMENT=<environment-name>"`.
+#
 # 5. `ddev restart`
 #
 # 'ddev pull lagoon'
@@ -46,4 +53,3 @@ files_push_command:
     set -eu -o pipefail
     #set -x   # You can enable bash debugging output by uncommenting
     lagoon-sync sync files -p ${LAGOON_PROJECT} -e local -t ${LAGOON_ENVIRONMENT} --no-interaction 
-
