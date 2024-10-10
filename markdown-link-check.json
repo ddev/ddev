@@ -65,7 +65,11 @@
     },
     {
       "pattern": "^https://team-ddev.1password.com"
+    },
+    {
+      "pattern": "^https://.*.archive.org"
     }
+
   ],
   "httpHeaders": [
     {
