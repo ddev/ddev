@@ -17,7 +17,7 @@ var WebTag = "20241002_deviantintegral_vim_tiny" // Note that this can be overri
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.23.4"
+var BaseDBTag = "20231216_bitnami_base_for_mysql"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.4"
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.4"

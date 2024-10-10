@@ -918,6 +918,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.Postgres {
 		templateVars.DBMountDir = "/var/lib/postgresql/data"
 	}
+	// TODO: Determine if mount to /bitnami is for all mysql/bitnami or just newest
+	if app.Database.Type == nodeps.MySQL {
+		templateVars.DBMountDir = "/bitnami/mysql/data"
+	}
 	if app.IsNFSMountEnabled() {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
