@@ -817,7 +817,7 @@ var IsInternetActiveResult = false
 // In order to override net.DefaultResolver with a stub, we have to define an
 // interface on our own since there is none from the standard library.
 var IsInternetActiveNetResolver interface {
-	LookupHost(ctx context.Context, host string) (addrs []string, err error)
+	LookupIP(ctx context.Context, network, host string) ([]net.IP, error)
 } = net.DefaultResolver
 
 // IsInternetActive checks to see if we have a viable
@@ -837,7 +837,7 @@ func IsInternetActive() bool {
 	// Using a random URL is more conclusive, but it's more intrusive because
 	// DNS may take some time, and it's really annoying.
 	testURL := "test.ddev.site"
-	addrs, err := IsInternetActiveNetResolver.LookupHost(ctx, testURL)
+	addrs, err := IsInternetActiveNetResolver.LookupIP(ctx, "ip4", testURL)
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
