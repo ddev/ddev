@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -1188,35 +1187,13 @@ func (app *DdevApp) GetLocalTimezone() (string, error) {
 		timezone = os.Getenv("TZ")
 	} else {
 		localtimeFile := filepath.Join("/etc", "localtime")
-		timezoneFile, err := filepath.EvalSymlinks(localtimeFile)
+		var err error
+		timezone, err = filepath.EvalSymlinks(localtimeFile)
 		if err != nil {
 			return "", fmt.Errorf("unable to read timezone from %s file: %v", localtimeFile, err)
 		}
-		// /etc/localtime is a symlink to a file, for example:
-		// /usr/share/zoneinfo/Europe/London on Linux and WSL2
-		// /var/db/timezone/zoneinfo/Europe/London on macOS (the exact path to /zoneinfo/ may differ)
-		// /usr/share/zoneinfo.default/Europe/London on macOS
-		// We can search for anything after /zoneinfo/ in the file path.
-		regex := regexp.MustCompile(`/zoneinfo.*?/`)
-		parts := regex.Split(strings.TrimSpace(timezoneFile), 2)
-		if len(parts) != 2 {
-			return "", fmt.Errorf("unable to read timezone from %s file", timezoneFile)
-		}
-		timezone = parts[1]
-		// Remove leading prefixes if they exist.
-		// https://stackoverflow.com/a/67888343/8097891
-		for _, prefix := range []string{"posix/", "right/"} {
-			timezone = strings.TrimPrefix(timezone, prefix)
-		}
-		if timezone == "" {
-			return "", fmt.Errorf("unable to read timezone from %s file", timezoneFile)
-		}
 	}
-	_, err := time.LoadLocation(timezone)
-	if err != nil {
-		return "", fmt.Errorf("failed to load timezone '%s': %v", timezone, err)
-	}
-	return timezone, nil
+	return util.GetTimezone(timezone)
 }
 
 // Start initiates docker-compose up
