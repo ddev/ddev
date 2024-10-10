@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20241002_deviantintegral_vim_tiny" // Note that this can be overridden by make
+var WebTag = "20241009_use_cmd_composer" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
