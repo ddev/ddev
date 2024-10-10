@@ -60,24 +60,16 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 13. `sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent`
 14. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it may require escalation.
 15. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
-16. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-17. Configure brew in PATH with:
-
-     ```
-     echo 'export PATH="/snap/bin:/home/linuxbrew/.linuxbrew/bin:$PATH"' >>~/.bashrc
-     source ~/.bashrc
-     ```
-
-18. As root user (`sudo -s`), add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-19. `git config --global --add safe.directory '*'`
-20. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
-21. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
-22. Run `ngrok authtoken <token>` with token for free account.
-23. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
-24. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
-25. Turn off the `System` -> `Notifications` -> `Additional settings` that cause the "Windows experience" prompts after upgrades:
+16. As root user (`sudo -s`), add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+17. `git config --global --add safe.directory '*'`
+18. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+19. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+20. Run `ngrok authtoken <token>` with token for free account.
+21. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
+22. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
+23. Turn off the `System` -> `Notifications` -> `Additional settings` that cause the "Windows experience" prompts after upgrades:
     ![disable_windows_experience](../images/disable_windows_experience.png)
-26. Edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
+24. Edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
 
     ```
     memory=12GB
