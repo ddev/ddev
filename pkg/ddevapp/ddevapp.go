@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -1187,23 +1188,17 @@ func (app *DdevApp) GetLocalTimezone() (string, error) {
 		timezone = os.Getenv("TZ")
 	} else {
 		localtimeFile := filepath.Join("/etc", "localtime")
-		// We don't use filepath.EvalSymlinks() here because it can return strange results on macOS,
-		// where /var/db/timezone/zoneinfo can be a symlink to different place, such as
-		// /var/db/timezone/tz/2024a.1.0/zoneinfo or /usr/share/zoneinfo.default
-		timezoneFile, err := os.Readlink(localtimeFile)
+		timezoneFile, err := filepath.EvalSymlinks(localtimeFile)
 		if err != nil {
 			return "", fmt.Errorf("unable to read timezone from %s file: %v", localtimeFile, err)
-		}
-		// It's relative on Linux, but on macOS it's absolute.
-		// https://stackoverflow.com/a/71142234/8097891
-		if !filepath.IsAbs(timezoneFile) {
-			timezoneFile = path.Join(path.Dir(localtimeFile), timezoneFile)
 		}
 		// /etc/localtime is a symlink to a file, for example:
 		// /usr/share/zoneinfo/Europe/London on Linux and WSL2
 		// /var/db/timezone/zoneinfo/Europe/London on macOS (the exact path to /zoneinfo/ may differ)
-		// We can search for anything after /zoneinfo/ in the file path
-		parts := strings.Split(strings.TrimSpace(timezoneFile), "/zoneinfo/")
+		// /usr/share/zoneinfo.default/Europe/London on macOS
+		// We can search for anything after /zoneinfo/ in the file path.
+		regex := regexp.MustCompile(`/zoneinfo.*?/`)
+		parts := regex.Split(strings.TrimSpace(timezoneFile), 2)
 		if len(parts) != 2 {
 			return "", fmt.Errorf("unable to read timezone from %s file", timezoneFile)
 		}
