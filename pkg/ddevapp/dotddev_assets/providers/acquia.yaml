@@ -6,20 +6,25 @@
 # 1. Get your Acquia API token from your Account Settings->API Tokens.
 # 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
 # 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull).
-# 4. Add / update the web_environment section in ~/.ddev/global_config.yaml
-#    or your project config.yamlwith the API keys:
+# 4. Add / update the web_environment section in ~/.ddev/global_config.yaml with the API keys:
 #    ```yaml
 #    web_environment:
-#    - ACQUIA_API_KEY=xxxxxxxx
-#    - ACQUIA_API_SECRET=xxxxx
+#        - ACQUIA_API_KEY=xxxxxxxx
+#        - ACQUIA_API_SECRET=xxxxx
 #    ```
-# 5. Add the ACQUIA_ENVIRONMENT_ID environment variable to your project config.yaml, for example:
+#    You can also do this with `ddev config global --web-environment-add="ACQUIA_API_KEY=xxxxxxxx,ACQUIA_API_SECRET=xxxxx"`.
+#
+# 5. Add the ACQUIA_ENVIRONMENT_ID environment variable to your project `.ddev/config.yaml`, for example:
 #    ```yaml
 #    web_environment:
-#    - ACQUIA_ENVIRONMENT_ID=project1.dev
-#   - On the Acquia Cloud Platform you can find this out by navigating to the environments page,
-#     clicking on the header and look for the "SSH URL" line.
-#     Eg. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
+#        - ACQUIA_ENVIRONMENT_ID=project1.dev
+#    ```
+#    You can also do this with `ddev config --web-environment-add="ACQUIA_ENVIRONMENT_ID=project1.dev"`.
+#
+#    On the Acquia Cloud Platform you can find this out by navigating to the environments page,
+#    clicking on the header and look for the "SSH URL" line.
+#    Eg. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
+#
 # 6. `ddev restart`
 # 7. Use `ddev pull acquia` to pull the project database and files.
 # 8. Optionally use `ddev push acquia` to push local files and database to Acquia. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
@@ -31,11 +36,11 @@
 
 auth_command:
   command: |
-     set -eu -o pipefail
-     if [ -z "${ACQUIA_API_KEY:-}" ] || [ -z "${ACQUIA_API_SECRET:-}" ]; then echo "Please make sure you have set ACQUIA_API_KEY and ACQUIA_API_SECRET in ~/.ddev/global_config.yaml" && exit 1; fi
-      if [ -z "${ACQUIA_ENVIRONMENT_ID:-}" ] ; then echo "Please set ACQUIA_ENVIRONMENT_ID via config.yaml or with '--environment=ACQUIA_ENVIRONMENT_ID=xxx'" && exit 1; fi
-      ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
-      acli -n auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
+    set -eu -o pipefail
+    if [ -z "${ACQUIA_API_KEY:-}" ] || [ -z "${ACQUIA_API_SECRET:-}" ]; then echo "Please make sure you have set ACQUIA_API_KEY and ACQUIA_API_SECRET in ~/.ddev/global_config.yaml" && exit 1; fi
+    if [ -z "${ACQUIA_ENVIRONMENT_ID:-}" ] ; then echo "Please set ACQUIA_ENVIRONMENT_ID via config.yaml or with '--environment=ACQUIA_ENVIRONMENT_ID=xxx'" && exit 1; fi
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+    acli -n auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
 
 db_pull_command:
   command: |

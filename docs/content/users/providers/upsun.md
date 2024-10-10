@@ -11,10 +11,16 @@ You need to obtain and configure an API token first. This only needs to be done 
 1. Login to the Upsun Dashboard and go to *My Profile* → *API Tokens*. Create an API token DDEV can use.
 2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`:
 
-```yaml
-web_environment:
-  - UPSUN_CLI_TOKEN=abcdeyourtoken
-```
+    ```yaml
+    web_environment:
+        - UPSUN_CLI_TOKEN=abcdeyourtoken
+    ```
+
+    You can also do this with:
+
+    ```bash
+    ddev config global --web-environment-add="UPSUN_CLI_TOKEN=abcdeyourtoken"
+    ```
 
 ## Upsun Per-Project Configuration
 
@@ -25,8 +31,8 @@ web_environment:
 
         ```yaml
         web_environment:
-        - UPSUN_PROJECT=nf4amudfn23biyourproject
-        - UPSUN_ENVIRONMENT=main
+            - UPSUN_PROJECT=nf4amudfn23biyourproject
+            - UPSUN_ENVIRONMENT=main
         ```
 
     * Or with a command from your terminal:

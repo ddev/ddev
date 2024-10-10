@@ -14,10 +14,16 @@ You need to obtain and configure an API token first. This is only needed once.
 1. Login to the Platform.sh Dashboard and go to *Account* → *API Tokens*. Create an API token DDEV can use.
 2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`:
 
-```yaml
-web_environment:
-  - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
-```
+    ```yaml
+    web_environment:
+        - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
+    ```
+
+    You can also do this with:
+
+    ```bash
+    ddev config global --web-environment-add="PLATFORMSH_CLI_TOKEN=abcdeyourtoken"`
+    ```
 
 ## Platform.sh Per-Project Configuration
 
@@ -28,8 +34,8 @@ web_environment:
 
         ```yaml
         web_environment:
-        - PLATFORM_PROJECT=nf4amudfn23biyourproject
-        - PLATFORM_ENVIRONMENT=main
+            - PLATFORM_PROJECT=nf4amudfn23biyourproject
+            - PLATFORM_ENVIRONMENT=main
         ```
 
     * Or with a command from your terminal:
@@ -50,8 +56,8 @@ If your environment contains more than one app, add `PLATFORM_APP` variable to y
 
     ```yaml
     web_environment:
-    - ...
-    - PLATFORM_APP=app
+        - ...
+        - PLATFORM_APP=app
     ```
 
 * Or with a command from your terminal:
@@ -68,13 +74,13 @@ If your project has multiple databases, they’ll all be pulled into DDEV with t
 
 You can designate the primary database using the `PLATFORM_PRIMARY_RELATIONSHIP` environment variable:
 
-```
+```bash
 ddev config --web-environment-add="PLATFORM_PRIMARY_RELATIONSHIP=main"
 ```
 
 You can also do the same thing by running `ddev pull platform` and using the `--environment` flag:
 
-```
+```bash
 ddev pull platform --environment="PLATFORM_PRIMARY_RELATIONSHIP=main"
 ```
 

@@ -37,16 +37,16 @@ You can set custom environment variables in several places:
 
     ```yaml
     web_environment:
-    - MY_ENV_VAR=someval
-    - MY_OTHER_ENV_VAR=someotherval
+        - MY_ENV_VAR=someval
+        - MY_OTHER_ENV_VAR=someotherval
     ```
 
 4. The project’s [`web_environment`](../configuration/config.md#web_environment) setting in `.ddev/config.yaml` or `.ddev/config.*.yaml`:
 
     ```yaml
     web_environment:
-    - MY_ENV_VAR=someval
-    - MY_OTHER_ENV_VAR=someotherval
+        - MY_ENV_VAR=someval
+        - MY_OTHER_ENV_VAR=someotherval
     ```
 
 If you’d rather use the CLI to set the project or global `web_environment` value, you can use the [`ddev config`](../usage/commands.md#config) command:

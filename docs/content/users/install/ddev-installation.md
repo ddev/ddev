@@ -404,18 +404,18 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can expose ports via the `ports` setting, which is usually not recommended if you work locally due to port conflicts. But you can load these additional Docker compose files only when Codespaces is detected. See [Defining Additional Services](./../extend/custom-compose-files.md#docker-composeyaml-examples) for more information. 
 
-    ```
+    ```yaml
     services:
         web:
             ports:
-            - "5174:5174"
+                - "5174:5174"
     ```
 
     ### Default environment variables
 
     Codespace instances already provide some [default environment values](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace). You can inherit and inject them in your `.ddev/config.yaml`:
     
-    ```
+    ```yaml
     web_environment: 
         - CODESPACES
         - CODESPACE_NAME
