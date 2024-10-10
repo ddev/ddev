@@ -9,6 +9,7 @@ import (
 	osexec "os/exec"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -387,4 +388,34 @@ func Chmod(path string, mode os.FileMode) error {
 		return nil
 	}
 	return os.Chmod(path, mode)
+}
+
+// GetTimezone tries to find local timezone from the path, that can be
+// either $TZ environment variable or /etc/localtime symlink
+func GetTimezone(path string) (string, error) {
+	// Use case-insensitive search for /zoneinfo/ in the file path.
+	regex := regexp.MustCompile(`(?i)/.*?zoneinfo.*?/`)
+	parts := regex.Split(strings.TrimSpace(path), 2)
+	if len(parts) != 2 {
+		// If this is not a path, but timezone, return it.
+		_, err := time.LoadLocation(path)
+		if err == nil {
+			return path, nil
+		}
+		return "", fmt.Errorf("unable to read timezone from %s", path)
+	}
+	timezone := parts[1]
+	// Remove leading prefixes if they exist.
+	// https://stackoverflow.com/a/67888343/8097891
+	for _, prefix := range []string{"posix/", "right/"} {
+		timezone = strings.TrimPrefix(timezone, prefix)
+	}
+	if timezone == "" {
+		return "", fmt.Errorf("unable to read timezone from %s", path)
+	}
+	_, err := time.LoadLocation(timezone)
+	if err != nil {
+		return "", fmt.Errorf("failed to load timezone '%s': %v", timezone, err)
+	}
+	return timezone, nil
 }

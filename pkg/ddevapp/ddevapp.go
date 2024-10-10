@@ -1187,28 +1187,13 @@ func (app *DdevApp) GetLocalTimezone() (string, error) {
 		timezone = os.Getenv("TZ")
 	} else {
 		localtimeFile := filepath.Join("/etc", "localtime")
-		timezoneFile, err := filepath.EvalSymlinks(localtimeFile)
+		var err error
+		timezone, err = filepath.EvalSymlinks(localtimeFile)
 		if err != nil {
 			return "", fmt.Errorf("unable to read timezone from %s file: %v", localtimeFile, err)
 		}
-		// /etc/localtime is a symlink to a file, for example:
-		// /usr/share/zoneinfo/Europe/London on Linux and WSL2
-		// /var/db/timezone/zoneinfo/Europe/London on macOS (the exact path to /zoneinfo/ may differ)
-		// We can search for anything after /zoneinfo/ in the file path
-		parts := strings.Split(strings.TrimSpace(timezoneFile), "/zoneinfo/")
-		if len(parts) != 2 {
-			return "", fmt.Errorf("unable to read timezone from %s file", timezoneFile)
-		}
-		timezone = parts[1]
-		if timezone == "" {
-			return "", fmt.Errorf("unable to read timezone from %s file", timezoneFile)
-		}
 	}
-	_, err := time.LoadLocation(timezone)
-	if err != nil {
-		return "", fmt.Errorf("failed to load timezone '%s': %v", timezone, err)
-	}
-	return timezone, nil
+	return util.GetTimezone(timezone)
 }
 
 // Start initiates docker-compose up
