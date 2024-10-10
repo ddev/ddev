@@ -137,14 +137,14 @@ ddev start --all`,
 			}
 
 			util.Success("Successfully started %s", project.GetName())
-			httpURLs, httpsURLs, _ := project.GetAllURLs()
-			if project.CanUseHTTPOnly() {
-				httpsURLs = httpURLs
-			}
-			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
+			emitReachProjectMessage(project)
 		}
 		amplitude.CheckSetUp()
 	},
+}
+
+func emitReachProjectMessage(project *ddevapp.DdevApp) {
+	util.Success("Your project can be reached at %s\nSee 'ddev describe' for alternate URLs.", project.GetPrimaryURL())
 }
 
 func init() {
