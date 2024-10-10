@@ -60,6 +60,104 @@ Two flags are available for every command:
 
 ---
 
+## `add-on`
+
+*Aliases: `addon`, `add-ons`, `addons`.*
+
+[Add-on](../extend/additional-services.md) commands.
+
+Environment variables:
+
+* `DDEV_GITHUB_TOKEN`: A [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) may be used for `ddev add-on` requests (which result in GitHub API queries). It's unusual for casual users to need this, but if you're doing lots of `ddev add-on` requests you may run into rate limiting. The token you use requires no privileges at all. Example:
+
+```bash
+export DDEV_GITHUB_TOKEN=<your github token>
+ddev add-on list --all
+```
+
+### `add-on get`
+
+*Alias: `add-on install`.*
+
+Download an add-on (service, provider, etc.).
+
+Flags:
+
+* `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
+* `--version <version>`: Specify a version to download
+* `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
+
+Example:
+
+```shell
+# Download the official Redis add-on
+ddev add-on get ddev/ddev-redis
+
+# Get debug info about `ddev add-on get` failure
+ddev add-on get ddev/ddev-redis --verbose
+
+# Download the official Redis add-on, version v1.0.4
+ddev add-on get ddev/ddev-redis --version v1.0.4
+
+# Download the Drupal Solr add-on from its v1.2.3 release tarball
+ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
+
+# Copy an add-on available in another directory
+ddev add-on get /path/to/package
+
+# Copy an add-on from a tarball in another directory
+ddev add-on get /path/to/tarball.tar.gz
+
+# Download the official Redis add-on and install it into a project named "my-project"
+ddev add-on get ddev/ddev-redis --project my-project
+```
+
+In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
+
+### `add-on remove`
+
+Remove an installed add-on. Accepts the full add-on name, the short name of the repository, or with owner/repository format.
+
+Flags:
+
+* `--project <projectName>`: Specify a project to remove the add-on from. Defaults to checking for a project in the current directory.
+* `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
+
+Example:
+
+```shell
+ddev add-on remove redis
+ddev add-on remove ddev-redis
+ddev add-on remove ddev/ddev-redis
+ddev add-on remove ddev/ddev-redis --project my-project
+```
+
+### `add-on list`
+
+Download an add-on (service, provider, etc.).
+
+Flags:
+
+* `--all`: List unofficial *and* official add-ons. (default `true`)
+* `--installed`: List installed add-ons
+* `--project <projectName>`: Specify a project to remove the add-on from. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
+
+Example:
+
+```shell
+# List official add-ons
+ddev add-on list
+
+# List official and third-party add-ons
+ddev add-on list --all
+
+# List installed add-ons
+ddev add-on list --installed
+
+# List installed add-ons for a specific project
+ddev add-on list --installed --project my-project
+```
+
 ## `aliases`
 
 Shows all aliases for each command in the current context (global or project).
@@ -67,6 +165,17 @@ Shows all aliases for each command in the current context (global or project).
 ```shell
 # Print a list of all available command aliases
 ddev aliases
+```
+
+## `artisan`
+
+*Alias: `art`.*
+
+Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
+
+```shell
+# Show all artisan subcommands
+ddev artisan list
 ```
 
 ## `auth`
@@ -87,17 +196,6 @@ ddev auth ssh
 Flags:
 
 * `--ssh-key-path`, `-d`: Full path to SSH key directory.
-
-## `artisan`
-
-*Aliases: `art`.*
-
-Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
-
-```shell
-# Show all artisan subcommands
-ddev artisan list
-```
 
 ## `blackfire`
 
@@ -446,7 +544,7 @@ ddev debug nfsmount
 
 ### `debug rebuild`
 
-*Aliases: `debug refresh`.*
+*Alias: `debug refresh`.*
 
 Rebuilds the project’s Docker cache with verbose output.
 
@@ -564,6 +662,47 @@ ddev describe
 ddev describe my-project
 ```
 
+## `dotenv`
+
+Commands for managing the contents of `.env` files.
+
+### `dotenv get`
+
+Get the value of an environment variable from a .env file. Provide the path relative to the project root when specifying the file.
+
+Example:
+
+```shell
+# Get the value of APP_KEY from the $DDEV_APPROOT/.env file
+ddev dotenv get .env --app-key
+
+# Get the value of ENV_KEY from the $DDEV_APPROOT/.ddev/.env file
+ddev dotenv get .ddev/.env --env-key
+```
+
+### `dotenv set`
+
+*Alias: `dotenv add`.*
+
+Create or update a `.env` file with values specified via long flags from the command line.
+Flags in the format `--env-key=value` will be converted to environment variable names
+like `ENV_KEY="value"`. The .env file should be named `.env` or `.env.<servicename>` or `.env.<something>`
+All environment variables can be used and expanded in `.ddev/docker-compose.*.yaml` files.
+Provide the path relative to the project root when specifying the file.
+
+Example:
+
+```shell
+# Create or update $DDEV_APPROOT/.env file with APP_KEY="value"
+ddev dotenv set .env --app-key=value
+
+# Create or update $DDEV_APPROOT/.ddev/.env file with EXTRA="value" and ANOTHER_KEY="extra value"
+ddev dotenv set .ddev/.env --extra value --another-key "extra value"
+
+# Create or update $DDEV_APPROOT/.ddev/.env.redis file with REDIS_TAG="7-bookworm"
+ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
+```
+
 ## `drush`
 
 Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal`, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
@@ -629,139 +768,6 @@ ddev export-db > /tmp/db.sql.gz
 
 # Dump my-project’s database, without compressing it, to `/tmp/my-project.sql`
 ddev export-db my-project --gzip=false --file=/tmp/my-project.sql
-```
-
-## `add-on`
-
-[Add-on](../extend/additional-services.md) commands.
-
-Environment variables:
-
-* `DDEV_GITHUB_TOKEN`: A [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) may be used for `ddev add-on` requests (which result in GitHub API queries). It's unusual for casual users to need this, but if you're doing lots of `ddev add-on` requests you may run into rate limiting. The token you use requires no privileges at all. Example:
-
-```bash
-export DDEV_GITHUB_TOKEN=<your github token>
-ddev add-on list --all
-```
-
-### `add-on get`
-
-Download an add-on (service, provider, etc.).
-
-Flags:
-
-* `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
-* `--version <version>`: Specify a version to download
-* `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
-
-Example:
-
-```shell
-# Download the official Redis add-on
-ddev add-on get ddev/ddev-redis
-
-# Get debug info about `ddev add-on get` failure
-ddev add-on get ddev/ddev-redis --verbose
-
-# Download the official Redis add-on, version v1.0.4
-ddev add-on get ddev/ddev-redis --version v1.0.4
-
-# Download the Drupal Solr add-on from its v1.2.3 release tarball
-ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
-
-# Copy an add-on available in another directory
-ddev add-on get /path/to/package
-
-# Copy an add-on from a tarball in another directory
-ddev add-on get /path/to/tarball.tar.gz
-
-# Download the official Redis add-on and install it into a project named "my-project"
-ddev add-on get ddev/ddev-redis --project my-project
-```
-
-In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
-
-### `add-on remove`
-
-Remove an installed add-on. Accepts the full add-on name, the short name of the repository, or with owner/repository format.
-
-Flags:
-
-* `--project <projectName>`: Specify a project to remove the add-on from. Defaults to checking for a project in the current directory.
-* `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
-
-Example:
-
-```shell
-ddev add-on remove redis
-ddev add-on remove ddev-redis
-ddev add-on remove ddev/ddev-redis
-ddev add-on remove ddev/ddev-redis --project my-project
-```
-
-### `add-on list`
-
-Download an add-on (service, provider, etc.).
-
-Flags:
-
-* `--all`: List unofficial *and* official add-ons. (default `true`)
-* `--installed`: List installed add-ons
-* `--project <projectName>`: Specify a project to remove the add-on from. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
-
-Example:
-
-```shell
-# List official add-ons
-ddev add-on list
-
-# List official and third-party add-ons
-ddev add-on list --all
-
-# List installed add-ons
-ddev add-on list --installed
-
-# List installed add-ons for a specific project
-ddev add-on list --installed --project my-project
-```
-
-## `dotenv`
-
-Commands for managing the contents of `.env` files.
-
-### `dotenv get`
-
-Get the value of an environment variable from a .env file. Provide the path relative to the project root when specifying the file.
-
-Example:
-
-```shell
-# Get the value of APP_KEY from the $DDEV_APPROOT/.env file
-ddev dotenv get .env --app-key
-
-# Get the value of ENV_KEY from the $DDEV_APPROOT/.ddev/.env file
-ddev dotenv get .ddev/.env --env-key
-```
-
-### `dotenv set`
-
-Create or update a `.env` file with values specified via long flags from the command line.
-Flags in the format `--env-key=value` will be converted to environment variable names
-like `ENV_KEY="value"`. The .env file should be named `.env` or `.env.<servicename>` or `.env.<something>`
-All environment variables can be used and expanded in `.ddev/docker-compose.*.yaml` files.
-Provide the path relative to the project root when specifying the file.
-
-Example:
-
-```shell
-# Create or update $DDEV_APPROOT/.env file with APP_KEY="value"
-ddev dotenv set .env --app-key=value
-
-# Create or update $DDEV_APPROOT/.ddev/.env file with EXTRA="value" and ANOTHER_KEY="extra value"
-ddev dotenv set .ddev/.env --extra value --another-key "extra value"
-
-# Create or update $DDEV_APPROOT/.ddev/.env.redis file with REDIS_TAG="7-bookworm"
-ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
 ```
 
 ## `heidisql`
@@ -952,6 +958,15 @@ ddev logs -s db
 ddev logs -s db my-project
 ```
 
+## `magento`
+
+Run the `magento` command; available only in projects of type `magento2`, and only works if `bin/magento` is in the project.
+
+```shell
+# Show all magento subcommands
+ddev magento list
+```
+
 ## `mailpit`
 
 Launch a browser with mailpit for the current project (global shell host container command).
@@ -961,15 +976,6 @@ Example:
 ```shell
 # Open Mailpit in the default browser
 ddev mailpit
-```
-
-## `magento`
-
-Run the `magento` command; available only in projects of type `magento2`, and only works if `bin/magento` is in the project.
-
-```shell
-# Show all magento subcommands
-ddev magento list
 ```
 
 ## `mutagen`
@@ -1018,6 +1024,8 @@ ddev mutagen reset my-project
 ```
 
 ### `mutagen status`
+
+*Alias: `mutagen st`.*
 
 Shows Mutagen sync status.
 
@@ -1451,6 +1459,8 @@ ddev ssh -d /var/www/html
 ```
 
 ## `start`
+
+*Alias: `add`*.
 
 Start a DDEV project.
 
