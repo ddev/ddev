@@ -507,7 +507,7 @@ func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 		if portChangeRequired {
 			*port = replacementPort
 			if verbose {
-				output.UserOut.Printf("Port %s is busy, using %s instead.", proposedPort, replacementPort)
+				output.UserOut.Printf("Port %s is busy, using %s instead, see %s", proposedPort, replacementPort, "https://ddev.com/port-conflict")
 			}
 		}
 	}
