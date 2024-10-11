@@ -47,7 +47,7 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 On `ddev start` you may see a message like this:
 
 ```bash
-Port 443 is busy, using 33001 instead, see https://ddev.com/port-conflict
+Port 443 is busy, using 33001 instead, see https://ddev.com/s/port-conflict
 ```
 
 This means that DDEV has detected that it can't use the expected port (`443`) in this example, because another application is using it. If this is OK, you don't need to take any action. Most users want to use the default ports though (`80` and `443`) so you may want to figure out what the conflict is and solve it (usually by stopping the competing application).
