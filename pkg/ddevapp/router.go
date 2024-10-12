@@ -283,7 +283,9 @@ func GetRouterBoundPorts() ([]uint16, error) {
 	}
 
 	for _, p := range r.Ports {
-		boundPorts = append(boundPorts, p.PublicPort)
+		if p.PublicPort != 0 {
+			boundPorts = append(boundPorts, p.PublicPort)
+		}
 	}
 	return boundPorts, nil
 }
