@@ -64,26 +64,12 @@ The following “Repository secret” environment variables must be configured i
 * Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a `GITHUB_TOKEN` that has power to manage packages (`write:packages` scope, classic PAT), change the version in the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) and run:
-
-    ```bash
-    cd .github/devcontainers/src
-    export GITHUB_TOKEN=<personal-access-token-with-power-to-manage-packages>
-    devcontainer features publish -n ddev/ddev .
-    ```
 
 ### Actual Release Creation
 
 1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
 2. Make sure you're about to create the right release tag.
 3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
-
-### Post-Release Tasks
-
-1. After the release has been created, the new gitpod image must be pushed.
-    1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh`
-    2. PR to update `.gitpod.yml` with the new image.
-    3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
 
