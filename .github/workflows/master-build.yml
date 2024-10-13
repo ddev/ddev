@@ -84,6 +84,20 @@ jobs:
         # We need to get all branches and tags for git describe to work properly
         fetch-depth: 0
 
+    - name: Set up Homebrew
+      id: set-up-homebrew
+      uses: Homebrew/actions/setup-homebrew@master
+
+    - name: Install Docker and deps
+      run: ./.github/workflows/linux-setup.sh
+
+    - name: Install build tools
+      run: ./.github/workflows/linux-build-setup.sh
+
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '>=1.21'
+
     - name: Login to DockerHub
       uses: docker/login-action@v3
       with:
