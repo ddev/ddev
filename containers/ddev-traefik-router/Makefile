@@ -1,6 +1,3 @@
-# Docker repo for a push
-DOCKER_REPO ?= ddev/ddev-traefik-router
-
 VERSION := $(shell git describe --tags --always --dirty)
 
 # Tests always run against amd64 (build host). Once tests have passed, a multi-arch build
@@ -8,6 +5,8 @@ VERSION := $(shell git describe --tags --always --dirty)
 BUILD_ARCHS=linux/amd64,linux/arm64
 
 include ../containers_shared.mak
+
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-traefik-router
 
 test: container
 	bash -c "test/containertest.sh $(DOCKER_REPO):$(VERSION)"

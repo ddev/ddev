@@ -32,6 +32,7 @@ env:
   HOMEBREW_EDGE_REPOSITORY: ${{ vars.HOMEBREW_EDGE_REPOSITORY }}
   HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
   REPOSITORY_OWNER: ${{ github.repository_owner }}
+  DOCKER_ORG: ${{ github.repository_owner }}
 
 permissions:
   packages: write
@@ -109,9 +110,8 @@ jobs:
       run: |
         pushd containers/ddev-gitpod-base >/dev/null
         # For testing, push to ddevhq docker org
-        DOCKER_REPO=ddev/ddev-gitpod-base
-        if [ "${REPOSITORY_OWNER}" =~ ^(ddev-test|rfay) ]; then export DOCKER_REPO=ddevhq/ddev-gitpod-base; fi
-        make push VERSION="${GITHUB_REF##*/}" DOCKER_REPO=${DOCKER_REPO}
+        if [ "${DOCKER_ORG}" =~ ^(ddev-test) ]; then export DOCKER_ORG=ddevhq; fi
+        make push VERSION="${GITHUB_REF##*/}" DOCKER_ORG=${DOCKER_ORG}
         popd >/dev/null
 
   build-most:
@@ -353,7 +353,6 @@ jobs:
           args: release --clean
         env:
           CGO_ENABLED: 0
-          DOCKER_ORG: ddev
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts

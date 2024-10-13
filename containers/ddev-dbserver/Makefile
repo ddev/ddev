@@ -1,4 +1,5 @@
-DOCKER_REPO ?= ddev/ddev-dbserver
+DOCKER_ORG ?= ddev
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-dbserver
 
 VERSION := $(shell git describe --tags --always --dirty)
 

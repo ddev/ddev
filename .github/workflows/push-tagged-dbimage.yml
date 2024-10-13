@@ -17,7 +17,7 @@ on:
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: ddev
+  DOCKER_ORG: ${{ github.repository_owner }}
   TAG: "${{ github.event.inputs.tag }}"
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

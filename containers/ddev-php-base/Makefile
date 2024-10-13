@@ -1,13 +1,13 @@
 # Makefile for a standard repo with associated image
 
-##### These variables need to be adjusted in most repositories #####
+include ../containers_shared.mak
 
-# Base docker org for tag and push
-DOCKER_ORG ?= ddev
+##### These variables need to be adjusted in most repositories #####
 SHELL=/bin/bash
 
 DEFAULT_IMAGES = ddev-php-base ddev-php-prod
 BUILD_ARCHS=linux/amd64,linux/arm64
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-php-base
 
 .PHONY: images
 
