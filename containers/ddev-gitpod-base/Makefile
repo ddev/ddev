@@ -14,6 +14,5 @@ test: container
 
 multi-arch:
 	set -x
-	echo "Creating multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";
 	docker buildx build --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .
 	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";

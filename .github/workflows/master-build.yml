@@ -108,7 +108,10 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v1')
       run: |
         pushd containers/ddev-gitpod-base >/dev/null
-        make push VERSION="${GITHUB_REF##*/}"
+        # For testing, push to ddevhq docker org
+        DOCKER_REPO=ddev/ddev-gitpod-base
+        if [ "${REPOSITORY_OWNER}" =~ ^(ddev-test|rfay) ]; then export DOCKER_REPO=ddevhq/ddev-gitpod-base; fi
+        make push VERSION="${GITHUB_REF##*/}" DOCKER_REPO=${DOCKER_REPO}
         popd >/dev/null
 
   build-most:

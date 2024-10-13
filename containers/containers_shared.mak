@@ -5,6 +5,8 @@ SANITIZED_DOCKER_REPO = $(subst /,_,$(DOCKER_REPO))
 
 DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 
+.PHONY: container push
+
 container: container-name
 	docker buildx build -o type=docker -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" .
 
@@ -25,5 +27,4 @@ push:
             --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
             --label "maintainer=DDEV <randy@randyfay.com>" \
             $(DOCKER_ARGS) . ;\
-     fi;
-
+     fi
