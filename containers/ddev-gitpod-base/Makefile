@@ -13,6 +13,7 @@ test: container
 	bash -c "test/containertest.sh $(DOCKER_REPO):$(VERSION)"
 
 multi-arch:
-	docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use;
-	docker buildx build --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .;
+	set -x
+	echo "Creating multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";
+	docker buildx build --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .
 	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";

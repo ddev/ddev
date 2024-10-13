@@ -337,9 +337,19 @@ jobs:
           docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
           popd
 
+      - name: Push DDEV devcontainer feature
+        if: startsWith(github.ref, 'refs/tags/v1')
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/ddev/ddev/install-ddev
+          imageTag: "${GITHUB_REF##*/}"
+          subFolder: 'containers/devcontainers'
+          push: always
+
       - name: Push ddev-gitpod-base image
         if: startsWith(github.ref, 'refs/tags/v1')
         run: |
-          pushd containers/ddev-gitpod-base
+          pushd containers/ddev-gitpod-base >/dev/null
           make push VERSION="${GITHUB_REF##*/}"
-          popd
+          popd >/dev/null
+
