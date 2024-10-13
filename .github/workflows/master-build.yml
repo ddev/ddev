@@ -336,3 +336,10 @@ jobs:
           pushd .gotmp/bin/windows_amd64/chocolatey
           docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
           popd
+
+      - name: Push ddev-gitpod-base image
+        if: startsWith(github.ref, 'refs/tags/v1')
+        run: |
+          pushd containers/ddev-gitpod-base
+          make push VERSION="${GITHUB_REF##*/}"
+          popd
