@@ -12,6 +12,7 @@ on:
         default: ddev-webserver
         type: choice
         options:
+          - ddev-gitpod-base
           - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent
@@ -19,7 +20,7 @@ on:
           - ddev-nginx-proxy-router
           - test-ssh-server
       tag:
-        description: Tag for pushed image (v1.22.2 for example)
+        description: Tag for pushed image (v1.24.5 for example)
         required: true
         default: ""
       debug_enabled:

@@ -336,6 +336,7 @@ The Buildkite automated tests require special access, which we typically grant t
 
 The Docker images that DDEV uses are included in the `containers/` directory:
 
+* `containers/ddev-gitpod-base` is the image used in GitPod by [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher)
 * `containers/ddev-php-base` the base build for `ddev-webserver`.
 * `containers/ddev-webserver` provides the web servers for per-project `web` containers.
 * `containers/ddev-dbserver` provides the `db` container for per-project databases.
