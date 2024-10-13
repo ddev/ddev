@@ -62,4 +62,4 @@ docker info
 docker version
 docker-compose version
 lsb_release -a
-docker buildx create --name ddev-builder-multi --use
+docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use

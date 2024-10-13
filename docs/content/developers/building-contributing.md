@@ -164,7 +164,7 @@ When preparing your pull request, please use a branch name like `YYYYMMDD_<your_
 If you make changes to a Docker image (like `ddev-webserver`), it won’t have any effect unless you:
 
 * Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`.
-* Multi-arch images require you to have a Buildx builder, so `docker buildx create --name ddev-builder-multi --use`.
+* Multi-arch images require you to have a Buildx builder, so `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use`.
 * You can’t push until you `docker login`.
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Push to `<yourorg>/ddev-webserver` repository with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repository.
 * Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the Docker image you pushed.
@@ -173,7 +173,7 @@ If you make changes to a Docker image (like `ddev-webserver`), it won’t have a
 
 To use `buildx` successfully you have to have the [`buildx` Docker plugin](https://docs.docker.com/buildx/working-with-buildx/), which is in many environments by default.
 
-To build multi-platform images you must `docker buildx create --use` as a one-time initialization.
+To build multi-platform images you must `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use` as a one-time initialization.
 
 * If you want to work locally with a quick build for your architecture, you can:
     * `make VERSION=<version>`
