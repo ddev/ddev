@@ -12,7 +12,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 # arm64 doesn't make sense here (yet) since gotechnies/alpine-ssh is amd64-only
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-include ../containers_shared.mak
+include ../containers_shared.mk
 
 # Docker repo for a push
 DOCKER_REPO ?= $(DOCKER_ORG)/test-ssh-server

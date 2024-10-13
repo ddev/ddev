@@ -1,6 +1,6 @@
 # Makefile for a standard repo with associated image
 
-include ../containers_shared.mak
+include ../containers_shared.mk
 
 ##### These variables need to be adjusted in most repositories #####
 SHELL=/bin/bash

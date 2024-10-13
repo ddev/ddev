@@ -4,7 +4,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 # will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-include ../containers_shared.mak
+include ../containers_shared.mk
 
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-traefik-router
 

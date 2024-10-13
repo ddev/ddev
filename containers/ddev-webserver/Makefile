@@ -9,7 +9,7 @@ BUILD_ARCHS=linux/amd64,linux/arm64
 
 build: images
 
-include ../containers_shared.mak
+include ../containers_shared.mk
 
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 

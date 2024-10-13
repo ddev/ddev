@@ -1,4 +1,4 @@
-include ../containers_shared.mak
+include ../containers_shared.mk
 
 # Docker repo for a push
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-nginx-proxy-router

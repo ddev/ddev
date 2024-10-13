@@ -7,7 +7,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 CURRENT_ARCH=$(shell ../get_arch.sh)
 
-# This Makefile explicitly does not include containers/containers_shared.mak,
+# This Makefile explicitly does not include containers/containers_shared.mk,
 # So has to explicitly declare anything it might need from there (like SHELL)
 SHELL = /bin/bash
 
