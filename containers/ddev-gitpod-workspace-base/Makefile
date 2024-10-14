@@ -13,6 +13,10 @@ DIR_TO_CHECKOUT :=base
 TMP_DIR :=/tmp/checkout-dir
 
 .PHONY: fetch-directory
+
+build: fetch-directory container
+push: fetch-directory
+
 fetch-directory:
 	rm -rf $(TMP_DIR) && mkdir -p $(TMP_DIR)
 	git clone --no-checkout $(REPO_URL) $(TMP_DIR)
@@ -21,11 +25,9 @@ fetch-directory:
 	cd $(TMP_DIR) && git checkout
 	rsync -av --progress $(TMP_DIR)/$(DIR_TO_CHECKOUT)/ $(TARGET_DIR)/
 	rm -rf $(TMP_DIR)
-
+	set -x
+	sed -i.bak '1s|^FROM buildpack-deps:jammy@sha256:[^ ]*|FROM buildpack-deps:jammy|' $(TARGET_DIR)/Dockerfile && rm -f $(TARGET_DIR)/Dockerfile.bak
 include ../containers_shared.mk
-
-container: fetch-directory
-push: fetch-directory
 
 test: container
 	bash -c "test/containertest.sh $(DOCKER_REPO):$(VERSION)"
