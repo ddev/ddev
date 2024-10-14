@@ -1,4 +1,5 @@
-FROM gitpod/workspace-base:latest AS workspace-base
+# DDEV copy of gitpod/workspace-base, built for both arm64 and amd64
+FROM ddev/ddev-gitpod-workspace-base:latest AS workspace-base
 SHELL ["/bin/bash", "-c"]
 
 USER root
