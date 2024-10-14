@@ -55,8 +55,6 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 `ddev exec composer create-project ...`
 
-DDEV uses Composer 2 by default. Use the `--composer-version` option to roll back to version 1: `ddev config --composer-version=1 && ddev start`.
-
 **composer.json Location**: It’s most common for `composer.json` to be in the project root, but you can specify an alternate Composer root using DDEV’s `composer_root` option in `.ddev/config.yaml`, or `ddev config --composer-root <dir>`. The `composer_root` value is the *relative* path from the project root to the directory containing `composer.json`. If yours is at `docroot/composer.json`, for example, the `composer_root` value should be `docroot`.
 
 !!!tip "Careful with Global Requirements!"
@@ -64,9 +62,12 @@ DDEV uses Composer 2 by default. Use the `--composer-version` option to roll bac
 
     You may want to synchronize created Composer configuration and installed packages with the DDEV’s [`homeadditions` directory](../extend/in-container-configuration.md) on your host machine.
 
+!!!tip "If you require `composer/composer` the version you require will be used"
+    If your `composer.json` specifies `composer/composer`, that version of composer will most likely be used by `ddev composer` and `ddev exec composer`, since it will be first in the `$PATH` inside the container. The `.ddev/config.yaml` `composer_version` will be ignored.
+
 <a name="windows-os-and-ddev-composer"></a>
 
-### Windows OS and `ddev composer`
+### Windows OS (Traditional Windows) and `ddev composer`
 
 DDEV attempts to help with Composer and some configurations of Docker Desktop for Windows that introduce complex filesystem workarounds.
 
