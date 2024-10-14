@@ -27,6 +27,9 @@ fetch-directory:
 	rm -rf $(TMP_DIR)
 	set -x
 	sed -i.bak '1s|^FROM buildpack-deps:jammy@sha256:[^ ]*|FROM buildpack-deps:jammy|' $(TARGET_DIR)/Dockerfile && rm -f $(TARGET_DIR)/Dockerfile.bak
+	cat <<EOF >> $(TARGET_DIR)/Dockerfile
+	cat Dockerfile.* >>$(TARGET_DIR)/Dockerfile
+'
 include ../containers_shared.mk
 
 test: container
