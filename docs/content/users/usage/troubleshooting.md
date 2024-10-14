@@ -44,11 +44,15 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 ## Web Server Ports Already Occupied
 
-By default, DDEV uses ports 80 and 443 (for the web server), ports 8025 and 8026 (for Mailpit) and 10999 (for the Traefik router dashboard) on your host. If DDEV can't find alternate ports to use it might give a message like:
+On `ddev start` you may see a message like this:
 
-> Port 443 is busy, using 33000 instead
+```bash
+Port 443 is busy, using 33001 instead, see https://ddev.com/s/port-conflict
+```
 
-In general, this automatic use of an alternate port will work for most people. If you want to figure out what is using the default ports, use the techniques listed below to stop the competing application or to change the default ports.
+This means that DDEV has detected that it can't use the expected port (`443`) in this example, because another application is using it. If this is OK, you don't need to take any action. Most users want to use the default ports though (`80` and `443`) so you may want to figure out what the conflict is and solve it (usually by stopping the competing application).
+
+If you want to figure out what is using the default ports, use the techniques listed below to stop the competing application or to change the default ports.
 
 If you do get messages like:
 
@@ -71,7 +75,7 @@ Consider `lando poweroff` for Lando, or `fin system stop` for Docksal, or stop M
 
 ### Method 2: Fix port conflicts by configuring your project to use different ports
 
-To configure a project to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
+To configure DDEV to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
 
 ```
 ddev config global --router-http-port=8080 --router-https-port=8443
@@ -104,10 +108,9 @@ Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports 
 * macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
 * macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.
 * MAMP (macOS): Stop MAMP.
-* Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
+* Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment. On Debian/Ubuntu: `sudo systemctl disable apache2 && sudo systemctl stop apache2`
 * nginx (macOS Homebrew): `sudo brew services stop nginx` or `sudo launchctl stop homebrew.mxcl.nginx`.
-* nginx (Ubuntu): `sudo service nginx stop`.
-* Apache (many environments, often named “httpd”): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`.
+* nginx (Ubuntu): `sudo systemctl stop nginx` or `sudo service nginx stop`.
 * VPNKit (macOS): You likely have a Docker container bound to port 80. Do you have containers up for Lando or another Docker-based development environment? If so, stop the other environment.
 * Lando: If you’ve previously used Lando, try running `lando poweroff`.
 * IIS on Windows (can affect WSL2). You’ll have to disable it in the Windows settings.
