@@ -7,29 +7,26 @@ VERSION := $(shell git describe --tags --always --dirty)
 # will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-TARGET_DIR :=./
-REPO_URL :=https://github.com/gitpod-io/workspace-images.git
-DIR_TO_CHECKOUT :=base
-TMP_DIR :=/tmp/checkout-dir
-
 .PHONY: fetch-directory
 
 build: fetch-directory container
 push: fetch-directory
 
+# Build a Dockerfile from the upstream dazzle-built workspace-images
+TARGET_DIR :=./
+REPO_URL :=https://github.com/gitpod-io/workspace-images.git
+TMP_DIR :=/tmp/checkout-dir
+GO_VERSION=1.23.2
 fetch-directory:
 	rm -rf $(TMP_DIR) && mkdir -p $(TMP_DIR)
-	git clone --no-checkout $(REPO_URL) $(TMP_DIR)
-	cd $(TMP_DIR) && git config core.sparseCheckout true
-	echo "$(DIR_TO_CHECKOUT)" >> $(TMP_DIR)/.git/info/sparse-checkout
-	cd $(TMP_DIR) && git checkout
-	rsync -av --progress $(TMP_DIR)/$(DIR_TO_CHECKOUT)/ $(TARGET_DIR)/
-	rm -rf $(TMP_DIR)
+	git clone $(REPO_URL) $(TMP_DIR)
 	set -x
+	cp $(TMP_DIR)/base/* .
+	echo "ENV GO_VERSION=$(GO_VERSION)" >> $(TARGET_DIR)/Dockerfile
+	for item in dep-cacert-update lang-go tool-docker; do grep -v 'FROM ${base}' $(TMP_DIR)/chunks/$$item/Dockerfile | awk '{ gsub(/amd64/, "$$(dpkg --print-architecture)"); print}' >> $(TARGET_DIR)/Dockerfile; done
+	rm -rf $(TMP_DIR)
 	sed -i.bak '1s|^FROM buildpack-deps:jammy@sha256:[^ ]*|FROM buildpack-deps:jammy|' $(TARGET_DIR)/Dockerfile && rm -f $(TARGET_DIR)/Dockerfile.bak
-	cat <<EOF >> $(TARGET_DIR)/Dockerfile
-	cat Dockerfile.* >>$(TARGET_DIR)/Dockerfile
-'
+
 include ../containers_shared.mk
 
 test: container
