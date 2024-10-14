@@ -23,7 +23,7 @@ fetch-directory:
 	set -x
 	cp $(TMP_DIR)/base/* .
 	echo "ENV GO_VERSION=$(GO_VERSION)" >> $(TARGET_DIR)/Dockerfile
-	for item in dep-cacert-update lang-go tool-docker; do grep -v 'FROM ${base}' $(TMP_DIR)/chunks/$$item/Dockerfile | awk '{ gsub(/amd64/, "$$(dpkg --print-architecture)"); print}' >> $(TARGET_DIR)/Dockerfile; done
+	for item in dep-cacert-update tool-docker; do grep -v 'FROM ${base}' $(TMP_DIR)/chunks/$$item/Dockerfile | awk '{ gsub(/amd64/, "$$(dpkg --print-architecture)"); print}' >> $(TARGET_DIR)/Dockerfile; done
 	rm -rf $(TMP_DIR)
 	sed -i.bak '1s|^FROM buildpack-deps:jammy@sha256:[^ ]*|FROM buildpack-deps:jammy|' $(TARGET_DIR)/Dockerfile && rm -f $(TARGET_DIR)/Dockerfile.bak
 

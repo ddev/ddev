@@ -37,6 +37,8 @@ RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 # a gcc instance named gcc-5 is required for some vscode installations
 RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
 
+RUN mkdir -p ~/go/bin
+
 RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
         go install $item; \
     done
