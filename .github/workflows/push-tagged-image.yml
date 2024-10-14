@@ -83,5 +83,7 @@ jobs:
       if: github.event.inputs.image == 'ddev-dbserver'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
-        make PUSH=true VERSION="${{ github.event.inputs.tag }}"
+        if [[ "${DOCKER_ORG}" =~ ^ddev-test ]]; then export DOCKER_ORG=ddevhq; fi
+        if [[ "${DOCKER_ORG}" =~ ^rfay ]]; then export DOCKER_ORG=ddev; fi
+        make PUSH=true VERSION="${{ github.event.inputs.tag }}" DOCKER_ORG=${DOCKER_ORG}
 
