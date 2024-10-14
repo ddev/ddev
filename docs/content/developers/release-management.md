@@ -28,6 +28,7 @@ These are normally configured in the repository environment variables.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
 * `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
+* `DOCKER_ORG`: the `hub.docker.org` organization to push to
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repository like be `ddev-test/homebrew-ddev-edge`.
 * `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repository like `ddev-test/homebrew-ddev`.
