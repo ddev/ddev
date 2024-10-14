@@ -13,6 +13,7 @@ on:
         type: choice
         options:
           - ddev-gitpod-base
+          - ddev-gitpod-workspace-base
           - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent
@@ -40,7 +41,7 @@ permissions:
 jobs:
   push-tagged-image:
     name: "push tagged image"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Load 1password secret(s)
