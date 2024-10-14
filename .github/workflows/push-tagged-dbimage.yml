@@ -62,4 +62,4 @@ jobs:
     - name: Push ${{  matrix.dbtype }}:${{ github.event.inputs.tag }}
       run: |
         cd "containers/ddev-dbserver"
-        make ${{ matrix.dbtype }} PUSH=true VERSION="${TAG}"
+        make ${{ matrix.dbtype }} PUSH=true VERSION="${TAG}" DOCKER_ORG=${DOCKER_ORG}
