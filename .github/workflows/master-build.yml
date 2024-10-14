@@ -414,6 +414,7 @@ jobs:
         run: |
           pushd containers/ddev-gitpod-base >/dev/null
           # For testing, push to ddevhq docker org
+          set -x
           if [[ "${DOCKER_ORG}" =~ ^ddev-test ]]; then export DOCKER_ORG=ddevhq; fi
           if [[ "${DOCKER_ORG}" =~ ^rfay ]]; then export DOCKER_ORG=ddev; fi
           make push VERSION="${GITHUB_REF##*/}" DOCKER_ORG=${DOCKER_ORG}
