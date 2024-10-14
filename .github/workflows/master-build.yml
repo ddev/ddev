@@ -32,7 +32,7 @@ env:
   HOMEBREW_EDGE_REPOSITORY: ${{ vars.HOMEBREW_EDGE_REPOSITORY }}
   HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
   REPOSITORY_OWNER: ${{ github.repository_owner }}
-  DOCKER_ORG: ${{ github.repository_owner }}
+  DOCKER_ORG: ${{ vars.DOCKER_ORG }}
 
 permissions:
   packages: write
@@ -415,8 +415,6 @@ jobs:
           pushd containers/ddev-gitpod-base >/dev/null
           # For testing, push to ddevhq docker org
           set -x
-          if [[ "${DOCKER_ORG}" =~ ^ddev-test ]]; then export DOCKER_ORG=ddevhq; fi
-          if [[ "${DOCKER_ORG}" =~ ^rfay ]]; then export DOCKER_ORG=ddev; fi
           make push VERSION="${GITHUB_REF##*/}" DOCKER_ORG=${DOCKER_ORG}
           popd >/dev/null
 
