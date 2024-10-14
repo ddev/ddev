@@ -7,14 +7,14 @@ VERSION := $(shell git describe --tags --always --dirty)
 # will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-TARGET_DIR := ./base-dir # Set the target directory where you want the contents
-REPO_URL := https://github.com/gitpod-io/workspace-images.git # Repository URL
-DIR_TO_CHECKOUT := base # Directory to checkout
-TMP_DIR := /tmp/checkout-dir # Temporary directory for sparse checkout
+TARGET_DIR :=./
+REPO_URL :=https://github.com/gitpod-io/workspace-images.git
+DIR_TO_CHECKOUT :=base
+TMP_DIR :=/tmp/checkout-dir
 
 .PHONY: fetch-directory
 fetch-directory:
-	mkdir -p $(TMP_DIR)
+	rm -rf $(TMP_DIR) && mkdir -p $(TMP_DIR)
 	git clone --no-checkout $(REPO_URL) $(TMP_DIR)
 	cd $(TMP_DIR) && git config core.sparseCheckout true
 	echo "$(DIR_TO_CHECKOUT)" >> $(TMP_DIR)/.git/info/sparse-checkout
