@@ -40,7 +40,7 @@ func IsPortActive(port string) bool {
 		}
 	}
 	// Otherwise, hmm, something else happened. It's not a fatal but can be reported.
-	util.Warning("Unable to properly check port status: %v", oe)
+	util.Warning("Unable to properly check port status for %s:%s: err=%v", dockerIP, port, err)
 	return false
 }
 
