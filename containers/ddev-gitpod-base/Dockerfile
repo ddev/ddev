@@ -40,4 +40,9 @@ RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
 
 RUN mkdir -p ~/go/bin
 
+RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
+        go install $item; \
+    done
+RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
+
 RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/master/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements
