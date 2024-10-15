@@ -54,7 +54,10 @@ ddev dotenv get .ddev/.env.redis --redis-tag`,
 		}
 
 		// Get unknown flags and ensure only one flag is passed
-		envFlags := GetUnknownFlags(cmd)
+		envFlags, err := GetUnknownFlags(cmd)
+		if err != nil {
+			util.Failed("Error reading command flags: %v", err)
+		}
 		if len(envFlags) < 1 {
 			_ = cmd.Help()
 			return
@@ -69,7 +72,7 @@ ddev dotenv get .ddev/.env.redis --redis-tag`,
 		}
 
 		if !strings.HasPrefix(flag, "--") {
-			util.Failed("The flag must be in a long format.")
+			util.Failed("The flag must be in long format, but received %s", flag)
 		}
 
 		// Extract the environment variable name
