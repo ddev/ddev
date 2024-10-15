@@ -18,7 +18,7 @@ push:
 	docker buildx build --push --platform $(BUILD_ARCHS) \
 	    -t $(DOCKER_REPO):$(VERSION) \
 	    --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
-	    --label "maintainer=DDEV <randy@randyfay.com>" \
+	    --label "maintainer=DDEV <support@ddev.com>" \
 	    $(DOCKER_ARGS) .
 	# If this is a stable version, then push the "latest" tag, which we don't currently
 	# use except with ddev-gitpod-base
@@ -26,6 +26,6 @@ push:
 		docker buildx build --push --platform $(BUILD_ARCHS) \
 			-t $(DOCKER_REPO):latest \
 			--label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
-			--label "maintainer=DDEV <randy@randyfay.com>" \
+			--label "maintainer=DDEV <support@ddev.com>" \
 			$(DOCKER_ARGS) . ;\
 	 fi

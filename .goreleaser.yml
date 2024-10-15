@@ -419,16 +419,6 @@ dockerhub:
       from_file:
         path: ./containers/ddev-gitpod-base/README.md
 
-  #ddev-gitpod-workspace-base
-  - images:
-      - '{{ .Env.DOCKER_ORG }}/ddev-gitpod-workspace-base'
-    username: '{{ .Env.DOCKERHUB_USERNAME }}'
-    secret_name: "DOCKERHUB_TOKEN"
-    description: Our copy of gitpod-workspace-base
-    full_description:
-      from_file:
-        path: ./containers/ddev-gitpod-workspace-base/README.md
-
   #ddev-nginx-proxy-router
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-nginx-proxy-router'

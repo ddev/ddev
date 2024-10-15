@@ -1,5 +1,6 @@
-# DDEV copy of gitpod/workspace-base, built for both arm64 and amd64
-FROM ddev/ddev-gitpod-workspace-base:latest AS workspace-base
+# https://github.com/ddev/ddev/pull/6613 had an attempt to build our own
+# multi-arch workspace-base image, but it had its own problems and was abandoned.
+FROM gitpod/workspace-base:latest AS workspace-base
 SHELL ["/bin/bash", "-c"]
 
 USER root
@@ -39,9 +40,4 @@ RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
 
 RUN mkdir -p ~/go/bin
 
-#RUN set -x; for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
-#        go install $item; \
-#    done
-#RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
-
-#RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/master/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements
+RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/master/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements

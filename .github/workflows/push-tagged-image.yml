@@ -13,7 +13,6 @@ on:
         type: choice
         options:
           - ddev-gitpod-base
-          - ddev-gitpod-workspace-base
           - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent

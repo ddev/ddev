@@ -3,9 +3,10 @@ DOCKER_REPO ?= $(DOCKER_ORG)/ddev-gitpod-base
 
 VERSION := $(shell git describe --tags --always --dirty)
 
-# Tests always run against amd64 (build host). Once tests have passed, a multi-arch build
-# will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
-BUILD_ARCHS=linux/amd64,linux/arm64
+# The upstream is amd64. In https://github.com/ddev/ddev/pull/6613
+# there was an attempt to build both arm64 and amd64 and perhaps we
+# should return to that one day if needed.
+BUILD_ARCHS=linux/amd64
 
 include ../containers_shared.mk
 
