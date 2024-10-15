@@ -39,7 +39,7 @@ func ValidateAsset(unexpandedAssetPath string, assetType string) (string, bool, 
 	}
 
 	for _, ext := range extensions {
-		if strings.HasSuffix(assetPath, ext) {
+		if strings.HasSuffix(assetPath, "."+ext) {
 			return assetPath, true, nil
 		}
 	}
