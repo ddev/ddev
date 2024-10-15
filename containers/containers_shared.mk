@@ -1,4 +1,6 @@
 DOCKER_ORG ?= ddev
+export DOCKER_ORG
+
 SHELL = /bin/bash
 
 SANITIZED_DOCKER_REPO = $(subst /,_,$(DOCKER_REPO))

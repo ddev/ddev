@@ -25,7 +25,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTS=-h,-v:,-d:
-LONGOPTS=archs:,db-type:,db-major-version:,db-pinned-version:,docker-args:,tag:,push,help
+LONGOPTS=archs:,db-type:,db-major-version:,db-pinned-version:,docker-args:,docker-org:,tag:,push,help
 
 ! PARSED=$(getopt --options=$OPTS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -79,6 +79,10 @@ while true; do
     ;;
   --tag)
     IMAGE_TAG=$2
+    shift 2
+    ;;
+  --docker-org)
+    DOCKER_ORG=$2
     shift 2
     ;;
   -h | --help)

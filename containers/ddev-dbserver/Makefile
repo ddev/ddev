@@ -1,5 +1,7 @@
 DOCKER_ORG ?= ddev
+export DOCKER_ORG
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-dbserver
+export DOCKER_REPO
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -62,7 +64,7 @@ $(BUILD_TARGETS):
 	    ARCHS="linux/$${ARCH}"; \
 	    ;; \
 	esac; \
-	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version=$${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION) --docker-args=$(DOCKER_ARGS)" && \
+	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version=$${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION) --docker-org=$(DOCKER_ORG) --docker-args=$(DOCKER_ARGS)" && \
 	if [ ! -z $${PUSH} ]; then cmd="$$cmd --push"; fi && \
 	if [ ! -z $${DB_PINNED_VERSION} ]; then cmd="$$cmd --db-pinned-version=$${DB_PINNED_VERSION}"; fi && \
 	echo $${cmd} && \
