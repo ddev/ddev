@@ -53,6 +53,7 @@ $(BUILD_TARGETS):
 	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
 	export ARCH=$(word 3, $(subst _, ,$@)) && \
 	export DB_PINNED_VERSION=$(word 4, $(subst _, ,$@)) && \
+	export DOCKER_ORG=${DOCKER_ORG:ddev} && \
 	case $${ARCH} in \
 	  both) \
 	    ARCHS="linux/amd64,linux/arm64"; \
