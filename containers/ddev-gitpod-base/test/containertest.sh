@@ -46,4 +46,6 @@ cleanup
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-docker run -t --rm ${DOCKER_IMAGE} ddev version
+if [ "$(arch)" != "arm64" ] && [ "$(arch)" != "aarch64" ]; then
+  docker run -t --rm ${DOCKER_IMAGE} ddev version
+fi
