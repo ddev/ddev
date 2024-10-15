@@ -40,9 +40,9 @@ RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
 
 # Some ~/.cache and related have been created by root
 RUN sudo chown -R gitpod ~
-RUN go clean -modcache && for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
+RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
         go install $item; \
-    done
+    done && go clean -modcache
 RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
 
 RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/master/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements

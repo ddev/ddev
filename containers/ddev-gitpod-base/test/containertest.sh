@@ -11,8 +11,10 @@ DOCKER_IMAGE=$1
 CONTAINER_NAME=ddev-gitpod-base-test
 
 function cleanup {
-	echo "Removing $CONTAINER_NAME"
-	docker rm -f $CONTAINER_NAME 2>/dev/null || true
+  if [ "$(arch)" != "arm64" ] && [ "$(arch)" != "aarch64" ]; then
+    echo "Removing $CONTAINER_NAME"
+    docker rm -f $CONTAINER_NAME 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT
 
@@ -42,10 +44,9 @@ function containercheck {
   return 1
 }
 
-cleanup
-
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 if [ "$(arch)" != "arm64" ] && [ "$(arch)" != "aarch64" ]; then
+  cleanup
   docker run -t --rm ${DOCKER_IMAGE} ddev version
 fi
