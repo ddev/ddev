@@ -30,7 +30,7 @@ multi-arch:
 	done
 
 $(DEFAULT_IMAGES):
-	 docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	 docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 test: images

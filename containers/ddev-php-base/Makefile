@@ -34,7 +34,7 @@ images: $(DEFAULT_IMAGES)
 
 $(DEFAULT_IMAGES):
 	set -eu -o pipefail; \
-	 DOCKER_BUILDKIT=1 docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	 DOCKER_BUILDKIT=1 docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 push:
@@ -45,7 +45,7 @@ push:
 	done
 
 test: $(DEFAULT_IMAGES)
-	DOCKER_BUILDKIT=1 docker buildx build --load --platform="linux/$$(./get_arch.sh)" --label com.ddev.buildhost=${shell hostname} --label com.ddev.buildinfo="$(BUILDINFO)" -t $(DOCKER_ORG)/$<:$(VERSION) $(DOCKER_ARGS) .
+	DOCKER_BUILDKIT=1 docker build --label com.ddev.buildhost=${shell hostname} --label com.ddev.buildinfo="$(BUILDINFO)" -t $(DOCKER_ORG)/$<:$(VERSION) $(DOCKER_ARGS) .
 	for item in $(DEFAULT_IMAGES); do \
 		if [ -x tests/$$item/test.sh ]; then tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION); fi; \
 	done
