@@ -34,7 +34,7 @@ auth_command:
   command: |
     set -eu -o pipefail
     export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
-    export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT}}"
+    export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     if [ -z "${UPSUN_CLI_TOKEN:-}" ]; then echo "Please make sure you have set UPSUN_CLI_TOKEN." && exit 1; fi
     if [ -z "${PLATFORM_PROJECT:-}" ]; then echo "Please make sure you have set PLATFORM_PROJECT." && exit 1; fi
     if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1; fi
@@ -43,6 +43,8 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
+    export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
     upsun db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
 
@@ -50,6 +52,8 @@ files_import_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
+    export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
     upsun mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"  --target=/var/www/html
 
@@ -59,6 +63,8 @@ db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
+    export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
     pushd /var/www/html/.ddev/.downloads >/dev/null
     gzip -dc db.sql.gz | upsun db:sql --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
@@ -69,5 +75,7 @@ files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
+    export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
     upsun mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
