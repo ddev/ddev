@@ -28,6 +28,7 @@ These are normally configured in the repository environment variables.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
 * `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
+* `DOCKER_ORG`: the `hub.docker.org` organization to push to
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repository like be `ddev-test/homebrew-ddev-edge`.
 * `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repository like `ddev-test/homebrew-ddev`.
@@ -64,26 +65,12 @@ The following “Repository secret” environment variables must be configured i
 * Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a `GITHUB_TOKEN` that has power to manage packages (`write:packages` scope, classic PAT), change the version in the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) and run:
-
-    ```bash
-    cd .github/devcontainers/src
-    export GITHUB_TOKEN=<personal-access-token-with-power-to-manage-packages>
-    devcontainer features publish -n ddev/ddev .
-    ```
 
 ### Actual Release Creation
 
 1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
 2. Make sure you're about to create the right release tag.
 3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
-
-### Post-Release Tasks
-
-1. After the release has been created, the new gitpod image must be pushed.
-    1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh`
-    2. PR to update `.gitpod.yml` with the new image.
-    3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
 
@@ -115,7 +102,7 @@ If you need to push from a forked PR, you’ll have to do this from your fork (f
 While it’s more error-prone, images can be pushed from the command line:
 
 1. `docker login` with a user that has push privileges.
-2. `docker buildx create --name ddev-builder-multi --use` or if it already exists, `docker buildx use ddev-builder-multi`.
+2. `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use`.
 3. `cd containers/<image>`.
 4. Before pushing `ddev-webserver`, make sure you’ve pushed a version of `ddev-php-base` and updated `ddev-webserver`’s Dockerfile to use that as a base.
 5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.

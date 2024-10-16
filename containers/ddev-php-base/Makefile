@@ -1,13 +1,13 @@
 # Makefile for a standard repo with associated image
 
-##### These variables need to be adjusted in most repositories #####
+include ../containers_shared.mk
 
-# Base docker org for tag and push
-DOCKER_ORG ?= ddev
+##### These variables need to be adjusted in most repositories #####
 SHELL=/bin/bash
 
 DEFAULT_IMAGES = ddev-php-base ddev-php-prod
 BUILD_ARCHS=linux/amd64,linux/arm64
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-php-base
 
 .PHONY: images
 
@@ -34,7 +34,7 @@ images: $(DEFAULT_IMAGES)
 
 $(DEFAULT_IMAGES):
 	set -eu -o pipefail; \
-	 DOCKER_BUILDKIT=1 docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	 DOCKER_BUILDKIT=1 docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 push:
@@ -45,7 +45,7 @@ push:
 	done
 
 test: $(DEFAULT_IMAGES)
-	DOCKER_BUILDKIT=1 docker buildx build --load --platform="linux/$$(./get_arch.sh)" --label com.ddev.buildhost=${shell hostname} --label com.ddev.buildinfo="$(BUILDINFO)" -t $(DOCKER_ORG)/$<:$(VERSION) $(DOCKER_ARGS) .
+	DOCKER_BUILDKIT=1 docker build --label com.ddev.buildhost=${shell hostname} --label com.ddev.buildinfo="$(BUILDINFO)" -t $(DOCKER_ORG)/$<:$(VERSION) $(DOCKER_ARGS) .
 	for item in $(DEFAULT_IMAGES); do \
 		if [ -x tests/$$item/test.sh ]; then tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION); fi; \
 	done

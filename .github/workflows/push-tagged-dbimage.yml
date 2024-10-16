@@ -17,7 +17,7 @@ on:
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: ddev
+  DOCKER_ORG: ${{ vars.DOCKER_ORG }}
   TAG: "${{ github.event.inputs.tag }}"
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,4 +62,4 @@ jobs:
     - name: Push ${{  matrix.dbtype }}:${{ github.event.inputs.tag }}
       run: |
         cd "containers/ddev-dbserver"
-        make ${{ matrix.dbtype }} PUSH=true VERSION="${TAG}"
+        make ${{ matrix.dbtype }} PUSH=true VERSION="${TAG}" DOCKER_ORG=${DOCKER_ORG}

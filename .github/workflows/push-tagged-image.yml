@@ -12,6 +12,7 @@ on:
         default: ddev-webserver
         type: choice
         options:
+          - ddev-gitpod-base
           - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent
@@ -19,7 +20,7 @@ on:
           - ddev-nginx-proxy-router
           - test-ssh-server
       tag:
-        description: Tag for pushed image (v1.22.2 for example)
+        description: Tag for pushed image (v1.24.5 for example)
         required: true
         default: ""
       debug_enabled:
@@ -29,7 +30,7 @@ on:
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: ddev
+  DOCKER_ORG: ${{ vars.DOCKER_ORG }}
   TAG: "${{ github.event.inputs.tag }}"
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -39,7 +40,7 @@ permissions:
 jobs:
   push-tagged-image:
     name: "push tagged image"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Load 1password secret(s)
@@ -81,5 +82,5 @@ jobs:
       if: github.event.inputs.image == 'ddev-dbserver'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
-        make PUSH=true VERSION="${{ github.event.inputs.tag }}"
+        make PUSH=true VERSION="${{ github.event.inputs.tag }}" DOCKER_ORG=${DOCKER_ORG}
 

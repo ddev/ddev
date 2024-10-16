@@ -1,5 +1,3 @@
-DOCKER_ORG ?= ddev
-DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 DEFAULT_IMAGES = ddev-webserver ddev-webserver-prod
 
@@ -11,7 +9,9 @@ BUILD_ARCHS=linux/amd64,linux/arm64
 
 build: images
 
-include ../containers_shared.mak
+include ../containers_shared.mk
+
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 images: $(DEFAULT_IMAGES)
 
@@ -30,7 +30,7 @@ multi-arch:
 	done
 
 $(DEFAULT_IMAGES):
-	 docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	 docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 test: images

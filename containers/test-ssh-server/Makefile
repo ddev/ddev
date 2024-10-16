@@ -5,9 +5,6 @@
 # This repo's root import path (under GOPATH).
 # PKG := github.com/ddev/repo_name
 
-# Docker repo for a push
-DOCKER_REPO ?= ddev/test-ssh-server
-
 VERSION := $(shell git describe --tags --always --dirty)
 
 # Tests always run against amd64 (build host). Once tests have passed, a multi-arch build
@@ -15,7 +12,10 @@ VERSION := $(shell git describe --tags --always --dirty)
 # arm64 doesn't make sense here (yet) since gotechnies/alpine-ssh is amd64-only
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-include ../containers_shared.mak
+include ../containers_shared.mk
+
+# Docker repo for a push
+DOCKER_REPO ?= $(DOCKER_ORG)/test-ssh-server
 
 # Additional targets can be added here
 # Also, existing targets can be overridden by copying and customizing them.
