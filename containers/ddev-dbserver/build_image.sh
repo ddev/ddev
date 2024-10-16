@@ -3,6 +3,8 @@
 # Build a ddev-dbserver image for variety of mariadb/mysql
 # and per architecture, optionally push
 # By default loads to local docker
+# Example:
+# ./build_image.sh --db-type=mysql --db-major-version=8.4 --archs=linux/arm64 --tag=v1.23.4-22-gfe969a5bb-dirty --docker-args=
 
 set -eu -o pipefail
 
@@ -105,11 +107,11 @@ fi
 
 BASE_IMAGE=${DB_TYPE}
 
-# For mysql, we have to use our own base images at ddev/mysql
 set -x
 
-if [ ${DB_TYPE} = "mysql" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
-  BASE_IMAGE=ddev/mysql
+# TODO: Use bitnami for all mysql >= 5.7
+if [ ${DB_TYPE} = "mysql" ] && [ ${DB_MAJOR_VERSION:-} != "5.5" ]; then
+  BASE_IMAGE=bitnami/mysql
 fi
 printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
 
