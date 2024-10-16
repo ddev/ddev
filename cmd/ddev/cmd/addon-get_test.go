@@ -185,7 +185,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	busyboxEnvFile := filepath.Join(site.Dir, ".ddev/.env.busybox")
 	require.NoFileExists(t, busyboxEnvFile, ".ddev/.env.busybox file should not exist at this point")
 
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--pre-install-variable2=pre2", "--post-install-variable", "post", "-A", "short_flag_VALUE", "--force-run", "-yes", "--force-UPPERCASE=true")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag=1.36.0", "--pre-install-variable=pre", "--pre-install-variable2=pre2", "--post-install-variable", "post", "--force-run")
 	require.NoError(t, err, "out=%s", out)
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
 	require.NoError(t, err, "out=%s", out)
@@ -204,10 +204,6 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.Contains(t, string(busyboxEnvFileContents), `POST_INSTALL_VARIABLE="post"`)
 	// --force-run is converted to empty string
 	require.Contains(t, string(busyboxEnvFileContents), `FORCE_RUN=""`)
-	// Some flags are ignored because they should not contain uppercase, or be a wrong flag:
-	require.NotContains(t, string(busyboxEnvFileContents), `A="short_flag_VALUE"`)
-	require.NotContains(t, string(busyboxEnvFileContents), "YES")
-	require.NotContains(t, string(busyboxEnvFileContents), "FORCE_UPPERCASE")
 
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "bare-busybox"))
 	require.NoError(t, err, "out=%s", out)

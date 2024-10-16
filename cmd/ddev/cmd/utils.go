@@ -92,10 +92,10 @@ func getRequestedProjectsExtended(names []string, all bool, withNonExisting bool
 // Works only with this config in Cobra: FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true}
 // If Cobra implements handling of unknown flags, this function can be removed/refactored.
 // See https://github.com/spf13/cobra/issues/739
-func GetUnknownFlags(cmd *cobra.Command) map[string]string {
+func GetUnknownFlags(cmd *cobra.Command) (map[string]string, error) {
 	unknownFlags := make(map[string]string)
 	if len(os.Args) < 1 {
-		return unknownFlags
+		return unknownFlags, nil
 	}
 
 	// Known flags tracking
@@ -116,8 +116,17 @@ func GetUnknownFlags(cmd *cobra.Command) map[string]string {
 	args := os.Args[1:]
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		// Skip if the argument is not a valid flag or a known flag
-		if !flagRegex.MatchString(arg) || knownFlags[arg] {
+		// Skip if the value is a known flag
+		if knownFlags[arg] {
+			continue
+		}
+
+		if !flagRegex.MatchString(arg) {
+			// Fail if the value is not a valid flag
+			if strings.HasPrefix(arg, "-") {
+				return unknownFlags, fmt.Errorf("the flag must be lowercase and start with a letter, but received %s", arg)
+			}
+			// Skip if the value is not a flag, but an argument
 			continue
 		}
 
@@ -134,5 +143,5 @@ func GetUnknownFlags(cmd *cobra.Command) map[string]string {
 			unknownFlags[arg] = ""
 		}
 	}
-	return unknownFlags
+	return unknownFlags, nil
 }

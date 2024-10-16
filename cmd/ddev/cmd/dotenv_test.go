@@ -75,6 +75,18 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "The file should have .env prefix")
 
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "-a", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "flag must be in long format")
+
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--TEST", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "the flag must be lowercase and start with a letter")
+
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--1test", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "the flag must be lowercase and start with a letter")
+
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--test-value", "--test-value-2")
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "one environment variable can be retrieved at a time")
@@ -85,7 +97,7 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "-a")
 	require.Error(t, err, "out=%s", out)
-	require.Contains(t, out, "flag must be in a long format")
+	require.Contains(t, out, "flag must be in long format")
 
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--test-value-with-special-characters", `Test$variable\nwith\n_new_lines`)
 	require.NoError(t, err, "out=%s", out)

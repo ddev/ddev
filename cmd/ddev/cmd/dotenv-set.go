@@ -63,7 +63,10 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 		}
 
 		// Get unknown flags and convert them to env variables
-		envSlice := GetUnknownFlags(cmd)
+		envSlice, err := GetUnknownFlags(cmd)
+		if err != nil {
+			util.Failed("Error reading command flags: %v", err)
+		}
 		hasUnknownFlags := false
 		changedEnvMap := make(map[string]string)
 		for flag, value := range envSlice {
@@ -72,6 +75,8 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 				envMap[envName] = value
 				changedEnvMap[envName] = value
 				hasUnknownFlags = true
+			} else {
+				util.Failed("The flag must be in long format, but received %s", flag)
 			}
 		}
 
