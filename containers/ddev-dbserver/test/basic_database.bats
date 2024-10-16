@@ -15,22 +15,22 @@ function setup {
 
 
 @test "test user root and db access for ${DB_TYPE} ${DB_VERSION}" {
-  mysql --skip-ssl --user=root --password=root --database=mysql --host=127.0.0.1 --port=$HOSTPORT -e "SELECT 1;"
-  mysql --skip-ssl -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e "SHOW TABLES;"
+  mysql ${SKIP_SSL} --user=root --password=root --database=mysql --host=127.0.0.1 --port=$HOSTPORT -e "SELECT 1;"
+  mysql ${SKIP_SSL} -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e "SHOW TABLES;"
 }
 
 @test "make sure trigger capability works correctly on ${DB_TYPE} ${DB_VERSION}" {
-    mysql --skip-ssl -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e 'CREATE TABLE account (acct_num INT, amount DECIMAL(10,2)); CREATE TRIGGER ins_sum BEFORE INSERT ON account
+    mysql ${SKIP_SSL} -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e 'CREATE TABLE account (acct_num INT, amount DECIMAL(10,2)); CREATE TRIGGER ins_sum BEFORE INSERT ON account
            FOR EACH ROW SET @sum = @sum + NEW.amount;'
 }
 
 @test "check correct mysql/mariadb version for ${DB_TYPE} ${DB_VERSION}" {
-    reported_version=$(mysql --skip-ssl --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW VARIABLES like \"version\";" | awk '{sub( /\.[0-9]+(-.*)?$/, "", $2); print $2 }')
+    reported_version=$(mysql ${SKIP_SSL} --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW VARIABLES like \"version\";" | awk '{sub( /\.[0-9]+(-.*)?$/, "", $2); print $2 }')
     echo "# Reported mysql/mariadb version=$reported_version and DB_VERSION=${DB_VERSION}"
     [ "${reported_version}" = ${DB_VERSION} ]
 }
 
 @test "look for utf8mb4_general_ci configured on ${DB_TYPE} ${DB_VERSION}" {
-    mysql --skip-ssl --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8mb4_general_ci"
+    mysql ${SKIP_SSL} --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8mb4_general_ci"
 }
 

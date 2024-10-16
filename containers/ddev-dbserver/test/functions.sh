@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SKIP_SSL="--skip-ssl"
+if mysql --help | grep -q -v -- '--skip-ssl'; then SKIP_SSL=""; fi
+
 function basic_setup {
     export CONTAINER_NAME="testserver"
     export HOSTPORT=31000
