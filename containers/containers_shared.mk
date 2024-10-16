@@ -16,18 +16,17 @@ container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
 
 push:
-	docker buildx use multi-arch-builder >/dev/null 2>&1 || docker buildx create --name multi-arch-builder --use
-	docker buildx build --push --platform $(BUILD_ARCHS) \
-	    -t $(DOCKER_REPO):$(VERSION) \
-	    --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
-	    --label "maintainer=DDEV <support@ddev.com>" \
-	    $(DOCKER_ARGS) .
-	# If this is a stable version, then push the "latest" tag, which we don't currently
-	# use except with ddev-gitpod-base
-	if [[ "$(VERSION)" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$$ ]] ; then \
+	set -eu -o pipefail; \
+	for item in $(DEFAULT_IMAGES); do \
+		docker buildx use multi-arch-builder >/dev/null 2>&1 || docker buildx create --name multi-arch-builder --use; \
+		tags="-t $(DOCKER_ORG)/$${item}:$(VERSION)"; \
+		if [[ "$(VERSION)" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$$ ]] ; then \
+			tags="$${tags} -t $(DOCKER_ORG)/$${item}:latest"; \
+		fi; \
 		docker buildx build --push --platform $(BUILD_ARCHS) \
-			-t $(DOCKER_REPO):latest \
-			--label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
+			--target=$${item} \
+			$${tags} \
+			--label "build-info=$(DOCKER_ORG)/$${item}:$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
 			--label "maintainer=DDEV <support@ddev.com>" \
-			$(DOCKER_ARGS) . ;\
-	 fi
+			$(DOCKER_ARGS) . ; \
+	done

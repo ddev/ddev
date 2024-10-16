@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim AS ddev-ssh-agent
 
 RUN apt-get update && apt-get install -y bash expect file gpg openssh-client socat psmisc && apt-get autoclean
 

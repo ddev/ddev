@@ -1,5 +1,6 @@
 # Docker repo for a push
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-nginx-proxy-router
+DEFAULT_IMAGES = ddev-nginx-proxy-router
 
 VERSION := $(shell git describe --tags --always --dirty)
 

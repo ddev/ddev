@@ -1,4 +1,5 @@
 VERSION := $(shell git describe --tags --always --dirty)
+DEFAULT_IMAGES = ddev-traefik-router
 
 # Tests always run against amd64 (build host). Once tests have passed, a multi-arch build
 # will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
