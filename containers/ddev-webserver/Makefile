@@ -15,20 +15,6 @@ DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 images: $(DEFAULT_IMAGES)
 
-push:
-	set -eu -o pipefail; \
-	for item in $(DEFAULT_IMAGES); do \
-		docker buildx build --push --platform $(BUILD_ARCHS) --label com.ddev.buildhost=${shell hostname} --target=$$item  -t $(DOCKER_ORG)/$$item:$(VERSION) $(DOCKER_ARGS) .; \
-		echo "pushed $(DOCKER_ORG)/$$item"; \
-	done
-
-multi-arch:
-	set -eu -o pipefail; \
-	for item in $(DEFAULT_IMAGES); do \
-		docker buildx build --platform $(BUILD_ARCHS) --label com.ddev.buildhost=${shell hostname} --target=$$item  -t $(DOCKER_ORG)/$$item:$(VERSION) $(DOCKER_ARGS) .; \
-		echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_ORG)/$$item"; \
-	done
-
 $(DEFAULT_IMAGES):
 	 docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 

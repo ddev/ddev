@@ -1,5 +1,6 @@
 # Docker repo for a push
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-gitpod-base
+DEFAULT_IMAGES = ddev-gitpod-base
 
 VERSION := $(shell git describe --tags --always --dirty)
 

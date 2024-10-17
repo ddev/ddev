@@ -1,6 +1,6 @@
 # https://github.com/ddev/ddev/pull/6613 had an attempt to build our own
 # multi-arch workspace-base image, but it had its own problems and was abandoned.
-FROM gitpod/workspace-base:latest AS workspace-base
+FROM gitpod/workspace-base:latest AS ddev-gitpod-base
 SHELL ["/bin/bash", "-c"]
 
 USER root

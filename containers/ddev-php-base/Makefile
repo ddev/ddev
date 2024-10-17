@@ -34,18 +34,10 @@ images: $(DEFAULT_IMAGES)
 
 $(DEFAULT_IMAGES):
 	set -eu -o pipefail; \
-	 DOCKER_BUILDKIT=1 docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
-
-
-push:
-	set -eu -o pipefail; \
-	for item in $(DEFAULT_IMAGES); do \
-		docker buildx build --push --platform $(BUILD_ARCHS) --label com.ddev.buildhost=${shell hostname} --target=$$item  -t $(DOCKER_ORG)/$$item:$(VERSION) $(DOCKER_ARGS) .; \
-		echo "pushed $(DOCKER_ORG)/$$item:$(VERSION)"; \
-	done
+	docker buildx build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 test: $(DEFAULT_IMAGES)
-	DOCKER_BUILDKIT=1 docker build --label com.ddev.buildhost=${shell hostname} --label com.ddev.buildinfo="$(BUILDINFO)" -t $(DOCKER_ORG)/$<:$(VERSION) $(DOCKER_ARGS) .
+	docker buildx build --label com.ddev.buildhost=${shell hostname} --label com.ddev.buildinfo="$(BUILDINFO)" -t $(DOCKER_ORG)/$<:$(VERSION) $(DOCKER_ARGS) .
 	for item in $(DEFAULT_IMAGES); do \
 		if [ -x tests/$$item/test.sh ]; then tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION); fi; \
 	done

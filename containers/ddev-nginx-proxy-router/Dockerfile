@@ -1,4 +1,4 @@
-FROM nginx:1.20.1
+FROM nginx:1.20.1 AS ddev-nginx-proxy-router
 
 ENV MKCERT_VERSION=v1.4.6
 
