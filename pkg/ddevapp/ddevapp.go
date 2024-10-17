@@ -134,6 +134,7 @@ type DdevApp struct {
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
+	ExtraLocales              []string               `yaml:"extra_locales,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
