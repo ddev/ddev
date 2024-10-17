@@ -369,6 +369,7 @@ jobs:
           publish-features: "true"
           base-path-to-features: "./containers/devcontainers"
           devcontainer-cli-version: "0.53.0"
+          disable-repo-tagging: "true"
 
   push-gitpod-base:
     name: Push ddev-gitpod-base docker image
@@ -417,4 +418,3 @@ jobs:
           set -x
           make push VERSION="${GITHUB_REF##*/}" DOCKER_ORG=${DOCKER_ORG}
           popd >/dev/null
-
