@@ -1151,6 +1151,32 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		}
 	}
 
+	if strings.Contains(fullpath, "webimageBuild") && len(app.ExtraLocales) > 0 {
+		if app.ExtraLocales[0] == "all" {
+			// TODO: Handle the case where extraPackages is nil?
+			extraPackages = append(extraPackages, "locales-all")
+		} else {
+			localeMap, err := LoadLocales()
+			if err != nil {
+				util.Warning("Unable to LoadLocales(): %v", err)
+			}
+			// Start with our normal base list of locales
+			localeList := "en_CA.UTF-8 UTF-8\nen_US.UTF-8 UTF-8\nen_GB.UTF-8 UTF-8\nde_DE.UTF-8 UTF-8\nde_AT.UTF-8 UTF-8\nfr_CA.UTF-8 UTF-8\nfr_FR.UTF-8 UTF-8\nja_JP.UTF-8 UTF-8\nru_RU.UTF-8 UTF-8\n"
+
+			var localeContent LocaleDesc
+			var ok bool
+			for _, l := range app.ExtraLocales {
+				if localeContent, ok = localeMap[l]; ok {
+					localeList = localeList + localeContent.shortName + "." + localeContent.encoding + " " + localeContent.encoding + "\n"
+				} else {
+					util.Warning("unable to process invalid locale %s", l)
+				}
+			}
+			contents = contents + "RUN cat <<EOF >/etc/locale.gen\n" + localeList + "EOF\n"
+			contents = contents + "RUN /usr/sbin/locale-gen\n"
+		}
+	}
+
 	if extraContent != "" {
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected extra content

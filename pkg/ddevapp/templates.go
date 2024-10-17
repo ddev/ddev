@@ -111,6 +111,18 @@ const ConfigInstructions = `
 # See https://github.com/Masterminds/semver#checking-version-constraints for
 # supported constraint formats
 
+# The web container comes with a few common locales installed, but you can 
+# add extras with extra_locales:
+#
+# extra_locales: []
+# Example:
+# extra_locales:
+# - oc_FR
+# - uk_UA.utf8
+# or
+# extra_locales:
+# - all
+#
 # working_dir:
 #   web: /var/www/html
 #   db: /home
