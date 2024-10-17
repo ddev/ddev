@@ -86,8 +86,8 @@ func TestUpsunPull(t *testing.T) {
 	provider, err := app.GetProvider("upsun")
 	require.NoError(t, err)
 
-	provider.EnvironmentVariables["UPSUN_PROJECT"] = upsunTestSiteID
-	provider.EnvironmentVariables["UPSUN_ENVIRONMENT"] = upsunPullTestSiteEnvironment
+	provider.EnvironmentVariables["PLATFORM_PROJECT"] = upsunTestSiteID
+	provider.EnvironmentVariables["PLATFORM_ENVIRONMENT"] = upsunPullTestSiteEnvironment
 	provider.EnvironmentVariables["UPSUN_CLI_TOKEN"] = token
 
 	err = app.Start()
@@ -148,8 +148,8 @@ func TestUpsunPush(t *testing.T) {
 	provider, err := app.GetProvider("upsun")
 	require.NoError(t, err)
 
-	provider.EnvironmentVariables["UPSUN_PROJECT"] = upsunTestSiteID
-	provider.EnvironmentVariables["UPSUN_ENVIRONMENT"] = upsunPushTestSiteEnvironment
+	provider.EnvironmentVariables["PLATFORM_PROJECT"] = upsunTestSiteID
+	provider.EnvironmentVariables["PLATFORM_ENVIRONMENT"] = upsunPushTestSiteEnvironment
 	provider.EnvironmentVariables["UPSUN_CLI_TOKEN"] = token
 
 	err = app.Start()
