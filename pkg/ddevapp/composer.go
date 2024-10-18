@@ -18,6 +18,16 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-composer hooks: %v", err)
 	}
 
+	// Wrap arguments in double quotes if they contain
+	// double quotes or single quotes or whitespaces or curly braces.
+	// This is needed because we use Cmd (not RawCmd) in ExecOpts
+	// to run Composer from $PATH i.e. from `vendor/bin`.
+	for i, arg := range args {
+		if strings.ContainsAny(arg, `"' {}`) {
+			args[i] = `"` + strings.ReplaceAll(arg, `"`, `\"`) + `"`
+		}
+	}
+
 	argString := strings.Join(args, " ")
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",

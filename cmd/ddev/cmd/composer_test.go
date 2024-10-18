@@ -89,7 +89,7 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 	}
 }
 
-func TestComposerCmdCreateRequireRemove(t *testing.T) {
+func TestComposerCmdCreateRequireRemoveConfig(t *testing.T) {
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
@@ -148,10 +148,11 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 		out, err = exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Created project in ")
+		assert.FileExists(filepath.Join(tmpDir, composerRoot, "composer.json"))
 		assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
 
 		// Test a composer require, with passthrough args
-		args = []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
+		args = []string{"composer", "require", "sebastian/version:5.0.1 as 5.0.0", "--no-plugins", "--ansi"}
 		out, err = exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Generating autoload files")
@@ -162,6 +163,13 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Generating autoload files")
 		assert.False(fileutil.FileExists(filepath.Join(tmpDir, composerRoot, "vendor/sebastian")))
+		// Test a composer config, with passthrough args
+		args = []string{"composer", "config", "repositories.local", `{"type": "composer", "url": "https://example.com"}`}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		composerJSON, err := fileutil.ReadFileIntoString(filepath.Join(tmpDir, composerRoot, "composer.json"))
+		assert.NoError(err, "failed to read %v: err=%v", filepath.Join(tmpDir, composerRoot, "composer.json"), err)
+		assert.Contains(composerJSON, "https://example.com")
 	}
 }
 
