@@ -18,7 +18,7 @@ It will remain enabled until you start or restart the project.
 * In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container`.
 * Drush 13+ disables Xdebug even when Xdebug is enabled on DDEV. As per [their docs](https://www.drush.org/13.x/commands/#xdebug) you can:
     * Enable it for a single Drush command by running: `ddev drush --xdebug`
-    * Set `DRUSH_ALLOW_XDEBUG=1` [environment variable](../../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every Drush call to be run with Xdebug when the PHP extension is enabled.
+    * Set `DRUSH_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every Drush call to be run with Xdebug when the PHP extension is enabled.
 
 For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/docs/remote). The intention here is that one won’t have to understand Xdebug to do debugging.
 
