@@ -17,8 +17,8 @@ It will remain enabled until you start or restart the project.
 * The IDE’s debug server port must be set to Xdebug’s default 9003, which is already the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
 * In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container`.
 * [Drush 13+ disables Xdebug](https://www.drush.org/13.x/commands/#xdebug) even when Xdebug is enabled on DDEV. As per their docs you can:
-    * You can enable it for a single Drush command by running: `ddev drush --xdebug`
-    * Set `DRUSH_ALLOW_XDEBUG=1` [environment variable](../../extend/customization-extendibility/#environment-variables-for-containers-and-services), allowing every drush call to be debugged but also making all Drush commands slower as they are run with Xdebug enabled.
+    * Enable it for a single Drush command by running: `ddev drush --xdebug`
+    * Set `DRUSH_ALLOW_XDEBUG=1` [environment variable](../../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every drush call to be run with Xdebug if enabled. Not recommended as one will normally want to debug the site without that having a hit on drush commands.
 
 For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/docs/remote). The intention here is that one won’t have to understand Xdebug to do debugging.
 
