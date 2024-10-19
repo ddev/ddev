@@ -3,7 +3,7 @@
 DDEV provides integration with the [Platform.sh Website Management Platform](https://platform.sh/), which allows Platform.sh users to quickly download and provision a project from Platform.sh in a local DDEV-managed environment.
 
 !!!tip
-    Consider using `ddev get ddev/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/ddev/ddev-platformsh)) for more complete Platform.sh integration.
+    Consider using `ddev add-on get ddev/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/ddev/ddev-platformsh)) for more complete Platform.sh integration.
 
 DDEV’s Platform.sh integration pulls databases and files from an existing Platform.sh site/environment into your local system so you can develop locally.
 
@@ -14,10 +14,16 @@ You need to obtain and configure an API token first. This is only needed once.
 1. Login to the Platform.sh Dashboard and go to *Account* → *API Tokens*. Create an API token DDEV can use.
 2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`:
 
-```yaml
-web_environment:
-  - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
-```
+    ```yaml
+    web_environment:
+        - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
+    ```
+
+    You can also do this with:
+
+    ```bash
+    ddev config global --web-environment-add="PLATFORMSH_CLI_TOKEN=abcdeyourtoken"`
+    ```
 
 ## Platform.sh Per-Project Configuration
 
@@ -28,8 +34,8 @@ web_environment:
 
         ```yaml
         web_environment:
-        - PLATFORM_PROJECT=nf4amudfn23biyourproject
-        - PLATFORM_ENVIRONMENT=main
+            - PLATFORM_PROJECT=nf4amudfn23biyourproject
+            - PLATFORM_ENVIRONMENT=main
         ```
 
     * Or with a command from your terminal:
@@ -50,8 +56,8 @@ If your environment contains more than one app, add `PLATFORM_APP` variable to y
 
     ```yaml
     web_environment:
-    - ...
-    - PLATFORM_APP=app
+        - ...
+        - PLATFORM_APP=app
     ```
 
 * Or with a command from your terminal:
@@ -68,13 +74,13 @@ If your project has multiple databases, they’ll all be pulled into DDEV with t
 
 You can designate the primary database using the `PLATFORM_PRIMARY_RELATIONSHIP` environment variable:
 
-```
+```bash
 ddev config --web-environment-add="PLATFORM_PRIMARY_RELATIONSHIP=main"
 ```
 
 You can also do the same thing by running `ddev pull platform` and using the `--environment` flag:
 
-```
+```bash
 ddev pull platform --environment="PLATFORM_PRIMARY_RELATIONSHIP=main"
 ```
 

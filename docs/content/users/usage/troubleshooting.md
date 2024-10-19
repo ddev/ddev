@@ -44,23 +44,25 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 ## Web Server Ports Already Occupied
 
-DDEV may notify you about port conflicts with this message about port 80 or 443:
+On `ddev start` you may see a message like this:
 
-> Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use
+```bash
+Port 443 is busy, using 33001 instead, see https://ddev.com/s/port-conflict
+```
 
-DDEV sometimes also has this error message that will alert you to port conflicts:
+This means that DDEV has detected that it can't use the expected port (`443`) in this example, because another application is using it. If this is OK, you don't need to take any action. Most users want to use the default ports though (`80` and `443`) so you may want to figure out what the conflict is and solve it (usually by stopping the competing application).
+
+If you want to figure out what is using the default ports, use the techniques listed below to stop the competing application or to change the default ports.
+
+If you do get messages like:
 
 > ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.
 
 or
 
-> Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:443 -> 0.0.0.0:0: listen tcp 127.0.0.1:443: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+> Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:8025 -> 0.0.0.0:0: listen tcp 127.0.0.1:8025: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
 
-This means there’s another process or web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
-
-In some cases, the conflict could be over Mailpit’s port 8025 or 8026.
-
-To resolve this conflict, choose one of these methods:
+it means that some other process is using a needed port, and use a number of techniques to sort this out, although this is rarely necessary now the DDEV can use alternate ports.
 
 1. Stop all Docker containers that might be using the port by running `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
 2. If you’re using another local development environment that uses these ports (MAMP, WAMP, Lando, etc.), consider stopping it.
@@ -73,22 +75,15 @@ Consider `lando poweroff` for Lando, or `fin system stop` for Docksal, or stop M
 
 ### Method 2: Fix port conflicts by configuring your project to use different ports
 
-To configure a project to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
+To configure DDEV to use non-conflicting ports, remove router port configuration from the project and set it globally to different values. This will work for most people:
 
 ```
-ddev config --router-http-port="" --router-https-port=""
 ddev config global --router-http-port=8080 --router-https-port=8443
-ddev start
+ddev config --router-http-port="" --router-https-port=""
+ddev restart
 ```
 
-This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
-
-If the conflict is over port 8025 or 8026, it’s probably clashing with Mailpit’s default port:
-
-```
-ddev config --mailpit-http-port="" --mailpit-https-port=""
-ddev config global --mailpit-http-port=8301 --mailpit-https-port=8302
-```
+This changes all projects' HTTP URLs to `http://yoursite.ddev.site:8080` and the HTTPS URLs to `https://yoursite.ddev.site:8443`.
 
 ### Method 3: Fix port conflicts by stopping the competing application
 
@@ -100,17 +95,22 @@ Probably the most common conflicting application is Apache running locally. It c
 sudo apachectl stop
 ```
 
+or
+
+```bash
+sudo systemctl stop apache2 && sudo systemctl disable apache2
+```
+
 **Common tools that use port 80 and port 443:**
 
-Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
+Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports for their projects, and these work fine whenever some other process is not using them. All of the DDEV projects on a given computer can use ports 80 and 443 at the same time. However, if you are not getting the default ports, here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
 * macOS content filtering: Under "Screen Time" → "Choose Screen Time content and privacy settings", turn off "Content and Privacy" and then reboot. This has been a common issue with macOS Sonoma.
 * macOS or Linux Homebrew: Look for active processes by running `brew services` and temporarily running `brew services stop` individually to see if it has any impact on the conflict.
 * MAMP (macOS): Stop MAMP.
-* Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
+* Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment. On Debian/Ubuntu: `sudo systemctl disable apache2 && sudo systemctl stop apache2`
 * nginx (macOS Homebrew): `sudo brew services stop nginx` or `sudo launchctl stop homebrew.mxcl.nginx`.
-* nginx (Ubuntu): `sudo service nginx stop`.
-* Apache (many environments, often named “httpd”): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`.
+* nginx (Ubuntu): `sudo systemctl stop nginx` or `sudo service nginx stop`.
 * VPNKit (macOS): You likely have a Docker container bound to port 80. Do you have containers up for Lando or another Docker-based development environment? If so, stop the other environment.
 * Lando: If you’ve previously used Lando, try running `lando poweroff`.
 * IIS on Windows (can affect WSL2). You’ll have to disable it in the Windows settings.
@@ -273,7 +273,7 @@ The error messages you get will be more informative than messages that come when
 You can also see the output from the full Docker build using either
 
 ```
-ddev debug refresh
+ddev debug rebuild
 ```
 
 or
@@ -288,7 +288,7 @@ The Docker build environment (where all projects have a little bit happening) is
 
 * **WSL2**: On WSL2 it's a known issue that the WSL2 environment time can get out of sync with the real time. This is an [ongoing problem](https://github.com/microsoft/WSL/issues/10006) with WSL2, and can be fixed with various workarounds. One good workaround is to install `ntpdate` and `sudo ntpdate pool.ntp.org` to sync the time. The time in WSL2 can get out of sync due to laptop sleeping or other causes. A reboot also fixes it.
 * **VPN**: If you are on a packet-inspection VPN, it often causes problems with validation of certificates on internet sites. In that situation you'll need to get the CA updates required and install them with a custom Dockerfile, as described on [Stack Overflow](https://stackoverflow.com/questions/71595327/corporate-network-ddev-composer-create-results-in-ssl-certificate-error/71595428#71595428).
-* **Other Docker Build**: The Dockerfile build environment is different from the host-side build and different from what you get with `ddev ssh`. If you're having trouble with it it may be caused by name resolution or IP connectivity problems, most often caused by a firewall or VPN. Turn off your firewall temporarily and VPN. A good debugging technique would be to do a simple `.ddev/web-build/Dockerfile` that does `RUN curl -I https://www.google.com` and then use `ddev debug refresh` to see the result. If it gets a 200 result, then your name resolution and internet connectivity are working in the Docker build environment.
+* **Other Docker Build**: The Dockerfile build environment is different from the host-side build and different from what you get with `ddev ssh`. If you're having trouble with it it may be caused by name resolution or IP connectivity problems, most often caused by a firewall or VPN. Turn off your firewall temporarily and VPN. A good debugging technique would be to do a simple `.ddev/web-build/Dockerfile` that does `RUN curl -I https://www.google.com` and then use `ddev debug rebuild` to see the result. If it gets a 200 result, then your name resolution and internet connectivity are working in the Docker build environment.
 
 ## DDEV Starts but Browser Can’t Access URL
 
@@ -326,7 +326,7 @@ You verify this is your problem by running `ping -c 1 dkkd.ddev.site`. If you ge
 In this case, you can take any one of the following approaches:
 
 1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it. See [issue](https://github.com/ddev/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it’s a simple change to a configuration directive to allow it.
-2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution, see [this article](https://www.hellotech.com/guide/for/how-to-change-dns-server-windows-mac).
+2. Most computers can use more relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution, see [this article](https://support.perimeter81.com/docs/change-your-pc-dns-settings).
 3. If you have control of the router, you can usually change its DHCP settings to choose a public, relaxed DNS server as in #2.
 4. You can live with DDEV trying to edit the `/etc/hosts` file, which it only has to do when a new name is added to a project.
 

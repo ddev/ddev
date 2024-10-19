@@ -137,6 +137,10 @@ markdown_extensions:
 - pymdownx.superfences:
 - pymdownx.tabbed:
     alternate_style: true
+    combine_header_slug: true
+    slugify: !!python/object/apply:pymdownx.slugs.slugify
+      kwds:
+        case: lower
 - pymdownx.tasklist:
     custom_checkbox: true
 - pymdownx.tilde
@@ -220,3 +224,4 @@ nav:
       - developers/writing-style-guide.md
       - developers/remote-config.md
       - developers/maintainers.md
+      - developers/secret-management.md

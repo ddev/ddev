@@ -2,10 +2,12 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/netutil"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -63,7 +65,8 @@ func TestExtraPortExpose(t *testing.T) {
 	}
 
 	for i, p := range portsToTest {
-		url := fmt.Sprintf("%s:%s/testfile.html", app.GetPrimaryURL(), p)
+		baseURL := netutil.BaseURLFromFullURL(app.GetPrimaryURL())
+		url := fmt.Sprintf("%s:%s/testfile.html", baseURL, p)
 		out, resp, err := testcommon.GetLocalHTTPResponse(t, url)
 		require.NoError(t, err, "failed to get hit url %s, out=%s, resp=%v err=%v", url, out, resp, err)
 		require.Contains(t, out, fmt.Sprintf("this is test%d", i+1))

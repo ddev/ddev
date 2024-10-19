@@ -11,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestRandString ensures that RandString only generates string of the correct value and characters.
@@ -193,4 +194,39 @@ func TestArrayToReadableOutput(t *testing.T) {
 
 	_, err := util.ArrayToReadableOutput([]string{})
 	assert.EqualErrorf(err, "empty slice", "Expected error when passing an empty slice")
+}
+
+// TestGetTimezone tests GetTimezone
+func TestGetTimezone(t *testing.T) {
+	testCases := []struct {
+		description string
+		input       string
+		result      string
+		error       string
+	}{
+		{"$TZ env var", "Europe/London", "Europe/London", ""},
+		{"Linux /etc/localtime symlink", "/usr/share/zoneinfo/Europe/London", "Europe/London", ""},
+		{"Linux /etc/localtime posix symlink", "/usr/share/zoneinfo/posix/Europe/London", "Europe/London", ""},
+		{"Linux /etc/localtime right symlink", "/usr/share/zoneinfo/right/Europe/London", "Europe/London", ""},
+		{"/etc/localtime is not a symlink", "/etc/localtime", "", "unable to read timezone from /etc/localtime"},
+		{"macOS /etc/localtime symlink", "/var/db/timezone/zoneinfo/Europe/London", "Europe/London", ""},
+		{"macOS Sonoma /etc/localtime symlink", "/private/var/db/timezone/tz/2024a.1.0/zoneinfo/Europe/London", "Europe/London", ""},
+		{"macOS Sequoia /etc/localtime symlink", "/usr/share/zoneinfo.default/Europe/London", "Europe/London", ""},
+		{"Case-insensitive search for /zoneinfo/ in the path", "/path/to/TestZoneInfoTest/Europe/London", "Europe/London", ""},
+		{"Timezone has wrong format", "/Europe/London", "", "unable to read timezone from /Europe/London"},
+		{"Not real timezone", "Europe/Test", "", "unable to read timezone from Europe/Test"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			timezone, err := util.GetTimezone(tc.input)
+			require.Equal(t, tc.result, timezone)
+			if tc.error == "" {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.error)
+			}
+		})
+	}
 }

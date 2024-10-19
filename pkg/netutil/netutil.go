@@ -1,7 +1,9 @@
 package netutil
 
 import (
+	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"slices"
 	"syscall"
@@ -37,14 +39,14 @@ func IsPortActive(port string) bool {
 			return false
 		}
 	}
-	// Otherwise, hmm, something else happened. It's not a fatal or anything.
-	util.Warning("Unable to properly check port status: %v", oe)
+	// Otherwise, hmm, something else happened. It's not a fatal but can be reported.
+	util.Warning("Unable to properly check port status for %s:%s: err=%v", dockerIP, port, err)
 	return false
 }
 
-// IsLocalIP returns true if the provided IP address is
+// HasLocalIP returns true if at least one of the provided IP addresses is
 // assigned to the local computer
-func IsLocalIP(ipAddress string) bool {
+func HasLocalIP(ipAddresses []net.IP) bool {
 	dockerIP, err := dockerutil.GetDockerIP()
 
 	if err != nil {
@@ -52,8 +54,10 @@ func IsLocalIP(ipAddress string) bool {
 		return false
 	}
 
-	if ipAddress == dockerIP {
-		return true
+	for _, ipAddress := range ipAddresses {
+		if ipAddress.String() == dockerIP {
+			return true
+		}
 	}
 
 	localIPs, err := GetLocalIPs()
@@ -64,10 +68,15 @@ func IsLocalIP(ipAddress string) bool {
 	}
 
 	// Check if the parsed IP address is local using slices.Contains
-	return slices.Contains(localIPs, ipAddress)
+	for _, ipAddress := range ipAddresses {
+		if slices.Contains(localIPs, ipAddress.String()) {
+			return true
+		}
+	}
+	return false
 }
 
-// GetLocalIPs() returns IP addresses associated with the machine
+// GetLocalIPs returns IP addresses associated with the machine
 func GetLocalIPs() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -78,12 +87,12 @@ func GetLocalIPs() ([]string, error) {
 	for _, addr := range addrs {
 		switch v := addr.(type) {
 		case *net.IPNet:
-			if v.IP.IsLoopback() {
+			if v.IP.IsLoopback() || v.IP.To4() == nil {
 				continue
 			}
 			localIPs = append(localIPs, v.IP.String())
 		case *net.IPAddr:
-			if v.IP.IsLoopback() {
+			if v.IP.IsLoopback() || v.IP.To4() == nil {
 				continue
 			}
 			localIPs = append(localIPs, v.IP.String())
@@ -91,4 +100,14 @@ func GetLocalIPs() ([]string, error) {
 	}
 
 	return localIPs, nil
+}
+
+// BaseURLFromFullURL returns the base url (http://hostname.example.com) from a URL, without port
+func BaseURLFromFullURL(fullURL string) string {
+	parsedURL, err := url.Parse(fullURL)
+	if err != nil {
+		return ""
+	}
+	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Hostname())
+	return baseURL
 }

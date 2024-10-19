@@ -329,6 +329,11 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	if err != nil {
 		return nil, err
 	}
+	// Make sure the deletion is synced before we recreate
+	err = p.app.MutagenSyncFlush()
+	if err != nil {
+		return nil, err
+	}
 	err = os.Mkdir(p.getDownloadDir(), 0755)
 	if err != nil {
 		return nil, err
@@ -355,7 +360,7 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 		return nil, err
 	}
 
-	sqlTarballs, err := fileutil.ListFilesInDirFullPath(p.getDownloadDir())
+	sqlTarballs, err := fileutil.ListFilesInDirFullPath(p.getDownloadDir(), true)
 	if err != nil || sqlTarballs == nil {
 		return nil, fmt.Errorf("failed to find downloaded files in %s: %v", p.getDownloadDir(), err)
 	}

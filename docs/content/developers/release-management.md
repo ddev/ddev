@@ -21,29 +21,37 @@ search:
 * Discord
 * Docker
 
-### Actual secrets required
+### Environment variables required
 
-<!-- markdown-link-check-disable-next-line -->
-The following “Repository secret” environment variables must be added to <https://github.com/ddev/ddev/settings/secrets/actions>:
+These are normally configured in the repository environment variables.
 
-* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`.
-* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
+* `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
+* `DOCKER_ORG`: the `hub.docker.org` organization to push to
+* `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
+* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repository like be `ddev-test/homebrew-ddev-edge`.
+* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repository like `ddev-test/homebrew-ddev`.
+
+### GitHub Actions Secrets Required
+
+* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`. Unfortunately, the `1password/load-secrets-action` does not work with Windows (see [issue](https://github.com/1Password/load-secrets-action/issues/46)).
+* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
+
+### 1Password secrets required
+
+<!-- markdown-link-check-disable-next-line -->
+The following “Repository secret” environment variables must be configured in 1Password:
+
 * `AUR_SSH_PRIVATE_KEY`: Private SSH key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
-* `DDEV_MAIN_REPO_ORGNAME`: The organization to be used for testing, normally `ddev` but it may be `ddev-test` for the test organization.
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
-* `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions.
 * `DOCKERHUB_TOKEN`: Token for pushing to `hub.docker.com`. or updating image descriptions.
-* `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
 * `GORELEASER_KEY`: License key for GoReleaser Pro.
-* `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev-test/homebrew-ddev-edge`.
-* `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but may be `ddev/homebrew-ddev-edge`.
 
 ## Creating a Release
 
@@ -57,26 +65,12 @@ The following “Repository secret” environment variables must be added to <ht
 * Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a `GITHUB_TOKEN` that has power to manage packages (`write:packages` scope, classic PAT), change the version in the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) and run:
-
-    ```bash
-    cd .github/devcontainers/src
-    export GITHUB_TOKEN=<personal-access-token-with-power-to-manage-packages>
-    devcontainer features publish -n ddev/ddev .
-    ```
 
 ### Actual Release Creation
 
 1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
 2. Make sure you're about to create the right release tag.
 3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
-
-### Post-Release Tasks
-
-1. After the release has been created, the new gitpod image must be pushed.
-    1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh`
-    2. PR to update `.gitpod.yml` with the new image.
-    3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
 
@@ -108,7 +102,7 @@ If you need to push from a forked PR, you’ll have to do this from your fork (f
 While it’s more error-prone, images can be pushed from the command line:
 
 1. `docker login` with a user that has push privileges.
-2. `docker buildx create --name ddev-builder-multi --use` or if it already exists, `docker buildx use ddev-builder-multi`.
+2. `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use`.
 3. `cd containers/<image>`.
 4. Before pushing `ddev-webserver`, make sure you’ve pushed a version of `ddev-php-base` and updated `ddev-webserver`’s Dockerfile to use that as a base.
 5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.
@@ -127,7 +121,7 @@ Sadly, there are no ARM64 Docker images for MySQL 5.7 and 8.0, so we have our ow
 
 ## Actual Release Docker Image Updates
 
-We don’t actually build every image for every point release. If there have been no changes to `ddev-traefik-router` or `ddev-ssh-agent`, for example, we only usually push those and update `pkg/version/version.go` on major releases.
+We may not build every image for every point release. If there have been no changes to `ddev-traefik-router` or `ddev-ssh-agent`, for example, we may not push those and update `pkg/version/version.go` on major releases.
 
 But here are the steps for building:
 
@@ -187,7 +181,7 @@ This is done automatically by the release build on a dedicated Windows test runn
 1. Install the suggested [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/). Only the signing component is required.
 2. Add the path of the kit binaries to the Windows system PATH, `C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/`.
 3. The keyfob and Safenet Authentication Client must be installed. The best documentation for the Safenet software is at <https://support.globalsign.com/ssl/ssl-certificates-installation/safenet-drivers>. You must configure the advanced client settings to “Enable single logon” or it will require the password on each run.
-4. After `make windows_install` the `ddev-windows-installer.exe` will be in `.ddev/bin/windows_amd64/ddev_windows_installer.exe` and you can sign it with `signtool sign ddev-windows-installer.exe`.
+4. After `make windows_amd64_install` the `ddev_windows_amd64_installer.exe` will be in `.ddev/bin/windows_amd64/ddev_windows_amd64_installer.exe` and you can sign it with `signtool sign ddev_windows_amd64_installer.exe`.
 5. If you need to install the GitHub self-hosted Windows runner, do it with the instructions in project settings → Actions → Runners.
 6. Currently the `actions/cache` runner does not work out of the box on Windows, so you have to install tar and zstd as described in [this issue](https://github.com/actions/cache/issues/580#issuecomment-1165839728).
 
@@ -219,7 +213,7 @@ Prerequisites:
 * `export GORELEASER_KEY=<key>`
 
 ```bash
-export GITHUB_REPOSITORY_OWNER=ddev-test
+export REPOSITORY_OWNER=ddev-test
 git tag <tagname> # Try to include context like PR number, for example v1.22.8-PR5824
 make windows_amd64 windows_arm64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
 goreleaser release --prepare --nightly --clean

@@ -43,7 +43,7 @@ func TestProcessHooks(t *testing.T) {
 		_ = os.RemoveAll(filepath.Join(app.AppRoot, "composer.json"))
 		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
 	})
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	// Create a composer.json so we can do actions on it.
@@ -68,7 +68,7 @@ func TestProcessHooks(t *testing.T) {
 		{"exec: ls /usr/local/bin", "acli\ncomposer", "Running task: Exec command 'ls /usr/local/bin'"},
 		{"exec-host: \"echo something\"", "something\n", "Running task: Exec command 'echo something' on the host"},
 		{"exec: echo MYSQL_PWD=${MYSQL_PWD:-}\n    service: db", "MYSQL_PWD=db\n", "Running task: Exec command 'echo MYSQL_PWD=${MYSQL_PWD:-}' in container/service 'db'"},
-		{"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt'"},
+		{"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt'"},
 		{"exec: \"touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt\"", "", "Running task: Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt'"},
 		{"exec:\n    exec_raw: [ls, /usr/local]", "bin\netc\ngames\n", "Exec command '[ls /usr/local] (raw)'"},
 	}
@@ -101,19 +101,19 @@ func TestProcessHooks(t *testing.T) {
 	err = app.Restart()
 	require.NoError(t, err)
 
-	require.FileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
+	require.FileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("%s-php-version-%s.txt", t.Name(), app.PHPVersion)))
 	require.FileExists(t, filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	// Make sure skip hooks work
 	ddevapp.SkipHooks = true
 	app.Hooks = map[string][]ddevapp.YAMLTask{
 		"hook-test-skip-hooks": {
-			{"exec": "\"echo TestProcessHooks > /var/www/html/TestProcessHooksSkipHooks${DDEV_ROUTER_HTTPS_PORT}.txt\""},
+			{"exec": "\"echo TestProcessHooks > /var/www/html/TestProcessHooksSkipHooks-php-version-${DDEV_PHP_VERSION}.txt\""},
 		},
 	}
 	err = app.ProcessHooks("hook-test")
 	require.NoError(t, err)
-	require.NoFileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooksSkipHooks%s.txt", app.GetRouterHTTPSPort())))
+	require.NoFileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooksSkipHooks-php-version-%s.txt", app.PHPVersion)))
 	ddevapp.SkipHooks = false
 
 	// Attempt processing hooks with a guaranteed failure

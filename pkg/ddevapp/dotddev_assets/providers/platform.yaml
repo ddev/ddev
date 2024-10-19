@@ -3,7 +3,7 @@
 # your own preferences. If you edit it, remove the `ddev-generated` line from the top so
 # that it won't be overwritten.
 
-# Consider using `ddev get ddev/ddev-platformsh` (https://github.com/ddev/ddev-platformsh) for more
+# Consider using `ddev add-on get ddev/ddev-platformsh` (https://github.com/ddev/ddev-platformsh) for more
 # complete platform integration.
 
 # To use this configuration,
@@ -14,14 +14,19 @@
 #    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
 #    ```yaml
 #    web_environment:
-#    - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
+#        - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
 #    ```
+#    You can also do this with `ddev config global --web-environment-add="PLATFORMSH_CLI_TOKEN=abcdeyourtoken"`.
+#
 # 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT and optional PLATFORM_APP (only if your environment contains more than one app) variables to your project `.ddev/config.yaml` or a `.ddev/config.platform.yaml`
 #    ```yaml
 #    web_environment:
-#    - PLATFORM_PROJECT=nf4amudfn23biyourproject
-#    - PLATFORM_ENVIRONMENT=main
-#    - PLATFORM_APP=app
+#        - PLATFORM_PROJECT=nf4amudfn23biyourproject
+#        - PLATFORM_ENVIRONMENT=main
+#        - PLATFORM_APP=app
+#    ```
+#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23biyourproject,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app"`.
+#
 # 4. `ddev restart`
 # 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 # 6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.

@@ -40,6 +40,9 @@
       "pattern": "^https://github.com/orgs/ddev"
     },
     {
+      "pattern": "^https://github.com/watching"
+    },
+    {
       "pattern": "^https://newmonitor.thefays.us/icingaweb2"
     },
     {
@@ -56,7 +59,17 @@
     },
     {
       "pattern": "^https://community.chocolatey.org"
+    },
+    {
+      "pattern": "^https://aur.archlinux.org"
+    },
+    {
+      "pattern": "^https://team-ddev.1password.com"
+    },
+    {
+      "pattern": "^https://.*.archive.org"
     }
+
   ],
   "httpHeaders": [
     {

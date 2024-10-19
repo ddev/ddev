@@ -27,8 +27,6 @@ func init() {
 // ports reserved in DdevGlobalConfig.UsedHostPorts
 // and that the port can actually be bound.
 func TestGetFreePort(t *testing.T) {
-	assert := asrt.New(t)
-
 	dockerIP, err := dockerutil.GetDockerIP()
 	require.NoError(t, err)
 
@@ -48,7 +46,7 @@ func TestGetFreePort(t *testing.T) {
 	// Make sure we have a global config set up.
 	_ = globalconfig.ReadGlobalConfig()
 	err = globalconfig.ReservePorts(t.Name(), ports)
-	assert.NoError(err)
+	require.NoError(t, err)
 	t.Cleanup(func() {
 		_ = globalconfig.RemoveProjectInfo(t.Name())
 	})
@@ -56,13 +54,13 @@ func TestGetFreePort(t *testing.T) {
 	for try := 0; try < 5; try++ {
 		port, err := globalconfig.GetFreePort(dockerIP)
 		require.NoError(t, err)
-		assert.NotContains(globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
+		require.NotContains(t, globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
 		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, versionconstants.BusyboxImage}
-		_, err = exec.RunCommand("docker", dockerCommand)
+		out, err := exec.RunCommand("docker", dockerCommand)
 
-		assert.NoError(err, "failed to 'docker %v': %v", dockerCommand, err)
+		require.NoError(t, err, "failed to 'docker %v': %v, output='%v'", dockerCommand, err, out)
 	}
 }
 
@@ -134,8 +132,8 @@ type internetActiveNetResolverStub struct {
 	err       error
 }
 
-// LookupHost is a custom version of net.LookupHost that wastes some time and then returns
-func (t internetActiveNetResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
+// LookupIP is a custom version of net.LookupIP that wastes some time and then returns
+func (t internetActiveNetResolverStub) LookupIP(ctx context.Context, _, _ string) ([]net.IP, error) {
 	select {
 	case <-time.After(t.sleepTime):
 	case <-ctx.Done():
@@ -152,7 +150,7 @@ func internetActiveResetVariables() {
 	globalconfig.DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 }
 
-// TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupHost returns an error
+// TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupIP returns an error
 func TestIsInternetActiveErrorOccurred(t *testing.T) {
 	internetActiveResetVariables()
 
@@ -186,8 +184,8 @@ func TestIsInternetActiveAlreadyChecked(t *testing.T) {
 	asrt.True(t, globalconfig.IsInternetActive())
 }
 
-// TestIsInternetActive tests if IsInternetActive() returns true, when the LookupHost call goes well
-// and if it properly sets the globals so it won't execute the LookupHost again.
+// TestIsInternetActive tests if IsInternetActive() returns true, when the LookupIP call goes well
+// and if it properly sets the globals so it won't execute the LookupIP again.
 func TestIsInternetActive(t *testing.T) {
 	internetActiveResetVariables()
 

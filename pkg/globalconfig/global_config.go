@@ -68,13 +68,14 @@ type GlobalConfig struct {
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
-	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
-	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
-	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
-	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
-	WebEnvironment                   []string                    `yaml:"web_environment"`
-	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
-	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info,omitempty"`
+	// This may still be used in Docker Compose automated tests
+	UseDockerComposeFromPath bool                    `yaml:"use_docker_compose_from_path,omitempty"`
+	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
+	WebEnvironment           []string                `yaml:"web_environment"`
+	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
+	ProjectList              map[string]*ProjectInfo `yaml:"project_info,omitempty"`
 }
 
 // New returns a default GlobalConfig
@@ -223,10 +224,6 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
 
-	if DdevGlobalConfig.IsTraefikRouter() && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
-		return fmt.Errorf("use-letsencrypt is not directly supported with Traefik. But it can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
-	}
-
 	return nil
 }
 
@@ -371,8 +368,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # You can inject environment variables into the web container with:
 # web_environment:
-# - SOMEENV=somevalue
-# - SOMEOTHERENV=someothervalue
+#     - SOMEENV=somevalue
+#     - SOMEOTHERENV=someothervalue
 
 # Adjust the default table style used in ddev list and describe
 # table_style: default
@@ -458,12 +455,6 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # required_docker_compose_version: ""
 # This can be used to override the default required docker-compose version
 # It should normally be left alone, but can be set to, for example, "v2.1.1"
-
-# use_docker_compose_from_path: false
-# This can be set to true to allow DDEV to use whatever docker-compose is
-# found in the $PATH instead of using the private docker-compose downloaded
-# to ~/.ddev/bin/docker-compose.
-# Please don't use this unless directed to do so
 
 # messages:
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
@@ -826,7 +817,7 @@ var IsInternetActiveResult = false
 // In order to override net.DefaultResolver with a stub, we have to define an
 // interface on our own since there is none from the standard library.
 var IsInternetActiveNetResolver interface {
-	LookupHost(ctx context.Context, host string) (addrs []string, err error)
+	LookupIP(ctx context.Context, network, host string) ([]net.IP, error)
 } = net.DefaultResolver
 
 // IsInternetActive checks to see if we have a viable
@@ -846,7 +837,7 @@ func IsInternetActive() bool {
 	// Using a random URL is more conclusive, but it's more intrusive because
 	// DNS may take some time, and it's really annoying.
 	testURL := "test.ddev.site"
-	addrs, err := IsInternetActiveNetResolver.LookupHost(ctx, testURL)
+	addrs, err := IsInternetActiveNetResolver.LookupIP(ctx, "ip4", testURL)
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ const disabledServicesDir = ".disabled-services"
 var ServiceEnable = &cobra.Command{
 	Use:     "enable service [project]",
 	Short:   "Enable a 3rd party service",
-	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev get" to obtain a service not already on your system.`, disabledServicesDir),
+	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev add-on get" to obtain a service not already on your system.`, disabledServicesDir),
 	Example: `ddev service enable solr`,
 	Run: func(_ *cobra.Command, args []string) {
 		if len(args) < 1 {

@@ -6,7 +6,7 @@ services:
     # Prevent zombie container
     init: true
     command:
-      - --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
+      - --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml
     user: {{ .UID }}:{{ .GID }}
     {{ end }}
 

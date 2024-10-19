@@ -1,5 +1,6 @@
 # Docker repo for a push
-DOCKER_REPO ?= ddev/ddev-nginx-proxy-router
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-nginx-proxy-router
+DEFAULT_IMAGES = ddev-nginx-proxy-router
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -7,7 +8,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 # will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-include ../containers_shared.mak
+include ../containers_shared.mk
 
 test: container
 	bash -c "test/containertest.sh $(DOCKER_REPO):$(VERSION)"

@@ -93,7 +93,7 @@ For certain use cases, you might need to add directives very early on the Docker
 * `.ddev/web-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile.*`
 
-Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug refresh`](../usage/commands.md#debug-refresh).
+Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug rebuild`](../usage/commands.md#debug-rebuild).
 
 Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
 
@@ -135,15 +135,18 @@ ENV COMPOSER_HOME=""
 
 The following environment variables are available for the web Dockerfile to use at build time:
 
-* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.21.4`
+* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.23.3`
 * `$username`: the username inferred from your host-side username
 * `$uid`: the user ID inferred from your host-side user ID
 * `$gid`: the group ID inferred from your host-side group ID
-* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration (provided in versions after v1.21.4)
+* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration
+* `$TARGETARCH`: The build target architecture, like `arm64` or `amd64`
+* `$TARGETOS`: The build target operating system (always `linux`)
+* `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
 
-For example, a Dockerfile might want to build an extension for the configured PHP version like this:
+For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
 
-```Dockerfile
+```dockerfile
 ENV extension=xhprof
 ENV extension_repo=https://github.com/longxinH/xhprof
 ENV extension_version=v2.3.8
@@ -156,6 +159,12 @@ RUN phpize
 RUN ./configure
 RUN make install
 RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
+```
+
+An example of using `$TARGETARCH` would be:
+
+```dockerfile
+RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}"
 ```
 
 ## Installing into the home directory
@@ -178,4 +187,4 @@ It can be complicated to figure out what’s going on when building a Dockerfile
 
 1. Use [`ddev ssh`](../usage/commands.md#ssh) first of all to pioneer the steps you want to take. You can do all the things you need to do there and see if it works. If you’re doing something that affects PHP, you may need to `sudo killall -USR2 php-fpm` for it to take effect.
 2. Put the steps you pioneered into `.ddev/web-build/Dockerfile` as above.
-3. If you can’t figure out what’s failing or why, running `ddev debug refresh` will show the full output of the build process. You can also run `export DDEV_VERBOSE=true && ddev start` to see what’s happening during the `ddev start` Dockerfile build.
+3. If you can’t figure out what’s failing or why, running `ddev debug rebuild` will show the full output of the build process. You can also run `export DDEV_VERBOSE=true && ddev start` to see what’s happening during the `ddev start` Dockerfile build.

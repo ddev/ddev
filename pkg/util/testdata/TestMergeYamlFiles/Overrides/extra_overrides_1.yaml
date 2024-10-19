@@ -1,0 +1,5 @@
+log:
+  level: INFO
+
+core:
+  defaultRuleSyntax: v3

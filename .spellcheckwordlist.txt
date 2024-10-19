@@ -14,6 +14,7 @@ Callgraph
 CGroups
 CIFS
 CLI
+Cloudflare
 CMD
 CMS
 CMSes
@@ -94,6 +95,7 @@ Magento's
 Mailpit
 Mailpit's
 Mailgun
+Magerun
 Manage
 MariaDB
 Matthias
@@ -434,6 +436,8 @@ mapall
 mariabackup
 mariadb
 memcached
+middleware
+middlewares
 misconfigured
 mkcert
 mkdir
@@ -458,6 +462,8 @@ mysite
 mysql
 mysqldump
 mysqlworkbench
+n98-magerun
+n98-magerun2
 namlen
 natively
 netstat
@@ -651,6 +657,7 @@ uid
 uli
 uncheck
 uncomment
+uncommenting
 uninstallation
 unix
 unless

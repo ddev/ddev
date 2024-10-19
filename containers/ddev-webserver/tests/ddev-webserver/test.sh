@@ -12,6 +12,10 @@ if [[ "${DOCKER_REPO}" == "*prod*" ]]; then
   IS_HARDENED=true
 fi
 
+# Find the directory of this script
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+export TEST_SCRIPT_DIR=${DIR}/../../../testscripts
+
 export HOST_HTTP_PORT="8080"
 export HOST_HTTPS_PORT="8443"
 export CONTAINER_HTTP_PORT="80"
@@ -71,11 +75,11 @@ if ! containerwait; then
     echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
     exit 100
 fi
-bats tests/ddev-webserver/general.bats
+bats --show-output-of-passing-tests tests/ddev-webserver/general.bats
 
 cleanup
 
-for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4 8.0 8.1 8.2 8.3; do
+for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4 8.0 8.1 8.2 8.3 8.4; do
     for WEBSERVER_TYPE in nginx-fpm apache-fpm; do
         export PHP_VERSION WEBSERVER_TYPE DOCKER_IMAGE
         docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null
@@ -114,5 +118,10 @@ bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=8.0" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+containerwait
+bats tests/ddev-webserver/imagemagick.bats
+
+cleanup
 
 echo "Test successful"

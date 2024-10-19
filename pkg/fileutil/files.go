@@ -213,8 +213,8 @@ func ListFilesInDir(path string) ([]string, error) {
 	return fileList, nil
 }
 
-// ListFilesInDirFullPath returns an array of full path of files found in a directory
-func ListFilesInDirFullPath(path string) ([]string, error) {
+// ListFilesInDirFullPath returns an array of full path of files found in a directory. If excludeDirectories is set, it skips subdirectories.
+func ListFilesInDirFullPath(path string, excludeDirectories bool) ([]string, error) {
 	var fileList []string
 	dirEntrySlice, err := os.ReadDir(path)
 	if err != nil {
@@ -222,6 +222,9 @@ func ListFilesInDirFullPath(path string) ([]string, error) {
 	}
 
 	for _, de := range dirEntrySlice {
+		if excludeDirectories && de.IsDir() {
+			continue
+		}
 		fileList = append(fileList, filepath.Join(path, de.Name()))
 	}
 	return fileList, nil
@@ -431,6 +434,16 @@ func TemplateStringToFile(content string, vars map[string]interface{}, targetFil
 		return nil
 	}
 	return nil
+}
+
+// GlobFilenames looks in dirPath for files matching globPattern
+// like "static_config.*.yaml" for example
+func GlobFilenames(dirPath string, globPattern string) ([]string, error) {
+	matchingFiles, err := filepath.Glob(filepath.Join(dirPath, globPattern))
+	if err != nil {
+		return nil, err
+	}
+	return matchingFiles, nil
 }
 
 // CheckSignatureOrNoFile checks to make sure that a file or directory either doesn't exist

@@ -24,22 +24,25 @@ on:
 #  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 env:
+  AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
-  GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
-  DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  FURY_ACCOUNT: ${{ vars.FURY_ACCOUNT }}
+  HOMEBREW_EDGE_REPOSITORY: ${{ vars.HOMEBREW_EDGE_REPOSITORY }}
+  HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
+  REPOSITORY_OWNER: ${{ github.repository_owner }}
+  DOCKER_ORG: ${{ vars.DOCKER_ORG }}
+
+permissions:
+  packages: write
 
 jobs:
   build-most:
     name: Build DDEV executables except Windows
-    runs-on: ubuntu-22.04
-    env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
+    runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v4
         with:
           # We need to get all branches and tags for git describe to work properly
@@ -90,23 +93,24 @@ jobs:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
     env:
-      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
+      DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
     steps:
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build and sign windows amd64 + arm64 binaries and amd64 installer
+      - name: Build and sign windows amd64/arm64 binaries and installers
         shell: bash
         run: |
-          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN is not true"; fi
-          make windows_install
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; fi
+          make windows_amd64_install windows_arm64_install
       - name: Show github.ref
         run: echo ${{ github.ref }}
       - name: Build chocolatey on release
         if: startsWith( github.ref, 'refs/tags/v1')
         run: make chocolatey
 
-      - name: "Verify that intrumentation is working (Windows)"
+      - name: "Verify that instrumentation is working (Windows)"
         run: |
           export PATH=".gotmp/bin/windows_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
@@ -115,6 +119,13 @@ jobs:
           ddev config global | grep instrumentation-opt-in=true
           ddev version | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
+
+      - name: Verify that binaries and installers were signed
+        run: |
+          signtool verify -pa .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
+          signtool verify -pa .gotmp/bin/windows_amd64/ddev.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/ddev.exe
 
       - name: Cache signed binaries
         # After 3.0.5 they were using zstdmt which is not available on Windows
@@ -131,6 +142,15 @@ jobs:
     runs-on: macos-latest
     needs: build-most
     steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+
       - name: "setup macOS"
         run: |
           brew install coreutils gnu-getopt jq
@@ -155,8 +175,6 @@ jobs:
 
       - name: Sign and notarize binaries (amd64 and arm64)
         env:
-          DDEV_MACOS_SIGNING_PASSWORD: ${{ secrets.DDEV_MACOS_SIGNING_PASSWORD }}
-          DDEV_MACOS_APP_PASSWORD: ${{ secrets.DDEV_MACOS_APP_PASSWORD }}
           TEAM_ID: "9HQ298V2BW"
         run: |
           set -o errexit -o pipefail
@@ -175,19 +193,34 @@ jobs:
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
 
   artifacts:
-    name: Upload artifacts
-    runs-on: ubuntu-22.04
-    needs: [build-most, sign-windows, notarize-macos]
     env:
-      DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-      CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
-
+      AUR_EDGE_GIT_URL: ${{ vars.AUR_EDGE_GIT_URL }}
+      AUR_STABLE_GIT_URL: ${{ vars.AUR_STABLE_GIT_URL }}
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+    name: Upload artifacts
+    runs-on: ubuntu-latest
+    needs: [build-most, sign-windows, notarize-macos]
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          AUR_SSH_PRIVATE_KEY: "op://push-secrets/AUR_SSH_PRIVATE_KEY/private key?ssh-format=openssh"
+          CHOCOLATEY_API_KEY: "op://push-secrets/CHOCOLATEY_API_KEY/credential"
+          GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
+          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+          FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential"
+          GORELEASER_KEY: "op://push-secrets/GORELEASER_KEY/credential"
 
       - uses: actions/checkout@v4
         with:
@@ -244,14 +277,6 @@ jobs:
           args: release --clean
         env:
           CGO_ENABLED: 0
-          DOCKER_ORG: ddev
-          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
-          AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
@@ -282,23 +307,114 @@ jobs:
         with:
           name: ddev-linux-amd64
           path: .gotmp/bin/linux_amd64/ddev
+      - name: Upload windows-amd64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-amd64
+          path: .gotmp/bin/windows_amd64/ddev.exe
+
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-amd64-installer
-          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+          path: .gotmp/bin/windows_amd64/ddev_windows_amd64_installer*.exe
       - name: Upload windows-arm64 binary
         uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-arm64
           path: .gotmp/bin/windows_arm64/ddev.exe
+      - name: Upload windows_arm64 installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-arm64-installer
+          path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer*.exe
 
       - name: Show github.ref
         run: echo ${{ github.ref }}
 
+      # TODO: This can be done by goreleaser these days
       - name: Chocolatey windows release
-        if: env.CHOCOLATEY_API_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
+        if: github.repository == 'ddev/ddev' && startsWith(github.ref, 'refs/tags/v1')
         run: |
           pushd .gotmp/bin/windows_amd64/chocolatey
           docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
           popd
+
+  push-devcontainers:
+    name: Push devcontainer feature
+    runs-on: ubuntu-latest
+    needs: artifacts
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
+
+      - uses: actions/checkout@v4
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+
+      - name: Replace version in devcontainer-feature.json
+        run: |
+          sed -i 's/\${DDEV_VERSION}/'"${GITHUB_REF##*/}"'/g' ./containers/devcontainers/install-ddev/devcontainer-feature.json
+
+      - name: Push DDEV devcontainer feature
+        if: startsWith(github.ref, 'refs/tags/v1')
+        uses: devcontainers/action@v1
+        with:
+          publish-features: "true"
+          base-path-to-features: "./containers/devcontainers"
+          devcontainer-cli-version: "0.53.0"
+
+  push-gitpod-base:
+    name: Push ddev-gitpod-base docker image
+    runs-on: ubuntu-latest
+    needs: artifacts
+
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - uses: actions/checkout@v4
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Push ddev-gitpod-base image
+        if: startsWith(github.ref, 'refs/tags/v1')
+        run: |
+          pushd containers/ddev-gitpod-base >/dev/null
+          # For testing, push to ddevhq docker org
+          set -x
+          make push VERSION="${GITHUB_REF##*/}" DOCKER_ORG=${DOCKER_ORG}
+          popd >/dev/null
+

@@ -14,73 +14,81 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 4. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`.
 5. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
 6. After restart, in **administrative** Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`.
-7. (Skip on WSL2 Docker Desktop setup.) Now download and run [`windows_buildkite-testmachine_setup.sh`](scripts/windows_buildkite_setup.sh).
-8. (Skip on WSL2 Docker Desktop setup.) Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh).
+7. Now download and run [`windows_buildkite-testmachine_setup.sh`](scripts/windows_buildkite_setup.sh).
+8. Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh).
 9. Launch Docker. It may require you to take further actions.
    * Check "Launch on login"
    * Check "Add the *.docker.internal names to the host's /etc/hosts file"
    * Uncheck "SBOM Indexing"
    * Under "Resources" uncheck "Resource Saver"
 10. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
-11. (Skip on WSL2 Docker Desktop setup.) Enable gd, fileinfo, and curl extensions in `/c/tools/php*/php.ini`.
-12. If a laptop, set the “lid closing” setting to do nothing.
-13. Set the “Sleep after time” setting in settings to never.
-14. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
-15. (Skip on WSL2 Docker Desktop setup.) Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
-16. `git config --global --add safe.directory '*'`.
-17. (Skip on WSL2 Docker Desktop setup.) Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-18. (Skip on WSL2 Docker Desktop setup.) Run `.buildkite/sanetestbot.sh` to check your work.
-19. (Skip on WSL2 Docker Desktop setup.) Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
-20. Verify that `go`, `ddev`, `git-bash` are in the path.
-21. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
-22. Turn off the settings that cause the "windows experience" prompts after new upgrades:
+11. Enable gd, fileinfo, and curl extensions in `/c/tools/php*/php.ini`.
+12. Set the “Sleep after time” setting in settings to never.
+13. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
+14. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
+15. `git config --global --add safe.directory '*'`.
+16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+17. Run `.buildkite/sanetestbot.sh` to check your work.
+18. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
+19. Verify that `go`, `ddev`, `git-bash` are in the path.
+20. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
+21. Turn off the settings that cause the "windows experience" prompts after new upgrades:
 ![disable_windows_experience](../images/disable_windows_experience.png)
 
-## Additional Windows Setup for WSL2+Docker Desktop Testing
+## Both Docker Desktop/WSL2 and Docker-ce/WSL2
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent`
-2. `sudo apt update && sudo apt install -y apt-transport-https autojump build-essential ca-certificates curl dirmngr etckeeper expect git gnupg icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client nagios-plugins postgresql-client unzip vim zip`
-3. `sudo snap install --classic go`
-4. Install `ngrok` with the [`linux apt` technique](https://ngrok.com/download).
-5. `curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg`
-6. `echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list`
-7. `sudo apt-get update && sudo apt-get install -y buildkite-agent`
-8. `buildkite-agent` should have home directory `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
-9. Configure buildkite agent in /etc/buildkite-agent:
-    * `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"`
-    * token="xxx"
-10. `sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent`
-11. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it does require escalation.
-12. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
-13. Install DDEV using the [standard WSL2 Docker Desktop installation](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#wsl2-docker-desktop-install-script)
-14. Delete the CAROOT and WSLENV environment variables from administrative PowerShell:
+2. Set the hostname in `/etc/wsl.conf` in the network section, for example:
 
-     ```powershell
-     [Environment]::SetEnvironmentVariable("CAROOT", $null, "Machine")
-     [Environment]::SetEnvironmentVariable("WSLENV", $null, "Machine")
-     ```
+    ```
+    [network]
+    hostname=tb-wsl-16-dockerce
+    ```
 
-15. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-16. Configure brew in PATH with:
+3. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
+4. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
+5. `sudo apt update && sudo apt install -y apt-transport-https autojump build-essential ca-certificates curl dirmngr etckeeper expect git gnupg icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client nagios-plugins postgresql-client unzip vim zip`
+6. `sudo snap install --classic go`
+7. Install `ngrok` with the [`linux apt` technique](https://ngrok.com/download).
+8. `curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg`
+9. `echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list`
+10. `sudo apt-get update && sudo apt-get install -y buildkite-agent`
+11. Change `buildkite-agent` home directory to `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
+12. Configure buildkite agent in /etc/buildkite-agent:
+     * `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"`
+     * token="xxx"
+13. `sudo systemctl enable buildkite-agent && sudo systemctl start buildkite-agent`
+14. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it may require escalation.
+15. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
+16. As root user (`sudo -s`), add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+17. `git config --global --add safe.directory '*'`
+18. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+19. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+20. Run `ngrok authtoken <token>` with token for free account.
+21. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
+22. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
+23. Turn off the `System` -> `Notifications` -> `Additional settings` that cause the "Windows experience" prompts after upgrades:
+    ![disable_windows_experience](../images/disable_windows_experience.png)
+24. Edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
 
-     ```
-     echo 'export PATH="/snap/bin:/home/linuxbrew/.linuxbrew/bin:$PATH"' >>~/.bashrc
-     source ~/.bashrc
-     ```
+    ```
+    memory=12GB
+    [experimental]
+    autoMemoryReclaim=dropcache
+    ```
 
-17. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-18. Manually run DDEV's `.buildkite/testbot_maintenance.sh`.
-19. `git config --global --add safe.directory '*'`
-20. Follow the [Icinga instructions](https://newmonitor.thefays.us/icingaweb2/doc/module/director/chapter/Working-with-agents) to configure the agent. Under the host's "Agent" tab it provides a script to configure the agent.
-21. Windows Terminal should be installed. Set "Ubuntu" as the default and have it start on Windows startup.
-22. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
-23. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
-24. Run `ngrok authtoken <token>` with token for free account.
+## Windows Setup for WSL2+Docker Desktop
 
-## Additional Windows Setup for WSL2+Docker-Inside Testing
+1. Install Docker Desktop on Windows
+2. In Docker Desktop, enable WSL2 integration with this distro (and this distro only, not default distro).
+3. Install DDEV using the [standard WSL2 Docker Desktop installation](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#wsl2-docker-desktop-install-script)
+4. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+5. Run `.buildkite/sanetestbot.sh` to check your work.
 
-1. Uninstall Docker Desktop.
-2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop might have added in `C:\Windows\system32\drivers\etc\hosts`.
+## Windows Setup for WSL2+Docker-Inside Testing
+
+1. Make sure Docker Desktop is not integrated with this distro.
+2. Remove any entries (especially `host.docker.internal`) that Docker Desktop might have added in `C:\Windows\system32\drivers\etc\hosts`.
 3. Install Docker and basics in WSL2:
 
     ```bash
@@ -91,7 +99,12 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     sudo usermod -aG docker $USER
     ```
 
-4. Run `.buildkite/sanetestbot.sh`
+4. Install DDEV using the [standard WSL2 Docker CE installation](https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/#wsl2-docker-ce-inside-install-script)
+5. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+6. Run `.buildkite/sanetestbot.sh` to check your work.
+7. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
+8. Turn off the settings that cause the "windows experience" prompts after new upgrades:
+   ![disable_windows_experience](../images/disable_windows_experience.png)
 
 ## Icinga2 monitoring setup for WSL2 instances
 
@@ -101,7 +114,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 4. Add `nagios` to the `docker` group in `/etc/group`.
 5. `sudo icinga2 node wizard` to configure the agent, see [docs](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#agentsatellite-setup-on-linux)
 6. Restart `sudo systemctl restart icinga2`
-7. Hope that it can all work sometime.
+7. On `newmonitor.thefays.us` edit `/usr/local/bin/check_buildkite_agents.sh` to include the hostname of the new instance.
 
 ## macOS Docker Desktop Test Agent Setup (Intel and Apple Silicon)
 
@@ -117,7 +130,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mysql-client mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
 14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.

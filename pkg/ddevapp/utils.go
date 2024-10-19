@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -17,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerVersions "github.com/docker/docker/api/types/versions"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -226,6 +229,7 @@ type ignoreTemplateContents struct {
 // Each value in ignores will be added as a new line to the .gitignore.
 func CreateGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
+	existingContent := ""
 
 	if fileutil.FileExists(gitIgnoreFilePath) {
 		sigFound, err := fileutil.FgrepStringInFile(gitIgnoreFilePath, nodeps.DdevFileSignature)
@@ -238,50 +242,61 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 			util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
 			return nil
 		}
+		// Read the existing content for future comparison.
+		if gitIgnoreFileBytes, err := os.ReadFile(gitIgnoreFilePath); err == nil {
+			existingContent = string(gitIgnoreFileBytes)
+		}
 		// Otherwise, remove the existing file to prevent surprising template results
-		err = os.Remove(gitIgnoreFilePath)
-		if err != nil {
-			return err
+		if existingContent == "" {
+			err = os.Remove(gitIgnoreFilePath)
+			if err != nil {
+				return err
+			}
 		}
 	}
+
 	err := os.MkdirAll(targetDir, 0777)
 	if err != nil {
 		return err
 	}
 
-	generatedIgnores := []string{}
+	// Get the content for the .gitignore file.
+	var generatedIgnores []string
 	for _, p := range ignores {
 		pFullPath := filepath.Join(targetDir, p)
 		sigFound, err := fileutil.FgrepStringInFile(pFullPath, nodeps.DdevFileSignature)
-		//if err != nil {
-		//	util.Warning("file not found: %s: %v", p, err)
-		//}
 		if sigFound || err != nil {
 			generatedIgnores = append(generatedIgnores, p)
 		}
 	}
 
-	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
+	t, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer util.CheckClose(file)
-
-	parms := ignoreTemplateContents{
+	// Execute the template into the buffer.
+	var buf bytes.Buffer
+	ignoredItems := ignoreTemplateContents{
 		Signature:    nodeps.DdevFileSignature,
 		IgnoredItems: generatedIgnores,
 	}
-
-	//nolint: revive
-	if err = tmpl.Execute(file, parms); err != nil {
+	if err = t.Execute(&buf, ignoredItems); err != nil {
 		return err
 	}
+	// Only write the file if the generated content differs from the existing content.
+	if buf.String() != existingContent {
+		file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+		}
+		defer util.CheckClose(file)
 
+		// Write the new content to the file.
+		if _, err = buf.WriteTo(file); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -533,4 +548,29 @@ func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
 		nameMap[app.Name] = app
 	}
 	return nameMap
+}
+
+// CheckDdevVersionConstraint returns an error if the given constraint does not match the current DDEV version
+func CheckDdevVersionConstraint(constraint string, errorPrefix string, errorSuffix string) error {
+	normalizedConstraint := constraint
+	if !strings.Contains(normalizedConstraint, "-") {
+		// Allow pre-releases to be included in the constraint validation
+		// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
+		normalizedConstraint += "-0"
+	}
+	if errorPrefix == "" {
+		errorPrefix = "error"
+	}
+	c, err := semver.NewConstraint(normalizedConstraint)
+	if err != nil {
+		return fmt.Errorf("%s: the '%s' constraint is not valid. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", errorPrefix, constraint).(invalidConstraint)
+	}
+	// Make sure we do this check with valid released versions
+	v, err := semver.NewVersion(versionconstants.DdevVersion)
+	if err == nil {
+		if !c.Check(v) {
+			return fmt.Errorf("%s: your DDEV version '%s' doesn't meet the constraint '%s'. Please update to a DDEV version that meets this constraint %s", errorPrefix, versionconstants.DdevVersion, constraint, strings.TrimSpace(errorSuffix))
+		}
+	}
+	return nil
 }

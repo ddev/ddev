@@ -182,7 +182,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that all the official ddev-provided custom commands are usable by checking help
-	for _, c := range []string{"launch", "xdebug"} {
+	for _, c := range []string{"launch", "phpmyadmin", "xdebug"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
@@ -206,7 +206,7 @@ func TestCustomCommands(t *testing.T) {
 	app.Type = origAppType
 
 	// The various CMS commands should not be available here
-	for _, c := range []string{"artisan", "cake", "drush", "magento", "typo3", "wp"} {
+	for _, c := range []string{"artisan", "art", "cake", "drush", "magento", "typo3", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
@@ -241,7 +241,7 @@ func TestCustomCommands(t *testing.T) {
 	_, _ = exec.RunHostCommand(DdevBin)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
-	for _, c := range []string{"artisan", "pint"} {
+	for _, c := range []string{"artisan", "art", "pint"} {
 		_, err = exec.RunHostCommand(DdevBin, "help", c)
 		assert.NoError(err)
 	}

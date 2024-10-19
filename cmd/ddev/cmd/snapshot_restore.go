@@ -31,7 +31,7 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 			}
 		} else {
 			if len(args) != 1 { // If the name of the snapshot isn't provided, do prompted restore
-				snapshots, err := app.ListSnapshots()
+				snapshots, err := app.ListSnapshotNames()
 				if err != nil {
 					util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
 				}

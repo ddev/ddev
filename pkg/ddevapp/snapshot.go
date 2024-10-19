@@ -2,12 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/util"
 	"io/fs"
 	"os"
 	"path"
@@ -17,7 +11,23 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 )
+
+type Snapshot struct {
+	Name    string
+	Created time.Time
+}
+
+// SnapshotRestoreDefaultWaitTime is the max time we'll wait for snapshot restore.
+// If default_container_timeout is set higher than that it can be more
+const SnapshotRestoreDefaultWaitTime = 600
 
 // DeleteSnapshot removes the snapshot tarball or directory inside a project
 func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
@@ -51,11 +61,11 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	return nil
 }
 
-// GetLatestSnapshot returns the latest created snapshot of a project
+// GetLatestSnapshot returns the name of the latest created snapshot of a project
 func (app *DdevApp) GetLatestSnapshot() (string, error) {
 	var snapshots []string
 
-	snapshots, err := app.ListSnapshots()
+	snapshots, err := app.ListSnapshotNames()
 	if err != nil {
 		return "", err
 	}
@@ -68,9 +78,21 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 }
 
 // ListSnapshots returns a list of the names of all project snapshots
-func (app *DdevApp) ListSnapshots() ([]string, error) {
+func (app *DdevApp) ListSnapshotNames() ([]string, error) {
+	var names []string
+	snapshots, err := app.ListSnapshots()
+
+	for _, snapshot := range snapshots {
+		names = append(names, snapshot.Name)
+	}
+
+	return names, err
+}
+
+// ListSnapshots returns a list of all project snapshots
+func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 	var err error
-	var snapshots []string
+	var snapshots []Snapshot
 
 	snapshotDir := app.GetConfigPath("db_snapshots")
 
@@ -104,7 +126,11 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	for _, f := range files {
 		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") {
 			n := m.ReplaceAll([]byte(f.Name()), []byte(""))
-			snapshots = append(snapshots, string(n))
+			snapshot := Snapshot{
+				Name:    string(n),
+				Created: f.ModTime(),
+			}
+			snapshots = append(snapshots, snapshot)
 		}
 	}
 
@@ -175,7 +201,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// For mariadb/mysql restart container and wait for restore
 	if status == SiteRunning || status == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotFile)
-		util.Success("With large snapshots this may take a long time.\nThis will normally time out after %d seconds (max of all container timeouts)\nbut you can increase it by changing default_container_timeout.", app.FindMaxTimeout())
+		maxWaitTime := max(SnapshotRestoreDefaultWaitTime, app.GetMaxContainerWaitTime())
+		util.Success("With large snapshots this may take a long time.\nThis may time out after %d seconds \nbut you can increase it by changing default_container_timeout.", maxWaitTime)
 		dbContainer, err := GetContainer(app, "db")
 		if err != nil || dbContainer == nil {
 			return fmt.Errorf("no container found for db; err=%v", err)
@@ -222,9 +249,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
 	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
-	// Allow extra time by default for the snapshot restore. This is arbitrary but may help.
+	// If the default_container_timeout does not already specify a longer period
+	// then allow extra time by default for the snapshot restore. This is arbitrary but may help.
 	origTimeout := app.DefaultContainerTimeout
-	app.DefaultContainerTimeout = "600"
+	if t, _ := strconv.Atoi(app.DefaultContainerTimeout); t <= SnapshotRestoreDefaultWaitTime {
+		app.DefaultContainerTimeout = strconv.Itoa(SnapshotRestoreDefaultWaitTime)
+	}
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
@@ -233,7 +263,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// On mysql/mariadb the snapshot restore doesn't actually complete right away after
 	// the mariabackup/xtrabackup returns.
 	if app.Database.Type != nodeps.Postgres {
-		output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
+		output.UserOut.Printf("Waiting up to %ss for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.DefaultContainerTimeout, app.Name)
 		// Now it's up, but we need to find out when it finishes loading.
 		for {
 			// We used to use killall -1 mysqld here

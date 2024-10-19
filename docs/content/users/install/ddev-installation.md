@@ -232,7 +232,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         * If you have WSL2 but not an Ubuntu distro, install one with `wsl --install Ubuntu`.  
           If that doesn't work for you, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
-        If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
+        If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-24.04`.
 
     5. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
@@ -289,9 +289,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     If you must use traditional Windows, then Docker Desktop is your only choice of a Docker provider. DDEV is supported in this configuration but it's not as performant as the WSL2 options.
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
-    * Each [DDEV release](https://github.com/ddev/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
+    * Each [DDEV release](https://github.com/ddev/ddev/releases) includes Windows installers for AMD64 and ARM64 Windows (`ddev_windows_<architecture>_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
 
-    Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
+    Most people interact with DDEV on traditional Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
 
     !!!note "Windows Firefox Trusted CA"
 
@@ -317,7 +317,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     Choose any of the following methods to launch your project with [Gitpod](https://www.gitpod.io):
 
-    1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod and run the following:
+    1. Add a [.gitpod.yml](https://www.gitpod.io/docs/references/gitpod-yml) to your project that installs DDEV and starts your project. The easy way to do this is with the excellent [ddev-gitpod-setup](https://github.com/tyler36/ddev-gitpod-setup) add-on. `ddev get tyler36/ddev-gitpod-setup` and add it to your git repository, push it, and then open it. You can even do all of this right on gitpod by opening your repository, doing the `ddev get` there and then pushing it back and restarting.
+    2. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod and run the following:
         ```bash
         # Add DDEV’s GPG key to your keyring
         curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
@@ -332,9 +333,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * You can install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
-    2. Use the [ddev-gitpod-launcher](https://ddev.github.io/ddev-gitpod-launcher/) form to launch a repository.
+    3. Use the [ddev-gitpod-launcher](https://ddev.github.io/ddev-gitpod-launcher/) form to launch a repository.
         You’ll provide a source repository and click a button to open a newly-established environment. You can specify a companion artifacts repository and automatically load `db.sql.gz` and `files.tgz` from it. (More details in the [repository’s README](https://github.com/ddev/ddev-gitpod-launcher/blob/main/README.md).)
-    3. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fddev%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.
+    4. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fddev%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.
         It’s easiest to drag the link into your bookmarks. When you’re on a Git repository, click the bookmark to open it with DDEV in Gitpod. It does the same thing as the second option, but it works on non-Chrome browsers and you can use native browser keyboard shortcuts.
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://ddev.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
@@ -342,9 +343,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 === "Codespaces"
 
     ## GitHub Codespaces
-
-    ??? "Codespaces may not work predictably; Gitpod is more reliable"
-        Unfortunately "your mileage may vary" with Codespaces. and we haven't been able to adequately keep it supported. See [various](https://github.com/ddev/ddev/issues/6102) [issues](https://github.com/ddev/ddev/pull/6101) as well as [postCreateCommand issues](https://github.com/devcontainers/features/issues/977).
 
     You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally; you only need a browser and an internet connection.
 
@@ -355,7 +353,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      }
+      },
+      "postCreateCommand": "echo 'it should all be set up'"
     }
     ```
 
@@ -405,18 +404,18 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can expose ports via the `ports` setting, which is usually not recommended if you work locally due to port conflicts. But you can load these additional Docker compose files only when Codespaces is detected. See [Defining Additional Services](./../extend/custom-compose-files.md#docker-composeyaml-examples) for more information. 
 
-    ```
+    ```yaml
     services:
         web:
             ports:
-            - "5174:5174"
+                - "5174:5174"
     ```
 
     ### Default environment variables
 
     Codespace instances already provide some [default environment values](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace). You can inherit and inject them in your `.ddev/config.yaml`:
     
-    ```
+    ```yaml
     web_environment: 
         - CODESPACES
         - CODESPACE_NAME
@@ -455,11 +454,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
                 "label": "web https"
             }
         },
-        "postCreateCommand": "chmod +x .devcontainer/setup_project.sh && .devcontainer/setup_project.sh"
+        "postCreateCommand": "bash .devcontainer/setup_project.sh"
     }
     ``` 
     
-    ```
+    ```bash
     #!/bin/bash
     set -ex
 

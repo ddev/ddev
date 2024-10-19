@@ -1,8 +1,11 @@
 #!/bin/bash
 
+SKIP_SSL="--skip-ssl"
+if mysql --help | grep -q -v -- '--skip-ssl'; then SKIP_SSL=""; fi
+
 function basic_setup {
     export CONTAINER_NAME="testserver"
-    export HOSTPORT=33000
+    export HOSTPORT=31000
     export MYTMPDIR="${HOME}/tmp/testserver-sh_${RANDOM}_$$"
     export outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
     export VOLUME="dbserver_test-${RANDOM}_$$"

@@ -27,7 +27,7 @@ const lagoonProjectName = "amazeeio-ddev"
 const lagoonPullTestSiteEnvironment = "pull"
 const lagoonPushTestSiteEnvironment = "push"
 
-// TODO: Change this to the actual dediicated pull environment
+// TODO: Change this to the actual dedicated pull environment
 const lagoonPullSiteURL = "https://nginx.pull.amazeeio-ddev.us2.amazee.io/"
 const lagoonSiteExpectation = "Super easy vegetarian pasta"
 
@@ -38,7 +38,6 @@ func lagoonSetupSSHKey(t *testing.T) string {
 	if sshkey = os.Getenv("DDEV_LAGOON_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_LAGOON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 	return sshkey + "\n"
 }
 
@@ -189,7 +188,7 @@ func TestLagoonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	c := fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | lagoon ssh -p %s -e %s -C 'mysql --host=$MARIADB_HOST --user=$MARIADB_USERNAME --password=$MARIADB_PASSWORD --database=$MARIADB_DATABASE'`, t.Name(), tval, lagoonProjectName, lagoonPushTestSiteEnvironment)
+	c := fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | lagoon ssh --strict-host-key-checking no -p %s -e %s -C 'mysql --host=$MARIADB_HOST --user=$MARIADB_USERNAME --password=$MARIADB_PASSWORD --database=$MARIADB_DATABASE'`, t.Name(), tval, lagoonProjectName, lagoonPushTestSiteEnvironment)
 	//t.Logf("attempting command '%s'", c)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: c,
@@ -199,7 +198,7 @@ func TestLagoonPush(t *testing.T) {
 
 	// Test that the file arrived there
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`lagoon ssh -p %s -e %s -C 'ls -l /app/web/sites/default/files/%s'`, lagoonProjectName, lagoonPushTestSiteEnvironment, fName),
+		Cmd: fmt.Sprintf(`lagoon ssh --strict-host-key-checking no -p %s -e %s -C 'ls -l /app/web/sites/default/files/%s'`, lagoonProjectName, lagoonPushTestSiteEnvironment, fName),
 	})
 	assert.NoError(err)
 	assert.Contains(out, tval)

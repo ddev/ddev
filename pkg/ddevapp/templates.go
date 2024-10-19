@@ -14,7 +14,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "8.2"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3"
+# php_version: "8.2"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3", "8.4"
 
 # You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to DDEV's' behavior,
@@ -27,7 +27,7 @@ const ConfigInstructions = `
 #   version: <version> # database version, like "10.11" or "8.0"
 #   MariaDB versions can be 5.5-10.8, 10.11, and 11.4.
 #   MySQL versions can be 5.5-8.0.
-#   PostgreSQL versions can be 9-16.
+#   PostgreSQL versions can be 9-17.
 
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
@@ -45,6 +45,8 @@ const ConfigInstructions = `
 # webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn
 
 # timezone: Europe/Berlin
+# If timezone is unset, DDEV will attempt to derive it from the host system timezone
+# using the $TZ environment variable or the /etc/localtime symlink.
 # This is the timezone used in the containers and by PHP;
 # it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
@@ -64,16 +66,14 @@ const ConfigInstructions = `
 #   - preview
 #   - snapshot
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
-# To reinstall Composer after the image was built, run "ddev debug refresh".
+# To reinstall Composer after the image was built, run "ddev debug rebuild".
 
 # nodejs_version: "20"
 # change from the default system Node.js version to any other version.
-# Numeric version numbers can be complete (i.e. 18.15.0) or
-# incomplete (18, 17.2, 16). 'lts' and 'latest' can be used as well along with
-# other named releases.
-# see https://www.npmjs.com/package/n#specifying-nodejs-versions
-# Note that you can continue using 'ddev nvm' or nvm inside the web container
-# to change the project's installed node version if you need to.
+# See https://ddev.readthedocs.io/en/stable/users/configuration/config/#nodejs_version for more information
+# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
+# Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
+# can specify any version, and is more robust than using 'nvm'.
 
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
@@ -194,8 +194,8 @@ const ConfigInstructions = `
 
 # You can inject environment variables into the web container with:
 # web_environment:
-# - SOMEENV=somevalue
-# - SOMEOTHERENV=someothervalue
+#     - SOMEENV=somevalue
+#     - SOMEOTHERENV=someothervalue
 
 # no_project_mount: false
 # (Experimental) If true, DDEV will not mount the project into the web container;

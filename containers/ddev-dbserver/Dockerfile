@@ -1,5 +1,5 @@
-ARG BASE_IMAGE
-ARG DB_PINNED_VERSION
+ARG BASE_IMAGE="scratch"
+ARG DB_PINNED_VERSION="latest"
 FROM ${BASE_IMAGE}:${DB_PINNED_VERSION}
 
 # This must be reiterated because everything is emptied on FROM
@@ -7,10 +7,10 @@ ARG BASE_IMAGE
 ARG DB_VERSION
 
 ENV LANG=C.UTF-8
-ENV MYSQL_DATABASE db
-ENV MYSQL_USER db
-ENV MYSQL_PASSWORD db
-ENV MYSQL_ROOT_PASSWORD root
+ENV MYSQL_DATABASE=db
+ENV MYSQL_USER=db
+ENV MYSQL_PASSWORD=db
+ENV MYSQL_ROOT_PASSWORD=root
 
 SHELL ["/bin/bash", "-c"]
 
@@ -43,9 +43,11 @@ RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch
     curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
+    percona_setup=pxb24; \
     xtrabackup_version=percona-xtrabackup-24 ; \
     if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi; \
-    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
+    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; percona_setup=pxb80; fi ; \
+    percona-release setup ${percona_setup}; \
     apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
 RUN apt-get -qq autoclean
@@ -79,9 +81,9 @@ RUN /sbin/mkhomedir_helper www-data
 # Have requested them to update this in https://bugs.mysql.com/bug.php?id=105632
 # But they haven't done it, and it will break things when it expires.
 RUN rm -f /etc/apt/sources.list.d/mysql.list && \
-  for item in "A4A9 4068 76FC BD3C 4567  70C8 8C71 8D3B 5072 E1F5" ; do \
-    apt-key remove "${item}" || true; \
-  done;
+    for item in "A4A9 4068 76FC BD3C 4567  70C8 8C71 8D3B 5072 E1F5" ; do \
+        apt-key remove "${item}" || true; \
+    done;
 
 # Normal upstream image doesn't actually have /home/mysql created
 # Make sure it's there in case user 999 (mysql) is using this image.

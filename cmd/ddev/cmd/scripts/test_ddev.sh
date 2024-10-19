@@ -48,11 +48,16 @@ echo
 ddev debug configyaml | grep -v web_environment
 
 header "existing project customizations"
-grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres 2>/dev/null
+grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres .ddev/.env .ddev/.env.* 2>/dev/null | grep -v '\.example$' 2>/dev/null
+
+if ls .ddev/nginx >/dev/null 2>&1 ; then
+  echo "Customizations in .ddev/nginx:"
+  ls -l .ddev/nginx
+fi
 
 header "installed DDEV add-ons"
 
-ddev get --installed
+ddev add-on list --installed
 
 header "mutagen situation"
 
@@ -119,7 +124,7 @@ which -a docker
 echo
 
 printf "Docker provider: ${docker_platform}\n"
-if [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
+if [ "${WSL_DISTRO_NAME}" = "" ] && [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
 fi
 
@@ -173,8 +178,8 @@ cat <<END >web/index.php
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 
-header "ddev debug refresh"
-ddev debug refresh
+header "ddev debug rebuild"
+ddev debug rebuild
 
 header "Project startup"
 DDEV_DEBUG=true ddev start -y || ( \

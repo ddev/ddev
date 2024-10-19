@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,6 +34,7 @@ import (
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
+	dockerNetwork "github.com/docker/docker/api/types/network"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
@@ -57,7 +59,7 @@ var NoHealthCheck = dockerContainer.HealthConfig{
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
-func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string, netOptions dockerTypes.NetworkCreate) error {
+func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string, netOptions dockerNetwork.CreateOptions) error {
 	// Pre-check for network duplicates
 	RemoveNetworkDuplicates(ctx, client, name)
 
@@ -76,7 +78,7 @@ func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
 	ctx, client := GetDockerClient()
-	netOptions := dockerTypes.NetworkCreate{
+	netOptions := dockerNetwork.CreateOptions{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   map[string]string{"com.ddev.platform": "ddev"},
@@ -99,7 +101,7 @@ func NetworkExists(netName string) bool {
 // netName can also be network's ID
 func RemoveNetwork(netName string) error {
 	ctx, client := GetDockerClient()
-	networks, _ := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	// the loop below may not contain such a network
 	var err = errdefs.NotFound(errors.New("not found"))
 	// loop through all networks because there may be duplicates
@@ -127,7 +129,7 @@ func RemoveNetworkWithWarningOnError(netName string) {
 // This means that if there is only one network with this name - no action,
 // and if there are several such networks, then we leave the first one, and delete the others
 func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, netName string) {
-	networks, _ := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	networkMatchFound := false
 	for _, network := range networks {
 		if network.Name == netName || network.ID == netName {
@@ -158,7 +160,7 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 	if DockerHost == "" {
 		DockerContext, DockerHost, err = GetDockerContext()
 		// ddev --version may be called without Docker client or context available, ignore err
-		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
+		if err != nil && !CanRunWithoutDocker() {
 			util.Failed("Unable to get Docker context: %v", err)
 		}
 		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
@@ -343,9 +345,40 @@ func FindContainersWithLabel(label string) ([]dockerTypes.Container, error) {
 	return containers, nil
 }
 
+// FindImagesByLabels takes a map of label names and values and returns any Docker images which match all labels.
+// danglingOnly is used to return only dangling images, otherwise return all of them, including dangling.
+func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]dockerImage.Summary, error) {
+	if len(labels) < 1 {
+		return []dockerImage.Summary{{}}, fmt.Errorf("the provided list of labels was empty")
+	}
+	filterList := dockerFilters.NewArgs()
+	for k, v := range labels {
+		label := fmt.Sprintf("%s=%s", k, v)
+		// If no value is specified, filter any value by the key.
+		if v == "" {
+			label = k
+		}
+		filterList.Add("label", label)
+	}
+
+	if danglingOnly {
+		filterList.Add("dangling", "true")
+	}
+
+	ctx, client := GetDockerClient()
+	images, err := client.ImageList(ctx, dockerImage.ListOptions{
+		All:     true,
+		Filters: filterList,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
+}
+
 // NetExists checks to see if the Docker network for DDEV exists.
 func NetExists(ctx context.Context, client *dockerClient.Client, name string) bool {
-	nets, _ := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	nets, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	for _, n := range nets {
 		if n.Name == name {
 			return true
@@ -356,14 +389,14 @@ func NetExists(ctx context.Context, client *dockerClient.Client, name string) bo
 
 // FindNetworksWithLabel returns all networks with the given label
 // It ignores the value of the label, is only interested that the label exists.
-func FindNetworksWithLabel(label string) ([]dockerTypes.NetworkResource, error) {
+func FindNetworksWithLabel(label string) ([]dockerNetwork.Inspect, error) {
 	ctx, client := GetDockerClient()
-	networks, err := client.NetworkList(ctx, dockerTypes.NetworkListOptions{})
+	networks, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	var matchingNetworks []dockerTypes.NetworkResource
+	var matchingNetworks []dockerNetwork.Inspect
 	for _, network := range networks {
 		if network.Labels != nil {
 			if _, exists := network.Labels[label]; exists {
@@ -399,7 +432,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				health, _ := GetContainerHealth(container)
 				if health != "healthy" {
 					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+					desc = desc + fmt.Sprintf(" %s:%s\nTroubleshoot this with these commands:\n%s", name, health, suggestedCommand)
 				}
 			}
 			return "", fmt.Errorf("health check timed out after %v: labels %v timed out without becoming healthy, status=%v, detail=%s ", durationWait, labels, status, desc)
@@ -416,10 +449,10 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return logOutput, nil
 			case "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy, log=%s\nTroubleshoot this with these commands: \n%s", name, logOutput, suggestedCommand)
 			case "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited,\nTroubleshoot this with these commands:\n%s", name, suggestedCommand)
 			}
 		}
 	}
@@ -450,7 +483,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					health, _ := GetContainerHealth(&container)
 					if health != "healthy" {
 						name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-						desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+						desc = desc + fmt.Sprintf(" %s:%s\nTroubleshoot this with these commands:\n%s", name, health, suggestedCommand)
 					}
 				}
 			}
@@ -470,10 +503,10 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					continue
 				case "unhealthy":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
+					return fmt.Errorf("%s container is unhealthy, log=%s\nTroubleshoot this with these commands:\n%s", name, logOutput, suggestedCommand)
 				case "exited":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&container)
-					return fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
+					return fmt.Errorf("%s container exited.\nTroubleshoot this with these commands:\n%s", name, suggestedCommand)
 				default:
 					allHealthy = false
 				}
@@ -511,7 +544,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 				health, _ := GetContainerHealth(container)
 				if health != "healthy" {
 					name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-					desc = desc + fmt.Sprintf(" %s:%s - more info with %s", name, health, suggestedCommand)
+					desc = desc + fmt.Sprintf(" %s:%s\nTroubleshoot this with these commands:\n%s", name, health, suggestedCommand)
 				}
 			}
 			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
@@ -528,10 +561,10 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 				return logOutput, nil
 			case status == "unhealthy":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container is unhealthy: %s, more info with %s", name, logOutput, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container is unhealthy, log=%s\nTroubleshoot this with these commands:\n%s", name, logOutput, suggestedCommand)
 			case status == "exited":
 				name, suggestedCommand := getSuggestedCommandForContainerLog(container)
-				return logOutput, fmt.Errorf("%s container exited, more info with %s", name, suggestedCommand)
+				return logOutput, fmt.Errorf("%s container exited\nTroubleshoot this with these commands:\n%s", name, suggestedCommand)
 			}
 		}
 	}
@@ -597,7 +630,7 @@ func GetContainerHealth(container *dockerTypes.Container) (string, string) {
 	if status != "" {
 		numLogs := len(inspect.State.Health.Log)
 		if numLogs > 0 {
-			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1])
+			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
 		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
@@ -610,7 +643,7 @@ func GetContainerHealth(container *dockerTypes.Container) (string, string) {
 		}
 	}
 
-	return status, logOutput
+	return status, strings.TrimSpace(logOutput)
 }
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
@@ -794,7 +827,7 @@ func CheckDockerVersion(versionConstraint string) error {
 		for _, err := range errs {
 			msgs = fmt.Sprint(msgs, err, "\n")
 		}
-		return fmt.Errorf(msgs)
+		return fmt.Errorf("%s", msgs)
 	}
 	return nil
 }
@@ -834,7 +867,7 @@ func CheckDockerCompose() error {
 		for _, err := range errs {
 			msgs = fmt.Sprint(msgs, err, "\n")
 		}
-		return fmt.Errorf(msgs)
+		return fmt.Errorf("%s", msgs)
 	}
 
 	return nil
@@ -886,9 +919,9 @@ func GetDockerIP() (string, error) {
 				addr := net.ParseIP(hostPart)
 				if addr == nil {
 					// If it wasn't an IP address, look it up to get IP address
-					ip, err := net.LookupHost(hostPart)
+					ip, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", hostPart)
 					if err == nil && len(ip) > 0 {
-						hostPart = ip[0]
+						hostPart = ip[0].String()
 					} else {
 						return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
 					}
@@ -1295,7 +1328,7 @@ func GetNFSServerAddr() (string, error) {
 		// We can't use the Docker host because that's for inside the container,
 		// and this is for setting up the network interface
 		ctx, client := GetDockerClient()
-		n, err := client.NetworkInspect(ctx, "bridge", dockerTypes.NetworkInspectOptions{})
+		n, err := client.NetworkInspect(ctx, "bridge", dockerNetwork.InspectOptions{})
 		if err != nil {
 			return "", err
 		}
@@ -1388,14 +1421,8 @@ func RemoveImage(tag string) error {
 // targetSubdir is where to copy it to on the volume
 // uid is the uid of the resulting files
 // exclusion is a path to be excluded
-// If destroyExisting the volume is removed and recreated
+// If destroyExisting the specified targetSubdir is removed and recreated
 func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
-	if destroyExisting {
-		err := RemoveVolume(volumeName)
-		if err != nil {
-			util.Warning("Could not remove Docker volume %s: %v", volumeName, err)
-		}
-	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
 	_, err := os.Stat(sourcePath)
@@ -1414,7 +1441,14 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+
+	var c = ""
+	if destroyExisting {
+		c = c + `rm -rf "` + targetSubdirFullPath + `"/{*,.*} && `
+	}
+	c = c + "mkdir -p " + targetSubdirFullPath + " && sleep infinity "
+
+	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -1448,7 +1482,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	if uid == "" {
 		uid = "0"
 	}
-	execCreate, err := client.ContainerExecCreate(ctx, containerID, dockerTypes.ExecConfig{
+	execCreate, err := client.ContainerExecCreate(ctx, containerID, dockerContainer.ExecOptions{
 		Cmd:          []string{"sh", "-c", command},
 		AttachStdout: true,
 		AttachStderr: true,
@@ -1459,7 +1493,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	}
 
 	var stdout, stderr bytes.Buffer
-	execAttach, err := client.ContainerExecAttach(ctx, execCreate.ID, dockerTypes.ExecStartCheck{
+	execAttach, err := client.ContainerExecAttach(ctx, execCreate.ID, dockerContainer.ExecStartOptions{
 		Detach: false,
 	})
 	if err != nil {
@@ -1627,7 +1661,21 @@ func IsLima() bool {
 		util.Warning("IsLima(): Unable to get Docker info, err=%v", err)
 		return false
 	}
-	if strings.HasPrefix(info.Name, "lima") {
+	if info.Name != "lima-rancher-desktop" && strings.HasPrefix(info.Name, "lima") {
+		return true
+	}
+	return false
+}
+
+// IsRancherDesktop detects if running on Rancher Desktop
+func IsRancherDesktop() bool {
+	ctx, client := GetDockerClient()
+	info, err := client.Info(ctx)
+	if err != nil {
+		util.Warning("IsRancherDesktop(): Unable to get Docker info, err=%v", err)
+		return false
+	}
+	if strings.HasPrefix(info.Name, "lima-rancher-desktop") {
 		return true
 	}
 	return false
@@ -1707,7 +1755,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	// nolint: errcheck
 	defer t.Close()
 
-	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, dockerTypes.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
+	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, dockerContainer.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
 	if err != nil {
 		return err
 	}
@@ -1869,9 +1917,46 @@ func GetLiveDockerComposeVersion() (string, error) {
 	return globalconfig.DockerComposeVersion, nil
 }
 
+// GetContainerNames takes an array of Container
+// and returns an array of strings with container names
+func GetContainerNames(containers []dockerTypes.Container, excludeContainerNames []string) []string {
+	var names []string
+	for _, container := range containers {
+		if len(container.Names) == 0 {
+			continue
+		}
+		name := container.Names[0][1:] // Trimming the leading '/' from the container name
+		if slices.Contains(excludeContainerNames, name) {
+			continue
+		}
+		names = append(names, name)
+	}
+	return names
+}
+
 // IsErrNotFound returns true if the error is a NotFound error, which is returned
 // by the API when some object is not found. It is an alias for [errdefs.IsNotFound].
 // Used as a wrapper to avoid direct import for docker client.
 func IsErrNotFound(err error) bool {
 	return dockerClient.IsErrNotFound(err)
+}
+
+// CanRunWithoutDocker returns true if the command or flag can run without Docker.
+func CanRunWithoutDocker() bool {
+	if len(os.Args) < 2 {
+		return true
+	}
+	// Check the first arg
+	if slices.Contains([]string{"-v", "--version", "-h", "--help", "help", "hostname"}, os.Args[1]) {
+		return true
+	}
+	// Check the last arg
+	if slices.Contains([]string{"-h", "--help"}, os.Args[len(os.Args)-1]) {
+		// Some commands don't support Cobra help, because they are wrappers
+		if slices.Contains([]string{"composer"}, os.Args[1]) {
+			return false
+		}
+		return true
+	}
+	return false
 }

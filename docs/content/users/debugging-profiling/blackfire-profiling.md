@@ -19,15 +19,15 @@ The Blackfire CLI is built into the web container, so you don’t need to instal
 1. Add the `BLACKFIRE_SERVER_ID`, `BLACKFIRE_SERVER_TOKEN`, `BLACKFIRE_CLIENT_ID`, and `BLACKFIRE_CLIENT_TOKEN` environment variables to `~/.ddev/global_config.yaml` via the `web_environment` key:
 
     ```yaml
-      web_environment:
-      - OTHER_ENV=something
-      - BLACKFIRE_SERVER_ID=dde5f66d-xxxxxx
-      - BLACKFIRE_SERVER_TOKEN=09b0ec-xxxxx
-      - BLACKFIRE_CLIENT_ID=f5e88b7e-xxxxx
-      - BLACKFIRE_CLIENT_TOKEN=00cee15-xxxxx1
+    web_environment:
+        - OTHER_ENV=something
+        - BLACKFIRE_SERVER_ID=dde5f66d-xxxxxx
+        - BLACKFIRE_SERVER_TOKEN=09b0ec-xxxxx
+        - BLACKFIRE_CLIENT_ID=f5e88b7e-xxxxx
+        - BLACKFIRE_CLIENT_TOKEN=00cee15-xxxxx1
     ```
 
-    You can also do this with `ddev config global --web-environment-add="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`, but any existing environment variables will be deleted.
+    You can also do this with `ddev config global --web-environment-add="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`.
   
 2. [`ddev start`](../usage/commands.md#start).
 3. `ddev blackfire on`.

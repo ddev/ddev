@@ -1,0 +1,3 @@
+name: valid_constraint_recipe
+
+ddev_version_constraint: "!= v0.0.0-overridden-by-make"

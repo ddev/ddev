@@ -381,7 +381,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	} else { // No siteNameArg passed, c.Name not set: use c.Name from the directory
 		pwd, err := os.Getwd()
 		util.CheckErr(err)
-		app.Name = filepath.Base(pwd)
+		app.Name = ddevapp.NormalizeProjectName(filepath.Base(pwd))
 	}
 
 	err = app.CheckExistingAppInApproot()
@@ -534,21 +534,18 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.MailpitHTTPSPort = mailpitHTTPSPortArg
 	}
 
-	if additionalHostnamesArg != "" {
-		app.AdditionalHostnames = strings.Split(additionalHostnamesArg, ",")
-	}
+	// Check if the 'additional-hostnames' flag has been set and not default
+	app.AdditionalHostnames = processFlag(cmd, "additional-hostnames", app.AdditionalHostnames)
 
-	if additionalFQDNsArg != "" {
-		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
-	}
+	// Check if the 'additional-fqdns' flag has been set and not default
+	app.AdditionalFQDNs = processFlag(cmd, "additional-fqdns", app.AdditionalFQDNs)
 
-	if omitContainersArg != "" {
-		app.OmitContainers = strings.Split(omitContainersArg, ",")
-	}
+	// Check if the 'omit-containers' flag has been set and not default
+	app.OmitContainers = processFlag(cmd, "omit-containers", app.OmitContainers)
 
 	if cmd.Flag("web-environment").Changed {
 		env := strings.TrimSpace(webEnvironmentLocal)
-		if env == "" {
+		if env == "" || env == `""` || env == `''` {
 			app.WebEnvironment = []string{}
 		} else {
 			app.WebEnvironment = strings.Split(env, ",")
@@ -575,18 +572,20 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {
-		if cmd.Flag("webimage-extra-packages").Value.String() == "" {
+		val := cmd.Flag("webimage-extra-packages").Value.String()
+		if val == "" || val == `""` || val == `''` {
 			app.WebImageExtraPackages = nil
 		} else {
-			app.WebImageExtraPackages = strings.Split(cmd.Flag("webimage-extra-packages").Value.String(), ",")
+			app.WebImageExtraPackages = strings.Split(val, ",")
 		}
 	}
 
 	if cmd.Flag("dbimage-extra-packages").Changed {
-		if cmd.Flag("dbimage-extra-packages").Value.String() == "" {
+		val := cmd.Flag("dbimage-extra-packages").Value.String()
+		if val == "" || val == `""` || val == `''` {
 			app.DBImageExtraPackages = nil
 		} else {
-			app.DBImageExtraPackages = strings.Split(cmd.Flag("dbimage-extra-packages").Value.String(), ",")
+			app.DBImageExtraPackages = strings.Split(val, ",")
 		}
 	}
 
@@ -733,4 +732,25 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	return nil
+}
+
+// processFlag checks if a flag has changed and processes its value accordingly.
+func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []string {
+	// If the flag hasn't changed, return the current value.
+	if !cmd.Flag(flagName).Changed {
+		return currentValue
+	}
+
+	arg := cmd.Flag(flagName).Value.String()
+
+	// Remove all spaces from the flag value.
+	arg = strings.Replace(arg, " ", "", -1)
+
+	// If the flag value is an empty string, return an empty slice.
+	if arg == "" || arg == `""` || arg == `''` {
+		return []string{}
+	}
+
+	// If the flag value is not an empty string, split it by commas and return the resulting slice.
+	return strings.Split(arg, ",")
 }

@@ -94,6 +94,9 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
+!!!note "If your `composer.json` requires `composer/composer` that version will be used instead"
+    If your project `composer.json` includes `composer/composer`, then the version specified there will normally be used instead of any version specified by `composer_version`, since `vendor/bin/composer` will come first in the in-container `$PATH`.
+
 ## `corepack_enable`
 
 Whether to `corepack enable` on Node.js configuration.
@@ -127,7 +130,7 @@ Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the
 You can configure a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent `ddev start` from running if it doesn't validate. For example:
 
 ```yaml
-ddev_version_constraint: '>=v1.23.0-alpha1'
+ddev_version_constraint: '>= v1.23.0-alpha1'
 ```
 
 This is only supported with DDEV versions above v1.22.4; older DDEV versions will ignore this setting.
@@ -298,13 +301,13 @@ DDEV must detect whether the internet is working to determine whether to add hos
 
 ## `letsencrypt_email`
 
-Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).) (Not currently compatible with Traefik router.)
+Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).)
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `` | &zwnj;
 
-Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
+Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [hosting](../topics/hosting.md) feature.
 
 ## `mailpit_http_port`
 
@@ -354,7 +357,7 @@ The URL-friendly name DDEV should use to reference the project.
 
 ## `ngrok_args`
 
-Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
+Extra flags for [configuring ngrok](https://ngrok.com/docs/agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -385,13 +388,39 @@ Whether to skip mounting project into web container.
 
 ## `nodejs_version`
 
-Node.js version for the web container’s “system” version.
+Node.js version for the web container’s “system” version. [`n`](https://www.npmjs.com/package/n) tool is under the hood.
+
+There is no need to reconfigure `nodejs_version` unless you want a version other than the version already specified, which will be the default version at the time the project was configured.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
-There is no need to configure `nodejs_version` unless you want a version other than the default version.
+!!!tip "How to install the Node.js version from a file"
+    Your project team may specify the Node.js version in a more general way than in the `.ddev/config.yaml`. For example, you may use a `.nvmrc` file, the `package.json`, or a similar technique. In that case, DDEV can use the external configuration provided by that file.
+
+    There is an `auto` label (see [full documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions)):
+
+    ```bash
+    ddev config --nodejs-version=auto
+    ```
+
+    It reads the target version from a file in the [DDEV_APPROOT](../extend/custom-commands.md#environment-variables-provided) directory, or any parent directory.
+
+    `n` looks for in order:
+
+    * `.n-node-version` : version on single line. Custom to `n`.
+    * `.node-version` : version on single line. Used by [multiple tools](https://github.com/shadowspawn/node-version-usage).
+    * `.nvmrc` : version on single line. Used by `nvm`.
+    * if no version file found, look for `engine` as below.
+
+    The `engine` label looks for a `package.json` file and reads the engines field to determine compatible Node.js.
+
+    If your file is not in the `DDEV_APPROOT` directory, you can create a link to the parent folder, so that `n` can find it. For example, if you have `frontend/.nvmrc`, create a `.ddev/web-build/Dockerfile.nvmrc` file:
+
+    ```dockerfile
+    RUN ln -sf /var/www/html/frontend/.nvmrc /var/www/.nvmrc
+    ```
 
 !!!note "Switching from `nvm` to `nodejs_version`"
     If switching from using `nvm` to using `nodejs_version`, you may find that the container continues to use the previously specified version. If this happens, use `ddev nvm alias default system` or `ddev ssh` into the container (`ddev ssh`) and run `rm -rf /mnt/ddev-global-cache/nvm_dir/${DDEV_PROJECT}-web`, then `ddev restart`.
@@ -440,7 +469,7 @@ The PHP version the project should use.
 
 | Type | Default | Usage
 | -- |---------| --
-| :octicons-file-directory-16: project | `8.2`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, or `8.3`.
+| :octicons-file-directory-16: project | `8.2`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, `8.3`, or `8.4`.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
@@ -465,15 +494,15 @@ Specific docker-compose version for download.
 If set to `v2.8.0`, for example, it will download and use that version instead of the expected version for docker-compose.
 
 !!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. Best avoided otherwise.
+    This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
 
 ## `router`
 
-Whether to enable the default [Traefik router](../extend/traefik-router.md) or the legacy "nginx-proxy" router.
+Whether to enable the default [Traefik router](../extend/traefik-router.md) or the deprecated "nginx-proxy" router.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (legacy).
+| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (deprecated).
 
 May also be set via `ddev config global --router=traefik` or `ddev config global --router=nginx-proxy`.
 
@@ -533,7 +562,9 @@ Timezone for container and PHP configuration.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `UTC` | Can be any [valid timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), like `Europe/Dublin` or `MST7MDT`.
+| :octicons-file-directory-16: project | Automatic detection or `UTC` | Can be any [valid timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), like `Europe/Dublin` or `MST7MDT`.
+
+If `timezone` is unset, DDEV will attempt to derive it from the host system timezone using the `$TZ` environment variable or the `/etc/localtime` symlink.
 
 ## `traefik_monitor_port`
 
@@ -588,7 +619,7 @@ Whether to use the system-installed docker-compose. You can otherwise use [`requ
 When `true`, DDEV will use the docker-compose found in on your system’s path instead of using its private, known-good, docker-compose version.
 
 !!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. Best avoided otherwise.
+    This should only be used in specific cases like troubleshooting. (It is used in the Docker Compose automated tests.)
 
 ## `use_hardened_images`
 
@@ -598,21 +629,21 @@ Whether to use hardened images for internet deployment.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [casual hosting](../topics/hosting.md) feature.
+When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [hosting](../topics/hosting.md) feature.
 
 ## `use_letsencrypt`
 
-Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).) (Not currently compatible with Traefik router.)
+Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).)
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
+May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [hosting](../topics/hosting.md) feature.
 
 ## `web_environment`
 
-Additional [custom environment variables](../extend/customization-extendibility.md#providing-custom-environment-variables-to-a-container) for a project’s web container. (Or for all projects if used globally.)
+Additional [custom environment variables](../extend/customization-extendibility.md#environment-variables-for-containers-and-services) for a project’s web container. (Or for all projects if used globally.)
 
 | Type | Default | Usage
 | -- | -- | --

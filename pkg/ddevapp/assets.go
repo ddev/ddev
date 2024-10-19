@@ -21,7 +21,6 @@ import (
 //go:embed traefik_config_template.yaml
 //go:embed traefik_static_config_template.yaml
 //go:embed traefik_global_config_template.yaml
-//go:embed router_Dockerfile_template
 //go:embed django4/*
 //go:embed drupal/*
 //go:embed magento/*
@@ -43,6 +42,12 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 	err := fileutil.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir(), nil)
 	if err != nil {
 		return err
+	}
+
+	// We don't want to populate the project's .ddev directory
+	// unless the project name is explicitly specified.
+	if appName == "" {
+		return nil
 	}
 
 	app, err := GetActiveApp(appName)

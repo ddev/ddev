@@ -8,9 +8,12 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	dockerTypes "github.com/docker/docker/api/types"
 	copy2 "github.com/otiai10/copy"
 
 	"github.com/Masterminds/semver/v3"
@@ -230,7 +233,7 @@ func TestConfigCommand(t *testing.T) {
 	testMatrix := map[string][]string{
 		"magentophpversion": {nodeps.AppTypeMagento, nodeps.PHPDefault},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP82},
-		"drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
+		"Drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -295,6 +298,47 @@ func TestConfigCommand(t *testing.T) {
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for apptype %v (expected %s got %s) (%v)", app.Type, testValues[phpVersionPos], app.PHPVersion, app)
 		err = ddevapp.PrepDdevDirectory(app)
 		assert.NoError(err)
+	}
+}
+
+// TestConfigCommandProjectNormalization tests behavior when normalizing project names.
+// For example, a directory like "some_dir" should result in project name "some-dir"
+func TestConfigCommandProjectNormalization(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+
+	testMatrix := []struct {
+		name        string
+		expectation string
+	}{
+		{"normalname", "normalname"},
+		{"with-hyphen", "with-hyphen"},
+		{"with_underscore", "with-underscore"},
+		{"with.dot", "with.dot"},
+	}
+
+	for _, tc := range testMatrix {
+		t.Run(tc.name, func(t *testing.T) {
+
+			baseTestDir := t.TempDir()
+			testDir := filepath.Join(baseTestDir, tc.name)
+			err := os.Mkdir(testDir, 0755)
+			require.NoError(t, err)
+
+			// Create the app we'll use for testing.
+			app, err := ddevapp.NewApp(testDir, false)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectation, app.Name)
+
+			t.Cleanup(func() {
+				_ = app.Stop(true, false)
+				_ = os.Chdir(origDir)
+			})
+
+			err = ddevapp.PrepDdevDirectory(app)
+			assert.NoError(err)
+		})
 	}
 }
 
@@ -488,79 +532,40 @@ func TestConfigValidate(t *testing.T) {
 		t.Fatalf("Failed to app.ValidateConfig(), err=%v", err)
 	}
 
-	app.DdevVersionConstraint = ">= 1.twentythree"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "constraint that is not valid")
-	app.DdevVersionConstraint = ""
+	testCases := []struct {
+		description       string
+		ddevVersion       string
+		versionConstraint string
+		error             string
+	}{
+		{"Invalid constraint", ddevVersion, ">= 1.twentythree", "constraint is not valid"},
+		{"Lower version", "v1.22.0", ">= 1.23", "your DDEV version 'v1.22.0' doesn't meet the constraint '>= 1.23'"},
+		{"Equal version", "v1.23.0", ">= 1.23", ""},
+		{"Not semver version", "2134asdf-dirty", ">= 1.23", ""},
+		{"Lower semver version with suffix", "v1.22.3-11-g8baef014e", ">= 1.23", "your DDEV version 'v1.22.3-11-g8baef014e' doesn't meet the constraint '>= 1.23'"},
+		{"Equal semver version with suffix", "v1.22.3-11-g8baef014e", ">= 1.22", ""},
+		{"Constraint with suffix", "v1.22.3-11-g8baef014e", ">= 1.23.0-0", "your DDEV version 'v1.22.3-11-g8baef014e' doesn't meet the constraint '>= 1.23.0-0'"},
+		{"Lower prerelease version", "v1.22.3-alpha2", ">= v1.22.3-alpha3", "your DDEV version 'v1.22.3-alpha2' doesn't meet the constraint '>= v1.22.3-alpha3'"},
+		{"Greater prerelease version", "v1.22.3-beta1", ">= v1.22.3-alpha3", ""},
+		{"Compare with suffixes", "v1.22.3-11-g8baef014e", ">= 1.22.0-0", ""},
+	}
 
-	versionconstants.DdevVersion = "v1.22.0"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.0') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.23.0"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "2134asdf-dirty"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	// Testing out pre-releases and built PRs versions
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.23"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.22"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.23.0-0"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= 1.23.0-0' and the version of DDEV you are using ('v1.22.3-11-g8baef014e') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-alpha2"
-	app.DdevVersionConstraint = ">= v1.22.3-alpha3"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	assert.Contains(err.Error(), "project has a DDEV version constraint of '>= v1.22.3-alpha3' and the version of DDEV you are using ('v1.22.3-alpha2') does not meet the constraint")
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-beta1"
-	app.DdevVersionConstraint = ">= v1.22.3-alpha3"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
-
-	versionconstants.DdevVersion = "v1.22.3-11-g8baef014e"
-	app.DdevVersionConstraint = ">= 1.22.0-0"
-	err = app.ValidateConfig()
-	assert.NoError(err)
-	app.DdevVersionConstraint = ""
-	versionconstants.DdevVersion = ddevVersion
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			assert := asrt.New(t)
+			versionconstants.DdevVersion = tc.ddevVersion
+			app.DdevVersionConstraint = tc.versionConstraint
+			err = app.ValidateConfig()
+			if tc.error == "" {
+				assert.NoError(err)
+			} else {
+				assert.Error(err)
+				assert.Contains(err.Error(), tc.error)
+			}
+			app.DdevVersionConstraint = ""
+			versionconstants.DdevVersion = ddevVersion
+		})
+	}
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
@@ -754,7 +759,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
 func TestPHPOverrides(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Apple Silicon/Lima/Colima to ignore problems with 'connection reset by peer or connection refused'")
 	}
 
@@ -813,14 +818,14 @@ func TestPHPOverrides(t *testing.T) {
 
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err, "failed to flush Mutagen sync")
-	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
 
 }
 
 // TestPHPConfig checks some key PHP configuration items
 func TestPHPConfig(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("skipping on Lima/Colima because of unpredictable behavior, unable to connect")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("skipping on Lima/Colima/Rancher because of unpredictable behavior, unable to connect")
 	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
@@ -842,7 +847,7 @@ func TestPHPConfig(t *testing.T) {
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80}
+	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -857,7 +862,7 @@ func TestPHPConfig(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		err = app.Start()
+		err = app.Restart()
 		require.NoError(t, err)
 
 		t.Logf("============= PHP version=%s ================", v)
@@ -874,10 +879,10 @@ func TestPHPConfig(t *testing.T) {
 		})
 		require.NoError(t, err)
 		out = strings.Trim(out, "\n")
-		require.Equal(t, `float(0.6)`, out)
+		require.Contains(t, out, `float(0.6)`)
 
 		// Verify that environment variables are available in php-fpm
-		out, _, err = testcommon.GetLocalHTTPResponse(t, "http://"+app.GetHostname()+"/phpinfo.php")
+		out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/phpinfo.php")
 		require.NoError(t, err)
 		assert.Contains(out, "phpversion="+v)
 		// Make sure that php-fpm isn't clearing environment variables
@@ -885,8 +890,8 @@ func TestPHPConfig(t *testing.T) {
 		// Make sure the .ddev/.env file works
 		assert.Contains(out, "SOMEENV=someenv-value")
 
-		// Remove the PHP83 exception when it has missing extensions
-		if v != nodeps.PHP83 {
+		// Remove the PHP84 exception when it has missing extensions
+		if v != nodeps.PHP84 {
 			// This list does not contain all expected, as php5.6 is missing some, etc.
 			expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
 			for _, e := range expectedExtensions {
@@ -1046,16 +1051,26 @@ func TestTimezoneConfig(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// Start test with empty timezone env
+	t.Setenv("TZ", "")
+
 	err = app.Start()
 	assert.NoError(err)
 
-	// Without timezone set, we should find Etc/UTC
+	// Without timezone set, we should find Etc/UTC on Windows
+	hostTimezoneAbbr := "UTC"
+	hostTimezone := "UTC"
+	// Without timezone set, we should automatically detect local timezone on Linux, WSL2 and macOS
+	if runtime.GOOS != "windows" {
+		hostTimezoneAbbr, _ = time.Now().In(time.Local).Zone()
+		hostTimezone, _ = app.GetLocalTimezone()
+	}
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=UTC\nphptz=UTC", stdout)
+	assert.Equal(fmt.Sprintf("timezone=%s\nphptz=%s", hostTimezoneAbbr, hostTimezone), stdout)
 
 	// Make sure db container is also working
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1063,9 +1078,10 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=UTC", stdout)
+	assert.Equal(fmt.Sprintf("timezone=%s", hostTimezoneAbbr), stdout)
 
-	// With timezone set, we the correct timezone operational
+	// With timezone set, app.Timezone should be used first
+	t.Setenv("TZ", "Europe/Rome")
 	app.Timezone = "Europe/Paris"
 	err = app.Start()
 	require.NoError(t, err)
@@ -1075,6 +1091,26 @@ func TestTimezoneConfig(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Paris"), stdout)
+
+	// Make sure db container is also working with CET
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "echo -n timezone=$(date +%Z)",
+	})
+	assert.NoError(err)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T"), stdout)
+
+	// With timezone set, TZ env should be used if app.Timezone is empty
+	t.Setenv("TZ", "Europe/Rome")
+	app.Timezone = ""
+	err = app.Start()
+	require.NoError(t, err)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+	})
+	assert.NoError(err)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Rome"), stdout)
 
 	// Make sure db container is also working with CET
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1198,10 +1234,17 @@ RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		assert.NoError(err)
 	}
 
-	// Make sure that DDEV_PHP_VERSION gets into the build
+	// Make sure that DDEV_PHP_VERSION gets into the web build
+	// and that TARGETARCH and friends are working
 	err = ddevapp.WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.ddev-php-version"), []byte(`
-ARG DDEV_PHP_VERSION
 RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
+RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFORM}"
+`))
+	require.NoError(t, err)
+
+	// Make sure that TARGETARCH and friends working on db container
+	err = ddevapp.WriteImageDockerfile(app.GetConfigPath("db-build/Dockerfile.targets"), []byte(`
+RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFORM}"
 `))
 	require.NoError(t, err)
 
@@ -1236,11 +1279,19 @@ RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test3.txt >/dev/null",
 		})
 		assert.NoError(err)
+
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Service: item,
+			Cmd:     fmt.Sprintf("ls -d /var/tmp/my-arch-info-is-%s-%s-%s/%s", "linux", runtime.GOARCH, "linux", runtime.GOARCH),
+		})
+		require.NoError(t, err, "out=%s stderr=%s", out, stderr)
+
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt 2>/dev/null",
 		})
 		assert.Error(err)
+
 	}
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1459,6 +1510,100 @@ func TestConfigFunctionality(t *testing.T) {
 	}
 
 	// Make sure that the db port is configured
-	_, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
+	out, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
+	require.NoError(t, err, "failed host-side mysql command, output='%v'", out)
+}
+
+// TestConfigDefaultContainerTimeout verifies that `default_container_timeout` works
+// properly
+func TestConfigDefaultContainerTimeout(t *testing.T) {
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	_ = os.Chdir(site.Dir)
+	app, err := ddevapp.NewApp("", true)
 	require.NoError(t, err)
+	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+	defaultTimeoutInt, _ := strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
+	tName := t.Name()
+
+	t.Cleanup(func() {
+		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+		_ = app.WriteConfig()
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose." + tName + ".yaml"))
+		_ = os.Chdir(origDir)
+	})
+
+	simpleWaitTimeMatrix := []struct {
+		description string
+		maxWaitTime int
+		expectation int
+	}{
+		{"nospec", defaultTimeoutInt, defaultTimeoutInt},
+		{"nospec", 30, 30},
+		{"nohealthcheck", defaultTimeoutInt, defaultTimeoutInt},
+		{"nohealthcheck", 1200, 1200},
+		{"longtimeout", defaultTimeoutInt, defaultTimeoutInt},
+		{"longtimeout", 1200, 1200},
+		{"withshortstartperiod", defaultTimeoutInt, defaultTimeoutInt},
+		{"withshortstartperiod", 1200, 1200},
+		{"withlongstartperiod", defaultTimeoutInt, 1350},
+		{"withlongstartperiod", 1200, 1350},
+		{"intervalset", defaultTimeoutInt, 135},
+		{"intervalset", 1200, 1200},
+		{"intervalandretriesset", defaultTimeoutInt, 660},
+		{"intervalandretriesset", 1200, 1200},
+	}
+
+	for _, tc := range simpleWaitTimeMatrix {
+		t.Run(tc.description, func(t *testing.T) {
+			app.DefaultContainerTimeout = strconv.Itoa(tc.maxWaitTime)
+			app.DockerEnv()
+			dockerComposeSource := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
+			dockerComposeTarget := app.GetConfigPath("docker-compose." + tName + ".yaml")
+			err = copy2.Copy(dockerComposeSource, dockerComposeTarget, copy2.Options{})
+			require.NoError(t, err)
+			err = app.WriteDockerComposeYAML()
+			require.NoError(t, err)
+			maxWaitTime := app.GetMaxContainerWaitTime()
+			require.Equal(t, tc.expectation, maxWaitTime, "for tc=%v expected maxWaitTime to be %v but it was %v", tc, tc.expectation, maxWaitTime)
+		})
+	}
+
+	// Try snapshot restore with and without increased wait time
+	// Inspect db container start_period
+	// Inspect output of snapshot restore
+	_ = os.RemoveAll(app.GetConfigPath("docker-compose." + tName + ".yaml"))
+	for _, maxWaitTime := range []string{nodeps.DefaultDefaultContainerTimeout, "850"} {
+		app.DefaultContainerTimeout = maxWaitTime
+		app.DockerEnv()
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Restart()
+		require.NoError(t, err)
+
+		// Inspect db container for correct healthcheck
+		c, err := dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
+		require.NoError(t, err)
+		require.NotEqual(t, dockerTypes.ContainerJSON{}, c)
+		expectedWaitTime, _ := strconv.Atoi(maxWaitTime)
+		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
+		_, err = app.Snapshot(t.Name() + maxWaitTime)
+		require.NoError(t, err)
+		err = app.RestoreSnapshot(t.Name() + maxWaitTime)
+		require.NoError(t, err)
+
+		// Inspect container that results from snapshot restore
+		c, err = dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
+		require.NoError(t, err)
+		require.NotEqual(t, dockerTypes.ContainerJSON{}, c)
+		expectedWaitTime = ddevapp.SnapshotRestoreDefaultWaitTime
+		// If the maxWaitTime was set to greater than the expected 600/SnapshotRestoreDefaultWaitTime
+		// (which is set in the snapshot restore code) then use the maxWaitTime value
+		if maxWaitTimeInt, _ := strconv.Atoi(maxWaitTime); maxWaitTimeInt > expectedWaitTime {
+			expectedWaitTime = maxWaitTimeInt
+		}
+		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
+	}
 }

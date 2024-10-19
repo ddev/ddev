@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -40,9 +41,9 @@ func IsWindowsDdevExeAvailable() bool {
 			return windowsDdevExeAvailable
 		}
 
-		_, err = exec2.LookPath("sudo.exe")
+		_, err = exec2.LookPath("gsudo.exe")
 		if err != nil {
-			util.Warning("sudo.exe not found in $PATH, please install DDEV on Windows side; err=%v", err)
+			util.Warning("gsudo.exe not found in $PATH, please install DDEV on Windows side; err=%v", err)
 			windowsDdevExeAvailable = false
 			return windowsDdevExeAvailable
 		}
@@ -94,11 +95,11 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
 			// If they have provided "*.<name>" then look up the suffix
 			checkName := strings.TrimPrefix(name, "*.")
-			hostIPs, err := net.LookupHost(checkName)
+			hostIPs, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", checkName)
 
 			// If we had successful lookup and the IP address looked up is local
 			// then we don't have to add it to the /etc/hosts.
-			if err == nil && len(hostIPs) > 0 && netutil.IsLocalIP(hostIPs[0]) {
+			if err == nil && len(hostIPs) > 0 && netutil.HasLocalIP(hostIPs) {
 				continue
 			}
 		}
@@ -251,7 +252,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
 	if (runtime.GOOS == "windows" || nodeps.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-		c = []string{"sudo.exe"}
+		c = []string{"gsudo.exe"}
 	}
 	c = append(c, args...)
 	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nThis is normally to add unresolvable hostnames to the hosts file.\nYou may be required to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))

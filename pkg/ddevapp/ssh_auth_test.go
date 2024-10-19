@@ -20,6 +20,9 @@ import (
 
 // TestSSHAuth tests basic SSH authentication
 func TestSSHAuth(t *testing.T) {
+	if dockerutil.IsColima() {
+		t.Skip("Skipping on Colima")
+	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}

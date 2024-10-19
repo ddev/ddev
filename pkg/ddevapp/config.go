@@ -13,7 +13,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -102,7 +101,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 
 	// Provide a default app name based on directory name
-	app.Name = filepath.Base(app.AppRoot)
+	app.Name = NormalizeProjectName(filepath.Base(app.AppRoot))
 
 	// Gather containers to omit, adding ddev-router for gitpod/codespaces
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
@@ -200,6 +199,12 @@ func (app *DdevApp) WriteConfig() error {
 	// Only set the images on write if non-default values have been specified.
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
+	}
+	if appcopy.RouterHTTPPort == nodeps.DdevDefaultRouterHTTPPort {
+		appcopy.RouterHTTPPort = ""
+	}
+	if appcopy.RouterHTTPSPort == nodeps.DdevDefaultRouterHTTPSPort {
+		appcopy.RouterHTTPSPort = ""
 	}
 	if appcopy.MailpitHTTPPort == nodeps.DdevDefaultMailpitHTTPPort {
 		appcopy.MailpitHTTPPort = ""
@@ -453,24 +458,9 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// Validate ddev version constraint, if any
 	if app.DdevVersionConstraint != "" {
-		constraint := app.DdevVersionConstraint
-		if !strings.Contains(constraint, "-") {
-			// Allow pre-releases to be included in the constraint validation
-			// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
-			constraint += "-0"
-		}
-		c, err := semver.NewConstraint(constraint)
+		err := CheckDdevVersionConstraint(app.DdevVersionConstraint, fmt.Sprintf("unable to start the '%s' project", app.Name), "or update the `ddev_version_constraint` in your .ddev/config.yaml file")
 		if err != nil {
-			return fmt.Errorf("the %s project has '%s' constraint that is not valid. See https://github.com/Masterminds/semver#checking-version-constraints for valid constraints format", app.Name, app.DdevVersionConstraint).(invalidConstraint)
-		}
-
-		// Make sure we do this check with valid released versions
-		v, err := semver.NewVersion(versionconstants.DdevVersion)
-		if err == nil {
-			if !c.Check(v) {
-				return fmt.Errorf("the %s project has a DDEV version constraint of '%s' and the version of DDEV you are using ('%s') does not meet the constraint. Please update the `ddev_version_constraint` in your .ddev/config.yaml or use a version of DDEV that meets the constraint",
-					app.Name, app.DdevVersionConstraint, versionconstants.DdevVersion)
-			}
+			return err
 		}
 	}
 
@@ -723,6 +713,20 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
+	// Remove old global traefik configuuration.
+	for _, f := range []string{"static_config.yaml"} {
+		traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+
+		item := filepath.Join(traefikGlobalConfigPath, f)
+		signatureFound, err := fileutil.FgrepStringInFile(item, nodeps.DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(item)
+			if err != nil {
+				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", item, err)
+			}
+		}
+	}
+
 	// Remove old .global_commands directory
 	legacyCommandDir := app.GetConfigPath(".global_commands")
 	if fileutil.IsDirectory(legacyCommandDir) {
@@ -792,7 +796,6 @@ type composeYAMLVars struct {
 	WebExtraHTTPPorts               string
 	WebExtraHTTPSPorts              string
 	WebExtraExposedPorts            string
-	EnvFile                         string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -827,6 +830,16 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
+	timezone := app.Timezone
+	if timezone == "" {
+		timezone, err = app.GetLocalTimezone()
+		if err != nil {
+			util.Debug("Unable to autodetect timezone: %v", err.Error())
+		} else {
+			util.Debug("Using automatically detected timezone: TZ=%s", timezone)
+		}
+	}
+
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
 		Plugin:                    "ddev",
@@ -854,7 +867,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		MountType:          "bind",
 		WebMount:           "../",
 		Hostnames:          app.GetHostnames(),
-		Timezone:           app.Timezone,
+		Timezone:           timezone,
 		ComposerVersion:    app.ComposerVersion,
 		Username:           username,
 		UID:                uid,
@@ -883,11 +896,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
 		templateVars.GitDirMount = true
-	}
-
-	envFile := app.GetConfigPath(".env")
-	if fileutil.FileExists(envFile) {
-		templateVars.EnvFile = envFile
 	}
 
 	webimageExtraHTTPPorts := []string{}
@@ -959,8 +967,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
-		extraWebContent = extraWebContent + "\nRUN npm install -g n"
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN n install %s && ln -sf /usr/local/bin/node /usr/local/bin/nodejs", app.NodeJSVersion)
+		extraWebContent = extraWebContent + fmt.Sprintf(`
+ENV N_PREFIX=/home/$username/.n
+ENV N_INSTALL_VERSION="%s"
+`, app.NodeJSVersion)
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
@@ -973,13 +983,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		if err == nil && drupalVersion == "11" {
 			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
 ### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
-ARG TARGETPLATFORM
-ENV SQLITE_VERSION=%s
-RUN mkdir -p /tmp/sqlite3 && \
+ARG SQLITE_VERSION=%s
+RUN log-stderr.sh bash -c "mkdir -p /tmp/sqlite3 && \
 wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETPLATFORM##linux/}.deb && \
 apt-get install -y /tmp/sqlite3/*.deb && \
-rm -rf /tmp/sqlite3
+rm -rf /tmp/sqlite3" || true
 			`, versionconstants.Drupal11RequiredSqlite3Version)
 		}
 	}
@@ -1023,7 +1032,7 @@ redirect_stderr=true
 		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
+	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
 	}
@@ -1046,7 +1055,7 @@ RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg ma
 `
 		}
 		extraDBContent = extraDBContent + `
-ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
+ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
 RUN chmod ugo+rx /postgres_healthcheck.sh
 RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
@@ -1056,7 +1065,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 `
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
+	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
 
 	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
 	// because that deletes the .dbimageBuild directory
@@ -1072,7 +1081,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 	}
 
 	// SSH agent needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
+	err = WriteBuildDockerfile(app, filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
 	}
@@ -1097,7 +1106,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 // WriteBuildDockerfile writes a Dockerfile to be used in the
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
-func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
+func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
 
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
@@ -1110,11 +1119,14 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 
 ### DDEV-injected base Dockerfile contents
-ARG BASE_IMAGE
+ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `
 	contents = contents + `
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETOS
 ARG username
 ARG uid
 ARG gid
@@ -1178,8 +1190,24 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 		// selecting a branch instead of a major version only.
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected composer update
-RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
+RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || log-stderr.sh composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
+
+		// For Postgres, install the relevant PostgreSQL clients
+		if app.Database.Type == nodeps.Postgres {
+			psqlVersion := app.Database.Version
+			if psqlVersion == nodeps.Postgres9 {
+				psqlVersion = "9.6"
+			}
+			contents = contents + fmt.Sprintf(`
+RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
+if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
+  log-stderr.sh bash -c "apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
+  apt-get install -y postgresql-client-%s && \
+  apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION}" || true; \
+fi`, app.Database.Version, psqlVersion) + "\n\n"
+		}
+
 	}
 
 	// If there are user dockerfiles, appends their contents
@@ -1251,9 +1279,8 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 func (app *DdevApp) promptForName() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
-		// If working directory name is invalid for hostnames, we shouldn't suggest it
-		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
-			app.Name = filepath.Base(dir)
+		if err == nil && hostRegex.MatchString(NormalizeProjectName(filepath.Base(dir))) {
+			app.Name = NormalizeProjectName(filepath.Base(dir))
 		}
 	}
 
@@ -1404,9 +1431,16 @@ func PrepDdevDirectory(app *DdevApp) error {
 		}
 	}
 
-	err = os.MkdirAll(filepath.Join(dir, "web-entrypoint.d"), 0755)
-	if err != nil {
-		return err
+	// Pre-create a few dirs so we can be sure they are owned by the user and not root.
+	dirs := []string{
+		"web-entrypoint.d",
+		"xhprof",
+	}
+	for _, subdir := range dirs {
+		err = os.MkdirAll(filepath.Join(dir, subdir), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Some of the listed items are wildcards or directories, and if they are, there's an error

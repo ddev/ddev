@@ -1,12 +1,11 @@
 package ddevapp
 
 import (
-	"os"
-	"strings"
-
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"gopkg.in/yaml.v3"
+	"os"
+	"path/filepath"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -46,9 +45,17 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+	envFiles, err := app.EnvFiles()
+	if err != nil {
+		return err
+	}
+	var action []string
+	for _, envFile := range envFiles {
+		action = append(action, "--env-file", envFile)
+	}
 	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
-		Action:       []string{"config"},
+		Action:       append(action, "config"),
 	})
 	if err != nil {
 		return err
@@ -89,44 +96,81 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
+	envFiles, err := app.EnvFiles()
+	if err != nil {
+		return nil, err
+	}
 
-	// Find any services that have bind-mount to AppRoot and make them relative
-	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm
-	// This is an ugly an shortsighted approach, but otherwise we'd have to parse the yaml.
-	// Note that this issue with docker-compose config was fixed in docker-compose 2.0.0RC4
-	// so it's in Docker Desktop 4.1.0.
-	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
+	// Ensure that some important network properties are not overridden by users
+	for name, network := range tempMap["networks"].(map[string]interface{}) {
+		if network == nil {
+			continue
+		}
+		networkMap := network.(map[string]interface{})
+		// Default networks don't allow to override these properties
+		if name == "ddev_default" {
+			networkMap["name"] = dockerutil.NetName
+			networkMap["external"] = true
+		}
+		if name == "default" {
+			networkMap["name"] = app.GetDefaultNetworkName()
+			// If "external" was added by user, remove it
+			delete(networkMap, "external")
+		}
+		// Add labels that are used to clean up internal networks when the project is stopped
+		if external, ok := networkMap["external"].(bool); !ok || !external {
+			labels, ok := networkMap["labels"].(map[string]interface{})
+			if !ok {
+				labels = make(map[string]interface{})
+				networkMap["labels"] = labels
+			}
+			labels["com.ddev.platform"] = "ddev"
+		}
+	}
 
-	for _, service := range tempMap["services"].(map[string]interface{}) {
+	// Make sure that all services have the `ddev_default` and `default` networks
+	for name, service := range tempMap["services"].(map[string]interface{}) {
 		if service == nil {
 			continue
 		}
 		serviceMap := service.(map[string]interface{})
 
-		// Find any services that have bind-mount to app.AppRoot and make them relative
-		if serviceMap["volumes"] != nil {
-			volumes := serviceMap["volumes"].([]interface{})
-			for k, volume := range volumes {
-				// With docker-compose v1, the volume might not be a map, it might be
-				// old-style "/Users/rfay/workspace/d9/.ddev:/mnt/ddev_config:ro"
-				if volumeMap, ok := volume.(map[string]interface{}); ok {
-					if volumeMap["source"] != nil {
-						if volumeMap["source"].(string) == app.AppRoot {
-							volumeMap["source"] = "../"
-						}
+		// Make sure all services have our networks stanza
+		networks, ok := serviceMap["networks"].(map[string]interface{})
+		if !ok {
+			networks = make(map[string]interface{})
+		}
+		// Add default networks if they don't exist
+		if _, exists := networks["ddev_default"]; !exists {
+			networks["ddev_default"] = nil
+		}
+		if _, exists := networks["default"]; !exists {
+			networks["default"] = nil
+		}
+		// Update the serviceMap with the networks
+		serviceMap["networks"] = networks
+
+		// Add environment variables from .env files to services
+		for _, envFile := range envFiles {
+			filename := filepath.Base(envFile)
+			// Variables from .ddev/.env should be available in all containers,
+			// and variables from .ddev/.env.* should only be available in a specific container.
+			if filename == ".env" || filename == ".env."+name {
+				envMap, _, err := ReadProjectEnvFile(envFile)
+				if err != nil && !os.IsNotExist(err) {
+					util.Failed("Unable to read %s file: %v", envFile, err)
+				}
+				if len(envMap) > 0 {
+					if serviceMap["environment"] == nil {
+						serviceMap["environment"] = map[string]interface{}{}
 					}
-				} else if volumeMap, ok := volume.(string); ok {
-					parts := strings.SplitN(volumeMap, ":", 2)
-					if parts[0] == app.AppRoot && len(parts) >= 2 {
-						volumes[k] = "../" + parts[1]
+					if environmentMap, ok := serviceMap["environment"].(map[string]interface{}); ok {
+						for envKey, envValue := range envMap {
+							environmentMap[envKey] = envValue
+						}
 					}
 				}
 			}
-		}
-		// Make sure all services have our networks stanza
-		serviceMap["networks"] = map[string]interface{}{
-			"ddev_default": nil,
-			"default":      nil,
 		}
 	}
 

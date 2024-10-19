@@ -7,6 +7,7 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 # GOTEST_SHORT=12 means drupal10
 export GOTEST_SHORT=12
+export DDEV_SKIP_NODEJS_TEST=true
 
 export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
@@ -25,8 +26,10 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
     docker context use default
     # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
     if command -v orb 2>/dev/null ; then
+      docker context use orbstack
       echo "Starting orbstack" && (nohup orb start &)
     else
+      docker context use desktop-linux
       open -a Docker
     fi
     sleep 5
@@ -162,9 +165,6 @@ fi
 
 set -x
 
-# We don't want any docker volumes to be existing and changing behavior
-docker volume prune -a -f >/dev/null 2>&1 || true
-
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
 bash "$(dirname $0)/testbot_maintenance.sh" || true
@@ -175,7 +175,8 @@ ddev poweroff || true
 if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
-docker system prune --volumes --force >/dev/null || true
+docker system prune --volumes --force || true
+docker volume prune -a -f || true
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"

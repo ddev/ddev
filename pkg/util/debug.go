@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"github.com/ddev/ddev/pkg/output"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
 )
 
@@ -94,7 +94,7 @@ func CheckGoroutines() {
 			p := pprof.Lookup("goroutine")
 			// Write it to stderr
 			_ = p.WriteTo(buf, 2)
-			Verbose(buf.String())
+			Verbose("%s", buf.String())
 		}
 		output.UserOut.Printf("goroutines=%d at exit of main()", globalconfig.GoroutineCount)
 	}

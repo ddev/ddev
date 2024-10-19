@@ -85,7 +85,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Traditional Windows
 
-    #### Chocolatey
+    #### Chocolatey (only on Intel machines)
 
     ```bash
     # Turn off DDEV and upgrade it
@@ -94,7 +94,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     #### Installer
 
-    Download and run the Windows installer for the latest [DDEV release](https://github.com/ddev/ddev/releases) (`ddev_windows_installer.<version>.exe`).
+    Download and run the Windows installer (for your architecture, most often AMD64) for the latest [DDEV release](https://github.com/ddev/ddev/releases) (`ddev_windows_<architecture>_installer.<version>.exe`).
 
 === "Gitpod"
 

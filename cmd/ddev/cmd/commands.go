@@ -73,7 +73,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	}
 
 	for _, commandSet := range []string{projectCommandPath, globalCommandPath} {
-		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
+		// If the item isn't a directory, skip it.
+		if !fileutil.IsDirectory(commandSet) {
+			continue
+		}
+		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet, false)
 		if err != nil {
 			return err
 		}
@@ -151,6 +155,18 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		if val, ok := directives["Example"]; ok {
 			example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
+		}
+
+		var aliases []string
+		if val, ok := directives["Aliases"]; ok {
+			for _, alias := range strings.Split(val, ",") {
+				alias = strings.TrimSpace(alias)
+				if foundCmd, _, err := rootCmd.Find([]string{alias}); err != nil {
+					aliases = append(aliases, alias)
+				} else {
+					util.Warning("Command '%s' cannot have alias '%s' that is already in use by command '%s', skipping it", commandName, alias, foundCmd.Name())
+				}
+			}
 		}
 
 		autocompleteTerms := []string{}
@@ -263,6 +279,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			Use:                usage,
 			Short:              description + descSuffix,
 			Example:            example,
+			Aliases:            aliases,
 			DisableFlagParsing: disableFlags,
 			FParseErrWhitelist: cobra.FParseErrWhitelist{
 				UnknownFlags: true,

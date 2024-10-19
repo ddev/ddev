@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"os"
+	"slices"
+	"strings"
 	"testing"
 
-	"strings"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -23,12 +26,19 @@ func TestCmdRestart(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	_, err = ddevapp.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active DDEV configuration: %v", err)
 	}
 
 	assert.Contains(string(out), "Your project can be reached at")
+	switch slices.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-router") {
+	case true:
+		assert.Contains(string(out), "127.0.0.1")
+	case false:
+		assert.NotContains(string(out), "127.0.0.1")
+		assert.Contains(string(out), app.GetPrimaryURL())
+	}
 	cleanup()
 }
 
@@ -36,10 +46,17 @@ func TestCmdRestart(t *testing.T) {
 func TestCmdRestartJSON(t *testing.T) {
 	assert := asrt.New(t)
 	site := TestSites[0]
-	cleanup := site.Chdir()
-	defer cleanup()
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
+	origDir, _ := os.Getwd()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
+	})
 
-	_, err := ddevapp.GetActiveApp("")
+	_, err = ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active DDEV configuration: %v", err)
 	}

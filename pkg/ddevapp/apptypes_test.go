@@ -88,7 +88,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		})
 
 		// Prompt for apptype as a way to get it into the config.
-		input := fmt.Sprintf(appType + "\n")
+		input := fmt.Sprintf("%s\n", appType)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 		err = app.AppTypePrompt()
@@ -143,7 +143,7 @@ func TestConfigOverrideActionOnExistingConfig(t *testing.T) {
 		})
 
 		// Prompt for apptype as a way to get it into the config.
-		input := fmt.Sprintf(appType + "\n")
+		input := fmt.Sprintf("%s\n", appType)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 		err = app.AppTypePrompt()

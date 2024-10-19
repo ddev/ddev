@@ -1,0 +1,33 @@
+accesslog: {}
+api:
+  dashboard: true
+  insecure: true
+certificatesResolvers:
+  acme-tlsChallenge:
+    acme:
+      email: ""
+      storage: /mnt/ddev-global-cache/traefik/acme.json
+      tlsChallenge: {}
+core:
+  defaultRuleSyntax: v2
+entryPoints:
+  http-80:
+    address: :80
+  http-443:
+    address: :443
+  http-8025:
+    address: :8025
+  http-8026:
+    address: :8026
+  traefik:
+    address: :10999
+global:
+  sendAnonymousUsage: false
+log:
+  level: INFO
+ping:
+  entryPoint: traefik
+providers:
+  file:
+    directory: /mnt/ddev-global-cache/traefik/config
+    watch: true

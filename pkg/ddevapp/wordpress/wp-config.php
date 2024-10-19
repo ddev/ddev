@@ -33,7 +33,7 @@ define( 'NONCE_SALT', '{{ $config.NonceSalt }}' );
 defined( 'ABSPATH' ) || define( 'ABSPATH', dirname( __FILE__ ) . '/{{ $config.AbsPath }}' );
 
 // Include for settings managed by ddev.
-$ddev_settings = dirname( __FILE__ ) . '/wp-config-ddev.php';
+$ddev_settings = __DIR__ . '/wp-config-ddev.php';
 if ( ! defined( 'DB_USER' ) && getenv( 'IS_DDEV_PROJECT' ) == 'true' && is_readable( $ddev_settings ) ) {
 	require_once( $ddev_settings );
 }

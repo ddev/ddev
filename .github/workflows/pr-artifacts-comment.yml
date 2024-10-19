@@ -149,8 +149,8 @@ jobs:
             body += `\n\nSee [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr).`;
             body += `\n\n[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${prNumber})`;
             const codespacesLink = prRef && prRepoId
-              ? `https://codespaces.new/?ref=${prRef}&repo=${prRepoId}`
-              : `https://codespaces.new/${context.repo.owner}/${context.repo.repo}`;
+              ? `https://github.com/codespaces/new?ref=${prRef}&repo=${prRepoId}`
+              : `https://github.com/codespaces/new/${context.repo.owner}/${context.repo.repo}`;
             body += `\n\n[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](${codespacesLink})`;
 
             // Upsert the comment on the PR

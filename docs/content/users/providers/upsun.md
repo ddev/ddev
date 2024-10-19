@@ -11,28 +11,34 @@ You need to obtain and configure an API token first. This only needs to be done 
 1. Login to the Upsun Dashboard and go to *My Profile* → *API Tokens*. Create an API token DDEV can use.
 2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`:
 
-```yaml
-web_environment:
-  - UPSUN_CLI_TOKEN=abcdeyourtoken
-```
+    ```yaml
+    web_environment:
+        - UPSUN_CLI_TOKEN=abcdeyourtoken
+    ```
+
+    You can also do this with:
+
+    ```bash
+    ddev config global --web-environment-add="UPSUN_CLI_TOKEN=abcdeyourtoken"
+    ```
 
 ## Upsun Per-Project Configuration
 
 1. Check out the Upsun site and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
-2. Add `UPSUN_PROJECT` and `UPSUN_ENVIRONMENT` variables to your project.
+2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project.
 
     * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
 
         ```yaml
         web_environment:
-        - UPSUN_PROJECT=nf4amudfn23biyourproject
-        - UPSUN_ENVIRONMENT=main
+            - PLATFORM_PROJECT=nf4amudfn23biyourproject
+            - PLATFORM_ENVIRONMENT=main
         ```
 
     * Or with a command from your terminal:
 
         ```bash
-        ddev config --web-environment-add="UPSUN_PROJECT=nf4amudfn23bi,UPSUN_ENVIRONMENT=main"
+        ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
         ```
 
 3. Run [`ddev restart`](../usage/commands.md#restart).

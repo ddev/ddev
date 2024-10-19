@@ -26,7 +26,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 curl -sSL https://golang.org/dl/go${GO_VERSION}.linux-arm64.tar.gz -o /tmp/go.tgz && sudo rm -rf /usr/local/go && sudo tar -zxf /tmp/go.tgz -C /usr/local
 
-git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
+git clone --branch v1.11.0 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
 # Install mkcert
 sudo curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64" && sudo chmod +x /usr/local/bin/mkcert
@@ -62,4 +62,4 @@ docker info
 docker version
 docker-compose version
 lsb_release -a
-docker buildx create --name ddev-builder-multi --use
+docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use

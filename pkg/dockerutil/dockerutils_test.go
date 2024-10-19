@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
@@ -149,7 +150,7 @@ func TestGetContainerHealth(t *testing.T) {
 		assert.NotNil(container)
 
 		status, healthDetail := dockerutil.GetContainerHealth(container)
-		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK ")
+		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK")
 		assert.Equal("healthy", status)
 	})
 
@@ -179,82 +180,94 @@ func TestContainerWait(t *testing.T) {
 		"com.ddev.site-name": testContainerName,
 	}
 
+	// We should have `testContainerName' already running, it was started by
+	// startTestContainer(). And we don't delete it.
+
 	// Try a zero-wait, should show timed-out
 	_, err := dockerutil.ContainerWait(0, labels)
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "health check timed out")
-	}
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "health check timed out")
 
 	// Try 30-second wait for "healthy", should show OK
 	healthDetail, err := dockerutil.ContainerWait(30, labels)
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	assert.Contains(healthDetail, "phpstatus:OK")
+	require.Contains(t, healthDetail, "phpstatus:OK")
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{"com.ddev.site-name": "nothing-there"}
+	// Make sure none already exist
+	_ = dockerutil.RemoveContainersByLabels(labels)
+
 	_, err = dockerutil.ContainerWait(1, labels)
 	require.Error(t, err)
-	assert.Contains(err.Error(), "failed to query container")
+	require.Contains(t, err.Error(), "failed to query container")
 
 	// If we run a quick container and it immediately exits, ContainerWait should find it is not there
 	// and note that it exited.
 	labels = map[string]string{"test": "quickexit"}
+	// Make sure none already exist
 	_ = dockerutil.RemoveContainersByLabels(labels)
-	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels, nil, nil)
+	c1, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+"-quickexit-"+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels, nil, nil)
 	t.Cleanup(func() {
-		_ = dockerutil.RemoveContainer(cID)
+		_ = dockerutil.RemoveContainer(c1)
+		assert.NoError(err, "failed to remove container %v (%s)", labels, c1)
+
 	})
 	require.NoError(t, err)
 	_, err = dockerutil.ContainerWait(5, labels)
-	assert.Error(err)
-	assert.Contains(err.Error(), "container exited")
-	_ = dockerutil.RemoveContainer(cID)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "container exited")
 
 	// If we run a container that does not have a healthcheck
 	// it should be found as good immediately
 	labels = map[string]string{"test": "nohealthcheck"}
+	// Make sure none already exist
 	_ = dockerutil.RemoveContainersByLabels(labels)
-	cID, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels, nil, nil)
+
+	c2, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+"-nohealthcheck-busybox-sleep-60-"+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels, nil, nil)
 	t.Cleanup(func() {
-		_ = dockerutil.RemoveContainer(cID)
+		err = dockerutil.RemoveContainer(c2)
+		assert.NoError(err, "failed to remove container (sleep 60) %v (%s)", labels, c2)
 	})
 	require.NoError(t, err)
 	_, err = dockerutil.ContainerWait(5, labels)
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	ddevWebserver := versionconstants.WebImg + ":" + versionconstants.WebTag
+	ddevWebserver := ddevImages.GetWebImage()
 	// If we run a container that *does* have a healthcheck but it's unhealthy
 	// then ContainerWait shouldn't return until specified wait, and should fail
 	// Use ddev-webserver for this; it won't have good health on normal run
-	labels = map[string]string{"test": "hashealthcheckbutbad"}
+	labels = map[string]string{"test": "hashealthcheckbutunhealthy"}
+	// Make sure none already exist
 	_ = dockerutil.RemoveContainersByLabels(labels)
-	cID, _, err = dockerutil.RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil, nil)
+	c3, _, err := dockerutil.RunSimpleContainer(ddevWebserver, t.Name()+"-hashealthcheckbutunhealthy-"+util.RandString(5), []string{"sleep", "5"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil, nil)
 	t.Cleanup(func() {
-		_ = dockerutil.RemoveContainer(cID)
+		err = dockerutil.RemoveContainer(c3)
+		assert.NoError(err, "failed to remove container %v (%s)", labels, c3)
 	})
 	require.NoError(t, err)
 	_, err = dockerutil.ContainerWait(3, labels)
-	assert.Error(err)
-	assert.Contains(err.Error(), "timed out without becoming healthy")
-	_ = dockerutil.RemoveContainer(cID)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "timed out without becoming healthy")
 
 	// If we run a container that *does* have a healthcheck but it's not healthy for a while
 	// then ContainerWait should detect failure early, but should succeed later
 	labels = map[string]string{"test": "hashealthcheckbutbad"}
+	// Make sure none already exist
 	_ = dockerutil.RemoveContainersByLabels(labels)
-	cID, _, err = dockerutil.RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil, nil)
+	c4, _, err := dockerutil.RunSimpleContainer(ddevWebserver, t.Name()+"-hashealthcheckbutbad2-"+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels, nil, nil)
 	t.Cleanup(func() {
-		_ = dockerutil.RemoveContainer(cID)
+		err = dockerutil.RemoveContainer(c4)
+		assert.NoError(err, "failed to remove container %v (%s)", labels, c4)
 	})
 	require.NoError(t, err)
 	_, err = dockerutil.ContainerWait(3, labels)
-	assert.Error(err)
-	assert.Contains(err.Error(), "timed out without becoming healthy")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "timed out without becoming healthy")
 	// Try it again, wait 60s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
 	out, err := dockerutil.ContainerWait(60, labels)
-	assert.NoError(err, "output=%s", out)
+	require.NoError(t, err, "output=%s", out)
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
@@ -303,11 +316,10 @@ func TestComposeWithStreams(t *testing.T) {
 
 	// Use the current actual web container for this, so replace in base docker-compose file
 	composeBase := filepath.Join("testdata", "TestComposeWithStreams", "test-compose-with-streams.yaml")
-	tmp, err := os.MkdirTemp("", "")
-	assert.NoError(err)
-	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	realComposeFile := filepath.Join(tmpDir, "replaced-compose-with-streams.yaml")
 
-	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", versionconstants.WebImg+":"+versionconstants.WebTag, composeBase, realComposeFile)
+	err := fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", versionconstants.WebImg+":"+versionconstants.WebTag, composeBase, realComposeFile)
 	assert.NoError(err)
 
 	composeFiles := []string{realComposeFile}
@@ -587,7 +599,7 @@ func TestCopyIntoVolume(t *testing.T) {
 	})
 
 	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Make sure that the content is the same, and that .test.sh is executable
 	// On Windows the upload can result in losing executable bit
@@ -622,6 +634,16 @@ subdir1.txt
 	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	assert.NoError(err)
 	assert.Equal("root.txt here\n", out)
+
+	// Copy destructively and make sure that stuff got destroyed
+	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()+"2"), t.Name(), "", "0", "", true)
+	require.NoError(t, err)
+
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/subdir1.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	require.Error(t, err)
+
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	require.NoError(t, err)
 }
 
 // TestDockerIP tries out a number of DOCKER_HOST permutations
@@ -694,7 +716,7 @@ func TestCopyFromContainer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
-	targetDir, err := os.MkdirTemp("", t.Name())
+	targetDir := testcommon.CreateTmpDir(t.Name())
 	require.NoError(t, err)
 
 	err = dockerutil.CopyFromContainer(testContainerName, containerSourceDir, targetDir)

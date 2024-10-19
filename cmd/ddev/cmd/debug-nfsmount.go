@@ -67,7 +67,7 @@ var DebugNFSMountCmd = &cobra.Command{
 			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/install/performance/#nfs")
 			util.Failed("Details: error=%v\noutput=%v", err, out)
 		}
-		output.UserOut.Printf(strings.TrimSpace(out))
+		output.UserOut.Printf("%s", strings.TrimSpace(out))
 		util.Success("")
 		util.Success("Successfully accessed NFS mount of %s", app.AppRoot)
 		switch {

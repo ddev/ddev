@@ -1,10 +1,15 @@
 package util_test
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
+	"gopkg.in/yaml.v3"
 )
 
 // TestYamlFileToMap tests YamlFileToMap()
@@ -64,4 +69,43 @@ func TestYamlToDict(t *testing.T) {
 	name, ok := d["name"].(string)
 	require.True(t, ok)
 	assert.Equal("app", name)
+}
+
+// TestMergeYamlFiles tests many permutations of MergetYamlFiles()
+func TestMergeYamlFiles(t *testing.T) {
+	origDir, _ := os.Getwd()
+	testData := filepath.Join(origDir, "testdata", t.Name())
+
+	testCases := []struct {
+		content string
+		dir     string
+	}{
+		{"Basic no-actual-merge, just using the base file", "baseFileOnly"},
+		{"Basic file with a single file that only adds, no merging", "baseWithPlugins"},
+		{"certificates resolvers", "baseWithCertificatesResolvers"},
+		{"Overrides", "Overrides"},
+		{"caServerOverride", "caServerOverride"},
+	}
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			testDir := filepath.Join(testData, tc.dir)
+			extraFiles, err := filepath.Glob(filepath.Join(testDir, "extra*.yaml"))
+			require.NoError(t, err)
+
+			mergeResult, err := util.MergeYamlFiles(filepath.Join(testDir, "base.yaml"), extraFiles...)
+			require.NoError(t, err)
+
+			expectedResultFile := filepath.Join(testDir, "expectation.yaml")
+			expectedResultString, err := fileutil.ReadFileIntoString(expectedResultFile)
+			require.NoError(t, err)
+			// Unmarshall the loaded result expectation so it will look the same as merged (without comments, etc)
+			var tmpMap map[string]interface{}
+			err = yaml.Unmarshal([]byte(expectedResultString), &tmpMap)
+			require.NoError(t, err)
+			unmarshalledExpectationString, err := yaml.Marshal(tmpMap)
+			require.NoError(t, err)
+
+			require.Equal(t, string(unmarshalledExpectationString), mergeResult)
+		})
+	}
 }

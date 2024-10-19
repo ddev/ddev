@@ -2,12 +2,9 @@ package dockerutil_test
 
 import (
 	"os"
-	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
@@ -67,21 +64,4 @@ func TestDockerComposeDownload(t *testing.T) {
 		assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), activeVersion)
 	}
 
-	// Test using docker-compose from path.
-	// Make sure our Required/Expected DockerComposeVersion is not something we'd find on the machine
-	globalconfig.DockerComposeVersion = ""
-	globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = "v2.5.1"
-	globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = true
-	activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
-	assert.NoError(err)
-	path, err := exec.LookPath("docker-compose")
-	assert.NoError(err)
-	out, err := exec2.RunHostCommand(path, "version", "--short")
-	assert.NoError(err)
-	parsedFoundVersion := strings.Trim(string(out), "\r\n")
-	if !strings.HasPrefix(parsedFoundVersion, "v") {
-		parsedFoundVersion = "v" + parsedFoundVersion
-	}
-	assert.Equal(parsedFoundVersion, activeVersion)
-	t.Logf("parsedFoundVersion=%s activeVersion=%s", parsedFoundVersion, activeVersion)
 }

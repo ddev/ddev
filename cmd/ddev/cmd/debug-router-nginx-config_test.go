@@ -2,19 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 // TestDebugRouterNginxConfigCmd ensures the debug router-nginx-config prints the nginx config to stdout
 func TestDebugRouterNginxConfigCmd(t *testing.T) {
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		t.Skip("Skipping when UseTrafik is set, as it's invalid")
-	}
+	t.Skip("Skipping because the nginx-proxy router is deprecated")
 	assert := asrt.New(t)
 
 	site := TestSites[0]

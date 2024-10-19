@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim AS test-ssh-server
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y bash openssh-server vim
@@ -11,4 +11,3 @@ EXPOSE 22
 COPY /files /
 RUN chmod -R go-rwx /root/.ssh
 CMD ["/usr/sbin/sshd","-D", "-e"]
-

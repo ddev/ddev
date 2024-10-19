@@ -28,9 +28,9 @@ DDEV_WEBSERVER_TYPE="${DDEV_WEBSERVER_TYPE:-nginx-fpm}"
 # Update the default PHP and FPM versions a DDEV_PHP_VERSION like '5.6' or '7.0' is provided
 # Otherwise it will use the default version configured in the Dockerfile
 if [ -n "$DDEV_PHP_VERSION" ] ; then
-	update-alternatives --set php /usr/bin/php${DDEV_PHP_VERSION}
-	ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
-	export PHP_INI=/etc/php/${DDEV_PHP_VERSION}/fpm/php.ini
+  update-alternatives --set php /usr/bin/php${DDEV_PHP_VERSION}
+  ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
+  export PHP_INI=/etc/php/${DDEV_PHP_VERSION}/fpm/php.ini
 fi
 
 # Set PHP timezone to configured $TZ if there is one
@@ -90,7 +90,11 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+
+if [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
+  n-install.sh || true
+fi
 
 # The following ensures a persistent and shared "global" cache for
 # yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache

@@ -4,8 +4,8 @@
 ## Description: Run artisan CLI inside the web container
 ## Usage: artisan [flags] [args]
 ## Example: "ddev artisan list" or "ddev artisan cache:clear"
+## Aliases: art
 ## ProjectTypes: laravel
 ## ExecRaw: true
 
 php ./artisan "$@"
-

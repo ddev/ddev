@@ -135,7 +135,6 @@ func TestPantheonPush(t *testing.T) {
 	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -269,10 +268,23 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	// Provide an SSH key for `ddev auth ssh`
 	err := os.Mkdir("sshtest", 0755)
 	require.NoError(t, err)
+	// If the first line is empty, discard it
+	if privateKey[0] == '\n' {
+		privateKey = privateKey[1:]
+	}
+	if privateKey[len(privateKey)-1] != '\n' {
+		privateKey = privateKey + "\n"
+	}
+	//l := len(privateKey)
+	//t.Logf("privateKey starts with character '%v' string '%s' keytype '%s' and ends with '%s'. The last character is '%v'", privateKey[0], privateKey[0:30], privateKey[5:40], privateKey[l-26:], privateKey[l-1])
 	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
 	require.NoError(t, err)
+	//out, err2 := exec.RunHostCommand("file", filepath.Join("sshtest", "id_rsa_test"))
+	//require.NoError(t, err2)
+	//t.Logf("result of file on id_rsa_test=%s", out)
 	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
-	require.NoError(t, err, "out=%s", out)
+	pwd, _ := os.Getwd()
+	require.NoError(t, err, "failed to RunHostCommand expect script in dir=%s, out=%s", pwd, out)
 	require.Contains(t, out, "Identity added:")
 	return nil
 }

@@ -75,16 +75,16 @@ services:
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
-      {{ if eq .DBType "postgres" }}
+      {{- if eq .DBType "postgres" }}
       test: ["CMD-SHELL", "/postgres_healthcheck.sh"]
-      {{ end }}
-      interval: 1s
-      retries: 120
+      {{- end }}
+      interval: "1s"
+      retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
-      {{ if templateCanUse "healthcheck.start_interval" }}
-      start_interval: 1s
-      {{ end }}
-      timeout: 70s
+      {{ if templateCanUse "healthcheck.start_interval" -}}
+      start_interval: "1s"
+      {{- end }}
+      timeout: "70s"
   {{ end }} {{/* end if not .OmitDB */}}
 
   web:
@@ -100,9 +100,6 @@ services:
         DDEV_DATABASE: ${DDEV_DATABASE}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
-    {{ if .EnvFile }}
-    env_file: '{{ .EnvFile }}'
-    {{ end }}
 
     networks: ["default", "ddev_default"]
     cap_add:
@@ -198,7 +195,6 @@ services:
     {{ if not .DisableSettingsManagement }}
     - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
     {{ end }}
-    - DRUSH_ALLOW_XDEBUG=1
     - DOCKER_IP={{ .DockerIP }}
     - GOARCH
     - GOOS
@@ -245,13 +241,13 @@ services:
       {{ end }}
       {{ end }}
     healthcheck:
-      interval: 1s
-      retries: 120
+      interval: "1s"
+      retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
-      {{ if templateCanUse "healthcheck.start_interval" }}
-      start_interval: 1s
-      {{ end }}
-      timeout: 70s
+      {{- if templateCanUse "healthcheck.start_interval" }}
+      start_interval: "1s"
+      {{- end }}
+      timeout: "70s"
 
 networks:
   ddev_default:

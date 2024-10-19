@@ -1,7 +1,7 @@
 ﻿
 $ErrorActionPreference = 'Stop';
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url64      = 'https://github.com/REPLACE_GITHUB_ORG/ddev/releases/download/REPLACE_DDEV_VERSION/ddev_windows_installer.REPLACE_DDEV_VERSION.exe'
+$url64      = 'https://github.com/REPLACE_GITHUB_ORG/ddev/releases/download/REPLACE_DDEV_VERSION/ddev_windows_amd64_installer.REPLACE_DDEV_VERSION.exe'
 
 $packageArgs = @{
   packageName   = $env:ChocolateyPackageName

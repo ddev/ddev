@@ -150,6 +150,26 @@ func TestMutagenSimple(t *testing.T) {
 	assert.NoError(err, "Could not run Mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
 	assert.Equal("ok", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	// Remove the mutagen-agents.tar.gz file if it exists and start the app
+	if fileutil.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz")) {
+		err = os.Remove(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
+		require.NoError(t, err)
+	}
+	err = app.Start()
+	require.NoError(t, err)
+	// Verify that the mutagen-agents.tar.gz file was downloaded
+	assert.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
+	// Remove the mutagen-agents.tar.gz file again and restart the app
+	err = os.Remove(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
+	require.NoError(t, err)
+	err = app.Restart()
+	require.NoError(t, err)
+	// Verify again that the mutagen-agents.tar.gz file was downloaded
+	assert.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
+
 	// Make sure Mutagen daemon gets stopped on poweoff
 	ddevapp.PowerOff()
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {

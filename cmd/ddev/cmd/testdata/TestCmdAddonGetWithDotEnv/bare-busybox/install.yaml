@@ -1,0 +1,4 @@
+name: bare-busybox
+
+project_files:
+  - docker-compose.bare-busybox.yaml

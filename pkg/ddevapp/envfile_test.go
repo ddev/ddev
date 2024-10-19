@@ -1,14 +1,15 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/fileutil"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteProjectEnvFile(t *testing.T) {
@@ -24,7 +25,7 @@ func TestWriteProjectEnvFile(t *testing.T) {
 		_ = os.RemoveAll(app.GetConfigPath(".env"))
 	})
 
-	testEnvFiles, err := fileutil.ListFilesInDirFullPath(filepath.Join(origDir, "testdata", t.Name()))
+	testEnvFiles, err := fileutil.ListFilesInDirFullPath(filepath.Join(origDir, "testdata", t.Name()), false)
 	require.NoError(t, err)
 	appEnvFile := filepath.Join(app.AppRoot, ".env")
 	for _, envFileName := range testEnvFiles {

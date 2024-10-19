@@ -94,7 +94,7 @@ jobs:
             popd
 
           elif [[ "${{ matrix.containers }}" == "others" ]]; then
-            for dir in ddev-nginx-proxy-router ddev-ssh-agent ddev-traefik-router test-ssh-server
+            for dir in ddev-gitpod-base ddev-nginx-proxy-router ddev-ssh-agent ddev-traefik-router test-ssh-server
               do pushd containers/$dir
               echo "--- Test container $dir"
               time make test DOCKER_ARGS=--no-cache
