@@ -19,6 +19,10 @@ Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) cre
 
 Download and unzip the appropriate binary and place it in your `$PATH`.
 
+## Rollback to a previous version
+
+You can also [downgrade to an older version of DDEV](../users/usage/faq.md#how-can-i-install-a-specific-version-of-ddev).
+
 ### Homebrew with macOS or Linux
 
 If you’re using Homebrew, start by unlinking your current binary:

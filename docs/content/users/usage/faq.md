@@ -221,12 +221,17 @@ You can use the [`ddev self-upgrade`](../usage/commands.md#self-upgrade) command
 
 ### How can I install a specific version of DDEV?
 
+#### Debian, Ubuntu, or WSL2
+
+For Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt-get update && sudo apt-get install ddev=<version>`, for example `sudo apt-get install ddev=1.23.4` to run a previous, older version of DDEV.
+
+#### Homebrew
+
 If you’re using Homebrew, first run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
 
 1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
-2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.21.5, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.21.5`.
-3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt-get update && sudo apt-get install ddev=<version>`, for example `sudo apt-get install ddev=1.21.5`.
-4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
+2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.23.4, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.23.4`.
+3. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
 ### Why do I have an old DDEV?
 
