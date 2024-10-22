@@ -16,7 +16,7 @@ Use [DDEV on Gitpod](https://ddev.readthedocs.io/en/stable/users/install/ddev-in
 
 ### Building and pushing to Docker Hub
 
-Use [push.sh](https://github.com/ddev/ddev/blob/master/.gitpod/images/push.sh)
+See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
 
 ### Running
 
@@ -28,7 +28,7 @@ docker run -it --rm ddev/ddev-gitpod-base:<tag> bash
 
 ## Source:
 
-[https://github.com/ddev/ddev/blob/master/.gitpod/images/Dockerfile](https://github.com/ddev/ddev/blob/master/.gitpod/images/Dockerfile)
+[https://github.com/ddev/ddev/blob/master/containers/ddev-gitpod-base](https://github.com/ddev/ddev/blob/master/containers/ddev-gitpod-base)
 
 ## Maintained by:
 

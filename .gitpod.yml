@@ -41,19 +41,42 @@ vscode:
     - rogalmic.bash-debug
 
 ports:
-  # Ignore host https port
-  - port: 8443
+  # Ignore direct-build https port
+  - port: 2222
     onOpen: ignore
   - port: 3306
     onOpen: ignore
-  # Direct-connect ddev-webserver port that is the main port
-  - port: 8080
+  - port: 5432
+    onOpen: ignore
+  # Used by projector
+  - port: 6942
     onOpen: ignore
   # Currently un-notified and unsupported mailpit https port
   - port: 8027
     onOpen: ignore
+  # Currently un-notified and unsupported phpmyadmin http port
   - port: 8036
+    onOpen: ignore
+  # Currently un-notified and unsupported phpmyadmin https port
+  - port: 8037
+    onOpen: ignore
+  # Direct-connect ddev-webserver port that is the main port
+  - port: 8080
+    onOpen: ignore
+  # xhgui http port
+  - port: 8143
+    onOpen: ignore
+  # xhgui https port
+  - port: 8142
     onOpen: ignore
   # xdebug port
   - port: 9003
     onOpen: ignore
+  # Adminer http port
+  - port: 9100
+    onOpen: ignore
+  # Adminer https port
+  - port: 9101
+    onOpen: ignore
+  # projector port
+  - port: 9999
