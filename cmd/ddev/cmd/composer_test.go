@@ -89,7 +89,7 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 	}
 }
 
-func TestComposerCmdCreateRequireRemove(t *testing.T) {
+func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
 	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
@@ -148,10 +148,11 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 		out, err = exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Created project in ")
+		assert.FileExists(filepath.Join(tmpDir, composerRoot, "composer.json"))
 		assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
 
 		// Test a composer require, with passthrough args
-		args = []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
+		args = []string{"composer", "require", "sebastian/version:5.0.1 as 5.0.0", "--no-plugins", "--ansi"}
 		out, err = exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Generating autoload files")
@@ -162,6 +163,25 @@ func TestComposerCmdCreateRequireRemove(t *testing.T) {
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Generating autoload files")
 		assert.False(fileutil.FileExists(filepath.Join(tmpDir, composerRoot, "vendor/sebastian")))
+		// Test a composer config, with passthrough args
+		args = []string{"composer", "config", "repositories.packagist", `{"type": "composer", "url": "https://packagist.org"}`}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		composerJSON, err := fileutil.ReadFileIntoString(filepath.Join(tmpDir, composerRoot, "composer.json"))
+		assert.NoError(err, "failed to read %v: err=%v", filepath.Join(tmpDir, composerRoot, "composer.json"), err)
+		assert.Contains(composerJSON, "https://packagist.org")
+		// Test a composer binary override using /var/www/html/vendor/bin from $PATH
+		args = []string{"composer", "--version"}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		assert.NotContains(out, "2.8.0")
+		args = []string{"composer", "require", "composer/composer:v2.8.0"}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		args = []string{"composer", "--version"}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		assert.Contains(out, "2.8.0")
 	}
 }
 
