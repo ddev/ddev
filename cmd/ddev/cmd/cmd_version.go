@@ -38,7 +38,7 @@ var versionCmd = &cobra.Command{
 
 		if cmd.Flags().Changed("verify-constraint") {
 			versionConstraint := cmd.Flag("verify-constraint").Value.String()
-			err := ddevapp.CheckDdevVersionConstraint(versionConstraint, "" , "")
+			err := ddevapp.CheckDdevVersionConstraint(versionConstraint, "", "")
 			if err != nil {
 				util.Failed(err.Error())
 				os.Exit(2)
