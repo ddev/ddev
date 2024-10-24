@@ -11,6 +11,9 @@ import (
 	"path/filepath"
 )
 
+var bashFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh")
+var fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")
+
 // CdCmd is the top-level "ddev cd" command
 var CdCmd = &cobra.Command{
 	Use:   "cd [project-name]",
@@ -19,26 +22,26 @@ var CdCmd = &cobra.Command{
 
 From bash:
 
-printf '\nsource "%s"' >> ~/.bashrc
+printf '\n[ -f "%s" ] && source "%s"' >> ~/.bashrc
 
 From zsh:
 
-printf '\nsource "%s"' >> ~/.zshrc
+printf '\n[ -f "%s" ] && source "%s"' >> ~/.zshrc
 
 From fish:
 
-echo \n'source "%s"' >> ~/.config/fish/config.fish
+echo \n'[ -f "%s" ] && source "%s"' >> ~/.config/fish/config.fish
 
 Restart your shell, and use 'ddev cd project-name'.
-`, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh"), filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh"), filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")),
+`, bashFile, bashFile, bashFile, bashFile, fishFile, fishFile),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Example: `ddev cd
 command ddev cd project-name
 ddev cd project-name`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, file := range []string{"ddev.sh", "ddev.fish"} {
-			if !fileutil.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells", file)) {
-				util.Failed("Unable to find %s in %s", file, globalconfig.GetGlobalDdevDir())
+		for _, file := range []string{bashFile, fishFile} {
+			if !fileutil.FileExists(file) {
+				util.Failed("Unable to find file: %s", file)
 			}
 
 		}
