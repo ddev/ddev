@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/styles"
 
@@ -34,6 +35,15 @@ var versionCmd = &cobra.Command{
 		}
 
 		v := version.GetVersionInfo()
+
+		if cmd.Flags().Changed("verify-constraint") {
+			versionConstraint := cmd.Flag("verify-constraint").Value.String()
+			err := ddevapp.CheckDdevVersionConstraint(versionConstraint, "" , "")
+			if err != nil {
+				util.Failed(err.Error())
+				os.Exit(2)
+			}
+		}
 
 		var out bytes.Buffer
 		t := table.NewWriter()
@@ -70,5 +80,6 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	versionCmd.Flags().String("verify-constraint", "", `Check if the currently installed ddev matches a specific version constraint.`)
 	RootCmd.AddCommand(versionCmd)
 }
