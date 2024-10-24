@@ -40,7 +40,7 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for Mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.17.2"
+const RequiredMutagenVersion = "0.18.0"
 
 const RequiredDockerComposeVersionDefault = "v2.29.7"
 

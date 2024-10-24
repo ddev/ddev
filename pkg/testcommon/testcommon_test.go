@@ -2,11 +2,6 @@ package testcommon
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
-	"testing"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -14,6 +9,11 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
+	"runtime"
+	"testing"
+	"time"
 )
 
 var DdevBin = "ddev"
@@ -230,7 +230,7 @@ func TestPretestAndEnv(t *testing.T) {
 	site := TestSites[0]
 	site.Name = t.Name()
 
-	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", site.Name})
 
 	site.WebEnvironment = []string{"SOMEVAR=somevar"}
 	site.PretestCmd = fmt.Sprintf("%s exec 'touch /var/tmp/%s'", DdevBin, t.Name())
@@ -254,6 +254,14 @@ func TestPretestAndEnv(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
+
+	if runtime.GOOS == "windows" && app.IsMutagenEnabled() {
+		// We can't replace mutagen.exe on windows if anything has been using it
+		ddevapp.PowerOff()
+		err = ddevapp.MutagenReset(app)
+		require.NoError(t, err)
+		time.Sleep(1000 * time.Millisecond)
+	}
 
 	err = app.Start()
 	require.NoError(t, err)
