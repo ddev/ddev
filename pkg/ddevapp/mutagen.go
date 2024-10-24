@@ -384,9 +384,15 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		if _, ok = alpha["scanProblems"]; ok {
 			problems = true
 		}
+		if _, ok = alpha["transitionProblems"]; ok {
+			problems = true
+		}
 	}
 	if beta, ok := session["beta"].(map[string]interface{}); ok {
 		if _, ok = beta["scanProblems"]; ok {
+			problems = true
+		}
+		if _, ok = beta["transitionProblems"]; ok {
 			problems = true
 		}
 	}
