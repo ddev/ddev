@@ -1546,7 +1546,7 @@ Print DDEV and component versions.
 
 Flags:
 
-* `--match-constraint <version-constraint>`: Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+* `--match-constraint <version-constraint>` (added on v1.24.0): Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
 
 Example:
 
@@ -1554,13 +1554,16 @@ Example:
 # Print DDEV and platform version details
 ddev version
 
-# ddev add-on command was added in v1.23.5, conditionally run the new command
-if ddev version --match-constraint ">= 1.23.5" 2>&1 > /dev/null; then
-  ddev add-on get ....
-else
-  ddev get ....  
+# This is only supported with DDEV versions above v1.24.0
+# 'ddev add-on' command was added in v1.23.5, deprecating 'ddev get' that was added on v1.19.0.
+if ddev version --match-constraint ">= 1.19.0" 2>&1 > /dev/null; then
+  if ddev version --match-constraint ">= 1.23.5" 2>&1 > /dev/null; then
+    ddev add-on get ....
+  else
+    ddev get ....  
+  fi
 fi
-```
+  ```
 
 !!!tip
     `ddev --version` is a more concise command that only outputs the DDEV version without component versions.
