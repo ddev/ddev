@@ -20,15 +20,15 @@ var CdCmd = &cobra.Command{
 	Short: "Uses shell built-in 'cd' to change to a project directory",
 	Long: fmt.Sprintf(`To enable 'ddev cd' command, source the ddev.sh script from your rc-script.
 
-From bash:
+For bash:
 
 printf '\n[ -f "%s" ] && source "%s"' >> ~/.bashrc
 
-From zsh:
+For zsh:
 
 printf '\n[ -f "%s" ] && source "%s"' >> ~/.zshrc
 
-From fish:
+For fish:
 
 echo \n'[ -f "%s" ] && source "%s"' >> ~/.config/fish/config.fish
 
