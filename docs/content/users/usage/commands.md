@@ -1563,7 +1563,7 @@ if ddev version --match-constraint ">= 1.19.0" 2>&1 > /dev/null; then
     ddev get ....  
   fi
 fi
-  ```
+```
 
 !!!tip
     `ddev --version` is a more concise command that only outputs the DDEV version without component versions.
