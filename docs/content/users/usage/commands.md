@@ -1566,7 +1566,7 @@ fi
     `ddev --version` is a more concise command that only outputs the DDEV version without component versions.
 
 !!!tip
-  You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint) as well.
+  You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
 
 ## `wp`
 
