@@ -140,7 +140,7 @@ Flags:
 
 * `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--installed`: List installed add-ons
-* `--project <projectName>`: Specify a project to remove the add-on from. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
+* `--project <projectName>`: Specify the project for which to list add-ons. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
 
 Example:
 
