@@ -36,12 +36,11 @@ var versionCmd = &cobra.Command{
 
 		v := version.GetVersionInfo()
 
-		if cmd.Flags().Changed("verify-constraint") {
-			versionConstraint := cmd.Flag("verify-constraint").Value.String()
+		if cmd.Flags().Changed("match-constraint") {
+			versionConstraint := cmd.Flag("match-constraint").Value.String()
 			err := ddevapp.CheckDdevVersionConstraint(versionConstraint, "", "")
 			if err != nil {
 				util.Failed(err.Error())
-				os.Exit(2)
 			}
 		}
 
@@ -80,6 +79,6 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
-	versionCmd.Flags().String("verify-constraint", "", `Check if the currently installed ddev matches a specific version constraint.`)
+	versionCmd.Flags().String("match-constraint", "", `Check if the currently installed ddev matches the specified version constraint.`)
 	RootCmd.AddCommand(versionCmd)
 }

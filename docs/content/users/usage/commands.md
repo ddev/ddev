@@ -1544,15 +1544,29 @@ ddev typo3 site:show
 
 Print DDEV and component versions.
 
+Flags:
+
+* `--match-constraint <version-constraint>`: Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+
 Example:
 
 ```shell
 # Print DDEV and platform version details
 ddev version
+
+# ddev add-on command was added in v1.23.5, conditionally run the new command
+if ddev version --match-constraint ">= 1.23.5" 2>&1 > /dev/null; then
+  ddev add-on get ....
+else
+  ddev get ....  
+fi
 ```
 
 !!!tip
     `ddev --version` is a more concise command that only outputs the DDEV version without component versions.
+
+!!!tip
+  You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint) as well.
 
 ## `wp`
 
