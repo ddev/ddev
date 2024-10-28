@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -306,7 +307,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		services[shortName]["short_name"] = shortName
 		var ports []string
 		for pk := range c.Config.ExposedPorts {
-			ports = append(ports, pk.Port())
+			if !slices.Contains(ports, pk.Port()) {
+				ports = append(ports, pk.Port())
+			}
 		}
 		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
 		var hostPorts []string
@@ -2937,11 +2940,13 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 			httpsPort = ":" + app.GetRouterHTTPSPort()
 		}
 
-		httpsURLs = append(httpsURLs, "https://"+name+httpsPort)
+		if !app.CanUseHTTPOnly() {
+			httpsURLs = append(httpsURLs, "https://"+name+httpsPort)
+		}
 		httpURLs = append(httpURLs, "http://"+name+httpPort)
 	}
 
-	if !IsRouterDisabled(app) {
+	if !IsRouterDisabled(app) && !app.CanUseHTTPOnly() {
 		httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
 	}
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())

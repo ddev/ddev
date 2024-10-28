@@ -131,7 +131,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			switch {
 			// Normal case, using ddev-router based URLs
 			case !ddevapp.IsRouterDisabled(app):
-				if httpsURL, ok := v["https_url"]; ok {
+				if httpsURL, ok := v["https_url"]; ok && !app.CanUseHTTPOnly() {
 					urlPortParts = append(urlPortParts, httpsURL)
 				} else if httpURL, ok = v["http_url"]; ok {
 					urlPortParts = append(urlPortParts, httpURL)
@@ -184,14 +184,18 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if _, ok := desc["mailpit_url"]; ok {
 				mailpitURL = desc["mailpit_url"].(string)
 			}
-			if _, ok := desc["mailpit_https_url"]; ok {
+			if _, ok := desc["mailpit_https_url"]; ok && !app.CanUseHTTPOnly() {
 				mailpitURL = desc["mailpit_https_url"].(string)
 			}
 			t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", mailpitURL)})
 
 			//WebExtraExposedPorts stanza
 			for _, extraPort := range app.WebExtraExposedPorts {
-				t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("InDocker: localhost:%d https://%s:%d http://%s:%d", extraPort.WebContainerPort, app.GetHostname(), extraPort.HTTPSPort, app.GetHostname(), extraPort.HTTPPort)})
+				if app.CanUseHTTPOnly() {
+					t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("http://%s:%d\nInDocker: web:%d", app.GetHostname(), extraPort.HTTPPort, extraPort.WebContainerPort)})
+				} else {
+					t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("https://%s:%d\nInDocker: web:%d", app.GetHostname(), extraPort.HTTPSPort, extraPort.WebContainerPort)})
+				}
 			}
 
 			// All URLs stanza
