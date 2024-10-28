@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -341,10 +342,18 @@ func GetDrupalVersion(app *DdevApp) (string, error) {
 	return v, err
 }
 
-// isDrupalApp returns true if the app is drupal
+// isDrupalApp returns true if the app is drupal (drupal8+)
 func isDrupalApp(app *DdevApp) bool {
-	v, err := GetDrupalVersion(app)
-	if err == nil && v != "" {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	v, err := strconv.Atoi(vStr)
+	if err != nil {
+		return false
+	}
+
+	if v >= 8 {
 		return true
 	}
 	return false
