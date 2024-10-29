@@ -18,7 +18,7 @@ var fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/she
 var CdCmd = &cobra.Command{
 	Use:   "cd [project-name]",
 	Short: "Uses shell built-in 'cd' to change to a project directory",
-	Long: fmt.Sprintf(`To enable 'ddev cd' command, source the ddev.sh script from your rc-script.
+	Long: fmt.Sprintf(`To enable the 'ddev cd' command, source the ddev.sh script from your rc-script.
 
 For bash:
 
@@ -36,7 +36,6 @@ Restart your shell, and use 'ddev cd project-name'.
 `, bashFile, bashFile, bashFile, bashFile, fishFile, fishFile),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Example: `ddev cd
-command ddev cd project-name
 ddev cd project-name`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, file := range []string{bashFile, fishFile} {
