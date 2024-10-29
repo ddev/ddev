@@ -35,18 +35,13 @@ echo \n'[ -f "%s" ] && source "%s"' >> ~/.config/fish/config.fish
 Restart your shell, and use 'ddev cd project-name'.
 `, bashFile, bashFile, bashFile, bashFile, fishFile, fishFile),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
-	Example: `ddev cd
-ddev cd project-name`,
+	Example:           `ddev cd project-name`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, file := range []string{bashFile, fishFile} {
 			if !fileutil.FileExists(file) {
 				util.Failed("Unable to find file: %s", file)
 			}
 
-		}
-		if len(args) < 1 {
-			output.UserOut.Println(cmd.Long)
-			return
 		}
 		if len(args) != 1 {
 			util.Failed("This command only takes one argument: project-name")
@@ -56,10 +51,16 @@ ddev cd project-name`,
 		if err != nil {
 			util.Failed("Failed to find path for project: %v", err)
 		}
-		output.UserOut.Println(app.AppRoot)
+		if cmd.Flags().Changed("get-approot") {
+			output.UserOut.Println(app.AppRoot)
+		} else {
+			output.UserOut.Println(cmd.Long)
+		}
 	},
 }
 
 func init() {
+	CdCmd.Flags().BoolP("get-approot", "", false, "Get the full path to the project root directory")
+	_ = CdCmd.Flags().MarkHidden("get-approot")
 	RootCmd.AddCommand(CdCmd)
 }

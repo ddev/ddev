@@ -232,12 +232,8 @@ ddev cake
 Uses shell built-in `cd` to change to a project directory.
 
 ```shell
-# Shows help to make `ddev cd` work in your shell
-ddev cd
-# Returns the path to the project-name
-command ddev cd project-name
 # Goes to the project-name directory
-# Works only if you applied the instructions from `ddev cd`
+# Works only if you applied the instructions from this command
 ddev cd project-name
 ```
 

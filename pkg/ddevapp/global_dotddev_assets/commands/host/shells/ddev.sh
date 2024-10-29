@@ -7,7 +7,10 @@
 
 ddev() {
   if [ "$1" = "cd" ] && [ -n "$2" ]; then
-    cd "$(DDEV_VERBOSE=false command ddev cd "$2")"
+    case "$2" in
+      -*) command ddev "$@" ;;
+      *) cd "$(DDEV_VERBOSE=false command ddev cd "$2" --get-approot)" ;;
+    esac
   else
     command ddev "$@"
   fi
