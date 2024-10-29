@@ -19,6 +19,7 @@ var ComposerCmd = &cobra.Command{
 	Long: `Executes a Composer command at the Composer root in the web container. Generally,
 any Composer command can be forwarded to the container context by prepending
 the command with 'ddev'.`,
+	Aliases: []string{"co"},
 	Example: `ddev composer install
 ddev composer require <package>
 ddev composer outdated --minor-only

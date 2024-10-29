@@ -251,6 +251,8 @@ ddev clean my-project my-other-project
 
 ## `composer`
 
+*Alias: `co`.*
+
 Executes a [Composer command](../usage/developer-tools.md#ddev-and-composer) within the web container.
 
 `ddev composer create` is a special command that is an adaptation of `composer create-project`. See [DDEV and Composer](../usage/developer-tools.md#ddev-and-composer) for more information.
@@ -704,6 +706,8 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
 ```
 
 ## `drush`
+
+*Alias: `dr`.*
 
 Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal`, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
 
