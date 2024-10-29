@@ -22,6 +22,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	path, _, err := app.Exec(&ExecOpts{
 		Cmd: "echo $PATH",
 	})
+	path = strings.Trim(path, "\n")
 	if err == nil && path != "" {
 		env = append(env, "PATH="+path)
 	}
