@@ -6,6 +6,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
+	"strings"
 )
 
 // Composer runs Composer commands in the web container, managing pre- and post- hooks
