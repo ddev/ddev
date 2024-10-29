@@ -30,7 +30,9 @@ ddev delete --all`,
 		if noConfirm && deleteAll {
 			util.Failed("Sorry, it's not possible to use flags --all and --yes together")
 		}
-
+		if deleteAll && len(args) > 0 {
+			util.Failed("Sorry, it's not possible to use flag --all and project names together")
+		}
 		// Skip project validation if --omit-snapshot is provided
 		originalRunValidateConfig := ddevapp.RunValidateConfig
 		ddevapp.RunValidateConfig = !omitSnapshot
