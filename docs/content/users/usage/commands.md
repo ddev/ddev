@@ -511,6 +511,22 @@ Example:
 ddev debug get-volume-db-version
 ```
 
+### `debug match-constraint`
+
+Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+
+Example:
+
+```shell
+# This is only supported with DDEV versions above v1.24.0
+if ddev debug match-constraint "< 1.25" >/dev/null 2>&1; then
+  # do something for ddev versions below 1.25
+  ...
+else
+  # do something for ddev versions 1.25+
+  ...
+fi
+```
 ### `debug migrate-database`
 
 Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
@@ -1544,25 +1560,11 @@ ddev typo3 site:show
 
 Print DDEV and component versions.
 
-Flags:
-
-* `--match-constraint <version-constraint>` (added on v1.24.0): Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
-
 Example:
 
 ```shell
 # Print DDEV and platform version details
 ddev version
-
-# This is only supported with DDEV versions above v1.24.0
-# 'ddev add-on' command was added in v1.23.5, deprecating 'ddev get' that was added on v1.19.0.
-if ddev version --match-constraint ">= 1.19.0" 2>&1 > /dev/null; then
-  if ddev version --match-constraint ">= 1.23.5" 2>&1 > /dev/null; then
-    ddev add-on get ....
-  else
-    ddev get ....  
-  fi
-fi
 ```
 
 !!!tip
