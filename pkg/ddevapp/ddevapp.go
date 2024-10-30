@@ -135,7 +135,6 @@ type DdevApp struct {
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
-	ExtraLocales              []string               `yaml:"extra_locales,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -1231,8 +1230,6 @@ func (app *DdevApp) Start() error {
 Please use the built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
 	}
-
-	DownloadLocalesIfNeeded()
 
 	if runtime.GOOS == "darwin" {
 		failOnRosetta()

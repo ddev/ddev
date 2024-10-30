@@ -468,7 +468,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 }
 
 // DownloadAndExtractTarball takes an url to a tar.gz file and
-// extracts into a new temp directory and the directory
+// extracts into a new a temp directory and the directory
 // and a cleanup function.
 // It's the caller's responsibility to call the cleanup function.
 func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(), error) {
