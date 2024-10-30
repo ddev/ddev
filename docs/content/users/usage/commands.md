@@ -527,6 +527,10 @@ else
   ...
 fi
 ```
+
+!!!tip
+    You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
+
 ### `debug migrate-database`
 
 Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
@@ -1569,9 +1573,6 @@ ddev version
 
 !!!tip
     `ddev --version` is a more concise command that only outputs the DDEV version without component versions.
-
-!!!tip
-    You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
 
 ## `wp`
 
