@@ -16,7 +16,6 @@ dbimage_extra_packages: [telnet, netcat, sudo]
 
 Then the additional packages will be built into the containers during [`ddev start`](../usage/commands.md#start).
 
-
 ## Adding PHP Extensions
 
 ### PHP Extensions supported by `deb.sury.org`
