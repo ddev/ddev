@@ -2,12 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
 	"strings"
-
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/mattn/go-isatty"
 )
 
 // Composer runs Composer commands in the web container, managing pre- and post- hooks
@@ -18,14 +17,23 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-composer hooks: %v", err)
 	}
 
-	argString := strings.Join(args, " ")
+	// Prevent Composer from debugging when Xdebug is enabled
+	env := []string{"XDEBUG_MODE=off"}
+	// Let Composer know which binary to run from the PATH
+	path, _, err := app.Exec(&ExecOpts{
+		Cmd: "echo $PATH",
+	})
+	path = strings.Trim(path, "\n")
+	if err == nil && path != "" {
+		env = append(env, "PATH="+path)
+	}
+
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
 		Dir:     app.GetComposerRoot(true, true),
-		Cmd:     "composer " + argString,
+		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-		// Prevent Composer from debugging when Xdebug is enabled
-		Env: []string{"XDEBUG_MODE=off"},
+		Env:     env,
 	})
 	if err != nil {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)
