@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugCheckDBMatch verified that the DB Type/Version in container matches configured
 var DebugMatchConstraint = &cobra.Command{
 	Use:     "match-constraint",
 	Short:   "Check if the currently installed ddev matches the specified version constraint.",
