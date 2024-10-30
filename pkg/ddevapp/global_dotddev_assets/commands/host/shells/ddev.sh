@@ -6,7 +6,7 @@
 # "ddev cd project-name" to cd into the project directory.
 
 ddev() {
-  if [ "$1" = "cd" ] && [ -n "$2" ]; then
+  if [ "$#" -eq 2 ] && [ "$1" = "cd" ]; then
     case "$2" in
       -*) command ddev "$@" ;;
       *) cd "$(DDEV_VERBOSE=false command ddev cd "$2" --get-approot)" ;;

@@ -12,7 +12,7 @@ function ddev
       case '-*'
         command ddev $argv
       case '*'
-        cd (DDEV_VERBOSE=false command ddev cd $argv[2] --get-approot)
+        cd (DDEV_VERBOSE=false command ddev cd "$argv[2]" --get-approot)
     end
   else
     command ddev $argv
