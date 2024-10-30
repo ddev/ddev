@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// DebugMatchConstraint Compares a constraint against the installed DDEV version.
 var DebugMatchConstraint = &cobra.Command{
 	Use:     "match-constraint",
 	Short:   "Check if the currently installed ddev matches the specified version constraint.",
