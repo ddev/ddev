@@ -16,6 +16,7 @@ dbimage_extra_packages: [telnet, netcat, sudo]
 
 Then the additional packages will be built into the containers during [`ddev start`](../usage/commands.md#start).
 
+
 ## Adding PHP Extensions
 
 ### PHP Extensions supported by `deb.sury.org`
@@ -75,6 +76,17 @@ ADD https://raw.githubusercontent.com/ddev/ddev/master/containers/ddev-php-base/
 RUN chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/xdebug.ini
 # ddev xdebug handles enabling module so we don't enable here
 #RUN phpenmod ${extension}
+```
+
+## Adding Locales
+
+The web image ships by default with a small number of locales, which work for most usages, including
+`en_CA`, `en_US`, `en_GB`, `de_DE`, `de_AT`, `fr_CA`, `fr_FR`, `ja_JP`, and `ru_RU`.
+
+If you need other locales, you can install all of them by adding `locales-all` to your `webimage_extra_packages`. For example, in `.ddev/config.yaml`:
+
+```
+webimage_extra_packages: [locales-all]
 ```
 
 ## Adding Extra Dockerfiles for `webimage` and `dbimage`
