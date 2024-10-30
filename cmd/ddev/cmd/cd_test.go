@@ -14,12 +14,7 @@ import (
 func TestCdCmd(t *testing.T) {
 	assert := asrt.New(t)
 	// Shows help
-	out, err := exec.RunHostCommand(DdevBin, "cd")
-	assert.NoError(err)
-	assert.Contains(out, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh"))
-	assert.Contains(out, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish"))
-	// Shows help
-	out, err = exec.RunHostCommand(DdevBin, "cd")
+	out, err := exec.RunHostCommand(DdevBin, "cd", TestSites[0].Name)
 	assert.NoError(err)
 	assert.Contains(out, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh"))
 	assert.Contains(out, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish"))
@@ -31,4 +26,8 @@ func TestCdCmd(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "cd", "does-not-exist-"+util.RandString(4))
 	assert.Error(err)
 	assert.Contains(out, "Failed to find path for project")
+	// Shows error
+	out, err = exec.RunHostCommand(DdevBin, "cd")
+	assert.Error(err)
+	assert.Contains(out, "This command only takes one argument: project-name")
 }
