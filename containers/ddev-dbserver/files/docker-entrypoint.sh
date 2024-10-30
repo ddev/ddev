@@ -141,16 +141,16 @@ echo
 echo "Starting mysqld."
 
 # Checks if any arguments are present.
-elif ["$#" -eq 0]; then
-    tail -f /var/log/mysqld.log &
-    exec mysqld --server-id=0
+if [ "$#" -eq 0 ]; then
+  tail -f /var/log/mysqld.log &
+  exec mysqld --server-id=0
 else
-    # Checks if --server-id argument is given.
-    elif [[ " $* " =~ "--server-id"([=[:space:]]|$) ]]; then
-        tail -f /var/log/mysqld.log &
-        exec mysqld "$@"
-    else
-        tail -f /var/log/mysqld.log &
-        exec mysqld --server-id=0 "$@"
-    fi
+  # Checks if --server-id argument is given.
+  if [[ " $* " =~ "--server-id"([=[:space:]]|$) ]]; then
+    tail -f /var/log/mysqld.log &
+    exec mysqld "$@"
+  else
+    tail -f /var/log/mysqld.log &
+    exec mysqld --server-id=0 "$@"
+  fi
 fi
