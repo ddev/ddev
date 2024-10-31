@@ -47,7 +47,7 @@ DdevVersion ?= $(VERSION)
 
 # This version-strategy uses git tags to set the version string
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
-VERSION := $(shell git describe --tags --always --dirty)
+VERSION := $(shell git fetch --tags >/dev/null 2>&1 && git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
 # no_v_version removes the front v, for Chocolatey mostly
