@@ -16,6 +16,7 @@ ENV CAROOT=/mnt/ddev-global-cache/mkcert
 # BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
+ARG DEFAULT_LOCALES="en_CA.UTF-8 UTF-8\nen_US.UTF-8 UTF-8\nen_GB.UTF-8 UTF-8\nde_DE.UTF-8 UTF-8\nde_AT.UTF-8 UTF-8\nfr_CA.UTF-8 UTF-8\nfr_FR.UTF-8 UTF-8\nja_JP.UTF-8 UTF-8\nru_RU.UTF-8 UTF-8\n"
 
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
@@ -38,13 +39,15 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     bash-completion \
     libcap2-bin \
     libmagickcore-6.q16-6-extra \
-    locales-all \
+    locales \
     mariadb-client \
     postgresql-client \
     pv \
     supervisor \
     symfony-cli \
     xz-utils
+
+RUN printf "${DEFAULT_LOCALES}" > /etc/locale.gen && locale-gen
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
@@ -102,7 +105,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     libpcre3 \
     libpq-dev \
     libpython3-dev \
-    locales-all \
     nano \
     ncurses-bin \
     netcat-traditional \
@@ -248,7 +250,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     iputils-ping \
     jq \
     libpcre3 \
-    locales-all \
     nano \
     ncurses-bin \
     netcat-traditional \
