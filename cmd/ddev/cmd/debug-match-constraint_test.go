@@ -8,7 +8,7 @@ import (
 
 // TestDebugMatchConstraintCmd checks to see match-constraint behaves as expected
 func TestDebugMatchConstraintCmd(t *testing.T) {
-	version, err := exec.RunHostCommand(DdevBin, "--version")
+	version, _ := exec.RunHostCommand(DdevBin, "--version")
 
 	out, err := exec.RunHostCommand(DdevBin, "debug", "match-constraint", "> 1.0")
 	require.NoError(t, err, "Match constraint should not have errored for > 1.0, version='%s', out='%s'", version, out)
