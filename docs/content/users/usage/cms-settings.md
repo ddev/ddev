@@ -53,6 +53,15 @@ With the default Drupal configuration, it’s very difficult to debug Twig templ
 $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml';
 ```
 
+#### Drush and Xdebug
+
+Drush 13+ disables Xdebug even when [Xdebug is enabled on DDEV](../debugging-profiling/step-debugging.md).
+
+As per [Drush docs](https://www.drush.org/13.x/commands/#xdebug) you can:  
+
+* Enable it for a single Drush command by running: `ddev drush --xdebug`
+* Set `DRUSH_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every Drush call to be run with Xdebug when the PHP extension is enabled.
+
 #### Multisite
 
 1. Start with the [DDEV Drupal 8 Multisite Recipe](<https://github.com/ddev/ddev-contrib/tree/master/recipes/drupal8-multisite>).
