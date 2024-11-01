@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 	"regexp"
-	"strings"
 	"testing"
 )
 
@@ -25,14 +25,8 @@ func TestDebugMatchConstraintCmd(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "debug", "match-constraint", constraint)
 	require.NoError(t, err, "Match constraint should not have errored for %s, out='%s'", constraint, out)
 
-	// Get the real DDEV version from `ddev --version` (versionconstants.DdevVersion won't work here)
-	out, err = exec.RunHostCommand(DdevBin, "--version")
-	require.NoError(t, err, "DDEV version should not have errored, out='%s'", out)
-	versionParts := strings.Split(strings.TrimSpace(out), " ")
-	ddevVersion := versionParts[len(versionParts)-1]
-
-	if !regexp.MustCompile(`^v[0-9]+\.`).MatchString(ddevVersion) {
-		t.Skip(fmt.Sprintf("Skipping check for semver because DDEV version doesn't start with any valid version tag, it's '%v'", ddevVersion))
+	if !regexp.MustCompile(`^v[0-9]+\.`).MatchString(versionconstants.DdevVersion) {
+		t.Skip(fmt.Sprintf("Skipping check for semver because DDEV version doesn't start with any valid version tag, it's '%v'", versionconstants.DdevVersion))
 	}
 
 	constraint = ">= 1.0"
