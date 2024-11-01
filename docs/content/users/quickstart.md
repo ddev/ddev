@@ -70,6 +70,24 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ddev launch
     ```
 
+## Contao
+
+[Detailed instructions](https://docs.contao.org/manual/en/guides/local-installation/ddev/) can be found here.
+
+=== "Composer"
+
+    ```bash
+    mkdir -p ~/projects/contao/contao-ddev && cd ~/projects/contao/contao-ddev
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2 --create-docroot --timezone=Europe/Berlin
+    ddev composer create contao/managed-edition:5.3
+    # After installation, the database access data must be entered in the .env.local file. At the same time, we also set up Mailpit here too:
+    # DATABASE_URL=mysql://db:db@db:3306/db
+    # MAILER_DSN=smtp://localhost:1025
+    ddev exec "bin/console contao:migrate"
+    ddev exec "bin/console contao:user:create"
+    ddev launch
+    ```
+
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
