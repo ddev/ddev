@@ -79,6 +79,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
 
       - name: Get Date
         id: get-date
