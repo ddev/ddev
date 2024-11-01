@@ -5,35 +5,39 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"path/filepath"
 )
 
-var bashFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh")
-var fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")
+var (
+	bashFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh")
+	fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")
+)
 
 // CdCmd is the top-level "ddev cd" command
 var CdCmd = &cobra.Command{
 	Use:   "cd [project-name]",
 	Short: "Uses shell built-in 'cd' to change to a project directory",
-	Long: fmt.Sprintf(`To enable the 'ddev cd' command, source the ddev.sh script from your rc-script.
+	Long: heredoc.Doc(fmt.Sprintf(`
+		To enable the 'ddev cd' command, source the ddev.sh script from your rc-script.
 
-For bash:
+		For bash:
 
-printf '\n[ -f "%s" ] && source "%s"' >> ~/.bashrc
+		printf '\n[ -f "%s" ] && source "%s"\n' >> ~/.bashrc
 
-For zsh:
+		For zsh:
 
-printf '\n[ -f "%s" ] && source "%s"' >> ~/.zshrc
+		printf '\n[ -f "%s" ] && source "%s"\n' >> ~/.zshrc
 
-For fish:
+		For fish:
 
-echo \n'[ -f "%s" ] && source "%s"' >> ~/.config/fish/config.fish
+		printf '\n[ -f "%s" ] && source "%s"\n' >> ~/.config/fish/config.fish
 
-Restart your shell, and use 'ddev cd project-name'.
-`, bashFile, bashFile, bashFile, bashFile, fishFile, fishFile),
+		Restart your shell, and use 'ddev cd project-name'.
+		`, bashFile, bashFile, bashFile, bashFile, fishFile, fishFile)),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Example:           `ddev cd project-name`,
 	Run: func(cmd *cobra.Command, args []string) {
