@@ -106,10 +106,14 @@ RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
 RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
+# Loop through $PHP_VERSIONS, selecting packages for the target architecture.
+# Uses yq to retrieve a space-separated list of packages from /php-packages.yaml based on PHP version and architecture,
+# formats each package with the version prefix (php8.4-<package>), and installs them.
+# The 'pkgs=' line uses yq to get packages as a single string, then awk applies the PHP version prefix to each item,
+# transforming 'cli fpm' from yq to 'php8.4-cli php8.4-fpm'.
 RUN <<ENDFOR
-set -x
 for v in ${PHP_VERSIONS}; do
-    echo "INSTALLING $v"
+    echo "INSTALLING ${v}"
     targetarch=${TARGETPLATFORM#linux/}
     pkgs=$(yq ".${v//.}.${targetarch} | join(\" \")" /php-packages.yaml | awk -v v="$v" 'BEGIN {RS=" ";} {printf "%s-%s ", v, $0}')
     echo "pkgs=$pkgs"
