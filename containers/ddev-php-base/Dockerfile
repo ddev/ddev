@@ -30,7 +30,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     procps \
     wget
 RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
-ADD /php-packages.yaml /
+ADD generic-files /
 #END base
 
 ### ---------------------------ddev-xdebug-build--------------------------------------

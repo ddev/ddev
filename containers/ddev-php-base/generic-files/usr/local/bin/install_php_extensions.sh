@@ -16,7 +16,10 @@ PHP_VERSION=$1
 ARCH=$2
 
 # Retrieve and format the list of packages for the specified PHP version and architecture
-pkgs=$(yq ".${PHP_VERSION//.}.${ARCH} | join(\" \")" /php-packages.yaml | awk -v v="$PHP_VERSION" 'BEGIN {RS=" ";} {printf "%s-%s ", v, $0}')
+# Uses `yq` to get the proper list of extensions for the PHP version and architecture.
+# The awk transforms the list from something like "cli common fpm" to
+# somethign like "phpX.X-cli phpX.X-common phpX.X-fpm"
+pkgs=$(yq ".${PHP_VERSION//.}.${ARCH} | join(\" \")" /etc/php-packages.yaml | awk -v v="$PHP_VERSION" 'BEGIN {RS=" ";} {printf "%s-%s ", v, $0}')
 
 # Echo the packages to be installed for logging
 echo "Installing packages for PHP ${PHP_VERSION} on ${ARCH}: $pkgs"
