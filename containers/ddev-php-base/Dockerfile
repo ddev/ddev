@@ -110,6 +110,16 @@ RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.
 RUN for v in ${PHP_VERSIONS}; do \
     /usr/local/bin/install_php_extensions.sh "$v" "${TARGETPLATFORM#linux/}"; \
 done
+RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
+RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
+    touch /var/log/php-fpm.log && \
+    chmod ugo+rw /var/log/php-fpm.log && \
+    chmod ugo+rwx /var/run && \
+    touch /var/log/nginx/access.log && \
+    touch /var/log/nginx/error.log && \
+    chmod -R ugo+rw /var/log/nginx/ && \
+    chmod ugo+rx /usr/local/bin/* && \
+    ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
 ### ---------------------------ddev-xdebug-build--------------------------------------
 ### The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
