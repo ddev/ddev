@@ -59,7 +59,7 @@ var WebserverDefault = WebserverNginxFPM
 // PerformanceModeDefault is default value for app.PerformanceMode
 var PerformanceModeDefault = types.PerformanceModeEmpty
 
-const NodeJSDefault = "20"
+const NodeJSDefault = "22"
 
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false

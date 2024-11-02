@@ -62,7 +62,7 @@ func TestNodeJSVersions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Testing some random versions, complete, incomplete, and labels
-	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20"} {
+	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20", "22"} {
 		app.NodeJSVersion = v
 		if app.NodeJSVersion == "auto" {
 			v = nvmrcVersion
