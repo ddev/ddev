@@ -511,6 +511,26 @@ Example:
 ddev debug get-volume-db-version
 ```
 
+### `debug match-constraint`
+
+Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+
+Example:
+
+```shell
+# This is only supported with DDEV versions above v1.24.0
+if ddev debug match-constraint "< 1.25" >/dev/null 2>&1; then
+  # do something for ddev versions below 1.25
+  ...
+else
+  # do something for ddev versions 1.25+
+  ...
+fi
+```
+
+!!!tip
+    You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
+
 ### `debug migrate-database`
 
 Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
