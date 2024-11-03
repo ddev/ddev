@@ -102,7 +102,7 @@ Further information can also be found in the [Contao documentation](https://docs
     ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2 --create-docroot --timezone=Europe/Berlin
     ```
 
-    Afterwards you can [download the Contao Manager](https://contao.org/de/download), copy it into the public directory and rename it (.php). Start ddev and follow the further steps within the Contao Manager.
+    Afterwards you can [download the Contao Manager](https://contao.org/en/download), copy it into the public directory and rename it (.php). Start DDEV and follow the further steps within the Contao Manager.
 
 
 ## Craft CMS
