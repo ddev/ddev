@@ -73,6 +73,8 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 ## Contao
 
 Further information can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
+The [Contao demo website](https://demo.contao.org/), with demonstrations and examples of some of the features this CMS, can be added when installing the CMS and is designed to help you get started with your first web projects.
+The demo website can be optionally installed alongside Contao, either through the [Contao Manager or with Composer](https://github.com/contao/contao-demo). 
 
 === "Composer"
 
