@@ -392,6 +392,8 @@ Node.js version for the web container’s “system” version. [`n`](https://ww
 
 There is no need to reconfigure `nodejs_version` unless you want a version other than the version already specified, which will be the default version at the time the project was configured.
 
+Note that specifying any Node.js version will cause ddev to download and install that version when running `ddev start`. If optimizing startup speed is your biggest concern (such as in CI), consider only using the version of Node that is included with DDEV by default.
+
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
