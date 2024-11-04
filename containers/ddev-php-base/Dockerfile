@@ -60,7 +60,7 @@ RUN pecl channel-update pecl.php.net && \
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
 ### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
-ARG PHP_DEFAULT_VERSION="8.3"
+ARG PHP_DEFAULT_VERSION="8.2"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2 php8.3 php8.4"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
