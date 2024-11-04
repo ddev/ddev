@@ -90,6 +90,8 @@ Further information can also be found in the [Contao documentation](https://docs
     
     # Create backend user
     ddev exec "bin/console contao:user:create"
+    
+    # The administration area can be accessed directly: ddev launch /contao
     ddev launch
     ```
 
