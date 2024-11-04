@@ -195,7 +195,7 @@ ddev auth ssh
 
 Flags:
 
-* `--ssh-key-path`, `-d`: Full path to SSH key directory.
+* `--ssh-key-path`, `-d`: Full path to SSH key directory or file.
 
 ## `blackfire`
 

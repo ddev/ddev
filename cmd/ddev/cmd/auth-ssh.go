@@ -6,6 +6,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
@@ -45,13 +46,29 @@ var AuthSSHCommand = &cobra.Command{
 		}
 		fi, err := os.Stat(sshKeyPath)
 		if os.IsNotExist(err) {
-			util.Failed("The SSH key directory %s was not found", sshKeyPath)
+			util.Failed("The SSH key path %s was not found", sshKeyPath)
 		}
 		if err != nil {
-			util.Failed("Failed to check status of SSH key directory %s: %v", sshKeyPath, err)
+			util.Failed("Failed to check status of SSH key path %s: %v", sshKeyPath, err)
 		}
+
+		var paths []string
+		var files []string
 		if !fi.IsDir() {
-			util.Failed("The SSH key directory (%s) must be a directory", sshKeyPath)
+			files = append(files, sshKeyPath)
+		} else {
+			files, err = fileutil.ListFilesInDirFullPath(sshKeyPath, true)
+			if err != nil {
+				util.Failed("Failed to list files in %s: %v", sshKeyPath, err)
+			}
+		}
+		// Get real paths to key files in case they are symlinks
+		for _, file := range files {
+			realPath, err := filepath.EvalSymlinks(file)
+			if err != nil {
+				util.Failed("Error resolving symlinks for %s: %v", file, err)
+			}
+			paths = append(paths, realPath)
 		}
 
 		app, err := ddevapp.GetActiveApp("")
@@ -68,9 +85,17 @@ var AuthSSHCommand = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
-		sshKeyPath = util.WindowsPathToCygwinPath(sshKeyPath)
 
-		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint=", "--mount=type=bind,src=" + sshKeyPath + ",dst=/tmp/sshtmp", versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`}
+		var mounts []string
+		for _, keyPath := range paths {
+			filename := filepath.Base(keyPath)
+			keyPath = util.WindowsPathToCygwinPath(keyPath)
+			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
+		}
+
+		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint="}
+		dockerCmd = append(dockerCmd, mounts...)
+		dockerCmd = append(dockerCmd, versionconstants.SSHAuthImage+":"+versionconstants.SSHAuthTag+"-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -d skip -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`)
 
 		err = exec.RunInteractiveCommand("docker", dockerCmd)
 
@@ -81,7 +106,7 @@ var AuthSSHCommand = &cobra.Command{
 }
 
 func init() {
-	AuthSSHCommand.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "d", "", "full path to SSH key directory")
+	AuthSSHCommand.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "d", "", "full path to SSH key directory or file")
 
 	AuthCmd.AddCommand(AuthSSHCommand)
 }
