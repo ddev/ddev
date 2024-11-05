@@ -94,6 +94,14 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
+Composer is updated during the first `ddev start` of a project, or when other changes like a new DDEV version require a rebuild of the web container. If it is important that every team member be on the exact same version of Composer, consider adding a post-start hook to your project such as:
+
+```yaml
+hooks:
+    post-start:
+        - exec: composer self-update 2.8.2
+```
+
 !!!note "If your `composer.json` requires `composer/composer` that version will be used instead"
     If your project `composer.json` includes `composer/composer`, then the version specified there will normally be used instead of any version specified by `composer_version`, since `vendor/bin/composer` will come first in the in-container `$PATH`.
 
