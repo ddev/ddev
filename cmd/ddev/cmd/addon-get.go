@@ -359,10 +359,11 @@ func getInjectedEnv(envFile string, verbose bool) string {
 		}
 		injectedEnv = "export"
 		for k, v := range envMap {
-			v = strings.Replace(v, " ", `\ `, -1)
+			// Escape all spaces and dollar signs
+			v = strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), ` `, `\ `)
 			injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
 			if verbose {
-				util.Warning(`%s="%s"`, k, v)
+				util.Warning(`%s=%s`, k, v)
 			}
 		}
 	}

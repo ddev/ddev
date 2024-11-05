@@ -27,7 +27,8 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 	// envFilePath := filepath.Join(app.AppRoot, ".env")
 	for k, v := range envMap {
 		// Escape double quotes in the value, since we wrap it in double quotes
-		v = `"` + strings.ReplaceAll(v, `"`, `\"`) + `"`
+		// Escape $ in the value, since we don't want to expand it
+		v = `"` + strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), `"`, `\"`) + `"`
 		// If the item is already in envText, use regex to replace it
 		// otherwise, append it to the envText.
 		// (^|[\r\n]+) - first group $1 matches the start of a line or newline characters
@@ -37,14 +38,11 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 		if exp.MatchString(envText) {
 			// To insert a literal $ in the output, use $$ in the template.
 			// See https://pkg.go.dev/regexp?utm_source=godoc#Regexp.Expand
-			v = strings.ReplaceAll(v, `$`, `$$`)
+			// Replacing is done for `\$`, not `$`, because we already escaped `$` above.
+			v = strings.ReplaceAll(v, `\$`, `\$$`)
 			// Remove comments with whitespaces here using only $1 and $2 groups
 			envText = exp.ReplaceAllString(envText, fmt.Sprintf(`$1$2=%s`, v))
 		} else {
-			// Escape $ in the value, since we wrap it in double quotes, and we don't want to expand it
-			if strings.Contains(v, `$`) {
-				v = strings.ReplaceAll(v, `$`, `\$`)
-			}
 			envText = strings.TrimSuffix(envText, "\n")
 			if envText != "" {
 				envText = fmt.Sprintf("%s\n%s=%s\n", envText, k, v)
