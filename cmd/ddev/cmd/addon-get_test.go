@@ -251,7 +251,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 
 	// Update the busybox image in .ddev/.env.busybox
 	// And update the value for THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag", "1.36.1", "--this-variable-can-be-changed-from-env=changed")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag", "1.36.1", "--this-variable-can-be-changed-from-env=changed", "--dollar-sign", `$dollar_variable`)
 	require.NoError(t, err, "out=%s", out)
 
 	out, err = exec.RunHostCommand(DdevBin, "restart")
@@ -272,6 +272,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.Contains(t, out, "POST_INSTALL_VARIABLE=post")
 	// The variable below is already added to the busybox environment stanza.
 	require.Contains(t, out, "THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV=changed")
+	require.Contains(t, out, "DOLLAR_SIGN=$dollar_variable")
 	require.NotContains(t, out, "THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV=true")
 	// Variables from *.example files should not be here
 	require.NotContains(t, out, "WEB_EXAMPLE_VARIABLE")

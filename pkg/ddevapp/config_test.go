@@ -888,6 +888,9 @@ func TestPHPConfig(t *testing.T) {
 		assert.Contains(out, "IS_DDEV_PROJECT=true")
 		// Make sure the .ddev/.env file works
 		assert.Contains(out, "SOMEENV=someenv-value")
+		assert.Contains(out, "DOLLAR_SINGLE_QUOTES=$SOMEENV $ sign")
+		assert.Contains(out, "DOLLAR_DOUBLE_QUOTES=someenv-value $ sign")
+		assert.Contains(out, "DOLLAR_DOUBLE_QUOTES_ESCAPED=$SOMEENV $ sign")
 
 		// Remove the PHP84 exception when it has missing extensions
 		if v != nodeps.PHP84 {
