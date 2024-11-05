@@ -1164,8 +1164,20 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
-	// For webimage, update to latest Composer.
+	// webimage only things
 	if strings.Contains(fullpath, "webimageBuild") {
+
+		// If our PHP version is not already provided in the ddev-webserver, add it now
+		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
+			contents = contents + fmt.Sprintf(`
+### DDEV-injected addition of not-preinstalled PHP version
+RUN /usr/local/bin/install_php_extensions.sh "%s" "${TARGETPLATFORM#linux/}";
+RUN update-alternatives --set php /usr/bin/php%s
+RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
+	`, app.PHPVersion, app.PHPVersion, app.PHPVersion)
+		}
+
+		// For webimage, update to latest Composer.
 		// Version to run composer self-update to the version
 		var composerSelfUpdateArg string
 

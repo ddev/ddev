@@ -34,5 +34,13 @@ var ValidPHPVersions = map[string]bool{
 	PHP84: true,
 }
 
+// PreinstalledPHPVersions is list of preinstalled versions (already in ddev-php-base and ddev-webserver
+var PreinstalledPHPVersions = map[string]bool{
+	PHP81: true,
+	PHP82: true,
+	PHP83: true,
+	PHP84: true,
+}
+
 // Composer version default - will get latest Composer v2
 var ComposerDefault = "2"
