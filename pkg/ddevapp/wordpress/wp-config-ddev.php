@@ -29,7 +29,7 @@ if ( getenv( 'IS_DDEV_PROJECT' ) == 'true' ) {
 	defined( 'WP_DEBUG' ) || define( 'WP_DEBUG', true );
 
 	/** WordPress environment type. */
-	define( 'WP_ENVIRONMENT_TYPE', 'local' );
+	defined( 'WP_ENVIRONMENT_TYPE' ) || define( 'WP_ENVIRONMENT_TYPE', 'local' );
 
 	/**
 	 * Set WordPress Database Table prefix if not already set.
