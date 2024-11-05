@@ -102,6 +102,9 @@ fi
 # If it is a timeout error (see 'timeout --help')
 if [ "${timeout}" -gt 0 ] && [ "${exit_code}" -eq 124 ]; then
   echo "Command '${command[*]}' timed out after ${timeout} seconds" | tee -a "${tmp_error_file}" >&2
+  # START_SCRIPT_TIMEOUT default is 30 seconds (or default_container_timeout / 4)
+  # 30 * 4 * 2 = 240 seconds (double the default timeout), which gives 240 / 4 = 60 seconds suggestion instead of the default 30
+  echo "If your internet connection is slow, consider increasing the timeout by running 'ddev config --default-container-timeout=$(( ${START_SCRIPT_TIMEOUT:-30} * 4 * 2 )) && ddev restart'" >&2
 fi
 
 # If stderr is empty
