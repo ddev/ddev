@@ -103,8 +103,6 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
             - exec: mkdir -p ~/bin && ln -sf /usr/local/bin/composer ~/bin/composer
     ```
 
-## `corepack_disable`
-
 ## `corepack_enable`
 
 Whether to `corepack enable` on Node.js configuration.
