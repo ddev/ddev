@@ -1171,9 +1171,11 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
 			contents = contents + fmt.Sprintf(`
 ### DDEV-injected addition of not-preinstalled PHP version
-RUN /usr/local/bin/install_php_extensions.sh "%s" "${TARGETPLATFORM#linux/}";
+RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETPLATFORM#linux/}";
 RUN update-alternatives --set php /usr/bin/php%s
 RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
+RUN mkdir -p /tmp/xhprof
+RUN chmod -fR ugo+w /etc/php /var/lib/php/modules
 	`, app.PHPVersion, app.PHPVersion, app.PHPVersion)
 		}
 
