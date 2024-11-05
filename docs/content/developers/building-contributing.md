@@ -348,7 +348,7 @@ When changes are made to an image, they have to be temporarily pushed to a tag�
 
 ## Pull Requests
 
-Create a pull request on GitHub to contribute your changes back into DDEV. Once you’ve opened a pull request, a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request. If so, add more commits to your branch and push them. They’ll automatically go into the existing pull request.
+If you're undertaking a large change, create an issue first so it can be discussed before you invest a lot of time. When you're ready, create a pull request on GitHub to contribute your changes to DDEV. Once you’ve opened a pull request, a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request. If so, add more commits to your branch and push them. They’ll automatically go into the existing pull request.
 
 If your pull request is merged, great! If not, no sweat; it may not be what the project maintainer had in mind, or they were already working on it. This happens, so our recommendation is to take any feedback you’ve received and go forth and pull request again. Or create your own open source project.
 
