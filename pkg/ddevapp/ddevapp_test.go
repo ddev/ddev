@@ -1192,7 +1192,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 			// Disable all to avoid confusion
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Cmd: "disable_xhprof && rm -rf /tmp/xhprof",
+				Cmd: "disable_xhprof && rm -rf /tmp/xhprof/*",
 			})
 			require.NoError(t, err)
 		}
