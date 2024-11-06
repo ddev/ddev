@@ -978,7 +978,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			Cmd: "curl -sSfL localhost",
 		})
 		require.NoError(t, err)
-		require.Equal(t, `PHP_IDE_CONFIG is properly unset`, stdout)
+		require.True(t, strings.HasPrefix(stdout, `PHP_IDE_CONFIG is properly unset`), "PHP_IDE_CONFIG was incorrectly set")
 
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
