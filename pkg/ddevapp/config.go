@@ -1176,6 +1176,7 @@ RUN update-alternatives --set php /usr/bin/php%s
 RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
 RUN mkdir -p /tmp/xhprof
 RUN chmod -fR ugo+w /etc/php /var/lib/php/modules
+RUN phpdismod blackfire xdebug xhprof
 	`, app.PHPVersion, app.PHPVersion, app.PHPVersion)
 		}
 
