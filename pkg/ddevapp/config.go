@@ -1134,6 +1134,21 @@ ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
+	// If our PHP version is not already provided in the ddev-webserver, add it now
+	if strings.Contains(fullpath, "webimageBuild") {
+		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
+			contents = contents + fmt.Sprintf(`
+### DDEV-injected addition of not-preinstalled PHP version
+RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETPLATFORM#linux/}"
+RUN update-alternatives --set php /usr/bin/php%s
+RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
+RUN mkdir -p /tmp/xhprof
+RUN chmod -fR ugo+w /etc/php /var/lib/php/modules /tmp/xhprof
+RUN phpdismod blackfire xdebug xhprof
+	`, app.PHPVersion, app.PHPVersion, app.PHPVersion)
+		}
+	}
+
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(userDockerfilePath + "/pre.Dockerfile*")
@@ -1166,19 +1181,6 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 
 	// webimage only things
 	if strings.Contains(fullpath, "webimageBuild") {
-
-		// If our PHP version is not already provided in the ddev-webserver, add it now
-		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
-			contents = contents + fmt.Sprintf(`
-### DDEV-injected addition of not-preinstalled PHP version
-RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETPLATFORM#linux/}"
-RUN update-alternatives --set php /usr/bin/php%s
-RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
-RUN mkdir -p /tmp/xhprof
-RUN chmod -fR ugo+w /etc/php /var/lib/php/modules /tmp/xhprof
-RUN phpdismod blackfire xdebug xhprof
-	`, app.PHPVersion, app.PHPVersion, app.PHPVersion)
-		}
 
 		// For webimage, update to latest Composer.
 		// Version to run composer self-update to the version
