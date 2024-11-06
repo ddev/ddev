@@ -846,12 +846,11 @@ func TestPHPConfig(t *testing.T) {
 	})
 
 	// Most of the time there's no reason to do all versions of PHP
-	phpKeys := []string{}
+	// so we can subtract those if GOTEST_SHORT==""
+	phpKeys := nodeps.GetValidPHPVersions()
 	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
-	for k := range nodeps.ValidPHPVersions {
-		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
-			phpKeys = append(phpKeys, k)
-		}
+	if os.Getenv("GOTEST_SHORT") != "" {
+		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
 	sort.Strings(phpKeys)
 
