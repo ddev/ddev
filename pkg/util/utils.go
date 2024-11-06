@@ -419,3 +419,22 @@ func GetTimezone(path string) (string, error) {
 	}
 	return timezone, nil
 }
+
+// SubtractSlices removes elements of slice b from slice a.
+func SubtractSlices(a, b []string) []string {
+	// Create a map to keep track of elements in slice b for quick lookup.
+	bMap := make(map[string]bool)
+	for _, elem := range b {
+		bMap[elem] = true
+	}
+
+	// Collect elements from a that are not in b.
+	var result []string
+	for _, elem := range a {
+		if _, found := bMap[elem]; !found {
+			result = append(result, elem)
+		}
+	}
+
+	return result
+}

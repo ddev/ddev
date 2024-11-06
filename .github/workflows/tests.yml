@@ -124,8 +124,26 @@ jobs:
       - name: Override environment variables for push-pull-test-platforms
         run: |
           echo "MAKE_TARGET=test" >> $GITHUB_ENV
-          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|TestDdevImportFiles|TestDdevAllDatabases|TestComposerCreateCmd|Test.*(Push|Pull)|TestAutocomplet)'" >> $GITHUB_ENV
           echo "GOTEST_SHORT=" >> $GITHUB_ENV
+          # In push-pull-test-platforms we want to run all tests
+          # that limit their scope when running with any value of GOTEST_SHORT
+          TP=(
+            "TestAppdirAlreadyInUse"
+            "TestAutocomplet"
+            "TestAvailableUpdates"
+            "TestComposerCreateCmd"
+            "TestConfigDatabaseVersion"
+            "TestDdevAllDatabases"
+            "TestDdevFullSite.*"
+            "TestDdevImportFiles"
+            "TestDdevXdebugEnabled"
+            "TestDdevXhprofEnabled"
+            "TestPHPConfig"
+            "Test.*(Push|Pull)"
+          )
+          TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
+          echo "pull-push-test-platforms TESTARGS=$TESTARGS"
+          echo "TESTARGS=${TESTARGS}" >> $GITHUB_ENV
         if: ${{ matrix.pull-push-test-platforms }}
 
       - name: Load 1password secret(s) for push-pull-test-platforms

@@ -952,20 +952,15 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	// Most of the time there's no reason to do all versions of PHP
-	phpKeys := []string{}
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
-	for k := range nodeps.ValidPHPVersions {
-		// TODO: Remove when xdebug available for php8.4
-		if k == nodeps.PHP84 {
-			continue
-		}
-		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
-			phpKeys = append(phpKeys, k)
-		}
-	}
+	// Default to testing all versions if GOTEST_SHORT is not set
+	phpKeys := nodeps.GetValidPHPVersions()
+
+	// TODO: Remove the PHP 8.4 exclusion when php8.4-xhprof is available
+	exclusions := []string{nodeps.PHP84}
+	phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	sort.Strings(phpKeys)
-	// Most of the time we can just test with the default PHP version
+
+	// Test only the default version if GOTEST_SHORT is set
 	if os.Getenv("GOTEST_SHORT") != "" {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
@@ -1121,20 +1116,13 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
-	phpKeys := []string{}
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0"}
-	for k := range nodeps.ValidPHPVersions {
-		// TODO: Remove when xhprof available for php8.4
-		if k == nodeps.PHP84 {
-			continue
-		}
-		if !nodeps.ArrayContainsString(exclusions, k) {
-			phpKeys = append(phpKeys, k)
-		}
-	}
+	phpKeys := nodeps.GetValidPHPVersions()
+	// TODO: Remove the PHP 8.4 exclusion when php8.4-xhprof is available
+	exclusions := []string{nodeps.PHP56, nodeps.PHP84}
+	phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	sort.Strings(phpKeys)
 
-	// Most of the time we can just test with the default PHP version
+	// If GOTESt_SHORT is set, we'll just use the default version instead
 	if os.Getenv("GOTEST_SHORT") != "" {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
@@ -1658,10 +1646,12 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
 	// Bug: PostgreSQL 9 doesn't work with snapshot restore, see https://github.com/ddev/ddev/issues/3583
-	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
+	exclusions := []string{"postgres:9"}
+	dbVersions = util.SubtractSlices(dbVersions, exclusions)
+
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:14", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 

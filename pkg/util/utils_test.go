@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"testing"
 
@@ -226,6 +227,62 @@ func TestGetTimezone(t *testing.T) {
 			} else {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.error)
+			}
+		})
+	}
+}
+
+// compareSlices checks if two slices are equal after sorting them.
+func compareSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	// Sort both slices before comparing
+	sort.Strings(a)
+	sort.Strings(b)
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// TestSubtractSlices does simple test of SubtractSlices
+func TestSubtractSlices(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        []string
+		b        []string
+		expected []string
+	}{
+		{
+			name:     "No overlap",
+			a:        []string{"apple", "banana", "cherry"},
+			b:        []string{"date", "fig"},
+			expected: []string{"apple", "banana", "cherry"},
+		},
+		{
+			name:     "Partial overlap",
+			a:        []string{"apple", "banana", "cherry"},
+			b:        []string{"banana"},
+			expected: []string{"apple", "cherry"},
+		},
+		{
+			name:     "Complete overlap",
+			a:        []string{"apple", "banana"},
+			b:        []string{"apple", "banana"},
+			expected: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := util.SubtractSlices(tt.a, tt.b)
+			if !compareSlices(result, tt.expected) {
+				t.Errorf("SubtractSlices(%v, %v) = %v; want %v", tt.a, tt.b, result, tt.expected)
 			}
 		})
 	}
