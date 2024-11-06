@@ -1646,7 +1646,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
 	// Bug: PostgreSQL 9 doesn't work with snapshot restore, see https://github.com/ddev/ddev/issues/3583
-	exclusions := []string{nodeps.Postgres9}
+	exclusions := []string{"postgres:9"}
 	dbVersions = util.SubtractSlices(dbVersions, exclusions)
 
 	//Use a smaller list if GOTEST_SHORT
