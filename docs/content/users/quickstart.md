@@ -72,29 +72,26 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
 ## Contao
 
-Further information can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
-The [Contao demo website](https://demo.contao.org/), with demonstrations and examples of some of the features this CMS, can be added when installing the CMS and is designed to help you get started with your first web projects.
-The demo website can be optionally installed alongside Contao, either through the [Contao Manager or with Composer](https://github.com/contao/contao-demo). 
+Further information on the DDEV procedure can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
 
 === "Composer"
 
     ```bash
-    mkdir -p ~/projects/my-contao && cd ~/projects/my-contao
-    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2 --create-docroot --timezone=Europe/Berlin
+    mkdir my-contao-site && cd my-contao-site
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
     ddev composer create contao/managed-edition:5.3
     
-    # After installation, the database access data must be entered in the .env.local file. At the same time, we also set up Mailpit here too:
-    # DATABASE_URL=mysql://db:db@db:3306/db
-    # MAILER_DSN=smtp://localhost:1025
-    
+    # Set DATABASE_URL and MAILER_DSN in .env.local
+    ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
+
     # Create the database
-    ddev exec "bin/console contao:migrate"
+    ddev exec contao-console contao:migrate --no-interaction
     
     # Create backend user
-    ddev exec "bin/console contao:user:create"
+    ddev exec contao-console contao:user:create --username=admin --name=Administrator --email=admin@example.com --language=en --password=Password123 --admin
     
-    # The administration area can be accessed directly: ddev launch /contao
-    ddev launch
+    # Access the administration area
+    ddev launch contao
     ```
 
 === "Contao Manager"    
@@ -102,11 +99,24 @@ The demo website can be optionally installed alongside Contao, either through th
     Like most PHP projects, Contao could be installed and updated with Composer. The [Contao Manager](https://docs.contao.org/manual/en/installation/contao-manager/) is a tool that provides a graphical user interface to manage a Contao installation.
 
     ```bash
-    mkdir -p ~/projects/my-contao && cd ~/projects/my-contao
-    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2 --create-docroot --timezone=Europe/Berlin
+    mkdir my-contao-site && cd my-contao-site
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+
+    # set DATABASE_URL and MAILER_DSN in .env.local
+    ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
+
+    # Download the Contao Manager
+    ddev start
+    ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
+
+    # Follow the further steps within the Contao Manager
+    ddev launch contao-manager.phar.php
     ```
 
-    Afterwards you can [download the Contao Manager](https://contao.org/en/download), copy it into the public directory and rename it (.php). Start DDEV and follow the further steps within the Contao Manager.
+=== "Demo Website"
+
+    The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo). 
+    Via the Contao Manager you can simply select this option during the first installation.
 
 
 ## Craft CMS
