@@ -20,9 +20,8 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	// Prevent Composer from debugging when Xdebug is enabled
 	env := []string{"XDEBUG_MODE=off"}
 	// Let Composer know which binary to run from the PATH
-	// And expand `~` in the PATH, because it is not expanded in this situation
 	path, _, err := app.Exec(&ExecOpts{
-		Cmd: `echo $PATH | sed "s|~|$HOME|g"`,
+		Cmd: "echo $PATH",
 	})
 	path = strings.Trim(path, "\n")
 	if err == nil && path != "" {

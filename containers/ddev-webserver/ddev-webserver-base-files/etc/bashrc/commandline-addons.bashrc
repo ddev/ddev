@@ -1,4 +1,14 @@
-export PATH="~/bin:$PATH:/var/www/html/bin"
+case ":$PATH:" in
+    *":$HOME/bin:"*) ;;
+    *) PATH="$HOME/bin:$PATH" ;;
+esac
+
+case ":$PATH:" in
+    *":/var/www/html/bin:"*) ;;
+    *) PATH="$PATH:/var/www/html/bin" ;;
+esac
+
+export PATH
 
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
