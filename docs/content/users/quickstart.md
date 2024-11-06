@@ -94,7 +94,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
     ddev launch contao
     ```
 
-=== "Contao Manager"    
+=== "Contao Manager"
 
     Like most PHP projects, Contao could be installed and updated with Composer. The [Contao Manager](https://docs.contao.org/manual/en/installation/contao-manager/) is a tool that provides a graphical user interface to manage a Contao installation.
 
