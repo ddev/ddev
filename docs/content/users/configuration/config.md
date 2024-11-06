@@ -95,13 +95,7 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
 !!!note "If your `composer.json` requires `composer/composer` that version will be used instead"
-    If your project `composer.json` includes `composer/composer`, then the version specified there will normally be used instead of any version specified by `composer_version`, since `vendor/bin/composer` will come first in the in-container `$PATH`. However, if you prefer to use the version specified by `composer_version`, add the following hook to your `.ddev/config.yaml`:
-
-    ```yaml
-    hooks:
-        post-start:
-            - exec: mkdir -p ~/bin && ln -sf /usr/local/bin/composer ~/bin/composer
-    ```
+    If your project `composer.json` includes `composer/composer`, then the version specified there will normally be used instead of any version specified by `composer_version`, since `vendor/bin/composer` will come first in the in-container `$PATH`.
 
 ## `corepack_enable`
 
