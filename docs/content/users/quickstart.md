@@ -118,7 +118,6 @@ Further information on the DDEV procedure can also be found in the [Contao docum
     The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo). 
     Via the Contao Manager you can simply select this option during the first installation.
 
-
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
