@@ -1646,10 +1646,12 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
 	// Bug: PostgreSQL 9 doesn't work with snapshot restore, see https://github.com/ddev/ddev/issues/3583
-	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
+	exclusions := []string{nodeps.Postgres9}
+	dbVersions = util.SubtractSlices(dbVersions, exclusions)
+
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:14", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
