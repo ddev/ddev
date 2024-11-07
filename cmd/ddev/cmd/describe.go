@@ -151,7 +151,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			if p, ok := v["exposed_ports"]; ok {
 				if p != "" {
-					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":\n"+p)
+					urlPortParts = append(urlPortParts, "InDocker: \n"+p)
 				} else {
 					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"])
 				}

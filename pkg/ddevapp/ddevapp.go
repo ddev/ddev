@@ -320,7 +320,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 		var exposedPrivatePortsStr []string
 		for _, p := range exposedPrivatePorts {
-			exposedPrivatePortsStr = append(exposedPrivatePortsStr, "  - "+strconv.FormatInt(int64(p), 10))
+			exposedPrivatePortsStr = append(exposedPrivatePortsStr, "  - "+shortName+":"+strconv.FormatInt(int64(p), 10))
 		}
 
 		var exposedPublicPortsKeys []int
