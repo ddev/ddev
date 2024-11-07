@@ -70,6 +70,54 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ddev launch
     ```
 
+## Contao
+
+Further information on the DDEV procedure can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
+
+=== "Composer"
+
+    ```bash
+    mkdir my-contao-site && cd my-contao-site
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+    ddev composer create contao/managed-edition:5.3
+    
+    # Set DATABASE_URL and MAILER_DSN in .env.local
+    ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
+
+    # Create the database
+    ddev exec contao-console contao:migrate --no-interaction
+    
+    # Create backend user
+    ddev exec contao-console contao:user:create --username=admin --name=Administrator --email=admin@example.com --language=en --password=Password123 --admin
+    
+    # Access the administration area
+    ddev launch contao
+    ```
+
+=== "Contao Manager"
+
+    Like most PHP projects, Contao could be installed and updated with Composer. The [Contao Manager](https://docs.contao.org/manual/en/installation/contao-manager/) is a tool that provides a graphical user interface to manage a Contao installation.
+
+    ```bash
+    mkdir my-contao-site && cd my-contao-site
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+
+    # set DATABASE_URL and MAILER_DSN in .env.local
+    ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
+
+    # Download the Contao Manager
+    ddev start
+    ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
+
+    # Follow the further steps within the Contao Manager
+    ddev launch contao-manager.phar.php
+    ```
+
+=== "Demo Website"
+
+    The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo). 
+    Via the Contao Manager you can simply select this option during the first installation.
+
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
