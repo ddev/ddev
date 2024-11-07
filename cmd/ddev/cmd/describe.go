@@ -151,14 +151,14 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			if p, ok := v["exposed_ports"]; ok {
 				if p != "" {
-					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
+					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":\n"+p)
 				} else {
 					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"])
 				}
 			}
 
 			if p, ok := v["host_ports"]; ok && p != "" {
-				urlPortParts = append(urlPortParts, "Host: 127.0.0.1:"+p)
+				urlPortParts = append(urlPortParts, "Host:\n"+p)
 			}
 
 			// Get extra info for web container

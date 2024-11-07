@@ -8,7 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -305,20 +305,39 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
 		services[shortName]["short_name"] = shortName
-		var ports []string
-		for pk := range c.Config.ExposedPorts {
-			if !slices.Contains(ports, pk.Port()) {
-				ports = append(ports, pk.Port())
-			}
-		}
-		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
-		var hostPorts []string
+
+		var exposedPrivatePorts []int
+		exposedPublicPorts := make(map[int]int)
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
-				hostPorts = append(hostPorts, strconv.FormatInt(int64(pv.PublicPort), 10))
+				exposedPublicPorts[int(pv.PublicPort)] = int(pv.PrivatePort)
+			} else {
+				exposedPrivatePorts = append(exposedPrivatePorts, int(pv.PrivatePort))
 			}
 		}
-		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
+
+		sort.Ints(exposedPrivatePorts)
+
+		var exposedPrivatePortsStr []string
+		for _, p := range exposedPrivatePorts {
+			exposedPrivatePortsStr = append(exposedPrivatePortsStr, "  - "+strconv.FormatInt(int64(p), 10))
+		}
+
+		var exposedPublicPortsKeys []int
+		for p := range exposedPublicPorts {
+			exposedPublicPortsKeys = append(exposedPublicPortsKeys, p)
+		}
+
+		sort.SliceStable(exposedPublicPortsKeys, func(i, j int) bool {
+			return exposedPublicPorts[exposedPublicPortsKeys[i]] < exposedPublicPorts[exposedPublicPortsKeys[j]]
+		})
+		var exposedPublicPortsStr []string
+		for _, p := range exposedPublicPortsKeys {
+			exposedPublicPortsStr = append(exposedPublicPortsStr, "  - 127.0.0.1:"+strconv.FormatInt(int64(p), 10)+"->"+strconv.FormatInt(int64(exposedPublicPorts[p]), 10))
+		}
+
+		services[shortName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, "\n")
+		services[shortName]["host_ports"] = strings.Join(exposedPublicPortsStr, "\n")
 
 		// Extract VIRTUAL_HOST, HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		if !IsRouterDisabled(app) {
