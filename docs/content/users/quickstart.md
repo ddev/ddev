@@ -390,7 +390,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     mkdir my-kirby-site && cd my-kirby-site
 
     # Set up the DDEV environment
-    ddev config --omit-containers=db
+    ddev config --omit-containers=db --webserver-type=apache-fpm
 
     # Spin up the project and install the Kirby Starterkit
     ddev start
@@ -409,7 +409,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     cd my-kirby-site
 
     # Set up the DDEV environment
-    ddev config --omit-containers=db
+    ddev config --omit-containers=db --webserver-type=apache-fpm
 
     # Spin up the project
     ddev start
