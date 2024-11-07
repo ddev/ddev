@@ -24,5 +24,5 @@ pkgs=$(yq ".${PHP_VERSION//.}.${ARCH} | join(\" \")" /etc/php-packages.yaml | aw
 # Echo the packages to be installed for logging
 echo "Installing packages for PHP ${PHP_VERSION} on ${ARCH}: $pkgs"
 
-# TODO: I'm not convinced that the apt-get update should be here or outside the script
-(apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y $pkgs || exit $?
+apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+DEBIAN_FRONTEND=noninteractive apt-get -qq install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y $pkgs || exit $?
