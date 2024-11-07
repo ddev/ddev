@@ -24,5 +24,6 @@ pkgs=$(yq ".${PHP_VERSION//.}.${ARCH} | join(\" \")" /etc/php-packages.yaml | aw
 # Echo the packages to be installed for logging
 echo "Installing packages for PHP ${PHP_VERSION/php/} on ${ARCH}: $pkgs"
 
-apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
 DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y $pkgs || exit $?
