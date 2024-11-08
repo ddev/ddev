@@ -14,5 +14,4 @@
       DDEV_TEST_SHARE_CMD: "false"
       DDEV_RUN_GET_TESTS: "false"
       DOCKER_TYPE: "colima"
-      LIMA_SSH_PORT_FORWARDER: "true"
     parallelism: 1
