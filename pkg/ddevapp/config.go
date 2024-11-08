@@ -1134,6 +1134,16 @@ ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
+	// If our PHP version is not already provided in the ddev-webserver, add it now
+	if strings.Contains(fullpath, "webimageBuild") {
+		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
+			contents = contents + fmt.Sprintf(`
+### DDEV-injected addition of not-preinstalled PHP version
+RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETPLATFORM#linux/}"
+	`, app.PHPVersion)
+		}
+	}
+
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(userDockerfilePath + "/pre.Dockerfile*")
@@ -1164,8 +1174,10 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
-	// For webimage, update to latest Composer.
+	// webimage only things
 	if strings.Contains(fullpath, "webimageBuild") {
+
+		// For webimage, update to latest Composer.
 		// Version to run composer self-update to the version
 		var composerSelfUpdateArg string
 
@@ -1193,6 +1205,17 @@ RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq i
 RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || log-stderr.sh composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 
+		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
+			contents = contents + fmt.Sprintf(`
+### DDEV-injected php default version setting
+RUN update-alternatives --set php /usr/bin/php%s
+RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
+RUN mkdir -p /tmp/xhprof
+RUN chmod -fR ugo+w /etc/php /var/lib/php/modules /tmp/xhprof
+RUN phpdismod blackfire xdebug xhprof
+`, app.PHPVersion, app.PHPVersion)
+		}
+
 		// For Postgres, install the relevant PostgreSQL clients
 		if app.Database.Type == nodeps.Postgres {
 			psqlVersion := app.Database.Version
@@ -1200,6 +1223,7 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 				psqlVersion = "9.6"
 			}
 			contents = contents + fmt.Sprintf(`
+### DDEV-injected postgresql-client setup
 RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
   log-stderr.sh bash -c "apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \

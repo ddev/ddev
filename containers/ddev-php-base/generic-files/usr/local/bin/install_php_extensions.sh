@@ -18,10 +18,12 @@ ARCH=$2
 # Retrieve and format the list of packages for the specified PHP version and architecture
 # Uses `yq` to get the proper list of extensions for the PHP version and architecture.
 # The awk transforms the list from something like "cli common fpm" to
-# somethign like "phpX.X-cli phpX.X-common phpX.X-fpm"
+# something like "phpX.X-cli phpX.X-common phpX.X-fpm"
 pkgs=$(yq ".${PHP_VERSION//.}.${ARCH} | join(\" \")" /etc/php-packages.yaml | awk -v v="$PHP_VERSION" 'BEGIN {RS=" ";} {printf "%s-%s ", v, $0}')
 
 # Echo the packages to be installed for logging
-echo "Installing packages for PHP ${PHP_VERSION} on ${ARCH}: $pkgs"
+echo "Installing packages for PHP ${PHP_VERSION/php/} on ${ARCH}: $pkgs"
 
-apt-get -qq install --no-install-recommends --no-install-suggests -y $pkgs || exit $?
+apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y $pkgs || exit $?
