@@ -944,6 +944,22 @@ func GetDockerIP() (string, error) {
 // https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 // Returns containerID, output, error
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings nat.PortMap, healthConfig *dockerContainer.HealthConfig) (containerID string, output string, returnErr error) {
+	config := &dockerContainer.Config{
+		Env:         env,
+		Labels:      labels,
+		Entrypoint:  entrypoint,
+		Healthcheck: healthConfig,
+	}
+	hostConfig := &dockerContainer.HostConfig{
+		Binds:        binds,
+		PortBindings: portBindings,
+	}
+	return RunSimpleContainerExtended(image, name, cmd, uid, removeContainerAfterRun, detach, config, hostConfig)
+}
+
+// RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
+// Accepts any config and hostConfig.
+func RunSimpleContainerExtended(image string, name string, cmd []string, uid string, removeContainerAfterRun bool, detach bool, config *dockerContainer.Config, hostConfig *dockerContainer.HostConfig) (containerID string, output string, returnErr error) {
 	ctx, client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -970,49 +986,34 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		}
 	}
 
-	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
-	if runtime.GOOS == "windows" {
-		for i := range binds {
-			binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
-			if strings.Index(binds[i], ":") == 1 {
-				binds[i] = strings.Replace(binds[i], ":", "", 1)
-				binds[i] = "/" + binds[i]
-				// And amazingly, the drive letter must be lower-case.
-				re := regexp.MustCompile("^/[A-Z]/")
-				driveLetter := re.FindString(binds[i])
-				if len(driveLetter) == 3 {
-					binds[i] = strings.TrimPrefix(binds[i], driveLetter)
-					binds[i] = strings.ToLower(driveLetter) + binds[i]
-				}
-
-			}
-		}
+	for i := range hostConfig.Binds {
+		hostConfig.Binds[i] = util.WindowsPathToCygwinPath(hostConfig.Binds[i])
+	}
+	for i := range hostConfig.Mounts {
+		hostConfig.Mounts[i].Source = util.WindowsPathToCygwinPath(hostConfig.Mounts[i].Source)
 	}
 
-	containerConfig := &dockerContainer.Config{
-		Image:        image,
-		Cmd:          cmd,
-		Env:          env,
-		User:         uid,
-		Labels:       labels,
-		Entrypoint:   entrypoint,
-		AttachStderr: true,
-		AttachStdout: true,
-		Healthcheck:  healthConfig,
+	config.Image = image
+	config.Cmd = cmd
+	config.User = uid
+	config.AttachStderr = true
+	config.AttachStdout = true
+
+	if config.Labels == nil {
+		config.Labels = make(map[string]string)
+	}
+	// Assign a default label so this container can be removed with 'ddev poweroff'
+	if _, exists := config.Labels["com.ddev.site-name"]; !exists {
+		config.Labels["com.ddev.site-name"] = ""
 	}
 
-	containerHostConfig := &dockerContainer.HostConfig{
-		Binds:        binds,
-		PortBindings: portBindings,
+	if runtime.GOOS == "linux" && !IsDockerDesktop() && !slices.Contains(hostConfig.ExtraHosts, "host.docker.internal:host-gateway") {
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:host-gateway")
 	}
 
-	if runtime.GOOS == "linux" && !IsDockerDesktop() {
-		containerHostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
-	}
-
-	container, err := client.ContainerCreate(ctx, containerConfig, containerHostConfig, nil, nil, name)
+	container, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create/start Docker container %v (%v, %v): %v", name, containerConfig, containerHostConfig, err)
+		return "", "", fmt.Errorf("failed to create/start Docker container %v (%v, %v): %v", name, config, hostConfig, err)
 	}
 
 	if removeContainerAfterRun {
