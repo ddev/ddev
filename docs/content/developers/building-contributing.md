@@ -159,10 +159,6 @@ make
 
 It’s easiest to do this using Gitpod (see above) because Gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the `$PATH`.
 
-## Pull Requests and PR Preparation
-
-When preparing your pull request, please use a branch name like `YYYYMMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
-
 ## Docker Image Changes
 
 If you make changes to a Docker image (like `ddev-webserver`), it won’t have any effect unless you:
@@ -350,18 +346,22 @@ The Docker images that DDEV uses are included in the `containers/` directory:
 
 When changes are made to an image, they have to be temporarily pushed to a tag—ideally with the same as the branch name of the PR—and the tag updated in `pkg/versionconstants/versionconstants.go`. Please ask if you need a container pushed to support a pull request.
 
-## Pull Request Pro Tips
+## Pull Requests
+
+To contribute your fixes or improvements to DDEV, make a pull request on GitHub. If you're undertaking a large change, create an issue first so it can be discussed before you invest a lot of time. When you're ready, create a pull request, and a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request. If so, add more commits to your branch and push them. They’ll automatically go into the existing pull request.
+
+If your pull request is merged, great! If not, no sweat; it may not be what the project maintainer had in mind, or they were already working on it. This happens, so our recommendation is to take any feedback you’ve received and go forth and pull request again. Or create your own open source project.
+
+### Preparing a pull request
 
 * **[Fork](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) the repository** and clone it locally. Connect your local to the original ‘upstream’ repository by adding it as a remote, and pull upstream changes often so you stay up to date and reduce the likelihood of conflicts when you submit your pull request. See more detailed instructions [here](https://help.github.com/articles/syncing-a-fork).
-* **Create a [branch](https://docs.github.com/en/get-started/quickstart/github-flow)** for your edits.
+* **Create a [branch](https://docs.github.com/en/get-started/quickstart/github-flow)** for your edits. See below for DDEV's conventions for branch names.
 * **Be clear** about the problem and how someone can recreate it, or why your feature will help. Be equally clear about the steps you took to make your changes.
 * **It’s best to test**. Run your changes against any existing tests and create new tests when needed. Whether tests exist or not, make sure your changes don’t break the existing project.
 
-## Open Pull Requests
+### Feature branch name
 
-Once you’ve opened a pull request, a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request. If so, add more commits to your branch and push them. They’ll automatically go into the existing pull request.
-
-If your pull request is merged, great! If not, no sweat; it may not be what the project maintainer had in mind, or they were already working on it. This happens, so our recommendation is to take any feedback you’ve received and go forth and pull request again. Or create your own open source project.
+When preparing your pull request, please use a branch name like `YYYYMMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
 
 ### Pull Request Title Guidelines
 
