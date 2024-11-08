@@ -297,19 +297,25 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
 	snapshotsDir := app.GetConfigPath("db_snapshots")
 	snapshotFullPath := filepath.Join(snapshotsDir, name)
+
 	// If old-style directory-based snapshot, then use the name, no massaging required
 	if fileutil.IsDirectory(snapshotFullPath) {
 		return name, nil
 	}
+
 	// But if it's a gzipped tarball, we have to get the filename.
 	files, err := fileutil.ListFilesInDir(snapshotsDir)
 	if err != nil {
 		return "", err
 	}
+
+	m := regexp.MustCompile("^" + regexp.QuoteMeta(name) + `-(mariadb|mysql|postgres)_[0-9.]*\.gz$`)
+
 	for _, file := range files {
-		if strings.HasPrefix(file, name+"-") {
+		if m.MatchString(file) {
 			return file, nil
 		}
 	}
+
 	return "", fmt.Errorf("snapshot %s not found in %s", name, snapshotsDir)
 }
