@@ -109,23 +109,25 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
 
-		// Map to track already added keys (because symlinks can resolve to the same file)
+		// Map to track already added keys
 		addedKeys := make(map[string]struct{})
 		var mounts []mount.Mount
-		for _, keyPath := range paths {
-			if _, exists := addedKeys[keyPath]; exists {
-				continue
+		for i, keyPath := range paths {
+			filename := filepath.Base(keyPath)
+			// If it has the same name, change it to avoid conflicts
+			if _, exists := addedKeys[filename]; exists {
+				filename = fmt.Sprintf("%s_%d", filename, i)
 			}
 			addedKeys[keyPath] = struct{}{}
 			mount := mount.Mount{
 				Type:     mount.TypeBind,
 				Source:   keyPath,
-				Target:   "/tmp/sshtmp/" + filepath.Base(keyPath),
+				Target:   "/tmp/sshtmp/" + filename,
 				ReadOnly: true,
 			}
 			mounts = append(mounts, mount)
 		}
-		sshAddCmd := []string{"bash", "-c", fmt.Sprintf(`cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && key_files=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' *); if [ -z "$key_files" ]; then echo 'No SSH keys found in %s' >&2; exit 1; else echo $key_files | xargs -d '\n' ssh-add; fi`, sshKeyPath)}
+		sshAddCmd := []string{"bash", "-c", fmt.Sprintf(`cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add; exit_code=$?; if [ $exit_code -eq 123 ]; then echo >&2 "No SSH keys found in %s"; fi; exit $exit_code`, sshKeyPath)}
 		config := &dockerContainer.Config{
 			Entrypoint: []string{},
 		}
