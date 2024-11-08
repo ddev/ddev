@@ -6,7 +6,15 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-export PATH="${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin:${PATH}"
+# Add ${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin as the first item to the $PATH.
+case ":$PATH:" in
+    # If the item is already in $PATH, don't add it again.
+    *":${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin:"*) ;;
+    # Otherwise, add it.
+    *) PATH="${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin:$PATH" ;;
+esac
+# And don't forget to export the new $PATH.
+export PATH
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
