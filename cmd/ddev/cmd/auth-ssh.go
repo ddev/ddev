@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -85,7 +86,12 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 			if err != nil {
 				util.Failed("Error resolving symlinks for %s: %v", file, err)
 			}
-			paths = append(paths, realPath)
+			if fileutil.FileIsReadable(realPath) {
+				paths = append(paths, realPath)
+			}
+		}
+		if len(paths) == 0 {
+			util.Failed("No SSH keys found in %s", sshKeyPath)
 		}
 
 		app, err := ddevapp.GetActiveApp("")
@@ -103,8 +109,14 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
 
+		// Map to track already added keys (because symlinks can resolve to the same file)
+		addedKeys := make(map[string]struct{})
 		var mounts []mount.Mount
 		for _, keyPath := range paths {
+			if _, exists := addedKeys[keyPath]; exists {
+				continue
+			}
+			addedKeys[keyPath] = struct{}{}
 			mount := mount.Mount{
 				Type:     mount.TypeBind,
 				Source:   keyPath,
@@ -113,7 +125,7 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 			}
 			mounts = append(mounts, mount)
 		}
-		sshAddCmd := []string{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && key_files=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' *); if [ -z "$key_files" ]; then echo 'No private keys found.' >&2; exit 1; else echo $key_files | xargs -d '\n' ssh-add; fi`}
+		sshAddCmd := []string{"bash", "-c", fmt.Sprintf(`cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && key_files=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' *); if [ -z "$key_files" ]; then echo 'No SSH keys found in %s' >&2; exit 1; else echo $key_files | xargs -d '\n' ssh-add; fi`, sshKeyPath)}
 		config := &dockerContainer.Config{
 			Entrypoint: []string{},
 		}
