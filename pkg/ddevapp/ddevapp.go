@@ -320,7 +320,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 		var exposedPrivatePortsStr []string
 		for _, p := range exposedPrivatePorts {
-			exposedPrivatePortsStr = append(exposedPrivatePortsStr, "  - "+shortName+":"+strconv.FormatInt(int64(p), 10))
+			exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
 		}
 
 		var exposedPublicPortsKeys []int
@@ -333,11 +333,11 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		})
 		var exposedPublicPortsStr []string
 		for _, p := range exposedPublicPortsKeys {
-			exposedPublicPortsStr = append(exposedPublicPortsStr, "  - 127.0.0.1:"+strconv.FormatInt(int64(p), 10)+"->"+strconv.FormatInt(int64(exposedPublicPorts[p]), 10))
+			exposedPublicPortsStr = append(exposedPublicPortsStr, strconv.FormatInt(int64(p), 10)+"->"+strconv.FormatInt(int64(exposedPublicPorts[p]), 10))
 		}
 
-		services[shortName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, "\n")
-		services[shortName]["host_ports"] = strings.Join(exposedPublicPortsStr, "\n")
+		services[shortName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, ", ")
+		services[shortName]["host_ports"] = strings.Join(exposedPublicPortsStr, ", ")
 
 		// Extract VIRTUAL_HOST, HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		if !IsRouterDisabled(app) {

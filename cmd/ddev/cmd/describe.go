@@ -151,14 +151,22 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			if p, ok := v["exposed_ports"]; ok {
 				if p != "" {
-					urlPortParts = append(urlPortParts, "InDocker: \n"+p)
+					portStr := ""
+					for _, exposedPort := range strings.Split(p, ", ") {
+						portStr = portStr + "  - " + v["short_name"] + ":" + exposedPort + "\n"
+					}
+					urlPortParts = append(urlPortParts, "InDocker: \n"+strings.Trim(portStr, "\n"))
 				} else {
 					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"])
 				}
 			}
 
 			if p, ok := v["host_ports"]; ok && p != "" {
-				urlPortParts = append(urlPortParts, "Host:\n"+p)
+				portStr := ""
+				for _, exposedPort := range strings.Split(p, ", ") {
+					portStr = portStr + "  - 127.0.0.1:" + exposedPort + "\n"
+				}
+				urlPortParts = append(urlPortParts, "Host: \n"+strings.Trim(portStr, "\n"))
 			}
 
 			// Get extra info for web container
