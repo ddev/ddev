@@ -101,7 +101,7 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 		// Prepare the friendly message with formatted environment variables
 		var formattedVars []string
 		for _, k := range rawResultKeys {
-			formattedVars = append(formattedVars, fmt.Sprintf(`%s="%v"`, k, strings.ReplaceAll(strings.ReplaceAll(changedEnvMap[k], `$`, `\$`), `"`, `\"`)))
+			formattedVars = append(formattedVars, fmt.Sprintf(`%s=%v`, k, ddevapp.EscapeEnvFileValue(changedEnvMap[k])))
 		}
 		friendlyMsg := fmt.Sprintf("Updated %s with:\n\n%s", envFile, strings.Join(formattedVars, "\n"))
 		output.UserOut.WithField("raw", changedEnvMap).Print(friendlyMsg)

@@ -26,9 +26,7 @@ func ReadProjectEnvFile(envFilePath string) (envMap map[string]string, envText s
 func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText string) error {
 	// envFilePath := filepath.Join(app.AppRoot, ".env")
 	for k, v := range envMap {
-		// Escape double quotes in the value, since we wrap it in double quotes
-		// Escape $ in the value, since we don't want to expand it
-		v = `"` + strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), `"`, `\"`) + `"`
+		v = EscapeEnvFileValue(v)
 		// If the item is already in envText, use regex to replace it
 		// otherwise, append it to the envText.
 		// (^|[\r\n]+) - first group $1 matches the start of a line or newline characters
@@ -38,8 +36,7 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 		if exp.MatchString(envText) {
 			// To insert a literal $ in the output, use $$ in the template.
 			// See https://pkg.go.dev/regexp?utm_source=godoc#Regexp.Expand
-			// Replacing is done for `\$`, not `$`, because we already escaped `$` above.
-			v = strings.ReplaceAll(v, `\$`, `\$$`)
+			v = strings.ReplaceAll(v, `$`, `$$`)
 			// Remove comments with whitespaces here using only $1 and $2 groups
 			envText = exp.ReplaceAllString(envText, fmt.Sprintf(`$1$2=%s`, v))
 		} else {
@@ -56,4 +53,17 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 		return err
 	}
 	return nil
+}
+
+// EscapeEnvFileValue escapes the value so it can be used in an .env file
+// The value is wrapped in double quotes for correct work with spaces.
+func EscapeEnvFileValue(value string) string {
+	value = strings.NewReplacer(
+		// Escape all dollar signs so they are not interpreted as bash variables
+		`$`, `\$`,
+		// Escape all double quotes since we wrap the value in double quotes
+		`"`, `\"`,
+	).Replace(value)
+	// Wrap the value in double quotes
+	return `"` + value + `"`
 }
