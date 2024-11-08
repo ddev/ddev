@@ -138,7 +138,13 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 		_, out, err := dockerutil.RunSimpleContainerExtended(docker.GetSSHAuthImage()+"-built", "auth-ssh-"+util.RandString(6), sshAddCmd, uidStr, true, false, config, hostConfig)
 		out = strings.TrimSpace(out)
 		if err != nil {
-			util.Failed("Unable to run auth ssh: %v; output='%s'", err, out)
+			helpMessage := ""
+			// Add a more helpful message to the obscure error from Docker
+			// Can be triggered if key is in /tmp on macOS
+			if strings.Contains(out, "bind source path does not exist") {
+				helpMessage = "\n\nThe specified SSH key path is not shared with your Docker provider."
+			}
+			util.Failed("Unable to run auth ssh: %v; output='%s'%s", err, out, helpMessage)
 		}
 		output.UserOut.Println(out)
 	},
