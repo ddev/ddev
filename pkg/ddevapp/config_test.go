@@ -824,9 +824,9 @@ func TestPHPOverrides(t *testing.T) {
 
 // TestPHPConfig checks some key PHP configuration items
 func TestPHPConfig(t *testing.T) {
-	//if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
-	//	t.Skip("skipping on Lima/Colima/Rancher because of unpredictable behavior, unable to connect")
-	//}
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("skipping on Lima/Colima/Rancher because of unpredictable behavior, unable to connect")
+	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -861,7 +861,10 @@ func TestPHPConfig(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-redis"}
+		// TODO: Remove this exclusion when redis is available for PHP 8.4
+		if app.PHPVersion != nodeps.PHP84 {
+			app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-redis"}
+		}
 		err = app.Restart()
 		require.NoError(t, err)
 
