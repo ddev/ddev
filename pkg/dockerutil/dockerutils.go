@@ -1013,7 +1013,7 @@ func RunSimpleContainerExtended(image string, name string, cmd []string, uid str
 
 	container, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create/start Docker container %v (%v, %v): %v", name, config, hostConfig, err)
+		return "", "", fmt.Errorf("failed to create/start Docker container %v from image %v with cmd %v: %v", name, image, cmd, err)
 	}
 
 	if removeContainerAfterRun {
