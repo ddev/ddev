@@ -80,7 +80,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
-				WidthMax: 10,
+				WidthMax: 12,
 			},
 			{
 				Name: "URL/Port",
@@ -210,7 +210,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			_, _, urls := app.GetAllURLs()
 			s := strings.Join(urls, ", ")
 			urlString := text.WrapSoft(s, int(urlPortWidth))
-			t.AppendRow(table.Row{"All URLs", "", urlString})
+			t.AppendRow(table.Row{"Project URLs", "", urlString})
 		}
 		bindInfo := []string{}
 		if app.BindAllInterfaces {
