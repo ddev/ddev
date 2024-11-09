@@ -44,6 +44,10 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	snapshotName, err := app.Snapshot(t.Name() + "_1")
 	assert.NoError(err)
 
+	// Provide a second snapshot that should not be deleted and whose filename will be lexicographically earlier (See https://github.com/ddev/ddev/issues/6694).
+	_, err = app.Snapshot(t.Name() + "_1-a")
+	assert.NoError(err)
+
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
 
