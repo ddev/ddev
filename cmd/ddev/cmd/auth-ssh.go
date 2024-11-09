@@ -118,7 +118,7 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 			if _, exists := addedKeys[filename]; exists {
 				filename = fmt.Sprintf("%s_%d", filename, i)
 			}
-			addedKeys[keyPath] = struct{}{}
+			addedKeys[filename] = struct{}{}
 			mount := mount.Mount{
 				Type:     mount.TypeBind,
 				Source:   keyPath,
