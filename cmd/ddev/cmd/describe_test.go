@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 
@@ -49,6 +52,9 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
 
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
@@ -67,6 +73,9 @@ func TestCmdDescribe(t *testing.T) {
 
 	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
 	for _, v := range TestSites {
+		err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "docker-compose.override.yaml"), filepath.Join(v.Dir, ".ddev", "docker-compose.override.yaml"))
+		assert.NoError(err)
+
 		app, err := ddevapp.NewApp(v.Dir, false)
 		require.NoError(t, err)
 		err = app.Start()
@@ -82,6 +91,15 @@ func TestCmdDescribe(t *testing.T) {
 		require.Contains(t, string(out), "STAT")
 		require.Contains(t, string(out), v.Name)
 		require.Contains(t, string(out), "OK")
+		// web ports
+		require.Contains(t, string(out), "web:5492")
+		require.Contains(t, string(out), "web:12394")
+		require.Contains(t, string(out), "  - 127.0.0.1:5332->5222")
+		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->12445"), string(out))
+		// db ports
+		require.Contains(t, string(out), "db:4352")
+		require.Contains(t, string(out), "127.0.0.1:12312->3999")
+		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->54355"), string(out))
 
 		err = os.Chdir(v.Dir)
 		require.NoError(t, err)
@@ -91,6 +109,15 @@ func TestCmdDescribe(t *testing.T) {
 		require.Contains(t, string(out), "STAT")
 		require.Contains(t, string(out), v.Name)
 		require.Contains(t, string(out), "OK")
+		// web ports
+		require.Contains(t, string(out), "web:5492")
+		require.Contains(t, string(out), "web:12394")
+		require.Contains(t, string(out), "  - 127.0.0.1:5332->5222")
+		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->12445"), string(out))
+		// db ports
+		require.Contains(t, string(out), "db:4352")
+		require.Contains(t, string(out), "127.0.0.1:12312->3999")
+		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->54355"), string(out))
 
 		// Test describe in current directory with json flag
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
@@ -116,6 +143,30 @@ func TestCmdDescribe(t *testing.T) {
 		require.EqualValues(t, v.Name, raw["name"])
 		require.Equal(t, ddevapp.RenderHomeRootedDir(v.Dir), raw["shortroot"].(string))
 		require.EqualValues(t, v.Dir, raw["approot"].(string))
+
+		// exposed and host ports
+		if services, servicesFound := raw["services"].(map[string]interface{}); servicesFound {
+			if web, webFound := services["web"].(map[string]interface{}); webFound {
+				// it's the first exposed port
+				require.Contains(t, web["exposed_ports"], "5492, ")
+				// it's the last exposed port
+				require.Contains(t, web["exposed_ports"], ", 57497")
+				// it's the first host port
+				require.Contains(t, web["host_ports"], "5332->5222, ")
+				// it's the last host port
+				require.Regexp(t, regexp.MustCompile(", [0-9]+->12445"), web["host_ports"])
+			}
+			if db, dbFound := services["db"].(map[string]interface{}); dbFound {
+				// it's the first exposed port
+				require.Contains(t, db["exposed_ports"], "4352, ")
+				// it's the last exposed port
+				require.Contains(t, db["exposed_ports"], ", 6594")
+				// it's the first host port
+				require.Contains(t, db["host_ports"], "12312->3999, ")
+				// it's the last host port
+				require.Regexp(t, regexp.MustCompile(", [0-9]+->54355"), db["host_ports"])
+			}
+		}
 
 		require.NotEmpty(t, item["msg"])
 	}
