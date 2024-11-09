@@ -223,7 +223,7 @@
 # commands:  file(1) magic for various shells and interpreters
 #
 #0       string          :\ shell archive or commands for antique kernel text
-0       string          #!/bin/sh               application/x-shellscript
+0       string          #!/usr/bin/env sh               application/x-shellscript
 0       string          #!\ /bin/sh             application/x-shellscript
 0       string          #!/bin/csh              application/x-shellscript
 0       string          #!\ /bin/csh            application/x-shellscript

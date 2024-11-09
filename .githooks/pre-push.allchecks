@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # Look for uncommitted files, http://stackoverflow.com/a/2659808/215713
 git diff-index --quiet HEAD || (echo "There are uncommitted files" && exit 1)
