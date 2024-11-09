@@ -141,7 +141,7 @@ ddev auth ssh -f ~/.ssh/id_ed25519`,
 			helpMessage := ""
 			// Add a more helpful message to the obscure error from Docker
 			// Can be triggered if key is in /tmp on macOS
-			if strings.Contains(out, "bind source path does not exist") {
+			if strings.Contains(err.Error(), "bind source path does not exist") {
 				helpMessage = "\n\nThe specified SSH key path is not shared with your Docker provider."
 			}
 			util.Failed("Unable to run auth ssh: %v; output='%s'%s", err, out, helpMessage)
