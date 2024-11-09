@@ -223,7 +223,7 @@
 # commands:  file(1) magic for various shells and interpreters
 #
 #0       string          :\ shell archive or commands for antique kernel text
-0       string          #!/usr/bin/env sh               application/x-shellscript
+0       string          #!/bin/sh               application/x-shellscript
 0       string          #!\ /bin/sh             application/x-shellscript
 0       string          #!/bin/csh              application/x-shellscript
 0       string          #!\ /bin/csh            application/x-shellscript
@@ -237,7 +237,7 @@
 0       string          #!/usr/local/bin/tcsh   application/x-shellscript
 0       string          #!\ /usr/local/bin/tcsh application/x-shellscript
 # bash shell magic, from Peter Tobias (tobias@server.et-inf.fho-emden.de)
-0       string          #!/usr/bin/env bash     		application/x-shellscript
+0       string          #!/bin/bash     		application/x-shellscript
 0       string          #!\ /bin/bash           application/x-shellscript
 0       string          #!/usr/local/bin/bash   application/x-shellscript
 0       string          #!\ /usr/local/bin/bash application/x-shellscript
