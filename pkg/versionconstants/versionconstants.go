@@ -17,7 +17,7 @@ var WebTag = "20241105_stasadev_composer_bin" // Note that this can be overridde
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.23.5"
+var BaseDBTag = "20241109_stijnveeke_mysql_args"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:v1.23.5"
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.23.5"
