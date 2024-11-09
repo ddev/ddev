@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function ddev_custom_init_scripts {
   echo "Loading custom entrypoint config from ${DDEV_WEB_ENTRYPOINT}";

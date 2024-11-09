@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script is used to install a matching Node.js version
 # using nodejs_version from .ddev/config.yaml in ddev-webserver

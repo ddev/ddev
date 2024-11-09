@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This script builds ddev artifacts and their sha256 hashes.
 # First arg is the artifact directory
 

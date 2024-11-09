@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #ddev-generated
 ## Description: Run yarn inside the web container in the root of the project (Use --cwd for another directory)

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: testhostcmd project
 ## Usage: testhostcmd

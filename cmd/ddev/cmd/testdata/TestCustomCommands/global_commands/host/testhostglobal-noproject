@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: testhostglobal-noproject global
 ## Usage: testhostglobal-noproject

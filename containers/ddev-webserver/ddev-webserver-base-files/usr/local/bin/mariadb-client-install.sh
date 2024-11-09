@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script is used to install a matching mariadb-client
 # in ddev-webserver

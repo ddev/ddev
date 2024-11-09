@@ -50,7 +50,7 @@ You can run commands in custom containers as well as standard DDEV `web` and `db
 For example, to add a `solrtail` command that runs in a Solr service, add `.ddev/commands/solr/solrtail` with:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: Tail the main solr log
 ## Usage: solrtail

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #ddev-generated
 # Please run this script with "bash test_ddev.sh"

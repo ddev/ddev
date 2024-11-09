@@ -459,7 +459,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ``` 
     
     ```bash
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -ex
 
     wait_for_docker() {

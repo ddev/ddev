@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Create a pipe that other processes can use to get
 # info into the docker logs

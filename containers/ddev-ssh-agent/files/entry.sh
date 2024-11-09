@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright (c) Andreas Urbanski, 2018
 #
 # Permission is hereby granted, free of charge, to any person obtaining a

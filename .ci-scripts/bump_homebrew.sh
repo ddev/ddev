@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Requires $DDEV_GITHUB_TOKEN, a token with public repo power
 

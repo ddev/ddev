@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Requires $AUR_SSH_PRIVATE_KEY, a private key in environment variable
 # This environment variable must be a single line, with \n replaced by "<SPLIT>"

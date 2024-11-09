@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Check a testbot or test environment to make sure it's likely to be sane.
 # We should add to this script whenever a testbot fails and we can figure out why.

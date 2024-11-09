@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -o errexit
 
 # Look for uncommitted files, http://stackoverflow.com/a/2659808/215713

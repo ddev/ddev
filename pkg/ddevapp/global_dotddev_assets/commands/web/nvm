@@ -1,4 +1,4 @@
-#!/bin/bash -i
+#!/usr/bin/env bash -i
 
 #ddev-generated
 ## Description: Run nvm inside the web container

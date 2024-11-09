@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #ddev-generated
 ## Description: Run sequelpro with current project database

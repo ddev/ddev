@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test all keyrings to make sure they are not going to expire
 # within DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION days

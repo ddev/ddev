@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 SKIP_SSL="--skip-ssl"
 if mysql --help | grep -q -v -- '--skip-ssl'; then SKIP_SSL=""; fi
