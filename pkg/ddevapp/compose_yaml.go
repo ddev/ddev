@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -166,7 +167,10 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 					}
 					if environmentMap, ok := serviceMap["environment"].(map[string]interface{}); ok {
 						for envKey, envValue := range envMap {
-							environmentMap[envKey] = envValue
+							// Escape $ characters in environment variables
+							// The same thing is done in `docker-compose config`
+							// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
+							environmentMap[envKey] = strings.ReplaceAll(envValue, `$`, `$$`)
 						}
 					}
 				}
