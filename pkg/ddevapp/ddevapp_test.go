@@ -3609,9 +3609,16 @@ func TestGetAllURLs(t *testing.T) {
 		urlMap[u] = true
 	}
 
-	// We expect two URLs for each hostname (http/https) and two direct web container address.
-	expectedNumUrls := len(app.GetHostnames())*2 + 2
-	assert.Equal(expectedNumUrls, len(urlMap), "Unexpected number of URLs returned: %d. Actual URLs are %v. urls=%v app.GetHostnames()=%v", len(urlMap), urlMap, urls, app.GetHostnames())
+	if app.CanUseHTTPOnly() {
+		t.Logf("Warning: app.CanUseHTTPOnly=%v", app.CanUseHTTPOnly())
+	}
+	// We expect one or two URLs for each hostname (http/https) and two direct web container address.
+	baseURLExpectation := len(app.GetHostnames())
+	if !app.CanUseHTTPOnly() {
+		baseURLExpectation = baseURLExpectation * 2
+	}
+	expectedNumUrls := baseURLExpectation + 2
+	assert.Equal(expectedNumUrls, len(urlMap), "Unexpected number of URLs returned: %d. CanUseHTTPOnly=%v Actual URLs are %v. urls=%v app.GetHostnames()=%v", len(urlMap), app.CanUseHTTPOnly(), urlMap, urls, app.GetHostnames())
 
 	// Ensure urlMap contains direct address of the web container
 	webContainer, err := app.FindContainerByType("web")
