@@ -145,28 +145,51 @@ func TestCmdDescribe(t *testing.T) {
 		require.EqualValues(t, v.Dir, raw["approot"].(string))
 
 		// exposed and host ports
-		if services, servicesFound := raw["services"].(map[string]interface{}); servicesFound {
-			if web, webFound := services["web"].(map[string]interface{}); webFound {
-				// it's the first exposed port
-				require.Contains(t, web["exposed_ports"], "5492, ")
-				// it's the last exposed port
-				require.Contains(t, web["exposed_ports"], ", 57497")
-				// it's the first host port
-				require.Contains(t, web["host_ports"], "5332->5222, ")
-				// it's the last host port
-				require.Regexp(t, regexp.MustCompile(", [0-9]+->12445"), web["host_ports"])
-			}
-			if db, dbFound := services["db"].(map[string]interface{}); dbFound {
-				// it's the first exposed port
-				require.Contains(t, db["exposed_ports"], "4352, ")
-				// it's the last exposed port
-				require.Contains(t, db["exposed_ports"], ", 6594")
-				// it's the first host port
-				require.Contains(t, db["host_ports"], "12312->3999, ")
-				// it's the last host port
-				require.Regexp(t, regexp.MustCompile(", [0-9]+->54355"), db["host_ports"])
-			}
+		require.Contains(t, raw, "services")
+		services := raw["services"].(map[string]interface{})
+		// web ports
+		require.Contains(t, services, "web")
+		web := services["web"].(map[string]interface{})
+		require.Contains(t, web["exposed_ports"], "5492,")
+		require.Contains(t, web["exposed_ports"], ",57497")
+		require.Contains(t, web["host_ports"], ",5332,")
+		require.Contains(t, web["host_ports"], ",5555,")
+		require.Contains(t, web, "host_ports_mapping")
+		webPortMapping := web["host_ports_mapping"].([]interface{})
+		var webPortMappingTest = map[string]string{}
+		var webPortMappingReverseTest = map[string]string{}
+		for _, portMapping := range webPortMapping {
+			webPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
+			webPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
 		}
+		require.Contains(t, webPortMappingTest, "5332")
+		require.Equal(t, "5222", webPortMappingTest["5332"])
+		require.Contains(t, webPortMappingReverseTest, "12445")
+		require.Regexp(t, regexp.MustCompile("[0-9]+"), webPortMappingReverseTest["12445"])
+		// db ports
+		require.Contains(t, services, "db")
+		db := services["db"].(map[string]interface{})
+		require.Contains(t, db["exposed_ports"], "4352,")
+		require.Contains(t, db["exposed_ports"], ",6594")
+		require.Contains(t, db["host_ports"], ",12312,")
+		dbPortMapping := db["host_ports_mapping"].([]interface{})
+		var dbPortMappingTest = map[string]string{}
+		var dbPortMappingReverseTest = map[string]string{}
+		for _, portMapping := range dbPortMapping {
+			dbPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
+			dbPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
+		}
+		require.Contains(t, dbPortMappingTest, "12312")
+		require.Equal(t, "3999", dbPortMappingTest["12312"])
+		require.Contains(t, dbPortMappingReverseTest, "54355")
+		require.Regexp(t, regexp.MustCompile("[0-9]+"), dbPortMappingReverseTest["54355"])
+		// testService for empty ports
+		require.Contains(t, services, "busybox")
+		busybox := services["busybox"].(map[string]interface{})
+		require.Equal(t, "", busybox["exposed_ports"].(string))
+		require.Equal(t, "", busybox["host_ports"].(string))
+		require.Equal(t, make([]interface{}, 0), busybox["host_ports_mapping"])
+		require.Contains(t, busybox, "host_ports_mapping")
 
 		require.NotEmpty(t, item["msg"])
 	}
