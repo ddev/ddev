@@ -3611,7 +3611,7 @@ func TestGetAllURLs(t *testing.T) {
 
 	// We expect two URLs for each hostname (http/https) and two direct web container address.
 	expectedNumUrls := len(app.GetHostnames())*2 + 2
-	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d. The urls are %v", len(urlMap), urlMap)
+	assert.Equal(expectedNumUrls, len(urlMap), "Unexpected number of URLs returned: %d. Actual URLs are %v. urls=%v app.GetHostnames()=%v", len(urlMap), urlMap, urls, app.GetHostnames())
 
 	// Ensure urlMap contains direct address of the web container
 	webContainer, err := app.FindContainerByType("web")
