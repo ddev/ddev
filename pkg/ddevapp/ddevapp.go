@@ -2842,6 +2842,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to process post-stop hooks: %v", err)
 		}
 	}
+	_ = os.Setenv(`DDEV_DB_CONTAINER_COMMAND`, "")
 
 	return nil
 }
