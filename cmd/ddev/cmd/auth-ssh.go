@@ -55,7 +55,8 @@ var AuthSSHCommand = &cobra.Command{
 		for _, file := range files {
 			key, err := filepath.EvalSymlinks(file)
 			if err != nil {
-				util.Failed("Error resolving symlinks for %s: %v", file, err)
+				util.Warning("Unable to read %s file: %v", file, err)
+				continue
 			}
 			if !slices.Contains(keys, key) {
 				if isPrivateKey, _ := fileIsPrivateKey(key); isPrivateKey {
