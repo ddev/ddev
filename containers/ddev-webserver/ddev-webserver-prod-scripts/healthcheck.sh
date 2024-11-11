@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # This uses /bin/sh, so it doesn't initialize profile/bashrc/etc
 

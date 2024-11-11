@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: testwebcmd project
 ## Usage: testwebcmd

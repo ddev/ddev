@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 MACOS_INFO_PATH=/Applications/Docker.app/Contents/Info.plist
 

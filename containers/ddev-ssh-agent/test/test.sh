@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Find the directory of this script
 export DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"

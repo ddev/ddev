@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: testwebglobal global
 ## Usage: testwebglobal

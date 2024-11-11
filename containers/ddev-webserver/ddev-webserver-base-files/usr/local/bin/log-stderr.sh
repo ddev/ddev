@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script is used to run a command with optional timeout
 # and save stderr to /tmp/ddev-log-stderr-{whoami}-{command-md5sum}.txt

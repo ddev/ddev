@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 echo "simplescript.sh; TEMPENV=$TEMPENV UID=$(id -u)"
 if [ "$ERROROUT" = "true" ] ; then

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script is used to install a matching `mysql` client (with `mysqldump`)
 # in ddev-webserver

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Build a ddev-dbserver image for variety of mariadb/mysql
 # and per architecture, optionally push

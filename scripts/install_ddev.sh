@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #ddev-generated
 # Script to download and install DDEV, https://github.com/ddev/ddev

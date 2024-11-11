@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Test ddev.conf generation for https://github.com/ddev/ddev/issues/2648
 

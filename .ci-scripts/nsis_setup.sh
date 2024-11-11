@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Set up nsis after it's installed
 # $1 should be the target directory where nsis is

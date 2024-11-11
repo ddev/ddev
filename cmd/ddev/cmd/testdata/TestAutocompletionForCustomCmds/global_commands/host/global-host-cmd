@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: global-host-cmd
 ## Usage: global-host-cmd

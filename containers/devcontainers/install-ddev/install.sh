@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -eu -o pipefail
 
 sudo install -m 0755 -d /etc/apt/keyrings

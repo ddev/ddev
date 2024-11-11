@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #ddev-generated
 # This assumes that the typo3 command will be in the $PATH; if in vendor/bin/ it will be

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Install NSIS on test machines, any other post-install
 # This should be run with administrative privileges.

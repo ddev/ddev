@@ -95,7 +95,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     In general, it’s best practice on most projects to do significant Git operations on the host, but they can be disruptive to the sync. It’s easy to add a Git post-checkout hook to do a `ddev mutagen sync` operation though. Add a `.git/hooks/post-checkout` file to your project and make it executable with `chmod +x .git/hooks/post-checkout`:
 
     ```bash
-    #!/bin/bash
+    #!/usr/bin/env bash
     ddev mutagen sync || true
     ```
 

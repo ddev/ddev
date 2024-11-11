@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function basic_setup {
     export CONTAINER_NAME="testserver"

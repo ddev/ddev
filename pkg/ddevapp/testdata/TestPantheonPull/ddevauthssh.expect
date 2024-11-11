@@ -1,4 +1,4 @@
-#!/usr/bin/env expect -f
+#!/usr/bin/env -S expect -f
 
 set ddevpath [lindex $argv 0];
 set keypath [lindex $argv 1];

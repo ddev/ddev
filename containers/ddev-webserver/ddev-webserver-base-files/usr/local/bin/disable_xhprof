@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 export PATH=$PATH:/usr/sbin:/sbin
 phpdismod xhprof
 killall -USR2 php-fpm 2>/dev/null || true

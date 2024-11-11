@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This script is used to build ddev/ddev using buildkite
 
 set -eu -o pipefail
