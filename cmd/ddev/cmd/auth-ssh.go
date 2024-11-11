@@ -63,7 +63,7 @@ var AuthSSHCommand = &cobra.Command{
 			}
 		}
 		if len(keys) == 0 {
-			util.Failed("No SSH keys found in %s", strings.Join(files, ", "))
+			util.Failed("No SSH keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
 
 		app, err := ddevapp.GetActiveApp("")
