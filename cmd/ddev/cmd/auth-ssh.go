@@ -2,20 +2,19 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/heredoc"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
-
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/spf13/cobra"
 )
 
 var sshKeyFiles, sshKeyDirs []string
@@ -31,7 +30,7 @@ var AuthSSHCommand = &cobra.Command{
 		ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
 		ddev auth ssh -d ~/.ssh -f /path/to/id_ed25519
 	`),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var err error
 		if len(args) > 0 {
 			util.Failed("This command takes no arguments.")
