@@ -26,9 +26,9 @@ var AuthSSHCommand = &cobra.Command{
 	Long:  `Use this command to provide the password to your SSH key to the ddev-ssh-agent container, where it can be used by other containers.`,
 	Example: heredoc.DocI2S(`
 		ddev auth ssh
-		ddev auth ssh -d ~/.ssh
+		ddev auth ssh -d ~/custom/path/to/ssh
 		ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
-		ddev auth ssh -d ~/.ssh -f /path/to/id_ed25519
+		ddev auth ssh -d ~/.ssh -f ~/custom/path/to/ssh/id_ed25519
 	`),
 	Run: func(_ *cobra.Command, args []string) {
 		var err error
