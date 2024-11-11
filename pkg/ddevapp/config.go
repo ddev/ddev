@@ -1280,6 +1280,7 @@ fi`, app.Database.Version, psqlVersion) + "\n\n"
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected folders permission fix
 RUN chmod 777 /run/php /var/log
+RUN mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
 `)
 	}
 

@@ -861,6 +861,10 @@ func TestPHPConfig(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
+		// TODO: Remove this exclusion when redis is available for PHP 8.4
+		if app.PHPVersion != nodeps.PHP84 {
+			app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-redis"}
+		}
 		err = app.Restart()
 		require.NoError(t, err)
 
