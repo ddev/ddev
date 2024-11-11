@@ -58,10 +58,8 @@ var AuthSSHCommand = &cobra.Command{
 				util.Warning("Unable to read %s file: %v", file, err)
 				continue
 			}
-			if !slices.Contains(keys, key) {
-				if isPrivateKey, _ := fileIsPrivateKey(key); isPrivateKey {
-					keys = append(keys, key)
-				}
+			if !slices.Contains(keys, key) && fileIsPrivateKey(key) {
+				keys = append(keys, key)
 			}
 		}
 		if len(keys) == 0 {
@@ -122,10 +120,15 @@ func getSSHKeyPaths(sshKeyPathArray []string, acceptsDirsOnly bool, acceptsFiles
 	var files []string
 	for _, sshKeyPath := range sshKeyPathArray {
 		if !filepath.IsAbs(sshKeyPath) {
-			sshKeyPath, err := filepath.Abs(sshKeyPath)
+			cwd, err := os.Getwd()
+			if err != nil {
+				util.Failed("Failed to get current working directory: %v", err)
+			}
+			fullPath, err := filepath.Abs(filepath.Join(cwd, sshKeyPath))
 			if err != nil {
 				util.Failed("Failed to derive absolute path for SSH key path %s: %v", sshKeyPath, err)
 			}
+			sshKeyPath = fullPath
 		}
 		fi, err := os.Stat(sshKeyPath)
 		if os.IsNotExist(err) {
@@ -155,10 +158,10 @@ func getSSHKeyPaths(sshKeyPathArray []string, acceptsDirsOnly bool, acceptsFiles
 // fileIsPrivateKey checks if a file is readable and that it is a private key.
 // Regex isn't used here because files can be huge.
 // The full check if it's really a private key is done with grep -l '^-----BEGIN .* PRIVATE KEY-----'.
-func fileIsPrivateKey(filePath string) (bool, error) {
-	file, err := os.OpenFile(filePath, os.O_RDONLY, 0666)
+func fileIsPrivateKey(filePath string) bool {
+	file, err := os.Open(filePath)
 	if err != nil {
-		return false, err
+		return false
 	}
 	// nolint: errcheck
 	defer file.Close()
@@ -166,9 +169,9 @@ func fileIsPrivateKey(filePath string) (bool, error) {
 	buffer := make([]byte, len(prefix))
 	_, err = file.Read(buffer)
 	if err != nil {
-		return false, err
+		return false
 	}
-	return string(buffer) == string(prefix), nil
+	return string(buffer) == string(prefix)
 }
 
 // echoDockerCmd formats the Docker command to be more readable.
