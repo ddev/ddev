@@ -44,12 +44,12 @@ RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/deb
     dpkg -i /tmp/debsuryorg-archive-keyring.deb && rm -f /tmp/debsuryorg-archive-keyring.deb && \
     echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
 ARG XDEBUG_VERSION="3.2.2"
-ARG XDEBUG_BUILD_PACKAGES="build-essential php-pear php8.0-dev php8.1-dev php8.2-dev"
+ARG XDEBUG_BUILD_PACKAGES="build-essential php-pear php8.1-dev php8.2-dev"
 RUN set -eu -o pipefail; \
     apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y ${XDEBUG_BUILD_PACKAGES}
 RUN pecl channel-update pecl.php.net && \
-    for version in 8.0 8.1 8.2; do \
+    for version in 8.1 8.2; do \
         (apt-get -qq remove -y php${version}-xdebug || true) && \
         pecl -d php_suffix=${version} install -f xdebug-${XDEBUG_VERSION} && \
         rm -f /usr/share/php/.registry/.channel.pecl.php.net/xdebug.reg || exit $?; \

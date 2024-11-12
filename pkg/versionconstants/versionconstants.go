@@ -17,7 +17,7 @@ var WebTag = "20241111_stasadev_n_install_cleanup" // Note that this can be over
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20241109_use_bin_env"
+var BaseDBTag = "20241112_remove_php8.0-xdebug"
 
 const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:20241109_use_bin_env"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20241109_use_bin_env"
