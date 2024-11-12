@@ -123,8 +123,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 
 ### ---------------------------ddev-xdebug-build--------------------------------------
 ### The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
-RUN apt-get -qq remove -y php8.0-xdebug php8.1-xdebug php8.2-xdebug
-COPY --from=ddev-xdebug-build /usr/lib/php/20200930/xdebug.so /usr/lib/php/20200930/xdebug.so
+RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
 COPY --from=ddev-xdebug-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
 COPY --from=ddev-xdebug-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
 #END ddev-xdebug-build
