@@ -181,13 +181,10 @@ brews:
   # ddev brew will only be uploaded on non-prerelease
   skip_upload: auto
   dependencies:
-  - name: mkcert
+    - name: mkcert
   custom_block: |
-    head "https://github.com/ddev/ddev.git", branch: "master"
-    if build.head?
-      depends_on "go" => :build
-      depends_on "make" => :build
-    end
+    depends_on "go" => [:build, :head]
+    depends_on "make" => [:build, :head]
   install: |
     if build.head?
         os = OS.mac? ? "darwin" : "linux"
@@ -221,13 +218,10 @@ brews:
   # ddev-edge brew will always be uploaded
   skip_upload: "false"
   dependencies:
-  - name: mkcert
+    - name: mkcert
   custom_block: |
-    head "https://github.com/ddev/ddev.git", branch: "master"
-    if build.head?
-      depends_on "go" => :build
-      depends_on "make" => :build
-    end
+    depends_on "go" => [:build, :head]
+    depends_on "make" => [:build, :head]
   install: |
     if build.head?
         os = OS.mac? ? "darwin" : "linux"
