@@ -183,8 +183,11 @@ brews:
   dependencies:
     - name: mkcert
   custom_block: |
-    depends_on "go" => [:build, :head]
-    depends_on "make" => [:build, :head]
+    head do
+      url "https://github.com/ddev/ddev.git", branch: "master"
+      depends_on "go" => :build
+      depends_on "make" => :build
+    end
   install: |
     if build.head?
         os = OS.mac? ? "darwin" : "linux"
@@ -220,8 +223,11 @@ brews:
   dependencies:
     - name: mkcert
   custom_block: |
-    depends_on "go" => [:build, :head]
-    depends_on "make" => [:build, :head]
+    head do
+      url "https://github.com/ddev/ddev.git", branch: "master"
+      depends_on "go" => :build
+      depends_on "make" => :build
+    end
   install: |
     if build.head?
         os = OS.mac? ? "darwin" : "linux"
