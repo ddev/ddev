@@ -394,7 +394,8 @@
         "shopware6",
         "silverstripe",
         "typo3",
-        "wordpress"
+        "wordpress",
+        "cakephp"
       ]
     },
     "upload_dirs": {
