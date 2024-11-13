@@ -186,33 +186,26 @@ brews:
   custom_block: |
     head do
       url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
-
-      resource "ddev-binary" do
+      resource "ddev-artifacts" do
         url "https://nightly.link/{{ .Env.REPOSITORY_OWNER }}/ddev/workflows/master-build/master/ddev-head-artifacts.zip"
-        sha256 "" # We'll need to skip checksum verification for nightlies
+        sha256 "{{ .Env.HEAD_ARTIFACTS_SHA }}"
       end
     end
   install: |
     if build.head?
-        resource("ddev-binary").stage do
-          # First unzip the main artifact
-          system "unzip", "-o", "ddev-head-artifacts.zip"
+        resource("ddev-artifacts").unpack buildpath
     
-          # Verify checksums
-          system "sha256sum", "-c", "checksums.txt"
+        # Get the appropriate inner zipfile based on architecture
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        inner_zip = "ddev_#{os}_#{arch}.zip"
     
-          # Now get the appropriate inner zipfile based on architecture
-          os = OS.mac? ? "macos" : "linux"
-          arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-          inner_zip = "ddev_#{os}_#{arch}.zip"
+        system "unzip", "-o", inner_zip, "-d", buildpath
     
-          # Unzip the architecture-specific binary and completions
-          system "unzip", "-o", inner_zip
-          bin.install "ddev"
-          bash_completion.install "ddev_bash_completion.sh" => "ddev"
-          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
-        end
+        bin.install "ddev"
+        bash_completion.install "ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
@@ -241,34 +234,26 @@ brews:
   custom_block: |
     head do
       url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
-
-      resource "ddev-binary" do
+      resource "ddev-artifacts" do
         url "https://nightly.link/{{ .Env.REPOSITORY_OWNER }}/ddev/workflows/master-build/master/ddev-head-artifacts.zip"
-        sha256 "" # We'll need to skip checksum verification for nightlies
+        sha256 "{{ .Env.HEAD_ARTIFACTS_SHA }}"
       end
     end
-
   install: |
     if build.head?
-        resource("ddev-binary").stage do
-          # First unzip the main artifact
-          system "unzip", "-o", "ddev-head-artifacts.zip"
+        resource("ddev-artifacts").unpack buildpath
     
-          # Verify checksums
-          system "sha256sum", "-c", "checksums.txt"
+        # Get the appropriate inner zipfile based on architecture
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        inner_zip = "ddev_#{os}_#{arch}.zip"
     
-          # Now get the appropriate inner zipfile based on architecture
-          os = OS.mac? ? "macos" : "linux"
-          arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-          inner_zip = "ddev_#{os}_#{arch}.zip"
+        system "unzip", "-o", inner_zip, "-d", buildpath
     
-          # Unzip the architecture-specific binary and completions
-          system "unzip", "-o", inner_zip
-          bin.install "ddev"
-          bash_completion.install "ddev_bash_completion.sh" => "ddev"
-          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
-        end
+        bin.install "ddev"
+        bash_completion.install "ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"

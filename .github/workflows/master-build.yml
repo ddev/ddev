@@ -312,6 +312,22 @@ jobs:
             artifacts/*.zip
             artifacts/checksums.txt
 
+      - name: Get SHA of uploaded artifact
+        run: |
+          # Get the artifact ID
+          ARTIFACT_ID=$(gh api /repos/${{ github.repository }}/actions/artifacts \
+            --jq '.artifacts[] | select(.name=="ddev-head-artifacts") | .id' \
+            --header "authorization: Bearer ${{ github.token }}")
+          
+          # Download the artifact directly from GitHub
+          gh api /repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip \
+            --header "authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            --output head-artifacts.zip
+          
+          ls -l head-artifacts.zip && sha256sum head-artifacts.zip
+          echo "HEAD_ARTIFACTS_SHA=$(sha256sum head-artifacts.zip | cut -d' ' -f1)" >> $GITHUB_ENV
+
       - name: Show github.ref
         run: echo ${{ github.ref }}
 
