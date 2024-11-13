@@ -11,7 +11,7 @@ fi
 PHP_VERSION=${1/php/}
 # xdebug
 EXTENSION_NAME=$2
-# 3.2.2
+# 3.2.2, latest
 EXTENSION_VERSION=$3
 # /usr/lib/php/20210902/xdebug.so
 # The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
@@ -30,11 +30,17 @@ if [ -f "${EXTENSION_FILE}" ]; then
   mv "${EXTENSION_FILE}" "${EXTENSION_FILE}.bak"
 fi
 
+if [ "${EXTENSION_VERSION}" = "latest" ]; then
+  PECL_EXTENSION="${EXTENSION_NAME}"
+else
+  PECL_EXTENSION="${EXTENSION_NAME}-${EXTENSION_VERSION}"
+fi
+
 # PECL does not allow to install multiple versions of extension at the same time,
 # use `rm -f /usr/share/php/.registry/.channel.pecl.php.net/extension.reg` to make it forget about another version.
 (pecl channel-update pecl.php.net && \
   echo "Building php${PHP_VERSION}-${EXTENSION_NAME}..." && \
-  pecl -d php_suffix="${PHP_VERSION}" install -f "${EXTENSION_NAME}-${EXTENSION_VERSION}" >/dev/null && \
+  pecl -d php_suffix="${PHP_VERSION}" install -f "${PECL_EXTENSION}" >/dev/null && \
   rm -f "/usr/share/php/.registry/.channel.pecl.php.net/${EXTENSION_NAME}.reg") || true
 
 if [ ! -f "${EXTENSION_FILE}" ]; then
