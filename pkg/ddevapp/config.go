@@ -1114,10 +1114,41 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 		return err
 	}
 
-	// Normal starting content is the arg and base image
-	contents := `
-#ddev-generated - Do not modify this file; your modifications will be overwritten.
+	contents := "#ddev-generated - Do not modify this file; your modifications will be overwritten.\n"
 
+	// Build custom PHP extensions if needed
+	// See /usr/local/bin/build_php_extension.sh
+	phpExtensions := []map[string]string{
+		// compile specific Xdebug version https://github.com/ddev/ddev/issues/6159
+		{
+			"php":     nodeps.PHP80,
+			"name":    "xdebug",
+			"version": "3.2.2",
+			"file":    "/usr/lib/php/20200930/xdebug.so",
+		},
+	}
+	if strings.Contains(fullpath, "webimageBuild") {
+		hasMultiStageBuild := false
+		for _, ext := range phpExtensions {
+			if app.PHPVersion == ext["php"] {
+				if !hasMultiStageBuild {
+					contents = contents + `
+### DDEV-injected custom build for PHP extensions
+ARG BASE_IMAGE="scratch"
+FROM $BASE_IMAGE AS ddev-php-extension-build
+SHELL ["/bin/bash", "-c"]
+`
+					hasMultiStageBuild = true
+				}
+				contents = contents + fmt.Sprintf(`
+RUN /usr/local/bin/build_php_extension.sh "%s" "%s" "%s" "%s" || true
+`, ext["php"], ext["name"], ext["version"], ext["file"])
+			}
+		}
+	}
+
+	// Normal starting content is the arg and base image
+	contents = contents + `
 ### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
@@ -1141,6 +1172,14 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 ### DDEV-injected addition of not-preinstalled PHP version
 RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
 	`, app.PHPVersion)
+		}
+		for _, ext := range phpExtensions {
+			if app.PHPVersion == ext["php"] {
+				contents = contents + fmt.Sprintf(`
+### DDEV-injected copy of %s %v for PHP %v
+COPY --from=ddev-php-extension-build %s %v
+`, ext["name"], ext["version"], app.PHPVersion, ext["file"], ext["file"])
+			}
 		}
 	}
 

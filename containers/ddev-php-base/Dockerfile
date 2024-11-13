@@ -37,23 +37,13 @@ ADD generic-files /
 ### Xdebug compile specific version because 3.3 is not fully reliable
 ### See https://github.com/ddev/ddev/issues/6159
 ### We don't need to recompile every Xdebug library https://xdebug.org/docs/compat (only PHP 8.0, 8.1, 8.2 can have Xdebug 3.2)
-### PECL does not allow you to install multiple versions of Xdebug, so there is `rm -f xdebug.reg`
 FROM base AS ddev-xdebug-build
 SHELL ["/bin/bash", "-c"]
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb && rm -f /tmp/debsuryorg-archive-keyring.deb && \
     echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
-ARG XDEBUG_VERSION="3.2.2"
-ARG XDEBUG_BUILD_PACKAGES="build-essential php-pear php8.1-dev php8.2-dev"
-RUN set -eu -o pipefail; \
-    apt-get -qq update && \
-    apt-get -qq install --no-install-recommends --no-install-suggests -y ${XDEBUG_BUILD_PACKAGES}
-RUN pecl channel-update pecl.php.net && \
-    for version in 8.1 8.2; do \
-        (apt-get -qq remove -y php${version}-xdebug || true) && \
-        pecl -d php_suffix=${version} install -f xdebug-${XDEBUG_VERSION} && \
-        rm -f /usr/share/php/.registry/.channel.pecl.php.net/xdebug.reg || exit $?; \
-    done
+RUN /usr/local/bin/build_php_extension.sh "8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
+RUN /usr/local/bin/build_php_extension.sh "8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
 #END ddev-xdebug-build
 
 ### ---------------------------ddev-php-base--------------------------------------
