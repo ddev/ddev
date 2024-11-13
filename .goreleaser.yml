@@ -187,9 +187,8 @@ brews:
       url "https://github.com/ddev/ddev.git", branch: "master"
       depends_on "go" => :build
       depends_on "make" => :build
-    end
-  install: |
-    if build.head?
+
+      def install
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
@@ -198,12 +197,16 @@ brews:
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
-    else
-        bin.install "ddev"
-        bash_completion.install "ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+      end
     end
+
+    def install
+      bin.install "ddev"
+      bash_completion.install "ddev_bash_completion.sh" => "ddev"
+      zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
+      fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+    end
+
 
   test: |
     system "#{bin}/ddev --version"
@@ -227,9 +230,8 @@ brews:
       url "https://github.com/ddev/ddev.git", branch: "master"
       depends_on "go" => :build
       depends_on "make" => :build
-    end
-  install: |
-    if build.head?
+
+      def install
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
@@ -238,16 +240,18 @@ brews:
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
-    else
-        bin.install "ddev"
-        bash_completion.install "ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+      end
+    end
+
+    def install
+      bin.install "ddev"
+      bash_completion.install "ddev_bash_completion.sh" => "ddev"
+      zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
+      fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
 
   test: |
     system "#{bin}/ddev --version"
-
 
 nfpms:
 - maintainer: Randy Fay
