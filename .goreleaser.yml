@@ -188,7 +188,6 @@ brews:
       url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
       resource "ddev-artifacts" do
         url "https://nightly.link/{{ .Env.REPOSITORY_OWNER }}/ddev/workflows/master-build/master/ddev-head-artifacts.zip"
-        sha256 "{{ .Env.HEAD_ARTIFACTS_SHA }}"
       end
     end
   install: |
@@ -236,7 +235,6 @@ brews:
       url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
       resource "ddev-artifacts" do
         url "https://nightly.link/{{ .Env.REPOSITORY_OWNER }}/ddev/workflows/master-build/master/ddev-head-artifacts.zip"
-        sha256 "{{ .Env.HEAD_ARTIFACTS_SHA }}"
       end
     end
   install: |
