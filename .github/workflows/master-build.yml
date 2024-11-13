@@ -213,7 +213,7 @@ jobs:
           DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
           DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
           DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
-          FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential"
+          FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential_${{ github.repository_owner }}"
           GORELEASER_KEY: "op://push-secrets/GORELEASER_KEY/credential"
 
       - uses: actions/checkout@v4
