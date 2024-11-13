@@ -65,7 +65,7 @@ func TestProcessHooks(t *testing.T) {
 		//{"composer: install", "", "Running task: Composer command '[install]' in web container"},
 		//{"composer: licenses --format=json", "no-version-set", "Running task: Composer command 'licenses --format=json' in web container"},
 		//{"composer:\n    exec_raw: [licenses, --format=json]", "no-version-set", "Running task: Composer command '[licenses --format=json]' in web container"},
-		{"exec: ls /usr/local/bin", "acli\ncomposer", "Running task: Exec command 'ls /usr/local/bin'"},
+		{"exec: ls /usr/local/bin", "acli\nbuild_php_extension.sh\ncomposer", "Running task: Exec command 'ls /usr/local/bin'"},
 		{"exec-host: \"echo something\"", "something\n", "Running task: Exec command 'echo something' on the host"},
 		{"exec: echo MYSQL_PWD=${MYSQL_PWD:-}\n    service: db", "MYSQL_PWD=db\n", "Running task: Exec command 'echo MYSQL_PWD=${MYSQL_PWD:-}' in container/service 'db'"},
 		{"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt'"},
