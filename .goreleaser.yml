@@ -194,8 +194,8 @@ brews:
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
     
-        # Build in the git checkout directory
-        cd buildpath do
+        # Change to the git checkout directory, which is the last component of the URL
+        cd("ddev") do
           # Get the git commit SHA for versioning
           git_hash = Utils.git_head
           version = "HEAD-" + git_hash[0..7]
@@ -249,14 +249,14 @@ brews:
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
     
-        # Build in the git checkout directory
-        cd buildpath do
+        # Change to the git checkout directory, which is the last component of the URL
+        cd("ddev") do
           # Get the git commit SHA for versioning
           git_hash = Utils.git_head
           version = "HEAD-" + git_hash[0..7]
-
+    
           system "make", "VERSION=#{version}"
-  
+
           # Install the compiled binary
           bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
 
