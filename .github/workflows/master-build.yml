@@ -201,12 +201,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-most, sign-windows, notarize-macos]
     steps:
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v2
         with:
@@ -267,6 +261,12 @@ jobs:
           cgo=$(".gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev" version 2>/dev/null | awk '/cgo_enabled/ {print $2}')
           if [ "${cgo}" != "0" ]; then echo "CGO_ENABLED=${cgo} but it must be 0 in released binary" && exit 10; fi
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v6
@@ -282,16 +282,20 @@ jobs:
       - name: Create and checksum release archives
         run: |
           mkdir -p artifacts
+          pwd
+          set -eu -o pipefail
+          set -x
+          ls -lR .gotmp/bin
           echo "# Archive checksums" > artifacts/checksums.txt
           for item in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
             pushd .gotmp/bin/${item} >/dev/null
             tar -zxf ../completions.tar.gz
-            zip ../../artifacts/ddev_${item}.zip ddev ddev_*completion* ddev_fig_spec.ts
+            zip -v ../../artifacts/ddev_${item}.zip ddev ddev_*completion* ddev_fig_spec.ts
             popd >/dev/null
           done
           for item in windows_amd64 windows_arm64; do
             pushd .gotmp/bin/${item} >/dev/null
-            zip ../../artifacts/ddev_${item}.zip ddev.exe ddev*installer.exe
+            zip -v ../../artifacts/ddev_${item}.zip ddev.exe ddev*installer.exe
             popd >/dev/null
           done
           
