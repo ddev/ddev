@@ -285,18 +285,18 @@ jobs:
           pwd
           set -eu -o pipefail
           set -x
-          ls -lR .gotmp/bin
+          ls -lR artifacts .gotmp/bin
           echo "# Archive checksums" > artifacts/checksums.txt
           for item in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
             pushd .gotmp/bin/${item} >/dev/null
             cp -r ../completions/* .
             ls -l $PWD
-            zip -v ../../artifacts/ddev_${item}.zip ddev ddev_*completion* ddev_fig_spec.ts
+            zip -v ../../../artifacts/ddev_${item}.zip ddev ddev_*completion* ddev_fig_spec.ts
             popd >/dev/null
           done
           for item in windows_amd64 windows_arm64; do
             pushd .gotmp/bin/${item} >/dev/null
-            zip -v ../../artifacts/ddev_${item}.zip ddev.exe ddev*installer.exe
+            zip -v ../../../artifacts/ddev_${item}.zip ddev.exe ddev*installer.exe
             popd >/dev/null
           done
           
