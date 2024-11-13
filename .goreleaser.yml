@@ -189,11 +189,21 @@ brews:
       depends_on "make" => :build
 
       def install
+        ENV["GOPATH"] = buildpath
+        ENV["GOBIN"] = buildpath
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        system "mkdir", "-p", "#{bin}"
-        system "make", "build", "completions"
-        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+
+        # Get the git commit SHA for versioning
+        git_hash = Utils.git_head
+        version = "HEAD-" + git_hash[0..7]
+
+        system "make", "VERSION=#{version}"
+
+        # Install the compiled binary
+        bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
+
+        # Install completions
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
@@ -206,7 +216,6 @@ brews:
       zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
       fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
-
 
   test: |
     system "#{bin}/ddev --version"
@@ -232,11 +241,21 @@ brews:
       depends_on "make" => :build
 
       def install
+        ENV["GOPATH"] = buildpath
+        ENV["GOBIN"] = buildpath
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        system "mkdir", "-p", "#{bin}"
-        system "make", "build", "completions"
-        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+  
+        # Get the git commit SHA for versioning
+        git_hash = Utils.git_head
+        version = "HEAD-" + git_hash[0..7]
+  
+        system "make", "VERSION=#{version}"
+
+        # Install the compiled binary
+        bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
+
+        # Install completions
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
