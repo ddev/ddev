@@ -378,6 +378,7 @@
       "type": "string",
       "enum": [
         "backdrop",
+        "cakephp",
         "craftcms",
         "django4",
         "drupal",
@@ -394,8 +395,7 @@
         "shopware6",
         "silverstripe",
         "typo3",
-        "wordpress",
-        "cakephp"
+        "wordpress"
       ]
     },
     "upload_dirs": {
