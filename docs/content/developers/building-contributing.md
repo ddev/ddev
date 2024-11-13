@@ -9,7 +9,14 @@ search:
 There are several ways to use DDEV’s latest-committed HEAD version:
 
 * **Download** the latest master branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/master-build/master). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
-* **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased. Since you’re building this on your own computer, it’s not signed or notarized, and you’ll get a notification that instrumentation doesn’t work, which is fine. If you’re using Linux/WSL2, you’ll likely need to install build-essential by running the following command: `sudo apt-get install -y build-essential`. In case you want to regularly test and use the latest version of DDEV HEAD run `brew upgrade --fetch-head ddev` instead.
+* **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased.
+* **Install via script**: You can download and run the [install_ddev_head.sh](https://raw.githubusercontent.com/ddev/ddev/refs/heads/master/scripts/install_ddev_head.sh)  script, or run it automatically:
+
+    ```bash
+    # Download and run the install script
+    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/refs/heads/master/scripts/install_ddev_head.sh | bash
+    ```
+
 * **Build manually**: If you have normal build tools like `make` and `go` installed, you can check out the code and run `make`.
 * **Gitpod** You can use the latest build by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/ddev/ddev).
 
