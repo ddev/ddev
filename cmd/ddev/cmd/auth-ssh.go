@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
-	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -81,7 +84,7 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
 
-		var mounts []string
+		var mounts []mount.Mount
 		// Map to track already added keys
 		addedKeys := make(map[string]struct{})
 		for i, keyPath := range keys {
@@ -92,16 +95,27 @@ var AuthSSHCommand = &cobra.Command{
 				filename = fmt.Sprintf("%s_%d", filename, i)
 			}
 			addedKeys[filename] = struct{}{}
-			keyPath = util.WindowsPathToCygwinPath(keyPath)
-			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
+			mount := mount.Mount{
+				Type:     mount.TypeBind,
+				Source:   keyPath,
+				Target:   "/tmp/sshtmp/" + filename,
+				ReadOnly: true,
+			}
+			mounts = append(mounts, mount)
 		}
 
-		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint="}
-		dockerCmd = append(dockerCmd, mounts...)
-		dockerCmd = append(dockerCmd, docker.GetSSHAuthImage()+"-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`)
-
-		err = exec.RunInteractiveCommand("docker", dockerCmd)
-
+		dockerCmd := []string{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`}
+		config := &dockerContainer.Config{
+			Entrypoint:  []string{},
+			AttachStdin: true,
+			OpenStdin:   true,
+		}
+		hostConfig := &dockerContainer.HostConfig{
+			Mounts:      mounts,
+			VolumesFrom: []string{ddevapp.SSHAuthName},
+		}
+		_, out, err := dockerutil.RunSimpleContainerExtended(docker.GetSSHAuthImage()+"-built", "auth-ssh-"+util.RandString(6), dockerCmd, uidStr, true, false, config, hostConfig)
+		out = strings.TrimSpace(out)
 		if err != nil {
 			helpMessage := ""
 			// Add more helpful message to the obscure error from Docker
@@ -109,8 +123,9 @@ var AuthSSHCommand = &cobra.Command{
 			if strings.Contains(err.Error(), "bind source path does not exist") {
 				helpMessage = "\n\nThe specified SSH key path is not shared with your Docker provider."
 			}
-			util.Failed("Docker command 'docker %v' failed: %v %v", echoDockerCmd(dockerCmd), err, helpMessage)
+			util.Failed("Command '%v' failed: %v; output='%s' %v", echoDockerCmd(dockerCmd), err, out, helpMessage)
 		}
+		output.UserOut.Println(out)
 	},
 }
 
