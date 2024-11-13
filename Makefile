@@ -292,7 +292,7 @@ golangci-lint:
 	if command -v golangci-lint >/dev/null 2>&1; then \
 		$$CMD; \
 	else \
-		echo "Skipping golanci-lint as not installed"; \
+		echo "Skipping golangci-lint as not installed"; \
 	fi
 
 version:
