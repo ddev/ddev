@@ -193,20 +193,23 @@ brews:
         ENV["GOBIN"] = buildpath
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+    
+        # Build in the git checkout directory
+        cd buildpath do
+          # Get the git commit SHA for versioning
+          git_hash = Utils.git_head
+          version = "HEAD-" + git_hash[0..7]
+    
+          system "make", "VERSION=#{version}"
 
-        # Get the git commit SHA for versioning
-        git_hash = Utils.git_head
-        version = "HEAD-" + git_hash[0..7]
+          # Install the compiled binary
+          bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
 
-        system "make", "VERSION=#{version}"
-
-        # Install the compiled binary
-        bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
-
-        # Install completions
-        bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
-        fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
+          # Install completions
+          bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
+          zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
+          fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
+        end
       end
     end
 
@@ -245,20 +248,23 @@ brews:
         ENV["GOBIN"] = buildpath
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-  
-        # Get the git commit SHA for versioning
-        git_hash = Utils.git_head
-        version = "HEAD-" + git_hash[0..7]
-  
-        system "make", "VERSION=#{version}"
+    
+        # Build in the git checkout directory
+        cd buildpath do
+          # Get the git commit SHA for versioning
+          git_hash = Utils.git_head
+          version = "HEAD-" + git_hash[0..7]
 
-        # Install the compiled binary
-        bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
+          system "make", "VERSION=#{version}"
+  
+          # Install the compiled binary
+          bin.install ".gotmp/bin/#{os}_#{arch}/ddev"
 
-        # Install completions
-        bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
-        fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
+          # Install completions
+          bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
+          zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
+          fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
+        end
       end
     end
 
