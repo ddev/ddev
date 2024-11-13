@@ -8,7 +8,7 @@ if [ "$#" -ne 4 ]; then
 fi
 
 # 8.0
-PHP_VERSION=$1
+PHP_VERSION=${1/php/}
 # xdebug
 EXTENSION_NAME=$2
 # 3.2.2

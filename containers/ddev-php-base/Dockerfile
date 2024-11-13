@@ -31,20 +31,25 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     wget
 RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD generic-files /
-#END base
 
-### ---------------------------ddev-xdebug-build--------------------------------------
-### Xdebug compile specific version because 3.3 is not fully reliable
-### See https://github.com/ddev/ddev/issues/6159
-### We don't need to recompile every Xdebug library https://xdebug.org/docs/compat (only PHP 8.0, 8.1, 8.2 can have Xdebug 3.2)
-FROM base AS ddev-xdebug-build
-SHELL ["/bin/bash", "-c"]
+RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
+
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb && rm -f /tmp/debsuryorg-archive-keyring.deb && \
-    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
-RUN /usr/local/bin/build_php_extension.sh "8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
-RUN /usr/local/bin/build_php_extension.sh "8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
-#END ddev-xdebug-build
+    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get -qq update
+#END base
+
+### ---------------------------ddev-php-extension-build--------------------------------------
+FROM base AS ddev-php-extension-build
+SHELL ["/bin/bash", "-c"]
+### Xdebug compile specific version because 3.3 is not fully reliable
+### See https://github.com/ddev/ddev/issues/6159
+RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
+#END ddev-php-extension-build
 
 ### ---------------------------ddev-php-base--------------------------------------
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
@@ -66,15 +71,6 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
 SHELL ["/bin/bash", "-c"]
-
-RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
-
-RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
-    dpkg -i /tmp/debsuryorg-archive-keyring.deb && rm -f /tmp/debsuryorg-archive-keyring.deb && \
-    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
 
 RUN apt-get -qq update
 RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -111,12 +107,12 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
     chmod ugo+rx /usr/local/bin/* && \
     ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
-### ---------------------------ddev-xdebug-build--------------------------------------
+### ---------------------------ddev-php-extension-build--------------------------------------
 ### The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
 RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
-COPY --from=ddev-xdebug-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
-COPY --from=ddev-xdebug-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
-#END ddev-xdebug-build
+COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
+COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
+#END ddev-php-extension-build
 RUN phpdismod xhprof
 RUN apt-get -qq autoremove -y
 RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer

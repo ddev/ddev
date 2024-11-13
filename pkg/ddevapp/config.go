@@ -1141,7 +1141,7 @@ SHELL ["/bin/bash", "-c"]
 					hasMultiStageBuild = true
 				}
 				contents = contents + fmt.Sprintf(`
-RUN /usr/local/bin/build_php_extension.sh "%s" "%s" "%s" "%s" || true
+RUN /usr/local/bin/build_php_extension.sh "php%s" "%s" "%s" "%s" || true
 `, ext["php"], ext["name"], ext["version"], ext["file"])
 			}
 		}
