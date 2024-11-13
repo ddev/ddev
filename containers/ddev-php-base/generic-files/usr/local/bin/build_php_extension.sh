@@ -31,11 +31,11 @@ if [ -f "${EXTENSION_FILE}" ]; then
 fi
 
 # PECL does not allow to install multiple versions of extension at the same time,
-# use `rm -f /usr/share/php/.registry/.channel.pecl.php.net/xdebug.reg` to make it forget about another version.
+# use `rm -f /usr/share/php/.registry/.channel.pecl.php.net/extension.reg` to make it forget about another version.
 (pecl channel-update pecl.php.net && \
   echo "Building php${PHP_VERSION}-${EXTENSION_NAME}..." && \
   pecl -d php_suffix="${PHP_VERSION}" install -f "${EXTENSION_NAME}-${EXTENSION_VERSION}" >/dev/null && \
-  rm -f /usr/share/php/.registry/.channel.pecl.php.net/xdebug.reg) || true
+  rm -f "/usr/share/php/.registry/.channel.pecl.php.net/${EXTENSION_NAME}.reg") || true
 
 if [ ! -f "${EXTENSION_FILE}" ]; then
   echo "Failed to build ${EXTENSION_FILE}"

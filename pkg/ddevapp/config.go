@@ -1176,9 +1176,10 @@ RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
 		for _, ext := range phpExtensions {
 			if app.PHPVersion == ext["php"] {
 				contents = contents + fmt.Sprintf(`
-### DDEV-injected copy of %s %v for PHP %v
+### DDEV-injected copy of %s %v
+RUN apt-get -qq remove -y php%s-%s || true
 COPY --from=ddev-php-extension-build %s %v
-`, ext["name"], ext["version"], app.PHPVersion, ext["file"], ext["file"])
+`, ext["name"], ext["version"], app.PHPVersion, ext["name"], ext["file"], ext["file"])
 			}
 		}
 	}
