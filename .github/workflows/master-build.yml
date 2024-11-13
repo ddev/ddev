@@ -289,7 +289,8 @@ jobs:
           echo "# Archive checksums" > artifacts/checksums.txt
           for item in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
             pushd .gotmp/bin/${item} >/dev/null
-            tar -zxf ../completions.tar.gz
+            cp -r ../completions/* .
+            ls -l $PWD
             zip -v ../../artifacts/ddev_${item}.zip ddev ddev_*completion* ddev_fig_spec.ts
             popd >/dev/null
           done
