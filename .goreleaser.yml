@@ -193,12 +193,9 @@ brews:
     if build.head?
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        # Get the git commit SHA for versioning
-        git_hash = Utils.git_head
-        version = "HEAD-" + git_hash[0..7]
-    
-        system "make", "VERSION=#{version}"
-        system "cp", ".gotmp/bin/#{os}_#{arch}/ddev", "#{bin}/ddev"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "build", "completions"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
@@ -236,12 +233,9 @@ brews:
     if build.head?
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        # Get the git commit SHA for versioning
-        git_hash = Utils.git_head
-        version = "HEAD-" + git_hash[0..7]
-    
-        system "make", "VERSION=#{version}"
-        system "cp", ".gotmp/bin/#{os}_#{arch}/ddev", "#{bin}/ddev"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "build", "completions"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
@@ -254,6 +248,7 @@ brews:
 
   test: |
     system "#{bin}/ddev --version"
+
 
 nfpms:
 - maintainer: Randy Fay
