@@ -33,6 +33,7 @@ env:
   HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
   REPOSITORY_OWNER: ${{ github.repository_owner }}
   DOCKER_ORG: ${{ vars.DOCKER_ORG }}
+  HEAD_ARTIFACTS_SHA: blank-for-now
 
 permissions:
   packages: write
