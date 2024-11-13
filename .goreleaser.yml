@@ -199,9 +199,7 @@ brews:
         resource("ddev-binary").stage do
           system "unzip", "-o", Dir["*.zip"].first if Dir["*.zip"].any?
           bin.install "ddev"
-          bash_completion.install "ddev_bash_completion.sh" => "ddev"
-          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+          # In the future, we could get and install the completion files
         end
     else
         bin.install "ddev"
@@ -244,9 +242,7 @@ brews:
         resource("ddev-binary").stage do
           system "unzip", "-o", Dir["*.zip"].first if Dir["*.zip"].any?
           bin.install "ddev"
-          bash_completion.install "ddev_bash_completion.sh" => "ddev"
-          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+          # In the future, we could get and install the completion files
         end
     else
         bin.install "ddev"
