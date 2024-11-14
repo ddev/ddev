@@ -191,10 +191,17 @@ Example:
 ```shell
 # Add your SSH keys to the SSH agent container
 ddev auth ssh
+# Add your SSH keys from ~/custom/path/to/ssh
+ddev auth ssh -d ~/custom/path/to/ssh
+# Add your SSH keys from ~/.ssh/id_ed25519 and ~/.ssh/id_rsa
+ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
+# Add your SSH keys from ~/.ssh and ~/custom/path/to/ssh/id_ed25519
+ddev auth ssh -d ~/.ssh -f ~/custom/path/to/ssh/id_ed25519
 ```
 
 Flags:
 
+* `--ssh-key-file`, `-f`: Full path to SSH key file.
 * `--ssh-key-path`, `-d`: Full path to SSH key directory.
 
 ## `blackfire`
