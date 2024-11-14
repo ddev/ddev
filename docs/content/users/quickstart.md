@@ -705,11 +705,12 @@ There are many ways to install Symfony, here are a few of them based on the [Sym
 !!!tip "Default web environments"
     On `ddev start` command, some environments will be automatically added to `.env.local` file.
 
-    `MAILER_*` to use [Mailpit](https://ddev.readthedocs.io/en/stable/users/usage/developer-tools/#email-capture-and-review-mailpit) as mail catcher.
-    `DATABASE_*` based on database selection unless [--omit-containers=db](https://ddev.readthedocs.io/en/stable/users/configuration/config/#omit_containers) is set.
-    `REDIS_*` if `ddev/ddev-redis` or `ddev/ddev-redis-7` add-on installed.
+    - `MAILER_*` to use [Mailpit](https://ddev.readthedocs.io/en/stable/users/usage/developer-tools/#email-capture-and-review-mailpit) as mail catcher.
+    - `DATABASE_*` based on database selection unless [--omit-containers=db](https://ddev.readthedocs.io/en/stable/users/configuration/config/#omit_containers) is set.
+    - `REDIS_*` if `ddev/ddev-redis` or `ddev/ddev-redis-7` add-on installed.
 
 !!!tip "Want to run Symfony Console (bin/console)?"
+
     ```bash
     ddev console list
     # ddev console doctrine:schema:update --force
@@ -718,6 +719,7 @@ There are many ways to install Symfony, here are a few of them based on the [Sym
 !!!tip "Consuming Messages (Running the Worker)"
     Edit `.ddev/config.yaml` in your project directory and uncomment `post-start` hook
     To see `messenger:consume` command logs
+
     ```bash
     ddev exec symfony server:log
     ```
