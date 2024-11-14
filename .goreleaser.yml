@@ -185,32 +185,30 @@ brews:
 
   custom_block: |
     head do
-      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
-      resource "ddev-artifacts" do
-        url "https://nightly.link/{{ .Env.REPOSITORY_OWNER }}/ddev/workflows/master-build/master/ddev-head-artifacts.zip"
+      url "https://github.com/ddev/ddev.git", branch: "master"
+
+      resource "ddev-binary" do
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        os = OS.mac? ? "macos" : "linux"
+        url "https://nightly.link/ddev/ddev/workflows/master-build/master/ddev-#{os}-#{arch}.zip"
+        sha256 "" # We'd need to figure out how to handle this for nightlies
       end
     end
   install: |
     if build.head?
-        resource("ddev-artifacts").unpack buildpath
-    
-        # Get the appropriate inner zipfile based on architecture
-        os = OS.mac? ? "darwin" : "linux"
-        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        inner_zip = "ddev_#{os}_#{arch}.zip"
-    
-        system "unzip", "-o", inner_zip, "-d", buildpath
-    
-        bin.install "ddev"
-        bash_completion.install "ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+        resource("ddev-binary").stage do
+          system "unzip", "-o", Dir["*.zip"].first if Dir["*.zip"].any?
+          bin.install "ddev"
+          bash_completion.install "ddev_bash_completion.sh" => "ddev"
+          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
+          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"          end
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
+
 
   test: |
     system "#{bin}/ddev --version"
@@ -229,29 +227,26 @@ brews:
   skip_upload: "false"
   dependencies:
     - name: mkcert
-
   custom_block: |
     head do
-      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
-      resource "ddev-artifacts" do
-        url "https://nightly.link/{{ .Env.REPOSITORY_OWNER }}/ddev/workflows/master-build/master/ddev-head-artifacts.zip"
+      url "https://github.com/ddev/ddev.git", branch: "master"
+
+      resource "ddev-binary" do
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        os = OS.mac? ? "macos" : "linux"
+        url "https://nightly.link/ddev/ddev/workflows/master-build/master/ddev-#{os}-#{arch}.zip"
+        sha256 "" # We'd need to figure out how to handle this for nightlies
       end
     end
   install: |
     if build.head?
-        resource("ddev-artifacts").unpack buildpath
-    
-        # Get the appropriate inner zipfile based on architecture
-        os = OS.mac? ? "darwin" : "linux"
-        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        inner_zip = "ddev_#{os}_#{arch}.zip"
-    
-        system "unzip", "-o", inner_zip, "-d", buildpath
-    
-        bin.install "ddev"
-        bash_completion.install "ddev_bash_completion.sh" => "ddev"
-        zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+        resource("ddev-binary").stage do
+          system "unzip", "-o", Dir["*.zip"].first if Dir["*.zip"].any?
+          bin.install "ddev"
+          bash_completion.install "ddev_bash_completion.sh" => "ddev"
+          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
+          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
+        end
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"

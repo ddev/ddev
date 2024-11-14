@@ -279,38 +279,56 @@ jobs:
         env:
           CGO_ENABLED: 0
 
-      - name: Create and checksum release archive
-        run: |
-          mkdir -p artifacts
-          pwd
-          set -eu -o pipefail
-          set -x
-          ls -lR artifacts .gotmp/bin
-          echo "# Archive checksums" > artifacts/checksums.txt
-          for item in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
-            pushd .gotmp/bin/${item} >/dev/null
-            cp -r ../completions/* .
-            ls -l $PWD
-            zip -v ../../../artifacts/ddev_${item}.zip ddev ddev_*completion* ddev_fig_spec.ts
-            popd >/dev/null
-          done
-          for item in windows_amd64 windows_arm64; do
-            pushd .gotmp/bin/${item} >/dev/null
-            zip -v ../../../artifacts/ddev_${item}.zip ddev.exe ddev*installer.exe
-            popd >/dev/null
-          done
-          
-          # Create checksums
-          cd artifacts
-          sha256sum *.zip >>checksums.txt
+      # Do artifacts for upload to workflow URL
+      - name: Generate artifacts
+        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: Upload all artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ddev-head-artifacts
-          path: |
-            artifacts/*.zip
-            artifacts/checksums.txt
+          name: all-ddev-executables
+          path: ${{ github.workspace }}/artifacts/*
+      - name: Upload macos-amd64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-macos-amd64
+          path: .gotmp/bin/darwin_amd64/ddev
+      - name: Upload macos-arm64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-macos-arm64
+          path: .gotmp/bin/darwin_arm64/ddev
+      - name: Upload linux-arm64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-linux-arm64
+          path: .gotmp/bin/linux_arm64/ddev
+      - name: Upload linux-amd64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-linux-amd64
+          path: .gotmp/bin/linux_amd64/ddev
+      - name: Upload windows-amd64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-amd64
+          path: .gotmp/bin/windows_amd64/ddev.exe
+
+      - name: Upload windows_amd64 installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-amd64-installer
+          path: .gotmp/bin/windows_amd64/ddev_windows_amd64_installer*.exe
+      - name: Upload windows-arm64 binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-arm64
+          path: .gotmp/bin/windows_arm64/ddev.exe
+      - name: Upload windows_arm64 installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddev-windows-arm64-installer
+          path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer*.exe
 
       - name: Show github.ref
         run: echo ${{ github.ref }}
