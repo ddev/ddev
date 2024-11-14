@@ -82,7 +82,7 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 ## Changing PHP Version
 
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config.md#php_version) can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, `8.3`, or `8.4`.
+The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config.md#php_version) can be `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, `8.2`, `8.3`, or `8.4`.
 
 ### Older Versions of PHP
 
