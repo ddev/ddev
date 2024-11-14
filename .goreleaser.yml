@@ -186,29 +186,25 @@ brews:
   custom_block: |
     head do
       url "https://github.com/ddev/ddev.git", branch: "master"
-
-      resource "ddev-binary" do
-        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        os = OS.mac? ? "macos" : "linux"
-        url "https://nightly.link/ddev/ddev/workflows/master-build/master/ddev-#{os}-#{arch}.zip"
-        sha256 "" # We'd need to figure out how to handle this for nightlies
-      end
+      depends_on "go" => :build
+      depends_on "make" => :build
     end
   install: |
     if build.head?
-        resource("ddev-binary").stage do
-          system "unzip", "-o", Dir["*.zip"].first if Dir["*.zip"].any?
-          bin.install "ddev"
-          bash_completion.install "ddev_bash_completion.sh" => "ddev"
-          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"          end
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "build", "completions"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+        bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
+        fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
-
 
   test: |
     system "#{bin}/ddev --version"
@@ -230,23 +226,19 @@ brews:
   custom_block: |
     head do
       url "https://github.com/ddev/ddev.git", branch: "master"
-
-      resource "ddev-binary" do
-        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
-        os = OS.mac? ? "macos" : "linux"
-        url "https://nightly.link/ddev/ddev/workflows/master-build/master/ddev-#{os}-#{arch}.zip"
-        sha256 "" # We'd need to figure out how to handle this for nightlies
-      end
+      depends_on "go" => :build
+      depends_on "make" => :build
     end
   install: |
     if build.head?
-        resource("ddev-binary").stage do
-          system "unzip", "-o", Dir["*.zip"].first if Dir["*.zip"].any?
-          bin.install "ddev"
-          bash_completion.install "ddev_bash_completion.sh" => "ddev"
-          zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
-          fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
-        end
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "build", "completions"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+        bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
+        fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
