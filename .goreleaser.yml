@@ -315,7 +315,7 @@ snapshot:
 #    output: true
 
 aurs:
-- name: "ddev"
+- name: "{{ .Env.AUR_PACKAGE_NAME }}"
   ids:
   - ddev
   homepage: "https://github.com/ddev/ddev"
@@ -353,7 +353,7 @@ aurs:
     name: Randy Fay
     email: randy.fay@ddev.com
 
-- name: "ddev-edge"
+- name: "{{ .Env.AUR_PACKAGE_NAME }}-edge"
   ids:
   - ddev
   homepage: "https://github.com/ddev/ddev"

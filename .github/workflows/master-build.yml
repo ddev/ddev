@@ -194,6 +194,7 @@ jobs:
 
   artifacts:
     env:
+      AUR_PACKAGE_NAME: ${{ vars.AUR_PACKAGE_NAME }}
       AUR_EDGE_GIT_URL: ${{ vars.AUR_EDGE_GIT_URL }}
       AUR_STABLE_GIT_URL: ${{ vars.AUR_STABLE_GIT_URL }}
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
