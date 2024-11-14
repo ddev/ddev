@@ -306,13 +306,13 @@ nfpms:
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'
 
-before_publish:
-  - cmd: |
-      echo "Debug before_publish"
-      echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
-      echo "Prerelease='{{.Prerelease}}'"
-      echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
-    output: true
+#before_publish:
+#  - cmd: |
+#      echo "Debug before_publish"
+#      echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
+#      echo "Prerelease='{{.Prerelease}}'"
+#      echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
+#    output: true
 
 aurs:
 - name: "ddev"
@@ -323,8 +323,8 @@ aurs:
   maintainers:
   - 'Randy Fay <randy.fay@ddev.com>'
   license: "Apache 2"
-  # main ddev repo will only be uploaded on non-prerelease and ddev/ddev repo
-  skip_upload: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'
+  # main ddev repo will only be uploaded on non-prerelease
+  skip_upload: auto
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
   # AUR_STABLE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-bin.git
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
@@ -361,8 +361,8 @@ aurs:
   maintainers:
   - 'Randy Fay <randy.fay@ddev.com>'
   license: "Apache 2"
-  # Always upload on ddev/ddev
-  skip_upload: '{{ if eq .Env.REPOSITORY_OWNER "ddev" }}false{{ else }}true{{ end }}'
+  # Always upload, even on prerelease
+  skip_upload: "false"
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
   # AUR_EDGE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-edge-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-edge-bin.git
   git_url: '{{ .Env.AUR_EDGE_GIT_URL }}'
