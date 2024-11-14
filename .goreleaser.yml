@@ -326,7 +326,7 @@ aurs:
   # main ddev repo will only be uploaded on non-prerelease and ddev/ddev repo
   skip_upload: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
-  # AUR_EDGE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-bin.git
+  # AUR_STABLE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-bin.git
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
   depends:
   - docker
@@ -351,7 +351,7 @@ aurs:
   # Defaults are shown below.
   commit_author:
     name: Randy Fay
-    email: randy@randyfay.com
+    email: randy.fay@ddev.com
 
 - name: "ddev-edge"
   ids:
@@ -389,7 +389,7 @@ aurs:
   # Defaults are shown below.
   commit_author:
     name: Randy Fay
-    email: randy@randyfay.com
+    email: randy.fay@ddev.com
 
 furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
