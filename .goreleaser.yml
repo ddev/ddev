@@ -536,3 +536,81 @@ dockerhub:
     full_description:
       from_file:
         path: ./containers/test-ssh-server/README.md
+
+#chocolateys:
+#    name: ddev-test
+#
+#    package_source_url: https://github.com/ddev/ddev/tree/master/winpkg/chocolatey
+#
+#    # Your app's owner.
+#    # It basically means you.
+#    owners: DDEV Foundation
+#
+#    # Your app's authors (probably you).
+#    authors: DDEV Foundation
+#
+#    project_url: https://ddev.com/
+#
+#    # Which format to use.
+#    #
+#    # Valid options are:
+#    # - 'msi':     msi installers (requires the MSI pipe configured, Pro only)
+#    # - 'archive': archives (only if format is zip),
+#    #
+#    # Default: 'archive'.
+#    # This feature is only available in GoReleaser Pro.
+#    use: msi
+#
+#    # URL which is determined by the given Token (github,
+#    # gitlab or gitea).
+#    #
+#    # Default: depends on the git remote.
+#    # Templates: allowed.
+##    url_template: "https://github.com/foo/bar/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+#
+##    icon_url: "https://rawcdn.githack.com/foo/bar/efbdc760-395b-43f1-bf69-ba25c374d473/icon.png"
+#
+#    # Your app's copyright details.
+#    #
+#    # Templates: allowed.
+#    copyright: DDEV Foundation
+#
+#    license_url: https://github.com/ddev/ddev/blob/master/LICENSE
+#    require_license_acceptance: true
+#
+#    # Your app's source url.
+#    project_source_url: https://github.com/ddev/ddev
+#
+#    # Your app's documentation url.
+#    docs_url: https://ddev.readthedocs.io
+#
+#    # App's bugtracker url.
+#    bug_tracker_url: https://github.com/ddev/ddev/issues
+#
+#    tags: "ddev drupal TYPO3 backdrop php"
+#
+#    summary: DDEV is a local web development tool optimized for PHP projects and CMSs.
+#
+#    # This the description of your chocolatey package.
+#    # Supports markdown.
+#    description: |
+#      {{ .ProjectName }} allows developers to use both nginx and apache, and many versions of PHP, with no host configurations.
+#
+#    release_notes: "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev/releases/tag/v{{ .Version }}"
+#
+#    # App's dependencies
+#    # The version is not required.
+#    dependencies:
+#      - id: gsudo
+#      - id: ngrok
+#      - id: mkcert
+#
+#    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+#
+#    # The source repository that will push the package to.
+#    source_repo: "https://push.chocolatey.org/"
+#
+#    # Setting this will prevent goreleaser to actually try to push the package
+#    # to chocolatey repository, leaving the responsibility of publishing it to
+#    # the user.
+#    skip_publish: false
