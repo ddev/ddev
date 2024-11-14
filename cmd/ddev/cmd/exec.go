@@ -15,7 +15,7 @@ var execDirArg string
 
 // DdevExecCmd allows users to execute arbitrary sh commands within a container.
 var DdevExecCmd = &cobra.Command{
-	Use:     "exec <command>",
+	Use:     "exec [flags] [command] [command-flags]",
 	Aliases: []string{"."},
 	Short:   "Execute a shell command in the container for a service. Uses the web service by default.",
 	Long:    `Execute a shell command in the container for a service. Uses the web service by default. To run your command in the container for another service, run "ddev exec --service <service> <cmd>". If you want to use raw, uninterpreted command inside container use --raw as in example.`,
