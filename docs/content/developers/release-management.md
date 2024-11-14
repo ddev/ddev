@@ -220,11 +220,7 @@ make windows_amd64 windows_arm64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm
 goreleaser release --prepare --nightly --clean
 ```
 
-This will create all the artifacts that would have been pushed in the `dist` directory. You can copy Linux packages from there to test them manually, download the built tarballs for use elsewhere, install Homebrew package manually, for example:
-
-```bash
-brew install ./dist/homebrew/Formula/ddev.rb
-```
+This will create all the artifacts that would have been pushed in the `dist` directory. You can copy Linux packages from there to test them manually, download the built tarballs for use elsewhere.
 
 ### Creating a test release on `ddev-test/ddev`
 
