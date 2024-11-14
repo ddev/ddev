@@ -310,7 +310,7 @@ var (
 		{
 			Name:                          "TestPkgSymfony",
 			SourceURL:                     "https://github.com/symfony/demo/archive/refs/tags/v2.6.0.tar.gz",
-			ArchiveInternalExtractionPath: "test-symfony-demo-2.6.0/",
+			ArchiveInternalExtractionPath: "demo-2.6.0/",
 			Type:                          nodeps.AppTypeSymfony,
 			Docroot:                       "public",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
