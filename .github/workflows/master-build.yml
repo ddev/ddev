@@ -316,7 +316,7 @@ jobs:
 
       # TODO: This can be done by goreleaser these days
       - name: Chocolatey windows release
-        if: github.repository == 'ddev/ddev' && startsWith(github.ref, 'refs/tags/v1')
+        if: github.repository_owner == 'ddev' && startsWith(github.ref, 'refs/tags/v1')
         run: |
           pushd .gotmp/bin/windows_amd64/chocolatey
           docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
