@@ -392,6 +392,15 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 * `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 
+## `console`
+
+Run the `console` command; available only in projects of type `symfony`, and only available if `bin/console` exists.
+
+```shell
+# Show all Symfony console subcommands
+ddev console list
+```
+
 ## `craft`
 
 Run a [Craft CMS command](https://craftcms.com/docs/4.x/console-commands.html) inside the web container (global shell web container command).

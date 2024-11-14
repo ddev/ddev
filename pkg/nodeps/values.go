@@ -103,6 +103,7 @@ const (
 	AppTypeDrupal       = "drupal"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"
+	AppTypeSymfony      = "symfony"
 	AppTypeMagento      = "magento"
 	AppTypeMagento2     = "magento2"
 	AppTypePHP          = "php"

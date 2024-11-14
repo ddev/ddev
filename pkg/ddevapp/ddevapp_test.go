@@ -306,6 +306,20 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
+		// 20: Symfony
+		{
+			Name:                          "TestPkgSymfony",
+			SourceURL:                     "https://github.com/symfony/demo/archive/refs/tags/v2.6.0.tar.gz",
+			ArchiveInternalExtractionPath: "test-symfony-demo-2.6.0/",
+			Type:                          nodeps.AppTypeSymfony,
+			Docroot:                       "public",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to the Symfony Demo application"},
+			FilesImageURI:                 "/apple-touch-icon.png",
+			WebEnvironment: []string{
+				"APP_SECRET=1234567890",
+			},
+		},
 	}
 
 	FullTestSites = TestSites

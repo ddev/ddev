@@ -94,7 +94,7 @@ for PHP_VERSION in 8.1 8.2 8.3 8.4; do
     done
 done
 
-for project_type in backdrop craftcms drupal drupal7 drupal8 drupal9 drupal10 laravel magento magento2 typo3 wordpress default; do
+for project_type in backdrop craftcms drupal drupal7 drupal8 drupal9 drupal10 laravel magento magento2 symfony typo3 wordpress default; do
 	export PHP_VERSION="8.3"
     export project_type
 	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null
