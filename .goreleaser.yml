@@ -307,13 +307,12 @@ snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'
 
 before_publish:
-  hooks:
-    - cmd: |
-        echo "Debug before_publish"
-        echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
-        echo "Prerelease='{{.Prerelease}}'"
-        echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
-
+  - cmd: |
+      echo "Debug before_publish"
+      echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
+      echo "Prerelease='{{.Prerelease}}'"
+      echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
+    output: true
 
 aurs:
 - name: "ddev"
@@ -355,13 +354,6 @@ aurs:
     email: randy@randyfay.com
 
 - name: "ddev-edge"
-  hooks:
-    pre:
-      - cmd: |
-          echo "Debug for ddev-edge:"
-          echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
-          echo "Prerelease='{{.Prerelease}}'"
-          echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
   ids:
   - ddev
   homepage: "https://github.com/ddev/ddev"
