@@ -309,17 +309,13 @@ var (
 		// 20: Symfony
 		{
 			Name:                          "TestPkgSymfony",
-			SourceURL:                     "https://github.com/symfony/demo/archive/refs/tags/v2.6.0.tar.gz",
-			ArchiveInternalExtractionPath: "demo-2.6.0/",
+			SourceURL:                     "https://github.com/ddev/test-symfony/archive/refs/tags/v2.6.0.tar.gz",
+			ArchiveInternalExtractionPath: "test-symfony-2.6.0/",
 			Type:                          nodeps.AppTypeSymfony,
 			Docroot:                       "public",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Symfony Demo"},
 			FilesImageURI:                 "/apple-touch-icon.png",
-			PretestCmd:                    "ddev composer install --no-progress",
-			WebEnvironment: []string{
-				"APP_SECRET=1234567890",
-			},
 		},
 	}
 
