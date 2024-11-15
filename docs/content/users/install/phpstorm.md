@@ -8,14 +8,6 @@ If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you ca
 - DDEV v1.21.1 or higher.
 - Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
 
-## Prerequisite
-
-Regardless of your setup, you need to have PhpStorm use DDEV’s private docker-compose executable.
-
-In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the full path of your `.ddev/bin/docker-compose` file relative to your home directory.
-
-If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
-
 ## DDEV Integration Plugin
 
 It’s easiest to use the DDEV Integration Plugin, which you can install from [its landing page](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or by searching the in-app marketplace (*Preferences* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms.
@@ -24,7 +16,17 @@ Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since 
 
 ## Manual Setup
 
-If you’re not using the DDEV Integration Plugin, you can follow these steps instead:
+If you’re not using the DDEV Integration Plugin, you can follow these steps.
+
+### Prerequisite
+
+You need to configure PhpStorm to use DDEV’s private docker-compose executable.
+
+In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the full path of your `.ddev/bin/docker-compose` file relative to your home directory.
+
+If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
+
+### Manual Setup Procedure
 
 1. Start your project by running [`ddev start`](../usage/commands.md#start).
 2. Open the DDEV project. In this example, the project name is `drup` and the site is `drup.ddev.site`.
