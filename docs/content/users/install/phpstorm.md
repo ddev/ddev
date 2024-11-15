@@ -22,7 +22,7 @@ If you’re not using the DDEV Integration Plugin, you can follow these steps.
 
 You need to configure PhpStorm to use DDEV’s private docker-compose executable.
 
-In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the full path of your `.ddev/bin/docker-compose` file relative to your home directory.
+In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the absolute path of ddev's docker-compose in your home directory (for example, `~/.ddev/bin/docker-compose`).
 
 If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
 
