@@ -97,12 +97,12 @@ func TestCmdDescribe(t *testing.T) {
 		require.NotContains(t, string(out), "web:5492 ->")
 		require.NotContains(t, string(out), "web:12394 ->")
 		require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
-		require.Regexp(t, regexp.MustCompile("  - web:12445 -> 127.0.0.1:[0-9]+"), string(out))
+		require.Regexp(t, regexp.MustCompile(" {2}- web:12445 -> 127.0.0.1:[0-9]+"), string(out))
 		// db ports
 		require.Contains(t, string(out), "db:4352")
 		require.NotContains(t, string(out), "db:4352 ->")
 		require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
-		require.Regexp(t, regexp.MustCompile("  - db:54355 -> 127.0.0.1:[0-9]+"), string(out))
+		require.Regexp(t, regexp.MustCompile(" {2}- db:54355 -> 127.0.0.1:[0-9]+"), string(out))
 		// busybox1 for no exposed ports
 		require.Contains(t, string(out), "InDocker: busybox1")
 		// busybox2 for ONLY exposed ports (no host ports)
@@ -125,12 +125,12 @@ func TestCmdDescribe(t *testing.T) {
 		require.NotContains(t, string(out), "web:5492 ->")
 		require.NotContains(t, string(out), "web:12394 ->")
 		require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
-		require.Regexp(t, regexp.MustCompile("  - web:12445 -> 127.0.0.1:[0-9]+"), string(out))
+		require.Regexp(t, regexp.MustCompile(" {2}- web:12445 -> 127.0.0.1:[0-9]+"), string(out))
 		// db ports
 		require.Contains(t, string(out), "db:4352")
 		require.NotContains(t, string(out), "db:4352 ->")
 		require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
-		require.Regexp(t, regexp.MustCompile("  - db:54355 -> 127.0.0.1:[0-9]+"), string(out))
+		require.Regexp(t, regexp.MustCompile(" {2}- db:54355 -> 127.0.0.1:[0-9]+"), string(out))
 		// busybox1 for no exposed ports
 		require.Contains(t, string(out), "InDocker: busybox1")
 		// busybox2 for ONLY exposed ports (no host ports)
