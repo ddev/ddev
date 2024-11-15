@@ -107,6 +107,7 @@ if [ "${timeout}" -gt 0 ] && [ "${exit_code}" -eq 124 ]; then
   # 30 * 4 * 2 = 240 seconds (double the default timeout), which gives 240 / 4 = 60 seconds suggestion instead of the default 30
   echo "If your internet connection is slow, consider increasing the timeout by running this:" | tee -a "${tmp_error_file}" >&2
   echo "\`ddev config --default-container-timeout=$(( ${START_SCRIPT_TIMEOUT:-30} * 4 * 2 )) && ddev restart\`" | tee -a "${tmp_error_file}" >&2
+  echo | tee -a "${tmp_error_file}" >&2
 fi
 
 # If stderr is empty
