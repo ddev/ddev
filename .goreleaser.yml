@@ -1,3 +1,8 @@
+# DDEV goreleaser configuration
+# Handles uploading built executables to most of the places they go
+# See https://ddev.readthedocs.io/en/stable/developers/release-management/#environment-variables-required
+# for environment variables that may be used.
+
 version: 2
 ##### BUILDS ######
 builds:
