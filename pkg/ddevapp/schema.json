@@ -378,6 +378,7 @@
       "type": "string",
       "enum": [
         "backdrop",
+        "cakephp",
         "craftcms",
         "django4",
         "drupal",
