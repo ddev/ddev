@@ -310,6 +310,7 @@ var (
 		{
 			Name:                          "TestPkgSymfony",
 			SourceURL:                     "https://github.com/ddev/test-symfony/archive/refs/tags/v2.6.0.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/test-symfony/releases/download/v2.6.0/db.sql.tar.gz",
 			ArchiveInternalExtractionPath: "test-symfony-2.6.0/",
 			Type:                          nodeps.AppTypeSymfony,
 			Docroot:                       "public",
