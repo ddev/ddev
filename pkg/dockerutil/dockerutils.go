@@ -1047,7 +1047,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 	_, err = stdcopy.StdCopy(&stdout, &stdout, rc)
 	if err != nil {
-		return container.ID, "", fmt.Errorf("failed to copy container logs: %v", err)
+		util.Warning("failed to copy container logs: %v", err)
 	}
 
 	// This is the exitCode from the cli.ContainerWait()
