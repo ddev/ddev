@@ -314,8 +314,9 @@ var (
 			Type:                          nodeps.AppTypeSymfony,
 			Docroot:                       "public",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to the Symfony Demo application"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Symfony Demo"},
 			FilesImageURI:                 "/apple-touch-icon.png",
+			PretestCmd:                    "ddev composer install --no-progress",
 			WebEnvironment: []string{
 				"APP_SECRET=1234567890",
 			},
