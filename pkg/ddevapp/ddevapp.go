@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -311,7 +312,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
 				exposedPublicPorts[int(pv.PublicPort)] = int(pv.PrivatePort)
-			} else {
+			}
+			if !slices.Contains(exposedPrivatePorts, int(pv.PrivatePort)) {
 				exposedPrivatePorts = append(exposedPrivatePorts, int(pv.PrivatePort))
 			}
 		}

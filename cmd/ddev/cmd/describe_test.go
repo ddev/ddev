@@ -94,12 +94,17 @@ func TestCmdDescribe(t *testing.T) {
 		// web ports
 		require.Contains(t, string(out), "web:5492")
 		require.Contains(t, string(out), "web:12394")
-		require.Contains(t, string(out), "  - 127.0.0.1:5332->5222")
-		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->12445"), string(out))
+		require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
+		require.Regexp(t, regexp.MustCompile("  - web:12445 -> 127.0.0.1:[0-9]+"), string(out))
 		// db ports
 		require.Contains(t, string(out), "db:4352")
-		require.Contains(t, string(out), "127.0.0.1:12312->3999")
-		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->54355"), string(out))
+		require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
+		require.Regexp(t, regexp.MustCompile("  - db:54355 -> 127.0.0.1:[0-9]+"), string(out))
+		// busybox1 for no exposed ports
+		require.Contains(t, string(out), "InDocker: busybox1")
+		// busybox2 for ONLY exposed ports (no host ports)
+		require.Contains(t, string(out), "InDocker:")
+		require.NotContains(t, string(out), "InDocker: busybox2")
 
 		err = os.Chdir(v.Dir)
 		require.NoError(t, err)
@@ -112,12 +117,17 @@ func TestCmdDescribe(t *testing.T) {
 		// web ports
 		require.Contains(t, string(out), "web:5492")
 		require.Contains(t, string(out), "web:12394")
-		require.Contains(t, string(out), "  - 127.0.0.1:5332->5222")
-		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->12445"), string(out))
+		require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
+		require.Regexp(t, regexp.MustCompile("  - web:12445 -> 127.0.0.1:[0-9]+"), string(out))
 		// db ports
 		require.Contains(t, string(out), "db:4352")
-		require.Contains(t, string(out), "127.0.0.1:12312->3999")
-		require.Regexp(t, regexp.MustCompile("  - 127.0.0.1:[0-9]+->54355"), string(out))
+		require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
+		require.Regexp(t, regexp.MustCompile("  - db:54355 -> 127.0.0.1:[0-9]+"), string(out))
+		// busybox1 for no exposed ports
+		require.Contains(t, string(out), "InDocker: busybox1")
+		// busybox2 for ONLY exposed ports (no host ports)
+		require.Contains(t, string(out), "InDocker:")
+		require.NotContains(t, string(out), "InDocker: busybox2")
 
 		// Test describe in current directory with json flag
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
@@ -183,13 +193,20 @@ func TestCmdDescribe(t *testing.T) {
 		require.Equal(t, "3999", dbPortMappingTest["12312"])
 		require.Contains(t, dbPortMappingReverseTest, "54355")
 		require.Regexp(t, regexp.MustCompile("[0-9]+"), dbPortMappingReverseTest["54355"])
-		// testService for empty ports
-		require.Contains(t, services, "busybox")
-		busybox := services["busybox"].(map[string]interface{})
-		require.Equal(t, "", busybox["exposed_ports"].(string))
-		require.Equal(t, "", busybox["host_ports"].(string))
-		require.Equal(t, make([]interface{}, 0), busybox["host_ports_mapping"])
-		require.Contains(t, busybox, "host_ports_mapping")
+		// busybox1 for no exposed ports
+		require.Contains(t, services, "busybox1")
+		busybox1 := services["busybox1"].(map[string]interface{})
+		require.Equal(t, "", busybox1["exposed_ports"].(string))
+		require.Equal(t, "", busybox1["host_ports"].(string))
+		require.Equal(t, make([]interface{}, 0), busybox1["host_ports_mapping"])
+		require.Contains(t, busybox1, "host_ports_mapping")
+		// busybox2 for ONLY exposed ports (no host ports)
+		require.Contains(t, services, "busybox2")
+		busybox2 := services["busybox2"].(map[string]interface{})
+		require.Equal(t, "3333", busybox2["exposed_ports"].(string))
+		require.Equal(t, "", busybox2["host_ports"].(string))
+		require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
+		require.Contains(t, busybox2, "host_ports_mapping")
 
 		require.NotEmpty(t, item["msg"])
 	}

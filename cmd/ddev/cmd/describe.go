@@ -149,24 +149,28 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				}
 			}
 
-			if p, ok := v["exposed_ports"].(string); ok {
-				if p != "" {
-					portStr := ""
-					for _, exposedPort := range strings.Split(p, ",") {
-						portStr = portStr + "  - " + v["short_name"].(string) + ":" + exposedPort + "\n"
-					}
-					urlPortParts = append(urlPortParts, "InDocker: \n"+strings.Trim(portStr, "\n"))
-				} else {
-					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"].(string))
+			portStr := "InDocker"
+			var portMappingDockerHost = map[string]string{}
+			if p, ok := v["host_ports_mapping"].([]map[string]string); ok && len(p) != 0 {
+				portStr += " -> Host"
+				for _, portMapping := range p {
+					portMappingDockerHost[portMapping["exposed_port"]] = portMapping["host_port"]
 				}
 			}
+			portStr += ":"
 
-			if p, ok := v["host_ports_mapping"].([]map[string]string); ok && len(p) != 0 {
-				portStr := ""
-				for _, portMapping := range p {
-					portStr = portStr + "  - 127.0.0.1:" + portMapping["host_port"] + "->" + portMapping["exposed_port"] + "\n"
+			if p, ok := v["exposed_ports"].(string); ok {
+				if p != "" {
+					for _, exposedPort := range strings.Split(p, ",") {
+						portStr += "\n - " + v["short_name"].(string) + ":" + exposedPort
+						if host, ok := portMappingDockerHost[exposedPort]; ok {
+							portStr += " -> 127.0.0.1:" + host
+						}
+					}
+					urlPortParts = append(urlPortParts, portStr)
+				} else {
+					urlPortParts = append(urlPortParts, portStr+" "+v["short_name"].(string))
 				}
-				urlPortParts = append(urlPortParts, "Host: \n"+strings.Trim(portStr, "\n"))
 			}
 
 			// Get extra info for web container

@@ -15,10 +15,19 @@ services:
     ports:
       - 12312:3999
       - 54355
-  busybox:
+  busybox1:
     image: busybox
     command: tail -f /dev/null
-    container_name: ddev-${DDEV_SITENAME}-busybox
+    container_name: ddev-${DDEV_SITENAME}-busybox1
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+  busybox2:
+    expose:
+      - 3333
+    image: busybox
+    command: tail -f /dev/null
+    container_name: ddev-${DDEV_SITENAME}-busybox2
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
