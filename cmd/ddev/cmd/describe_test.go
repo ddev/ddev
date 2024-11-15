@@ -105,6 +105,8 @@ func TestCmdDescribe(t *testing.T) {
 		// busybox2 for ONLY exposed ports (no host ports)
 		require.Contains(t, string(out), "InDocker:")
 		require.NotContains(t, string(out), "InDocker: busybox2")
+		require.Contains(t, string(out), "  - busybox2:3333")
+		require.NotContains(t, string(out), "  - busybox2:3333 ->")
 
 		err = os.Chdir(v.Dir)
 		require.NoError(t, err)
@@ -128,6 +130,8 @@ func TestCmdDescribe(t *testing.T) {
 		// busybox2 for ONLY exposed ports (no host ports)
 		require.Contains(t, string(out), "InDocker:")
 		require.NotContains(t, string(out), "InDocker: busybox2")
+		require.Contains(t, string(out), "  - busybox2:3333")
+		require.NotContains(t, string(out), "  - busybox2:3333 ->")
 
 		// Test describe in current directory with json flag
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
