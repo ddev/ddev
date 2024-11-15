@@ -255,7 +255,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		c = []string{"gsudo.exe"}
 	}
 	c = append(c, args...)
-	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nThis is normally to add unresolvable hostnames to the hosts file.\nYou may be required to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))
+	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
 	return out, err
