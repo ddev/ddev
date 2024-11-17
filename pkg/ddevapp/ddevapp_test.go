@@ -3588,9 +3588,6 @@ func TestPHPWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, site := range TestSites {
-		if site.Type == nodeps.AppTypeDjango4 || site.Type == nodeps.AppTypePython {
-			continue
-		}
 		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		app := new(ddevapp.DdevApp)

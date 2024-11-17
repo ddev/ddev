@@ -137,9 +137,6 @@ echo 'Server started'
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
 
-# Run any python/django4 activities.
-ddev_python_setup
-
 # Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
 ddev_custom_init_scripts
 

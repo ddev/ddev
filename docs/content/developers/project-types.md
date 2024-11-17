@@ -10,7 +10,7 @@ To add a new project type:
 
 * Add the new type to the list in `nodeps/values.go`
 * Add to `appTypeMatrix` in `apptypes.go`
-* Create a new go file for your project type, like `django.go`.
+* Create a new go file for your project type, like `mytype.go`.
 * Implement the functions that you think are needed for your project type and add references to them in your `appTypeMatrix` stanza. There are lots of examples that you can start with in places like `drupal.go` and `typo3.go`, `shopware6.go`, etc. The comments in the code in `apptypes.go` for the `appTypeFuncs` for each type of action tell what these are for, but here's a quick summary.
     * `settingsCreator` is the function that will create a main settings file if none exists.
     * `uploadDir` returns the filepath of the user-uploaded files directory for the project type, like `sites/default/files` for Drupal or `pub/media` for magento2.

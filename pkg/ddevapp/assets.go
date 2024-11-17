@@ -21,7 +21,6 @@ import (
 //go:embed traefik_config_template.yaml
 //go:embed traefik_static_config_template.yaml
 //go:embed traefik_global_config_template.yaml
-//go:embed django4/*
 //go:embed drupal/*
 //go:embed magento/*
 //go:embed wordpress/*

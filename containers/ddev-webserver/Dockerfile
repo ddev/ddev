@@ -105,16 +105,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     libldap-common \
     libpcre3 \
     libpq-dev \
-    libpython3-dev \
     nano \
     ncurses-bin \
     netcat-traditional \
     openssh-client \
     patch \
-    python-is-python3 \
-    python3-pip \
-    python3-psycopg2 \
-    python3-venv \
     rsync \
     sudo \
     telnet \

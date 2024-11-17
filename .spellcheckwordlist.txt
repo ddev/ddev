@@ -296,7 +296,6 @@ disable
 disallowal
 distro
 distros
-django
 dns
 dnsmasq
 docker

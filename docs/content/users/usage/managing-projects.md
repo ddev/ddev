@@ -4,8 +4,6 @@ The [`ddev config`](../usage/commands.md#config) and `ddev start` commands attem
 
 For **Craft CMS** DDEV settings are added to the `.env` file.
 
-For **Django 4** DDEV settings are placed in `.ddev/settings/settings.django4.py` and a stanza is added to your `settings.py` that is only invoked in DDEV context.
-
 For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, `settings.ddev.php`. The `ddev config` command will ensure these settings are included in your `settings.php` through the following steps:
 
 - Write DDEV settings to `settings.ddev.php`.
@@ -49,7 +47,6 @@ Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` curren
 ```
 ➜  ddev list
  NAME            STATUS        LOCATION                    URL                           TYPE
- bakerydemo      running (ok)  ~/workspace/bakerydemo      https://bakerydemo.ddev.site  django4
  d10             stopped       ~/workspace/d10                                           drupal10
  drup            running (ok)  ~/workspace/drup            https://drup.ddev.site        drupal
  my-cakephp-app  stopped       ~/workspace/my-cakephp-app                                cakephp
@@ -60,7 +57,6 @@ Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` curren
 
 ➜  ddev list --active-only
  NAME        STATUS        LOCATION                URL                           TYPE
- bakerydemo  running (ok)  ~/workspace/bakerydemo  https://bakerydemo.ddev.site  django4
  drup        running (ok)  ~/workspace/drup        https://drup.ddev.site        drupal
  Router      healthy       ~/.ddev                 http://127.0.0.1:10999        traefik
 ```

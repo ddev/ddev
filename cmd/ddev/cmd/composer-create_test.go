@@ -35,13 +35,6 @@ func TestComposerCreateCmd(t *testing.T) {
 
 	for _, docRoot := range []string{"", "doc-root"} {
 		for _, projectType := range validAppTypes {
-			if projectType == nodeps.AppTypeDjango4 || projectType == nodeps.AppTypePython {
-				// Skip as an empty django4/python do not start nicely right away
-				// https://github.com/ddev/ddev/issues/5171
-				t.Logf("== SKIP TestComposerCreateCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
-				t.Logf("== SKIP python projects are not starting up nicely and composer create is very unlikely to be used")
-				continue
-			}
 			if projectType == nodeps.AppTypeDrupal6 {
 				t.Logf("== SKIP TestComposerCreateCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
 				t.Logf("== SKIP drupal6 projects uses a very old php version and composer create is very unlikely to be used")
