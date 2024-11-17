@@ -471,8 +471,7 @@
       "type": "string",
       "enum": [
         "nginx-fpm",
-        "apache-fpm",
-        "nginx-gunicorn"
+        "apache-fpm"
       ]
     },
     "working_dir": {

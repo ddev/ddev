@@ -78,7 +78,6 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     file \
     ghostscript \
     imagemagick \
-    gunicorn \
     graphicsmagick \
     jq \
     msmtp \
