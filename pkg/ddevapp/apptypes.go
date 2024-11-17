@@ -104,14 +104,6 @@ func init() {
 			postStartAction:      craftCmsPostStartAction,
 		},
 
-		nodeps.AppTypeDjango4: {
-			settingsCreator:      django4SettingsCreator,
-			appTypeDetect:        isDjango4App,
-			configOverrideAction: django4ConfigOverrideAction,
-			postConfigAction:     django4PostConfigAction,
-			postStartAction:      django4PostStartAction,
-		},
-
 		nodeps.AppTypeDrupal6: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
@@ -181,12 +173,6 @@ func init() {
 
 		nodeps.AppTypePHP: {
 			postStartAction: nil,
-		},
-
-		nodeps.AppTypePython: {
-			appTypeDetect:        isPythonApp,
-			configOverrideAction: pythonConfigOverrideAction,
-			postConfigAction:     pythonPostConfigAction,
 		},
 
 		nodeps.AppTypeShopware6: {

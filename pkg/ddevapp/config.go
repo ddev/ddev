@@ -91,11 +91,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.WebserverType = nodeps.WebserverDefault
 	app.SetPerformanceMode(nodeps.PerformanceModeDefault)
 
-	// Turn off Mutagen on Python projects until initial setup can be done
-	if app.WebserverType == nodeps.WebserverNginxGunicorn {
-		app.SetPerformanceMode(types.PerformanceModeNone)
-	}
-
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 
@@ -171,11 +166,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		if err != nil {
 			return app, err
 		}
-	}
-
-	// If non-php type, use non-php webserver type
-	if app.WebserverType == nodeps.WebserverDefault && app.Type == nodeps.AppTypeDjango4 {
-		app.WebserverType = nodeps.WebserverNginxGunicorn
 	}
 
 	// TODO: Enable once the bootstrap is clean and every project is loaded once only

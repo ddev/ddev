@@ -38,9 +38,8 @@ const (
 
 // Webserver types
 const (
-	WebserverNginxFPM      = "nginx-fpm"
-	WebserverApacheFPM     = "apache-fpm"
-	WebserverNginxGunicorn = "nginx-gunicorn"
+	WebserverNginxFPM  = "nginx-fpm"
+	WebserverApacheFPM = "apache-fpm"
 )
 
 // ValidOmitContainers is the list of things that can be omitted
@@ -82,9 +81,8 @@ var GoroutineLimit = 10
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
-	WebserverNginxFPM:      true,
-	WebserverApacheFPM:     true,
-	WebserverNginxGunicorn: true,
+	WebserverNginxFPM:  true,
+	WebserverApacheFPM: true,
 }
 
 // App types

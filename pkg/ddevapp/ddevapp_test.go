@@ -1083,9 +1083,6 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
 	for k := range nodeps.ValidWebserverTypes {
-		if k == nodeps.WebserverNginxGunicorn {
-			continue
-		}
 		webserverKeys = append(webserverKeys, k)
 	}
 	// Most of the time we can just test with the default webserver_type
@@ -2352,11 +2349,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			}
 		}
 		// Test dynamic URL + database content.
-		// With nginx-gunicorn, the auto-detect and reload of new settings files
-		// may take a few seconds, so wait for it.
-		if app.WebserverType == nodeps.WebserverNginxGunicorn {
-			time.Sleep(time.Second * 10)
-		}
 		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
