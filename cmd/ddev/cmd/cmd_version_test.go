@@ -17,6 +17,9 @@ import (
 func TestCmdVersion(t *testing.T) {
 	assert := asrt.New(t)
 
+	if versionconstants.DdevVersion == `v0.0.0-overridden-by-make` {
+		t.Skip("skipping because not built with make, has no embedded version")
+	}
 	versionData := make(map[string]interface{})
 
 	args := []string{"version", "--json-output"}
