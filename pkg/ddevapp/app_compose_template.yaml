@@ -220,6 +220,7 @@ services:
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
+    - START_SCRIPT_TIMEOUT={{ .StartScriptTimeout }}
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
     labels:

@@ -112,7 +112,7 @@ fi)
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
-if [ ! -f ~/.nvm/nvm.sh ]; then (timeout 30 install_nvm.sh || true); fi
+if [ ! -f ~/.nvm/nvm.sh ]; then (log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" install_nvm.sh || true); fi
 
 # /mnt/ddev_config/.homeadditions may be either
 # a bind-mount, or a volume mount, but we don't care,

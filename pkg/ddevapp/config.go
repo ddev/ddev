@@ -792,6 +792,7 @@ type composeYAMLVars struct {
 	IsGitpod                        bool
 	IsCodespaces                    bool
 	DefaultContainerTimeout         string
+	StartScriptTimeout              string
 	UseHostDockerInternalExtraHosts bool
 	WebExtraHTTPPorts               string
 	WebExtraHTTPSPorts              string
@@ -889,6 +890,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsCodespaces:       nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
+		StartScriptTimeout:      app.GetStartScriptTimeout(),
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
@@ -1025,11 +1027,11 @@ redirect_stderr=true
 	}
 	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
 	if app.Database.Type == nodeps.MySQL {
-		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mysql-client-install.sh || true\n", app.GetStartScriptTimeout())
 	}
 	// Some MariaDB versions may have their own client in the ddev-webserver
 	if app.Database.Type == nodeps.MariaDB {
-		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mariadb-client-install.sh || true\n", app.GetStartScriptTimeout())
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)

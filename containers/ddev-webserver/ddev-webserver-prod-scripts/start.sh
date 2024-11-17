@@ -108,7 +108,7 @@ fi)
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
-if [ ! -f ~/.nvm/nvm.sh ]; then (timeout 30 install_nvm.sh || true); fi
+if [ ! -f ~/.nvm/nvm.sh ]; then (log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" install_nvm.sh || true); fi
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/

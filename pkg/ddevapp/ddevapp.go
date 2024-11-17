@@ -3284,6 +3284,22 @@ func FormatSiteStatus(status string) string {
 	return formattedStatus
 }
 
+// GetStartScriptTimeout returns the timeout for scripts on start
+// Used for START_SCRIPT_TIMEOUT
+func (app *DdevApp) GetStartScriptTimeout() string {
+	containerTimeout, err := strconv.Atoi(app.DefaultContainerTimeout)
+	if err != nil {
+		containerTimeout, _ = strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
+	}
+	// Use 1/4 of the default container timeout for scripts on start
+	timeoutForScriptsOnStart := strconv.Itoa(containerTimeout / 4)
+	// With 30 seconds minimum
+	if containerTimeout/4 <= 30 {
+		timeoutForScriptsOnStart = "30"
+	}
+	return timeoutForScriptsOnStart
+}
+
 // genericImportFilesAction defines the workflow for importing project files.
 func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)
