@@ -98,7 +98,7 @@ var AuthSSHCommand = &cobra.Command{
 
 		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint="}
 		dockerCmd = append(dockerCmd, mounts...)
-		dockerCmd = append(dockerCmd, docker.GetSSHAuthImage()+"-built", "/add-keys.sh")
+		dockerCmd = append(dockerCmd, docker.GetSSHAuthImage()+"-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`)
 
 		err = exec.RunInteractiveCommand("docker", dockerCmd)
 
