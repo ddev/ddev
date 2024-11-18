@@ -196,8 +196,8 @@ brews:
     end
   install: |
     if build.head?
-        system "git", "fetch", "--unshallow" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
-        system "git", "fetch", "--tags"
+        system "sh", "-c", "git fetch --unshallow >/dev/null 2>&1" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
+        system "sh", "-c", "git fetch --tags -f >/dev/null 2>&1"
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
@@ -238,8 +238,8 @@ brews:
     end
   install: |
     if build.head?
-        system "git", "fetch", "--unshallow" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
-        system "git", "fetch", "--tags"
+        system "sh", "-c", "git fetch --unshallow >/dev/null 2>&1" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
+        system "sh", "-c", "git fetch --tags -f >/dev/null 2>&1"
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
