@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -581,12 +582,16 @@ func (app *DdevApp) CheckCustomConfig() {
 	ddevDir := filepath.Dir(app.ConfigPath)
 
 	customConfig := false
-	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == nodeps.WebserverNginxFPM {
-		util.Warning("Using custom nginx configuration in nginx-site.conf")
+
+	mutagenConfigPath := app.GetConfigPath("mutagen/mutagen.yml")
+	sigFound, _ := fileutil.FgrepStringInFile(mutagenConfigPath, nodeps.DdevFileSignature)
+	if !sigFound && app.IsMutagenEnabled() {
+		util.Warning("Using custom mutagen configuration in %s", mutagenConfigPath)
 		customConfig = true
 	}
+
 	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
-	sigFound, _ := fileutil.FgrepStringInFile(nginxFullConfigPath, nodeps.DdevFileSignature)
+	sigFound, _ = fileutil.FgrepStringInFile(nginxFullConfigPath, nodeps.DdevFileSignature)
 	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
 		util.Warning("Using custom nginx configuration in %s", nginxFullConfigPath)
 		customConfig = true
@@ -594,7 +599,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	apacheFullConfigPath := app.GetConfigPath("apache/apache-site.conf")
 	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, nodeps.DdevFileSignature)
-	if !sigFound && app.WebserverType != nodeps.WebserverNginxFPM {
+	if !sigFound && app.WebserverType == nodeps.WebserverApacheFPM {
 		util.Warning("Using custom apache configuration in %s", apacheFullConfigPath)
 		customConfig = true
 	}
@@ -628,6 +633,20 @@ func (app *DdevApp) CheckCustomConfig() {
 		if len(phpFiles) > 0 {
 			printableFiles, _ := util.ArrayToReadableOutput(phpFiles)
 			util.Warning("Using custom PHP configuration: %v", printableFiles)
+			customConfig = true
+		}
+	}
+
+	customDockerPath := filepath.Join(ddevDir, "web-build")
+	if _, err := os.Stat(customDockerPath); err == nil {
+		dockerFiles, err := filepath.Glob(customDockerPath + "/*Dockerfile*")
+		util.CheckErr(err)
+		dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
+			return strings.HasSuffix(s, ".example")
+		})
+		if len(dockerFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(dockerFiles)
+			util.Warning("Using custom web-entrypoint.d configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
