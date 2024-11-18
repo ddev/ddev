@@ -698,24 +698,24 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
 
 	defer util.TimeTrackC(fmt.Sprintf("%s ConfigOverrideDetection", site.Name))()
 
 	// Copy test overrides into the project .ddev directory
 	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {
 		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", item))
-		err := fileutil.CopyDir(filepath.Join(testDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
-		assert.NoError(err)
+		err := fileutil.CopyDir(filepath.Join(origDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
+		require.NoError(t, err)
 	}
 
 	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
-	assert.NoError(err)
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		_ = app.Stop(true, false)
@@ -726,11 +726,12 @@ func TestConfigOverrideDetection(t *testing.T) {
 				t.Logf("failed to delete %s: %v", f, err)
 			}
 		}
+		_ = os.Chdir(origDir)
 	})
 
 	stdoutFunc, err := util.CaptureOutputToFile()
 	assert.NoError(err)
-	startErr := app.StartAndWait(2)
+	startErr := app.Start()
 	stdout := stdoutFunc()
 
 	var logs, health string
@@ -740,17 +741,13 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
-	assert.Contains(stdout, "collation.cnf")
-	assert.Contains(stdout, "my-php.ini")
+	require.Contains(t, stdout, "collation.cnf")
+	require.Contains(t, stdout, "my-php.ini")
+	require.Contains(t, stdout, "junker99.conf")
 
-	switch app.WebserverType {
-	case nodeps.WebserverNginxFPM:
-		fallthrough
-	default:
-		assert.Contains(stdout, "apache-site.conf")
-		assert.NotContains(stdout, "nginx-site.conf")
-	}
-	assert.Contains(stdout, "Custom configuration is updated")
+	require.NotContains(t, stdout, "apache-site.conf")
+	require.Contains(t, stdout, "nginx-site.conf")
+	require.Contains(t, stdout, "Custom configuration is updated")
 }
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
