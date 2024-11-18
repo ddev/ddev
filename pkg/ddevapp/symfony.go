@@ -24,7 +24,11 @@ func symfonyEnvMailer(app *DdevApp, envMap map[string]string) {
 	envMap["MAILER_HOST"] = "localhost"
 	envMap["MAILER_PORT"] = "1025"
 	envMap["MAILER_URL"] = "smtp://localhost:1025"
-	envMap["MAILER_WEB_URL"] = fmt.Sprintf("%s:8026", app.GetPrimaryURL())
+	mailpitPort := app.GetMailpitHTTPSPort()
+	if app.CanUseHTTPOnly() {
+		mailpitPort = app.GetMailpitHTTPPort()
+	}
+	envMap["MAILER_WEB_URL"] = fmt.Sprintf("%s:%s", app.GetPrimaryURL(), mailpitPort)
 }
 
 func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
