@@ -26,7 +26,7 @@ const TraefikRouterImage = "ddev/ddev-traefik-router:20241109_use_bin_env"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "20241109_use_bin_env"
+var SSHAuthTag = "20241115_rfay_ssh_agent_update"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
