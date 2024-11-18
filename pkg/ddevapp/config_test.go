@@ -741,7 +741,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
-	for _, configFile := range []string{"collation.cnf", "my-php.ini", "junker99.conf", "do-something.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse", "mutagen.yml"} {
+	for _, configFile := range []string{"collation.cnf", "my-php.ini", "junker99.conf", "do-something.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse"} {
 		require.Contains(t, stdout, configFile, "did not find %s listed in custom configuration", configFile)
 	}
 
@@ -760,6 +760,9 @@ func TestConfigOverrideDetection(t *testing.T) {
 		t.Fatalf("Unknown WebserverType: %s", app.WebserverType)
 	}
 
+	if app.IsMutagenEnabled() {
+		require.Contains(t, stdout, "mutagen.yml")
+	}
 	require.Contains(t, stdout, "Custom configuration is updated")
 
 }
