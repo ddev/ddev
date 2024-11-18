@@ -9,9 +9,14 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 )
 
-// isSymfonyApp returns true if the app is of type laravel
+// isSymfonyApp returns true if the app is of type symfony
 func isSymfonyApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, "bin", "console")) && fileutil.FileExists(filepath.Join(app.AppRoot, "src", "Kernel.php"))
+}
+
+// setSymfonySiteSettingsPaths sets the paths to .env.local file.
+func setSymfonySiteSettingsPaths(app *DdevApp) {
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env.local")
 }
 
 func symfonyEnvMailer(app *DdevApp, envMap map[string]string) {

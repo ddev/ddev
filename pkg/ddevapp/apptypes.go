@@ -220,9 +220,10 @@ func init() {
 		},
 
 		nodeps.AppTypeSymfony: {
-			appTypeDetect:       isSymfonyApp,
-			postStartAction:     symfonyPostStartAction,
-			hookDefaultComments: getSymfonyHooks,
+			appTypeDetect:        isSymfonyApp,
+			appTypeSettingsPaths: setSymfonySiteSettingsPaths,
+			postStartAction:      symfonyPostStartAction,
+			hookDefaultComments:  getSymfonyHooks,
 		},
 
 		nodeps.AppTypeTYPO3: {
