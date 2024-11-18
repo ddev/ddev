@@ -115,13 +115,21 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     python3-psycopg2 \
     python3-venv \
     rsync \
-    sqlite3 \
     sudo \
     telnet \
     tree \
     unzip \
     vim-tiny \
     zip
+
+### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
+### TODO: When we have this from upstream Debian 13 Trixie, we must remove this stanza
+ARG SQLITE_VERSION="3.45.1"
+RUN mkdir -p /tmp/sqlite3 && \
+wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
+wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
+apt-get install -y /tmp/sqlite3/*.deb && \
+rm -rf /tmp/sqlite3"
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
