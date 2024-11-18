@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
@@ -46,9 +45,5 @@ func GetSSHAuthImage() string {
 
 // GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
-	image := versionconstants.TraefikRouterImage
-	if globalconfig.DdevGlobalConfig.Router == types.RouterTypeNginxProxy {
-		image = versionconstants.TraditionalRouterImage
-	}
-	return image
+	return versionconstants.TraefikRouterImage
 }

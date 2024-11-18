@@ -347,7 +347,6 @@ The Docker images that DDEV uses are included in the `containers/` directory:
 * `containers/ddev-php-base` the base build for `ddev-webserver`.
 * `containers/ddev-webserver` provides the web servers for per-project `web` containers.
 * `containers/ddev-dbserver` provides the `db` container for per-project databases.
-* `containers/ddev-nginx-proxy-router` is the (deprecated) the nginx-proxy router image.
 * `containers/ddev-ssh-agent` provides a single in-Docker-network SSH agent so projects can use your SSH keys.
 * `containers/ddev-traefik-router` is the current Traefik-based router image.
 

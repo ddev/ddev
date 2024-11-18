@@ -19,7 +19,6 @@ var DBImg = "ddev/ddev-dbserver"
 // BaseDBTag is the main tag, DBTag is constructed from it
 var BaseDBTag = "20241109_use_bin_env"
 
-const TraditionalRouterImage = "ddev/ddev-nginx-proxy-router:20241109_use_bin_env"
 const TraefikRouterImage = "ddev/ddev-traefik-router:20241109_use_bin_env"
 
 // SSHAuthImage is image for agent

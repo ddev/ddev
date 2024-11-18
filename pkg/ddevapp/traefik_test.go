@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/testcommon"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"

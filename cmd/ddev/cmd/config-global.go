@@ -9,7 +9,6 @@ import (
 	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	globalconfigTypes "github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -143,12 +142,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("disable-http2").Changed {
-		val, _ := cmd.Flags().GetBool("disable-http2")
-		globalconfig.DdevGlobalConfig.DisableHTTP2 = val
-		dirty = true
-	}
-
 	if cmd.Flag("use-letsencrypt").Changed {
 		val, _ := cmd.Flags().GetBool("use-letsencrypt")
 		globalconfig.DdevGlobalConfig.UseLetsEncrypt = val
@@ -206,18 +199,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("use-traefik").Changed {
-		if v, _ := cmd.Flags().GetBool("use-traefik"); v {
-			globalconfig.DdevGlobalConfig.Router = globalconfigTypes.RouterTypeTraefik
-			dirty = true
-		}
-	}
-
-	if cmd.Flag("router").Changed {
-		val, _ := cmd.Flags().GetString("router")
-		globalconfig.DdevGlobalConfig.Router = val
-		dirty = true
-	}
 	if cmd.Flag("wsl2-no-windows-hosts-mgt").Changed {
 		val, _ := cmd.Flags().GetBool("wsl2-no-windows-hosts-mgt")
 		globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt = val
@@ -298,7 +279,6 @@ func init() {
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrumentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 3000, "Increase timeout when checking internet timeout, in milliseconds")
-	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in deprecated nginx-proxy ddev-router, 'ddev config global --disable-http2' or `ddev config global --disable-http2=false'")
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev config global --use-letsencrypt' or `ddev config global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev config global --letsencrypt-email=me@example.com'")
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
@@ -318,7 +298,6 @@ func init() {
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
 	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use Traefik for ddev-router")
 	_ = configGlobalCommand.Flags().MarkDeprecated("use-traefik", "please use --router instead")
-	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("Valid router types are %s, default is %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", "), globalconfigTypes.RouterTypeDefault))
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The default router HTTP port for all projects")
 	configGlobalCommand.Flags().String("router-https-port", "", "The default router HTTPS port for all projects")

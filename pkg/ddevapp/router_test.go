@@ -12,7 +12,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
@@ -223,63 +222,6 @@ func TestRouterConfigOverride(t *testing.T) {
 
 	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'", "")
 	assert.Equal(answer+"\n", stdout)
-}
-
-// TestDisableHTTP2 tests we can enable or disable http2
-func TestDisableHTTP2(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
-	if globalconfig.GetCAROOT() == "" {
-		t.Skip("Skipping because mkcert/http not enabled")
-	}
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		t.Skip("Skipping because router=traefik doesn't have feature to turn off http/2")
-	}
-
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-	testDir := testcommon.CreateTmpDir(t.Name())
-	_ = os.Chdir(testDir)
-	err := os.WriteFile("index.html", []byte("hello from the test"), 0644)
-	assert.NoError(err)
-	testcommon.ClearDockerEnv()
-
-	_, err = exec.RunCommand(DdevBin, []string{"poweroff"})
-	require.NoError(t, err)
-
-	app, err := ddevapp.NewApp(testDir, true)
-	assert.NoError(err)
-	err = app.WriteConfig()
-	assert.NoError(err)
-
-	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig.DisableHTTP2 = false
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		_ = os.RemoveAll(testDir)
-		assert.NoError(err)
-	})
-
-	err = app.Start()
-	assert.NoError(err)
-
-	// Verify that http2 is on by default
-	out, err := exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
-	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
-	assert.Equal("HTTP/2 200 \r\n", out)
-
-	// Now turn it off and verify
-	globalconfig.DdevGlobalConfig.DisableHTTP2 = true
-	err = app.Start()
-	assert.NoError(err)
-
-	out, err = exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
-	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
-	assert.Equal("HTTP/1.1 200 OK\r\n", out)
-
 }
 
 // TestAllocateAvailablePortForRouter tests AllocateAvailablePortForRouter()

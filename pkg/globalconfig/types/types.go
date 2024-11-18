@@ -6,15 +6,12 @@ type RouterType = string
 
 // Router Types
 const (
-	RouterTypeTraefik    RouterType = "traefik"
-	RouterTypeNginxProxy RouterType = "nginx-proxy"
-	RouterTypeDefault    RouterType = RouterTypeTraefik
+	RouterTypeTraefik RouterType = "traefik"
 )
 
 // validRouterTypes is the list of valid router types
 var validRouterTypes = []RouterType{
 	RouterTypeTraefik,
-	RouterTypeNginxProxy,
 }
 
 // IsValidRouterType limits the choices for Router Type
