@@ -2324,7 +2324,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
 
-		if app.Type != nodeps.AppTypeShopware6 {
+		switch app.Type {
+		case nodeps.AppTypeShopware6, nodeps.AppTypeSymfony:
+			// Skip the check for the above types because they use app.SiteSettingsPath differently
+		default:
 			assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
 		}
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7"}, app.Type) {
