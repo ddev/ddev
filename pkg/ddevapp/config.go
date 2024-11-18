@@ -1413,7 +1413,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 	// Determine the document root.
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s\n", app.AppRoot)
-	output.UserOut.Printf("Leave docroot empty (hit <RETURN>) if your index.php is in the project root.\n")
+	output.UserOut.Printf("Leave docroot empty (hit <RETURN>) to use the location shown in parentheses.\nOr specify a custom path if your index.php is in a different directory.\n")
 	var docrootPrompt = "Docroot Location"
 	var defaultDocroot = DiscoverDefaultDocroot(app)
 	// If there is a default docroot, display it in the prompt.
