@@ -101,8 +101,6 @@ Installed add-ons are versioned and can be viewed by running `ddev add-on list -
 
 You can update an add-on by running `ddev add-on get <addonname>`, or remove it by running `ddev add-on remove <addonname>`.
 
-If you have add-ons that were installed before v1.22, update them with `ddev add-on get <addonname>` and they will be versioned and available in `ddev add-on list --installed`.
-
 ## Adding Custom Configuration to an Add-on
 
 Sometimes it's necessary to add custom configuration to an add-on. For example, in [`ddev-redis`](https://github.com/ddev/ddev-redis) the `image` is set to `image: redis:${REDIS_TAG:-6-bullseye}` (it is important to have the default value for `$REDIS_TAG`). If you wanted to change this to use `7-bookworm` instead, you would have two choices:
