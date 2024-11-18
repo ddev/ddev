@@ -741,7 +741,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
-	for _, configFile := range []string{"collation.cnf", "my-php.ini", "junker99.conf", "do-something.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse"} {
+	for _, configFile := range []string{"mysql-collation.cnf", "php-override.ini", "web-entrypoint-dosomething.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse"} {
 		require.Contains(t, stdout, configFile, "did not find %s listed in custom configuration", configFile)
 	}
 
@@ -749,11 +749,11 @@ func TestConfigOverrideDetection(t *testing.T) {
 	case nodeps.WebserverApacheFPM:
 		require.Contains(t, stdout, "apache-site.conf")
 		require.NotContains(t, stdout, "nginx-site.conf")
-		require.NotContains(t, stdout, "junker99.conf")
+		require.NotContains(t, stdout, "nginx-snippet.conf")
 
 	case nodeps.WebserverNginxFPM:
 		require.Contains(t, stdout, "nginx-site.conf")
-		require.Contains(t, stdout, "junker99.conf")
+		require.Contains(t, stdout, "nginx-snippet.conf")
 		require.NotContains(t, stdout, "apache-site.conf")
 
 	default:

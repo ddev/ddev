@@ -604,14 +604,16 @@ func (app *DdevApp) CheckCustomConfig() {
 		customConfig = true
 	}
 
-	nginxPath := filepath.Join(ddevDir, "nginx")
-	if _, err := os.Stat(nginxPath); err == nil {
-		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
-		util.CheckErr(err)
-		if len(nginxFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(nginxFiles)
-			util.Warning("Using nginx snippets: %v", printableFiles)
-			customConfig = true
+	if app.WebserverType == nodeps.WebserverNginxFPM {
+		nginxPath := filepath.Join(ddevDir, "nginx")
+		if _, err := os.Stat(nginxPath); err == nil {
+			nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
+			util.CheckErr(err)
+			if len(nginxFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(nginxFiles)
+				util.Warning("Using nginx snippets: %v", printableFiles)
+				customConfig = true
+			}
 		}
 	}
 
