@@ -1,3 +1,8 @@
+# DDEV goreleaser configuration
+# Handles uploading built executables to most of the places they go
+# See https://ddev.readthedocs.io/en/stable/developers/release-management/#environment-variables-required
+# for environment variables that may be used.
+
 version: 2
 ##### BUILDS ######
 builds:
@@ -176,18 +181,23 @@ brews:
     name: homebrew-ddev
   description: DDEV
   directory: Formula
-  homepage: https://github.com/ddev/ddev
+  homepage: https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev
   license: "Apache 2"
   # ddev brew will only be uploaded on non-prerelease
   skip_upload: auto
   dependencies:
-  - name: mkcert
+    - name: mkcert
+
   custom_block: |
-    head "https://github.com/ddev/ddev.git", branch: "master"
-    depends_on "go" => :build
-    depends_on "make" => :build
+    head do
+      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
+      depends_on "go" => :build
+      depends_on "make" => :build
+    end
   install: |
     if build.head?
+        system "sh", "-c", "git fetch --unshallow >/dev/null 2>&1" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
+        system "sh", "-c", "git fetch --tags -f >/dev/null 2>&1"
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
@@ -214,18 +224,22 @@ brews:
     name: homebrew-ddev-edge
   description: DDEV
   directory: Formula
-  homepage: https://github.com/ddev/ddev
+  homepage: https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev
   license: "Apache 2"
   # ddev-edge brew will always be uploaded
   skip_upload: "false"
   dependencies:
-  - name: mkcert
+    - name: mkcert
   custom_block: |
-    head "https://github.com/ddev/ddev.git", branch: "master"
-    depends_on "go" => :build
-    depends_on "make" => :build
+    head do
+      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
+      depends_on "go" => :build
+      depends_on "make" => :build
+    end
   install: |
     if build.head?
+        system "sh", "-c", "git fetch --unshallow >/dev/null 2>&1" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
+        system "sh", "-c", "git fetch --tags -f >/dev/null 2>&1"
         os = OS.mac? ? "darwin" : "linux"
         arch = Hardware::CPU.arm? ? "arm64" : "amd64"
         system "mkdir", "-p", "#{bin}"
@@ -286,22 +300,29 @@ nfpms:
       - xdg-utils
 
 snapshot:
-  name_template: '{{ .Version }}-{{.ShortCommit}}'
+  version_template: '{{ .Version }}-{{.ShortCommit}}'
 
+#before_publish:
+#  - cmd: |
+#      echo "Debug before_publish"
+#      echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
+#      echo "Prerelease='{{.Prerelease}}'"
+#      echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
+#    output: true
 
 aurs:
-- name: "ddev"
+- name: "{{ .Env.AUR_PACKAGE_NAME }}"
   ids:
   - ddev
   homepage: "https://github.com/ddev/ddev"
   description: "DDEV: a local web development environment"
   maintainers:
-  - 'Randy Fay <randy at randyfay.com>'
+  - 'Randy Fay <randy.fay@ddev.com>'
   license: "Apache 2"
   # main ddev repo will only be uploaded on non-prerelease
   skip_upload: auto
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
-  # AUR_EDGE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-bin.git
+  # AUR_STABLE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-bin.git
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
   depends:
   - docker
@@ -326,15 +347,15 @@ aurs:
   # Defaults are shown below.
   commit_author:
     name: Randy Fay
-    email: randy@randyfay.com
+    email: randy.fay@ddev.com
 
-- name: "ddev-edge"
+- name: "{{ .Env.AUR_PACKAGE_NAME }}-edge"
   ids:
   - ddev
   homepage: "https://github.com/ddev/ddev"
   description: "DDEV: a local web development environment (edge)"
   maintainers:
-  - 'Randy Fay <randy at randyfay.com>'
+  - 'Randy Fay <randy.fay@ddev.com>'
   license: "Apache 2"
   # Always upload, even on prerelease
   skip_upload: "false"
@@ -364,7 +385,7 @@ aurs:
   # Defaults are shown below.
   commit_author:
     name: Randy Fay
-    email: randy@randyfay.com
+    email: randy.fay@ddev.com
 
 furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
@@ -511,3 +532,81 @@ dockerhub:
     full_description:
       from_file:
         path: ./containers/test-ssh-server/README.md
+
+#chocolateys:
+#    name: ddev-test
+#
+#    package_source_url: https://github.com/ddev/ddev/tree/master/winpkg/chocolatey
+#
+#    # Your app's owner.
+#    # It basically means you.
+#    owners: DDEV Foundation
+#
+#    # Your app's authors (probably you).
+#    authors: DDEV Foundation
+#
+#    project_url: https://ddev.com/
+#
+#    # Which format to use.
+#    #
+#    # Valid options are:
+#    # - 'msi':     msi installers (requires the MSI pipe configured, Pro only)
+#    # - 'archive': archives (only if format is zip),
+#    #
+#    # Default: 'archive'.
+#    # This feature is only available in GoReleaser Pro.
+#    use: msi
+#
+#    # URL which is determined by the given Token (github,
+#    # gitlab or gitea).
+#    #
+#    # Default: depends on the git remote.
+#    # Templates: allowed.
+##    url_template: "https://github.com/foo/bar/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+#
+##    icon_url: "https://rawcdn.githack.com/foo/bar/efbdc760-395b-43f1-bf69-ba25c374d473/icon.png"
+#
+#    # Your app's copyright details.
+#    #
+#    # Templates: allowed.
+#    copyright: DDEV Foundation
+#
+#    license_url: https://github.com/ddev/ddev/blob/master/LICENSE
+#    require_license_acceptance: true
+#
+#    # Your app's source url.
+#    project_source_url: https://github.com/ddev/ddev
+#
+#    # Your app's documentation url.
+#    docs_url: https://ddev.readthedocs.io
+#
+#    # App's bugtracker url.
+#    bug_tracker_url: https://github.com/ddev/ddev/issues
+#
+#    tags: "ddev drupal TYPO3 backdrop php"
+#
+#    summary: DDEV is a local web development tool optimized for PHP projects and CMSs.
+#
+#    # This the description of your chocolatey package.
+#    # Supports markdown.
+#    description: |
+#      {{ .ProjectName }} allows developers to use both nginx and apache, and many versions of PHP, with no host configurations.
+#
+#    release_notes: "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev/releases/tag/v{{ .Version }}"
+#
+#    # App's dependencies
+#    # The version is not required.
+#    dependencies:
+#      - id: gsudo
+#      - id: ngrok
+#      - id: mkcert
+#
+#    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+#
+#    # The source repository that will push the package to.
+#    source_repo: "https://push.chocolatey.org/"
+#
+#    # Setting this will prevent goreleaser to actually try to push the package
+#    # to chocolatey repository, leaving the responsibility of publishing it to
+#    # the user.
+#    skip_publish: false
