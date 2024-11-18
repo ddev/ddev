@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20241118_rfay_git_safe_directory" // Note that this can be overridden by make
+var WebTag = "20241118_rfay_d11_requirements_global" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -44,5 +44,3 @@ const RequiredMutagenVersion = "0.18.0"
 
 const RequiredDockerComposeVersionDefault = "v2.30.3"
 
-// Drupal11RequiredSqlite3Version for ddev-webserver
-const Drupal11RequiredSqlite3Version = "3.45.1"

@@ -2460,7 +2460,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 				})
 				require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
 				stdout = strings.Trim(stdout, "\r\n")
-				require.Equal(t, versionconstants.Drupal11RequiredSqlite3Version, stdout)
+				require.Equal(t, "3.45.1", stdout)
 			}
 		}
 		// We don't want all the projects running at once.
