@@ -114,9 +114,9 @@ func symfonyPostStartAction(app *DdevApp) error {
 
 // getSymfonyHooks for appending as byte array.
 func getSymfonyHooks() []byte {
-	backdropHooks := `## Un-comment to consume async message.
+	symfonyHooks := `## Un-comment to consume async message.
 #    post-start:
 #    - exec: symfony run --daemon --watch=config,src,templates,vendor bin/console messenger:consume async -vv
 `
-	return []byte(backdropHooks)
+	return []byte(symfonyHooks)
 }

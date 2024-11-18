@@ -679,6 +679,19 @@ ddev launch /admin
 
 There are many ways to install Symfony, here are a few of them based on the [Symfony docs](https://symfony.com/doc/current/setup.html).
 
+DDEV automatically updates or creates the `.env.local` file with the database information.
+
+=== "Composer"
+
+    ```bash
+    mkdir my-symfony-site && cd my-symfony-site
+    ddev config --project-type=symfony --docroot=public
+    ddev composer create symfony/skeleton
+    ddev composer require webapp
+    # When it asks if you want to include docker configuration, say "no" with "x"
+    ddev launch
+    ```
+
 === "Symfony CLI"
 
     ```bash
@@ -702,14 +715,7 @@ There are many ways to install Symfony, here are a few of them based on the [Sym
     ddev launch
     ```
 
-!!!tip "Default web environments"
-    On `ddev start` command, some environments will be automatically added to `.env.local` file.
-
-    - `MAILER_*` to use [Mailpit](https://ddev.readthedocs.io/en/stable/users/usage/developer-tools/#email-capture-and-review-mailpit) as mail catcher.
-    - `DATABASE_*` based on database selection unless [--omit-containers=db](https://ddev.readthedocs.io/en/stable/users/configuration/config/#omit_containers) is set.
-    - `REDIS_*` if `ddev/ddev-redis` or `ddev/ddev-redis-7` add-on installed.
-
-!!!tip "Want to run Symfony Console (bin/console)?"
+!!!tip "Want to run Symfony Console (`bin/console`)?"
 
     ```bash
     ddev console list
@@ -717,8 +723,7 @@ There are many ways to install Symfony, here are a few of them based on the [Sym
     ```
 
 !!!tip "Consuming Messages (Running the Worker)"
-    Edit `.ddev/config.yaml` in your project directory and uncomment `post-start` hook
-    To see `messenger:consume` command logs
+    Edit `.ddev/config.yaml` in your project directory and uncomment `post-start` hook to see `messenger:consume` command logs, and run:
 
     ```bash
     ddev exec symfony server:log
