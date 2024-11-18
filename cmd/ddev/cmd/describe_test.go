@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -170,35 +172,84 @@ func TestCmdDescribe(t *testing.T) {
 		// web ports
 		require.Contains(t, services, "web")
 		web := services["web"].(map[string]interface{})
+
 		require.Contains(t, web["exposed_ports"], "5492,")
 		require.Contains(t, web["exposed_ports"], ",57497")
-		require.Contains(t, web["host_ports"], ",5332,")
+
+		var webExposedPortsInt []int
+		for _, p := range strings.Split(web["exposed_ports"].(string), ",") {
+			i, err := strconv.Atoi(p)
+			asrt.NoError(t, err)
+			webExposedPortsInt = append(webExposedPortsInt, i)
+		}
+		require.True(t, slices.IsSorted(webExposedPortsInt))
+
+		require.Contains(t, web["host_ports"], "5332,")
 		require.Contains(t, web["host_ports"], ",5555,")
+
+		var webHostPortsInt []int
+		for _, p := range strings.Split(web["host_ports"].(string), ",") {
+			i, err := strconv.Atoi(p)
+			asrt.NoError(t, err)
+			webHostPortsInt = append(webHostPortsInt, i)
+		}
+		require.True(t, slices.IsSorted(webHostPortsInt))
+
 		require.Contains(t, web, "host_ports_mapping")
 		webPortMapping := web["host_ports_mapping"].([]interface{})
 		var webPortMappingTest = map[string]string{}
 		var webPortMappingReverseTest = map[string]string{}
+		var webPortMappingExposedPortInt []int
 		for _, portMapping := range webPortMapping {
+			i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
+			asrt.NoError(t, err)
+			webPortMappingExposedPortInt = append(webPortMappingExposedPortInt, i)
 			webPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
 			webPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
 		}
+		require.True(t, slices.IsSorted(webPortMappingExposedPortInt))
 		require.Contains(t, webPortMappingTest, "5332")
 		require.Equal(t, "5222", webPortMappingTest["5332"])
 		require.Contains(t, webPortMappingReverseTest, "12445")
 		require.Regexp(t, regexp.MustCompile("[0-9]+"), webPortMappingReverseTest["12445"])
+
 		// db ports
 		require.Contains(t, services, "db")
 		db := services["db"].(map[string]interface{})
+
 		require.Contains(t, db["exposed_ports"], "4352,")
 		require.Contains(t, db["exposed_ports"], ",6594")
-		require.Contains(t, db["host_ports"], ",12312,")
+
+		var dbExposedPortsInt []int
+		for _, p := range strings.Split(db["exposed_ports"].(string), ",") {
+			i, err := strconv.Atoi(p)
+			asrt.NoError(t, err)
+			dbExposedPortsInt = append(dbExposedPortsInt, i)
+		}
+		require.True(t, slices.IsSorted(dbExposedPortsInt))
+
+		require.Contains(t, db["host_ports"], "12312,")
+
+		var dbbHostPortsInt []int
+		for _, p := range strings.Split(web["host_ports"].(string), ",") {
+			i, err := strconv.Atoi(p)
+			asrt.NoError(t, err)
+			dbbHostPortsInt = append(dbbHostPortsInt, i)
+		}
+		require.True(t, slices.IsSorted(dbbHostPortsInt))
+
 		dbPortMapping := db["host_ports_mapping"].([]interface{})
 		var dbPortMappingTest = map[string]string{}
 		var dbPortMappingReverseTest = map[string]string{}
+		var dbPortMappingExposedPortInt []int
 		for _, portMapping := range dbPortMapping {
+			i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
+			asrt.NoError(t, err)
+			dbPortMappingExposedPortInt = append(dbPortMappingExposedPortInt, i)
 			dbPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
 			dbPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
 		}
+		require.True(t, slices.IsSorted(dbPortMappingExposedPortInt))
 		require.Contains(t, dbPortMappingTest, "12312")
 		require.Equal(t, "3999", dbPortMappingTest["12312"])
 		require.Contains(t, dbPortMappingReverseTest, "54355")

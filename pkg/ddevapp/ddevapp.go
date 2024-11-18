@@ -318,26 +318,33 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			}
 		}
 
+		// Sort exposed ports
 		sort.Ints(exposedPrivatePorts)
-
 		var exposedPrivatePortsStr []string
 		for _, p := range exposedPrivatePorts {
 			exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
 		}
 
+		// Extract host ports from map
 		var exposedPublicPortsKeys []int
 		for p := range exposedPublicPorts {
 			exposedPublicPortsKeys = append(exposedPublicPortsKeys, p)
 		}
 
+		// Sort host/exposed port map by exposed port
 		sort.SliceStable(exposedPublicPortsKeys, func(i, j int) bool {
 			return exposedPublicPorts[exposedPublicPortsKeys[i]] < exposedPublicPorts[exposedPublicPortsKeys[j]]
 		})
-		var exposedPublicPortsStr []string
 		exposedPublicPortsMapping := make([]map[string]string, 0)
 		for _, p := range exposedPublicPortsKeys {
-			exposedPublicPortsStr = append(exposedPublicPortsStr, strconv.FormatInt(int64(p), 10))
 			exposedPublicPortsMapping = append(exposedPublicPortsMapping, map[string]string{"host_port": strconv.FormatInt(int64(p), 10), "exposed_port": strconv.FormatInt(int64(exposedPublicPorts[p]), 10)})
+		}
+
+		// Sort host ports
+		var exposedPublicPortsStr []string
+		sort.Ints(exposedPublicPortsKeys)
+		for _, p := range exposedPublicPortsKeys {
+			exposedPublicPortsStr = append(exposedPublicPortsStr, strconv.FormatInt(int64(p), 10))
 		}
 
 		services[shortName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, ",")
