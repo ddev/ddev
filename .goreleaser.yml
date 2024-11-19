@@ -395,16 +395,6 @@ furies:
 
 dockerhub:
 
-  #arch-aur-builder
-  - images:
-      - '{{ .Env.DOCKER_ORG }}/arch-aur-builder'
-    username: '{{ .Env.DOCKERHUB_USERNAME }}'
-    secret_name: "DOCKERHUB_TOKEN"
-    description: Arch push helper (obsolete)
-    full_description:
-      from_file:
-        path: ./.circleci/README.arch-aur-builder.md
-
   # ddev-dbserver
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mariadb-5.5'
