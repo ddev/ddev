@@ -488,6 +488,8 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 !!!warning "Troubleshooting Only!"
     This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
 
+## `router`
+
 The only current value is `traefik`.
 
 ## `router_bind_all_interfaces`
