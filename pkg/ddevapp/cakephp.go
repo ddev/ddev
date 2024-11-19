@@ -74,9 +74,8 @@ func cakephpPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// cakephpConfigOverrideAction overrides php_version for CakePHP, requires PHP8.1
+// cakephpConfigOverrideAction overrides php_version for CakePHP
 func cakephpConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP83
 	app.DisableUploadDirsWarning = true
 	return nil
 }

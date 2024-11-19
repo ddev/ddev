@@ -61,14 +61,14 @@ func TestConfigOverrideAction(t *testing.T) {
 
 	appTypes := map[string]string{
 		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
-		nodeps.AppTypeCakePHP:      nodeps.PHP83,
+		nodeps.AppTypeCakePHP:      nodeps.PHPDefault,
 		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,
 		nodeps.AppTypeDrupal:       nodeps.PHPDefault,
-		nodeps.AppTypeLaravel:      nodeps.PHP82,
+		nodeps.AppTypeLaravel:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
-		nodeps.AppTypeMagento2:     nodeps.PHP82,
+		nodeps.AppTypeMagento2:     nodeps.PHPDefault,
 		nodeps.AppTypeSilverstripe: nodeps.PHPDefault,
 		nodeps.AppTypeWordPress:    nodeps.PHPDefault,
 	}
