@@ -74,7 +74,7 @@ func cakephpPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// cakephpConfigOverrideAction overrides php_version for CakePHP
+// cakephpConfigOverrideAction disables UploadDirsWarning
 func cakephpConfigOverrideAction(app *DdevApp) error {
 	app.DisableUploadDirsWarning = true
 	return nil
