@@ -49,6 +49,7 @@ type ComposeCmdOpts struct {
 	ComposeFiles []string
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
+	Timeout      time.Duration
 }
 
 // NoHealthCheck is a HealthConfig that disables any existing healthcheck when
@@ -701,7 +702,13 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		return "", "", err
 	}
 
-	proc := exec.Command(path, arg...)
+	ctx := context.Background()
+	if cmd.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
+		defer cancel()
+	}
+	proc := exec.CommandContext(ctx, path, arg...)
 	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
 
@@ -750,6 +757,9 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		done <- true
 	}
 
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return stdout.String(), stderr, fmt.Errorf("composeCmd timed out after %v and failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", cmd.Timeout, os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
+	}
 	if err != nil {
 		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
 	}

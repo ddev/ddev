@@ -1496,6 +1496,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Action:       []string{"--progress=" + progress, "build"},
 		Progress:     true,
+		Timeout:      time.Hour * 1,
 	})
 	if err != nil {
 		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
@@ -1512,6 +1513,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},
 			Progress:     true,
+			Timeout:      time.Hour * 1,
 		})
 		if err != nil {
 			return fmt.Errorf("docker-compose build web --no-cache failed: %v, output='%s', stderr='%s'", err, out, stderr)
