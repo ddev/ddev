@@ -110,6 +110,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     netcat-traditional \
     openssh-client \
     patch \
+    python-is-python3 \
     rsync \
     sudo \
     telnet \
