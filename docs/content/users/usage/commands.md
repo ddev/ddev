@@ -236,13 +236,15 @@ ddev cake
 
 ## `cd`
 
-Uses shell built-in `cd` to change to a project directory. For example, `ddev cd some-project` will change directories to the project root of the project named `some-project`.
+Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
 
-Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish`. To see the explanation of what you need to do:
+Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish`.
 
 ```shell
+# To see the explanation of what you need to do
+ddev cd
 # Where some-project is a project from the `ddev list`
-ddev cd some-project
+ddevcd some-project
 ```
 
 ## `clean`
