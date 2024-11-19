@@ -2,11 +2,9 @@
 
 If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you can configure it for tight integration with DDEV and Docker to more easily run actions, access services, enable autocompletion, and enjoy a more convenient development experience.
 
-## Requirements
+## Before Starting
 
-- PhpStorm 2022.2 or higher.
-- DDEV v1.21.1 or higher.
-- Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
+Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
 
 ## Prerequisite
 
