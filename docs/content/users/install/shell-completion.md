@@ -87,7 +87,7 @@ You can run the `ddev_powershell_completion.ps1` script manually or install it s
 Although most people will use techniques like Homebrew for installation, a tar archive of shell completion scripts for various shells is available in each release, called `ddev_shell_completion_scripts.<version>.tar.gz`. If you need to manually install, you can download the files and extract them with the following commands, replacing the VERSION number in the first line with your version:
 
 ```bash
-VERSION=v1.22.6
+VERSION=v1.24.0
 curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
 tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
 ```

@@ -130,14 +130,12 @@ Example: `dbimage_extra_packages: ["less"]` will add the `less` package when the
 You can configure a [version constraint](https://github.com/Masterminds/semver#checking-version-constraints) for DDEV that will be validated against the running DDEV executable and prevent `ddev start` from running if it doesn't validate. For example:
 
 ```yaml
-ddev_version_constraint: '>= v1.23.0-alpha1'
+ddev_version_constraint: '>= v1.24.0-alpha1'
 ```
-
-This is only supported with DDEV versions above v1.22.4; older DDEV versions will ignore this setting.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | | `>= 1.22.4`
+| :octicons-file-directory-16: project | | `>= 1.23.4`
 
 ## `default_container_timeout`
 
