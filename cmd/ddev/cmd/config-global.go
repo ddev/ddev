@@ -9,6 +9,7 @@ import (
 	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	globalconfigTypes "github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -296,13 +297,14 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote Docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
-	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use Traefik for ddev-router")
-	_ = configGlobalCommand.Flags().MarkDeprecated("use-traefik", "please use --router instead")
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The default router HTTP port for all projects")
 	configGlobalCommand.Flags().String("router-https-port", "", "The default router HTTPS port for all projects")
 	configGlobalCommand.Flags().String("mailpit-http-port", "", "The default Mailpit HTTP port for all projects")
 	configGlobalCommand.Flags().String("mailpit-https-port", "", "The default Mailpit HTTPS port for all projects")
+	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("The only valid router types are %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", ")))
+	_ = configGlobalCommand.Flags().MarkDeprecated("router", "The only router used now is traefik, so --router is no longer needed")
+	_ = configGlobalCommand.Flags().MarkHidden("router")
 	configGlobalCommand.Flags().String("traefik-monitor-port", "", "The Traefik monitor port; can be changed in case of port conflicts")
 	ConfigCommand.AddCommand(configGlobalCommand)
 }
