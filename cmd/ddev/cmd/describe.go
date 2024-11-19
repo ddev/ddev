@@ -80,7 +80,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
-				WidthMax: 10,
+				WidthMax: 12,
 			},
 			{
 				Name: "URL/Port",
@@ -109,7 +109,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	if status == ddevapp.SiteRunning {
 		serviceNames := []string{}
 		// Get a list of services in the order we want them, with web and db first
-		serviceMap := desc["services"].(map[string]map[string]string)
+		serviceMap := desc["services"].(map[string]map[string]interface{})
 		for k := range serviceMap {
 			if k != "web" && k != "db" {
 				serviceNames = append(serviceNames, k)
@@ -131,9 +131,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			switch {
 			// Normal case, using ddev-router based URLs
 			case !ddevapp.IsRouterDisabled(app):
-				if httpsURL, ok := v["https_url"]; ok && !app.CanUseHTTPOnly() {
+				if httpsURL, ok := v["https_url"].(string); ok && !app.CanUseHTTPOnly() {
 					urlPortParts = append(urlPortParts, httpsURL)
-				} else if httpURL, ok = v["http_url"]; ok {
+				} else if httpURL, ok = v["http_url"].(string); ok {
 					urlPortParts = append(urlPortParts, httpURL)
 				}
 
@@ -143,22 +143,34 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// Router disabled, but not because of Gitpod, use direct http url
 			case ddevapp.IsRouterDisabled(app):
-				httpURL = v["host_http_url"]
+				httpURL = v["host_http_url"].(string)
 				if httpURL != "" {
 					urlPortParts = append(urlPortParts, httpURL)
 				}
 			}
 
-			if p, ok := v["exposed_ports"]; ok {
-				if p != "" {
-					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
-				} else {
-					urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"])
+			portStr := "InDocker"
+			var portMappingDockerHost = map[string]string{}
+			if p, ok := v["host_ports_mapping"].([]map[string]string); ok && len(p) != 0 {
+				portStr += " -> Host"
+				for _, portMapping := range p {
+					portMappingDockerHost[portMapping["exposed_port"]] = portMapping["host_port"]
 				}
 			}
+			portStr += ":"
 
-			if p, ok := v["host_ports"]; ok && p != "" {
-				urlPortParts = append(urlPortParts, "Host: 127.0.0.1:"+p)
+			if p, ok := v["exposed_ports"].(string); ok {
+				if p != "" {
+					for _, exposedPort := range strings.Split(p, ",") {
+						portStr += "\n - " + v["short_name"].(string) + ":" + exposedPort
+						if host, ok := portMappingDockerHost[exposedPort]; ok {
+							portStr += " -> 127.0.0.1:" + host
+						}
+					}
+					urlPortParts = append(urlPortParts, portStr)
+				} else {
+					urlPortParts = append(urlPortParts, portStr+" "+v["short_name"].(string))
+				}
 			}
 
 			// Get extra info for web container
@@ -175,7 +187,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				extraInfo = append(extraInfo, app.Database.Type+":"+app.Database.Version)
 				extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
 			}
-			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
+			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"].(string)), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
 		}
 
 		if !ddevapp.IsRouterDisabled(app) {
@@ -202,7 +214,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			_, _, urls := app.GetAllURLs()
 			s := strings.Join(urls, ", ")
 			urlString := text.WrapSoft(s, int(urlPortWidth))
-			t.AppendRow(table.Row{"All URLs", "", urlString})
+			t.AppendRow(table.Row{"Project URLs", "", urlString})
 		}
 		bindInfo := []string{}
 		if app.BindAllInterfaces {

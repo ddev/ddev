@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -283,13 +284,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
-	appDesc["services"] = map[string]map[string]string{}
+	appDesc["services"] = map[string]map[string]interface{}{}
 
 	containers, err := dockerutil.GetAppContainers(app.Name)
 	if err != nil {
 		return nil, err
 	}
-	services := appDesc["services"].(map[string]map[string]string)
+	services := appDesc["services"].(map[string]map[string]interface{})
 	for _, k := range containers {
 		serviceName := strings.TrimPrefix(k.Names[0], "/")
 		shortName := strings.Replace(serviceName, fmt.Sprintf("ddev-%s-", app.Name), "", 1)
@@ -300,25 +301,55 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			continue
 		}
 		fullName := strings.TrimPrefix(serviceName, "/")
-		services[shortName] = map[string]string{}
+		services[shortName] = map[string]interface{}{}
 		services[shortName]["status"] = c.State.Status
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
 		services[shortName]["short_name"] = shortName
-		var ports []string
-		for pk := range c.Config.ExposedPorts {
-			if !slices.Contains(ports, pk.Port()) {
-				ports = append(ports, pk.Port())
-			}
-		}
-		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
-		var hostPorts []string
+
+		var exposedPrivatePorts []int
+		exposedPublicPorts := make(map[int]int)
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
-				hostPorts = append(hostPorts, strconv.FormatInt(int64(pv.PublicPort), 10))
+				exposedPublicPorts[int(pv.PublicPort)] = int(pv.PrivatePort)
+			}
+			if !slices.Contains(exposedPrivatePorts, int(pv.PrivatePort)) {
+				exposedPrivatePorts = append(exposedPrivatePorts, int(pv.PrivatePort))
 			}
 		}
-		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
+
+		// Sort exposed ports
+		sort.Ints(exposedPrivatePorts)
+		var exposedPrivatePortsStr []string
+		for _, p := range exposedPrivatePorts {
+			exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
+		}
+
+		// Extract host ports from map
+		var exposedPublicPortsKeys []int
+		for p := range exposedPublicPorts {
+			exposedPublicPortsKeys = append(exposedPublicPortsKeys, p)
+		}
+
+		// Sort host/exposed port map by exposed port
+		sort.SliceStable(exposedPublicPortsKeys, func(i, j int) bool {
+			return exposedPublicPorts[exposedPublicPortsKeys[i]] < exposedPublicPorts[exposedPublicPortsKeys[j]]
+		})
+		exposedPublicPortsMapping := make([]map[string]string, 0)
+		for _, p := range exposedPublicPortsKeys {
+			exposedPublicPortsMapping = append(exposedPublicPortsMapping, map[string]string{"host_port": strconv.FormatInt(int64(p), 10), "exposed_port": strconv.FormatInt(int64(exposedPublicPorts[p]), 10)})
+		}
+
+		// Sort host ports
+		var exposedPublicPortsStr []string
+		sort.Ints(exposedPublicPortsKeys)
+		for _, p := range exposedPublicPortsKeys {
+			exposedPublicPortsStr = append(exposedPublicPortsStr, strconv.FormatInt(int64(p), 10))
+		}
+
+		services[shortName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, ",")
+		services[shortName]["host_ports"] = strings.Join(exposedPublicPortsStr, ",")
+		services[shortName]["host_ports_mapping"] = exposedPublicPortsMapping
 
 		// Extract VIRTUAL_HOST, HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		if !IsRouterDisabled(app) {
@@ -352,7 +383,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			appHostname := ""
 
 			if ok {
-				appHostname = hostname
+				appHostname = hostname.(string)
 			} else {
 				appHostname = appDesc["hostname"].(string)
 			}
@@ -385,7 +416,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					services[shortName][attributeName] = protocol + appHostname
 
 					if ports[0] != portDefault {
-						services[shortName][attributeName] = services[shortName][attributeName] + ":" + ports[0]
+						services[shortName][attributeName] = services[shortName][attributeName].(string) + ":" + ports[0]
 					}
 				}
 			}

@@ -1,0 +1,33 @@
+services:
+  web:
+    expose:
+      - 5492
+      - 12394
+      - 57497
+    ports:
+      - 5332:5222
+      - 5555:5777
+      - 12445
+  db:
+    expose:
+      - 6594
+      - 4352
+    ports:
+      - 12312:3999
+      - 54355
+  busybox1:
+    image: busybox
+    command: tail -f /dev/null
+    container_name: ddev-${DDEV_SITENAME}-busybox1
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+  busybox2:
+    expose:
+      - 3333
+    image: busybox
+    command: tail -f /dev/null
+    container_name: ddev-${DDEV_SITENAME}-busybox2
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
