@@ -42,7 +42,7 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.18.0"
 
-const RequiredDockerComposeVersionDefault = "v2.30.0"
+const RequiredDockerComposeVersionDefault = "v2.30.3"
 
 // Drupal11RequiredSqlite3Version for ddev-webserver
 const Drupal11RequiredSqlite3Version = "3.45.1"
