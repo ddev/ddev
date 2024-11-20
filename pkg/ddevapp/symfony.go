@@ -19,23 +19,25 @@ func setSymfonySiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env.local")
 }
 
+// symfonyEnvMailer sets up mail catcher environment variabels for symfony project type
 func symfonyEnvMailer(app *DdevApp, envMap map[string]string) {
 	envMap["MAILER_AUTH_MODE"] = ""
 	envMap["MAILER_PASSWORD"] = ""
 	envMap["MAILER_USERNAME"] = ""
 	envMap["MAILER_CATCHER"] = "1"
 	envMap["MAILER_DRIVER"] = "smtp"
-	envMap["MAILER_DSN"] = "smtp://localhost:1025"
-	envMap["MAILER_HOST"] = "localhost"
+	envMap["MAILER_DSN"] = "smtp://127.0.0.1:1025"
+	envMap["MAILER_HOST"] = "127.0.0.1"
 	envMap["MAILER_PORT"] = "1025"
-	envMap["MAILER_URL"] = "smtp://localhost:1025"
+	envMap["MAILER_URL"] = "smtp://127.0.0.1:1025"
 	mailpitPort := app.GetMailpitHTTPSPort()
 	if app.CanUseHTTPOnly() {
 		mailpitPort = app.GetMailpitHTTPPort()
 	}
-	envMap["MAILER_WEB_URL"] = fmt.Sprintf("%s:%s", app.GetPrimaryURL(), mailpitPort)
+	envMap["MAILER_WEB_URL"] = fmt.Sprintf("%s:%s", app.GetHostname(), mailpitPort)
 }
 
+// symfonyEnvDatabase sets up database environment variabels for symfony project type
 func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 	if slices.Contains(app.OmitContainers, "db") {
 		return
@@ -45,19 +47,20 @@ func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 	dbDriver := ""
 	dbVersion := ""
 
-	if app.Database.Type == nodeps.Postgres {
+	switch app.Database.Type {
+	case nodeps.Postgres:
 		dbPort = "5432"
 		dbDriver = "postgres"
 		dbVersion = app.Database.Version
-	} else if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
+	case nodeps.MySQL:
 		dbPort = "3306"
 		dbDriver = "mysql"
-		if app.Database.Type == nodeps.MariaDB {
-			// doctrine requires mariadb version until its patch version so add 0 as default patch version
-			dbVersion = fmt.Sprintf("%s.0-mariadb", app.Database.Version)
-		} else {
-			dbVersion = app.Database.Version
-		}
+		dbVersion = app.Database.Version
+	case nodeps.MariaDB:
+		dbPort = "3306"
+		dbDriver = "mysql"
+		// doctrine requires mariadb version until its patch version so add 0 as default patch version
+		dbVersion = fmt.Sprintf("%s.0-mariadb", app.Database.Version)
 	}
 
 	if dbVersion != "" {
