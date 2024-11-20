@@ -7,7 +7,7 @@ const ConfigInstructions = `
 # name: <projectname> # Name of the project, automatically provides
 #   http://projectname.ddev.site and https://projectname.ddev.site
 
-# type: <projecttype>  # backdrop, craftcms, django4, drupal, drupal6, drupal7, laravel, magento, magento2, php, python, shopware6, silverstripe, typo3, wordpress
+# type: <projecttype>  # backdrop, craftcms, drupal, drupal6, drupal7, laravel, magento, magento2, php, shopware6, silverstripe, typo3, wordpress
 # See https://ddev.readthedocs.io/en/stable/users/quickstart/ for more
 # information on the different project types
 # "drupal" covers recent Drupal 8+
@@ -42,7 +42,7 @@ const ConfigInstructions = `
 # "ddev xhprof" to enable Xhprof and "ddev xhprof off" to disable it work better,
 # as leaving Xhprof enabled all the time is a big performance hit.
 
-# webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn
+# webserver_type: nginx-fpm or apache-fpm
 
 # timezone: Europe/Berlin
 # If timezone is unset, DDEV will attempt to derive it from the host system timezone

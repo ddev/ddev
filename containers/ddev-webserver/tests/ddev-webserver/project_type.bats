@@ -3,6 +3,13 @@
 # Run these tests from the repo root directory, for example
 # bats tests
 
+# Requires bats-assert and bats-support
+# brew tap kaos/shell &&
+# brew install bats-core bats-assert bats-support jq mkcert yq
+setup() {
+  load setup.sh
+}
+
 @test "verify that backdrop drush commands were added on backdrop and only backdrop ($project_type)" {
 	if [ "$project_type" = "backdrop" ] ; then
 	 	# The .drush/commands/backdrop directory should only exist for backdrop apptype

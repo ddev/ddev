@@ -1,0 +1,18 @@
+# See DDEV Mutagen docs at
+# https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen
+# For detailed information about mutagen configuration options, see
+# https://mutagen.io/documentation/introduction/configuration
+sync:
+  defaults:
+    mode: "two-way-resolved"
+    stageMode: "neighboring"
+    ignore:
+      paths:
+        # The top-level .git directory is ignored because where possible it's
+        # mounted into the container with a traditional docker bind-mount
+        - "/.git"
+        - "/.tarballs"
+        - "/.ddev/db_snapshots"
+        - "/.ddev/.importdb*"
+        - ".DS_Store"
+        - ".idea"

@@ -191,20 +191,6 @@ func TestCustomCommands(t *testing.T) {
 		_, err = exec.RunHostCommand(DdevBin, c, "--version")
 		assert.NoError(err, "Failed to run ddev %s --version", c)
 	}
-
-	// See if `ddev python` works for Python app types
-	origAppType := app.Type
-	for _, appType := range []string{nodeps.AppTypeDjango4, nodeps.AppTypePython} {
-		app.Type = appType
-		err = app.WriteConfig()
-		require.NoError(t, err)
-		for _, c := range []string{"python"} {
-			out, err = exec.RunHostCommand(DdevBin, c, "--version")
-			assert.NoError(err, "Expected ddev python --version to work with apptype=%s but it didn't, output=%s", c, app.Type, out)
-		}
-	}
-	app.Type = origAppType
-
 	// The various CMS commands should not be available here
 	for _, c := range []string{"artisan", "art", "cake", "drush", "magento", "typo3", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")

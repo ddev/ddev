@@ -264,64 +264,7 @@ var (
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
 
-		// 14: python generic
-		// Uses https://github.com/ddev/test-flask-sayhello fork of
-		// https://github.com/greyli/sayhello - no database download required
-		{
-			Name:                          "TestPkgPython",
-			SourceURL:                     "https://github.com/ddev/test-flask-sayhello/archive/refs/tags/v1.0.1.tar.gz",
-			ArchiveInternalExtractionPath: "test-flask-sayhello-1.0.1/",
-			DBTarURL:                      "",
-			FullSiteTarballURL:            "",
-			PretestCmd:                    "ddev exec flask forge",
-			WebEnvironment: []string{
-				"DATABASE_URI=postgresql://db:db@db/db",
-				"WSGI_APP=sayhello:app",
-			},
-			Type:    nodeps.AppTypePython,
-			Docroot: "",
-			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: ""},
-			//UploadDir:                     "files",
-			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "20 messages"},
-			FilesImageURI: "",
-		},
-
-		// 15: Django 4
-		// Uses https://github.com/ddev/test-django4-bakerydemo fork of
-		// https://github.com/wagtail/bakerydemo - no database download required
-		{
-			Name:                          "TestPkgDjango4",
-			SourceURL:                     "https://github.com/ddev/test-django4-bakerydemo/archive/refs/tags/v1.0.1.tar.gz",
-			ArchiveInternalExtractionPath: "test-django4-bakerydemo-1.0.1/",
-			DBTarURL:                      "",
-			FullSiteTarballURL:            "",
-			PretestCmd:                    "touch .env && ddev python manage.py migrate >/dev/null && ddev python manage.py load_initial_data && ddev exec pkill -1 gunicorn",
-			WebEnvironment: []string{
-				"DJANGO_SETTINGS_MODULE=bakerydemo.settings.dev",
-			},
-			Type:    nodeps.AppTypeDjango4,
-			Docroot: "",
-			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: ""},
-			//UploadDir:                     "files",
-			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to the Wagtail Bakery"},
-			FilesImageURI: "/media/images/Anadama_bread_1.2e16d0ba.fill-180x180-c100.jpg",
-		},
-
-		// 16: Platform django4 template without DJANGO_SETTINGS_MODULE
-		// Here it has to use the settings file it finds and update that.
-		// Uses https://github.com/ddev/test-platformsh-templates-django4 fork of
-		// https://github.com/platformsh-templates/django4 without doing anything to it
-		{
-			Name:                          "TestPkgPlatformDjango4",
-			SourceURL:                     "https://github.com/ddev/test-platformsh-templates-django4/archive/refs/tags/v1.0.0.tar.gz",
-			ArchiveInternalExtractionPath: "test-platformsh-templates-django4-1.0.0/",
-			DBTarURL:                      "",
-			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDjango4,
-			Docroot:                       "",
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Hello, and welcome to the"},
-		},
-		// 17: Silverstripe
+		// 14: Silverstripe
 		{
 			Name:                          "TestPkgSilverstripe",
 			SourceURL:                     "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/silverstripe-base.tar.gz",
@@ -333,7 +276,7 @@ var (
 			Type:                          nodeps.AppTypeSilverstripe,
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 5.0\">"},
 		},
-		// 18: CakePHP
+		// 15: CakePHP
 		{
 			Name:                          "TestPkgCakePHP",
 			SourceURL:                     "https://github.com/ddev/test-cakephp/archive/refs/tags/5.0.1.1.tar.gz",
@@ -349,7 +292,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "CakePHP is able to connect to the database"},
 			FilesImageURI:                 "/img/cake.logo.svg",
 		},
-		// 19: drupal11
+		// 16: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
 			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.0.0.tar.gz",
@@ -1140,9 +1083,6 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
 	for k := range nodeps.ValidWebserverTypes {
-		if k == nodeps.WebserverNginxGunicorn {
-			continue
-		}
 		webserverKeys = append(webserverKeys, k)
 	}
 	// Most of the time we can just test with the default webserver_type
@@ -2409,11 +2349,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			}
 		}
 		// Test dynamic URL + database content.
-		// With nginx-gunicorn, the auto-detect and reload of new settings files
-		// may take a few seconds, so wait for it.
-		if app.WebserverType == nodeps.WebserverNginxGunicorn {
-			time.Sleep(time.Second * 10)
-		}
 		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
@@ -3653,9 +3588,6 @@ func TestPHPWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, site := range TestSites {
-		if site.Type == nodeps.AppTypeDjango4 || site.Type == nodeps.AppTypePython {
-			continue
-		}
 		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		app := new(ddevapp.DdevApp)

@@ -38,9 +38,8 @@ const (
 
 // Webserver types
 const (
-	WebserverNginxFPM      = "nginx-fpm"
-	WebserverApacheFPM     = "apache-fpm"
-	WebserverNginxGunicorn = "nginx-gunicorn"
+	WebserverNginxFPM  = "nginx-fpm"
+	WebserverApacheFPM = "apache-fpm"
 )
 
 // ValidOmitContainers is the list of things that can be omitted
@@ -82,9 +81,8 @@ var GoroutineLimit = 10
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
-	WebserverNginxFPM:      true,
-	WebserverApacheFPM:     true,
-	WebserverNginxGunicorn: true,
+	WebserverNginxFPM:  true,
+	WebserverApacheFPM: true,
 }
 
 // App types
@@ -93,7 +91,6 @@ const (
 	AppTypeBackdrop     = "backdrop"
 	AppTypeCakePHP      = "cakephp"
 	AppTypeCraftCms     = "craftcms"
-	AppTypeDjango4      = "django4"
 	AppTypeDrupal6      = "drupal6"
 	AppTypeDrupal7      = "drupal7"
 	AppTypeDrupal8      = "drupal8"
@@ -105,7 +102,6 @@ const (
 	AppTypeMagento      = "magento"
 	AppTypeMagento2     = "magento2"
 	AppTypePHP          = "php"
-	AppTypePython       = "python"
 	AppTypeShopware6    = "shopware6"
 	AppTypeTYPO3        = "typo3"
 	AppTypeWordPress    = "wordpress"

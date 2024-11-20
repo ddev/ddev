@@ -582,9 +582,9 @@ The DDEV-specific project type.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `django4`, `drupal6`, `drupal7`, `drupal`,  `laravel`, `magento`, `magento2`, `php`, `python`, `shopware6`, `silverstripe`, `typo3`, or `wordpress`.
+| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `drupal6`, `drupal7`, `drupal`,  `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `typo3`, or `wordpress`.
 
-The `php` and `python` types don’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
+The `php` type doesn’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 
 The former DDEV project types `drupal8`, `drupal9`, and `drupal10` can still be manually specified; by using `drupal` instead, DDEV will autodetect the correct type and its corresponding settings.
 
@@ -694,7 +694,7 @@ Which available [web server type](../extend/customization-extendibility.md#chang
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`.
+| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm` or `apache-fpm`.
 
 To change from the default `nginx-fpm` to `apache-fpm`, for example, you would need to edit your project’s `.ddev/config.yaml` to include the following:
 

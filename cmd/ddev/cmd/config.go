@@ -233,7 +233,7 @@ func init() {
 	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, "Sets the project's upload directories, the destination directories of the import-files command.")
 	ConfigCommand.Flags().String("upload-dir", "", "Sets the project's upload directories, the destination directories of the import-files command.")
 	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
-	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm/apache-fpm/nginx-gunicorn")
+	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm/apache-fpm")
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Sets the web container image")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this DDEV version")
 	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Sets the db container image")

@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:20241112_remove_php8.0-xdebug AS ddev-webserver-base
+FROM ddev/ddev-php-base:20241117_remove_python_django AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -105,16 +105,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     libldap-common \
     libpcre3 \
     libpq-dev \
-    libpython3-dev \
     nano \
     ncurses-bin \
     netcat-traditional \
     openssh-client \
     patch \
     python-is-python3 \
-    python3-pip \
-    python3-psycopg2 \
-    python3-venv \
     rsync \
     sudo \
     telnet \

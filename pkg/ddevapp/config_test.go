@@ -698,39 +698,40 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
 
 	defer util.TimeTrackC(fmt.Sprintf("%s ConfigOverrideDetection", site.Name))()
 
 	// Copy test overrides into the project .ddev directory
-	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {
+	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mutagen", "mysql", "web-build", "web-entrypoint.d"} {
 		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", item))
-		err := fileutil.CopyDir(filepath.Join(testDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
-		assert.NoError(err)
+		err := fileutil.CopyDir(filepath.Join(origDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
+		require.NoError(t, err)
 	}
 
 	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
-	assert.NoError(err)
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		_ = app.Stop(true, false)
-		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx_full"} {
+		for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mutagen", "mysql", "web-build", "web-entrypoint.d"} {
 			f := app.GetConfigPath(item)
 			err = os.RemoveAll(f)
 			if err != nil {
 				t.Logf("failed to delete %s: %v", f, err)
 			}
 		}
+		_ = os.Chdir(origDir)
 	})
 
 	stdoutFunc, err := util.CaptureOutputToFile()
 	assert.NoError(err)
-	startErr := app.StartAndWait(2)
+	startErr := app.Start()
 	stdout := stdoutFunc()
 
 	var logs, health string
@@ -738,23 +739,32 @@ func TestConfigOverrideDetection(t *testing.T) {
 		logs, health, _ = ddevapp.GetErrLogsFromApp(app, startErr)
 	}
 
-	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
+	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
-	assert.Contains(stdout, "collation.cnf")
-	assert.Contains(stdout, "my-php.ini")
+	for _, configFile := range []string{"mysql-collation.cnf", "php-override.ini", "web-entrypoint-dosomething.sh", "Dockerfile.something", "Dockerfile", "pre.Dockerfile.somethingelse"} {
+		require.Contains(t, stdout, configFile, "did not find %s listed in custom configuration", configFile)
+	}
 
 	switch app.WebserverType {
+	case nodeps.WebserverApacheFPM:
+		require.Contains(t, stdout, "apache-site.conf")
+		require.NotContains(t, stdout, "nginx-site.conf")
+		require.NotContains(t, stdout, "nginx-snippet.conf")
+
 	case nodeps.WebserverNginxFPM:
-		fallthrough
-	case nodeps.WebserverNginxGunicorn:
-		assert.Contains(stdout, "nginx-site.conf")
-		assert.NotContains(stdout, "apache-site.conf")
-		assert.Contains(stdout, "junker99.conf")
+		require.Contains(t, stdout, "nginx-site.conf")
+		require.Contains(t, stdout, "nginx-snippet.conf")
+		require.NotContains(t, stdout, "apache-site.conf")
+
 	default:
-		assert.Contains(stdout, "apache-site.conf")
-		assert.NotContains(stdout, "nginx-site.conf")
+		t.Fatalf("Unknown WebserverType: %s", app.WebserverType)
 	}
-	assert.Contains(stdout, "Custom configuration is updated")
+
+	if app.IsMutagenEnabled() {
+		require.Contains(t, stdout, "mutagen.yml")
+	}
+	require.Contains(t, stdout, "Custom configuration is updated")
+
 }
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.

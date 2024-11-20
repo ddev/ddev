@@ -380,7 +380,6 @@
         "backdrop",
         "cakephp",
         "craftcms",
-        "django4",
         "drupal",
         "drupal6",
         "drupal7",
@@ -391,7 +390,6 @@
         "magento",
         "magento2",
         "php",
-        "python",
         "shopware6",
         "silverstripe",
         "typo3",
@@ -473,8 +471,7 @@
       "type": "string",
       "enum": [
         "nginx-fpm",
-        "apache-fpm",
-        "nginx-gunicorn"
+        "apache-fpm"
       ]
     },
     "working_dir": {

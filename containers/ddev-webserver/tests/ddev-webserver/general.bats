@@ -1,5 +1,12 @@
 #!/usr/bin/env bats
 
+# Requires bats-assert and bats-support
+# brew tap kaos/shell &&
+# brew install bats-core bats-assert bats-support
+setup() {
+  load setup.sh
+}
+
 @test "Verify required binaries are installed in normal image" {
     if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
     COMMANDS="composer drush8 git magerun magerun2 mkcert mysql mysqladmin mysqldump node npm platform sudo symfony terminus wp"
@@ -31,7 +38,6 @@
     docker exec $CONTAINER_NAME bash -c 'php --modules | grep -v "xhprof"'
 }
 
-
 @test "verify that composer v2 is installed by default" {
     v=$(docker exec $CONTAINER_NAME bash -c 'composer --version | awk "{ print $3;}"')
     [[ "${v}" > "2." ]]
@@ -62,7 +68,11 @@
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
   fi
   docker cp ${TEST_SCRIPT_DIR}/check_key_expirations.sh ${CONTAINER_NAME}:/tmp
-  docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} /tmp/check_key_expirations.sh >&3
-
+  docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90}" ${CONTAINER_NAME} /tmp/check_key_expirations.sh >&3
 }
 
+@test "verify python is installed" {
+  run docker exec ${CONTAINER_NAME} python --version
+  assert_success
+  assert_output --partial "Python 3"
+}

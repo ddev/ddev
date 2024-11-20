@@ -17,10 +17,6 @@ sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl gi
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
-if [ ! -f /home/linuxbrew/.linuxbrew/Homebrew/bin/brew ] ; then
-  rm -rf /home/linuxbrew
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-fi
 export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
@@ -29,13 +25,11 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 source ~/.bashrc
 
-for item in ddev/ddev/ddev docker-compose golangci-lint mkcert; do
-    brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
+for item in bats-core ddev/ddev/ddev docker-compose golangci-lint kaos/shell/bats-assert kaos/shell/bats-file mkcert; do
+    brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
 mkcert -install
-
-git clone --branch v1.11.0 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local >/dev/null
 
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 
