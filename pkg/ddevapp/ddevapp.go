@@ -3333,6 +3333,21 @@ func (app *DdevApp) GetStartScriptTimeout() string {
 	return timeoutForScriptsOnStart
 }
 
+// GetMinimalContainerTimeout returns the timeout depending on the container timeout.
+// It returns the default timeout if the container's specified timeout is less than the default.
+func (app *DdevApp) GetMinimalContainerTimeout() string {
+	containerTimeout, err := strconv.Atoi(app.DefaultContainerTimeout)
+	defaultTimeout, _ := strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
+	if err != nil {
+		containerTimeout = defaultTimeout
+	}
+	minimalTimeout := strconv.Itoa(containerTimeout)
+	if containerTimeout <= defaultTimeout {
+		minimalTimeout = nodeps.DefaultDefaultContainerTimeout
+	}
+	return minimalTimeout
+}
+
 // genericImportFilesAction defines the workflow for importing project files.
 func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)

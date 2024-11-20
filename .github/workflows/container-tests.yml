@@ -78,6 +78,7 @@ jobs:
         run: |
           source ~/.bashrc
           docker version
+          docker info
           mkcert --version
           set -eu -o pipefail
 
