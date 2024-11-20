@@ -56,11 +56,6 @@ func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 		dbPort = "3306"
 		dbDriver = "mysql"
 		dbVersion = app.Database.Version
-	case nodeps.MariaDB:
-		dbPort = "3306"
-		dbDriver = "mysql"
-		// doctrine requires mariadb version until its patch version so add 0 as default patch version
-		dbVersion = fmt.Sprintf("%s.0-mariadb", app.Database.Version)
 	}
 
 	if dbVersion != "" {
