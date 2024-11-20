@@ -255,7 +255,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		tag = parts[0]
 		//name := typeOfVal.Field(i).Name
 		fieldValue := v.Field(i).Interface()
-		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" {
+		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" && tag != "router" {
 			tagWithDashes := strings.Replace(tag, "_", "-", -1)
 			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
 			keys = append(keys, tagWithDashes)
@@ -303,7 +303,7 @@ func init() {
 	configGlobalCommand.Flags().String("mailpit-http-port", "", "The default Mailpit HTTP port for all projects")
 	configGlobalCommand.Flags().String("mailpit-https-port", "", "The default Mailpit HTTPS port for all projects")
 	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("The only valid router types are %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", ")))
-	_ = configGlobalCommand.Flags().MarkDeprecated("router", "The only router used now is traefik, so --router is no longer needed")
+	_ = configGlobalCommand.Flags().MarkDeprecated("router", "\nThe only router used now is traefik, so --router is no longer needed")
 	_ = configGlobalCommand.Flags().MarkHidden("router")
 	configGlobalCommand.Flags().String("traefik-monitor-port", "", "The Traefik monitor port; can be changed in case of port conflicts")
 	ConfigCommand.AddCommand(configGlobalCommand)

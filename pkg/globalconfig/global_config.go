@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig/types"
-	"github.com/ddev/ddev/pkg/util"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -210,7 +209,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
-		util.Warning("The only valid router type is %s, but you have router: %s in your global configuration, using %s instead", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
+		output.UserOut.Println("The only valid router type is %s, but you have router: %s in your global configuration, using %s instead", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
 		DdevGlobalConfig.Router = types.RouterTypeTraefik
 		return nil
 	}
@@ -222,6 +221,7 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
+
 	return nil
 }
 
@@ -324,6 +324,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	if cfgCopy.PerformanceMode == configTypes.PerformanceModeEmpty {
 		cfgCopy.PerformanceMode = cfgCopy.GetPerformanceMode()
 	}
+
+	// We only have one router, so this field is old, and when writing we can omitempty
+	cfgCopy.Router = ""
 
 	cfgbytes, err := yaml.Marshal(cfgCopy)
 	if err != nil {
