@@ -21,7 +21,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -976,23 +975,6 @@ ENV N_INSTALL_VERSION="%s"
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
-	}
-	if app.Type == nodeps.AppTypeDrupal {
-		// TODO: When ddev-webserver has required drupal 11+ sqlite version we can remove this.
-		// These packages must be retrieved from snapshot.debian.org. We hope they'll be there
-		// when we need them.
-		drupalVersion, err := GetDrupalVersion(app)
-		if err == nil && drupalVersion == "11" {
-			extraWebContent = extraWebContent + "\n" + fmt.Sprintf(`
-### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
-ARG SQLITE_VERSION=%s
-RUN log-stderr.sh bash -c "mkdir -p /tmp/sqlite3 && \
-wget -O /tmp/sqlite3/sqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
-wget -O /tmp/sqlite3/libsqlite3.deb https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
-apt-get install -y /tmp/sqlite3/*.deb && \
-rm -rf /tmp/sqlite3" || true
-			`, versionconstants.Drupal11RequiredSqlite3Version)
-		}
 	}
 
 	// Add supervisord config for WebExtraDaemons
