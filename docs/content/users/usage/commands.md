@@ -609,17 +609,6 @@ ddev debug rebuild --service db
 ddev debug rebuild --all
 ```
 
-### `debug router-nginx-config`
-
-Prints the router’s [nginx config](../extend/customization-extendibility.md#custom-nginx-configuration).
-
-Example:
-
-```shell
-# Output router nginx configuration
-ddev debug router-nginx-config
-```
-
 ### `debug test`
 
 Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/master/cmd/ddev/cmd/scripts/test_ddev.sh).
