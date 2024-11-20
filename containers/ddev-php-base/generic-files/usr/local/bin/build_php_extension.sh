@@ -20,8 +20,8 @@ EXTENSION_FILE=$4
 # install pecl
 if ! command -v pecl >/dev/null 2>&1 || [ "$(dpkg -l | grep "php${PHP_VERSION}-dev")" = "" ]; then
   echo "Installing pecl to build php${PHP_VERSION}-${EXTENSION_NAME}"
-  apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
-  apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y build-essential php-pear "php${PHP_VERSION}-dev" || exit $?
 fi
 
@@ -38,7 +38,7 @@ fi
 
 # PECL does not allow to install multiple versions of extension at the same time,
 # use `rm -f /usr/share/php/.registry/.channel.pecl.php.net/extension.reg` to make it forget about another version.
-(pecl channel-update pecl.php.net && \
+(timeout "${START_SCRIPT_TIMEOUT:-30}" pecl channel-update pecl.php.net && \
   echo "Building php${PHP_VERSION}-${EXTENSION_NAME}..." && \
   pecl -d php_suffix="${PHP_VERSION}" install -f "${PECL_EXTENSION}" >/dev/null && \
   rm -f "/usr/share/php/.registry/.channel.pecl.php.net/${EXTENSION_NAME}.reg") || true

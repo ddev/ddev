@@ -1041,23 +1041,23 @@ redirect_stderr=true
 		// However, they do have a postgres:11-bullseye, but we won't start using it yet
 		// because of awkward changes to $DBIMAGE. PostgreSQL 11 will be EOL Nov 2023
 		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
-			extraDBContent = extraDBContent + `
+			extraDBContent = extraDBContent + fmt.Sprintf(`
 RUN rm -f /etc/apt/sources.list.d/pgdg.list
 RUN echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" > /etc/apt/sources.list
-RUN apt-get update || true
+RUN timeout %s apt-get update || true
 RUN apt-get -y install apt-transport-https
 RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-`
+`, app.GetMinimalContainerTimeout())
 		}
-		extraDBContent = extraDBContent + `
+		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
 RUN chmod ugo+rx /postgres_healthcheck.sh
 RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
 RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf
 RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
-RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
-`
+RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
+`, app.GetMinimalContainerTimeout())
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
@@ -1136,8 +1136,8 @@ SHELL ["/bin/bash", "-c"]
 					hasMultiStageBuild = true
 				}
 				contents = contents + fmt.Sprintf(`
-RUN /usr/local/bin/build_php_extension.sh "php%s" "%s" "%s" "%s" || true
-`, ext["php"], ext["name"], ext["version"], ext["file"])
+RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/build_php_extension.sh "php%s" "%s" "%s" "%s" || true
+`, app.GetStartScriptTimeout(), ext["php"], ext["name"], ext["version"], ext["file"])
 			}
 		}
 	}
@@ -1165,8 +1165,8 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
 			contents = contents + fmt.Sprintf(`
 ### DDEV-injected addition of not-preinstalled PHP version
-RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
-	`, app.PHPVersion)
+RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
+`, app.GetStartScriptTimeout(), app.PHPVersion)
 		}
 		for _, ext := range phpExtensions {
 			if app.PHPVersion == ext["php"] {
@@ -1204,9 +1204,10 @@ COPY --from=ddev-php-extension-build %s %v
 	}
 
 	if extraPackages != nil {
-		contents = contents + `
+		contents = contents + fmt.Sprintf(`
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
-RUN (apt-get -qq update || true) && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests %v
+`, app.GetMinimalContainerTimeout(), strings.Join(extraPackages, " "))
 	}
 
 	// webimage only things
@@ -1261,7 +1262,7 @@ RUN phpdismod blackfire xdebug xhprof
 ### DDEV-injected postgresql-client setup
 RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
-  log-stderr.sh bash -c "apt-get -qq update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
+  log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" bash -c "apt-get update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
   apt-get install -y postgresql-client-%s && \
   apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION}" || true; \
 fi`, app.Database.Version, psqlVersion) + "\n\n"
