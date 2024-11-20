@@ -1222,10 +1222,10 @@ RUN phpdismod blackfire xdebug xhprof
 ### DDEV-injected postgresql-client setup
 RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
-  log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" bash -c "apt-get update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
+  log-stderr.sh --timeout %s bash -c "apt-get update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
   apt-get install -y postgresql-client-%s && \
   apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION}" || true; \
-fi`, app.Database.Version, psqlVersion) + "\n\n"
+fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 		}
 
 	}
