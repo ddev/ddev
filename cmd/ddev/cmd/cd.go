@@ -15,6 +15,7 @@ import (
 
 var (
 	bashFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh")
+	zshFile  = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.zsh")
 	fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")
 )
 
@@ -38,7 +39,7 @@ var CdCmd = &cobra.Command{
 		printf '\n[ -f "%s" ] && source "%s"\n' >> ~/.config/fish/config.fish
 
 		Restart your shell, and use 'ddevcd project-name'.
-		`, bashFile, bashFile, bashFile, bashFile, fishFile, fishFile)),
+		`, bashFile, bashFile, zshFile, zshFile, fishFile, fishFile)),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Example: heredoc.DocI2S(`
 		ddev cd

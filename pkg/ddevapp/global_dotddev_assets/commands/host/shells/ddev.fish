@@ -1,3 +1,4 @@
+#!/usr/bin/env fish
 #ddev-generated
 # This script should be sourced in the context of your shell like so:
 # source $HOME/.ddev/commands/host/shells/ddev.fish
