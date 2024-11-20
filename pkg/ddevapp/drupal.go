@@ -403,7 +403,9 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
 	case "9":
 		app.PHPVersion = nodeps.PHP81
-		// Drupal 10+ can use current DDEV default
+		// Drupal 10+ can use current DDEV default PHP version
+	case "11":
+		app.CorepackEnable = true
 	}
 	return nil
 }
