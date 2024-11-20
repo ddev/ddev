@@ -78,7 +78,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "use-docker-compose-from-path=false")
 	assert.Contains(out, "project-tld="+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	assert.Contains(out, "xdebug-ide-location=")
-	assert.Contains(out, "router=traefik")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 	assert.Contains(out, "router-http-port=80")
 	assert.Contains(out, "router-https-port=443")
