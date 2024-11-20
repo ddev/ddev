@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -125,9 +126,10 @@ func TestProjectPortOverride(t *testing.T) {
 func TestRouterConfigOverride(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+	extrasYamlName := `router-compose.extras.yaml`
 	testDir := testcommon.CreateTmpDir(t.Name())
 	_ = os.Chdir(testDir)
-	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.override.yaml")
+	extrasYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), extrasYamlName)
 
 	testcommon.ClearDockerEnv()
 
@@ -135,7 +137,7 @@ func TestRouterConfigOverride(t *testing.T) {
 	assert.NoError(err)
 	err = app.WriteConfig()
 	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "router-compose.override.yaml"), overrideYaml)
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), extrasYamlName), extrasYaml)
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
@@ -147,14 +149,15 @@ func TestRouterConfigOverride(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
-		_ = os.Remove(overrideYaml)
+		_ = os.Remove(extrasYaml)
 	})
 
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'", "")
-	assert.Equal(answer+"\n", stdout)
+	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo ANSWER=${ANSWER}'", "")
+	stdout = strings.Trim(stdout, "\r\n")
+	assert.Equal("ANSWER="+answer, stdout)
 }
 
 // TestAllocateAvailablePortForRouter tests AllocateAvailablePortForRouter()
