@@ -209,7 +209,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
-		output.UserOut.Println("The only valid router type is %s, but you have router: %s in your global configuration, using %s instead", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
+		output.UserOut.Printf("\nThe only valid router type is %s, but you have router: %s in your global configuration, using %s instead.\n", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
 		DdevGlobalConfig.Router = types.RouterTypeTraefik
 		return nil
 	}
