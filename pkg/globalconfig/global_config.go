@@ -3,7 +3,6 @@ package globalconfig
 import (
 	"context"
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"net"
 	"os"
 	"os/exec"
@@ -12,6 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ddev/ddev/pkg/globalconfig/types"
+	"github.com/ddev/ddev/pkg/util"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -208,7 +210,9 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
-		return fmt.Errorf("invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
+		util.Warning("The only valid router type is %s, but you have router: %s in your global configuration, using %s instead", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
+		DdevGlobalConfig.Router = types.RouterTypeTraefik
+		return nil
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
