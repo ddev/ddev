@@ -4,3 +4,6 @@
 [user]
     name = DDEV User
     email = nobody@example.com
+
+[safe]
+    directory = *
