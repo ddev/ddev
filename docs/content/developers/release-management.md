@@ -168,7 +168,7 @@ docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco p
 
 The AUR repository normally updates with the release process, so nothing needs to be done.
 
-However, you can manually publish the release to [the DDEV AUR repository](https://aur.archlinux.org/packages/ddev-bin/). The README.md in the AUR Git repository (`ssh://aur@aur.archlinux.org/ddev-bin.git` or `https://aur.archlinux.org/ddev-bin.git`) has instructions on how to update, including how to do it with a Docker container, so it doesn’t have to be done on an ArchLinux or Manjaro VM.
+However, you can manually publish the release to [the DDEV AUR repository](https://aur.archlinux.org/packages/ddev-bin/). The README.md in the AUR Git repository (`ssh://aur@aur.archlinux.org:ddev-bin.git` or `https://aur.archlinux.org/ddev-bin.git`) has instructions on how to update, including how to do it with a Docker container, so it doesn’t have to be done on an ArchLinux or Manjaro VM.
 
 ## Manually Signing the Windows Installer
 
