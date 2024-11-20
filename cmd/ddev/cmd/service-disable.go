@@ -2,20 +2,22 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
+
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"io/fs"
-	"os"
 )
 
 // ServiceDisable implements the ddev service disable command
 var ServiceDisable = &cobra.Command{
-	Use:     "disable service [project]",
-	Short:   "disable a 3rd party service",
-	Long:    fmt.Sprintf(`disable a 3rd party service. The docker-compose.*.yaml will be moved from .ddev into .ddev/%s.`, disabledServicesDir),
-	Example: `ddev service disable solr`,
+	Use:        "disable service [project]",
+	Short:      "The service commands have been deprecated and removed and replaced by ddev add-on",
+	Hidden:     true,
+	Deprecated: `true`,
 	Run: func(_ *cobra.Command, args []string) {
+		util.Warning("The service commands have been deprecated and removed and replaced by ddev add-on")
 		if len(args) < 1 {
 			util.Failed("You must specify a service to disable")
 		}

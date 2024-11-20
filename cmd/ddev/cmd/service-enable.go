@@ -12,11 +12,14 @@ const disabledServicesDir = ".disabled-services"
 
 // ServiceEnable implements the ddev service enable command
 var ServiceEnable = &cobra.Command{
-	Use:     "enable service [project]",
-	Short:   "Enable a 3rd party service",
-	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev add-on get" to obtain a service not already on your system.`, disabledServicesDir),
-	Example: `ddev service enable solr`,
+	Use:        "enable service [project]",
+	Short:      "Enable a 3rd party service",
+	Hidden:     true,
+	Deprecated: `true`,
+	Long:       fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev add-on get" to obtain a service not already on your system.`, disabledServicesDir),
+	Example:    `ddev service enable solr`,
 	Run: func(_ *cobra.Command, args []string) {
+		util.Warning("The service commands have been deprecated and removed and replaced by ddev add-on")
 		if len(args) < 1 {
 			util.Failed("You must specify a service to enable")
 		}
