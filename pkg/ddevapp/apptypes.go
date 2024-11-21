@@ -497,17 +497,3 @@ func GetValidAppTypes() []string {
 	}
 	return keys
 }
-
-// GetValidAppTypesWithoutAliases returns the valid apptype keys from the appTypeMatrix without aliases like
-// drupal8/9/10
-func GetValidAppTypesWithoutAliases() []string {
-	keys := make([]string, 0, len(appTypeMatrix))
-	for k := range appTypeMatrix {
-		if k == nodeps.AppTypeDrupal8 || k == nodeps.AppTypeDrupal9 || k == nodeps.AppTypeDrupal10 {
-			continue
-		}
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}

@@ -3326,7 +3326,7 @@ func TestHttpsRedirection(t *testing.T) {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
-	types := ddevapp.GetValidAppTypesWithoutAliases()
+	types := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
 		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}

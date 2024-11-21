@@ -22,9 +22,9 @@ func TestComposerCreateCmd(t *testing.T) {
 	origDir, err := os.Getwd()
 	require.NoError(t, err)
 
-	validAppTypes := ddevapp.GetValidAppTypesWithoutAliases()
+	validAppTypes := ddevapp.GetValidAppTypes()
 	if os.Getenv("GOTEST_SHORT") != "" {
-		validAppTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
+		validAppTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 	}
 
 	for _, docRoot := range []string{"", "doc-root"} {

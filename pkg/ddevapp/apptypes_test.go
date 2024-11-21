@@ -22,7 +22,7 @@ import (
 func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	appTypes := ddevapp.GetValidAppTypesWithoutAliases()
+	appTypes := ddevapp.GetValidAppTypes()
 	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
 		if t != nodeps.AppTypePHP {

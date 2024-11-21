@@ -199,7 +199,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	})
 
 	app.Name = util.RandString(32)
-	app.Type = ddevapp.GetValidAppTypesWithoutAliases()[0]
+	app.Type = ddevapp.GetValidAppTypes()[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()
