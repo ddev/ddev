@@ -1,12 +1,13 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/util"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -39,7 +40,7 @@ func TestLocalfilePull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal
+	app.Type = nodeps.AppTypeDrupal11
 	app.Docroot = "web"
 	err = app.Stop(true, false)
 	require.NoError(t, err)

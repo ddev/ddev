@@ -142,7 +142,7 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
-		nodeps.AppTypeDrupal11: {
+		nodeps.AppTypeDrupal: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
 			hookDefaultComments:        getDrupalHooks,
@@ -214,10 +214,8 @@ func init() {
 		},
 	}
 
-	drupalAlias := appTypeMatrix[nodeps.AppTypeDrupal]
-	drupalAlias.appTypeDetect = nil
-	for _, alias := range []string{nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10} {
-		appTypeMatrix[alias] = drupalAlias
+	for _, drupalType := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal8} {
+		appTypeMatrix[drupalType] = appTypeMatrix[nodeps.AppTypeDrupal]
 	}
 }
 

@@ -62,7 +62,7 @@ func TestLagoonPull(t *testing.T) {
 	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal
+	app.Type = nodeps.AppTypeDrupal11
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
@@ -141,7 +141,7 @@ func TestLagoonPush(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal
+	app.Type = nodeps.AppTypeDrupal11
 	_ = app.Stop(true, false)
 
 	app.Docroot = "web"

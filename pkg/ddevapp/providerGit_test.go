@@ -28,7 +28,7 @@ func TestGitPull(t *testing.T) {
 	app, err := ddevapp.NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal
+	app.Type = nodeps.AppTypeDrupal11
 	app.Docroot = "web"
 	err = app.Stop(true, false)
 	require.NoError(t, err)

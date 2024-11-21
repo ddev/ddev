@@ -63,7 +63,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
 			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.zip",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal,
+			Type:                          nodeps.AppTypeDrupal8,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "Vegan chocolate and nut brownies"},
@@ -174,7 +174,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
 			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami.sql.zip",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal,
+			Type:                          nodeps.AppTypeDrupal9,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
@@ -1366,7 +1366,7 @@ func TestDdevImportDB(t *testing.T) {
 			drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
 			assert.NoError(err)
 			assert.True(drupalHashSalt)
-		case nodeps.AppTypeDrupal:
+		case nodeps.AppTypeDrupal11:
 			settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
 			assert.NoError(err)
 			assert.True(settingsHashSalt)
@@ -2385,16 +2385,13 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Special installed sqlite3 test for drupal11.
-		if app.Type == nodeps.AppTypeDrupal {
-			drupalVersion, err := ddevapp.GetDrupalVersion(app)
-			if err == nil && drupalVersion == "11" {
-				stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-					Cmd: "sqlite3 --version | awk '{print $1}'",
-				})
-				require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
-				stdout = strings.Trim(stdout, "\r\n")
-				require.Equal(t, "3.45.1", stdout)
-			}
+		if app.Type == nodeps.AppTypeDrupal11 {
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Cmd: "sqlite3 --version | awk '{print $1}'",
+			})
+			require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
+			stdout = strings.Trim(stdout, "\r\n")
+			require.Equal(t, "3.45.1", stdout)
 		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
@@ -2703,7 +2700,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeCraftCms:     {"files"},
 		nodeps.AppTypeDrupal6:      {"sites/default/files"},
 		nodeps.AppTypeDrupal7:      {"sites/default/files"},
-		nodeps.AppTypeDrupal:       {"sites/default/files"},
+		nodeps.AppTypeDrupal11:     {"sites/default/files"},
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
@@ -3329,7 +3326,7 @@ func TestHttpsRedirection(t *testing.T) {
 	types := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range types {
