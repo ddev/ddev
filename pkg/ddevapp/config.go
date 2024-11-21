@@ -260,12 +260,12 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Write example Dockerfiles into build directories
 	contents := []byte(`
-#ddev-generated
-# You can copy this Dockerfile.example to Dockerfile to add configuration
-# or packages or anything else to your webimage
-# These additions will be appended last to ddev's own Dockerfile
-RUN npm install --global forever
-RUN echo "Built on $(date)" > /build-date.txt
+## #ddev-generated
+## You can copy this Dockerfile.example to Dockerfile to add configuration
+## or packages or anything else to your webimage
+## These additions will be appended last to DDEV's own Dockerfile
+## See examples here https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage
+# RUN echo "Built on $(date)" > /build-date.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
@@ -273,10 +273,12 @@ RUN echo "Built on $(date)" > /build-date.txt
 		return err
 	}
 	contents = []byte(`
-#ddev-generated
-# You can copy this Dockerfile.example to Dockerfile to add configuration
-# or packages or anything else to your dbimage
-RUN echo "Built on $(date)" > /build-date.txt
+## #ddev-generated
+## You can copy this Dockerfile.example to Dockerfile to add configuration
+## or packages or anything else to your dbimage
+## These additions will be appended last to DDEV's own Dockerfile
+## See examples here https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage
+# RUN echo "Built on $(date)" > /build-date.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)

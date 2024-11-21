@@ -1314,13 +1314,6 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 		Cmd: fmt.Sprintf("ls /var/tmp/running-php-%s >/dev/null", app.PHPVersion),
 	})
 	assert.NoError(err)
-
-	// We have "npm install --global forever" in .ddev/web-build/Dockerfile.example
-	// It should not be added to the web container.
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "command -v forever >/dev/null",
-	})
-	assert.Error(err)
 }
 
 // TestConfigLoadingOrder verifies that configs load in lexicographical order
