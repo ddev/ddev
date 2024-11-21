@@ -218,7 +218,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
-      # Experiment with only testing TYPO3 with the apache run.
+      # Use the TYPO3 project type with the apache run.
       GOTEST_SHORT: 5
       DDEV_NONINTERACTIVE: "true"
     steps:

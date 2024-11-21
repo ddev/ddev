@@ -5,8 +5,8 @@ set -eu -o pipefail
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-# GOTEST_SHORT=12 means drupal10
-export GOTEST_SHORT=12
+# GOTEST_SHORT=16 means drupal11
+export GOTEST_SHORT=16
 export DDEV_SKIP_NODEJS_TEST=true
 
 export DOCKER_SCAN_SUGGEST=false
