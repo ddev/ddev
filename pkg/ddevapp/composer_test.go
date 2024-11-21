@@ -1,15 +1,16 @@
 package ddevapp_test
 
 import (
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"testing"
 )
 
 // TestComposer does trivial tests of the DDEV Composer command
@@ -19,8 +20,8 @@ func TestComposer(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 
-	// Use drupal9 only for this test, need a little Composer action
-	site := FullTestSites[8]
+	// Use drupal11 only for this test, need a little Composer action
+	site := FullTestSites[16]
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
 		app := &ddevapp.DdevApp{Name: site.Name}

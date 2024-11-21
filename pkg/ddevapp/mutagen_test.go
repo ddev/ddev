@@ -33,8 +33,8 @@ func TestMutagenSimple(t *testing.T) {
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
-	// Use Drupal9 as it is a good target for Composer failures
-	site := FullTestSites[8]
+	// Use Drupal11 as it is a good target for Composer failures
+	site := FullTestSites[16]
 	// We will create directory from scratch, as we'll be removing files and changing it.
 	app := &ddevapp.DdevApp{Name: site.Name}
 	_ = app.Stop(true, false)
@@ -199,8 +199,8 @@ func TestMutagenConfigChange(t *testing.T) {
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
-	// Use Drupal9 as it is a good target for Composer failures
-	site := FullTestSites[8]
+	// Use Drupal11 as it is a good target for Composer failures
+	site := FullTestSites[16]
 	// We will create directory from scratch, as we'll be removing files and changing it.
 	app := &ddevapp.DdevApp{Name: site.Name}
 	_ = app.Stop(true, false)
