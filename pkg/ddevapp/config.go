@@ -607,7 +607,7 @@ func (app *DdevApp) CheckCustomConfig() {
 	if app.WebserverType == nodeps.WebserverNginxFPM {
 		nginxPath := filepath.Join(ddevDir, "nginx")
 		if _, err := os.Stat(nginxPath); err == nil {
-			nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
+			nginxFiles, err := filepath.Glob(filepath.Join(nginxPath, "*.conf"))
 			util.CheckErr(err)
 			if len(nginxFiles) > 0 {
 				printableFiles, _ := util.ArrayToReadableOutput(nginxFiles)
@@ -619,7 +619,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	mysqlPath := filepath.Join(ddevDir, "mysql")
 	if _, err := os.Stat(mysqlPath); err == nil {
-		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
+		mysqlFiles, err := filepath.Glob(filepath.Join(mysqlPath, "*.cnf"))
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
 			printableFiles, _ := util.ArrayToReadableOutput(mysqlFiles)
@@ -630,7 +630,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	phpPath := filepath.Join(ddevDir, "php")
 	if _, err := os.Stat(phpPath); err == nil {
-		phpFiles, err := filepath.Glob(phpPath + "/*.ini")
+		phpFiles, err := filepath.Glob(filepath.Join(phpPath, "*.ini"))
 		util.CheckErr(err)
 		if len(phpFiles) > 0 {
 			printableFiles, _ := util.ArrayToReadableOutput(phpFiles)
@@ -641,7 +641,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	customDockerPath := filepath.Join(ddevDir, "web-build")
 	if _, err := os.Stat(customDockerPath); err == nil {
-		dockerFiles, err := filepath.Glob(customDockerPath + "/*Dockerfile*")
+		dockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "*Dockerfile*"))
 		util.CheckErr(err)
 		dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
 			return strings.HasSuffix(s, ".example")
@@ -655,7 +655,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	webEntrypointPath := filepath.Join(ddevDir, "web-entrypoint.d")
 	if _, err := os.Stat(webEntrypointPath); err == nil {
-		entrypointFiles, err := filepath.Glob(webEntrypointPath + "/*.sh")
+		entrypointFiles, err := filepath.Glob(filepath.Join(webEntrypointPath, "*.sh"))
 		util.CheckErr(err)
 		if len(entrypointFiles) > 0 {
 			printableFiles, _ := util.ArrayToReadableOutput(entrypointFiles)
@@ -1141,7 +1141,7 @@ RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${
 
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
-		files, err := filepath.Glob(userDockerfilePath + "/pre.Dockerfile*")
+		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "pre.Dockerfile*"))
 		if err != nil {
 			return err
 		}
@@ -1232,14 +1232,14 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 
 	// If there are user dockerfiles, appends their contents
 	if userDockerfilePath != "" {
-		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile*")
+		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "Dockerfile*"))
 		if err != nil {
 			return err
 		}
 
 		for _, file := range files {
 			// Skip the example file
-			if file == userDockerfilePath+"/Dockerfile.example" {
+			if file == filepath.Join(userDockerfilePath, "Dockerfile.example") {
 				continue
 			}
 
