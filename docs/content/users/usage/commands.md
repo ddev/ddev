@@ -234,19 +234,6 @@ Run the `cake` command; available only in projects of type `cakephp`, and only a
 ddev cake
 ```
 
-## `cd`
-
-Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
-
-Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish`.
-
-```shell
-# To see the explanation of what you need to do
-ddev cd
-# Where some-project is a project from the `ddev list`
-ddevcd some-project
-```
-
 ## `clean`
 
 Removes items DDEV has created. (See [Uninstalling DDEV](../usage/uninstall.md).)
@@ -446,6 +433,19 @@ ddev debug capabilities
 
 # List capabilities of `my-project`
 ddev debug capabilities my-project
+```
+
+### `debug cd`
+
+Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
+
+Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish`.
+
+```shell
+# To see the explanation of what you need to do
+ddev debug cd
+# Where some-project is a project from the `ddev list`
+ddevcd some-project
 ```
 
 ### `debug check-db-match`

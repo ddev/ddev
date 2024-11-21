@@ -19,10 +19,10 @@ var (
 	fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")
 )
 
-// CdCmd is the top-level "ddev cd" command
-var CdCmd = &cobra.Command{
-	Use:   "cd [project-name]",
-	Short: "Uses shell built-in 'cd' to change to a project directory",
+// DebugCdCmd implements the ddev debug cd command
+var DebugCdCmd = &cobra.Command{
+	Use:   "cd",
+	Short: "Use the 'ddevcd' function to quickly change to your project directory",
 	Long: heredoc.Doc(fmt.Sprintf(`
 		To enable the 'ddevcd' function, source the ddev.sh script from your rc-script.
 
@@ -42,7 +42,7 @@ var CdCmd = &cobra.Command{
 		`, bashFile, bashFile, zshFile, zshFile, fishFile, fishFile)),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Example: heredoc.DocI2S(`
-		ddev cd
+		ddev debug cd
 		ddevcd project-name
 	`),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -76,9 +76,9 @@ var CdCmd = &cobra.Command{
 }
 
 func init() {
-	CdCmd.Flags().BoolP("get-approot", "", false, "Get the full path to the project root directory")
-	_ = CdCmd.Flags().MarkHidden("get-approot")
-	CdCmd.Flags().BoolP("list", "", false, "Get project names")
-	_ = CdCmd.Flags().MarkHidden("list")
-	RootCmd.AddCommand(CdCmd)
+	DebugCdCmd.Flags().BoolP("get-approot", "", false, "Get the full path to the project root directory")
+	_ = DebugCdCmd.Flags().MarkHidden("get-approot")
+	DebugCdCmd.Flags().BoolP("list", "", false, "Get project names")
+	_ = DebugCdCmd.Flags().MarkHidden("list")
+	DebugCmd.AddCommand(DebugCdCmd)
 }
