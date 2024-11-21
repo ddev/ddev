@@ -60,12 +60,12 @@ RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/ph
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
 ### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
-ARG PHP_DEFAULT_VERSION="8.2"
+ARG PHP_DEFAULT_VERSION="8.3"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.1 php8.2 php8.3 php8.4"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG DRUSH_VERSION=8.4.12
-ENV NODE_VERSION=20
+ENV NODE_VERSION=22
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_PROCESS_TIMEOUT=2000

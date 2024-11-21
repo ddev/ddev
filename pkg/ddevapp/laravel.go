@@ -78,10 +78,3 @@ func laravelPostStartAction(app *DdevApp) error {
 
 	return nil
 }
-
-// laravelConfigOverrideAction would require PHP8.2
-// but that is now the default for DDEV v1.23+
-//func laravelConfigOverrideAction(app *DdevApp) error {
-//	app.PHPVersion = nodeps.PHP82
-//	return nil
-//}

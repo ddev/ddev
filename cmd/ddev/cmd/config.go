@@ -37,7 +37,7 @@ var (
 	// projectTypeArg is the DDEV app type, like drupal7/drupal8/wordpress.
 	projectTypeArg string
 
-	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2/7.3/7.4/8.0/8.1/8.2/etc.
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6-8.4 etc.
 	phpVersionArg string
 
 	// httpPortArg overrides the default HTTP port (80).

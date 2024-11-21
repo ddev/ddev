@@ -61,14 +61,14 @@ func TestConfigOverrideAction(t *testing.T) {
 
 	appTypes := map[string]string{
 		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
-		nodeps.AppTypeCakePHP:      nodeps.PHP83,
+		nodeps.AppTypeCakePHP:      nodeps.PHPDefault,
 		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,
 		nodeps.AppTypeDrupal:       nodeps.PHPDefault,
-		nodeps.AppTypeLaravel:      nodeps.PHP82,
+		nodeps.AppTypeLaravel:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
-		nodeps.AppTypeMagento2:     nodeps.PHP82,
+		nodeps.AppTypeMagento2:     nodeps.PHPDefault,
 		nodeps.AppTypeSilverstripe: nodeps.PHPDefault,
 		nodeps.AppTypeWordPress:    nodeps.PHPDefault,
 	}
@@ -122,7 +122,6 @@ func TestConfigOverrideActionOnExistingConfig(t *testing.T) {
 
 	// This will only work for those project types defining configOverrideAction and altering php version
 	appTypes := map[string]string{
-		nodeps.AppTypeCakePHP: nodeps.PHP83,
 		nodeps.AppTypeDrupal6: nodeps.PHP56,
 		nodeps.AppTypeDrupal7: nodeps.PHP82,
 		// For AppTypeDrupal we can't guess a version without a working installation.
