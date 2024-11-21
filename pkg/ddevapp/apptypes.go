@@ -110,7 +110,7 @@ func init() {
 			hookDefaultComments:        getDrupal6Hooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
 			appTypeDetect:              isDrupal6App,
-			configOverrideAction:       drupal6ConfigOverrideAction,
+			configOverrideAction:       drupalConfigOverrideAction,
 			postStartAction:            drupal6PostStartAction,
 			importFilesAction:          drupalImportFilesAction,
 			defaultWorkingDirMap:       docrootWorkingDir,
@@ -130,12 +130,24 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
-		nodeps.AppTypeDrupal: {
+		nodeps.AppTypeDrupal10: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
 			hookDefaultComments:        getDrupalHooks,
 			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
-			appTypeDetect:              isDrupalApp,
+			appTypeDetect:              isDrupal10App,
+			configOverrideAction:       drupalConfigOverrideAction,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
+		},
+
+		nodeps.AppTypeDrupal11: {
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupalHooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal11App,
 			configOverrideAction:       drupalConfigOverrideAction,
 			postStartAction:            drupalPostStartAction,
 			importFilesAction:          drupalImportFilesAction,
