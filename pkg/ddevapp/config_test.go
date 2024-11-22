@@ -866,7 +866,7 @@ func TestPHPConfig(t *testing.T) {
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
 	require.NoError(t, err)
-	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(site.Dir, "phpinfo.php"))
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
 	require.NoError(t, err)
 
 	for _, v := range phpKeys {
