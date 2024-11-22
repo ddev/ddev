@@ -209,7 +209,6 @@ For all versions of Drupal 8+ the Composer techniques work.
     ddev launch $(ddev drush uli)
     ```
 
-
 === "Drupal 9 (EOL)"
 
     ```bash
