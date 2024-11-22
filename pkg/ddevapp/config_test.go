@@ -1135,8 +1135,8 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Apple Silicon/Lima/Colima, lots of network connections failed")
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Lima/Colima, lots of network connections failed")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -1174,10 +1174,11 @@ func TestComposerVersionConfig(t *testing.T) {
 		// Ignore the non semantic versions for the moment e.g. stable or preview
 		// TODO: Figure out a way to test version key words
 		if isSemver(testVersion) {
+			stdout = strings.TrimSpace(stdout)
 			if strings.Count(testVersion, ".") < 2 {
-				assert.Contains(strings.TrimSpace(stdout), testVersion)
+				assert.Contains(stdout, testVersion, "Found wrong composer version, testVersion=%s, found='%s'", testVersion, stdout)
 			} else {
-				assert.Equal(testVersion, strings.TrimSpace(stdout))
+				assert.Equal(testVersion, stdout, "Found wrong composer version, expected %s, found='%s'", testVersion, stdout)
 			}
 		}
 	}
