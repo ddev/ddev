@@ -1,7 +1,7 @@
-#!/usr/bin/env sh
+#!/usr/bin/env zsh
 #ddev-generated
 # This script should be sourced in the context of your shell like so:
-# source $HOME/.ddev/commands/host/shells/ddev.sh
+# source $HOME/.ddev/commands/host/shells/ddev.zsh
 # Once the ddevcd() function is defined, you can type
 # "ddevcd project-name" to cd into the project directory.
 
@@ -10,7 +10,7 @@ ddevcd() {
 }
 
 _ddevcd_autocomplete() {
-  COMPREPLY=( $(compgen -W "$(DDEV_VERBOSE=false ddev debug cd --list)" -- "${COMP_WORDS[COMP_CWORD]}") )
+  compadd $(DDEV_VERBOSE=false ddev debug cd --list)
 }
 
-complete -F _ddevcd_autocomplete ddevcd
+compdef _ddevcd_autocomplete ddevcd
