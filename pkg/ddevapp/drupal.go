@@ -314,14 +314,6 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
 }
 
-// isDrupal7App returns true if the app is of type drupal7
-func isDrupal7App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ajax.js")); err == nil {
-		return true
-	}
-	return false
-}
-
 // GetDrupalVersion finds the drupal8+ version so it can be used
 // for setting requirements.
 // It can only work if there is configured Drupal8+ code
@@ -343,21 +335,47 @@ func GetDrupalVersion(app *DdevApp) (string, error) {
 	return v, err
 }
 
+// isDrupal6App returns true if the app is of type Drupal6
+func isDrupal6App(app *DdevApp) bool {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
+		return true
+	}
+	return false
+}
+
+// isDrupal7App returns true if the app is of type drupal7
+func isDrupal7App(app *DdevApp) bool {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ajax.js")); err == nil {
+		return true
+	}
+	return false
+}
+
+// isDrupal8App detects whether the code found is Drupal 8
+func isDrupal8App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "8"
+}
+
+// isDrupal9App detects whether the code found is Drupal 9
+func isDrupal9App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "9"
+}
+
 // isDrupal10App detects whether the code found is Drupal 10
 func isDrupal10App(app *DdevApp) bool {
 	vStr, err := GetDrupalVersion(app)
 	if err != nil {
 		return false
 	}
-	v, err := strconv.Atoi(vStr)
-	if err != nil {
-		return false
-	}
-
-	if v == 10 {
-		return true
-	}
-	return false
+	return vStr == "10"
 }
 
 // isDrupal11App detects whether the code found is Drupal 11
@@ -366,18 +384,10 @@ func isDrupal11App(app *DdevApp) bool {
 	if err != nil {
 		return false
 	}
-	v, err := strconv.Atoi(vStr)
-	if err != nil {
-		return false
-	}
-
-	if v == 11 {
-		return true
-	}
-	return false
+	return vStr == "11"
 }
 
-// isDrupalApp returns true if the app is drupal (drupal8+)
+// isDrupalApp returns true if the app is modern Drupal (drupal8+)
 func isDrupalApp(app *DdevApp) bool {
 	vStr, err := GetDrupalVersion(app)
 	if err != nil {
@@ -389,14 +399,6 @@ func isDrupalApp(app *DdevApp) bool {
 	}
 
 	if v >= 8 {
-		return true
-	}
-	return false
-}
-
-// isDrupal6App returns true if the app is of type Drupal6
-func isDrupal6App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
 		return true
 	}
 	return false

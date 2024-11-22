@@ -17,9 +17,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestApptypeDetection does a simple test of various filesystem setups to make
+// TestDetectAppType does a simple test of various filesystem setups to make
 // sure the expected apptype is returned.
-func TestApptypeDetection(t *testing.T) {
+func TestDetectAppType(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	appTypes := ddevapp.GetValidAppTypes()

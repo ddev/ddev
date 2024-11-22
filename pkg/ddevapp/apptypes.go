@@ -130,6 +130,30 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeDrupal8: {
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupalHooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal8App,
+			configOverrideAction:       drupalConfigOverrideAction,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
+		},
+
+		nodeps.AppTypeDrupal9: {
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupalHooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal9App,
+			configOverrideAction:       drupalConfigOverrideAction,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
+		},
+
 		nodeps.AppTypeDrupal10: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
@@ -142,7 +166,7 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
-		nodeps.AppTypeDrupal: {
+		nodeps.AppTypeDrupal11: {
 			settingsCreator:            createDrupalSettingsPHP,
 			uploadDirs:                 getDrupalUploadDirs,
 			hookDefaultComments:        getDrupalHooks,
@@ -212,10 +236,6 @@ func init() {
 			appTypeDetect:        isWordpressApp,
 			importFilesAction:    wordpressImportFilesAction,
 		},
-	}
-
-	for _, drupalType := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal8} {
-		appTypeMatrix[drupalType] = appTypeMatrix[nodeps.AppTypeDrupal]
 	}
 }
 
@@ -361,7 +381,15 @@ func (app *DdevApp) SetApptypeSettingsPaths() {
 // DetectAppType calls each apptype's detector until it finds a match,
 // or returns 'php' as a last resort.
 func (app *DdevApp) DetectAppType() string {
-	for appTypeName, appFuncs := range appTypeMatrix {
+	var keys []string
+	for k := range appTypeMatrix {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Traverse in sorted order
+	for _, appTypeName := range keys {
+		appFuncs := appTypeMatrix[appTypeName]
 		if appFuncs.appTypeDetect != nil && appFuncs.appTypeDetect(app) {
 			return appTypeName
 		}

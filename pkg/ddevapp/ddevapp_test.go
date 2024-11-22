@@ -2260,9 +2260,9 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
-	}
+	//if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+	//	t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
+	//}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 

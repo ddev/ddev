@@ -129,9 +129,10 @@ func (site *TestSite) Prepare() error {
 	app.Name = site.Name
 	app.Docroot = site.Docroot
 	app.UploadDirs = site.UploadDirs
-	app.Type = app.DetectAppType()
-	if app.Type != site.Type {
-		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", app.Type, site.Type)
+	app.Type = site.Type
+	detectedType := app.DetectAppType()
+	if app.Type != detectedType {
+		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)
 	}
 
 	app.WebEnvironment = site.WebEnvironment
