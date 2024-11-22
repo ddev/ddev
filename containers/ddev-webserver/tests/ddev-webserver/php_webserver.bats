@@ -15,8 +15,6 @@
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     CURRENT_ARCH=$(../get_arch.sh)
-    # TODO: Remove the exclusion below when xdebug is available for 8.4
-    if [ "${PHP_VERSION}" == "8.4" ]; then skip "Skipping because PHP8.4 xdebug not yet available"; fi
     docker exec -t $CONTAINER_NAME enable_xdebug
     if [[ ${PHP_VERSION} != 8.? ]] ; then
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
@@ -31,8 +29,6 @@
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     CURRENT_ARCH=$(../get_arch.sh)
-    # TODO: Remove the exclusion below when xhprof is available for 8.4
-    if [ "${PHP_VERSION}" == "8.4" ]; then skip "Skipping because PHP8.4 xhprof not yet available"; fi
 
     docker exec -t $CONTAINER_NAME enable_xhprof
     docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof.output_dir"
@@ -85,7 +81,7 @@
     ;;
   8.4)
     # TODO: Update this list as more become available
-    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
+    extensions="apcu bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml zip"
     ;;
 
   esac

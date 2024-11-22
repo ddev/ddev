@@ -58,9 +58,10 @@ php83:
   # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
   arm64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
-# 2024-11-01 missing apcu redis uploadprogress xdebug xhprof xmlrpc
+# 2024-11-22 missing apcu imagick memcached redis uploadprogress xdebug xhprof xmlrpc
+# TODO: installed with pecl: apcu redis uploadprogress xdebug xhprof
 php84:
-  # formerly bcmath bz2 cli common curl fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip
-  amd64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
-  # formerly bcmath bz2 cli common curl fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip
-  arm64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  # formerly bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip
+  amd64: ["bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  # formerly bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip
+  arm64: ["bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]

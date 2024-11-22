@@ -54,6 +54,12 @@ SHELL ["/bin/bash", "-c"]
 ### See https://github.com/ddev/ddev/issues/6159
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
+# TODO: installed with pecl: apcu redis uploadprogress xdebug xhprof
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "apcu" "latest" "/usr/lib/php/20240924/apcu.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "redis" "latest" "/usr/lib/php/20240924/redis.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "uploadprogress" "latest" "/usr/lib/php/20240924/uploadprogress.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "3.4.0beta1" "/usr/lib/php/20240924/xdebug.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "xhprof" "latest" "/usr/lib/php/20240924/xhprof.so"
 #END ddev-php-extension-build
 
 ### ---------------------------ddev-php-base--------------------------------------
@@ -116,6 +122,20 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
 COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
 COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
+# TODO: installed with pecl: apcu redis uploadprogress xdebug xhprof
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/apcu.so /usr/lib/php/20240924/apcu.so
+COPY --from=ddev-php-extension-build /usr/include/php/20240924/ext/apcu /usr/include/php/20240924/ext/apcu
+RUN cp /etc/php/8.3/mods-available/apcu.ini /etc/php/8.4/mods-available/apcu.ini
+
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/redis.so /usr/lib/php/20240924/redis.so
+RUN cp /etc/php/8.3/mods-available/redis.ini /etc/php/8.4/mods-available/redis.ini
+
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/uploadprogress.so /usr/lib/php/20240924/uploadprogress.so
+RUN cp /etc/php/8.3/mods-available/uploadprogress.ini /etc/php/8.4/mods-available/uploadprogress.ini
+
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/xdebug.so /usr/lib/php/20240924/xdebug.so
+
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/xhprof.so /usr/lib/php/20240924/xhprof.so
 #END ddev-php-extension-build
 RUN phpdismod xhprof
 RUN apt-get -qq autoremove -y
