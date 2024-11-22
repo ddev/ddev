@@ -81,7 +81,7 @@
     ;;
   8.4)
     # TODO: Update this list as more become available
-    extensions="apcu bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml zip"
+    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
     ;;
 
   esac
