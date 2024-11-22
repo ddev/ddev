@@ -134,6 +134,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			if isValidComposerOption("create-project", arg) {
 				// Skip it if we already have one argument for "composer create-project"
 				if !strings.HasPrefix(arg, "-") && hasVendorPackage {
+					util.Warning("Ignoring argument: %s", arg)
 					continue
 				}
 				createArgs = append(createArgs, arg)
