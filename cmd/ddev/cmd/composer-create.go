@@ -127,10 +127,19 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// We add the three options to "composer create-project": --no-plugins, --no-scripts, --no-install
 		// These options make the difference between "composer create-project" and "ddev composer create".
 		var createArgs []string
+		// For example, drupal/recommended-project
+		hasVendorPackage := false
 
 		for _, arg := range args {
 			if isValidComposerOption("create-project", arg) {
+				// Skip it if we already have one argument for "composer create-project"
+				if !strings.HasPrefix(arg, "-") && hasVendorPackage {
+					continue
+				}
 				createArgs = append(createArgs, arg)
+				if !strings.HasPrefix(arg, "-") {
+					hasVendorPackage = true
+				}
 			}
 		}
 
