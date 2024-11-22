@@ -2,19 +2,17 @@
 
 If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you can configure it for tight integration with DDEV and Docker to more easily run actions, access services, enable autocompletion, and enjoy a more convenient development experience.
 
-## Requirements
+## Before Starting
 
-- PhpStorm 2022.2 or higher.
-- DDEV v1.21.1 or higher.
-- Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
+Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
 
 ## Prerequisite
 
-Regardless of your setup, you need to have PhpStorm use DDEV’s private docker-compose executable.
+Regardless of your setup, make PhpStorm use DDEV’s private `docker-compose` executable.
 
-In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the full path of your `.ddev/bin/docker-compose` file relative to your home directory.
+In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the `docker-compose` executable to the absolute path of DDEV's private `docker-compose` binary, which is `$HOME/.ddev/bin/docker-compose`.
 
-If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
+If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use `docker-compose` from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of `docker-compose` either from Docker Desktop or installed another way.
 
 ## DDEV Integration Plugin
 

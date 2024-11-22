@@ -114,6 +114,7 @@ The basic thing to understand about Xdebug is that it’s a network protocol. Yo
 Here are basic steps to take to sort out any difficulty:
 
 * Make sure your IDE is listening for Xdebug.
+* If you have set the global [xdebug_ide_location](../configuration/config.md#xdebug_ide_location) to **anything** please reset it to defaults before continuing. It is only for a very tiny subset of users. `ddev config global --xdebug-ide-location=""` and `ddev restart`.
 * `ddev logs` may show you something like `Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (fallback through xdebug.client_host/xdebug.client_port) :-(`. If it does, it may mean that your firewall is blocking the connection, or in a small number of cases that `host.docker.internal` is not figured out successfully by DDEV or Docker. If it does:
     * Temporarily disable your firewall. On Windows/WSL this is typically Windows Defender; on macOS you'll find it in settings; on Debian/Ubuntu it's typically `ufw` so `sudo ufw disable`.
     * If disabling the firewall fixes the problem, re-enable the firewall and add an exception for port 9003. Your firewall will have a way to do this; on Debian/Ubuntu run `sudo ufw allow 9003`.
