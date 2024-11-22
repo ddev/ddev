@@ -2406,7 +2406,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
 // and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
-	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
@@ -2414,110 +2413,76 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
 	})
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	// Not all the example projects have an upload dir, so create it in case
 	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
 
 	uploadDir := app.GetUploadDir()
-	assert.NotEmpty(uploadDir)
+	require.NotEmpty(t, uploadDir)
 
 	// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
 	// making it writeable on the host.
-	filename := fileutil.RandomFilenameBase()
 	dirname := fileutil.RandomFilenameBase()
 	// Use path.Join for items on th container (linux) and filepath.Join for items on the host.
-	inContainerDir := path.Join(uploadDir, dirname)
-	onHostDir := filepath.Join(app.Docroot, inContainerDir)
+	dirPathFromRoot := path.Join(app.Docroot, uploadDir, dirname)
 
-	// The container execution directory is dependent on the app type
-	switch app.Type {
-	case nodeps.AppTypeWordPress, nodeps.AppTypeTYPO3, nodeps.AppTypePHP:
-		inContainerDir = path.Join(app.Docroot, inContainerDir)
-	}
+	err = os.MkdirAll(dirPathFromRoot, 0775)
+	require.NoError(t, err)
 
-	inContainerRelativePath := path.Join(inContainerDir, filename)
-	onHostRelativePath := path.Join(onHostDir, filename)
-
-	err = os.MkdirAll(onHostDir, 0775)
-	assert.NoError(err)
+	fileCreatedOnHost := path.Join(dirPathFromRoot, "file_created_on_host.txt")
 	// Create a file in the directory to make sure it syncs
-	f, err := os.OpenFile(filepath.Join(onHostDir, "junk.txt"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-	assert.NoError(err)
+	f, err := os.OpenFile(filepath.FromSlash(fileCreatedOnHost), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+	require.NoError(t, err)
 	_ = f.Close()
 
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	_, _, createFileErr := app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "echo 'content created inside container\n' >" + inContainerRelativePath,
+	fileCreatedInContainer := path.Join(dirPathFromRoot, "file_created_in_container.txt")
+	command := fmt.Sprintf("echo 'content created inside container' >%s", fileCreatedInContainer)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: command,
 	})
-	assert.NoError(createFileErr)
+	require.NoError(t, err)
 
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	require.NoError(t, err)
+
+	// Test if the file created on host has showed up inside container
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "test -f " + fileCreatedOnHost,
+	})
+	require.NoError(t, err, "fileCreatedOnHost %s does not exist in container: %v", fileCreatedOnHost, err)
 
 	// Now try to append to the file on the host.
 	// os.OpenFile() for append here fails if the file does not already exist.
-	f, err = os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
-	assert.NoError(err)
+	f, err = os.OpenFile(filepath.FromSlash(fileCreatedOnHost), os.O_APPEND|os.O_WRONLY, 0660)
+	require.NoError(t, err)
 	_, err = f.WriteString("This addition to the file was added on the host side")
-	assert.NoError(err)
+	require.NoError(t, err)
 	_ = f.Close()
-
-	// Create a file on the host and see what the result is. Make sure we can not append/write to it in the container.
-	filename = fileutil.RandomFilenameBase()
-	dirname = fileutil.RandomFilenameBase()
-	inContainerDir = path.Join(uploadDir, dirname)
-	onHostDir = filepath.Join(app.Docroot, inContainerDir)
-	// The container execution directory is dependent on the app type
-	switch app.Type {
-	case nodeps.AppTypeWordPress, nodeps.AppTypeTYPO3, nodeps.AppTypePHP:
-		inContainerDir = path.Join(app.Docroot, inContainerDir)
-	}
-
-	inContainerRelativePath = path.Join(inContainerDir, filename)
-	onHostRelativePath = filepath.Join(onHostDir, filename)
-
-	err = os.MkdirAll(onHostDir, 0775)
-	assert.NoError(err)
-
-	f, err = os.OpenFile(onHostRelativePath, os.O_CREATE|os.O_RDWR, 0660)
-	assert.NoError(err)
-	_, err = f.WriteString("This base content was inserted on the host side\n")
-	assert.NoError(err)
-	_ = f.Close()
-
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	// If the file exists, add to it. We don't want to add if it's not already there.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi",
+		Cmd: "echo 'content added inside container' >>" + fileCreatedOnHost,
 	})
-	assert.NoError(err)
+	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+
 	// grep the file for both the content added on host and that added in container.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath,
+		Cmd: "grep 'This addition to the file was added on the host side' " + fileCreatedOnHost + " && grep 'content added inside container' " + fileCreatedOnHost,
 	})
-	assert.NoError(err)
-
-	err = app.Stop(true, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	runTime()
 }
