@@ -94,13 +94,18 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
-!!!warning "Why my project's `composer_version` is not being used?"
+!!!warning "Why `composer_version` is not being used?"
     If your project's `composer.json` or `composer.lock` includes `composer/composer`, that version will take precedence over the one specified by `composer_version`, because `vendor/bin/composer` comes first in the in-container `$PATH`.
 
-    To use `composer_version` instead, either remove `composer/composer` from your `composer.json` or change the `$PATH` order:
+    To update `vendor/bin/composer` in the container to the latest version, run:
+    ```shell
+    ddev composer require composer/composer -W
+    ```
+
+    To use `composer_version` instead, either remove `composer/composer` from your `composer.json` or adjust the `$PATH` order:
     ```shell
     mkdir -p .ddev/homeadditions/.bashrc.d
-    echo 'export PATH=/usr/local/bin:$PATH' > .ddev/homeadditions/.bashrc.d/path.sh
+    echo 'export PATH=/usr/local/bin:$PATH' >.ddev/homeadditions/.bashrc.d/path.sh
     ddev restart
     ```
 
