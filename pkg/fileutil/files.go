@@ -560,7 +560,8 @@ func ShortHomeJoin(elem ...string) string {
 	if err != nil {
 		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
 	}
-	fullPath := filepath.Join(elem...)
+	userHome = util.WindowsPathToCygwinPath(userHome)
+	fullPath := util.WindowsPathToCygwinPath(filepath.Join(elem...))
 	if strings.HasPrefix(fullPath, userHome) {
 		return strings.Replace(fullPath, userHome, "~", 1)
 	}
