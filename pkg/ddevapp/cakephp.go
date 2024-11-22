@@ -49,16 +49,18 @@ func cakephpPostStartAction(app *DdevApp) error {
 	}
 	port := "3306"
 	dbConnection := "mysql"
+	dbParams := ""
 	if app.Database.Type == nodeps.Postgres {
-		dbConnection = "pgsql"
+		dbConnection = "postgres"
 		port = "5432"
+		dbParams = "?encoding=utf8"
 	}
 	envMap := map[string]string{
 		"export APP_NAME":                    app.GetName(),
 		"export DEBUG":                       "true",
 		"export APP_ENCODING":                "UTF-8",
 		"export APP_DEFAULT_LOCALE":          "en_US",
-		"export DATABASE_URL":                dbConnection + "://db:db@db:" + port + "/db",
+		"export DATABASE_URL":                dbConnection + "://db:db@db:" + port + "/db" + dbParams,
 		"export EMAIL_TRANSPORT_DEFAULT_URL": "smtp://localhost:1025",
 		"export SECURITY_SALT":               util.HashSalt(app.GetName()),
 		"export DEBUG_KIT_SAFE_TLD":          "site",
