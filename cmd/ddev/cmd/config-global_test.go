@@ -9,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +37,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// nolint: errcheck
 	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", "--omit-containers", "", "--disable-http2=false", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--router=traefik`, `--traefik-monitor-port=10999`}
+		args := []string{"config", "global", "--omit-containers", "", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--traefik-monitor-port=10999`}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 		out, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -69,7 +68,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("performance-mode=%s", configTypes.GetPerformanceModeDefault()))
 	assert.Contains(out, "router-bind-all-interfaces=false")
 	assert.Contains(out, "internet-detection-timeout-ms=3000")
-	assert.Contains(out, "disable-http2=false")
 	assert.Contains(out, "use-letsencrypt=false")
 	assert.Contains(out, "letsencrypt-email=")
 	assert.Contains(out, "table-style=default")
@@ -80,7 +78,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "use-docker-compose-from-path=false")
 	assert.Contains(out, "project-tld="+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	assert.Contains(out, "xdebug-ide-location=")
-	assert.Contains(out, "router=traefik")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 	assert.Contains(out, "router-http-port=80")
 	assert.Contains(out, "router-https-port=443")
@@ -91,7 +88,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// Update a config
 	// Don't include no-bind-mounts because global testing
 	// will turn it on and break this
-	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--performance-mode=mutagen", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router=nginx-proxy`, `--router-http-port=8081`, `--router-https-port=8882`, "--mailpit-http-port=18025", "--mailpit-https-port=10826", `--traefik-monitor-port=11999`}
+	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--performance-mode=mutagen", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router-http-port=8081`, `--router-https-port=8882`, "--mailpit-http-port=18025", "--mailpit-https-port=10826", `--traefik-monitor-port=11999`}
 	out, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
 	assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -100,7 +97,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("performance-mode=%s", configTypes.PerformanceModeMutagen))
 	assert.Contains(out, "router-bind-all-interfaces=true")
 	assert.Contains(out, "internet-detection-timeout-ms=850")
-	assert.Contains(out, "disable-http2=false")
 	assert.Contains(out, "use-letsencrypt=false")
 	assert.Contains(out, "letsencrypt-email=\n")
 	assert.Contains(out, "table-style=bright")
@@ -110,7 +106,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
 	assert.Contains(out, "use-docker-compose-from-path=false")
 	assert.Contains(out, "project-tld=")
-	assert.Contains(out, "router=nginx-proxy")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 
 	assert.Contains(out, "xdebug-ide-location=container")
@@ -119,7 +114,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "router-https-port=8882")
 	assert.Contains(out, "mailpit-http-port=18025")
 	assert.Contains(out, "mailpit-https-port=10826")
-	assert.Contains(out, "router=nginx-proxy")
 	assert.Contains(out, "traefik-monitor-port=11999")
 
 	globalconfig.EnsureGlobalConfig()
@@ -134,7 +128,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
 	assert.Equal("container", globalconfig.DdevGlobalConfig.XdebugIDELocation)
-	assert.Equal(types.RouterTypeNginxProxy, globalconfig.DdevGlobalConfig.Router)
 	assert.Equal("8081", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	assert.Equal("8882", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 

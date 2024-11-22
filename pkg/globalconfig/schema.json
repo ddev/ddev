@@ -10,10 +10,6 @@
       "description": "Not currently used.",
       "type": "boolean"
     },
-    "disable_http2": {
-      "description": "Whether to disable HTTP/2 listen in ddev-router.",
-      "type": "boolean"
-    },
     "fail_on_hook_fail": {
       "description": "Whether ddev start should be interrupted by a failing hook, on a single project or for all projects if used globally.",
       "type": "boolean"
@@ -104,14 +100,6 @@
     "required_docker_compose_version": {
       "description": "Specific docker-compose version for download.",
       "type": "string"
-    },
-    "router": {
-      "description": "The PHP version the project should use.",
-      "type": "string",
-      "enum": [
-        "traefik",
-        "nginx-proxy"
-      ]
     },
     "router_bind_all_interfaces": {
       "description": "Whether to bind ddev-router's ports on all network interfaces.",

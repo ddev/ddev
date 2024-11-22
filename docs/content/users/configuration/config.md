@@ -170,16 +170,6 @@ Not currently used.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-## `disable_http2`
-
-Whether to disable HTTP/2 listen in `ddev-router`.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`.
-
-Only available with legacy `router: nginx-proxy`, not the default `router: traefik`. When `true`, the router will not listen for HTTP/2, but use HTTP/1.1 SSL. (Some browsers don’t work well with HTTP/2.)
-
 ## `disable_settings_management`
 
 Whether to disable CMS-specific settings file management.
@@ -512,16 +502,6 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 
 !!!warning "Troubleshooting Only!"
     This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
-
-## `router`
-
-Whether to enable the default [Traefik router](../extend/traefik-router.md) or the deprecated "nginx-proxy" router.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (deprecated).
-
-May also be set via `ddev config global --router=traefik` or `ddev config global --router=nginx-proxy`.
 
 ## `router_bind_all_interfaces`
 

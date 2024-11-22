@@ -430,17 +430,6 @@ dockerhub:
       from_file:
         path: ./containers/ddev-gitpod-base/README.md
 
-  #ddev-nginx-proxy-router
-  - images:
-      - '{{ .Env.DOCKER_ORG }}/ddev-nginx-proxy-router'
-      - '{{ .Env.DOCKER_ORG }}/ddev-router'
-    username: '{{ .Env.DOCKERHUB_USERNAME }}'
-    secret_name: "DOCKERHUB_TOKEN"
-    description: DDEV's DEPRECATED ddev-nginx-proxy-router
-    full_description:
-      from_file:
-        path: ./containers/ddev-nginx-proxy-router/README.md
-
   #ddev-php-base
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-php-base'

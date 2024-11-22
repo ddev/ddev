@@ -1,21 +1,19 @@
 # Router Customization and Debugging (Traefik)
 
-Traefik is the default router in DDEV v1.22+. The older `nginx-proxy` router is deprecated, no longer receives automated test coverage, and will be removed in DDEV v1.24.
+DDEV uses the well-known open-source [Traefik](https://traefik.io/traefik/) for its router container.
 
-DDEV’s router plays an important role in its [container architecture](../usage/architecture.md#container-architecture), receiving HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
-
-DDEV uses Traefik by default unless you configure the (deprecated) `nginx-proxy` router by running `ddev poweroff && ddev config global --router=nginx-proxy`.
+DDEV’s router plays an important role in its [container architecture](../usage/architecture.md#container-architecture), receiving HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the appropriate project’s web container.
 
 ## Traefik Configuration
 
-Before continuing, it's important to note that **very few users ever experiment with custom Traefik configuration**. This is an advanced topic, and the vast majority of users never need to know anything about it, as DDEV generates all the necessary configuration. An understanding of Traefik configuration is required.
+Before continuing, it's important to note that **very few users ever experiment with custom Traefik configuration**. This is an advanced topic, and the vast majority of users never need to know anything about it, as DDEV generates all the necessary configuration. In general you don't need to understand Traefik configuration.
 
-You can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/getting-started/configuration-overview/). (DDEV uses the Traefik `v2` rule syntax by default, `defaultRuleSyntax: v2`. However, any custom router configuration can use `ruleSyntax: v3` to override this.)
+However, you can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/getting-started/configuration-overview/). (DDEV uses the Traefik `v3` rule syntax.)
 
 All Traefik configuration uses the *file* provider, not the *Docker* provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
 
 !!!tip
-    Like other DDEV configuration, any file with `#ddev-generated` will be overwritten unless you choose to “take over” it yourself. You can do this by removing the `#ddev-generated` line. DDEV will stop making changes to that file and you’ll be responsible for updating it.
+    Like other DDEV configuration, any file with `#ddev-generated` will be overwritten unless you choose to “take over” it yourself. You can do this by removing the `#ddev-generated` line. DDEV will stop making changes to that file, and you’ll be responsible for updating it.
 
 ### Traefik Static Configuration
 

@@ -211,7 +211,6 @@ func generateRouterCompose() (string, error) {
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"dockerIP":                   dockerIP,
-		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,

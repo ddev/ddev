@@ -143,12 +143,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("disable-http2").Changed {
-		val, _ := cmd.Flags().GetBool("disable-http2")
-		globalconfig.DdevGlobalConfig.DisableHTTP2 = val
-		dirty = true
-	}
-
 	if cmd.Flag("use-letsencrypt").Changed {
 		val, _ := cmd.Flags().GetBool("use-letsencrypt")
 		globalconfig.DdevGlobalConfig.UseLetsEncrypt = val
@@ -206,18 +200,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("use-traefik").Changed {
-		if v, _ := cmd.Flags().GetBool("use-traefik"); v {
-			globalconfig.DdevGlobalConfig.Router = globalconfigTypes.RouterTypeTraefik
-			dirty = true
-		}
-	}
-
-	if cmd.Flag("router").Changed {
-		val, _ := cmd.Flags().GetString("router")
-		globalconfig.DdevGlobalConfig.Router = val
-		dirty = true
-	}
 	if cmd.Flag("wsl2-no-windows-hosts-mgt").Changed {
 		val, _ := cmd.Flags().GetBool("wsl2-no-windows-hosts-mgt")
 		globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt = val
@@ -273,7 +255,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		tag = parts[0]
 		//name := typeOfVal.Field(i).Name
 		fieldValue := v.Field(i).Interface()
-		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" {
+		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" && tag != "router" {
 			tagWithDashes := strings.Replace(tag, "_", "-", -1)
 			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
 			keys = append(keys, tagWithDashes)
@@ -298,7 +280,6 @@ func init() {
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrumentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 3000, "Increase timeout when checking internet timeout, in milliseconds")
-	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in deprecated nginx-proxy ddev-router, 'ddev config global --disable-http2' or `ddev config global --disable-http2=false'")
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev config global --use-letsencrypt' or `ddev config global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev config global --letsencrypt-email=me@example.com'")
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
@@ -316,14 +297,14 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote Docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
-	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use Traefik for ddev-router")
-	_ = configGlobalCommand.Flags().MarkDeprecated("use-traefik", "please use --router instead")
-	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("Valid router types are %s, default is %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", "), globalconfigTypes.RouterTypeDefault))
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The default router HTTP port for all projects")
 	configGlobalCommand.Flags().String("router-https-port", "", "The default router HTTPS port for all projects")
 	configGlobalCommand.Flags().String("mailpit-http-port", "", "The default Mailpit HTTP port for all projects")
 	configGlobalCommand.Flags().String("mailpit-https-port", "", "The default Mailpit HTTPS port for all projects")
+	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("The only valid router types are %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", ")))
+	_ = configGlobalCommand.Flags().MarkDeprecated("router", "\nThe only router used now is traefik, so --router is no longer needed")
+	_ = configGlobalCommand.Flags().MarkHidden("router")
 	configGlobalCommand.Flags().String("traefik-monitor-port", "", "The Traefik monitor port; can be changed in case of port conflicts")
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

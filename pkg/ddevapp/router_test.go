@@ -12,7 +12,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
@@ -122,80 +121,15 @@ func TestProjectPortOverride(t *testing.T) {
 	}
 }
 
-// Do a modest test of Lets Encrypt functionality
-// This checks to see that Certbot ran and populated /etc/letsencrypt and
-// that /etc/letsencrypt is mounted on volume.
-func TestLetsEncrypt(t *testing.T) {
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		t.Skip("Skipping because router=traefik set and not yet supported")
-	}
-	assert := asrt.New(t)
-
-	savedGlobalconfig := globalconfig.DdevGlobalConfig
-
-	globalconfig.DdevGlobalConfig.UseLetsEncrypt = true
-	globalconfig.DdevGlobalConfig.LetsEncryptEmail = "nobody@example.com"
-	globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = true
-	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-	require.NoError(t, err)
-
-	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
-
-	// Force router stop so it will start up with Lets Encrypt mount
-	dest := ddevapp.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{dest},
-		Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
-	})
-	assert.NoError(err)
-
-	err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
-	assert.NoError(err)
-
-	app, err := ddevapp.NewApp(site.Dir, false)
-	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
-
-	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig = savedGlobalconfig
-		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		assert.NoError(err)
-		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{dest},
-			Action:       []string{"-p", ddevapp.RouterComposeProjectName, "down"},
-		})
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
-		assert.NoError(err)
-	})
-
-	container, err := dockerutil.FindContainerByName("ddev-router")
-	require.NoError(t, err)
-	require.NotNil(t, container)
-
-	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'", "")
-	assert.NoError(err)
-	stdout = strings.Trim(stdout, "\r\n")
-
-	assert.Equal("/etc/letsencrypt", stdout)
-
-	_, _, err = dockerutil.Exec(container.ID, "test -f /etc/letsencrypt/options-ssl-nginx.conf", "")
-	assert.NoError(err)
-}
-
 // TestRouterConfigOverride tests that the ~/.ddev/.router-compose.yaml can be overridden
 // with ~/.ddev/router-compose.*.yaml
 func TestRouterConfigOverride(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+	extrasYamlName := `router-compose.extras.yaml`
 	testDir := testcommon.CreateTmpDir(t.Name())
 	_ = os.Chdir(testDir)
-	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.override.yaml")
+	extrasYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), extrasYamlName)
 
 	testcommon.ClearDockerEnv()
 
@@ -203,7 +137,7 @@ func TestRouterConfigOverride(t *testing.T) {
 	assert.NoError(err)
 	err = app.WriteConfig()
 	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "router-compose.override.yaml"), overrideYaml)
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), extrasYamlName), extrasYaml)
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
@@ -215,71 +149,15 @@ func TestRouterConfigOverride(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
-		_ = os.Remove(overrideYaml)
+		_ = os.Remove(extrasYaml)
 	})
 
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'", "")
-	assert.Equal(answer+"\n", stdout)
-}
-
-// TestDisableHTTP2 tests we can enable or disable http2
-func TestDisableHTTP2(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
-	if globalconfig.GetCAROOT() == "" {
-		t.Skip("Skipping because mkcert/http not enabled")
-	}
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		t.Skip("Skipping because router=traefik doesn't have feature to turn off http/2")
-	}
-
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-	testDir := testcommon.CreateTmpDir(t.Name())
-	_ = os.Chdir(testDir)
-	err := os.WriteFile("index.html", []byte("hello from the test"), 0644)
-	assert.NoError(err)
-	testcommon.ClearDockerEnv()
-
-	_, err = exec.RunCommand(DdevBin, []string{"poweroff"})
-	require.NoError(t, err)
-
-	app, err := ddevapp.NewApp(testDir, true)
-	assert.NoError(err)
-	err = app.WriteConfig()
-	assert.NoError(err)
-
-	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig.DisableHTTP2 = false
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		_ = os.RemoveAll(testDir)
-		assert.NoError(err)
-	})
-
-	err = app.Start()
-	assert.NoError(err)
-
-	// Verify that http2 is on by default
-	out, err := exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
-	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
-	assert.Equal("HTTP/2 200 \r\n", out)
-
-	// Now turn it off and verify
-	globalconfig.DdevGlobalConfig.DisableHTTP2 = true
-	err = app.Start()
-	assert.NoError(err)
-
-	out, err = exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
-	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
-	assert.Equal("HTTP/1.1 200 OK\r\n", out)
-
+	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo ANSWER=${ANSWER}'", "")
+	stdout = strings.Trim(stdout, "\r\n")
+	assert.Equal("ANSWER="+answer, stdout)
 }
 
 // TestAllocateAvailablePortForRouter tests AllocateAvailablePortForRouter()

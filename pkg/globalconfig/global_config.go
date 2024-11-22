@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
-	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/globalconfig/types"
+
+	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -42,7 +43,6 @@ type ProjectInfo struct {
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
-	DisableHTTP2                     bool                        `yaml:"disable_http2"`
 	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
@@ -59,7 +59,7 @@ type GlobalConfig struct {
 	ProjectTldGlobal                 string                      `yaml:"project_tld"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
 	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
-	Router                           string                      `yaml:"router"`
+	Router                           string                      `yaml:"router,omitempty"`
 	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
@@ -91,7 +91,7 @@ func New() GlobalConfig {
 		RouterMailpitHTTPSPort:       nodeps.DdevDefaultMailpitHTTPSPort,
 		LastStartedVersion:           "v0.0",
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
-		Router:                       types.RouterTypeDefault,
+		Router:                       types.RouterTypeTraefik,
 		MkcertCARoot:                 readCAROOT(),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
@@ -209,7 +209,8 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
-		return fmt.Errorf("invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
+		output.UserOut.Warnf("\nThe only valid router type is %s, but you have router: %s in your global configuration, using %s instead.\n", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
+		DdevGlobalConfig.Router = types.RouterTypeTraefik
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
@@ -218,10 +219,6 @@ func ValidateGlobalConfig() error {
 
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
-	}
-
-	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.IsTraefikRouter() {
-		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
 
 	return nil
@@ -327,6 +324,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 		cfgCopy.PerformanceMode = cfgCopy.GetPerformanceMode()
 	}
 
+	// We only have one router, so this field is old, and when writing we can omitempty
+	cfgCopy.Router = ""
+
 	cfgbytes, err := yaml.Marshal(cfgCopy)
 	if err != nil {
 		return err
@@ -388,14 +388,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
 
-# router: traefik # or nginx-proxy
-# Traefik router is default, but you can switch to the legacy "nginx-proxy" router.
-
 # router_http_port: <port>  # Port to be used for http (defaults to 80)
 # router_https_port: <port> # Port for https (defaults to 443)
-
-# disable_http2: false
-# Disable http2 on ddev-router if true
 
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
