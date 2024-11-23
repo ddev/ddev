@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -18,7 +20,7 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping TestHardenedStart on Mac M1 because of useless Docker Desktop failures to connect")
 	}
 
@@ -36,9 +38,6 @@ func TestHardenedStart(t *testing.T) {
 	site := TestSites[testSite]
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	if app.IsMutagenEnabled() {
-		t.Skip("Skipping test because Mutagen is enabled")
-	}
 
 	runTime := util.TimeTrackC(fmt.Sprintf("%s DdevStart", site.Name))
 
@@ -72,6 +71,8 @@ func TestHardenedStart(t *testing.T) {
 
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
+
+	app.PerformanceMode = types.PerformanceModeNone
 
 	err = app.Start()
 	require.NoError(t, err)
