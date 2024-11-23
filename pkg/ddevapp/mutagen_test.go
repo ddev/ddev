@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -68,7 +69,8 @@ func TestMutagenSimple(t *testing.T) {
 	if !globalconfig.DdevGlobalConfig.NoBindMounts {
 		mutagenFile := ddevapp.GetMutagenConfigFilePath(app)
 		for _, d := range app.GetUploadDirs() {
-			exists, err := fileutil.FgrepStringInFile(mutagenFile, `- "/`+d+`"`)
+			searchDir := path.Join(app.Docroot, d)
+			exists, err := fileutil.FgrepStringInFile(mutagenFile, `- "/`+searchDir+`"`)
 			require.NoError(t, err)
 			require.True(t, exists, `upload_dir "/%s" not found in Mutagen config`, d)
 		}
@@ -87,10 +89,10 @@ func TestMutagenSimple(t *testing.T) {
 	assert.NoError(err)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
-	_, stderr, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "ls -l /var/www/html/vendor",
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "test -d /var/www/html/vendor",
 	})
-	assert.Contains(stderr, "cannot access '/var/www/html/vendor'")
+	assert.Error(err, "/var/www/html/vendor exists and it should not")
 
 	_, _, err = app.Composer([]string{"config", "--no-plugins", "allow-plugins", "true"})
 	require.NoError(t, err)
@@ -99,7 +101,7 @@ func TestMutagenSimple(t *testing.T) {
 	stdout, _, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	require.NoError(t, err, "stderr=%s, err=%v", stdout, err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "ls -l vendor/bin/var-dump-server >/dev/null",
+		Cmd: "test -f vendor/bin/var-dump-server >/dev/null",
 	})
 	assert.NoError(err)
 
