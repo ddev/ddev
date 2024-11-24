@@ -2439,11 +2439,14 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	err = os.MkdirAll(dirPathFromRoot, 0775)
 	require.NoError(t, err)
 
+	baseCreatedOnHostText := "This content in the file was added on the host side\n"
+	extraAddedInContainerText := "This content in the file was added inside the container\n"
 	fileCreatedOnHost := path.Join(dirPathFromRoot, "file_created_on_host.txt")
 	// Create a file in the directory to make sure it syncs
 	f, err := os.OpenFile(filepath.FromSlash(fileCreatedOnHost), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 	require.NoError(t, err)
-	_ = f.Close()
+	err = f.Close()
+	require.NoError(t, err)
 
 	fileCreatedInContainer := path.Join(dirPathFromRoot, "file_created_in_container.txt")
 	command := fmt.Sprintf("echo 'content created inside container' >%s", fileCreatedInContainer)
@@ -2461,28 +2464,60 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	})
 	require.NoError(t, err, "fileCreatedOnHost %s does not exist in container: %v", fileCreatedOnHost, err)
 
-	// Now try to append to the file on the host.
-	// os.OpenFile() for append here fails if the file does not already exist.
+	// Now try to write to the file on the host.
+	// os.OpenFile() for append here must succeed.
 	f, err = os.OpenFile(filepath.FromSlash(fileCreatedOnHost), os.O_APPEND|os.O_WRONLY, 0660)
 	require.NoError(t, err)
-	_, err = f.WriteString("This addition to the file was added on the host side")
+	_, err = f.WriteString(baseCreatedOnHostText)
 	require.NoError(t, err)
-	_ = f.Close()
+	err = f.Close()
+	require.NoError(t, err)
+
+	textExists, err := fileutil.FgrepStringInFile(fileCreatedOnHost, baseCreatedOnHostText)
+	require.NoError(t, err)
+	require.True(t, textExists, "file on host does not contain text '%s'", baseCreatedOnHostText)
+
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "echo 'content added inside container' >>" + fileCreatedOnHost,
+	// 2024-11-24: It seems that Lima/Colima the mutagen sync has not completed if we don't wait a second.
+	// Following this up with mutagen maintainer. Maybe MutagenSyncFlush isn't actually synchronous.
+	if dockerutil.IsLima() || dockerutil.IsColima() {
+		time.Sleep(time.Second * 1)
+	}
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat " + fileCreatedOnHost,
 	})
 	require.NoError(t, err)
+	t.Logf("Initial fileCreatedOnHost after mutagen sync='%s'", out)
+	require.Contains(t, out, baseCreatedOnHostText)
+
+	// Append text inside the container
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("echo '%s' >> %s", extraAddedInContainerText, fileCreatedOnHost),
+	})
+	require.NoError(t, err)
+
+	//out, _, err = app.Exec(&ddevapp.ExecOpts{
+	//	Cmd: "cat " + fileCreatedOnHost,
+	//})
+	//require.NoError(t, err)
+	//t.Logf("fileCreatedOnHost after addition of in-container content before mutagen sync='%s'", out)
+
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat " + fileCreatedOnHost,
+	})
+	require.NoError(t, err)
+	t.Logf("fileCreatedOnHost after addition of in-container content and mutagen sync='%s'", out)
 
 	// grep the file for both the content added on host and that added in container.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "grep 'This addition to the file was added on the host side' " + fileCreatedOnHost + " && grep 'content added inside container' " + fileCreatedOnHost,
+		Cmd: fmt.Sprintf(`grep "%s" %s && grep "%s" %s`, baseCreatedOnHostText, fileCreatedOnHost, extraAddedInContainerText, fileCreatedOnHost),
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "grep failed, actual content of file in container was '%s'", out)
 
 	runTime()
 }
