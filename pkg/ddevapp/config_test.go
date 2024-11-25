@@ -903,13 +903,14 @@ func TestPHPConfig(t *testing.T) {
 		assert.Contains(out, "DOLLAR_DOUBLE_QUOTES=someenv-value $ sign")
 		assert.Contains(out, "DOLLAR_DOUBLE_QUOTES_ESCAPED=$SOMEENV $ sign")
 
-		// Remove the PHP84 exception when it has missing extensions
-		if v != nodeps.PHP84 {
-			// This list does not contain all expected, as php5.6 is missing some, etc.
-			expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
-			for _, e := range expectedExtensions {
-				assert.Contains(out, fmt.Sprintf(`,%s,`, e))
-			}
+		// This list does not contain all expected, as php5.6 is missing some, etc.
+		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		// TODO: php8.4 imagick is broken
+		if v == nodeps.PHP84 {
+			expectedExtensions = []string{"apcu", "bcmath", "bz2", "curl", "gd", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		}
+		for _, e := range expectedExtensions {
+			assert.Contains(out, fmt.Sprintf(`,%s,`, e))
 		}
 	}
 

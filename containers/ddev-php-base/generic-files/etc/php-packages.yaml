@@ -60,9 +60,10 @@ php83:
 
 # 2024-11-25 missing amd64: xdebug
 # 2024-11-25 missing arm64: memcached redis xdebug
+# php8.4 imagick is broken https://github.com/oerdnj/deb.sury.org/issues/2176#issuecomment-2430770813
 # TODO: installed with pecl: memcached redis xdebug
 php84:
-  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip
-  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip
-  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xhprof", "xml", "xmlrpc", "zip"]
