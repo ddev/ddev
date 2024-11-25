@@ -127,20 +127,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// We add the three options to "composer create-project": --no-plugins, --no-scripts, --no-install
 		// These options make the difference between "composer create-project" and "ddev composer create".
 		var createArgs []string
-		// For example, drupal/recommended-project
-		hasVendorPackage := false
 
 		for _, arg := range args {
 			if isValidComposerOption("create-project", arg) {
-				// Skip it if we already have one argument for "composer create-project"
-				if !strings.HasPrefix(arg, "-") && hasVendorPackage {
-					util.Warning("Ignoring argument: %s", arg)
-					continue
-				}
 				createArgs = append(createArgs, arg)
-				if !strings.HasPrefix(arg, "-") {
-					hasVendorPackage = true
-				}
 			}
 		}
 
@@ -184,7 +174,12 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		})
 
 		if err != nil {
-			util.Failed("failed to create project: %v\nstderr=%v", err, stderr)
+			message := ""
+			if stderr != "" {
+				message = fmt.Sprintf("\nstderr=%v", stderr)
+			}
+			message = message + "\nThe optional <directory> and <version> arguments are not supported by 'ddev composer create'.\nIf you have included them, please remove and try again."
+			util.Failed("failed to create project: %v\n%v", err, message)
 		}
 
 		if len(stdout) > 0 {
