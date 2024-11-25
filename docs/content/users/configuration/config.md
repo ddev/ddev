@@ -95,6 +95,7 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
 !!!tip "How to run Composer from `vendor/bin/composer`?"
+
     ```shell
     ddev exec vendor/bin/composer --version
     # If you have a custom composer_root:
