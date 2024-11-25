@@ -170,18 +170,6 @@ func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
 		composerJSON, err := fileutil.ReadFileIntoString(filepath.Join(tmpDir, composerRoot, "composer.json"))
 		assert.NoError(err, "failed to read %v: err=%v", filepath.Join(tmpDir, composerRoot, "composer.json"), err)
 		assert.Contains(composerJSON, "https://packagist.org")
-		// Test a composer binary override using /var/www/html/vendor/bin from $PATH
-		args = []string{"composer", "--version"}
-		out, err = exec.RunHostCommand(DdevBin, args...)
-		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
-		assert.NotContains(out, "2.8.0")
-		args = []string{"composer", "require", "composer/composer:v2.8.0"}
-		out, err = exec.RunHostCommand(DdevBin, args...)
-		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
-		args = []string{"composer", "--version"}
-		out, err = exec.RunHostCommand(DdevBin, args...)
-		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
-		assert.Contains(out, "2.8.0")
 	}
 }
 

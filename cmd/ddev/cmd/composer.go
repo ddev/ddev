@@ -109,7 +109,7 @@ func getComposerCompletionFunc(isCreateCommand bool) func(*cobra.Command, []stri
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Dir:     app.GetComposerRoot(true, true),
-			RawCmd:  append([]string{"composer", "_complete", "-S2.6.6", "-n", "-sbash", "-c" + current, "-icomposer"}, input...),
+			RawCmd:  append([]string{"composer", "_complete", "-S2.8.3", "-n", "-sbash", "-c" + current, "-icomposer"}, input...),
 			Tty:     false,
 			// Prevent Composer from debugging when Xdebug is enabled
 			Env: []string{"XDEBUG_MODE=off"},

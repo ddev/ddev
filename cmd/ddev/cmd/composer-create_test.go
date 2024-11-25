@@ -16,12 +16,6 @@ import (
 )
 
 func TestComposerCreateCmd(t *testing.T) {
-	// Composer 2.8.1 changed the behavior of `composer create-project` for the local `--repository` flag.
-	// This test no longer uses `--repository`, but the original behavior is preserved
-	// with this Packagist package https://github.com/ddev/ddev-test-composer-create
-	// https://github.com/ddev/ddev/pull/6596
-	// https://github.com/composer/composer/issues/12150
-	// https://github.com/ddev/ddev/issues/6586
 	composerVersionForThisTest := nodeps.ComposerDefault
 	//composerVersionForThisTest := "2.8.0"
 

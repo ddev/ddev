@@ -9,6 +9,8 @@ case ":$PATH:" in
 esac
 # And don't forget to export the new $PATH.
 export PATH
+# Hide vendor/bin/composer from $PATH.
+export EXECIGNORE="${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin/composer"
 
 for f in /etc/bashrc/*.bashrc; do
     source $f;

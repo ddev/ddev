@@ -15,6 +15,8 @@ case ":$PATH:" in
 esac
 # And don't forget to export the new $PATH.
 export PATH
+# Hide vendor/bin/composer from $PATH.
+export EXECIGNORE="${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin/composer"
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.

@@ -94,26 +94,6 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
 
-!!!warning "Why is `composer_version` not being used?"
-    If your project's `composer.json` and/or `composer.lock` includes `composer/composer`, that version will take precedence over the one specified by `composer_version`, because `vendor/bin/composer` comes first in the in-container `$PATH`. You have three options:
-
-    1. Update `vendor/bin/composer` in the container:
-    ```shell
-    ddev composer require composer/composer -W
-    ```
-
-    2. Remove `composer/composer` from `composer.json`:
-    ```shell
-    ddev exec /usr/local/bin/composer remove composer/composer
-    ```
-
-    3. Adjust the `$PATH` order:
-    ```shell
-    mkdir -p .ddev/homeadditions/.bashrc.d
-    echo 'export PATH=/usr/local/bin:$PATH' >.ddev/homeadditions/.bashrc.d/path.sh
-    ddev restart
-    ```
-
 ## `corepack_enable`
 
 Whether to `corepack enable` on Node.js configuration.
@@ -498,7 +478,7 @@ Specific docker-compose version for download.
 | -- | -- | --
 | :octicons-globe-16: global | &zwnj; | &zwnj;
 
-If set to `v2.8.0`, for example, it will download and use that version instead of the expected version for docker-compose.
+If set to `v2.8.3`, for example, it will download and use that version instead of the expected version for docker-compose.
 
 !!!warning "Troubleshooting Only!"
     This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
