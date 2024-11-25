@@ -85,6 +85,8 @@ var ValidWebserverTypes = map[string]bool{
 	WebserverApacheFPM: true,
 }
 
+const AppTypeDrupalLatestStable = AppTypeDrupal11
+
 // App types
 const (
 	AppTypeNone     = ""

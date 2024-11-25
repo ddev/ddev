@@ -340,7 +340,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Warning("Failed to restart project after composer create: %v", err)
 		}
 
-		util.Success("\nddev composer create was successful.\nConsider using `ddev config --update` to autodetect configuration for your project")
+		util.Success("\nddev composer create was successful.")
 
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)

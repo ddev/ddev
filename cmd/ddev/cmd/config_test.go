@@ -628,7 +628,6 @@ func TestConfigUpdate(t *testing.T) {
 
 			// Updated values should match
 			checkValues(t, testName, expectation.configExpectation, app)
-
 		})
 	}
 }
