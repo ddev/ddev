@@ -1139,13 +1139,6 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
 `, app.GetStartScriptTimeout(), app.PHPVersion)
 		}
-		// TODO: installed with pecl: apcu redis uploadprogress xdebug xhprof
-		if app.PHPVersion == nodeps.PHP84 {
-			contents = contents + `
-### DDEV-injected custom-built extensions for PHP8.4
-RUN phpenmod apcu redis uploadprogress
-`
-		}
 	}
 
 	// If there are user pre.Dockerfile* files, insert their contents

@@ -76,12 +76,8 @@
 
   extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
   case ${PHP_VERSION} in
-  8.[123])
+  8.[1234])
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
-    ;;
-  8.4)
-    # TODO: Update this list as more become available
-    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
     ;;
 
   esac

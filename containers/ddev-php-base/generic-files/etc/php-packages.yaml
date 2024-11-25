@@ -1,67 +1,68 @@
 php56:
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xml xhprof xmlrpc zip
-  arm64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xml", "xhprof", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring mcrypt mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xml xhprof xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xml", "xhprof", "xmlrpc", "zip"]
 
 php70:
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php71:
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php72:
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common" , "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php73:
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php74:
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu apcu-bc bcmath bz2 cli common curl fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php80:
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php81:
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php82:
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
 php83:
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  amd64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
-  # formerly apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
-  arm64: ["apcu", "bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "zip"]
 
-# 2024-11-22 missing apcu imagick memcached redis uploadprogress xdebug xhprof xmlrpc
-# TODO: installed with pecl: apcu redis uploadprogress xdebug xhprof
+# 2024-11-25 missing amd64: xdebug
+# 2024-11-25 missing arm64: memcached redis xdebug
+# TODO: installed with pecl: memcached redis xdebug
 php84:
-  # formerly bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip
-  amd64: ["bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
-  # formerly bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip
-  arm64: ["bcmath", "bz2", "curl", "cli", "common", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xhprof", "xml", "xmlrpc", "zip"]
+  # formerly apcu bcmath bz2 cli common curl fpm gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xhprof", "xml", "xmlrpc", "zip"]
