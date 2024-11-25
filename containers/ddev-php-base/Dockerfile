@@ -54,9 +54,7 @@ SHELL ["/bin/bash", "-c"]
 ### See https://github.com/ddev/ddev/issues/6159
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
-# TODO: installed with pecl: imagick memcached redis xdebug
-# Build from https://github.com/Imagick/imagick/pull/690
-RUN /usr/local/bin/build_php_extension.sh "php8.4" "imagick" "https://github.com/Imagick/imagick/archive/944b67fce68bcb5835999a149f917670555b6fcb.tar.gz" "/usr/lib/php/20240924/imagick.so" "libmagickwand-dev libmagickcore-dev"
+# TODO: installed with pecl: memcached redis xdebug
 RUN /usr/local/bin/build_php_extension.sh "php8.4" "memcached" "latest" "/usr/lib/php/20240924/memcached.so" "libmemcached-dev zlib1g-dev libssl-dev"
 RUN /usr/local/bin/build_php_extension.sh "php8.4" "redis" "latest" "/usr/lib/php/20240924/redis.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "3.4.0beta1" "/usr/lib/php/20240924/xdebug.so"
@@ -122,11 +120,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
 COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
 COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
-# TODO: installed with pecl: imagick memcached redis xdebug
-COPY --from=ddev-php-extension-build /usr/lib/php/20240924/imagick.so /usr/lib/php/20240924/imagick.so
-COPY --from=ddev-php-extension-build /usr/include/php/20240924/ext/imagick/php_imagick_shared.h /usr/include/php/20240924/ext/imagick/php_imagick_shared.h
-RUN cp /etc/php/8.3/mods-available/imagick.ini /etc/php/8.4/mods-available/imagick.ini
-RUN phpenmod -v 8.4 imagick
+# TODO: installed with pecl: memcached redis xdebug
 COPY --from=ddev-php-extension-build /usr/lib/php/20240924/memcached.so /usr/lib/php/20240924/memcached.so
 RUN cp /etc/php/8.3/mods-available/memcached.ini /etc/php/8.4/mods-available/memcached.ini
 RUN phpenmod -v 8.4 memcached
