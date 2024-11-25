@@ -145,6 +145,9 @@ var SkipHooks = false
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
+	if app.Type == nodeps.AppTypeDrupal {
+		app.Type = nodeps.AppTypeDrupalLatestStable
+	}
 	return strings.ToLower(app.Type)
 }
 
