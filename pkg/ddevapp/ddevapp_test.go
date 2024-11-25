@@ -2385,14 +2385,13 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Special installed sqlite3 test for drupal11.
-		if app.Type == nodeps.AppTypeDrupal11 {
-			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-				Cmd: "sqlite3 --version | awk '{print $1}'",
-			})
-			require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
-			stdout = strings.Trim(stdout, "\r\n")
-			require.Equal(t, "3.45.1", stdout)
-		}
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: "sqlite3 --version | awk '{print $1}'",
+		})
+		require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
+		stdout = strings.Trim(stdout, "\r\n")
+		require.Equal(t, "3.45.1", stdout)
+
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
 		assert.NoError(err)

@@ -24,8 +24,6 @@ type settingsLocations struct {
 var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	nodeps.AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	nodeps.AppTypeDrupal9:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal10: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal11: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
