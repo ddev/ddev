@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-if [ "$#" -ne 4 ] && [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
+if [[ "$#" -ne 4 && "$#" -ne 5 && "$#" -ne 6 ]]; then
   echo "Usage: $0 <PHP_VERSION> <EXTENSION_NAME> <EXTENSION_VERSION> <EXTENSION_FILE> [<BUILD_PACKAGES>] [<CONFIGURE_OPTIONS>]"
   exit 1
 fi
@@ -26,20 +26,25 @@ BUILD_PACKAGES="${5:-}"
 CONFIGURE_OPTIONS="${6:-}"
 
 # install pecl
-if ! command -v pecl >/dev/null 2>&1 || [ "$(dpkg -l | grep "php${PHP_VERSION}-dev")" = "" ] || [ "${BUILD_PACKAGES}" != "" ]; then
+if ! command -v pecl >/dev/null 2>&1 || [[ "$(dpkg -l | grep "php${PHP_VERSION}-dev")" == "" ]] || [[ "${BUILD_PACKAGES}" != "" ]]; then
   echo "Installing pecl to build php${PHP_VERSION}-${EXTENSION_NAME}"
   timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
   timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y build-essential php-pear "php${PHP_VERSION}-dev" ${BUILD_PACKAGES} || exit $?
 fi
 
-if [ -f "${EXTENSION_FILE}" ]; then
+if [[ -f "${EXTENSION_FILE}" ]]; then
   echo "Moving existing ${EXTENSION_FILE} to ${EXTENSION_FILE}.bak"
   mv "${EXTENSION_FILE}" "${EXTENSION_FILE}.bak"
 fi
 
-if [ "${EXTENSION_VERSION}" = "latest" ]; then
+if [[ "${EXTENSION_VERSION}" == "latest" ]]; then
   PECL_EXTENSION="${EXTENSION_NAME}"
+elif [[ "${EXTENSION_VERSION}" == *"tar.gz" ]]; then
+  # if this is an archive, download it
+  rm -rf "/tmp/${EXTENSION_NAME}" && mkdir "/tmp/${EXTENSION_NAME}"
+  timeout "${START_SCRIPT_TIMEOUT:-30}" curl -fsSL "${EXTENSION_VERSION}" | tar xvz -C "/tmp/${EXTENSION_NAME}" --strip-components=1 -f -
+  PECL_EXTENSION="/tmp/${EXTENSION_NAME}/package.xml"
 else
   PECL_EXTENSION="${EXTENSION_NAME}-${EXTENSION_VERSION}"
 fi
@@ -48,10 +53,10 @@ timeout "${START_SCRIPT_TIMEOUT:-30}" pecl channel-update pecl.php.net || true
 
 echo "Building php${PHP_VERSION}-${EXTENSION_NAME}..."
 
-if [ "${CONFIGURE_OPTIONS}" = "-i" ]; then
+if [[ "${CONFIGURE_OPTIONS}" == "-i" ]]; then
   echo "pecl -d php_suffix=\"${PHP_VERSION}\" install -f \"${PECL_EXTENSION}\""
   pecl -d php_suffix="${PHP_VERSION}" install -f "${PECL_EXTENSION}" || true
-elif [ "${CONFIGURE_OPTIONS}" != "" ]; then
+elif [[ "${CONFIGURE_OPTIONS}" != "" ]]; then
   echo "pecl -d php_suffix=\"${PHP_VERSION}\" install --configureoptions=\"${CONFIGURE_OPTIONS}\" -f \"${PECL_EXTENSION}\""
   pecl -d php_suffix="${PHP_VERSION}" install --configureoptions="${CONFIGURE_OPTIONS}" -f "${PECL_EXTENSION}" || true
 else
@@ -63,10 +68,10 @@ fi
 # use `rm -f /usr/share/php/.registry/.channel.pecl.php.net/extension.reg` to make it forget about another version.
 rm -f "/usr/share/php/.registry/.channel.pecl.php.net/${EXTENSION_NAME}.reg"
 
-if [ ! -f "${EXTENSION_FILE}" ]; then
+if [[ ! -f "${EXTENSION_FILE}" ]]; then
   echo "Failed to build ${EXTENSION_FILE}"
 
-  if [ -f "${EXTENSION_FILE}.bak" ]; then
+  if [[ -f "${EXTENSION_FILE}.bak" ]]; then
     echo "Restoring previously existing file ${EXTENSION_FILE}"
     mv "${EXTENSION_FILE}.bak" "${EXTENSION_FILE}"
   fi
