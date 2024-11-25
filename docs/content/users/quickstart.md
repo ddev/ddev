@@ -181,7 +181,7 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 ## Drupal
 
-For all versions of Drupal 8+ the Composer techniques work.
+The legacy type `drupal` will be interpreted as the latest stable version of Drupal, so in 2024, `ddev config --project-type=drupal` will configure a Drupal 11 project. `drupal` can also be used as the project type in the `.ddev/config.yaml` but it will be interpreted as the latest stable version.
 
 === "Drupal 11"
 
@@ -207,20 +207,7 @@ For all versions of Drupal 8+ the Composer techniques work.
     ddev launch
     # or automatically log in with
     ddev launch $(ddev drush uli)
-    ```
-
-=== "Drupal 9 (EOL)"
-
-    ```bash
-    mkdir my-drupal9-site && cd my-drupal9-site
-    ddev config --project-type=drupal9 --php-version=8.1 --docroot=web
-    ddev composer create drupal/recommended-project:^9
-    ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
-    ddev launch
-    # or automatically log in with
-    ddev launch $(ddev drush uli)
-    ```
+    ````
 
 === "Drupal 6/7"
 
