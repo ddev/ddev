@@ -38,11 +38,7 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
     brew unlink ddev
     ```
 
-    Next, download the ZIP archive, unzip it, make it executable, and move it to the `/usr/local/bin/ddev` folder.
-
-    Here’s an example where `[LINK TO ZIP ARCHIVE]` comes from a PR comment:
-
-    ![Github Action PR Comment](../images/github-action-pr-comment.png)
+    Next, download the ZIP archive, unzip it, make it executable, and move it to the `/usr/local/bin/ddev` folder:
 
     ```bash
     wget -O ddev.zip [LINK TO ZIP ARCHIVE]
@@ -50,6 +46,10 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
     chmod +x ddev && sudo mv ddev /usr/local/bin/ddev
     rm ddev.zip
     ```
+
+    Replace `[LINK TO ZIP ARCHIVE]` with the corresponding link from the PR comment:
+
+    ![Github Action PR Comment](../images/github-action-pr-comment.png)
 
     Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`.
 
@@ -84,11 +84,7 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
     echo $PATH
     ```
 
-    Next, download the ZIP archive, unzip it, make it executable, and move it to the `~/bin` folder.
-
-    Here’s an example where `[LINK TO ZIP ARCHIVE]` comes from a PR comment:
-
-    ![Github Action PR Comment](../images/github-action-pr-comment.png)
+    Next, download the ZIP archive, unzip it, make it executable, and move it to the `~/bin` folder:
 
     ```bash
     wget -O ddev.zip [LINK TO ZIP ARCHIVE]
@@ -96,6 +92,10 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
     chmod +x ddev && mv ddev ~/bin/ddev
     rm ddev.zip
     ```
+
+    Replace `[LINK TO ZIP ARCHIVE]` with the corresponding link from the PR comment:
+
+    ![Github Action PR Comment](../images/github-action-pr-comment.png)
 
     Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`.
 
