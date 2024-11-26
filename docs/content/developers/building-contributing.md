@@ -64,9 +64,7 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
 
         (The binaries on the master branch and the final release binaries _are_ signed.)
 
-    You do not typically have to install anything else other than the downloaded binary; when you run it it will access any Docker images that it needs.
-
-    After you’re done, you can delete your downloaded binary and re-link the original Homebrew one:
+    After you’re done testing, you can delete your downloaded executable, and re-link the original Homebrew one:
 
     ```bash
     sudo rm /usr/local/bin/ddev
