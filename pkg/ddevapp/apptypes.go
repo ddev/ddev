@@ -237,7 +237,11 @@ func init() {
 			importFilesAction:    wordpressImportFilesAction,
 		},
 	}
-	appTypeMatrix[nodeps.AppTypeDrupal] = appTypeMatrix[nodeps.AppTypeDrupalLatestStable]
+
+	// Now add "drupal" type as a copy of latest stable, but don't allow it to be detected as a type
+	drupalType := appTypeMatrix[nodeps.AppTypeDrupalLatestStable]
+	drupalType.appTypeDetect = nil
+	appTypeMatrix[nodeps.AppTypeDrupal] = drupalType
 }
 
 // CreateSettingsFile creates the settings file (like settings.php) for the
