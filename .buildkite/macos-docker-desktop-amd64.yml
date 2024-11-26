@@ -1,8 +1,10 @@
 # Docker Desktop on macOS amd64
 # See https://buildkite.com/ddev/ddev-macos-amd64-mutagen/settings/repository
-# Runs on master only
+# Runs on master only, not on PRs
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "docker-desktop=true"

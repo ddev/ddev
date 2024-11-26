@@ -1,8 +1,10 @@
 # WSL2 with docker-ce (docker native inside WSL2 == Docker inside)
 # See https://buildkite.com/ddev/wsl2-docker-inside/settings/repository
-# Runs on master and all PRs, including forked PRs
+# Runs on master and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=wsl2"
       - "architecture=amd64"
@@ -13,4 +15,3 @@
       BUILDKIT_PROGRESS: plain
       DOCKER_TYPE: "wsl2dockerinside"
     parallelism: 1
-

@@ -1,8 +1,10 @@
 # Colima with qemu and sshfs
 # See https://buildkite.com/ddev/macos-colima/settings/repository
-# Runs on master and PRs, including forked PRs
+# Not currently used.
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "colima=true"

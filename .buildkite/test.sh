@@ -194,12 +194,8 @@ fi
 unset MUTAGEN_DATA_DIRECTORY
 if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
   MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync terminate -a || true
-  # This line can be removed when all PRs will not use ~/.ddev/.mdd
-  MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd/ ~/.ddev/bin/mutagen sync terminate -a || true
   MUTAGEN_DATA_DIRECTORY=~/.mutagen ~/.ddev/bin/mutagen daemon stop || true
   MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen daemon stop || true
-  # This line can be removed when all PRs will not use ~/.ddev/.mdd
-  MUTAGEN_DATA_DIRECTORY=~/.ddev/.mdd/ ~/.ddev/bin/mutagen daemon stop || true
 fi
 if command -v killall >/dev/null ; then
   killall mutagen || true

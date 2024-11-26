@@ -1,8 +1,10 @@
 # Windows native with Mutagen, used by ddev-windows-mutagen
 # See https://buildkite.com/ddev/ddev-windows-mutagen/settings/repository
-# Runs on branches/PRs on ddev/ddev only
+# Runs on master and PRs, not including forked PRs
 
   - command: ".buildkite/test.cmd"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=windows"
       - "dockertype=dockerforwindows"

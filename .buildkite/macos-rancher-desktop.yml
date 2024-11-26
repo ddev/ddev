@@ -1,8 +1,10 @@
 # Rancher Desktop on macOS arm64
 # See https://buildkite.com/ddev/macos-rancher-desktop/settings/repository
-# Runs on ddev/ddev only, not on PRs
+# Runs on master only, not on PRs
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "rancher-desktop=true"

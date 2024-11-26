@@ -1,6 +1,9 @@
-# Not currently used. This would build and run containers on Windows.
+# Build and run containers on Windows.
+# Not currently used.
 
   - command: ".buildkite/test_containers.cmd"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=windows"
       - "dockertype=dockerforwindows"
