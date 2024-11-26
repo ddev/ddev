@@ -25,7 +25,8 @@ func TestDetectAppType(t *testing.T) {
 	appTypes := ddevapp.GetValidAppTypes()
 	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
-		if t != nodeps.AppTypePHP {
+		// we don't detect "drupal" app type
+		if t != nodeps.AppTypePHP && t != nodeps.AppTypeDrupal {
 			notSimplePHPAppTypes = append(notSimplePHPAppTypes, t)
 		}
 	}
