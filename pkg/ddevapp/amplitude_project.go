@@ -55,7 +55,14 @@ func (app *DdevApp) TrackProject() {
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		RouterDisabled(IsRouterDisabled(app)).
-		WebserverType(app.GetWebserverType())
+		WebserverType(app.GetWebserverType()).
+		WebimageExtraPackages(app.WebImageExtraPackages).
+		DbImageExtraPackages(app.DBImageExtraPackages).
+		BindAllInterfaces(app.BindAllInterfaces).
+		CorepackEnable(app.CorepackEnable).
+		DdevVersionConstraint(app.DdevVersionConstraint).
+		DisableSettingsManagement(app.DisableSettingsManagement).
+		NoProjectMount(app.NoProjectMount)
 
 	if !nodeps.ArrayContainsString(containersOmitted, "db") {
 		builder.

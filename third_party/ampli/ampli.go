@@ -10,9 +10,9 @@
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/v1.24-updates/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/v1.24-updates/latest/getting-started/ddev
 //
 
 package ampli
@@ -375,9 +375,16 @@ func (e projectEvent) project() {
 
 type ProjectBuilder interface {
 	Build() ProjectEvent
+	BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder
+	CorepackEnable(corepackEnable bool) ProjectBuilder
 	DatabaseType(databaseType string) ProjectBuilder
 	DatabaseVersion(databaseVersion string) ProjectBuilder
+	DbImageExtraPackages(dbImageExtraPackages []string) ProjectBuilder
+	DdevVersionConstraint(ddevVersionConstraint string) ProjectBuilder
+	DisableSettingsManagement(disableSettingsManagement bool) ProjectBuilder
+	NoProjectMount(noProjectMount bool) ProjectBuilder
 	Router(router string) ProjectBuilder
+	WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder
 }
 
 type projectBuilder struct {
@@ -560,6 +567,18 @@ func (b *projectBuilder) WebserverType(webserverType string) ProjectBuilder {
 	return b
 }
 
+func (b *projectBuilder) BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder {
+	b.properties[`Bind All Interfaces`] = bindAllInterfaces
+
+	return b
+}
+
+func (b *projectBuilder) CorepackEnable(corepackEnable bool) ProjectBuilder {
+	b.properties[`Corepack Enable`] = corepackEnable
+
+	return b
+}
+
 func (b *projectBuilder) DatabaseType(databaseType string) ProjectBuilder {
 	b.properties[`Database Type`] = databaseType
 
@@ -572,8 +591,38 @@ func (b *projectBuilder) DatabaseVersion(databaseVersion string) ProjectBuilder 
 	return b
 }
 
+func (b *projectBuilder) DbImageExtraPackages(dbImageExtraPackages []string) ProjectBuilder {
+	b.properties[`DB Image Extra Packages`] = dbImageExtraPackages
+
+	return b
+}
+
+func (b *projectBuilder) DdevVersionConstraint(ddevVersionConstraint string) ProjectBuilder {
+	b.properties[`DDEV Version Constraint`] = ddevVersionConstraint
+
+	return b
+}
+
+func (b *projectBuilder) DisableSettingsManagement(disableSettingsManagement bool) ProjectBuilder {
+	b.properties[`Disable Settings Management`] = disableSettingsManagement
+
+	return b
+}
+
+func (b *projectBuilder) NoProjectMount(noProjectMount bool) ProjectBuilder {
+	b.properties[`No Project Mount`] = noProjectMount
+
+	return b
+}
+
 func (b *projectBuilder) Router(router string) ProjectBuilder {
 	b.properties[`Router`] = router
+
+	return b
+}
+
+func (b *projectBuilder) WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder {
+	b.properties[`Webimage Extra Packages`] = webimageExtraPackages
 
 	return b
 }
@@ -619,10 +668,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `main`,
+			Branch:    `v1.24-updates`,
 			Source:    `ddev`,
 			Version:   `8`,
-			VersionID: `48e9307f-858c-4b3e-ba94-80431d08f8d4`,
+			VersionID: `cb0f07b7-bbee-418d-9e96-ec6f11523862`,
 		}
 	}
 
