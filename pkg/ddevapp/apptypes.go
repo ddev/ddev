@@ -237,6 +237,7 @@ func init() {
 			importFilesAction:    wordpressImportFilesAction,
 		},
 	}
+	appTypeMatrix[nodeps.AppTypeDrupal] = appTypeMatrix[nodeps.AppTypeDrupalLatestStable]
 }
 
 // CreateSettingsFile creates the settings file (like settings.php) for the

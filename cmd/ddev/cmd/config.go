@@ -418,11 +418,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.ComposerRoot = ""
 	}
 
-	// "drupal" is an alias for "latest stable drupal"
-	if projectTypeArg == nodeps.AppTypeDrupal {
-		projectTypeArg = nodeps.AppTypeDrupalLatestStable
-	}
-
 	if projectTypeArg != "" && !ddevapp.IsValidAppType(projectTypeArg) {
 		validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 		util.Failed("Apptype must be one of %s", validAppTypes)

@@ -123,7 +123,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	// Make "drupal" an alias to latest modern drupal version
 	if app.Type == nodeps.AppTypeDrupal {
-		app.Type = nodeps.AppTypeDrupal11
+		app.Type = nodeps.AppTypeDrupalLatestStable
 	}
 
 	// Upgrade any pre-v1.19.0 config that has mariadb_version or mysql_version
