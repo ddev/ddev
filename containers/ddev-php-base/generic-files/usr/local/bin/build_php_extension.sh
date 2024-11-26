@@ -83,3 +83,64 @@ echo "Some extensions have more files than ${EXTENSION_FILE} and /etc/php/${PHP_
 echo "Check which files should be in php${PHP_VERSION}-${EXTENSION_NAME}: 'dpkg-query -L php${PHP_DEFAULT_VERSION}-${EXTENSION_NAME}'"
 echo "If the extension needs to be enabled, add: 'RUN phpenmod -v ${PHP_VERSION} ${EXTENSION_NAME}'"
 exit 0
+
+# Examples:
+#
+# -------------
+# Install php8.4-apcu:
+# To understand what files you need in "COPY --from", use "dpkg-query -L php8.3-apcu"
+# -------------
+# FROM base AS ddev-php-extension-build
+# ...
+# RUN /usr/local/bin/build_php_extension.sh "php8.4" "apcu" "latest" "/usr/lib/php/20240924/apcu.so"
+# ...
+# FROM base AS ddev-php-base
+# ...
+# COPY --from=ddev-php-extension-build /usr/lib/php/20240924/apcu.so /usr/lib/php/20240924/apcu.so
+# COPY --from=ddev-php-extension-build /usr/include/php/20240924/ext/apcu /usr/include/php/20240924/ext/apcu
+# RUN cp /etc/php/8.3/mods-available/apcu.ini /etc/php/8.4/mods-available/apcu.ini
+# RUN phpenmod -v 8.4 apcu
+# ...
+#
+# -------------
+# Install php8.4-memcached:
+# To understand what files you need in "COPY --from", use "dpkg-query -L php8.3-memcached"
+# -------------
+# FROM base AS ddev-php-extension-build
+# ...
+# RUN /usr/local/bin/build_php_extension.sh "php8.4" "memcached" "latest" "/usr/lib/php/20240924/memcached.so" "libmemcached-dev zlib1g-dev libssl-dev"
+# ...
+# FROM base AS ddev-php-base
+# ...
+# COPY --from=ddev-php-extension-build /usr/lib/php/20240924/memcached.so /usr/lib/php/20240924/memcached.so
+# RUN cp /etc/php/8.3/mods-available/memcached.ini /etc/php/8.4/mods-available/memcached.ini
+# RUN phpenmod -v 8.4 memcached
+# ...
+#
+# -------------
+# Install php8.4-redis:
+# To understand what files you need in "COPY --from", use "dpkg-query -L php8.3-redis"
+# -------------
+# FROM base AS ddev-php-extension-build
+# ...
+# RUN /usr/local/bin/build_php_extension.sh "php8.4" "redis" "latest" "/usr/lib/php/20240924/redis.so"
+# ...
+# FROM base AS ddev-php-base
+# ...
+# COPY --from=ddev-php-extension-build /usr/lib/php/20240924/redis.so /usr/lib/php/20240924/redis.so
+# RUN cp /etc/php/8.3/mods-available/redis.ini /etc/php/8.4/mods-available/redis.ini
+# RUN phpenmod -v 8.4 redis
+# ...
+#
+# -------------
+# Install php8.4-xdebug (3.4.0beta1 comes from https://pecl.php.net/package/xdebug):
+# To understand what files you need in "COPY --from", use "dpkg-query -L php8.3-xdebug"
+# -------------
+# FROM base AS ddev-php-extension-build
+# ...
+# RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "3.4.0beta1" "/usr/lib/php/20240924/xdebug.so"
+# ...
+# FROM base AS ddev-php-base
+# ...
+# COPY --from=ddev-php-extension-build /usr/lib/php/20240924/xdebug.so /usr/lib/php/20240924/xdebug.so
+# ...
