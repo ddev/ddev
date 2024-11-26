@@ -26,7 +26,7 @@ Another example: you could exclude memory profiling so there are fewer columns t
 
 XHGui is a graphical interface for XHProf profiling data that can store the results in MongoDB or PDO database.
 
-XHGui is a available via the official ddev-xhgui addon. See <https://github.com/ddev/ddev-xhgui> for the latest information.
+XHGui is a available via the official ddev-xhgui add-on. See <https://github.com/ddev/ddev-xhgui> for the latest information.
 
 ## Information Links
 

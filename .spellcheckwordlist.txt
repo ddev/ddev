@@ -711,6 +711,7 @@ xdebug's
 xtrabackup
 xeyes
 xhprof
+xhgui
 xz'd
 yaml
 yml
