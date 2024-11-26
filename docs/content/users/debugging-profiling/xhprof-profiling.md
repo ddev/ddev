@@ -22,6 +22,12 @@ For example, you may want to add a link to the profile run to the bottom of the 
 
 Another example: you could exclude memory profiling so there are fewer columns to study. Change `xhprof_enable(XHPROF_FLAGS_MEMORY);` to `xhprof_enable();` in `.ddev/xhprof/xhprof_prepend.php` and remove the `#ddev-generated` at the top of the file. See the docs on [xhprof_enable()](https://www.php.net/manual/en/function.xhprof-enable.php).
 
+## XHGui
+
+XHGui is a graphical interface for XHProf profiling data that can store the results in MongoDB or PDO database.
+
+XHGui is a available via the official ddev-xhgui addon. See <https://github.com/ddev/ddev-xhgui> for the latest information.
+
 ## Information Links
 
 * [php.net xhprof](https://www.php.net/manual/en/book.xhprof.php)
