@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-if [ "$#" -ne 4 ] && [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
+if [ "$#" -lt 4 ] || [ "$#" -gt 6 ]; then
   echo "Usage: $0 <PHP_VERSION> <EXTENSION_NAME> <EXTENSION_VERSION> <EXTENSION_FILE> [<BUILD_PACKAGES>] [<CONFIGURE_OPTIONS>]"
   exit 1
 fi
