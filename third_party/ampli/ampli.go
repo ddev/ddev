@@ -6,13 +6,13 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 8
+// Tracking Plan Version: 9
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/v1.24-updates/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/v1.24-updates/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
 //
 
 package ampli
@@ -309,23 +309,11 @@ func (b *commandBuilder) Build() CommandEvent {
 
 var Project = struct {
 	Builder func() interface {
-		AddOns(addOns []string) interface {
-			Containers(containers []string) interface {
-				ContainersOmitted(containersOmitted []string) interface {
-					FailOnHookFail(failOnHookFail bool) interface {
-						Id(id string) interface {
-							NodejsVersion(nodejsVersion string) interface {
-								PerformanceMode(performanceMode string) interface {
-									PhpVersion(phpVersion string) interface {
-										ProjectType(projectType string) interface {
-											RouterDisabled(routerDisabled bool) interface {
-												WebserverType(webserverType string) ProjectBuilder
-											}
-										}
-									}
-								}
-							}
-						}
+		Id(id string) interface {
+			PerformanceMode(performanceMode string) interface {
+				PhpVersion(phpVersion string) interface {
+					ProjectType(projectType string) interface {
+						WebserverType(webserverType string) ProjectBuilder
 					}
 				}
 			}
@@ -333,23 +321,11 @@ var Project = struct {
 	}
 }{
 	Builder: func() interface {
-		AddOns(addOns []string) interface {
-			Containers(containers []string) interface {
-				ContainersOmitted(containersOmitted []string) interface {
-					FailOnHookFail(failOnHookFail bool) interface {
-						Id(id string) interface {
-							NodejsVersion(nodejsVersion string) interface {
-								PerformanceMode(performanceMode string) interface {
-									PhpVersion(phpVersion string) interface {
-										ProjectType(projectType string) interface {
-											RouterDisabled(routerDisabled bool) interface {
-												WebserverType(webserverType string) ProjectBuilder
-											}
-										}
-									}
-								}
-							}
-						}
+		Id(id string) interface {
+			PerformanceMode(performanceMode string) interface {
+				PhpVersion(phpVersion string) interface {
+					ProjectType(projectType string) interface {
+						WebserverType(webserverType string) ProjectBuilder
 					}
 				}
 			}
@@ -375,15 +351,21 @@ func (e projectEvent) project() {
 
 type ProjectBuilder interface {
 	Build() ProjectEvent
+	AddOns(addOns []string) ProjectBuilder
 	BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder
+	Containers(containers []string) ProjectBuilder
+	ContainersOmitted(containersOmitted []string) ProjectBuilder
 	CorepackEnable(corepackEnable bool) ProjectBuilder
 	DatabaseType(databaseType string) ProjectBuilder
 	DatabaseVersion(databaseVersion string) ProjectBuilder
 	DbImageExtraPackages(dbImageExtraPackages []string) ProjectBuilder
 	DdevVersionConstraint(ddevVersionConstraint string) ProjectBuilder
 	DisableSettingsManagement(disableSettingsManagement bool) ProjectBuilder
+	FailOnHookFail(failOnHookFail bool) ProjectBuilder
 	NoProjectMount(noProjectMount bool) ProjectBuilder
+	NodejsVersion(nodejsVersion string) ProjectBuilder
 	Router(router string) ProjectBuilder
+	RouterDisabled(routerDisabled bool) ProjectBuilder
 	WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder
 }
 
@@ -391,107 +373,11 @@ type projectBuilder struct {
 	properties map[string]interface{}
 }
 
-func (b *projectBuilder) AddOns(addOns []string) interface {
-	Containers(containers []string) interface {
-		ContainersOmitted(containersOmitted []string) interface {
-			FailOnHookFail(failOnHookFail bool) interface {
-				Id(id string) interface {
-					NodejsVersion(nodejsVersion string) interface {
-						PerformanceMode(performanceMode string) interface {
-							PhpVersion(phpVersion string) interface {
-								ProjectType(projectType string) interface {
-									RouterDisabled(routerDisabled bool) interface {
-										WebserverType(webserverType string) ProjectBuilder
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Add-ons`] = addOns
-
-	return b
-}
-
-func (b *projectBuilder) Containers(containers []string) interface {
-	ContainersOmitted(containersOmitted []string) interface {
-		FailOnHookFail(failOnHookFail bool) interface {
-			Id(id string) interface {
-				NodejsVersion(nodejsVersion string) interface {
-					PerformanceMode(performanceMode string) interface {
-						PhpVersion(phpVersion string) interface {
-							ProjectType(projectType string) interface {
-								RouterDisabled(routerDisabled bool) interface {
-									WebserverType(webserverType string) ProjectBuilder
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Containers`] = containers
-
-	return b
-}
-
-func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface {
-	FailOnHookFail(failOnHookFail bool) interface {
-		Id(id string) interface {
-			NodejsVersion(nodejsVersion string) interface {
-				PerformanceMode(performanceMode string) interface {
-					PhpVersion(phpVersion string) interface {
-						ProjectType(projectType string) interface {
-							RouterDisabled(routerDisabled bool) interface {
-								WebserverType(webserverType string) ProjectBuilder
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Containers Omitted`] = containersOmitted
-
-	return b
-}
-
-func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
-	Id(id string) interface {
-		NodejsVersion(nodejsVersion string) interface {
-			PerformanceMode(performanceMode string) interface {
-				PhpVersion(phpVersion string) interface {
-					ProjectType(projectType string) interface {
-						RouterDisabled(routerDisabled bool) interface {
-							WebserverType(webserverType string) ProjectBuilder
-						}
-					}
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Fail On Hook Fail`] = failOnHookFail
-
-	return b
-}
-
 func (b *projectBuilder) Id(id string) interface {
-	NodejsVersion(nodejsVersion string) interface {
-		PerformanceMode(performanceMode string) interface {
-			PhpVersion(phpVersion string) interface {
-				ProjectType(projectType string) interface {
-					RouterDisabled(routerDisabled bool) interface {
-						WebserverType(webserverType string) ProjectBuilder
-					}
-				}
+	PerformanceMode(performanceMode string) interface {
+		PhpVersion(phpVersion string) interface {
+			ProjectType(projectType string) interface {
+				WebserverType(webserverType string) ProjectBuilder
 			}
 		}
 	}
@@ -501,28 +387,10 @@ func (b *projectBuilder) Id(id string) interface {
 	return b
 }
 
-func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
-	PerformanceMode(performanceMode string) interface {
-		PhpVersion(phpVersion string) interface {
-			ProjectType(projectType string) interface {
-				RouterDisabled(routerDisabled bool) interface {
-					WebserverType(webserverType string) ProjectBuilder
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Nodejs Version`] = nodejsVersion
-
-	return b
-}
-
 func (b *projectBuilder) PerformanceMode(performanceMode string) interface {
 	PhpVersion(phpVersion string) interface {
 		ProjectType(projectType string) interface {
-			RouterDisabled(routerDisabled bool) interface {
-				WebserverType(webserverType string) ProjectBuilder
-			}
+			WebserverType(webserverType string) ProjectBuilder
 		}
 	}
 } {
@@ -533,9 +401,7 @@ func (b *projectBuilder) PerformanceMode(performanceMode string) interface {
 
 func (b *projectBuilder) PhpVersion(phpVersion string) interface {
 	ProjectType(projectType string) interface {
-		RouterDisabled(routerDisabled bool) interface {
-			WebserverType(webserverType string) ProjectBuilder
-		}
+		WebserverType(webserverType string) ProjectBuilder
 	}
 } {
 	b.properties[`PHP Version`] = phpVersion
@@ -544,19 +410,9 @@ func (b *projectBuilder) PhpVersion(phpVersion string) interface {
 }
 
 func (b *projectBuilder) ProjectType(projectType string) interface {
-	RouterDisabled(routerDisabled bool) interface {
-		WebserverType(webserverType string) ProjectBuilder
-	}
-} {
-	b.properties[`Project Type`] = projectType
-
-	return b
-}
-
-func (b *projectBuilder) RouterDisabled(routerDisabled bool) interface {
 	WebserverType(webserverType string) ProjectBuilder
 } {
-	b.properties[`Router Disabled`] = routerDisabled
+	b.properties[`Project Type`] = projectType
 
 	return b
 }
@@ -567,8 +423,26 @@ func (b *projectBuilder) WebserverType(webserverType string) ProjectBuilder {
 	return b
 }
 
+func (b *projectBuilder) AddOns(addOns []string) ProjectBuilder {
+	b.properties[`Add-ons`] = addOns
+
+	return b
+}
+
 func (b *projectBuilder) BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder {
 	b.properties[`Bind All Interfaces`] = bindAllInterfaces
+
+	return b
+}
+
+func (b *projectBuilder) Containers(containers []string) ProjectBuilder {
+	b.properties[`Containers`] = containers
+
+	return b
+}
+
+func (b *projectBuilder) ContainersOmitted(containersOmitted []string) ProjectBuilder {
+	b.properties[`Containers Omitted`] = containersOmitted
 
 	return b
 }
@@ -609,14 +483,32 @@ func (b *projectBuilder) DisableSettingsManagement(disableSettingsManagement boo
 	return b
 }
 
+func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) ProjectBuilder {
+	b.properties[`Fail On Hook Fail`] = failOnHookFail
+
+	return b
+}
+
 func (b *projectBuilder) NoProjectMount(noProjectMount bool) ProjectBuilder {
 	b.properties[`No Project Mount`] = noProjectMount
 
 	return b
 }
 
+func (b *projectBuilder) NodejsVersion(nodejsVersion string) ProjectBuilder {
+	b.properties[`Nodejs Version`] = nodejsVersion
+
+	return b
+}
+
 func (b *projectBuilder) Router(router string) ProjectBuilder {
 	b.properties[`Router`] = router
+
+	return b
+}
+
+func (b *projectBuilder) RouterDisabled(routerDisabled bool) ProjectBuilder {
+	b.properties[`Router Disabled`] = routerDisabled
 
 	return b
 }
@@ -668,10 +560,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `v1.24-updates`,
+			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `8`,
-			VersionID: `cb0f07b7-bbee-418d-9e96-ec6f11523862`,
+			Version:   `9`,
+			VersionID: `0672776d-9124-4f21-8b4e-5a4f90ea8244`,
 		}
 	}
 
