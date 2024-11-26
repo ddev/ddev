@@ -67,21 +67,28 @@ brew link --force ddev
 
 ### Installing a Downloaded Binary in the `$PATH`
 
-Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. `echo $PATH` and `which ddev` are valuable commands for debugging. Since not every distro has `~/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
+Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. `echo $PATH` and `which ddev` are valuable commands for debugging. Since not every distro has `~/bin` in `$PATH`, you can create the folder and add it to your path.
 
+Add `~/bin` to your path, by adding this in your `~/.bashrc` file:
 ```
-mkdir -p ~/bin
 export PATH="~/bin:$PATH"
 ```
+Create the `~/bin` folder:
+```
+mkdir ~/bin
+```
+Close and reopen your terminal, and verify that it worked with `echo $PATH`.
 
-Next, unzip the ZIP file you downloaded, make it executable, and move it to a folder in your path. Check with `echo $PATH`:
+Next, download the executable file inside the `~/bin` folder, unzip it, and make it executable:
 
 ```
-unzip ddev.zip
-chmod +x ddev && mv ddev ~/bin
+cd ~/bin
+wget [LINK TO EXECUTABLE]
+unzip [EXECUTABLE FILE]
+chmod +x ddev
 ```
 
-Now, close and reopen your terminal, and verify the replacement worked by running `ddev version`. The output should be something like `DDEV version v1.22.3-39-gfbb878843`, instead of the regular `DDEV version v1.22.3`.
+Verify the replacement worked by running `ddev version`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `DDEV version v1.23.5`.
 
 You need to run `ddev poweroff` and `ddev start` to download the Docker images that it needs.
 
