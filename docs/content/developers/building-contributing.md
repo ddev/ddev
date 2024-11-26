@@ -53,8 +53,10 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
 
     Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`.
 
-    !!!tip "macOS and Unsigned Binaries"
-    macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
+    You need to run `ddev poweroff` and `ddev start` to download the Docker images that it needs.
+
+    !!!warning "macOS and Unsigned Binaries"
+        macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
 
         ```bash
         xattr -r -d com.apple.quarantine /usr/local/bin/ddev
