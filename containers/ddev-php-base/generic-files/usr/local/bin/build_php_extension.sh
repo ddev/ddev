@@ -135,6 +135,9 @@ exit 0
 # -------------
 # Install php8.4-xdebug (3.4.0beta1 comes from https://pecl.php.net/package/xdebug):
 # To understand what files you need in "COPY --from", use "dpkg-query -L php8.3-xdebug"
+# When a new PHP version is released, Xdebug may show "PHP Warning: JIT is incompatible with third party extensions"
+# Add "opcache.jit=disable" to xdebug.ini to hide this warning
+# See https://bugs.xdebug.org/view.php?id=2293
 # -------------
 # FROM base AS ddev-php-extension-build
 # ...
