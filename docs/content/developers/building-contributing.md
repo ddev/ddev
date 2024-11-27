@@ -80,7 +80,8 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
     ```bash
     mkdir ~/bin
     echo 'export PATH="$HOME/bin:$PATH"' >>~/.bashrc
-    # Close and reopen your terminal, and verify that it worked with:
+    source ~/.bashrc
+    # Verify that `~/bin` was added to your $PATH
     echo $PATH
     ```
 
