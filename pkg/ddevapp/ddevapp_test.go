@@ -2485,6 +2485,11 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	if dockerutil.IsLima() {
 		time.Sleep(time.Second * 1)
 	}
+	// Rancher Desktop uses sshfs, which is the slowest possible
+	if dockerutil.IsRancherDesktop() {
+		time.Sleep(time.Second * 20)
+	}
+
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: "cat " + fileCreatedOnHost,
 	})
