@@ -2476,12 +2476,13 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, textExists, "file on host does not contain text '%s'", baseCreatedOnHostText)
 
+	// For most project types the MutagenSyncFlush is superfluous because
+	// the upload_dirs directory here is bind-mounted
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
-	// 2024-11-24: It seems that Lima/Colima the mutagen sync has not completed if we don't wait a second.
-	// Following this up with mutagen maintainer. Maybe MutagenSyncFlush isn't actually synchronous.
-	if dockerutil.IsLima() || dockerutil.IsColima() {
+	// 2024-11-27: It seems that Lima the bind mount isn't exactly synchronous.
+	if dockerutil.IsLima() {
 		time.Sleep(time.Second * 1)
 	}
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -2503,6 +2504,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	//require.NoError(t, err)
 	//t.Logf("fileCreatedOnHost after addition of in-container content before mutagen sync='%s'", out)
 
+	// For most project types the MutagenSyncFlush is superfluous because
+	// the upload_dirs directory here is bind-mounted
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
