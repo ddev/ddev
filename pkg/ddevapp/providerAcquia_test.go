@@ -59,7 +59,7 @@ func TestAcquiaPull(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a Drupal 11 codebase (test CMS 12)
+	// Use a Drupal 11 codebase (test CMS 16)
 	drupalCode := FullTestSites[16]
 	drupalCode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())

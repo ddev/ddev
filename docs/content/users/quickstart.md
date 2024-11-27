@@ -207,7 +207,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ddev launch
     # or automatically log in with
     ddev launch $(ddev drush uli)
-    ````
+    ```
 
 === "Drupal 6/7"
 
