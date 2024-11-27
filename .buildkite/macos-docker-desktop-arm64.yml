@@ -3,6 +3,8 @@
 # Runs on master and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "docker-desktop=true"

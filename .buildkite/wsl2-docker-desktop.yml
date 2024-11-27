@@ -1,9 +1,10 @@
 # WSL2 using Docker Desktop
 # See https://buildkite.com/ddev/wsl2-docker-desktop/settings/repository
-# Runs on master only because DD is pretty flaky, so we can't keep up with
-# restarts on PRs
+# Runs on master and PRs, not including forked PRs
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=wsl2"
       - "architecture=amd64"

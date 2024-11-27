@@ -1,8 +1,10 @@
- # macOS Lima on arm64 with VZ/Virtiofs
- # Experimental, not yet enabled
- # See https://buildkite.com/ddev/macos-lima/settings/repository
+# macOS Lima on arm64 with VZ/Virtiofs
+# See https://buildkite.com/ddev/macos-lima/settings/repository
+# Runs on master and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=macos"
       - "lima=true"
