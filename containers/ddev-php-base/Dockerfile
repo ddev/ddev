@@ -54,6 +54,8 @@ SHELL ["/bin/bash", "-c"]
 ### See https://github.com/ddev/ddev/issues/6159
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
+# TODO: php8.4-xdebug installed with PECL
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "3.4.0beta1" "/usr/lib/php/20240924/xdebug.so"
 #END ddev-php-extension-build
 
 ### ---------------------------ddev-php-base--------------------------------------
@@ -116,6 +118,8 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
 COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
 COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
+# TODO: php8.4-xdebug installed with PECL
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/xdebug.so /usr/lib/php/20240924/xdebug.so
 #END ddev-php-extension-build
 RUN phpdismod xhprof
 RUN apt-get -qq autoremove -y
