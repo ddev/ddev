@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -17,6 +18,8 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
+
+var composerDirectoryArg = ""
 
 // ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
@@ -50,7 +53,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		if status != ddevapp.SiteRunning {
 			err = app.Start()
 			if err != nil {
-				util.Failed("failed to start app %s to run create-project: %v", app.Name, err)
+				util.Failed("Failed to start app %s to run create-project: %v", app.Name, err)
 			}
 		}
 
@@ -61,67 +64,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to create composerRoot: %v", err)
 		}
 
-		appRoot := app.GetAbsAppRoot(false)
-		skipDirs := []string{".ddev", ".git", ".tarballs"}
-		composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
-		err = filepath.Walk(appRoot,
-			func(walkPath string, walkInfo os.FileInfo, err error) error {
-				if walkPath == appRoot {
-					return nil
-				}
-
-				checkPath := app.GetRelativeDirectory(walkPath)
-
-				if walkInfo.IsDir() && slices.Contains(skipDirs, checkPath) {
-					return filepath.SkipDir
-				}
-				if !slices.Contains(composerCreateAllowedPaths, checkPath) {
-					return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
-				}
-				if err != nil {
-					return err
-				}
-				return nil
-			})
-
-		if err != nil {
-			util.Failed("Failed to create project: %v", err)
-		}
-
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
-
-		// Function to check if a Composer option is valid for a given command
-		isValidComposerOption := func(command, option string) bool {
-			// All arguments are valid for "create-project" and not valid for other commands.
-			if !strings.HasPrefix(option, "-") {
-				return command == "create-project"
-			}
-			// Try each option with --dry-run to see if it is valid.
-			validateCmd := []string{"composer", command, option, "--dry-run"}
-			userOutFunc := util.CaptureUserOut()
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Dir:     app.GetComposerRoot(true, false),
-				RawCmd:  validateCmd,
-			})
-			out := userOutFunc()
-			if err == nil {
-				return true
-			}
-			// If it's an error for the "--dry-run" we use in validateCmd, then the option is valid.
-			if option != "--dry-run" && strings.Contains(out, `"--dry-run" option does not exist`) {
-				return true
-			}
-			// We only care about the "option does not exist" error for "create-project",
-			// and if there are other errors, the user should see them.
-			if command == "create-project" {
-				return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
-			}
-			// The option is not valid for other commands on any error.
-			return false
-		}
 
 		// Add some args to avoid troubles while cloning the project.
 		// We add the three options to "composer create-project": --no-plugins, --no-scripts, --no-install
@@ -129,7 +74,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		var createArgs []string
 
 		for _, arg := range args {
-			if isValidComposerOption("create-project", arg) {
+			if isValidComposerOption(app, "create-project", arg) {
 				createArgs = append(createArgs, arg)
 			}
 		}
@@ -163,7 +108,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			"create-project",
 		}
 		composerCmd = append(composerCmd, createArgs...)
-		composerCmd = append(composerCmd, containerInstallPath)
+		composerCmd = appendAllArgsAtTheEnd(composerCmd, containerInstallPath, app)
+
+		checkForComposerCreateAllowedPaths(app)
 
 		output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -174,7 +121,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		})
 
 		if err != nil {
-			util.Failed("failed to create project: %v\nstderr=%v", err, stderr)
+			util.Failed("Failed to create project: %v\nstderr=%v", err, stderr)
 		}
 
 		if len(stdout) > 0 {
@@ -203,7 +150,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		})
 
 		if err != nil {
-			util.Failed("failed to create project: %v", err)
+			util.Failed("Failed to create project: %v", err)
 		}
 
 		// Make sure composer.json is here with Mutagen enabled
@@ -212,7 +159,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to flush Mutagen: %v", err)
 		}
 
-		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
 		var validRunScriptArgs []string
 
 		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
@@ -223,9 +170,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				"post-root-package-install",
 			}
 
-			for _, validCreateArg := range validCreateArgs {
-				if isValidComposerOption("run-script", validCreateArg) {
+			for i, validCreateArg := range validCreateArgs {
+				if isValidComposerOption(app, "run-script", validCreateArg) {
 					validRunScriptArgs = append(validRunScriptArgs, validCreateArg)
+				} else if strings.HasPrefix(validCreateArg, "-") && i+1 < len(validCreateArgs) && !strings.HasPrefix(validCreateArgs[i+1], "-") {
+					// If this is an option with a value, add it.
+					if isValidComposerOption(app, "run-script", validCreateArg+" "+validCreateArgs[i+1]) {
+						validRunScriptArgs = append(validRunScriptArgs, validCreateArg, validCreateArgs[i+1])
+					}
 				}
 			}
 
@@ -235,7 +187,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Dir:     app.GetComposerRoot(true, false),
+				Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
@@ -253,7 +205,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// and also restart mutagen
 		err = app.Restart()
 		if err != nil {
-			util.Warning("failed to restart project after composer create: %v", err)
+			util.Warning("Failed to restart project after composer create: %v", err)
 		}
 
 		// If --no-install was not provided by the user, call composer install
@@ -264,9 +216,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				"install",
 			}
 
-			for _, validCreateArg := range validCreateArgs {
-				if isValidComposerOption("install", validCreateArg) {
+			for i, validCreateArg := range validCreateArgs {
+				if isValidComposerOption(app, "install", validCreateArg) {
 					composerCmd = append(composerCmd, validCreateArg)
+				} else if strings.HasPrefix(validCreateArg, "-") && i+1 < len(validCreateArgs) && !strings.HasPrefix(validCreateArgs[i+1], "-") {
+					// If this is an option with a value, add it.
+					if isValidComposerOption(app, "install", validCreateArg+" "+validCreateArgs[i+1]) {
+						composerCmd = append(composerCmd, validCreateArg, validCreateArgs[i+1])
+					}
 				}
 			}
 
@@ -276,12 +233,12 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				RawCmd:  composerCmd,
-				Dir:     app.GetComposerRoot(true, false),
+				Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
 
 			if err != nil {
-				util.Failed("failed to install project: %v\nstderr=%v", err, stderr)
+				util.Failed("Failed to install project: %v\nstderr=%v", err, stderr)
 			}
 
 			if len(stdout) > 0 {
@@ -294,7 +251,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Reload composer.json if it has changed in the meantime.
-		composerManifest, _ = composer.NewManifest(path.Join(composerRoot, "composer.json"))
+		composerManifest, _ = composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
 
 		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
 			// Try to run post-create-project-cmd.
@@ -306,9 +263,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 			// If the flags for "run-script" were already validated, don't validate them again.
 			if validRunScriptArgs == nil {
-				for _, validCreateArg := range validCreateArgs {
-					if isValidComposerOption("run-script", validCreateArg) {
+				for i, validCreateArg := range validCreateArgs {
+					if isValidComposerOption(app, "run-script", validCreateArg) {
 						validRunScriptArgs = append(validRunScriptArgs, validCreateArg)
+					} else if strings.HasPrefix(validCreateArg, "-") && i+1 < len(validCreateArgs) && !strings.HasPrefix(validCreateArgs[i+1], "-") {
+						// If this is an option with a value, add it.
+						if isValidComposerOption(app, "run-script", validCreateArg+" "+validCreateArgs[i+1]) {
+							validRunScriptArgs = append(validRunScriptArgs, validCreateArg, validCreateArgs[i+1])
+						}
 					}
 				}
 			}
@@ -319,7 +281,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Dir:     app.GetComposerRoot(true, false),
+				Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
@@ -346,6 +308,154 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
 	},
+}
+
+// checkForComposerCreateAllowedPaths ensures that the project does not contain any paths that are not allowed to be present in the composer create command
+func checkForComposerCreateAllowedPaths(app *ddevapp.DdevApp) {
+	appRoot := app.GetAbsAppRoot(false)
+	composerRoot := filepath.Join(app.GetComposerRoot(false, false), composerDirectoryArg)
+	skipDirs := []string{".ddev", ".git", ".tarballs"}
+	composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
+	err := filepath.Walk(composerRoot,
+		func(walkPath string, walkInfo os.FileInfo, err error) error {
+			if walkPath == composerRoot {
+				return nil
+			}
+
+			checkPath := app.GetRelativeDirectory(walkPath)
+
+			if walkInfo.IsDir() && appRoot == composerRoot && slices.Contains(skipDirs, checkPath) {
+				return filepath.SkipDir
+			}
+			if !slices.Contains(composerCreateAllowedPaths, checkPath) {
+				return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(composerRoot, checkPath), composerCreateAllowedPaths)
+			}
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+	if err != nil {
+		util.Failed("Failed to create project: %v", err)
+	}
+}
+
+// appendAllArgsAtTheEnd appends all the arguments at the end of the "composer create-project"
+// This command also adjusts the directory properly (the second argument)
+func appendAllArgsAtTheEnd(args []string, containerInstallPath string, app *ddevapp.DdevApp) []string {
+	optionsWithValues := getListOfComposerOptionsThatCanHaveValues(app)
+	var composerArgs []string
+	// Start from the third argument, because the first two are "composer create-project"
+	for i := 2; i < len(args); i++ {
+		arg := args[i]
+		// Skip if this is an option
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		// Skip if this is a value for an option
+		if strings.HasPrefix(args[i-1], "-") && slices.Contains(optionsWithValues, args[i-1]) {
+			continue
+		}
+		// Add the second arg here, which is a directory
+		if len(composerArgs) == 1 {
+			appRoot := app.GetAbsAppRoot(false)
+			absComposerDirectory, err := filepath.Abs(arg)
+			if err != nil {
+				util.Failed("Failed to get absolute path for '%s': %v", arg, err)
+			}
+			if !strings.HasPrefix(absComposerDirectory, appRoot) {
+				util.Failed("Failed to create project: directory '%s' is outside the project root '%s'", absComposerDirectory, appRoot)
+			}
+			composerDirectoryArg = strings.TrimPrefix(absComposerDirectory, appRoot)
+			composerArgs = append(composerArgs, path.Join(containerInstallPath, composerDirectoryArg))
+		} else {
+			// Else add it without changes
+			composerArgs = append(composerArgs, arg)
+		}
+		// Set the arg to empty string, so we can filter it out
+		args[i] = ""
+	}
+	// If there was no directory argument, add one
+	if len(composerArgs) == 1 {
+		composerArgs = append(composerArgs, path.Join(containerInstallPath, composerDirectoryArg))
+	}
+	// Filter out the empty arguments
+	var filteredArgs []string
+	for _, arg := range args {
+		if arg != "" {
+			filteredArgs = append(filteredArgs, arg)
+		}
+	}
+	return append(filteredArgs, composerArgs...)
+}
+
+// getListOfComposerOptionsThatCanHaveValues returns slice of options that can have values in the "composer create-project"
+// This is needed to properly filter out arguments.
+func getListOfComposerOptionsThatCanHaveValues(app *ddevapp.DdevApp) []string {
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     app.GetComposerRoot(true, false),
+		RawCmd:  []string{"composer", "create-project", "--help"},
+	})
+	if err != nil {
+		return []string{}
+	}
+	// Search for lines like:
+	// -s, --stability=STABILITY
+	// --prefer-install=PREFER-INSTALL
+	re := regexp.MustCompile(`(?m)(?:(-\w), )?(--\w[\w-]*)=`)
+	// Use map to avoid duplicates
+	optionMap := make(map[string]struct{})
+	matches := re.FindAllStringSubmatch(stdout, -1)
+	for _, match := range matches {
+		if match[1] != "" {
+			// Add the short option if present
+			optionMap[match[1]] = struct{}{}
+		}
+		if match[2] != "" {
+			// Add the long option
+			optionMap[match[2]] = struct{}{}
+		}
+	}
+	// Convert the map to a slice
+	var options []string
+	for option := range optionMap {
+		options = append(options, option)
+	}
+	return options
+}
+
+// isValidComposerOption checks if a Composer option is valid for a given command
+func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) bool {
+	// All arguments are valid for "create-project" and not valid for other commands.
+	if !strings.HasPrefix(option, "-") {
+		return command == "create-project"
+	}
+	// Try each option with --dry-run to see if it is valid.
+	validateCmd := []string{"composer", command}
+	validateCmd = append(validateCmd, strings.Split(option, " ")...)
+	validateCmd = append(validateCmd, "--dry-run")
+	userOutFunc := util.CaptureUserOut()
+	_, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
+		RawCmd:  validateCmd,
+	})
+	out := userOutFunc()
+	if err == nil {
+		return true
+	}
+	// If it's an error for the "--dry-run" we use in validateCmd, then the option is valid.
+	if option != "--dry-run" && strings.Contains(out, `"--dry-run" option does not exist`) {
+		return true
+	}
+	// We only care about the "option does not exist" error for "create-project",
+	// and if there are other errors, the user should see them.
+	if command == "create-project" {
+		return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
+	}
+	// The option is not valid for other commands on any error.
+	return false
 }
 
 // ComposerCreateProjectCmd sends people to the right thing
