@@ -517,6 +517,39 @@ func (app *DdevApp) ValidateConfig() error {
 	// 	}
 	// }
 
+	usedNames := make(map[string]bool)
+	usedWebContainerPorts := make(map[int]bool)
+	usedHTTPAndHTTPSPorts := make(map[int]bool)
+	for _, extraPort := range app.WebExtraExposedPorts {
+		if usedNames[extraPort.Name] {
+			return fmt.Errorf("the %s project has a duplicate 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.Name)
+		}
+		usedNames[extraPort.Name] = true
+
+		if extraPort.HTTPPort == extraPort.HTTPSPort {
+			return fmt.Errorf("the %s project has the same 'http_port: %d' and 'https_port: %d' for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.HTTPPort, extraPort.HTTPSPort, extraPort.Name)
+		}
+
+		if extraPort.WebContainerPort == 0 || extraPort.HTTPPort == 0 || extraPort.HTTPSPort == 0 {
+			return fmt.Errorf("the %s project has an invalid empty port ('container_port: %d', 'http_port: %d', 'https_port: %d') for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.WebContainerPort, extraPort.HTTPPort, extraPort.HTTPSPort, extraPort.Name)
+		}
+
+		if usedWebContainerPorts[extraPort.WebContainerPort] {
+			return fmt.Errorf("the %s project has a duplicate 'container_port: %d' for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.WebContainerPort, extraPort.Name)
+		}
+		usedWebContainerPorts[extraPort.WebContainerPort] = true
+
+		if usedHTTPAndHTTPSPorts[extraPort.HTTPPort] {
+			return fmt.Errorf("the %s project has a duplicate 'http_port: %d' for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.HTTPPort, extraPort.Name)
+		}
+		usedHTTPAndHTTPSPorts[extraPort.HTTPPort] = true
+
+		if usedHTTPAndHTTPSPorts[extraPort.HTTPSPort] {
+			return fmt.Errorf("the %s project has a duplicate 'https_port: %d' for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.HTTPSPort, extraPort.Name)
+		}
+		usedHTTPAndHTTPSPorts[extraPort.HTTPSPort] = true
+	}
+
 	// Golang on Windows is not able to time.LoadLocation unless
 	// Go is installed... so skip validation on Windows
 	if runtime.GOOS != "windows" {

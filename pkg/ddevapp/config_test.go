@@ -557,9 +557,9 @@ func TestConfigValidate(t *testing.T) {
 			app.DdevVersionConstraint = tc.versionConstraint
 			err = app.ValidateConfig()
 			if tc.error == "" {
-				assert.NoError(err)
+				require.NoError(t, err)
 			} else {
-				assert.Error(err)
+				require.Error(t, err)
 				assert.Contains(err.Error(), tc.error)
 			}
 			app.DdevVersionConstraint = ""
@@ -569,80 +569,139 @@ func TestConfigValidate(t *testing.T) {
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
-	assert.Error(err)
+	require.Error(t, err)
 	assert.Contains(err.Error(), "not a valid project name")
 
 	app.Name = appName
 	app.Type = "potato"
 	err = app.ValidateConfig()
-	assert.Error(err)
+	require.Error(t, err)
 	assert.Contains(err.Error(), "invalid app type")
 
 	app.Type = appType
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
-	assert.Error(err)
+	require.Error(t, err)
 	assert.Contains(err.Error(), "unsupported PHP")
 
 	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = "server"
 	err = app.ValidateConfig()
-	assert.Error(err)
+	require.Error(t, err)
 	assert.Contains(err.Error(), "unsupported webserver type")
 
 	app.WebserverType = nodeps.WebserverDefault
 	app.AdditionalHostnames = []string{"good", "b@d"}
 	err = app.ValidateConfig()
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "invalid hostname")
-	}
+	require.Error(t, err)
+	assert.Contains(err.Error(), "invalid hostname")
 
 	app.AdditionalHostnames = []string{}
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
+		{Name: "foo", WebContainerPort: 4000, HTTPPort: 4000, HTTPSPort: 4001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "duplicate 'name: foo'")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 0, HTTPPort: 3000, HTTPSPort: 3001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "invalid empty port")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3000},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "same 'http_port: 3000' and 'https_port: 3000'")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
+		{Name: "bar", WebContainerPort: 3000, HTTPPort: 4000, HTTPSPort: 4001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "duplicate 'container_port: 3000'")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
+		{Name: "bar", WebContainerPort: 4000, HTTPPort: 3000, HTTPSPort: 4001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "duplicate 'http_port: 3000'")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
+		{Name: "bar", WebContainerPort: 4000, HTTPPort: 4000, HTTPSPort: 3001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "duplicate 'https_port: 3001'")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
+		{Name: "bar", WebContainerPort: 4000, HTTPPort: 3001, HTTPSPort: 4001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "duplicate 'http_port: 3001'")
+
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
+		{Name: "bar", WebContainerPort: 4000, HTTPPort: 4000, HTTPSPort: 3000},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "duplicate 'https_port: 3000'")
+
+	app.WebExtraExposedPorts = nil
 	app.AdditionalFQDNs = []string{"good.com", "b@d.com"}
 	err = app.ValidateConfig()
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "invalid hostname")
-	}
+	require.Error(t, err)
+	assert.Contains(err.Error(), "invalid hostname")
 
 	app.AdditionalFQDNs = []string{}
 	// Timezone validation isn't possible on Windows.
 	if runtime.GOOS != "windows" {
 		app.Timezone = "xxx"
 		err = app.ValidateConfig()
-		assert.Error(err)
+		require.Error(t, err)
 		app.Timezone = "America/Chicago"
 		err = app.ValidateConfig()
-		assert.NoError(err)
+		require.NoError(t, err)
 	}
 
 	// Make sure that wildcards work
 	app.AdditionalHostnames = []string{"x", "*.any"}
 	err = app.ValidateConfig()
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = app.WriteConfig()
-	assert.NoError(err)
+	require.NoError(t, err)
 	// This seems to completely fail on git-bash/Windows/mutagen. Hard to figure out why.
 	// Traditional Windows is not a very high priority
 	// This apparently started failing with Docker Desktop 4.19.0
 	// rfay 2023-05-02
 	if runtime.GOOS != "windows" {
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.MutagenSyncFlush()
-		assert.NoError(err)
+		require.NoError(t, err)
 		staticURI := site.Safe200URIWithExpectation.URI
 		_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI)
-		assert.NoError(err)
+		require.NoError(t, err)
 		_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI)
-		assert.NoError(err)
+		require.NoError(t, err)
 	}
 
 	// Make sure that a bare "*" in the additional_hostnames does *not* work
 	app.AdditionalHostnames = []string{"x", "*"}
 	err = app.ValidateConfig()
-	assert.Error(err)
+	require.Error(t, err)
 }
 
 // TestWriteConfig tests writing config values to file
