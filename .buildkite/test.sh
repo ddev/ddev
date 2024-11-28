@@ -7,6 +7,8 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 # GOTEST_SHORT=16 means drupal11
 export GOTEST_SHORT=16
+if [ ${OSTYPE:-unknown}  = "msys" ]; then export GOTEST_SHORT=true; fi
+
 export DDEV_SKIP_NODEJS_TEST=true
 
 export DOCKER_SCAN_SUGGEST=false
