@@ -10,9 +10,9 @@ This version history has been driven by what we hear from our wonderful communit
 
 - [x] Added PHP 8.4. PHP 8.3 is default for new projects
 - [x] NodeJS 22 becomes default
-- [x] Extensive support for matching `mysql`, `mariadb`, and `pq` clients so the client matches the server.
+- [x] Extensive support for matching `mysql`, `mariadb`, and `psql` clients so the client matches the server.
 - [x] MariaDB 11.4 LTS support
-- [x] Traditional Windows ARM64 (Windows Copilot) support
+- [x] Traditional Windows ARM64 support
 - [x] `ddev_version_constraint` option added for both `config.yaml` and Add-on `install.yaml`
 - [x] `ddev get` changed to `ddev add-on get`
 - [x] Traefik router is default, and supports hosting mode, with Let's Encrypt.
