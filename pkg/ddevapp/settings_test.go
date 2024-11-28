@@ -24,7 +24,8 @@ type settingsLocations struct {
 var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	nodeps.AppTypeDrupal:   {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal10: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal11: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
@@ -37,7 +38,7 @@ func TestWriteSettings(t *testing.T) {
 		nodeps.AppTypeBackdrop:  "settings.ddev.php",
 		nodeps.AppTypeDrupal6:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal7:   "sites/default/settings.ddev.php",
-		nodeps.AppTypeDrupal:    "sites/default/settings.ddev.php",
+		nodeps.AppTypeDrupal11:  "sites/default/settings.ddev.php",
 		nodeps.AppTypeWordPress: "wp-config-ddev.php",
 		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
@@ -292,7 +293,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 // different between two project names
 // Requires a drupal/backdrop project
 func TestDrupalBackdropConsistentHash(t *testing.T) {
-	projectTypes := []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal, nodeps.AppTypeBackdrop}
+	projectTypes := []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal11, nodeps.AppTypeBackdrop}
 	for _, projectType := range projectTypes {
 		// Make a spare directory for the first project
 		firstProjectDir := testcommon.CreateTmpDir(t.Name() + "-firstproject")

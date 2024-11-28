@@ -63,7 +63,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
 			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.zip",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal,
+			Type:                          nodeps.AppTypeDrupal8,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "Vegan chocolate and nut brownies"},
@@ -174,7 +174,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
 			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami.sql.zip",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal,
+			Type:                          nodeps.AppTypeDrupal9,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
@@ -233,7 +233,7 @@ var (
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal,
+			Type:                          nodeps.AppTypeDrupal10,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
@@ -295,12 +295,12 @@ var (
 		// 16: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
-			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.0.0.tar.gz",
-			ArchiveInternalExtractionPath: "test-drupal11-11.0.0/",
-			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.0.0/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.0.0/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.0.9.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.0.9/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.0.9/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.0.9/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeDrupal,
+			Type:                          nodeps.AppTypeDrupal11,
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
@@ -1366,7 +1366,7 @@ func TestDdevImportDB(t *testing.T) {
 			drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
 			assert.NoError(err)
 			assert.True(drupalHashSalt)
-		case nodeps.AppTypeDrupal:
+		case nodeps.AppTypeDrupal11:
 			settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
 			assert.NoError(err)
 			assert.True(settingsHashSalt)
@@ -2385,17 +2385,13 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Special installed sqlite3 test for drupal11.
-		if app.Type == nodeps.AppTypeDrupal {
-			drupalVersion, err := ddevapp.GetDrupalVersion(app)
-			if err == nil && drupalVersion == "11" {
-				stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-					Cmd: "sqlite3 --version | awk '{print $1}'",
-				})
-				require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
-				stdout = strings.Trim(stdout, "\r\n")
-				require.Equal(t, "3.45.1", stdout)
-			}
-		}
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: "sqlite3 --version | awk '{print $1}'",
+		})
+		require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
+		stdout = strings.Trim(stdout, "\r\n")
+		require.Equal(t, "3.45.1", stdout)
+
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -2409,7 +2405,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
 // and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
-	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
@@ -2417,110 +2412,119 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
 	})
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	// Not all the example projects have an upload dir, so create it in case
 	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
 
 	uploadDir := app.GetUploadDir()
-	assert.NotEmpty(uploadDir)
+	require.NotEmpty(t, uploadDir)
 
 	// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
 	// making it writeable on the host.
-	filename := fileutil.RandomFilenameBase()
 	dirname := fileutil.RandomFilenameBase()
 	// Use path.Join for items on th container (linux) and filepath.Join for items on the host.
-	inContainerDir := path.Join(uploadDir, dirname)
-	onHostDir := filepath.Join(app.Docroot, inContainerDir)
+	dirPathFromRoot := path.Join(app.Docroot, uploadDir, dirname)
 
-	// The container execution directory is dependent on the app type
-	switch app.Type {
-	case nodeps.AppTypeWordPress, nodeps.AppTypeTYPO3, nodeps.AppTypePHP:
-		inContainerDir = path.Join(app.Docroot, inContainerDir)
-	}
+	err = os.MkdirAll(dirPathFromRoot, 0775)
+	require.NoError(t, err)
 
-	inContainerRelativePath := path.Join(inContainerDir, filename)
-	onHostRelativePath := path.Join(onHostDir, filename)
-
-	err = os.MkdirAll(onHostDir, 0775)
-	assert.NoError(err)
+	baseCreatedOnHostText := "This content in the file was added on the host side\n"
+	extraAddedInContainerText := "This content in the file was added inside the container\n"
+	fileCreatedOnHost := path.Join(dirPathFromRoot, "file_created_on_host.txt")
 	// Create a file in the directory to make sure it syncs
-	f, err := os.OpenFile(filepath.Join(onHostDir, "junk.txt"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-	assert.NoError(err)
-	_ = f.Close()
+	f, err := os.OpenFile(filepath.FromSlash(fileCreatedOnHost), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+	require.NoError(t, err)
+	err = f.Close()
+	require.NoError(t, err)
 
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	_, _, createFileErr := app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "echo 'content created inside container\n' >" + inContainerRelativePath,
+	fileCreatedInContainer := path.Join(dirPathFromRoot, "file_created_in_container.txt")
+	command := fmt.Sprintf("echo 'content created inside container' >%s", fileCreatedInContainer)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: command,
 	})
-	assert.NoError(createFileErr)
+	require.NoError(t, err)
 
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	// Now try to append to the file on the host.
-	// os.OpenFile() for append here fails if the file does not already exist.
-	f, err = os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
-	assert.NoError(err)
-	_, err = f.WriteString("This addition to the file was added on the host side")
-	assert.NoError(err)
-	_ = f.Close()
+	// Test if the file created on host has showed up inside container
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "test -f " + fileCreatedOnHost,
+	})
+	require.NoError(t, err, "fileCreatedOnHost %s does not exist in container: %v", fileCreatedOnHost, err)
 
-	// Create a file on the host and see what the result is. Make sure we can not append/write to it in the container.
-	filename = fileutil.RandomFilenameBase()
-	dirname = fileutil.RandomFilenameBase()
-	inContainerDir = path.Join(uploadDir, dirname)
-	onHostDir = filepath.Join(app.Docroot, inContainerDir)
-	// The container execution directory is dependent on the app type
-	switch app.Type {
-	case nodeps.AppTypeWordPress, nodeps.AppTypeTYPO3, nodeps.AppTypePHP:
-		inContainerDir = path.Join(app.Docroot, inContainerDir)
+	// Now try to write to the file on the host.
+	// os.OpenFile() for append here must succeed.
+	f, err = os.OpenFile(filepath.FromSlash(fileCreatedOnHost), os.O_APPEND|os.O_WRONLY, 0660)
+	require.NoError(t, err)
+	_, err = f.WriteString(baseCreatedOnHostText)
+	require.NoError(t, err)
+	err = f.Close()
+	require.NoError(t, err)
+
+	textExists, err := fileutil.FgrepStringInFile(fileCreatedOnHost, baseCreatedOnHostText)
+	require.NoError(t, err)
+	require.True(t, textExists, "file on host does not contain text '%s'", baseCreatedOnHostText)
+
+	// For most project types the MutagenSyncFlush is superfluous because
+	// the upload_dirs directory here is bind-mounted
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+
+	// 2024-11-27: It seems that Lima the bind mount isn't exactly synchronous.
+	if dockerutil.IsLima() {
+		time.Sleep(time.Second * 1)
+	}
+	// Rancher Desktop uses sshfs, which is the slowest possible
+	if dockerutil.IsRancherDesktop() {
+		time.Sleep(time.Second * 20)
 	}
 
-	inContainerRelativePath = path.Join(inContainerDir, filename)
-	onHostRelativePath = filepath.Join(onHostDir, filename)
-
-	err = os.MkdirAll(onHostDir, 0775)
-	assert.NoError(err)
-
-	f, err = os.OpenFile(onHostRelativePath, os.O_CREATE|os.O_RDWR, 0660)
-	assert.NoError(err)
-	_, err = f.WriteString("This base content was inserted on the host side\n")
-	assert.NoError(err)
-	_ = f.Close()
-
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	// If the file exists, add to it. We don't want to add if it's not already there.
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi",
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat " + fileCreatedOnHost,
 	})
-	assert.NoError(err)
+	require.NoError(t, err)
+	t.Logf("Initial fileCreatedOnHost after mutagen sync='%s'", out)
+	require.Contains(t, out, baseCreatedOnHostText)
+
+	// Append text inside the container
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("echo '%s' >> %s", extraAddedInContainerText, fileCreatedOnHost),
+	})
+	require.NoError(t, err)
+
+	//out, _, err = app.Exec(&ddevapp.ExecOpts{
+	//	Cmd: "cat " + fileCreatedOnHost,
+	//})
+	//require.NoError(t, err)
+	//t.Logf("fileCreatedOnHost after addition of in-container content before mutagen sync='%s'", out)
+
+	// For most project types the MutagenSyncFlush is superfluous because
+	// the upload_dirs directory here is bind-mounted
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat " + fileCreatedOnHost,
+	})
+	require.NoError(t, err)
+	t.Logf("fileCreatedOnHost after addition of in-container content and mutagen sync='%s'", out)
+
 	// grep the file for both the content added on host and that added in container.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath,
+		Cmd: fmt.Sprintf(`grep "%s" %s && grep "%s" %s`, baseCreatedOnHostText, fileCreatedOnHost, extraAddedInContainerText, fileCreatedOnHost),
 	})
-	assert.NoError(err)
-
-	err = app.Stop(true, false)
-	assert.NoError(err)
+	require.NoError(t, err, "grep failed, actual content of file in container was '%s'", out)
 
 	runTime()
 }
@@ -2703,7 +2707,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeCraftCms:     {"files"},
 		nodeps.AppTypeDrupal6:      {"sites/default/files"},
 		nodeps.AppTypeDrupal7:      {"sites/default/files"},
-		nodeps.AppTypeDrupal:       {"sites/default/files"},
+		nodeps.AppTypeDrupal11:     {"sites/default/files"},
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
@@ -3326,10 +3330,10 @@ func TestHttpsRedirection(t *testing.T) {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
-	types := ddevapp.GetValidAppTypesWithoutAliases()
+	types := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range types {

@@ -209,16 +209,18 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Drupal commands should only be available for type drupal
-	app.Type = nodeps.AppTypeDrupal9
-	_ = app.WriteConfig()
-	_, _ = exec.RunHostCommand(DdevBin)
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	for _, c := range []string{"drush"} {
-		_, err = exec.RunHostCommand(DdevBin, "help", c)
+	// Drupal commands should be available for type drupal/backdrop projects
+	for _, drupalType := range []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal11, nodeps.AppTypeBackdrop} {
+		app.Type = drupalType
+		_ = app.WriteConfig()
+		_, _ = exec.RunHostCommand(DdevBin)
+		err = app.MutagenSyncFlush()
 		assert.NoError(err)
+
+		for _, c := range []string{"drush"} {
+			_, err = exec.RunHostCommand(DdevBin, "help", c)
+			assert.NoError(err)
+		}
 	}
 
 	// Laravel commands should only be available for type laravel

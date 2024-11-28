@@ -85,17 +85,21 @@ var ValidWebserverTypes = map[string]bool{
 	WebserverApacheFPM: true,
 }
 
+const AppTypeDrupalLatestStable = AppTypeDrupal11
+
 // App types
 const (
-	AppTypeNone         = ""
-	AppTypeBackdrop     = "backdrop"
-	AppTypeCakePHP      = "cakephp"
-	AppTypeCraftCms     = "craftcms"
-	AppTypeDrupal6      = "drupal6"
-	AppTypeDrupal7      = "drupal7"
-	AppTypeDrupal8      = "drupal8"
-	AppTypeDrupal9      = "drupal9"
-	AppTypeDrupal10     = "drupal10"
+	AppTypeNone     = ""
+	AppTypeBackdrop = "backdrop"
+	AppTypeCakePHP  = "cakephp"
+	AppTypeCraftCms = "craftcms"
+	AppTypeDrupal6  = "drupal6"
+	AppTypeDrupal7  = "drupal7"
+	AppTypeDrupal8  = "drupal8"
+	AppTypeDrupal9  = "drupal9"
+	AppTypeDrupal10 = "drupal10"
+	AppTypeDrupal11 = "drupal11"
+	// AppTypeDrupal is an alias for "most recent Drupal version"
 	AppTypeDrupal       = "drupal"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"

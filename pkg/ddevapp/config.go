@@ -121,6 +121,11 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		}
 	}
 
+	// Make "drupal" an alias to latest modern drupal version
+	if app.Type == nodeps.AppTypeDrupal {
+		app.Type = nodeps.AppTypeDrupalLatestStable
+	}
+
 	// Upgrade any pre-v1.19.0 config that has mariadb_version or mysql_version
 	if app.MariaDBVersion != "" {
 		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: app.MariaDBVersion}
@@ -1415,7 +1420,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	// If we found an application type set it and inform the user.
 	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
 
-	validAppTypes := strings.Join(GetValidAppTypesWithoutAliases(), ", ")
+	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
 	typePrompt := "Project Type [%s] (%s): "
 
 	defaultAppType := app.Type

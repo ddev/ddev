@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -22,9 +23,9 @@ func TestComposerCreateCmd(t *testing.T) {
 	origDir, err := os.Getwd()
 	require.NoError(t, err)
 
-	validAppTypes := ddevapp.GetValidAppTypesWithoutAliases()
+	validAppTypes := ddevapp.GetValidAppTypes()
 	if os.Getenv("GOTEST_SHORT") != "" {
-		validAppTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal}
+		validAppTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 	}
 
 	for _, docRoot := range []string{"", "doc-root"} {
@@ -49,7 +50,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				// Normally for Drupal the docroot would be web, and the composer root would be the
 				// project root (default). But here we're making sure we can use the docroot
 				// as the composer_root. Acquia sites often do this...
-				if projectType == nodeps.AppTypeDrupal {
+				if slices.Contains([]string{nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal8}, projectType) {
 					arguments = append(arguments, "--composer-root", docRoot)
 					composerDirOnHost = filepath.Join(tmpDir, docRoot)
 				}

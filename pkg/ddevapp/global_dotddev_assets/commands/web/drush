@@ -5,7 +5,7 @@
 ## Usage: drush [flags] [args]
 ## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
 ## Aliases: dr
-## ProjectTypes: drupal,drupal10,drupal9,drupal8,drupal7,backdrop
+## ProjectTypes: drupal,drupal11,drupal10,drupal9,drupal8,drupal7,backdrop
 ## ExecRaw: true
 
 if ! command -v drush >/dev/null; then

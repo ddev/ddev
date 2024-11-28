@@ -67,7 +67,7 @@ jobs:
       CGO_ENABLED: 0
       DDEV_NONINTERACTIVE: "true"
       DDEV_SKIP_NODEJS_TEST: "true"
-      GOTEST_SHORT: "12" # 12 is drupal10; means in TestFullSiteSetup we only use drupal10
+      GOTEST_SHORT: "16" # 16 is drupal11; means in TestFullSiteSetup we only use drupal11 by default
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
@@ -118,6 +118,12 @@ jobs:
         with:
           go-version: '>=1.21'
 
+      - name: Override environment variables for apache-fpm
+        if: ${{ matrix.apache-fpm }}
+        run: |
+          # GOTEST_SHORT=5 means use TYPO3 as the default codebase
+          echo "GOTEST_SHORT=5" >> $GITHUB_ENV
+
       - name: Override environment variables for push-pull-test-platforms
         run: |
           echo "MAKE_TARGET=test" >> $GITHUB_ENV
@@ -159,27 +165,27 @@ jobs:
           DDEV_UPSUN_API_TOKEN: "op://test-secrets/DDEV_UPSUN_API_TOKEN/credential"
         if: ${{ matrix.pull-push-test-platforms && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner) }}
 
-      - name: Override environment variables for plain nginx
+      - name: Override environment variables for plain nginx-fpm
+        if: ${{ matrix.webserver == 'nginx-fpm' }}
         run: |
           echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
           echo "TESTARGS=" >> $GITHUB_ENV
-        if: ${{ matrix.webserver == 'nginx-fpm' }}
 
       - name: Override environment variables for race detection
+        if: ${{ matrix.race-detection }}
         run: |
           echo "BUILDARGS=-race" >> $GITHUB_ENV
           echo "TESTARGS=-failfast -race" >> $GITHUB_ENV
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "DDEV_TEST_USE_MUTAGEN=true" >>$GITHUB_ENV
-        if: ${{ matrix.race-detection }}
 
       - run: echo "BUILDARGS=${BUILDARGS} TESTARGS=${TESTARGS} CGO_ENABLED=${CGO_ENABLED} DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
       - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: DDEV tests
         run: |

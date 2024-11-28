@@ -577,15 +577,15 @@ func TestConfigUpdate(t *testing.T) {
 	}{
 		"drupal11-composer": {
 			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
-			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHPDefault, Docroot: "web", CorepackEnable: true, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal11, PHPVersion: nodeps.PHPDefault, Docroot: "web", CorepackEnable: true, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
 		},
 		"drupal11-git": {
 			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
-			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "", CorepackEnable: true, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal11, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: true, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
 		},
 		"drupal10-composer": {
 			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
-			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal, PHPVersion: nodeps.PHP83, Docroot: "web", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
+			configExpectation: ddevapp.DdevApp{Type: nodeps.AppTypeDrupal10, PHPVersion: nodeps.PHPDefault, Docroot: "web", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
 		},
 		"craftcms": {
 			baseExpectation:   ddevapp.DdevApp{Type: nodeps.AppTypePHP, PHPVersion: nodeps.PHPDefault, Docroot: "", CorepackEnable: false, Database: ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}},
@@ -628,7 +628,6 @@ func TestConfigUpdate(t *testing.T) {
 
 			// Updated values should match
 			checkValues(t, testName, expectation.configExpectation, app)
-
 		})
 	}
 }
@@ -704,4 +703,81 @@ func TestConfigGitignore(t *testing.T) {
 	assert.NoError(err)
 	_, err = exec.RunHostCommand("bash", "-c", "git status | grep 'Untracked files'")
 	assert.Error(err, "Untracked files were found where we didn't expect them: %s", statusOut)
+}
+
+// TestDrupalAppTypeUsage validates that `drupal` project type gets used properly
+// * It should be accepted, but turned into latest stable drupal version when `ddev config`
+// * "drupal" in config.yaml type should be interpreted as latets stable drupal by ddev list and describe
+// * `ddev config --auto` should respect `drupal` as project type but convert it to latest stable
+func TestDrupalAppTypeUsage(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(tmpDir)
+
+	out, err := exec.RunCommand(DdevBin, []string{"delete", "-Oy", t.Name()})
+	require.NoError(t, err, "ddev delete -Oy failed: %v", out)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		out, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", t.Name()})
+		t.Logf("ddev delete -Oy %s output=%s", t.Name(), out)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	// Create a config
+	args := []string{"config", "--project-name=" + t.Name(), "--project-type=drupal"}
+	_, err = exec.RunCommand(DdevBin, args)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, true)
+	require.NoError(t, err)
+
+	require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
+	err = app.Start()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+	})
+	desc, err := app.Describe(true)
+	require.NoError(t, err)
+	require.Equal(t, nodeps.AppTypeDrupalLatestStable, desc["type"])
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
+	// Just read the config and verify that the project type is the explicit drupal version
+	app, err = ddevapp.NewApp(tmpDir, true)
+	require.NoError(t, err)
+	require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
+	// Now try type = "drupal" in the config.yaml and verify that we actually get latest stable
+	// legacy projects from late DDEV v1.23.x will have this.
+	app.Type = `drupal`
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Even though the config.yaml says "drupal", we'll report latest stable here
+	require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
+
+	// And app.Describe will show it as latest stable, even though type is set to drupal in config.yaml
+	desc, err = app.Describe(true)
+	require.NoError(t, err)
+	require.Equal(t, nodeps.AppTypeDrupalLatestStable, desc["type"])
+
+	// ddev config --auto should respect what is already in config.yaml
+	// But it will turn it into latest drupal stable instead of `drupal`
+	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err)
+
+	_, err = app.ReadConfig(false)
+	require.NoError(t, err)
+	require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
 }

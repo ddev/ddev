@@ -199,7 +199,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	})
 
 	app.Name = util.RandString(32)
-	app.Type = ddevapp.GetValidAppTypesWithoutAliases()[0]
+	app.Type = ddevapp.GetValidAppTypes()[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()
@@ -231,9 +231,9 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"magentophpversion": {nodeps.AppTypeMagento, nodeps.PHPDefault},
-		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP82},
-		"Drupalphpversion":  {nodeps.AppTypeDrupal, nodeps.PHPDefault},
+		"magentophpversion":  {nodeps.AppTypeMagento, nodeps.PHPDefault},
+		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHP82},
+		"Drupal11phpversion": {nodeps.AppTypeDrupal11, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -866,7 +866,7 @@ func TestPHPConfig(t *testing.T) {
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
 	require.NoError(t, err)
-	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(site.Dir, "phpinfo.php"))
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
 	require.NoError(t, err)
 
 	for _, v := range phpKeys {
@@ -1135,8 +1135,8 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Apple Silicon/Lima/Colima, lots of network connections failed")
+	if dockerutil.IsColima() || dockerutil.IsLima() {
+		t.Skip("Skipping on Lima/Colima, lots of network connections failed")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -1174,10 +1174,11 @@ func TestComposerVersionConfig(t *testing.T) {
 		// Ignore the non semantic versions for the moment e.g. stable or preview
 		// TODO: Figure out a way to test version key words
 		if isSemver(testVersion) {
+			stdout = strings.TrimSpace(stdout)
 			if strings.Count(testVersion, ".") < 2 {
-				assert.Contains(strings.TrimSpace(stdout), testVersion)
+				assert.Contains(stdout, testVersion, "Found wrong composer version, testVersion=%s, found='%s'", testVersion, stdout)
 			} else {
-				assert.Equal(testVersion, strings.TrimSpace(stdout))
+				assert.Equal(testVersion, stdout, "Found wrong composer version, expected %s, found='%s'", testVersion, stdout)
 			}
 		}
 	}

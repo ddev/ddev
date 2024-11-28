@@ -314,14 +314,6 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
 }
 
-// isDrupal7App returns true if the app is of type drupal7
-func isDrupal7App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ajax.js")); err == nil {
-		return true
-	}
-	return false
-}
-
 // GetDrupalVersion finds the drupal8+ version so it can be used
 // for setting requirements.
 // It can only work if there is configured Drupal8+ code
@@ -343,7 +335,59 @@ func GetDrupalVersion(app *DdevApp) (string, error) {
 	return v, err
 }
 
-// isDrupalApp returns true if the app is drupal (drupal8+)
+// isDrupal6App returns true if the app is of type Drupal6
+func isDrupal6App(app *DdevApp) bool {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
+		return true
+	}
+	return false
+}
+
+// isDrupal7App returns true if the app is of type drupal7
+func isDrupal7App(app *DdevApp) bool {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ajax.js")); err == nil {
+		return true
+	}
+	return false
+}
+
+// isDrupal8App detects whether the code found is Drupal 8
+func isDrupal8App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "8"
+}
+
+// isDrupal9App detects whether the code found is Drupal 9
+func isDrupal9App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "9"
+}
+
+// isDrupal10App detects whether the code found is Drupal 10
+func isDrupal10App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "10"
+}
+
+// isDrupal11App detects whether the code found is Drupal 11
+func isDrupal11App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "11"
+}
+
+// isDrupalApp returns true if the app is modern Drupal (drupal8+)
 func isDrupalApp(app *DdevApp) bool {
 	vStr, err := GetDrupalVersion(app)
 	if err != nil {
@@ -360,20 +404,6 @@ func isDrupalApp(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal6App returns true if the app is of type Drupal6
-func isDrupal6App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
-		return true
-	}
-	return false
-}
-
-// drupal6ConfigOverrideAction overrides php_version for D6
-func drupal6ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP56
-	return nil
-}
-
 // drupal7ConfigOverrideAction overrides php_version for D7
 func drupal7ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP82
@@ -382,31 +412,40 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 
 // drupalConfigOverrideAction selects proper versions for
 func drupalConfigOverrideAction(app *DdevApp) error {
-	v, err := GetDrupalVersion(app)
-	if err != nil || v == "" {
-		util.Warning("Unable to detect Drupal version, continuing")
-		return nil
+	var drupalVersion int
+	switch app.Type {
+	case nodeps.AppTypeDrupal6:
+		app.PHPVersion = nodeps.PHP56
+		drupalVersion = 6
+	case nodeps.AppTypeDrupal7:
+		app.PHPVersion = nodeps.PHP82
+		drupalVersion = 7
+	case nodeps.AppTypeDrupal8:
+		app.PHPVersion = nodeps.PHP74
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
+		drupalVersion = 8
+	case nodeps.AppTypeDrupal9:
+		app.PHPVersion = nodeps.PHP81
+		drupalVersion = 9
+	case nodeps.AppTypeDrupal10:
+		drupalVersion = 10
+	case nodeps.AppTypeDrupal:
+		fallthrough
+	case nodeps.AppTypeDrupal11:
+		app.CorepackEnable = true
+		drupalVersion = 11
 	}
 	// If there is no database, update it to the default one,
 	// otherwise show a warning to the user.
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		if dbType, err := app.GetExistingDBType(); err == nil && dbType == "" {
 			app.Database = DatabaseDefault
-		} else if app.Database != DatabaseDefault && v != "8" {
+		} else if app.Database != DatabaseDefault && drupalVersion >= 8 {
 			defaultType := DatabaseDefault.Type + ":" + DatabaseDefault.Version
 			util.Warning("Default database type is %s, but the current actual database type is %s, you may want to migrate with 'ddev debug migrate-database %s'.", defaultType, dbType, defaultType)
 		}
 	}
-	switch v {
-	case "8":
-		app.PHPVersion = nodeps.PHP74
-		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB104}
-	case "9":
-		app.PHPVersion = nodeps.PHP81
-		// Drupal 10+ can use current DDEV default PHP version
-	case "11":
-		app.CorepackEnable = true
-	}
+
 	return nil
 }
 

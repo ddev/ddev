@@ -145,18 +145,18 @@ func TestPantheonPush(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a D10 codebase for Drush to work right
-	d9code := FullTestSites[12]
-	d9code.Name = t.Name()
+	// Use a D11 codebase for Drush to work right
+	d11code := FullTestSites[16]
+	d11code.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
-	err = d9code.Prepare()
+	err = d11code.Prepare()
 	require.NoError(t, err)
-	app, err := ddevapp.NewApp(d9code.Dir, false)
+	app, err := ddevapp.NewApp(d11code.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
 
-	err = os.Chdir(d9code.Dir)
+	err = os.Chdir(d11code.Dir)
 	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
@@ -174,8 +174,7 @@ func TestPantheonPush(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal
-	app.PHPVersion = nodeps.PHP82
+	app.Type = nodeps.AppTypeDrupal11
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 

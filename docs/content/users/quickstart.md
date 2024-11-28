@@ -181,18 +181,15 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 ## Drupal
 
-For all versions of Drupal 8+ the Composer techniques work. The settings configuration is done differently for each Drupal version, but the project type is "drupal".
+The legacy type `drupal` will be interpreted as the latest stable version of Drupal, so in 2024, `ddev config --project-type=drupal` will configure a Drupal 11 project. `drupal` can also be used as the project type in the `.ddev/config.yaml` but it will be interpreted as the latest stable version.
 
 === "Drupal 11"
 
     ```bash
-    mkdir my-drupal-site && cd my-drupal-site
-    ddev config --project-type=drupal --php-version=8.3 --docroot=web
-    ddev start
+    mkdir my-drupal11-site && cd my-drupal11-site
+    ddev config --project-type=drupal11 --docroot=web
     ddev composer create drupal/recommended-project:^11
     ddev composer require drush/drush
-    ddev config --update
-    ddev restart
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
     # or automatically log in with
@@ -202,26 +199,9 @@ For all versions of Drupal 8+ the Composer techniques work. The settings configu
 === "Drupal 10"
 
     ```bash
-    mkdir my-drupal-site && cd my-drupal-site
-    ddev config --project-type=drupal --php-version=8.3 --docroot=web
-    ddev start
+    mkdir my-drupal10-site && cd my-drupal10-site
+    ddev config --project-type=drupal10 --docroot=web
     ddev composer create drupal/recommended-project:^10
-    ddev config --update
-    ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
-    ddev launch
-    # or automatically log in with
-    ddev launch $(ddev drush uli)
-    ```
-
-=== "Drupal 9 (EOL)"
-
-    ```bash
-    mkdir my-drupal-site && cd my-drupal-site
-    ddev config --project-type=drupal --php-version=8.1 --docroot=web
-    ddev start
-    ddev composer create drupal/recommended-project:^9
-    ddev config --update
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch

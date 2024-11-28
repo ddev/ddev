@@ -59,8 +59,8 @@ func TestAcquiaPull(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a Drupal 10 codebase (test CMS 12)
-	drupalCode := FullTestSites[12]
+	// Use a Drupal 11 codebase (test CMS 16)
+	drupalCode := FullTestSites[16]
 	drupalCode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestAcquiaPull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal
+	app.Type = nodeps.AppTypeDrupal11
 
 	_ = app.Stop(true, false)
 	err = app.WriteConfig()
@@ -151,8 +151,8 @@ func TestAcquiaPush(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	// Use a Drupal 10 codebase (test CMS 12)
-	drupalCode := FullTestSites[12]
+	// Use a Drupal 11 codebase (test CMS 16)
+	drupalCode := FullTestSites[16]
 	drupalCode.Name = t.Name()
 	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)

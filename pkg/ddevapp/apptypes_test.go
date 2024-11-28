@@ -17,15 +17,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestApptypeDetection does a simple test of various filesystem setups to make
+// TestDetectAppType does a simple test of various filesystem setups to make
 // sure the expected apptype is returned.
-func TestApptypeDetection(t *testing.T) {
+func TestDetectAppType(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	appTypes := ddevapp.GetValidAppTypesWithoutAliases()
+	appTypes := ddevapp.GetValidAppTypes()
 	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
-		if t != nodeps.AppTypePHP {
+		// we don't detect "drupal" app type
+		if t != nodeps.AppTypePHP && t != nodeps.AppTypeDrupal {
 			notSimplePHPAppTypes = append(notSimplePHPAppTypes, t)
 		}
 	}
@@ -65,7 +66,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		nodeps.AppTypeCraftCms:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,
-		nodeps.AppTypeDrupal:       nodeps.PHPDefault,
+		nodeps.AppTypeDrupal11:     nodeps.PHPDefault,
 		nodeps.AppTypeLaravel:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento2:     nodeps.PHPDefault,
