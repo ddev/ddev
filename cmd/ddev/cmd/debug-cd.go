@@ -64,10 +64,13 @@ var DebugCdCmd = &cobra.Command{
 				util.Failed("This command only takes one argument: project-name")
 			}
 			projectName := args[0]
+			originalRunValidateConfig := ddevapp.RunValidateConfig
+			ddevapp.RunValidateConfig = false
 			app, err := ddevapp.GetActiveApp(projectName)
 			if err != nil {
 				util.Failed("Failed to find path for project: %v", err)
 			}
+			ddevapp.RunValidateConfig = originalRunValidateConfig
 			output.UserOut.Println(app.AppRoot)
 			return
 		}

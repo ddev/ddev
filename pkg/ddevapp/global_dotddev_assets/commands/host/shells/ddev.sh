@@ -10,7 +10,7 @@ ddevcd() {
 }
 
 _ddevcd_autocomplete() {
-  COMPREPLY=( $(compgen -W "$(DDEV_VERBOSE=false ddev debug cd --list)" -- "${COMP_WORDS[COMP_CWORD]}") )
+  COMPREPLY=( $(compgen -W "$(DDEV_VERBOSE=false ddev debug cd --list 2>/dev/null)" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 
 complete -F _ddevcd_autocomplete ddevcd

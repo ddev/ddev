@@ -10,7 +10,7 @@ ddevcd() {
 }
 
 _ddevcd_autocomplete() {
-  compadd $(DDEV_VERBOSE=false ddev debug cd --list)
+  compadd $(DDEV_VERBOSE=false ddev debug cd --list 2>/dev/null)
 }
 
 compdef _ddevcd_autocomplete ddevcd

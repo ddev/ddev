@@ -12,7 +12,7 @@ function ddevcd
 end
 
 function __ddevcd_autocomplete
-  DDEV_VERBOSE=false ddev debug cd --list
+  DDEV_VERBOSE=false ddev debug cd --list 2>/dev/null
 end
 
 complete -c ddevcd -f -a "(__ddevcd_autocomplete)"
