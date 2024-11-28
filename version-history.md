@@ -6,6 +6,25 @@ search:
 
 This version history has been driven by what we hear from our wonderful community of users. Please share your comments or ideas in the [issue queue](https://github.com/ddev/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
+## v1.24 (Released 2024-12)
+
+- [x] Added PHP 8.4. PHP 8.3 is default for new projects
+- [x] NodeJS 22 becomes default
+- [x] Extensive support for matching `mysql`, `mariadb`, and `psql` clients so the client matches the server.
+- [x] MariaDB 11.4 LTS support
+- [x] Traditional Windows ARM64 support
+- [x] `ddev_version_constraint` option added for both `config.yaml` and Add-on `install.yaml`
+- [x] `ddev get` changed to `ddev add-on get`
+- [x] Traefik router is default, and supports hosting mode, with Let's Encrypt.
+- [x] `ddevcd` command allows easy switching between project directories
+- [x] `nginx-proxy` router type removed
+- [x] `python` and `django4` project types removed
+- [x] `ddev auth ssh` can be used with individual files and against symlinks.
+- [x] 25% smaller `ddev-webserver` Docker image
+- [x] `drupal` project type introduced as an alias for latest-stable Drupal version
+- [x] `ddev service enable` and `ddev service disable` commands deprecated in favor of `ddev add-on` commands.
+- [x] Reduced number of locales included by default in `ddev-webserver`, all locales can be enabled with `webimage_extra_packages: [locales-all]`
+
 ## v1.23 (Released 2024-04)
 
 - [x] `ddev-webserver` upgraded to Debian 12 Bookworm
