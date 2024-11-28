@@ -100,7 +100,7 @@ Download and unzip the appropriate binary and place it in your `$PATH`.
 
     Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`.
 
-    You need to run `ddev poweroff` and `ddev start` to download the Docker images that it needs.
+    When DDEV detects a version change, it recommends powering down all running containters. Then, it will download the new images, if required.
 
     After you’re done testing, you can delete your downloaded executable, restart your terminal, and again use the standard DDEV:
     
