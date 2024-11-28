@@ -329,12 +329,9 @@ func checkForComposerCreateAllowedPaths(app *ddevapp.DdevApp) {
 				return filepath.SkipDir
 			}
 			if !slices.Contains(composerCreateAllowedPaths, checkPath) {
-				return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(composerRoot, checkPath), composerCreateAllowedPaths)
+				return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
 			}
-			if err != nil {
-				return err
-			}
-			return nil
+			return err
 		})
 	if err != nil {
 		util.Failed("Failed to create project: %v", err)
