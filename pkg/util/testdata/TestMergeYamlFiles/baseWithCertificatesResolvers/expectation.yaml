@@ -33,7 +33,7 @@ experimental:
 global:
   sendAnonymousUsage: false
 log:
-  level: DEBUG
+  level: INFO
 ping:
   entryPoint: traefik
 providers:

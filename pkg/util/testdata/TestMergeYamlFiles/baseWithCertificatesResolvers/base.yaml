@@ -5,7 +5,7 @@
 # regularly to update `entryPoints`
 
 log:
-  level: DEBUG
+  level: INFO
 accesslog: { }
 
 api:

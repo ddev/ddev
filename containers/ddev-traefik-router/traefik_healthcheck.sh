@@ -14,21 +14,11 @@ if [ -f /tmp/healthy ]; then
     sleep ${sleeptime}
 fi
 
-# If /tmp/initializing, it means we're loading the default starter database
-if [ -f /tmp/initializing ]; then
-  printf "initializing"
-  exit 1
-fi
-
 # If we can now access the traefik ping endpoint, then we're healthy
-# We should be able to use `traefik healthcheck --ping` but it doesn't work if
-# using nonstandard port (always tries port 8080 even if traefik port is something else)
-if curl -s -f http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/ping ; then
-    printf "healthy"
+if traefik healthcheck --ping --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml; then
     touch /tmp/healthy
     exit 0
 fi
 
 rm -f /tmp/healthy
 exit 1
-

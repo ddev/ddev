@@ -19,7 +19,7 @@ var DBImg = "ddev/ddev-dbserver"
 // BaseDBTag is the main tag, DBTag is constructed from it
 var BaseDBTag = "20241109_use_bin_env"
 
-const TraefikRouterImage = "ddev/ddev-traefik-router:20241109_use_bin_env"
+const TraefikRouterImage = "ddev/ddev-traefik-router:20241128_stasadev_traefik"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
