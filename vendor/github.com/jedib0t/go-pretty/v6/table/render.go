@@ -185,7 +185,7 @@ func (t *Table) renderLine(out *strings.Builder, row rowStr, hint renderHint) {
 
 	// use a brand-new strings.Builder if a row length limit has been set
 	var outLine *strings.Builder
-	if t.allowedRowLength > 0 {
+	if t.style.Size.WidthMax > 0 {
 		outLine = &strings.Builder{}
 	} else {
 		outLine = out
@@ -207,26 +207,28 @@ func (t *Table) renderLine(out *strings.Builder, row rowStr, hint renderHint) {
 	if outLine != out {
 		t.renderLineMergeOutputs(out, outLine)
 	}
+	t.firstRowOfPage = false
 
 	// if a page size has been set, and said number of lines has already
 	// been rendered, and the header is not being rendered right now, render
 	// the header all over again with a spacing line
-	if hint.isRegularRow() {
+	if hint.isRegularNonSeparatorRow() {
 		t.numLinesRendered++
-		if t.pageSize > 0 && t.numLinesRendered%t.pageSize == 0 && !hint.isLastLineOfLastRow() {
+		if t.pager.size > 0 && t.numLinesRendered%t.pager.size == 0 && !hint.isLastLineOfLastRow() {
 			t.renderRowsFooter(out)
 			t.renderRowsBorderBottom(out)
 			out.WriteString(t.style.Box.PageSeparator)
 			t.renderRowsBorderTop(out)
 			t.renderRowsHeader(out)
+			t.firstRowOfPage = true
 		}
 	}
 }
 
 func (t *Table) renderLineMergeOutputs(out *strings.Builder, outLine *strings.Builder) {
 	outLineStr := outLine.String()
-	if text.RuneWidthWithoutEscSequences(outLineStr) > t.allowedRowLength {
-		trimLength := t.allowedRowLength - utf8.RuneCountInString(t.style.Box.UnfinishedRow)
+	if text.RuneWidthWithoutEscSequences(outLineStr) > t.style.Size.WidthMax {
+		trimLength := t.style.Size.WidthMax - utf8.RuneCountInString(t.style.Box.UnfinishedRow)
 		if trimLength > 0 {
 			out.WriteString(text.Trim(outLineStr, trimLength))
 			out.WriteString(t.style.Box.UnfinishedRow)
@@ -313,8 +315,7 @@ func (t *Table) renderRows(out *strings.Builder, rows []rowStr, hint renderHint)
 		hint.rowNumber = rowIdx + 1
 		t.renderRow(out, row, hint)
 
-		if (t.style.Options.SeparateRows && rowIdx < len(rows)-1) || // last row before footer
-			(t.separators[rowIdx] && rowIdx != len(rows)-1) { // manually added separator not after last row
+		if t.shouldSeparateRows(rowIdx, len(rows)) {
 			hint.isFirstRow = false
 			t.renderRowSeparator(out, hint)
 		}
@@ -323,17 +324,33 @@ func (t *Table) renderRows(out *strings.Builder, rows []rowStr, hint renderHint)
 
 func (t *Table) renderRowsBorderBottom(out *strings.Builder) {
 	if len(t.rowsFooter) > 0 {
-		t.renderRowSeparator(out, renderHint{isBorderBottom: true, isFooterRow: true, rowNumber: len(t.rowsFooter)})
+		t.renderRowSeparator(out, renderHint{
+			isBorderBottom: true,
+			isFooterRow:    true,
+			rowNumber:      len(t.rowsFooter),
+		})
 	} else {
-		t.renderRowSeparator(out, renderHint{isBorderBottom: true, isFooterRow: false, rowNumber: len(t.rows)})
+		t.renderRowSeparator(out, renderHint{
+			isBorderBottom: true,
+			isFooterRow:    false,
+			rowNumber:      len(t.rows),
+		})
 	}
 }
 
 func (t *Table) renderRowsBorderTop(out *strings.Builder) {
 	if len(t.rowsHeader) > 0 || t.autoIndex {
-		t.renderRowSeparator(out, renderHint{isBorderTop: true, isHeaderRow: true, rowNumber: 0})
+		t.renderRowSeparator(out, renderHint{
+			isBorderTop: true,
+			isHeaderRow: true,
+			rowNumber:   0,
+		})
 	} else {
-		t.renderRowSeparator(out, renderHint{isBorderTop: true, isHeaderRow: false, rowNumber: 0})
+		t.renderRowSeparator(out, renderHint{
+			isBorderTop: true,
+			isHeaderRow: false,
+			rowNumber:   0,
+		})
 	}
 }
 
@@ -368,8 +385,11 @@ func (t *Table) renderTitle(out *strings.Builder) {
 		colors := t.style.Title.Colors
 		colorsBorder := t.getBorderColors(renderHint{isTitleRow: true})
 		rowLength := t.maxRowLength
-		if t.allowedRowLength != 0 && t.allowedRowLength < rowLength {
-			rowLength = t.allowedRowLength
+		if wm := t.style.Size.WidthMax; wm > 0 && wm < rowLength {
+			rowLength = wm
+		}
+		if wm := t.style.Size.WidthMin; wm > 0 && wm > rowLength {
+			rowLength = wm
 		}
 		if t.style.Options.DrawBorder {
 			lenBorder := rowLength - text.RuneWidthWithoutEscSequences(t.style.Box.TopLeft+t.style.Box.TopRight)

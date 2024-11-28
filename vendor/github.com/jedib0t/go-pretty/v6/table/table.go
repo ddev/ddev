@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
+	"unicode"
 
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -50,6 +52,8 @@ type Table struct {
 	// columnConfigMap stores the custom-configuration by column
 	// number and is generated before rendering
 	columnConfigMap map[int]ColumnConfig
+	// firstRowOfPage tells if the renderer is on the first row of a page?
+	firstRowOfPage bool
 	// htmlCSSClass stores the HTML CSS Class to use on the <table> node
 	htmlCSSClass string
 	// indexColumn stores the number of the column considered as the "index"
@@ -65,10 +69,8 @@ type Table struct {
 	numLinesRendered int
 	// outputMirror stores an io.Writer where the "Render" functions would write
 	outputMirror io.Writer
-	// pageSize stores the maximum lines to render before rendering the header
-	// again (to denote a page break) - useful when you are dealing with really
-	// long tables
-	pageSize int
+	// pager controls how the output is separated into pages
+	pager pager
 	// rows stores the rows that make up the body (in string form)
 	rows []rowStr
 	// rowsColors stores the text.Colors over-rides for each row as defined by
@@ -106,6 +108,8 @@ type Table struct {
 	// suppressEmptyColumns hides columns which have no content on all regular
 	// rows
 	suppressEmptyColumns bool
+	// suppressTrailingSpaces removes all trailing spaces from the end of the last column
+	suppressTrailingSpaces bool
 	// title contains the text to appear above the table
 	title string
 }
@@ -182,9 +186,54 @@ func (t *Table) AppendSeparator() {
 	}
 }
 
+// ImportGrid helps import 1d or 2d arrays as rows.
+func (t *Table) ImportGrid(grid interface{}) bool {
+	rows := objAsSlice(grid)
+	if rows == nil {
+		return false
+	}
+	addedRows := false
+	for _, row := range rows {
+		rowAsSlice := objAsSlice(row)
+		if rowAsSlice != nil {
+			t.AppendRow(rowAsSlice)
+		} else if row != nil {
+			t.AppendRow(Row{row})
+		}
+		addedRows = true
+	}
+	return addedRows
+}
+
 // Length returns the number of rows to be rendered.
 func (t *Table) Length() int {
 	return len(t.rowsRaw)
+}
+
+// Pager returns an object that splits the table output into pages and
+// lets you move back and forth through them.
+func (t *Table) Pager(opts ...PagerOption) Pager {
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	// use a temporary page separator for splitting up the pages
+	tempPageSep := fmt.Sprintf("%p // page separator // %d", t.rows, time.Now().UnixNano())
+
+	// backup
+	origOutputMirror, origPageSep := t.outputMirror, t.Style().Box.PageSeparator
+	// restore on exit
+	defer func() {
+		t.outputMirror = origOutputMirror
+		t.Style().Box.PageSeparator = origPageSep
+	}()
+	// override
+	t.outputMirror = nil
+	t.Style().Box.PageSeparator = tempPageSep
+	// render
+	t.pager.pages = strings.Split(t.Render(), tempPageSep)
+
+	return &t.pager
 }
 
 // ResetFooters resets and clears all the Footer rows appended earlier.
@@ -206,6 +255,8 @@ func (t *Table) ResetRows() {
 // SetAllowedRowLength sets the maximum allowed length or a row (or line of
 // output) when rendered as a table. Rows that are longer than this limit will
 // be "snipped" to the length. Length has to be a positive value to take effect.
+//
+// Deprecated: in favor if Style().Size.WidthMax
 func (t *Table) SetAllowedRowLength(length int) {
 	t.allowedRowLength = length
 }
@@ -247,6 +298,7 @@ func (t *Table) SetIndexColumn(colNum int) {
 // in addition to returning a string.
 func (t *Table) SetOutputMirror(mirror io.Writer) {
 	t.outputMirror = mirror
+	t.pager.SetOutputMirror(mirror)
 }
 
 // SetPageSize sets the maximum number of lines to render before rendering the
@@ -254,7 +306,7 @@ func (t *Table) SetOutputMirror(mirror io.Writer) {
 // long list of rows that can span pages. Please note that the pagination logic
 // will not consider Header/Footer lines for paging.
 func (t *Table) SetPageSize(numLines int) {
-	t.pageSize = numLines
+	t.pager.size = numLines
 }
 
 // SetRowPainter sets the RowPainter function which determines the colors to use
@@ -288,6 +340,11 @@ func (t *Table) Style() *Style {
 		tempStyle := StyleDefault
 		t.style = &tempStyle
 	}
+	// override WidthMax with allowedRowLength until allowedRowLength is
+	// removed from code
+	if t.allowedRowLength > 0 {
+		t.style.Size.WidthMax = t.allowedRowLength
+	}
 	return t.style
 }
 
@@ -295,6 +352,11 @@ func (t *Table) Style() *Style {
 // regular rows.
 func (t *Table) SuppressEmptyColumns() {
 	t.suppressEmptyColumns = true
+}
+
+// SuppressTrailingSpaces removes all trailing spaces from the output.
+func (t *Table) SuppressTrailingSpaces() {
+	t.suppressTrailingSpaces = true
 }
 
 func (t *Table) getAlign(colIdx int, hint renderHint) text.Align {
@@ -313,6 +375,12 @@ func (t *Table) getAlign(colIdx int, hint renderHint) text.Align {
 			align = text.AlignRight
 		} else if hint.isAutoIndexRow {
 			align = text.AlignCenter
+		} else if hint.isHeaderRow {
+			align = t.style.Format.HeaderAlign
+		} else if hint.isFooterRow {
+			align = t.style.Format.FooterAlign
+		} else {
+			align = t.style.Format.RowAlign
 		}
 	}
 	return align
@@ -628,6 +696,15 @@ func (t *Table) getVAlign(colIdx int, hint renderHint) text.VAlign {
 			vAlign = cfg.VAlign
 		}
 	}
+	if vAlign == text.VAlignDefault {
+		if hint.isHeaderRow {
+			vAlign = t.style.Format.HeaderVAlign
+		} else if hint.isFooterRow {
+			vAlign = t.style.Format.FooterVAlign
+		} else {
+			vAlign = t.style.Format.RowVAlign
+		}
+	}
 	return vAlign
 }
 
@@ -679,6 +756,13 @@ func (t *Table) isIndexColumn(colIdx int, hint renderHint) bool {
 
 func (t *Table) render(out *strings.Builder) string {
 	outStr := out.String()
+	if t.suppressTrailingSpaces {
+		var trimmed []string
+		for _, line := range strings.Split(outStr, "\n") {
+			trimmed = append(trimmed, strings.TrimRightFunc(line, unicode.IsSpace))
+		}
+		outStr = strings.Join(trimmed, "\n")
+	}
 	if t.outputMirror != nil && len(outStr) > 0 {
 		_, _ = t.outputMirror.Write([]byte(outStr))
 		_, _ = t.outputMirror.Write([]byte("\n"))
@@ -744,7 +828,7 @@ func (t *Table) shouldMergeCellsHorizontallyBelow(row rowStr, colIdx int, hint r
 }
 
 func (t *Table) shouldMergeCellsVertically(colIdx int, hint renderHint) bool {
-	if t.columnConfigMap[colIdx].AutoMerge && colIdx < t.numColumns {
+	if !t.firstRowOfPage && t.columnConfigMap[colIdx].AutoMerge && colIdx < t.numColumns {
 		if hint.isSeparatorRow {
 			rowPrev := t.getRow(hint.rowNumber-1, hint)
 			rowNext := t.getRow(hint.rowNumber, hint)
@@ -760,6 +844,25 @@ func (t *Table) shouldMergeCellsVertically(colIdx int, hint renderHint) bool {
 		}
 	}
 	return false
+}
+
+func (t *Table) shouldSeparateRows(rowIdx int, numRows int) bool {
+	// not asked to separate rows and no manually added separator
+	if !t.style.Options.SeparateRows && !t.separators[rowIdx] {
+		return false
+	}
+
+	pageSize := numRows
+	if t.pager.size > 0 {
+		pageSize = t.pager.size
+	}
+	if rowIdx%pageSize == pageSize-1 { // last row of page
+		return false
+	}
+	if rowIdx == numRows-1 { // last row of table
+		return false
+	}
+	return true
 }
 
 func (t *Table) wrapRow(row rowStr) (int, rowStr) {
