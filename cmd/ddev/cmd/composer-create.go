@@ -25,6 +25,7 @@ var composerDirectoryArg = ""
 var ComposerCreateCmd = &cobra.Command{
 	DisableFlagParsing: true,
 	Use:                "create [args] [flags]",
+	Aliases:            []string{"create-project"},
 	Short:              "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
@@ -458,21 +459,6 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 	return false
 }
 
-// ComposerCreateProjectCmd sends people to the right thing
-// when they try ddev composer create-project
-var ComposerCreateProjectCmd = &cobra.Command{
-	Use:                "create-project",
-	Short:              "Unsupported, use `ddev composer create` instead",
-	DisableFlagParsing: true,
-	Hidden:             true,
-	Run: func(_ *cobra.Command, _ []string) {
-		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
-for basic project creation or 'ddev ssh' into the web container and execute
-'composer create-project' directly.`)
-	},
-}
-
 func init() {
-	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }
