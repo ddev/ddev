@@ -24,89 +24,47 @@ There are several ways to use DDEV’s latest-committed HEAD version:
 
 Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) creates GitHub artifacts you can use for testing, so you can download the one you need from the PR page, install it locally, and test using that build.
 
-Download and unzip the appropriate binary and place it in your `$PATH`.
-
 !!!tip "You can also [downgrade to an older version of DDEV](../users/usage/faq.md#how-can-i-install-a-specific-version-of-ddev) (perform a rollback)."
 
-=== "Homebrew with macOS or Linux"
+Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. Since not every distro has `$HOME/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
 
-    ### Homebrew with macOS or Linux
+```bash
+mkdir ~/bin
+echo 'export PATH="$HOME/bin:$PATH"' >>~/.bashrc
+source ~/.bashrc
+# Verify that `$HOME/bin` is the first entry in your `$PATH`
+echo $PATH
+```
 
-    If you’re using Homebrew, start by unlinking your current binary:
+Choose a ZIP file for your OS and architecture, download it using `wget`, `curl`, `dl` or using a browser and unzip it, make it executable, and move it to the `~/bin` folder:
 
-    ```bash
-    brew unlink ddev
-    ```
+```bash
+# Example for macOS Apple Silicon:
+unzip ddev-macos-arm64.zip
+chmod +x ddev && mv ddev ~/bin/ddev
+rm ddev-macos-arm64.zip
+```
 
-    Next, download the ZIP archive, unzip it, make it executable, and move it to the `/usr/local/bin/ddev` folder:
+![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
 
-    ```bash
-    wget -O ddev.zip [LINK TO ZIP ARCHIVE]
-    unzip ddev.zip
-    chmod +x ddev && sudo mv ddev /usr/local/bin/ddev
-    rm ddev.zip
-    ```
-
-    Replace `[LINK TO ZIP ARCHIVE]` with the corresponding link from the PR comment:
-
-    ![Github Action PR Comment](../images/github-action-pr-comment.png)
-
-    Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`.
-
-    You need to run `ddev poweroff` and `ddev start` to download the Docker images that it needs.
-
-    !!!warning "macOS and Unsigned Binaries"
-        macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
-
-        ```bash
-        xattr -r -d com.apple.quarantine /usr/local/bin/ddev
-        ```
-
-        (The binaries on the master branch and the final release binaries _are_ signed.)
-
-    After you’re done testing, you can delete your downloaded executable, and re-link the original Homebrew one:
+???warning "macOS and Unsigned Binaries (click me)"
+    macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
 
     ```bash
-    sudo rm /usr/local/bin/ddev
-    brew link --force ddev
+    xattr -r -d com.apple.quarantine ~/bin/ddev
     ```
 
-=== "Installing a Downloaded Binary in the `$PATH`"
+    (The binaries on the master branch and the final release binaries _are_ signed.)
 
-    ### Installing a Downloaded Binary in the `$PATH`
+Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`. Valuable commands for debugging are `which -a ddev` and `echo $PATH`.
 
-    Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. `echo $PATH` and `which ddev` are valuable commands for debugging. Since not every distro has `$HOME/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
+When DDEV detects a version change, it recommends [powering down](../users/usage/commands.md#poweroff) all running containers. Then, it will download the new images, if required.
 
-    ```bash
-    mkdir ~/bin
-    echo 'export PATH="$HOME/bin:$PATH"' >>~/.bashrc
-    source ~/.bashrc
-    # Verify that `~/bin` was added to your $PATH
-    echo $PATH
-    ```
+After you’re done testing, you can delete your downloaded executable, restart your terminal, and again use the standard DDEV:
 
-    Next, download the ZIP archive, unzip it, make it executable, and move it to the `~/bin` folder:
-
-    ```bash
-    wget -O ddev.zip [LINK TO ZIP ARCHIVE]
-    unzip ddev.zip
-    chmod +x ddev && mv ddev ~/bin/ddev
-    rm ddev.zip
-    ```
-
-    Replace `[LINK TO ZIP ARCHIVE]` with the corresponding link from the PR comment:
-
-    ![Github Action PR Comment](../images/github-action-pr-comment.png)
-
-    Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`.
-
-    When DDEV detects a version change, it recommends powering down all running containters. Then, it will download the new images, if required.
-
-    After you’re done testing, you can delete your downloaded executable, restart your terminal, and again use the standard DDEV:
-    
-    ```bash
-    rm ~/bin/ddev
-    ```
+```bash
+rm ~/bin/ddev
+```
 
 ## Open in Gitpod
 
