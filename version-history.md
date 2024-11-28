@@ -8,7 +8,7 @@ This version history has been driven by what we hear from our wonderful communit
 
 ## v1.24 (Released 2024-12)
 
-- [x] PHP 8.4, PHP 8.3 becomes default version on new projects
+- [x] Added PHP 8.4. PHP 8.3 is default for new projects
 - [x] NodeJS 22 becomes default
 - [x] Extensive support for matching `mysql`, `mariadb`, and `pq` clients so the client matches the server.
 - [x] MariaDB 11.4 LTS support
@@ -22,8 +22,8 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] `ddev auth ssh` can be used with individual files and against symlinks.
 - [x] 25% smaller `ddev-webserver` Docker image
 - [x] `drupal` project type introduced as an alias for latest-stable Drupal version
-- [x] `ddev service enable` and `ddev service disable` commands removed in favor of `ddev add-on` commands.
-- [x] Only limited locales are now included by default in `ddev-webserver`, all locales can be enabled with `webimage_extra_packages: [locales-all]`
+- [x] `ddev service enable` and `ddev service disable` commands deprecated in favor of `ddev add-on` commands.
+- [x] Reduced number of locales included by default in `ddev-webserver`, all locales can be enabled with `webimage_extra_packages: [locales-all]`
 
 ## v1.23 (Released 2024-04)
 
