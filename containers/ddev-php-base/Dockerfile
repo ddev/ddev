@@ -55,7 +55,7 @@ SHELL ["/bin/bash", "-c"]
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
 # TODO: php8.4-xdebug installed with PECL
-RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "3.4.0beta1" "/usr/lib/php/20240924/xdebug.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "latest" "/usr/lib/php/20240924/xdebug.so"
 #END ddev-php-extension-build
 
 ### ---------------------------ddev-php-base--------------------------------------
