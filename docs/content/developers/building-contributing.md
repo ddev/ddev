@@ -26,7 +26,7 @@ Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) cre
 
 !!!tip "You can also [downgrade to an older version of DDEV](../users/usage/faq.md#how-can-i-install-a-specific-version-of-ddev) (perform a rollback)."
 
-Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. Since not every distro has `$HOME/bin` in `$PATH`, you can create the folder and add it to your path in `~/.bashrc` with these commands:
+Normally, you can put any executable in your path, and it takes precedence, so you don't need to remove or disable an already installed DDEV instance, which we will use here. This example uses `~/bin`. Since not every OS has `$HOME/bin` in `$PATH`, you can create the folder and add it to your path by updating `~/.bashrc`, `~/.zshrc`, or another relevant shell configuration file with these commands:
 
 ```bash
 mkdir ~/bin
