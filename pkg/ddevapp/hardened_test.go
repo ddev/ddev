@@ -20,8 +20,8 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if nodeps.IsAppleSilicon() && (dockerutil.IsLima() || dockerutil.IsDockerDesktop()) {
-		t.Skip("Skipping TestHardenedStart on Apple Silicon because of useless failures to connect")
+	if dockerutil.IsLima() || dockerutil.IsColima() || (nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop()) {
+		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms")
 	}
 
 	assert := asrt.New(t)
