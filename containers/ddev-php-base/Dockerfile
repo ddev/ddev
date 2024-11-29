@@ -52,7 +52,7 @@ RUN apt-get -qq update
 FROM base AS ddev-php-extension-build
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 ARG XDEBUG_MODE=off
-### Xdebug comple specific version because 3.3 is not fully reliable
+### Xdebug compile specific version because 3.3 is not fully reliable
 ### See https://github.com/ddev/ddev/issues/6159
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
