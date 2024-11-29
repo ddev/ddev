@@ -178,7 +178,7 @@ func StartDdevRouter() error {
 	util.Debug(`Waiting for ddev-router to become ready, timeout=%v`, routerWaitTimeout)
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready; logOutput=%s, err=%v", logOutput, err)
+		return fmt.Errorf("ddev-router failed to become ready; log=%s, err=%v", logOutput, err)
 	}
 	util.Debug("ddev-router is ready")
 

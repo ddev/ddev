@@ -66,9 +66,10 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	// ensure we have a happy sshAuth
 	label := map[string]string{"com.docker.compose.project": SSHAuthName}
 	sshWaitTimeout := 60
-	_, err = dockerutil.ContainerWait(sshWaitTimeout, label)
+	util.Debug(`Waiting for ddev-ssh-agent to become ready, timeout=%v`, sshWaitTimeout)
+	logOutput, err := dockerutil.ContainerWait(sshWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-ssh-agent failed to become ready; debug with 'docker logs ddev-ssh-agent' and 'docker inspect --format \"{{json .State.Health }}\" ddev-ssh-agent'; error: %v", err)
+		return fmt.Errorf("ddev-ssh-agent failed to become ready; log=%s, err=%v", logOutput, err)
 	}
 
 	util.Warning("ssh-agent container is running: If you want to add authentication to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
