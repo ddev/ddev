@@ -3,6 +3,7 @@
 FROM debian:bookworm-slim AS base
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 
 RUN ls -l $(which dpkg-split) && ls -l $(which dpkg-deb)
 RUN for item in dpkg-split dpkg-deb; do \
@@ -49,7 +50,8 @@ RUN apt-get -qq update
 
 ### ---------------------------ddev-php-extension-build--------------------------------------
 FROM base AS ddev-php-extension-build
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
+ARG XDEBUG_MODE=off
 ### Xdebug compile specific version because 3.3 is not fully reliable
 ### See https://github.com/ddev/ddev/issues/6159
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
@@ -62,11 +64,13 @@ RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "latest" "/usr/lib/p
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
 ### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 ARG PHP_DEFAULT_VERSION="8.3"
+ARG XDEBUG_MODE=off
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.1 php8.2 php8.3 php8.4"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
-ARG DRUSH_VERSION=8.4.12
+ARG DRUSH_VERSION=8.5.0
 ENV NODE_VERSION=22
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -76,8 +80,6 @@ ENV COMPOSER_PROCESS_TIMEOUT=2000
 # BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
-
-SHELL ["/bin/bash", "-c"]
 
 RUN apt-get -qq update
 RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -115,16 +117,26 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 
 ### ---------------------------ddev-php-extension-build--------------------------------------
 ### The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
+ARG XDEBUG_MODE=off
 RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
 COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
 COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
 # TODO: php8.4-xdebug installed with PECL
 COPY --from=ddev-php-extension-build /usr/lib/php/20240924/xdebug.so /usr/lib/php/20240924/xdebug.so
 #END ddev-php-extension-build
-RUN phpdismod xhprof
+RUN phpdismod xhprof xdebug
 RUN apt-get -qq autoremove -y
 RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer
-RUN curl -L --fail -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
+RUN <<ENDDRUSH
+    mkdir -p /usr/local/src/drush
+    curl -sSfL -o /tmp/drush.tgz https://github.com/drush-ops/drush/archive/refs/tags/${DRUSH_VERSION}.tar.gz
+    tar -C /usr/local/src/drush --strip-components=1 -zxf /tmp/drush.tgz
+    pushd /usr/local/src/drush >/dev/null
+    composer install
+    ln -s /usr/local/src/drush/drush /usr/local/bin/drush8
+    popd >/dev/null
+ENDDRUSH
 RUN curl --fail -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -sf /usr/local/bin/wp-cli /usr/local/bin/wp
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
@@ -137,6 +149,8 @@ RUN chmod 777 /var/lib/php/sessions
 ### Build ddev-php-prod from ddev-php-base as a single layer
 ### There aren't any differences
 FROM scratch AS ddev-php-prod
+ARG XDEBUG_MODE=off
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 COPY --from=ddev-php-base / /
 EXPOSE 8080 8585
 CMD ["/usr/sbin/php-fpm", "-F"]
