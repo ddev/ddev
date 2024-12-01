@@ -1,7 +1,7 @@
 #ddev-generated
 
 log:
-  level: INFO
+  level: DEBUG
 accesslog: { }
 
 api:
@@ -23,15 +23,16 @@ ping:
 entryPoints:
   traefik:
     address: ":10999"
-
+  
   http-443:
     address: ":443"
-
+  
   http-80:
     address: ":80"
-
+  
   http-8025:
     address: ":8025"
-
+  
   http-8026:
     address: ":8026"
+  
