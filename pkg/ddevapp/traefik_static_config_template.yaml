@@ -5,8 +5,11 @@
 # regularly to update `entryPoints`
 
 log:
-  level: DEBUG
-accesslog: { }
+  level: ERROR
+accessLog:
+  filters:
+    statusCodes:
+      - "300-510"
 
 api:
   dashboard: true
