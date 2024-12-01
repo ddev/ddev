@@ -25,23 +25,23 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
 
     * `static_config.logs.yaml`:
 
-      ```yaml
-      # Enable extensive error and access logging
-      log:
-        level: DEBUG
-      accessLog: {}
-      ```
+        ```yaml
+        # Enable extensive error and access logging
+        log:
+          level: DEBUG
+        accessLog: {}
+        ```
 
     * `static_config.cloudflare.yaml`:
 
-      ```yaml
-      certificatesResolvers:
-        acme-dnsChallenge:
-          acme:
-            email: admin@example.com
-            dnsChallenge:
-              provider: cloudflare
-      ```
+        ```yaml
+        certificatesResolvers:
+          acme-dnsChallenge:
+            acme:
+              email: admin@example.com
+              dnsChallenge:
+                provider: cloudflare
+        ```
 
     * `static_config.fail2ban.yaml`
 
@@ -51,7 +51,7 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
             fail2ban:
               moduleName: "github.com/tomMoulard/fail2ban"
               version: "v0.8.1"
-      ```
+        ```
 
 * `certs/default_cert.*` files are the default DDEV-generated certificates, normally created by `mkcert`.
 * `config/default_config.yaml` contains global *dynamic* configuration, including pointers to the default certificates. It is possible to add other Traefik configuration in the `config` directory, which will apply to all projects. For example, a `config/router_middlewares.yaml` file might provide middleware implementations that would apply to all projects.
