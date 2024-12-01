@@ -36,7 +36,7 @@ source ~/.bashrc
 echo $PATH
 ```
 
-Choose a ZIP file for your OS and architecture, download it using `wget`, `curl`, `dl` or using a browser and unzip it, make it executable, and move it to the `~/bin` folder:
+Download a ZIP file for your OS and architecture by clicking the link (the result is something like `ddev-macos-arm64.zip`) or using `wget`, `curl`, `dl` and unzip it, make it executable, and move it to the `~/bin` folder:
 
 ```bash
 # Example for macOS Apple Silicon:
@@ -46,6 +46,8 @@ rm ddev-macos-arm64.zip
 ```
 
 ![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
+
+Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nightly builds](https://nightly.link/ddev/ddev/workflows/master-build/master).
 
 ???warning "macOS and Unsigned Binaries (click me)"
     macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
