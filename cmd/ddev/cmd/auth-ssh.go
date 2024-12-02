@@ -22,13 +22,12 @@ var sshKeyFiles, sshKeyDirs []string
 // AuthSSHCommand implements the "ddev auth ssh" command
 var AuthSSHCommand = &cobra.Command{
 	Use:   "ssh",
-	Short: "Add SSH key authentication to the ddev-ssh-agent container",
-	Long:  `Use this command to provide the password to your SSH key to the ddev-ssh-agent container, where it can be used by other containers.`,
+	Short: "Add SSH private key authentication to the ddev-ssh-agent container",
+	Long:  `Use this command to provide the password to your SSH private key to the ddev-ssh-agent container, where it can be used by other containers. The command can be executed multiple times to add more keys.`,
 	Example: heredoc.DocI2S(`
 		ddev auth ssh
 		ddev auth ssh -d ~/custom/path/to/ssh
 		ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
-		ddev auth ssh -d ~/.ssh -f ~/custom/path/to/ssh/id_ed25519
 	`),
 	Run: func(_ *cobra.Command, args []string) {
 		var err error
@@ -63,7 +62,7 @@ var AuthSSHCommand = &cobra.Command{
 			}
 		}
 		if len(keys) == 0 {
-			util.Failed("No SSH keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
+			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
 
 		app, err := ddevapp.GetActiveApp("")
@@ -107,14 +106,14 @@ var AuthSSHCommand = &cobra.Command{
 			// Add more helpful message to the obscure error from Docker
 			// Can be triggered if the key is in /tmp on macOS
 			if strings.Contains(err.Error(), "bind source path does not exist") {
-				helpMessage = "\n\nThe specified SSH key path is not shared with your Docker provider."
+				helpMessage = "\n\nThe specified SSH private key path is not shared with your Docker provider."
 			}
 			util.Failed("Docker command 'docker %v' failed: %v %v", echoDockerCmd(dockerCmd), err, helpMessage)
 		}
 	},
 }
 
-// getSSHKeyPaths returns an array of full paths to SSH keys
+// getSSHKeyPaths returns an array of full paths to SSH private keys
 // with checks to ensure they are valid.
 func getSSHKeyPaths(sshKeyPathArray []string, acceptsDirsOnly bool, acceptsFilesOnly bool) []string {
 	var files []string
@@ -126,25 +125,25 @@ func getSSHKeyPaths(sshKeyPathArray []string, acceptsDirsOnly bool, acceptsFiles
 			}
 			fullPath, err := filepath.Abs(filepath.Join(cwd, sshKeyPath))
 			if err != nil {
-				util.Failed("Failed to derive absolute path for SSH key path %s: %v", sshKeyPath, err)
+				util.Failed("Failed to derive absolute path for SSH private key path %s: %v", sshKeyPath, err)
 			}
 			sshKeyPath = fullPath
 		}
 		fi, err := os.Stat(sshKeyPath)
 		if os.IsNotExist(err) {
-			util.Failed("The SSH key path %s was not found", sshKeyPath)
+			util.Failed("The SSH private key path %s was not found", sshKeyPath)
 		}
 		if err != nil {
-			util.Failed("Failed to check status of SSH key path %s: %v", sshKeyPath, err)
+			util.Failed("Failed to check status of SSH private key path %s: %v", sshKeyPath, err)
 		}
 		if !fi.IsDir() {
 			if acceptsDirsOnly {
-				util.Failed("SSH key path %s is not a directory", sshKeyPath)
+				util.Failed("SSH private key path %s is not a directory", sshKeyPath)
 			}
 			files = append(files, sshKeyPath)
 		} else {
 			if acceptsFilesOnly {
-				util.Failed("SSH key path %s is not a file", sshKeyPath)
+				util.Failed("SSH private key path %s is not a file", sshKeyPath)
 			}
 			files, err = fileutil.ListFilesInDirFullPath(sshKeyPath, true)
 			if err != nil {
@@ -185,8 +184,10 @@ func echoDockerCmd(dockerCmd []string) string {
 }
 
 func init() {
-	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "full path to SSH key file")
-	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyDirs, "ssh-key-path", "d", nil, "full path to SSH key directory")
+	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "path to SSH private key file, use the flag multiple times to add more keys")
+	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyDirs, "ssh-key-path", "d", nil, "path to directory with SSH private key(s), use the flag multiple times to add more directories")
+	// While both flags work well with each other, don't allow them to be passed at the same time to make it easier to use.
+	AuthSSHCommand.MarkFlagsMutuallyExclusive("ssh-key-file", "ssh-key-path")
 
 	AuthCmd.AddCommand(AuthSSHCommand)
 }
