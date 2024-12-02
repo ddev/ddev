@@ -202,6 +202,7 @@ func generateRouterCompose() (string, error) {
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	uid, gid, username := util.GetContainerUIDGid()
+	timezone, _ := util.GetLocalTimezone()
 
 	templateVars := map[string]interface{}{
 		"Username":                   username,
@@ -215,6 +216,7 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
+		"Timezone":                   timezone,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")

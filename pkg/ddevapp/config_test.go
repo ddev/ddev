@@ -1073,7 +1073,7 @@ func TestTimezoneConfig(t *testing.T) {
 	// Without timezone set, we should automatically detect local timezone on Linux, WSL2 and macOS
 	if runtime.GOOS != "windows" {
 		hostTimezoneAbbr, _ = time.Now().In(time.Local).Zone()
-		hostTimezone, _ = app.GetLocalTimezone()
+		hostTimezone, _ = util.GetLocalTimezone()
 	}
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
