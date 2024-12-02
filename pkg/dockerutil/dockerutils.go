@@ -1970,3 +1970,24 @@ func CanRunWithoutDocker() bool {
 	}
 	return false
 }
+
+// ValidatePort checks that the given port is valid (in range 1-65535)
+func ValidatePort(port interface{}) error {
+	var dockerPort int
+	switch v := port.(type) {
+	case int:
+		dockerPort = v
+	case string:
+		var err error
+		dockerPort, err = strconv.Atoi(v)
+		if err != nil {
+			return fmt.Errorf("invalid port: %v", port)
+		}
+	default:
+		return fmt.Errorf("unsupported port type: %T", port)
+	}
+	if dockerPort < 1 || dockerPort > 65535 {
+		return fmt.Errorf("invalid port: %v", port)
+	}
+	return nil
+}
