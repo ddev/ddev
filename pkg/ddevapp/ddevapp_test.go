@@ -306,6 +306,18 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
+		// 20: Symfony
+		{
+			Name:                          "TestPkgSymfony",
+			SourceURL:                     "https://github.com/ddev/test-symfony/archive/refs/tags/v2.6.0.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/test-symfony/releases/download/v2.6.0/db.sql.tar.gz",
+			ArchiveInternalExtractionPath: "test-symfony-2.6.0/",
+			Type:                          nodeps.AppTypeSymfony,
+			Docroot:                       "public",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Symfony Demo"},
+			FilesImageURI:                 "/apple-touch-icon.png",
+		},
 	}
 
 	FullTestSites = TestSites
@@ -2312,7 +2324,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
 
-		if app.Type != nodeps.AppTypeShopware6 {
+		switch app.Type {
+		case nodeps.AppTypeShopware6, nodeps.AppTypeSymfony:
+			// Skip the check for the above types because they use app.SiteSettingsPath differently
+		default:
 			assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
 		}
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7"}, app.Type) {

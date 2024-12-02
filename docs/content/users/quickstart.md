@@ -80,16 +80,16 @@ Further information on the DDEV procedure can also be found in the [Contao docum
     mkdir my-contao-site && cd my-contao-site
     ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
     ddev composer create contao/managed-edition:5.3
-    
+
     # Set DATABASE_URL and MAILER_DSN in .env.local
     ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
 
     # Create the database
     ddev exec contao-console contao:migrate --no-interaction
-    
+
     # Create backend user
     ddev exec contao-console contao:user:create --username=admin --name=Administrator --email=admin@example.com --language=en --password=Password123 --admin
-    
+
     # Access the administration area
     ddev launch contao
     ```
@@ -115,7 +115,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
 === "Demo Website"
 
-    The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo). 
+    The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo).
     Via the Contao Manager you can simply select this option during the first installation.
 
 ## Craft CMS
@@ -434,7 +434,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         ```
 
         Alternately, you can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
-    
+
         ??? "Script to store Adobe/Magento Composer credentials (click me)"
             ```bash
             # Enter your username/password and agree to store your credentials
@@ -500,7 +500,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev launch /admin
 
     # Note that openmage itself provides several custom DDEV commands, including
-    # `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`, 
+    # `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
     # and `php-cs-fixer`.
     ```
 
@@ -679,13 +679,13 @@ ddev launch /admin
 
 There are many ways to install Symfony, here are a few of them based on the [Symfony docs](https://symfony.com/doc/current/setup.html).
 
-If your project uses a database you'll want to set the [DB connection string](https://symfony.com/doc/current/doctrine.html#configuring-the-database) in the `.env`. If using the default MariaDB configuration, you'll want `DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=10.11"`. If you're using a different database type or version, see `ddev describe` for the type and version.
+DDEV automatically updates or creates the `.env.local` file with the database information.
 
 === "Composer"
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --docroot=public
+    ddev config --project-type=symfony --docroot=public
     ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
@@ -696,10 +696,10 @@ If your project uses a database you'll want to set the [DB connection string](ht
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --docroot=public
+    ddev config --project-type=symfony --docroot=public
     ddev start
     ddev exec symfony check:requirements
-    ddev exec symfony new temp --version="7.0.*" --webapp
+    ddev exec symfony new temp --version="7.1.*" --webapp
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
     ddev launch
     ```
@@ -709,10 +709,24 @@ If your project uses a database you'll want to set the [DB connection string](ht
     ```bash
     git clone <my-symfony-repo> my-symfony-site
     cd my-symfony-site
-    ddev config --docroot=public
+    ddev config --project-type=symfony --docroot=public
     ddev start
     ddev composer install
     ddev launch
+    ```
+
+!!!tip "Want to run Symfony Console (`bin/console`)?"
+
+    ```bash
+    ddev console list
+    # ddev console doctrine:schema:update --force
+    ```
+
+!!!tip "Consuming Messages (Running the Worker)"
+    Edit `.ddev/config.yaml` in your project directory and uncomment `post-start` hook to see `messenger:consume` command logs, and run:
+
+    ```bash
+    ddev exec symfony server:log
     ```
 
 ## TYPO3

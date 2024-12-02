@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run symfony console inside the web container
+## Usage: console [flags] [args]
+## Example: "ddev console about" or "ddev console doctrine:schema:update --dump-sql"
+## ProjectTypes: symfony
+## ExecRaw: true
+
+if [ ! -f bin/console ]; then
+  echo 'bin/console does not exist in your project root directory.'
+  echo 'Please verify that you installed symfony in your project directory.'
+  exit 1
+fi
+
+symfony console "$@"
