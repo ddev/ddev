@@ -597,6 +597,36 @@ func (app *DdevApp) CheckCustomConfig() {
 		customConfig = true
 	}
 
+	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
+		traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+		if _, err := os.Stat(traefikGlobalConfigPath); err == nil {
+			traefikGlobalFiles, err := filepath.Glob(filepath.Join(traefikGlobalConfigPath, "static_config.*.yaml"))
+			util.CheckErr(err)
+			if len(traefikGlobalFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(traefikGlobalFiles)
+				util.Warning("Using custom global Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
+				customConfig = true
+			}
+		}
+		traefikConfigPath := filepath.Join(ddevDir, "traefik/config")
+		if _, err := os.Stat(traefikConfigPath); err == nil {
+			traefikFiles, err := filepath.Glob(filepath.Join(traefikConfigPath, "*.yaml"))
+			util.CheckErr(err)
+			var customTraefikFiles []string
+			for _, traefikFile := range traefikFiles {
+				sigFound, _ = fileutil.FgrepStringInFile(traefikFile, nodeps.DdevFileSignature)
+				if !sigFound {
+					customTraefikFiles = append(customTraefikFiles, traefikFile)
+				}
+			}
+			if len(customTraefikFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(customTraefikFiles)
+				util.Warning("Using custom Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
+				customConfig = true
+			}
+		}
+	}
+
 	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
 	sigFound, _ = fileutil.FgrepStringInFile(nginxFullConfigPath, nodeps.DdevFileSignature)
 	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
@@ -850,7 +880,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	timezone := app.Timezone
 	if timezone == "" {
-		timezone, err = app.GetLocalTimezone()
+		timezone, err = util.GetLocalTimezone()
 		if err != nil {
 			util.Debug("Unable to autodetect timezone: %v", err.Error())
 		} else {
