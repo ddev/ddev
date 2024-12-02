@@ -835,9 +835,9 @@ func IsInternetActive() bool {
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
-	if os.Getenv("DDEV_DEBUG") != "" {
+	if DdevDebug {
 		if active == false {
-			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/usage/faq/ for info.")
+			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/usage/offline/ for info.")
 		}
 		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)
 	}
