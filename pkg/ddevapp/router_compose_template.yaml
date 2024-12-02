@@ -37,6 +37,7 @@ services:
       - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
       - USE_LETSENCRYPT={{ .letsencrypt }}
         {{ end }}{{/* end if .letsencrypt */}}
+      - TZ={{ .Timezone }}
     restart: "no"
     healthcheck:
       {{ if eq .Router "traefik" }}

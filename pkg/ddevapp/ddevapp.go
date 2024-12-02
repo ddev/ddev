@@ -1217,22 +1217,6 @@ func (app *DdevApp) GetDBImage() string {
 	return dbImage
 }
 
-// GetLocalTimezone tries to find local timezone from $TZ or /etc/localtime symlink
-func (app *DdevApp) GetLocalTimezone() (string, error) {
-	timezone := ""
-	if os.Getenv("TZ") != "" {
-		timezone = os.Getenv("TZ")
-	} else {
-		localtimeFile := filepath.Join("/etc", "localtime")
-		var err error
-		timezone, err = filepath.EvalSymlinks(localtimeFile)
-		if err != nil {
-			return "", fmt.Errorf("unable to read timezone from %s file: %v", localtimeFile, err)
-		}
-	}
-	return util.GetTimezone(timezone)
-}
-
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error

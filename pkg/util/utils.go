@@ -420,6 +420,22 @@ func GetTimezone(path string) (string, error) {
 	return timezone, nil
 }
 
+// GetLocalTimezone tries to find local timezone from $TZ or /etc/localtime symlink
+func GetLocalTimezone() (string, error) {
+	timezone := ""
+	if os.Getenv("TZ") != "" {
+		timezone = os.Getenv("TZ")
+	} else {
+		localtimeFile := filepath.Join("/etc", "localtime")
+		var err error
+		timezone, err = filepath.EvalSymlinks(localtimeFile)
+		if err != nil {
+			return "", fmt.Errorf("unable to read timezone from %s file: %v", localtimeFile, err)
+		}
+	}
+	return GetTimezone(timezone)
+}
+
 // SubtractSlices removes elements of slice b from slice a.
 func SubtractSlices(a, b []string) []string {
 	// Create a map to keep track of elements in slice b for quick lookup.

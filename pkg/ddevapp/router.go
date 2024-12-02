@@ -175,10 +175,10 @@ func StartDdevRouter() error {
 	if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
 		routerWaitTimeout = 180
 	}
-	util.Debug(`Waiting for ddev-router to become ready. docker inspect --format "{{json .State.Health }}" ddev-router`)
+	util.Debug(`Waiting for ddev-router to become ready, timeout=%v`, routerWaitTimeout)
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router' and 'docker inspect --format \"{{json .State.Health }}\" ddev-router'; logOutput=%s, err=%v", logOutput, err)
+		return fmt.Errorf("ddev-router failed to become ready; log=%s, err=%v", logOutput, err)
 	}
 	util.Debug("ddev-router is ready")
 
@@ -202,6 +202,7 @@ func generateRouterCompose() (string, error) {
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	uid, gid, username := util.GetContainerUIDGid()
+	timezone, _ := util.GetLocalTimezone()
 
 	templateVars := map[string]interface{}{
 		"Username":                   username,
@@ -215,6 +216,7 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
+		"Timezone":                   timezone,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
