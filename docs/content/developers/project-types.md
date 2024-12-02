@@ -29,6 +29,8 @@ To add a new project type:
     * `composerCreateAllowedPaths` specifies the paths that can exist in a directory when `ddev composer create` is being used.
 * You’ll likely need templates for settings files, use the Drupal or TYPO3 templates as examples, for example `pkg/ddevapp/drupal` and `pkg/ddevapp/typo3`. Those templates have to be loaded at runtime as well.
 * For a custom nginx config, use `webserver_config_assets/nginx-site-php.conf` as an example.
+* Upload the project detection file stubs to the `testdata/TestDetectAppType` folder.
+* Add to `appTypes` test slice for `TestConfigOverrideAction` in `ddevapp/apptypes_test.go`.
 * If the project type has a custom command, add it to `global_dotddev_assets/commands/web` folder.
 * Once your project type starts working and behaving as you’d like, you’ll need to add test artifacts for it and try testing it (locally first).
     * Add your project to `TestSites` in `ddevapp_test.go`.
