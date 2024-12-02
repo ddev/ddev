@@ -30,11 +30,11 @@ func symfonyEnvMailer(app *DdevApp, envMap map[string]string) {
 	envMap["MAILER_HOST"] = "127.0.0.1"
 	envMap["MAILER_PORT"] = "1025"
 	envMap["MAILER_URL"] = "smtp://127.0.0.1:1025"
-	mailpitPort := app.GetMailpitHTTPSPort()
 	if app.CanUseHTTPOnly() {
-		mailpitPort = app.GetMailpitHTTPPort()
+		envMap["MAILER_WEB_URL"] = fmt.Sprintf("http://%s:%s", app.GetHostname(), app.GetMailpitHTTPPort())
+	} else {
+		envMap["MAILER_WEB_URL"] = fmt.Sprintf("https://%s:%s", app.GetHostname(), app.GetMailpitHTTPSPort())
 	}
-	envMap["MAILER_WEB_URL"] = fmt.Sprintf("%s:%s", app.GetHostname(), mailpitPort)
 }
 
 // symfonyEnvDatabase sets up database environment variabels for symfony project type
