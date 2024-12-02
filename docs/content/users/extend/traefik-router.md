@@ -29,7 +29,9 @@ Static configuration is automatically generated in the `~/.ddev/traefik` directo
         # Enable extensive error and access logging
         log:
           level: DEBUG
-        accessLog: {}
+        accessLog:
+          filters:
+            statusCodes: {}
         ```
 
     * `static_config.cloudflare.yaml`:
