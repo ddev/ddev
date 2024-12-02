@@ -597,6 +597,7 @@ func TestConfigValidate(t *testing.T) {
 	assert.Contains(err.Error(), "invalid hostname")
 
 	app.AdditionalHostnames = []string{}
+	// web_extra_exposed_ports shouldn't allow duplicate names for different config items
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
 		{Name: "foo", WebContainerPort: 4000, HTTPPort: 4000, HTTPSPort: 4001},
@@ -604,21 +605,28 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	assert.Contains(err.Error(), "duplicate 'name: foo'")
-
+	// web_extra_exposed_ports shouldn't allow not specified ports (for example, container_port: 0)
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 0, HTTPPort: 3000, HTTPSPort: 3001},
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "invalid empty port")
-
+	assert.Contains(err.Error(), "invalid 'container_port: 0'")
+	// web_extra_exposed_ports shouldn't allow wrong ports (for example, container_port: 123456)
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "foo", WebContainerPort: 123456, HTTPPort: 3000, HTTPSPort: 3001},
+	}
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	assert.Contains(err.Error(), "invalid 'container_port: 123456'")
+	// web_extra_exposed_ports shouldn't allow the same port for the same config item http_port/https_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3000},
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	assert.Contains(err.Error(), "same 'http_port: 3000' and 'https_port: 3000'")
-
+	// web_extra_exposed_ports shouldn't allow the same port for different config items container_port/container_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
 		{Name: "bar", WebContainerPort: 3000, HTTPPort: 4000, HTTPSPort: 4001},
@@ -626,7 +634,7 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	assert.Contains(err.Error(), "duplicate 'container_port: 3000'")
-
+	// web_extra_exposed_ports shouldn't allow the same port for different config items http_port/http_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
 		{Name: "bar", WebContainerPort: 4000, HTTPPort: 3000, HTTPSPort: 4001},
@@ -634,7 +642,7 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	assert.Contains(err.Error(), "duplicate 'http_port: 3000'")
-
+	// web_extra_exposed_ports shouldn't allow the same port for different config items https_port/https_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
 		{Name: "bar", WebContainerPort: 4000, HTTPPort: 4000, HTTPSPort: 3001},
@@ -642,7 +650,7 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	assert.Contains(err.Error(), "duplicate 'https_port: 3001'")
-
+	// web_extra_exposed_ports shouldn't allow the same port for the same config item container_port/http_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
 		{Name: "bar", WebContainerPort: 4000, HTTPPort: 3001, HTTPSPort: 4001},
@@ -650,7 +658,7 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	assert.Contains(err.Error(), "duplicate 'http_port: 3001'")
-
+	// web_extra_exposed_ports shouldn't allow the same port for different config items container_port/https_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
 		{Name: "bar", WebContainerPort: 4000, HTTPPort: 4000, HTTPSPort: 3000},

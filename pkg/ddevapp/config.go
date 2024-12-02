@@ -530,8 +530,10 @@ func (app *DdevApp) ValidateConfig() error {
 			return fmt.Errorf("the %s project has the same 'http_port: %d' and 'https_port: %d' for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.HTTPPort, extraPort.HTTPSPort, extraPort.Name)
 		}
 
-		if extraPort.WebContainerPort == 0 || extraPort.HTTPPort == 0 || extraPort.HTTPSPort == 0 {
-			return fmt.Errorf("the %s project has an invalid empty port ('container_port: %d', 'http_port: %d', 'https_port: %d') for 'name: %s' in web_extra_exposed_ports", app.Name, extraPort.WebContainerPort, extraPort.HTTPPort, extraPort.HTTPSPort, extraPort.Name)
+		for name, port := range map[string]int{"container_port": extraPort.WebContainerPort, "http_port": extraPort.HTTPPort, "https_port": extraPort.HTTPSPort} {
+			if err := dockerutil.ValidatePort(port); err != nil {
+				return fmt.Errorf("the %s project has an invalid '%s: %d' for 'name: %s' in web_extra_exposed_ports", app.Name, name, port, extraPort.Name)
+			}
 		}
 
 		if usedWebContainerPorts[extraPort.WebContainerPort] {
