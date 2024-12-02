@@ -23,7 +23,7 @@ var sshKeyFiles, sshKeyDirs []string
 var AuthSSHCommand = &cobra.Command{
 	Use:   "ssh",
 	Short: "Add SSH private key authentication to the ddev-ssh-agent container",
-	Long:  `Use this command to provide the password to your SSH private key to the ddev-ssh-agent container, where it can be used by other containers. The command can be executed multiple times to add more keys to the same ssh-agent.`,
+	Long:  `Use this command to provide the password to your SSH private key to the ddev-ssh-agent container, where it can be used by other containers. The command can be executed multiple times to add more keys.`,
 	Example: heredoc.DocI2S(`
 		ddev auth ssh
 		ddev auth ssh -d ~/custom/path/to/ssh
@@ -184,8 +184,8 @@ func echoDockerCmd(dockerCmd []string) string {
 }
 
 func init() {
-	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "full path to SSH private key file, use the flag multiple times to add more keys")
-	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyDirs, "ssh-key-path", "d", nil, "full path to directory with SSH private key(s), use the flag multiple times to add more directories")
+	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "path to SSH private key file, use the flag multiple times to add more keys")
+	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyDirs, "ssh-key-path", "d", nil, "path to directory with SSH private key(s), use the flag multiple times to add more directories")
 	// While both flags work well with each other, don't allow them to be passed at the same time to make it easier to use.
 	AuthSSHCommand.MarkFlagsMutuallyExclusive("ssh-key-file", "ssh-key-path")
 

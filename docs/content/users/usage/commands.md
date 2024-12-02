@@ -186,7 +186,7 @@ Authentication commands.
 
 Add [SSH key authentication](../usage/cli.md#ssh-into-containers) to the `ddev-ssh-agent` container.
 
-The command can be executed multiple times to add more keys to the same `ssh-agent`.
+The command can be executed multiple times to add more keys, or you can use the `-f` flag for several individual keys for example `ddev auth ssh -f /path/to/first_id_rsa -f /path/to/second_id_rsa`.
 
 Example:
 
@@ -201,8 +201,8 @@ ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
 
 Flags:
 
-* `--ssh-key-file`, `-f`: Full path to SSH private key file, use the flag multiple times to add more keys.
-* `--ssh-key-path`, `-d`: Full path to directory with SSH private key(s), use the flag multiple times to add more directories.
+* `--ssh-key-file`, `-f`: Path to SSH private key file, use the flag multiple times to add more keys.
+* `--ssh-key-path`, `-d`: Path to directory with SSH private key(s), use the flag multiple times to add more directories.
 
 ## `blackfire`
 
