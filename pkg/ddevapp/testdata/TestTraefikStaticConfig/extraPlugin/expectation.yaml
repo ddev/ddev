@@ -1,4 +1,9 @@
-accesslog: {}
+log:
+  level: ERROR
+accessLog:
+  filters:
+    statusCodes:
+      - "300-510"
 api:
   dashboard: true
   insecure: true
@@ -28,8 +33,6 @@ experimental:
       version: v0.8.1
 global:
   sendAnonymousUsage: false
-log:
-  level: DEBUG
 ping:
   entryPoint: traefik
 providers:

@@ -1,0 +1,8 @@
+#ddev-generated
+
+# Enable extensive error and access logging
+log:
+  level: DEBUG
+accessLog:
+  filters:
+    statusCodes: {}

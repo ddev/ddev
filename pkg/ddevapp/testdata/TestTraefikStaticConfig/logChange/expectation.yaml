@@ -1,4 +1,3 @@
-accesslog: {}
 api:
   dashboard: true
   insecure: true
@@ -24,7 +23,11 @@ entryPoints:
 global:
   sendAnonymousUsage: false
 log:
-  level: INFO
+  level: DEBUG
+accessLog:
+  filters:
+    statusCodes:
+      - "300-510"
 ping:
   entryPoint: traefik
 providers:
