@@ -160,7 +160,7 @@ docker ps -a
 if command -v mkcert >/dev/null; then
   header "mkcert information"
   which -a mkcert
-  echo "JAVA_HOME=${JAVA_HOME:-}"
+  echo "CAROOT=${CAROOT:-} WSLENV=${WSLENV:-} JAVA_HOME=${JAVA_HOME:-}"
   mkcert -CAROOT
   ls -l "$(mkcert -CAROOT)"
 fi
