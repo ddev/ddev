@@ -12,7 +12,7 @@ We love to hear from you and want you to be successful with DDEV!
 * [Discord](https://discord.gg/5wjP76mBJD) interactive community support.
 * [DDEV issue queue](https://github.com/ddev/ddev/issues) for bugs and feature requests.
 * [Mastodon](https://fosstodon.org/@ddev)
-* [Twitter (deprecated) with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us. It’s not as good for interactive support, but we’ll answer anywhere.
+* [Bluesky](https://bsky.app/profile/ddev.bsky.social)
 
 ## Additional Resources
 
