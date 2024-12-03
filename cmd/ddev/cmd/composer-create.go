@@ -356,11 +356,12 @@ func appendAllArgsAtTheEnd(args []string, containerInstallPath string, app *ddev
 		}
 		// Add the second arg here, which is a directory
 		if len(composerArgs) == 1 {
-			appRoot := app.GetAbsAppRoot(false)
+			appRoot := util.WindowsPathToCygwinPath(app.GetAbsAppRoot(false))
 			absComposerDirectory, err := filepath.Abs(arg)
 			if err != nil {
 				util.Failed("Failed to get absolute path for '%s': %v", arg, err)
 			}
+			absComposerDirectory = util.WindowsPathToCygwinPath(absComposerDirectory)
 			if !strings.HasPrefix(absComposerDirectory, appRoot) {
 				util.Failed("Failed to create project: directory '%s' is outside the project root '%s'", absComposerDirectory, appRoot)
 			}
@@ -454,6 +455,10 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 	}
 	// The option is not valid for other commands on any error.
 	return false
+}
+
+func getComposerRoot(app *ddevapp.DdevApp) string {
+	return path.Join(app.GetComposerRoot(true, false), composerDirectoryArg)
 }
 
 func init() {
