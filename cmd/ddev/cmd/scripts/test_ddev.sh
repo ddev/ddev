@@ -48,7 +48,7 @@ echo
 ddev debug configyaml | grep -v web_environment
 
 header "existing project customizations"
-grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres .ddev/.env .ddev/.env.* 2>/dev/null | grep -v '\.example$' 2>/dev/null
+grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres .ddev/traefik/config .ddev/.env .ddev/.env.* 2>/dev/null | grep -v '\.example$' 2>/dev/null
 
 if ls .ddev/nginx >/dev/null 2>&1 ; then
   echo "Customizations in .ddev/nginx:"
@@ -87,7 +87,7 @@ function cleanup {
 
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 
-printf "RUN timeout 120 apt-get update || true\nRUN curl -I https://www.google.com\n" > .ddev/web-build/Dockerfile.test
+printf "RUN timeout 30 apt-get update || true\nRUN curl -I https://www.google.com\n" > .ddev/web-build/Dockerfile.test
 
 set +eu
 
@@ -149,7 +149,7 @@ rancher-desktop)
   ;;
 esac
 
-if ddev debug dockercheck -h| grep dockercheck >/dev/null; then
+if ddev debug dockercheck -h | grep dockercheck >/dev/null; then
   ddev debug dockercheck 2>/dev/null
 fi
 
@@ -160,6 +160,7 @@ docker ps -a
 if command -v mkcert >/dev/null; then
   header "mkcert information"
   which -a mkcert
+  echo "JAVA_HOME=${JAVA_HOME:-}"
   mkcert -CAROOT
   ls -l "$(mkcert -CAROOT)"
 fi
@@ -167,6 +168,11 @@ fi
 if command -v ping >/dev/null; then
   header "ping attempt on ddev.site"
   ping -c 1 dkdkd.ddev.site
+fi
+
+if command -v curl >/dev/null; then
+  header "curl information"
+  which -a curl
 fi
 
 cat <<END >web/index.php
@@ -179,7 +185,11 @@ cat <<END >web/index.php
 END
 
 header "ddev debug rebuild"
-ddev debug rebuild
+if ddev debug rebuild -h | grep rebuild >/dev/null; then
+  ddev debug rebuild
+else
+  ddev debug refresh
+fi
 
 header "Project startup"
 DDEV_DEBUG=true ddev start -y || ( \
@@ -187,41 +197,45 @@ DDEV_DEBUG=true ddev start -y || ( \
   ddev list && \
   ddev describe && \
   printf "============= ddev-${PROJECT_NAME}-web healthcheck run =========\n" && \
-  docker exec ddev-${PROJECT_NAME}-web bash -x 'rm -f /tmp/healthy && /healthcheck.sh' && \
+  docker exec ddev-${PROJECT_NAME}-web bash -xc 'rm -f /tmp/healthy && /healthcheck.sh' && \
   printf "========= web container healthcheck ======\n" && \
   docker inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web && \
   printf "============= ddev-router healthcheck =========\n" && \
-  docker inspect --format "{{json .State.Health }}" ddev-router && \
+  ( docker inspect --format "{{json .State.Health }}" ddev-router || true ) && \
   printf "============= Global ddev homeadditions =========\n" && \
   ls -lR ~/.ddev/homeadditions/
   printf "============= ddev logs =========\n" && \
   ddev logs | tail -20l && \
   printf "============= contents of /mnt/ddev_config  =========\n" && \
-  docker exec -it ddev-d9-db ls -l /mnt/ddev_config && \
+  docker exec -it ddev-${PROJECT_NAME}-db ls -l /mnt/ddev_config && \
   printf "Start failed.\n" && \
   exit 1 )
 
-host_http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.services.web.host_http_url' 2>/dev/null)
-http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpURLs[0]' 2>/dev/null)
-https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r  '.raw.httpsURLs[0]' 2>/dev/null)
+host_http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.services.web.host_http_url' 2>/dev/null)
+http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.httpURLs[0]' 2>/dev/null)
+https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.httpsURLs[0]' 2>/dev/null)
 
 header "Curl of site from inside container"
 ddev exec curl --fail -I http://127.0.0.1
 
-header "curl -I of ${host_http_url} (web container http docker bind port) from outside"
-curl --fail -I ${host_http_url}
+if command -v curl >/dev/null; then
+  header "curl -I of ${host_http_url} (web container http docker bind port) from outside"
+  curl --fail -I "${host_http_url}"
 
-header "curl -I of ${http_url} (router http URL) from outside"
-curl --fail -I "${http_url}"
+  header "curl -I of ${http_url} (router http URL) from outside"
+  curl --fail -I "${http_url}"
 
-header "Full curl of ${http_url} (router http URL) from outside"
-curl "${http_url}"
+  header "Full curl of ${http_url} (router http URL) from outside"
+  curl "${http_url}"
 
-header "Full curl of ${https_url} (router https URL) from outside"
-curl "${https_url}"
+  header "Full curl of ${https_url} (router https URL) from outside"
+  curl "${https_url}"
 
-header "Curl google.com to check internet access and VPN"
-curl -I https://www.google.com
+  header "Curl google.com to check internet access and VPN"
+  curl -I https://www.google.com
+else
+  header "curl is not available on the host"
+fi
 
 header "host.docker.internal status"
 ddev exec ping -c 1 host.docker.internal
