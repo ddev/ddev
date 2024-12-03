@@ -2420,6 +2420,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
 // and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
+	if dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Rancher Desktop, sshfs is too slow")
+	}
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
