@@ -91,8 +91,7 @@ extra:
     link: https://discord.gg/5wjP76mBJD
   - icon: fontawesome/brands/stack-overflow
     link: https://stackoverflow.com/tags/ddev
-  - icon: fontawesome/brands/twitter
-    link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
+
   generator: false
   analytics:
     provider: plausible

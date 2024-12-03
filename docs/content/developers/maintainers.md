@@ -55,7 +55,7 @@ There are cases like access to hosting provider integrations that have essential
 * **Icinga monitoring system**: This is documented in [maintainer-info](https://github.com/ddev/maintainer-info).
 * **Discord**: Make admin in Discord.
 * **LinkedIn**: Add to the DDEV Foundation company page.
-* **Twitter (X)**: Posting is enabled by login in 1Password.
+* **Bluesky**: Posting is enabled by login in 1Password.
 * **Mastodon**: Posting is enabled by login in 1Password.
 * **Zoho Mail** is how `ddev.com` mail is routed; currently only Randy has an account, but we should consider adding others and making sure that more than one person can maintain it.
 * **Zoho CRM** is how we track contacts and send monthly emails or announcements. People involved in marketing will want to have access to this, but it will cost for additional users.
