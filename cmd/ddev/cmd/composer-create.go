@@ -154,10 +154,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to create project: %v", err)
 		}
 
-		// Make sure composer.json is here with Mutagen enabled
-		err = app.MutagenSyncFlush()
-		if err != nil {
-			util.Failed("Failed to flush Mutagen: %v", err)
+		// Flush Mutagen for composer.json
+		if err = app.MutagenSyncFlush(); err != nil {
+			util.Warning("Could not flush Mutagen: %v", err)
 		}
 
 		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
@@ -200,13 +199,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
 			}
-		}
 
-		// Do a spare restart, which will create any needed settings files
-		// and also restart mutagen
-		err = app.Restart()
-		if err != nil {
-			util.Warning("Failed to restart project after composer create: %v", err)
+			// Flush Mutagen after post-root-package-install
+			if err = app.MutagenSyncFlush(); err != nil {
+				util.Warning("Could not flush Mutagen: %v", err)
+			}
 		}
 
 		// If --no-install was not provided by the user, call composer install
@@ -248,6 +245,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
+			}
+
+			// Flush Mutagen after install
+			if err = app.MutagenSyncFlush(); err != nil {
+				util.Warning("Could not flush Mutagen: %v", err)
 			}
 		}
 
