@@ -159,7 +159,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Warning("Could not flush Mutagen: %v", err)
 		}
 
-		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
+		composerManifest, err := composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
+		if err != nil {
+			util.Failed("Failed to read composer.json: %v", err)
+		}
 		var validRunScriptArgs []string
 
 		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
@@ -254,7 +257,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Reload composer.json if it has changed in the meantime.
-		composerManifest, _ = composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
+		composerManifest, err = composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
+		if err != nil {
+			util.Failed("Failed to read composer.json: %v", err)
+		}
 
 		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
 			// Try to run post-create-project-cmd.
