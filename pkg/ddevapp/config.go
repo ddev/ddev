@@ -263,34 +263,6 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
-	// Write example Dockerfiles into build directories
-	contents := []byte(`
-## #ddev-generated
-## You can copy this Dockerfile.example to Dockerfile to add configuration
-## or packages or anything else to your webimage
-## These additions will be appended last to DDEV's own Dockerfile
-## See examples here https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage
-# RUN echo "Built on $(date)" > /build-date.txt
-`)
-
-	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
-	if err != nil {
-		return err
-	}
-	contents = []byte(`
-## #ddev-generated
-## You can copy this Dockerfile.example to Dockerfile to add configuration
-## or packages or anything else to your dbimage
-## These additions will be appended last to DDEV's own Dockerfile
-## See examples here https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage
-# RUN echo "Built on $(date)" > /build-date.txt
-`)
-
-	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -1220,6 +1192,10 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		}
 
 		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
 			userContents, err := fileutil.ReadFileIntoString(file)
 			if err != nil {
 				return err
@@ -1321,8 +1297,8 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 		}
 
 		for _, file := range files {
-			// Skip the example file
-			if file == filepath.Join(userDockerfilePath, "Dockerfile.example") {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
 				continue
 			}
 
@@ -1345,7 +1321,33 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
 	// This actually copies the Dockerfile, but it is then immediately overwritten by WriteImageDockerfile()
 	if userDockerfilePath != "" {
-		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath))
+		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath), copy2.Options{Skip: func(srcinfo os.FileInfo, src, dest string) (bool, error) {
+			// Always copy if this is a directory
+			if fileutil.IsDirectory(src) {
+				return false, nil
+			}
+			// Get the relative path of the file from userDockerfilePath
+			relPath, err := filepath.Rel(userDockerfilePath, src)
+			if err != nil {
+				return false, err
+			}
+			// Always copy if this is not a top-level file
+			if strings.Contains(relPath, string(filepath.Separator)) {
+				return false, nil
+			}
+			filename := filepath.Base(src)
+			// Always skip Dockerfile* and pre.Dockerfile*
+			if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") {
+				return true, nil
+			}
+			// Always skip README.txt if it is managed by DDEV
+			if filename == "README.txt" {
+				if err := fileutil.CheckSignatureOrNoFile(src, nodeps.DdevFileSignature); err == nil {
+					return true, nil
+				}
+			}
+			return false, nil
+		}})
 		if err != nil {
 			return err
 		}

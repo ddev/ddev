@@ -1283,6 +1283,9 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 	for _, item := range []string{"web", "db"} {
 		err = fileutil.TemplateStringToFile("junkfile", nil, app.GetConfigPath(fmt.Sprintf("%s-build/junkfile", item)))
 		assert.NoError(err)
+		_ = os.MkdirAll(app.GetConfigPath(fmt.Sprintf("%s-build/customDir", item)), 0755)
+		err = fileutil.TemplateStringToFile("junkfile2 in customDir", nil, app.GetConfigPath(fmt.Sprintf("%s-build/customDir/junkfile2", item)))
+		assert.NoError(err)
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile"), []byte(`
 RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		assert.NoError(err)
@@ -1290,6 +1293,7 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		// Last one includes previously recommended ARG/FROM that needs to be removed
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
 ADD junkfile /
+ADD customDir /customDir
 RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
 		assert.NoError(err)
 
@@ -1332,26 +1336,45 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 
 	// Make sure that the expected in-container file has been created
 	for _, item := range []string{"web", "db"} {
+		assert.FileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile"))
+		// Example files should not be copied
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.example"))
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/pre.Dockerfile.example"))
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/README.txt"))
+
+		// Context files should be copied
+		assert.FileExists(app.GetConfigPath("." + item + "imageBuild/junkfile"))
+		assert.FileExists(app.GetConfigPath("." + item + "imageBuild/customDir/junkfile2"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
-			Cmd:     "ls /junkfile",
+			Cmd:     "ls /junkfile && ls /customDir/junkfile2",
 		})
 		assert.NoError(err)
+
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + ".txt >/dev/null",
 		})
 		assert.NoError(err)
+
+		// Dockerfiles should not be copied
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.test1"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test1.txt >/dev/null",
 		})
 		assert.NoError(err)
+
+		// Dockerfiles should not be copied
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.test2"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test2.txt >/dev/null",
 		})
 		assert.NoError(err)
+
+		// Dockerfiles should not be copied
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/pre.Dockerfile.test3"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test3.txt >/dev/null",
@@ -1364,13 +1387,19 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 		})
 		require.NoError(t, err, "out=%s stderr=%s", out, stderr)
 
+		// Dockerfiles should not be copied
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/pre.Dockerfile.test4"))
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.test4"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt 2>/dev/null",
 		})
 		assert.Error(err)
-
 	}
+
+	// Dockerfiles should not be copied
+	assert.NoFileExists(app.GetConfigPath(".webimageBuild/Dockerfile.ddev-php-version"))
+	assert.NoFileExists(app.GetConfigPath(".dbimageBuild/Dockerfile.targets"))
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("ls /var/tmp/running-php-%s >/dev/null", app.PHPVersion),
