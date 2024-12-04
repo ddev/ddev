@@ -1321,7 +1321,7 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
 	// This actually copies the Dockerfile, but it is then immediately overwritten by WriteImageDockerfile()
 	if userDockerfilePath != "" {
-		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath), copy2.Options{Skip: func(srcinfo os.FileInfo, src, dest string) (bool, error) {
+		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath), copy2.Options{Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
 			// Always copy if this is a directory
 			if fileutil.IsDirectory(src) {
 				return false, nil
