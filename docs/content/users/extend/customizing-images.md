@@ -80,7 +80,7 @@ RUN chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/xdebug.ini
 ## Adding Locales
 
 The web image ships by default with a small number of locales, which work for most usages, including
-`en_CA`, `en_US`, `en_GB`, `de_DE`, `de_AT`, `fr_CA`, `fr_FR`, `ja_JP`, and `ru_RU`.
+`en_CA`, `en_US`, `en_GB`, `es_ES`, `es_MX`, `pt_BR`, `pt_PT`, `de_DE`, `de_AT`, `fr_CA`, `fr_FR`, `ja_JP`, and `ru_RU`.
 
 If you need other locales, you can install all of them by adding `locales-all` to your `webimage_extra_packages`. For example, in `.ddev/config.yaml`:
 
