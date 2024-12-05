@@ -1319,35 +1319,13 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 	}
 
 	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
-	// This actually copies the Dockerfile, but it is then immediately overwritten by WriteImageDockerfile()
 	if userDockerfilePath != "" {
-		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath), copy2.Options{Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
-			// Always copy if this is a directory
-			if fileutil.IsDirectory(src) {
-				return false, nil
-			}
-			// Get the relative path of the file from userDockerfilePath
-			relPath, err := filepath.Rel(userDockerfilePath, src)
-			if err != nil {
-				return false, err
-			}
-			// Always copy if this is not a top-level file
-			if strings.Contains(relPath, string(filepath.Separator)) {
-				return false, nil
-			}
-			filename := filepath.Base(src)
-			// Always skip Dockerfile* and pre.Dockerfile*
-			if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") {
-				return true, nil
-			}
-			// Always skip README.txt if it is managed by DDEV
-			if filename == "README.txt" {
-				if err := fileutil.CheckSignatureOrNoFile(src, nodeps.DdevFileSignature); err == nil {
-					return true, nil
-				}
-			}
-			return false, nil
-		}})
+		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath), copy2.Options{
+			Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
+				// Do not copy file if it's not a context file
+				return isNotDockerfileContextFile(userDockerfilePath, src)
+			},
+		})
 		if err != nil {
 			return err
 		}
@@ -1624,4 +1602,36 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
+}
+
+// isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file
+// We consider files in the .ddev/web-build and .ddev/db-build directory to be context files
+// excluding /Dockerfile*, /pre.Dockerfile*, and /README.txt
+func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, error) {
+	// Directories are always context.
+	if fileutil.IsDirectory(file) {
+		return false, nil
+	}
+	// Get the relative path of the file from userDockerfilePath
+	relPath, err := filepath.Rel(userDockerfilePath, file)
+	if err != nil {
+		return false, err
+	}
+	// If this is not a top-level file, it's a context file
+	if strings.Contains(relPath, string(filepath.Separator)) {
+		return false, nil
+	}
+	filename := filepath.Base(file)
+	// Return true for not context Dockerfiles
+	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") {
+		return true, nil
+	}
+	// Return true for not context README.txt if it is managed by DDEV
+	if filename == "README.txt" {
+		if err := fileutil.CheckSignatureOrNoFile(file, nodeps.DdevFileSignature); err == nil {
+			return true, nil
+		}
+	}
+	// Otherwise, it's a context file
+	return false, nil
 }
