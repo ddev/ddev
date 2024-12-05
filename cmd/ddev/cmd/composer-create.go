@@ -52,6 +52,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// Ensure project is running
 		status, _ := app.SiteStatus()
 		if status != ddevapp.SiteRunning {
+			err = app.CreateDocroot()
+			if err != nil {
+				util.Failed("Could not create docroot at %s: %v", app.Docroot, err)
+			}
 			err = app.Start()
 			if err != nil {
 				util.Failed("Failed to start app %s to run create-project: %v", app.Name, err)
@@ -162,7 +166,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 		var validRunScriptArgs []string
 
-		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
+		if !noScriptsPresent && composerManifest.HasPostRootPackageInstallScript() {
 			// Try to run post-root-package-install.
 			composerCmd = []string{
 				"composer",
@@ -253,7 +257,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to read composer.json: %v", err)
 		}
 
-		if !noScriptsPresent && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
+		if !noScriptsPresent && composerManifest.HasPostCreateProjectCmdScript() {
 			// Try to run post-create-project-cmd.
 			composerCmd = []string{
 				"composer",
@@ -467,8 +471,21 @@ func getComposerRootInContainer(app *ddevapp.DdevApp) string {
 	return path.Join(app.GetComposerRoot(true, false), composerDirectoryArg)
 }
 
-// prepareAppForComposer flushes mutagen and creates settings file
+// prepareAppForComposer creates docroot, if needed, and restarts the app.
+// Otherwise, it flushes mutagen, creates settings file, runs post start action
 func prepareAppForComposer(app *ddevapp.DdevApp) {
+	// Check if there is a docroot. If not, create one.
+	if !fileutil.IsDirectory(app.GetAbsDocroot(false)) {
+		err := app.CreateDocroot()
+		if err != nil {
+			util.Failed("Could not create docroot at %s: %v", app.Docroot, err)
+		}
+		// Restart the project after creating docroot
+		if err := app.Restart(); err != nil {
+			util.Failed("Could not restart %s project: %v", app.Name, err)
+		}
+		return
+	}
 	// Flush Mutagen to make sure composer.json is in sync after moving it from /tmp
 	if err := app.MutagenSyncFlush(); err != nil {
 		util.Warning("Could not flush Mutagen: %v", err)
