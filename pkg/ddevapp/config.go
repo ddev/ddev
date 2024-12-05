@@ -257,6 +257,12 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
+	// The .ddev directory may still need to be populated, especially in tests
+	err = PopulateExamplesCommandsHomeadditions(appcopy.Name)
+	if err != nil {
+		return err
+	}
+
 	// Allow project-specific post-config action
 	err = appcopy.PostConfigAction()
 	if err != nil {
@@ -1501,18 +1507,6 @@ func PrepDdevDirectory(app *DdevApp) error {
 		}).Debug("Config Directory does not exist, attempting to create.")
 
 		err = os.MkdirAll(dir, 0755)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Pre-create a few dirs so we can be sure they are owned by the user and not root.
-	dirs := []string{
-		"web-entrypoint.d",
-		"xhprof",
-	}
-	for _, subdir := range dirs {
-		err = os.MkdirAll(filepath.Join(dir, subdir), 0755)
 		if err != nil {
 			return err
 		}
