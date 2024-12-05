@@ -1,0 +1,4 @@
+# TODO: When we have Debian 13 Trixie, we must remove this condition
+# Allow downgrades for sqlite3 to avoid this error:
+# "Packages were downgraded and -y was used without --allow-downgrades"
+APT::Get::allow-downgrades "true";

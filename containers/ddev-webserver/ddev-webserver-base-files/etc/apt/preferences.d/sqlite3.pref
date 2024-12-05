@@ -1,0 +1,14 @@
+# Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
+# But with upgraded sqlite3, you can't install libsqlite3-dev because of broken dependencies
+# We can pin it to 3.40.1-2+deb12u1 from Debian 12 Bookworm, so it can be downgraded automatically
+# TODO: When we have Debian 13 Trixie, we must remove this condition
+
+Package: sqlite3
+Version: 3.45.1-1
+Pin: version 3.40.1-2+deb12u1
+Pin-Priority: 1001
+
+Package: libsqlite3-0
+Version: 3.45.1-1
+Pin: version 3.40.1-2+deb12u1
+Pin-Priority: 1001

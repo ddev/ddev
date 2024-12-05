@@ -1059,6 +1059,12 @@ ENV N_INSTALL_VERSION="%s"
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
+	if app.Type == nodeps.AppTypeDrupal11 {
+		// TODO: When we have Debian 13 Trixie, we must remove this condition
+		extraWebContent = extraWebContent + `
+### DDEV-injected ignore to downgrade sqlite3 to 3.40.1-2+deb12u1 in Drupal 11. If downgrade needed, move the file back
+RUN mv /etc/apt/preferences.d/sqlite3.pref /etc/apt/preferences.d/sqlite3.conf`
+	}
 
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string
