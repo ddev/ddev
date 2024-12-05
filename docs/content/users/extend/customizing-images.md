@@ -101,10 +101,10 @@ These files’ content will be inserted into the constructed Dockerfile for each
 
 For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* everything else:
 
-* `.ddev/web-build/pre.Dockerfile`
 * `.ddev/web-build/pre.Dockerfile.*`
-* `.ddev/db-build/pre.Dockerfile`
+* `.ddev/web-build/pre.Dockerfile`
 * `.ddev/db-build/pre.Dockerfile.*`
+* `.ddev/db-build/pre.Dockerfile`
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug rebuild`](../usage/commands.md#debug-rebuild).
 
