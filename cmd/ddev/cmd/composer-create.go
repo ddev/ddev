@@ -360,10 +360,13 @@ func appendAllArgsAtTheEnd(args []string, containerInstallPath string, app *ddev
 				util.Failed("Failed to create project: directory '%s' is outside the project root '%s'", absComposerDirectory, appRoot)
 			}
 			composerDirectoryArg = strings.TrimPrefix(absComposerDirectory, appRoot)
+			composerDirectoryArg = strings.TrimPrefix(composerDirectoryArg, "/")
 			if composerDirectoryArg != "" {
-				y := util.Confirm("It's uncommon to install a project in a subdirectory. Continue?")
-				if !y {
-					util.Warning("Aborting: no permission to install in %s", strings.TrimPrefix(composerDirectoryArg, "/"))
+				util.Warning("Installing the project in the '%s' subdirectory is uncommon.", composerDirectoryArg)
+				util.Warning("DDEV won't properly apply CMS configuration in a subdirectory.")
+				util.Warning("This will be similar to running 'composer create-project' without DDEV.")
+				if yes := util.Confirm("Continue?"); !yes {
+					util.Warning("Aborting: no permission to install in the '%s' subdirectory", composerDirectoryArg)
 					util.Warning("You can retry using '.' (current directory) as the directory argument.")
 					os.Exit(1)
 				}
@@ -470,10 +473,13 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 	if err := app.MutagenSyncFlush(); err != nil {
 		util.Warning("Could not flush Mutagen: %v", err)
 	}
-	// Write settings file with database information
-	// This is important because Composer can run some scripts depending on this
+	// Important because Composer can run some scripts depending on this
 	if _, err := app.CreateSettingsFile(); err != nil {
 		util.Warning("Could not write settings file: %v", err)
+	}
+	// Important because Composer can run some scripts depending on this
+	if err := app.PostStartAction(); err != nil {
+		util.Warning("Could not run PostStartAction: %v", err)
 	}
 }
 
