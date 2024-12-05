@@ -490,6 +490,22 @@ func (app DdevApp) GetAbsDocroot(inContainer bool) string {
 	return filepath.Join(app.GetAbsAppRoot(false), app.GetDocroot())
 }
 
+// CreateDocroot creates the docroot directory for DDEV app if it doesn't exist
+func (app DdevApp) CreateDocroot() error {
+	if app.Docroot == "" {
+		return nil
+	}
+	docrootAbsPath, err := filepath.Abs(app.Docroot)
+	if err != nil {
+		return err
+	}
+	if !fileutil.IsDirectory(docrootAbsPath) {
+		err := os.MkdirAll(docrootAbsPath, 0755)
+		return err
+	}
+	return nil
+}
+
 // GetAbsAppRoot returns the absolute path to the project root on the host or if
 // inContainer is set to true in the container.
 func (app DdevApp) GetAbsAppRoot(inContainer bool) string {
