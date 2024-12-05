@@ -1201,15 +1201,6 @@ ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
-	// If our PHP version is not already provided in the ddev-webserver, add it now
-	if strings.Contains(fullpath, "webimageBuild") {
-		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
-			contents = contents + fmt.Sprintf(`
-### DDEV-injected addition of not-preinstalled PHP version
-RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
-`, app.GetStartScriptTimeout(), app.PHPVersion)
-		}
-	}
 
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
@@ -1225,6 +1216,16 @@ RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${
 			}
 
 			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
+		}
+	}
+
+	// If our PHP version is not already provided in the ddev-webserver, add it now
+	if strings.Contains(fullpath, "webimageBuild") {
+		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
+			contents = contents + fmt.Sprintf(`
+### DDEV-injected addition of not-preinstalled PHP version
+RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
+`, app.GetStartScriptTimeout(), app.PHPVersion)
 		}
 	}
 
