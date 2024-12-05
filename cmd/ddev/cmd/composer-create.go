@@ -360,6 +360,14 @@ func appendAllArgsAtTheEnd(args []string, containerInstallPath string, app *ddev
 				util.Failed("Failed to create project: directory '%s' is outside the project root '%s'", absComposerDirectory, appRoot)
 			}
 			composerDirectoryArg = strings.TrimPrefix(absComposerDirectory, appRoot)
+			if composerDirectoryArg != "" {
+				y := util.Confirm("It's uncommon to install a project in a subdirectory. Continue?")
+				if !y {
+					util.Warning("Aborting: no permission to install in %s", strings.TrimPrefix(composerDirectoryArg, "/"))
+					util.Warning("You can retry using '.' (current directory) as the directory argument.")
+					os.Exit(1)
+				}
+			}
 			composerArgs = append(composerArgs, path.Join(containerInstallPath, composerDirectoryArg))
 		} else {
 			// Else add it without changes
