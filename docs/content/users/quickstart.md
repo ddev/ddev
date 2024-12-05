@@ -567,7 +567,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
-## Silverstripe
+## Silverstripe CMS
 
 Use a new or existing Composer project, or clone a Git repository.
 
@@ -593,12 +593,12 @@ Use a new or existing Composer project, or clone a Git repository.
     ddev sake dev/build flush=all
     ```
 
-Your Silverstripe project is now ready.
-The CMS can be found at /admin, log into the default admin account using `admin` and `password`.
+Your Silverstripe CMS project is now ready.
+The CMS can be found at `/admin`, log into the default admin account using `admin` and `password`.
 
-Visit the [Silverstripe documentation](https://userhelp.silverstripe.org/en/5/) for more information.
+Visit the Silverstripe CMS [user documentation](https://userhelp.silverstripe.org/) and [developer documentation](https://docs.silverstripe.org/) for more information.
 
-`ddev sake` can be used as a shorthand for the Silverstripe Make command `ddev exec vendor/bin/sake`
+`ddev sake` can be used as a shorthand for the Silverstripe CLI command `ddev exec vendor/bin/sake`.
 
 To open the CMS directly from CLI, run `ddev launch /admin`.
 
