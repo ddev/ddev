@@ -293,9 +293,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			if len(stderr) > 0 {
 				output.UserErr.Println(stderr)
 			}
-		}
 
-		prepareAppForComposer(app)
+			prepareAppForComposer(app)
+		}
 
 		util.Success("\nddev composer create was successful.")
 
