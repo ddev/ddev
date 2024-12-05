@@ -154,10 +154,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to create project: %v", err)
 		}
 
-		// Flush Mutagen for composer.json
-		if err = app.MutagenSyncFlush(); err != nil {
-			util.Warning("Could not flush Mutagen: %v", err)
-		}
+		prepareAppForComposer(app)
 
 		composerManifest, err := composer.NewManifest(path.Join(composerRoot, composerDirectoryArg, "composer.json"))
 		if err != nil {
@@ -190,7 +187,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
+				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
@@ -203,10 +200,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				output.UserErr.Println(stderr)
 			}
 
-			// Flush Mutagen after post-root-package-install
-			if err = app.MutagenSyncFlush(); err != nil {
-				util.Warning("Could not flush Mutagen: %v", err)
-			}
+			prepareAppForComposer(app)
 		}
 
 		// If --no-install was not provided by the user, call composer install
@@ -234,7 +228,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				RawCmd:  composerCmd,
-				Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
+				Dir:     getComposerRootInContainer(app),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
 
@@ -250,10 +244,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 				output.UserErr.Println(stderr)
 			}
 
-			// Flush Mutagen after install
-			if err = app.MutagenSyncFlush(); err != nil {
-				util.Warning("Could not flush Mutagen: %v", err)
-			}
+			prepareAppForComposer(app)
 		}
 
 		// Reload composer.json if it has changed in the meantime.
@@ -290,7 +281,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
+				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
@@ -304,12 +295,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
-		// Do a spare restart, which will create any needed settings files
-		// and also restart Mutagen
-		err = app.Restart()
-		if err != nil {
-			util.Warning("Failed to restart project after composer create: %v", err)
-		}
+		prepareAppForComposer(app)
 
 		util.Success("\nddev composer create was successful.")
 
@@ -445,7 +431,7 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 	userOutFunc := util.CaptureUserOut()
 	_, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Dir:     path.Join(app.GetComposerRoot(true, false), composerDirectoryArg),
+		Dir:     getComposerRootInContainer(app),
 		RawCmd:  validateCmd,
 	})
 	out := userOutFunc()
@@ -465,8 +451,22 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 	return false
 }
 
-func getComposerRoot(app *ddevapp.DdevApp) string {
+// getComposerRootInContainer returns the composer root in the container
+func getComposerRootInContainer(app *ddevapp.DdevApp) string {
 	return path.Join(app.GetComposerRoot(true, false), composerDirectoryArg)
+}
+
+// prepareAppForComposer flushes mutagen and creates settings file
+func prepareAppForComposer(app *ddevapp.DdevApp) {
+	// Flush Mutagen to make sure composer.json is in sync after moving it from /tmp
+	if err := app.MutagenSyncFlush(); err != nil {
+		util.Warning("Could not flush Mutagen: %v", err)
+	}
+	// Write settings file with database information
+	// This is important because Composer can run some scripts depending on this
+	if _, err := app.CreateSettingsFile(); err != nil {
+		util.Warning("Could not write settings file: %v", err)
+	}
 }
 
 func init() {
