@@ -199,10 +199,9 @@ Go templating resources:
 
 ## Additional services in ddev-contrib
 
-Commonly-used services are being migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported add-on repositories, but the repository still has a wealth of additional examples and instructions:
+Most commonly-used services have been migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported add-on repositories, but the repository still has a wealth of additional examples and instructions, but it's mostly obsolete.
 
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php)
 * **RabbitMQ**: See [RabbitMQ](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
-* **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
 While we welcome requests to integrate other services at [ddev-contrib](https://github.com/ddev/ddev-contrib), we encourage creating a supported add-on that’s more beneficial to the community.

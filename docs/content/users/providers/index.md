@@ -25,7 +25,7 @@ Each provider recipe is a YAML file that can have whatever name you want. The ex
 - [rsync](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/rsync.yaml.example)
 - [Upsun](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/upsun.yaml)
 
-We know you’ll find improvements to these examples and will have lots to contribute for other hosting providers, and we look forward to your contributions as pull requests here or in [ddev-contrib](https://github.com/ddev/ddev-contrib).
+We know you’ll find improvements to these examples and will have lots to contribute for other hosting providers, and we look forward to your contributions as pull requests here or as new add-ons.
 
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 

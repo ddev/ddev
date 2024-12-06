@@ -88,7 +88,7 @@ extra:
   - icon: fontawesome/brands/github
     link: https://github.com/ddev/ddev
   - icon: fontawesome/brands/discord
-    link: https://discord.gg/5wjP76mBJD
+    link: https://ddev.com/s/discord
   - icon: fontawesome/brands/stack-overflow
     link: https://stackoverflow.com/tags/ddev
 
