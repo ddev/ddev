@@ -235,8 +235,8 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     !!!warning "NFS is deprecated"
 
-        NFS is deprecated and no longer recommended. This feature may be
-        removed in a future release.
+        NFS is deprecated and no longer recommended. It can be complex and unreliable. This feature will be
+        removed in DDEV v1.25.0.
 
 
     ### Using NFS to Mount the Project into the Web Container
@@ -310,18 +310,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
             /nfsmount/.ddev
             ```
 
-    === "Windows NFS Setup"
-
-        The executable components required for Windows NFS, `winnfsd` and `nssm`, are packaged with the DDEV Windows Installer in each release. If you’ve used the Windows installer, they’re ready to go.
-
-        To enable `winnfsd` as a service, please download, inspect and run `windows_ddev_nfs_setup.sh` created by the installer at `C:\Program Files\ddev\windows_ddev_nfs_setup.sh`.
-
-        You can also download this [directly from the GitHub repository](https://raw.githubusercontent.com/ddev/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a Git Bash session on Windows. If your DDEV projects are set up outside your home directory, you’ll need to edit `~/.ddev/nfs_exports.txt` (created by the script) and restart the service with
-        `sudo nssm restart nfsd`.
-
-        !!!warning "Firewall Issues"
-            On Windows 10/11 you’ll likely have to allow `winnfsd` to bypass the Windows Defender Firewall. If you’re getting a timeout with no information after [`ddev start`](../usage/commands.md#start), try going to *Windows Defender Firewall* → *Allow an app or feature through Windows Defender Firewall*, *Change Settings*, *Allow another app*. Then choose `C:\Program Files\ddev\winnfsd.exe`, assuming that’s where `winnfsd` is installed.
-
         #### Debugging `ddev start` Failures with NFS Mount Enabled
 
         There are a number of reasons the NFS mount can fail on [`ddev start`](../usage/commands.md#start):
@@ -338,21 +326,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
         * When debugging, run [`ddev restart`](../usage/commands.md#restart) in between each change. Otherwise, you can have stale mounts inside the container and you’ll miss any benefit you may find in the debugging process.
         * Inspect `~/.ddev/nfs_exports.txt`.
         * Restart the server with `sudo nssm restart nfsd`.
-
-        #### Windows-specific NFS debugging
-
-        * Temporarily disable any firewall, VPN, or virus checker.
-        * You can only have one NFS daemon running, so if another application has installed one, you’ll want to use that NFS daemon and reconfigure it to allow NFS mounts of your projects.
-
-        1. Stop the running `winnfsd` service with `sudo nssm stop nfsd`.
-        2. Run `winnfsd` manually in the foreground with `winnfsd "C:\\"`. If it immediately returns to the shell prompt, there’s likely another `nfsd` service running.
-        3. In another window, in a DDEV project directory, run [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) to see if it can mount successfully. (The project doesn’t need to be started.) If `ddev debug nfsmount` is successful, then everything is probably going to work.
-        4. Confirm `~/.ddev/nfs_exports.txt` has a line that includes your project directories, then run `sudo nssm start nfsd` and `nssm status nfsd`. The status command should show `SERVICE_RUNNING`.
-        5. These [nssm](https://nssm.cc/) commands may be useful: `nssm help`, `sudo nssm start nfsd`, `sudo nssm stop nfsd`, `nssm status nfsd`, `sudo nssm edit nfsd` (pops up a window that may be hidden), and `sudo nssm remove nfsd` (also pops up a window, doesn’t work predictably if you haven’t already stopped the service).
-        6. `nssm` logs failures and what it’s doing to the system event log. Run Event Viewer and filter events:
-            ![Windows Event Viewer](../../images/windows-event-viewer.png)
-        7. Please make sure you’ve excluded `winnfsd` from the Windows Defender Firewall per the installation instructions above.
-        8. On Windows 10/11 Pro you can visit *Turn Windows features on or off* and enable *Services for NFS* → *Client for NFS*. The `showmount -e` command will then show available exports on the current machine. This can help find out if a conflicting server is running or identifying a problem with exports.
 
 ## Freeing Up System Resources
 
