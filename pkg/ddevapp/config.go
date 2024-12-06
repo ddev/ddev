@@ -1423,15 +1423,6 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 			}
 		}
 	}
-	dir, err := fileutil.FindFilenameInDirectory(app.AppRoot, []string{"manage.py"})
-	if err == nil && dir != "" {
-		defaultDocroot, err = filepath.Rel(app.AppRoot, dir)
-		if err != nil {
-			util.Warning("failed to filepath.Rel(%s, %s): %v", app.AppRoot, dir, err)
-			defaultDocroot = ""
-		}
-	}
-
 	return defaultDocroot
 }
 
@@ -1539,7 +1530,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 
 	// Some of the listed items are wildcards or directories, and if they are, there's an error
 	// opening them and they innately get added to the .gitignore.
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "config.*.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "config.*.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
