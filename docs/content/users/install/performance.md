@@ -236,7 +236,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     !!!warning "NFS is deprecated"
 
         NFS is deprecated and no longer recommended. It can be complex and unreliable. This feature will be
-        removed DDEV v1.25.0.
+        removed in DDEV v1.25.0.
 
 
     ### Using NFS to Mount the Project into the Web Container
