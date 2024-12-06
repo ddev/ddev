@@ -1059,7 +1059,12 @@ ENV N_INSTALL_VERSION="%s"
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
-
+	// TODO: When we have this from upstream Debian 13 Trixie, we must remove this condition
+	if app.Type == nodeps.AppTypeDrupal11 {
+		extraWebContent = extraWebContent + `
+### DDEV-injected SQLite 3.45.1 is required for Drupal 11 tests, change the project type if you don't need this
+RUN apt-get install -y /usr/local/sqlite3-drupal11/*.deb`
+	}
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string
 	for _, appStart := range app.WebExtraDaemons {
