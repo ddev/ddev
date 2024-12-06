@@ -338,7 +338,6 @@ filesystem
 filesystems
 findstr
 fish
-flask
 for
 format
 fpath
@@ -537,7 +536,6 @@ provider
 ps
 psql
 public
-python
 Querious
 quickstart
 quickstarts

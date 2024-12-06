@@ -104,7 +104,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     less \
     libldap-common \
     libpcre3 \
-    libpq-dev \
     nano \
     ncurses-bin \
     netcat-traditional \
