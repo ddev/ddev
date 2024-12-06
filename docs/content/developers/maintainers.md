@@ -10,7 +10,7 @@ Not all maintainers can do all these things at any given time, but these are the
 
 * **Support**: We try to give friendly, accurate, and timely responses to those who need help in:
     * [Issue queue](https://github.com/ddev/ddev/issues) (and discussions, etc). Please follow all in at least the ddev/ddev project. On the Watch/Unwatch button at the top of the repository, consider selecting "All Activity". Also consider this on other projects in the `ddev` organization or other projects that are in your interest area.
-    * Discord: Please read everything that happens in the [DDEV Discord](https://discord.gg/5wjP76mBJD) and respond to questions that you can help with.
+    * Discord: Please read everything that happens in the [DDEV Discord](https://ddev.com/s/discord) and respond to questions that you can help with.
     * Stack Overflow. You can subscribe to the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) using the [email filter](https://meta.stackoverflow.com/a/400613/8097891) and answer or comment on questions there.
     * Often in [Drupal Slack](https://www.drupal.org/join-slack) #ddev channel. We have tried and tried to get people over to Discord, but it's still pretty active there.
     * Other add-on repositories or related repos where we can help.

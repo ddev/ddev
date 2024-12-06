@@ -328,7 +328,7 @@ If anything in `.ddev/config.yaml` is wrong, you can edit that directly or use [
 
 ### How do I get support?
 
-See the [support options](../support.md), including [Discord](https://discord.gg/5wjP76mBJD), [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and the [issue queue](https://github.com/ddev/ddev/issues).
+See the [support options](../support.md), including [Discord](https://ddev.com/s/discord), [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and the [issue queue](https://github.com/ddev/ddev/issues).
 
 ### How can I contribute to DDEV?
 
@@ -336,8 +336,7 @@ We love and welcome contributions of knowledge, support, docs, and code:
 
 * Submit an issue or pull request to the [main repository](https://github.com/ddev/ddev).
 * Add your external resource to [awesome-ddev](https://github.com/ddev/awesome-ddev).
-* Add your recipe or HOWTO to [ddev-contrib](https://github.com/ddev/ddev-contrib).
-* Help others in [Discord](https://discord.gg/5wjP76mBJD) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).
+* Help others in [Discord](https://ddev.com/s/discord) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).
 * Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
 * Get involved with DDEV governance and the [Advisory Group](https://github.com/ddev/ddev/discussions/categories/ddev-advisory-group).
 

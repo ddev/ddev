@@ -28,7 +28,7 @@ See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-managem
 The [DDEV Docker Maintainers](https://github.com/ddev)
 
 ## Where to get help:
-* [DDEV Community Discord](https://discord.gg/5wjP76mBJD)
+* [DDEV Community Discord](https://ddev.com/s/discord)
 * [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev)
 
 ## Where to file issues:
