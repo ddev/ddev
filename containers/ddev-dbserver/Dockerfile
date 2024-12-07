@@ -1,21 +1,23 @@
 ARG BASE_IMAGE="scratch"
 ARG DB_PINNED_VERSION="latest"
 FROM ${BASE_IMAGE}:${DB_PINNED_VERSION}
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 
 # This must be reiterated because everything is emptied on FROM
 ARG BASE_IMAGE
 ARG DB_VERSION
 
-# TODO: This is temporary while we wait for built xtrabackup from Percona
-# Only used for mysql:8.0 arm64
-ARG XTRABACKUP_PACKAGE_VERSION=8.0.35-30-1
-
+#TODO: 2024-12-07: Currently the "testing" repository, change to the real one when they release
+# See https://perconadev.atlassian.net/browse/PXB-3361
+ARG PERCONA_SETUP_URL=https://repo.percona.com/prel/apt/pool/testing/p/percona-release/percona-release_1.0-30.generic_all.deb
 
 ENV LANG=C.UTF-8
 ENV MYSQL_DATABASE=db
 ENV MYSQL_USER=db
-ENV MYSQL_PASSWORD=db
-ENV MYSQL_ROOT_PASSWORD=root
+ARG PUBLIC_MYSQL_PASSWORD=db
+ENV MYSQL_PASSWORD=${PUBLIC_MYSQL_PASSWORD}
+ARG PUBLIC_MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_ROOT_PASSWORD=${PUBLIC_MYSQL_ROOT_PASSWORD}
 
 SHELL ["/bin/bash", "-c"]
 
@@ -44,30 +46,28 @@ RUN mkdir -p /var/lib/apt/lists/partial
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
 
 RUN <<EOF
+    set -eu -o pipefail
     arch=$(dpkg --print-architecture)
     set -x;
     if ( ! command -v xtrabackup && ! command -v mariabackup ); then
-        curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o /tmp/percona-release_latest.deb
-        apt-get install -y /tmp/percona-release_latest.deb
-        rm /tmp/percona-release*.deb
+        curl -o /tmp/percona_release_latest.deb --fail -sSL ${PERCONA_SETUP_URL}
+        apt-get install -y /tmp/percona_release_latest.deb
+        rm /tmp/percona_release_latest.deb
 
         # Use http when connecting. This only affects MariaDB 5.5
         if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi
 
         case ${DB_VERSION} in
-            # TODO: This is just temp hack to get xtrabackup here, it should end up using their `percona-release setup pxb84-lts` tool
-            # Currently broken due to https://perconadev.atlassian.net/issues/PXB-3361
             "8.0")
-            curl -L -s --fail -o /tmp/xtrabackup.deb https://downloads.percona.com/downloads/Percona-XtraBackup-8.0/Percona-XtraBackup-8.0.35-31/binary/debian/bookworm/x86_64/percona-xtrabackup-80_8.0.35-31-1.bookworm_${arch}.deb
-            apt-get update && apt-get -qq install -y /tmp/xtrabackup.deb
-            rm /tmp/xtrabackup.deb
-            ;;
+                percona-release setup pxb80
+                apt-get update && apt-get -qq install -y percona-xtrabackup-80
+                ;;
 
             "8.4")
-                curl -L -s --fail -o /tmp/xtrabackup.deb https://repo.percona.com/pxb-84-lts/apt/pool/main/p/percona-xtrabackup-84/percona-xtrabackup-84_8.4.0-1-1.bookworm_${arch}.deb
-                apt-get update && apt-get -qq install -y /tmp/xtrabackup.deb
-                rm /tmp/xtrabackup.deb
+                percona-release setup pxb84lts
+                apt-get update && apt-get -qq install -y percona-xtrabackup-84
                 ;;
+            # Older versions of mysql and a few mariadb use pxb24
             *)
                 percona-release setup pxb24
                 apt-get update && apt-get install -qq -y percona-xtrabackup-24
@@ -105,16 +105,6 @@ RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlba
 RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
 
 RUN /sbin/mkhomedir_helper www-data
-
-# Remove the /etc/apt entry so that if they don't renew the key
-# apt-get update will continue to function
-# Remove MySQL published key that expires 2022-02-15
-# Have requested them to update this in https://bugs.mysql.com/bug.php?id=105632
-# But they haven't done it, and it will break things when it expires.
-RUN rm -f /etc/apt/sources.list.d/mysql.list && \
-    for item in "A4A9 4068 76FC BD3C 4567  70C8 8C71 8D3B 5072 E1F5" ; do \
-        apt-key remove "${item}" || true; \
-    done;
 
 # Normal upstream image doesn't actually have /home/mysql created
 # Make sure it's there in case user 999 (mysql) is using this image.
