@@ -69,9 +69,8 @@ RUN <<EOF
                 ;;
             # Older versions of mysql and a few mariadb use pxb24
             *)
-                apt-get update && apt install -y percona-xtrabackup
-#                percona-release setup pxb24
-#                apt-get update && apt-get install -qq -y percona-xtrabackup-24
+                percona-release setup pxb24
+                apt-get update && apt install -qq -y percona-xtrabackup-24
                 ;;
         esac
     fi
