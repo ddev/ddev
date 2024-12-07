@@ -113,9 +113,7 @@ if [ ${DB_TYPE} = "mysql" ]; then
     # For mysql 5.7 arm64, we have to use our own base images at ddev/mysql
     if [ ${DB_MAJOR_VERSION} = "5.7" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
       BASE_IMAGE=ddev/mysql
-    fi
-
-    else if [ ${DB_MAJOR_VERSION:-} = "8.0" ] || ${DB_MAJOR_VERSION} = "8.4"; then
+    elif [ "${DB_MAJOR_VERSION:-}" = "8.0" ] || [ "${DB_MAJOR_VERSION}" = "8.4" ]; then
       BASE_IMAGE=bitnami/mysql
     fi
 fi
