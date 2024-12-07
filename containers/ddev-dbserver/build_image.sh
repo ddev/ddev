@@ -109,9 +109,15 @@ BASE_IMAGE=${DB_TYPE}
 
 set -x
 
-# TODO: Use bitnami for all mysql >= 5.7
-if [ ${DB_TYPE} = "mysql" ] && [ ${DB_MAJOR_VERSION:-} != "5.5" ]; then
-  BASE_IMAGE=bitnami/mysql
+if [ ${DB_TYPE} = "mysql" ]; then
+    # For mysql 5.7 arm64, we have to use our own base images at ddev/mysql
+    if [ ${DB_MAJOR_VERSION} = "5.7" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
+      BASE_IMAGE=ddev/mysql
+    fi
+
+    else if [ ${DB_MAJOR_VERSION:-} = "8.0" ] || ${DB_MAJOR_VERSION} = "8.4"; then
+      BASE_IMAGE=bitnami/mysql
+    fi
 fi
 printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
 
@@ -123,7 +129,7 @@ fi
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
   set -x
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" ${tag_directive}  .
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" ${tag_directive}  .
   set +x
 fi
 
@@ -131,5 +137,5 @@ fi
 set -x
 if [ -z "${PUSH:-}" ]; then
     echo "Loading to local docker ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" ${tag_directive} .
+    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" ${tag_directive} .
 fi
