@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 
 # This must be reiterated because everything is emptied on FROM
 ARG BASE_IMAGE
-ARG DB_VERSION
+ARG DB_MAJOR_VERSION
 
 #TODO: 2024-12-07: Currently the "testing" repository, change to the real one when they release
 # See https://perconadev.atlassian.net/browse/PXB-3361
@@ -57,7 +57,7 @@ RUN <<EOF
         # Use http when connecting. This only affects MariaDB 5.5
         if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi
 
-        case ${DB_VERSION} in
+        case ${DB_MAJOR_VERSION} in
             "8.0")
                 percona-release setup pxb80
                 apt-get update && apt-get -qq install -y percona-xtrabackup-80
@@ -69,8 +69,9 @@ RUN <<EOF
                 ;;
             # Older versions of mysql and a few mariadb use pxb24
             *)
-                percona-release setup pxb24
-                apt-get update && apt-get install -qq -y percona-xtrabackup-24
+                apt-get update && apt install -y percona-xtrabackup
+#                percona-release setup pxb24
+#                apt-get update && apt-get install -qq -y percona-xtrabackup-24
                 ;;
         esac
     fi
