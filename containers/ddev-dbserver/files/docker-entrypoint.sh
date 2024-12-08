@@ -136,8 +136,6 @@ fi
 # And update the server db version we have here.
 echo $server_db_version >${DATADIR}/db_mariadb_version.txt
 
-# TODO: Why aren't we just doing this with /etc/skel?
-cp -r /home/{.my.cnf,.bashrc} /home/$(whoami)
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
 
 echo
