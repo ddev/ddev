@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+
+# Check if this is a version of Silverstripe CMS with the symfony/console style sake
+# If not, just exit out as older versions of sake can't handle autocomplete
+if ! [ -f 'vendor/silverstripe/framework/bin/sake' ]; then
+    exit 0;
+fi
+
+# Prepare arguments required for symfony/console completion requests
+COMP_CWORD=$(($# - 1))
+INPUT=''
+for w in $@; do
+    if [ ! -z "$w" ]; then
+        INPUT+=("-i$w")
+    fi
+done
+
+# There's no way to add the completion script to .bashrc for only silverstripe projects,
+# so we've got to explicitly call the _complete command directly
+sfcomplete=$(vendor/bin/sake _complete --no-interaction -a1 -sbash -c$COMP_CWORD ${INPUT[@]})
+
+# If suggestions contains backslash (e.g. a FQCN) we need to escape the values.
+if [[ "$sfcomplete" =~ \\ ]]; then
+    # This works regardless of the host shell, while just quoting worked for bash but failed for zsh
+    suggestions=$(for s in $sfcomplete; do printf $'%q\n' "$s"; done)
+else
+    suggestions=$sfcomplete
+fi
+
+# Output the result as a new-line delimited string
+printf "%s\n" "${suggestions[@]}"

@@ -1306,13 +1306,13 @@ ddev restart --all
 
 ## `sake`
 
-Run the `sake` command, only available for Silverstripe projects and if the Silverstripe `sake` command is
+Run the `sake` command, only available for Silverstripe CMS projects and if the `sake` command is
 available in the `vendor/bin` folder.
 
 Common commands:
 
-* Build database: `ddev sake dev/build`
-* List of available tasks: `ddev sake dev/tasks`
+* Build database: `ddev sake dev/build` (or `ddev sake db:build` from Silverstripe CMS 6 onwards)
+* List of available tasks: `ddev sake dev/tasks` (or `ddev sake tasks` from Silverstripe CMS 6 onwards)
 
 ## `self-upgrade`
 
