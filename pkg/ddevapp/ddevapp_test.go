@@ -2399,13 +2399,16 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.Contains(err.Error(), "upload_dirs is not set", app.Type)
 		}
 
+		// TODO: When we have this from upstream Debian 13 Trixie, we must remove this condition
 		// Special installed sqlite3 test for drupal11.
-		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd: "sqlite3 --version | awk '{print $1}'",
-		})
-		require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
-		stdout = strings.Trim(stdout, "\r\n")
-		require.Equal(t, "3.45.1", stdout)
+		if app.Type == nodeps.AppTypeDrupal11 {
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Cmd: "sqlite3 --version | awk '{print $1}'",
+			})
+			require.NoError(t, err, "sqlite3 --version failed, output=%v, stderr=%v", stdout, stderr)
+			stdout = strings.Trim(stdout, "\r\n")
+			require.Equal(t, "3.45.1", stdout)
+		}
 
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
