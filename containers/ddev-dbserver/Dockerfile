@@ -99,7 +99,7 @@ RUN chmod ugo+x /healthcheck.sh
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
 
-RUN rm -rf /var/lib/mysql/*
+RUN rm -rf /var/lib/mysql/* /opt/bitnami/mysql/conf
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
 
 RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
