@@ -119,8 +119,4 @@ export NVM_DIR="$HOME/.nvm"
 # bash completion for npm
 [ -n "$(type -t npm)" ] && eval "$(npm completion)"
 
-for f in /etc/bashrc/*.bashrc; do
-  source $f;
-done
-
 for i in $(\ls $HOME/.bashrc.d/* 2>/dev/null); do source $i; done
