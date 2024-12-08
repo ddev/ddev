@@ -83,12 +83,10 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
-# On bitnami-derived images, mkdir tmp exists and writable, remove their configuration
+# On bitnami-derived images, remove their default config so we get ours
 RUN <<BITNAMI_EOF
 if [ -d /opt/bitnami/mysql ]; then
-#    mkdir -p /opt/bitnami/mysql/{tmp,data} && chmod 777 /opt/bitnami/mysql/{tmp,data}
     rm -rf /opt/bitnami/mysql/conf
-#    ln -sf /opt/bitnami/mysql/data /var/lib/mysql
 fi
 BITNAMI_EOF
 
