@@ -7,6 +7,7 @@ export DATADIR=${DB_BASE_DIR:-/var/lib/mysql}
 if [ "${BITNAMI_VOLUME_DIR:-}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
 
 SOCKET=/var/tmp/mysql.sock
+if [ ${BITNAMI_APP_NAME:-} = "mysql" ]; then ln -sf /opt/bitnami/mysql/tmp/mysql.sock ${SOCKET}; fi
 rm -f /tmp/healthy
 
 # We can't just switch on database type here, because early versions
