@@ -82,8 +82,9 @@ RUN rm -rf /var/lib/mysql /etc/mysql
 RUN mkdir -p /var/lib/mysql
 
 ADD files /
-# TODO: Do this only if needed, or perhaps put these files elsewhere
-RUN mkdir -p /opt/bitnami/mysql/tmp && chmod 777 /opt/bitnami/mysql/tmp
+
+# On bitnami-derived images, mkdir tmp exists and writable, remove their configuration
+RUN if [ -d /opt/bitnami/mysql ]; then mkdir -p /opt/bitnami/mysql/tmp && chmod 777 /opt/bitnami/mysql/tmp && rm -rf /opt/bitnami/mysql/conf; fi
 
 ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
@@ -99,7 +100,7 @@ RUN chmod ugo+x /healthcheck.sh
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
 
-RUN rm -rf /var/lib/mysql/* /opt/bitnami/mysql/conf
+RUN rm -rf /var/lib/mysql/*
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
 
 RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
