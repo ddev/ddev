@@ -862,6 +862,7 @@ type composeYAMLVars struct {
 	WebExtraHTTPPorts               string
 	WebExtraHTTPSPorts              string
 	WebExtraExposedPorts            string
+	BitnamiVolumeDir                string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -959,6 +960,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
+		BitnamiVolumeDir:                "",
 	}
 	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
@@ -986,7 +988,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.DBMountDir = "/var/lib/postgresql/data"
 	}
 	// TODO: Determine if mount to /bitnami is for all mysql/bitnami or just newest
-	if app.Database.Type == nodeps.MySQL {
+	// If we expand to using bitnami for mariadb this will change.
+	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
+		templateVars.BitnamiVolumeDir = "/bitnami/mysql"
 		templateVars.DBMountDir = "/bitnami/mysql/data"
 	}
 	if app.IsNFSMountEnabled() {
@@ -1191,7 +1195,7 @@ ARG uid
 ARG gid
 ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
-RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -G tty -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -G tty -l -m -s "/bin/bash" --comment '' $username )
 `
 
 	// If there are user pre.Dockerfile* files, insert their contents
