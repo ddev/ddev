@@ -3,9 +3,9 @@ set -x
 set -eu
 set -o pipefail
 
-export DATADIR=${DB_BASE_DIR:-/var/lib/mysql}
+export DATADIR=/var/lib/mysql
 echo BITNAMI_VOLUME_DIR=${BITNAMI_VOLUME_DIR:-notset}
-if [ "${BITNAMI_VOLUME_DIR:-}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
+# if [ "${BITNAMI_VOLUME_DIR:-}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
 
 SOCKET=/var/tmp/mysql.sock
 if [ "${BITNAMI_APP_NAME:-}" = "mysql" ]; then ln -sf /opt/bitnami/mysql/tmp/mysql.sock ${SOCKET}; fi
@@ -134,7 +134,7 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
 fi
 
 # And update the server db version we have here.
-echo $server_db_version >${DATADIR}/db_mariadb_version.txt
+echo $server_db_version >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
 
