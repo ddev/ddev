@@ -991,7 +991,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// If we expand to using bitnami for mariadb this will change.
 	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
 		templateVars.BitnamiVolumeDir = "/bitnami/mysql"
-		templateVars.DBMountDir = "/bitnami/mysql/data"
 	}
 	if app.IsNFSMountEnabled() {
 		templateVars.MountType = "volume"
