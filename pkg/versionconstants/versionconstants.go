@@ -17,7 +17,7 @@ var WebTag = "20241206_stasadev_sqlite3" // Note that this can be overridden by 
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.0"
+var BaseDBTag = "20231216_bitnami_base_for_mysql"
 
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.0"
 

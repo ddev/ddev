@@ -45,6 +45,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     environment:
       - COLUMNS
+      - BITNAMI_VOLUME_DIR={{ .BitnamiVolumeDir }}
       - DDEV_DATABASE
       - DDEV_DATABASE_FAMILY
       - DDEV_GOARCH
@@ -59,6 +60,8 @@ services:
       - DDEV_SITENAME
       - DDEV_TLD
       - DOCKER_IP={{ .DockerIP }}
+      #TODO: This hack setting HOME shouldn't be required and isn't correct
+      - HOME=/home/{{ .Username }}
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
       - LINES
