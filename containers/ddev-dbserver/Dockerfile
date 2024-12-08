@@ -84,7 +84,13 @@ RUN mkdir -p /var/lib/mysql
 ADD files /
 
 # On bitnami-derived images, mkdir tmp exists and writable, remove their configuration
-RUN if [ -d /opt/bitnami/mysql ]; then mkdir -p /opt/bitnami/mysql/tmp && chmod 777 /opt/bitnami/mysql/tmp && rm -rf /opt/bitnami/mysql/conf; fi
+RUN <<BITNAMI_EOF
+if [ -d /opt/bitnami/mysql ]; then
+    mkdir -p /opt/bitnami/mysql/tmp && chmod 777 /opt/bitnami/mysql/tmp
+    rm -rf /opt/bitnami/mysql/conf
+    ln -sf /opt/bitnami/mysql/data /var/lib/mysql
+fi
+BITNAMI_EOF
 
 ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
