@@ -4,10 +4,11 @@ set -eu
 set -o pipefail
 
 export DATADIR=${DB_BASE_DIR:-/var/lib/mysql}
+echo BITNAMI_VOLUME_DIR=${BITNAMI_VOLUME_DIR:-notset}
 if [ "${BITNAMI_VOLUME_DIR:-}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
 
 SOCKET=/var/tmp/mysql.sock
-if [ ${BITNAMI_APP_NAME:-} = "mysql" ]; then ln -sf /opt/bitnami/mysql/tmp/mysql.sock ${SOCKET}; fi
+if [ "${BITNAMI_APP_NAME:-}" = "mysql" ]; then ln -sf /opt/bitnami/mysql/tmp/mysql.sock ${SOCKET}; fi
 rm -f /tmp/healthy
 
 # We can't just switch on database type here, because early versions
@@ -40,7 +41,7 @@ function serverwait {
 # There may be a snapshots volume mounted on /mnt/snapshots
 # But if not, it means we can use snapshots from /mnt/ddev_config/snapshots
 if [ ! -d /mnt/snapshots ]; then
-  ln -s /mnt/ddev_config/ddev_snapshots /mnt/snapshots
+  ln -sf /mnt/ddev_config/ddev_snapshots /mnt/snapshots
 fi
 # If we have a restore_snapshot arg, get the snapshot file/directory
 # otherwise, fail and abort startup
