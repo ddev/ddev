@@ -5,7 +5,6 @@ set -o pipefail
 
 export DATADIR=/var/lib/mysql
 echo BITNAMI_VOLUME_DIR=${BITNAMI_VOLUME_DIR:-notset}
-# if [ "${BITNAMI_VOLUME_DIR:-}" != "" ]; then DATADIR=${BITNAMI_VOLUME_DIR}/data; fi
 
 SOCKET=/var/tmp/mysql.sock
 if [ "${BITNAMI_APP_NAME:-}" = "mysql" ]; then ln -sf /opt/bitnami/mysql/tmp/mysql.sock ${SOCKET}; fi
