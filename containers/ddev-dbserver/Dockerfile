@@ -92,7 +92,6 @@ BITNAMI_EOF
 
 ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
-RUN ln -s -f /dev/stderr /var/log/mysqld.err
 RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
 RUN if ! id mysql &>/dev/null ; then useradd -u 112 mysql; fi
 
@@ -106,8 +105,10 @@ RUN chmod ugo+wx /mnt /var/tmp
 
 RUN rm -rf /var/lib/mysql/*
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
+# version-conf.d should be writable so we can symlink, but the actual config files should not be
+RUN chmod ugo+w /etc/mysql/version-conf.d && chmod -R ugo-w /etc/mysql/version-conf.d/*
 
-RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
+RUN mkdir -p /var/run/mysqld && chmod 755 /var/run/mysqld
 
 RUN /sbin/mkhomedir_helper www-data
 
