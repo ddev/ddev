@@ -473,7 +473,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --disable-settings-management=false
     # Change the backend frontname URL to /admin_ddev
     ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
-    # Log into your account using `admin` and `Password123`
+    # Login using `admin` user and `Password123` password
     ddev launch /admin_ddev
     ```
 
@@ -637,8 +637,9 @@ mkdir my-sulu-site && cd my-sulu-site
 ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0 --webimage-extra-packages="xmlstarlet"
 ddev start
 ddev composer create sulu/skeleton
-# Create your default webspace configuration `config/webspaces/my-sulu-site.xml` from `config/webspaces/website.xml`
-# The command below will adjust the values for `<name>` and `<key>` so that they are matching your project:
+# Create your default webspace configuration `config/webspaces/my-sulu-site.xml`
+# from `config/webspaces/website.xml`. The command below will adjust the values
+# for `<name>` and `<key>`, so that they are matching your project:
 # <name>My Sulu Site</name>
 # <key>my-sulu-site</key>
 ddev exec 'name="$(echo "${DDEV_PROJECT}" | sed "s/\b\(.\)/\U\1/g" | tr "-" " ")"; key="${DDEV_PROJECT}"; xmlstarlet ed -u "//_:webspace/_:name" -v "${name}" -u "//_:webspace/_:key" -v "${key}" -u "//_:portals/_:portal/_:name" -v "${name}" -u "//_:portals/_:portal/_:key" -v "${key}" config/webspaces/website.xml > config/webspaces/${DDEV_PROJECT}.xml && rm -f config/webspaces/website.xml'
@@ -653,6 +654,7 @@ Now build the database. Building with the `dev` argument adds the user `admin` w
 # Set APP_ENV and DATABASE_URL in .env.local
 ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
 ddev exec bin/adminconsole sulu:build dev
+# Login using `admin` user and `admin` password
 ddev launch /admin
 ```
 
