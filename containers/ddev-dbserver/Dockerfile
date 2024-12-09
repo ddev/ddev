@@ -94,7 +94,7 @@ ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s -f /dev/stderr /var/log/mysqld.err
 RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
-RUN if ! id mysql &>/dev/null ; then useradd -u 1001 mysql; fi
+RUN if ! id mysql &>/dev/null ; then useradd -u 112 mysql; fi
 
 # Build a starter base db
 RUN /create_base_db.sh
