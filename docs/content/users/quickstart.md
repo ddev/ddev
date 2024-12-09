@@ -463,17 +463,18 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
-    --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-    --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
-    --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
-    --admin-user=admin --admin-password=Password123 --language=en_US
+        --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
+        --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
+        --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
+        --admin-user=admin --admin-password=Password123 --language=en_US
 
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
-    ddev magento info:adminuri
-    # Append the URI returned by the previous command either to ddev launch, like for example ddev launch /admin_XXXXXXX, or just run ddev launch and append the URI to the path in the browser
-    ddev launch
+    # Change the backend frontname URL to /admin_ddev
+    ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
+    # Log into your account using `admin` and `Password123`
+    ddev launch /admin_ddev
     ```
 
     Change the admin name and related information as needed.
@@ -532,7 +533,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ``` bash
     mkdir my-pimcore-site && cd my-pimcore-site
-    ddev config --docroot=public
+    ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
 
     ddev start
     ddev composer create pimcore/skeleton
@@ -633,37 +634,24 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 
 ```bash
 mkdir my-sulu-site && cd my-sulu-site
-ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
+ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0 --webimage-extra-packages="xmlstarlet"
 ddev start
 ddev composer create sulu/skeleton
-```
-
-Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
-
-```bash
-<?xml version="1.0" encoding="utf-8"?>
-<webspace xmlns="http://schemas.sulu.io/webspace/webspace"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://schemas.sulu.io/webspace/webspace http://schemas.sulu.io/webspace/webspace-1.1.xsd">
-    <!-- See: http://docs.sulu.io/en/latest/book/webspaces.html how to configure your webspace-->
-
-    <name>My Sulu CMS</name>
-    <key>my-sulu-cms</key>
+# Create your default webspace configuration `config/webspaces/my-sulu-site.xml` from `config/webspaces/website.xml`
+# The command below will adjust the values for `<name>` and `<key>` so that they are matching your project:
+# <name>My Sulu Site</name>
+# <key>my-sulu-site</key>
+ddev exec 'name="$(echo "${DDEV_PROJECT}" | sed "s/\b\(.\)/\U\1/g" | tr "-" " ")"; key="${DDEV_PROJECT}"; xmlstarlet ed -u "//_:webspace/_:name" -v "${name}" -u "//_:webspace/_:key" -v "${key}" -u "//_:portals/_:portal/_:name" -v "${name}" -u "//_:portals/_:portal/_:key" -v "${key}" config/webspaces/website.xml > config/webspaces/${DDEV_PROJECT}.xml && rm -f config/webspaces/website.xml'
 ```
 
 !!!warning "Caution"
     Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
 
-The information for the database connection is set in the environment variable `DATABASE_URL`. The installation will have created a `.env.local` file.  Set `DATABASE_URL` in the `.env.local` file so it looks like this:
+Now build the database. Building with the `dev` argument adds the user `admin` with the password `admin` to your project.
 
 ```bash
-APP_ENV=dev
-DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
-```
-
-Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
-
-```bash
+# Set APP_ENV and DATABASE_URL in .env.local
+ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
 ddev exec bin/adminconsole sulu:build dev
 ddev launch /admin
 ```
