@@ -11,21 +11,21 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20241206_stasadev_sqlite3" // Note that this can be overridden by make
+var WebTag = "v1.24.1" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.0"
+var BaseDBTag = "v1.24.1"
 
-const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.0"
+const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.1"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.24.0"
+var SSHAuthTag = "v1.24.1"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
