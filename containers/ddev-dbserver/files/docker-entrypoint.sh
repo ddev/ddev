@@ -76,12 +76,51 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
 rm -f /tmp/raw_mysql_version.txt
 
-# If we have extra mariadb cnf files, copy them to where they go.
+# If we have extra cnf files from user, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
   cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
   # Ignore errors on files such as .gitmanaged
   chmod -f -R ugo-w /etc/mysql/conf.d/*
 fi
+
+# Symlink version-specific configuration if there is any
+# For example, mysql_8.cnf.txt would be linked for mysql_8.0 and mysql_8.4
+# Or mysql_5.cnf.txt would be linked for mysql 5.5/6/7
+# Or mariadb.cnf.txt would be linked for any mariadb if there were not a more specific file
+
+CONFIG_DIR="/etc/mysql/version-conf.d"
+
+# Extract database type and version
+DB_TYPE="${server_db_version%%_*}"  # Everything before the first "_"
+DB_VERSION="${server_db_version#*_}"  # Everything after the first "_"
+DB_MAJOR_VERSION="${DB_VERSION%%.*}"  # Major version (first part before ".")
+DB_BASE="${DB_TYPE}_${DB_MAJOR_VERSION}"  # e.g., "mysql_8" or "mariadb_5"
+
+# Initialize symlinks
+echo "Initializing version-specific configuration for ${server_db_version}..."
+mkdir -p "${CONFIG_DIR}"
+
+# Find the best match configuration file
+BEST_MATCH=""
+if [ -f "${CONFIG_DIR}/${server_db_version}.cnf.txt" ]; then
+    # Exact match for the full version
+    BEST_MATCH="${CONFIG_DIR}/${server_db_version}.cnf.txt"
+elif [ -f "${CONFIG_DIR}/${DB_BASE}.cnf.txt" ]; then
+    # Fallback to major version match
+    BEST_MATCH="${CONFIG_DIR}/${DB_BASE}.cnf.txt"
+elif [ -f "${CONFIG_DIR}/${DB_TYPE}.cnf.txt" ]; then
+    # Fallback to generic type match
+    BEST_MATCH="${CONFIG_DIR}/${DB_TYPE}.cnf.txt"
+fi
+
+# Link the best match configuration
+if [ -n "${BEST_MATCH}" ]; then
+    ln -sf "${BEST_MATCH}" "${BEST_MATCH%%.txt}"
+    echo "Linked ${BEST_MATCH} -> ${BEST_MATCH%%.txt}"
+else
+    echo "No matching special configuration found for $server_db_version. Skipping."
+fi
+# chmod -f ugo-w /etc/mysql/version-conf.d/*.cnf
 
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase/base_db.gz)
@@ -103,7 +142,7 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     rm -rf ${DATADIR}/* ${DATADIR}/.[a-z]*
     ${BACKUPTOOL} --datadir=${DATADIR} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --datadir=${DATADIR} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
-    echo $server_db_version >${DATADIR}/db_mariadb_version.txt
+    echo ${server_db_version} >${DATADIR}/db_mariadb_version.txt
     echo "Database initialized from ${target}"
     rm -f /tmp/initializing
 fi
@@ -133,14 +172,23 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
 fi
 
 # And update the server db version we have here.
-echo $server_db_version >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
+echo ${server_db_version} >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
+
+# Zero out the error log at start
+printf "" > ${DATADIR:-/var/lib/mysql}/mysql.err
 
 echo
 echo 'MySQL init process done. Ready for start up.'
 echo
 
 echo "Starting mysqld."
-tail -f /var/log/mysqld.log &
+while true; do
+    sleep 1
+    if [ -f /var/log/mysqld.log ] && [ -f ${DATADIR:-/var/lib/mysql}/mysqld.err ]; then
+        tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err
+    fi
+done &
+
 exec mysqld --server-id=0
