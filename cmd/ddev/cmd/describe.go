@@ -143,8 +143,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// Router disabled, but not because of Gitpod, use direct http url
 			case ddevapp.IsRouterDisabled(app):
-				httpURL = v["host_http_url"].(string)
-				if httpURL != "" {
+				if httpURL, ok := v["host_http_url"].(string); ok && httpURL != "" {
 					urlPortParts = append(urlPortParts, httpURL)
 				}
 			}
