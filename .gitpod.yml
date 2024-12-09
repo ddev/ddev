@@ -27,6 +27,7 @@ tasks:
         ddev import-files --source=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
       fi
       gp ports await 8080 && sleep 1 && gp preview $(gp url 8080)
+      unset DDEV_NONINTERACTIVE
 
 vscode:
   extensions:
