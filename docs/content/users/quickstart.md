@@ -543,7 +543,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         command: 'while true; do /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance pimcore_scheduled_tasks pimcore_image_optimize pimcore_asset_update --memory-limit=250M --time-limit=3600; done'
         directory: /var/www/html" >.ddev/config.pimcore.yaml
 
-    ddev start
+    ddev restart
     ddev launch /admin
     ```
 
