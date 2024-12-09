@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -14,6 +15,7 @@ import (
 // And the global .ddev assets are in directory global_dotddev_assets
 //
 //go:embed dotddev_assets/* dotddev_assets/commands/.gitattributes
+//go:embed mysql_config_assets/*
 //go:embed global_dotddev_assets/* global_dotddev_assets/.gitignore global_dotddev_assets/commands/.gitattributes
 //go:embed app_compose_template.yaml
 //go:embed router_compose_template.yaml
@@ -59,6 +61,14 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 	err = fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""), GetInstalledAddonProjectFiles(app))
 	if err != nil {
 		return err
+	}
+
+	// Provide .ddev/mysql README and example by default
+	if app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB {
+		err = fileutil.CopyEmbedAssets(bundledAssets, "mysql_config_assets", app.GetConfigPath("mysql"), nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
