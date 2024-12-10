@@ -652,13 +652,14 @@ Create your default webspace configuration `mv config/webspaces/website.xml conf
     <key>my-sulu-site</key>
 ```
 
-Alternately, the command below will adjust the values for `<name>` and `<key>` to match the project you have set up:
+Alternatively, use the following commands to adjust the values for `<name>` and `<key>` to match your project setup:
 
 ```bash
 export SULU_PROJECT_NAME="My Sulu Site"
 export SULU_PROJECT_KEY="my-sulu-site"
-ddev exec "mv config/webspaces/website.xml config/webspaces/${SULU_PROJECT_KEY}.xml"
-ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' config/webspaces/${SULU_PROJECT_KEY}.xml"
+export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
+ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
+ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
 ```
 
 !!!warning "Caution"
