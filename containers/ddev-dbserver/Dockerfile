@@ -43,7 +43,7 @@ RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
 USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 RUN mkdir -p /var/lib/apt/lists/partial
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim-tiny wget
 
 RUN <<EOF
     set -eu -o pipefail
