@@ -634,15 +634,31 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 
 ```bash
 mkdir my-sulu-site && cd my-sulu-site
-ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0 --webimage-extra-packages="xmlstarlet"
+ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
 ddev start
 ddev composer create sulu/skeleton
-# Create your default webspace configuration `config/webspaces/my-sulu-site.xml`
-# from `config/webspaces/website.xml`. Alternately, the command below will adjust the values
-# for `<name>` and `<key>` to match the project you have set up:
-# <name>My Sulu Site</name>
-# <key>my-sulu-site</key>
-ddev exec 'name="$(echo "${DDEV_PROJECT}" | sed "s/\b\(.\)/\U\1/g" | tr "-" " ")"; key="${DDEV_PROJECT}"; xmlstarlet ed -u "//_:webspace/_:name" -v "${name}" -u "//_:webspace/_:key" -v "${key}" -u "//_:portals/_:portal/_:name" -v "${name}" -u "//_:portals/_:portal/_:key" -v "${key}" config/webspaces/website.xml > config/webspaces/${DDEV_PROJECT}.xml && rm -f config/webspaces/website.xml'
+```
+
+Create your default webspace configuration `mv config/webspaces/website.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
+
+```bash
+<?xml version="1.0" encoding="utf-8"?>
+<webspace xmlns="http://schemas.sulu.io/webspace/webspace"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.sulu.io/webspace/webspace http://schemas.sulu.io/webspace/webspace-1.1.xsd">
+    <!-- See: http://docs.sulu.io/en/latest/book/webspaces.html how to configure your webspace-->
+
+    <name>My Sulu Site</name>
+    <key>my-sulu-site</key>
+```
+
+Alternately, the command below will adjust the values for `<name>` and `<key>` to match the project you have set up:
+
+```bash
+export SULU_PROJECT_NAME="My Sulu Site"
+export SULU_PROJECT_KEY="my-sulu-site"
+ddev exec "mv config/webspaces/website.xml config/webspaces/${SULU_PROJECT_KEY}.xml"
+ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' config/webspaces/${SULU_PROJECT_KEY}.xml"
 ```
 
 !!!warning "Caution"
@@ -653,7 +669,7 @@ Now build the database. Building with the `dev` argument adds the user `admin` w
 ```bash
 # Set APP_ENV and DATABASE_URL in .env.local
 ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
-ddev exec bin/adminconsole sulu:build dev
+ddev exec bin/adminconsole sulu:build dev --no-interaction
 # Login using `admin` user and `admin` password
 ddev launch /admin
 ```
