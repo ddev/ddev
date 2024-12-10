@@ -184,11 +184,5 @@ echo 'MySQL init process done. Ready for start up.'
 echo
 
 echo "Starting mysqld."
-while true; do
-    sleep 1
-    if [ -f /var/log/mysqld.log ] && [ -f ${DATADIR:-/var/lib/mysql}/mysqld.err ]; then
-        tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err
-    fi
-done &
-
+tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
 exec mysqld --server-id=0
