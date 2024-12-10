@@ -711,17 +711,22 @@ func (app *DdevApp) CheckCustomConfig() {
 		}
 	}
 
-	customDockerPath := filepath.Join(ddevDir, "web-build")
-	if _, err := os.Stat(customDockerPath); err == nil {
-		dockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "*Dockerfile*"))
-		util.CheckErr(err)
-		dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
-			return strings.HasSuffix(s, ".example")
-		})
-		if len(dockerFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(dockerFiles)
-			util.Warning("Using custom web-entrypoint.d configuration: %v", printableFiles)
-			customConfig = true
+	for _, buildType := range []string{"web-build", "db-build"} {
+		customDockerPath := filepath.Join(ddevDir, buildType)
+		if _, err := os.Stat(customDockerPath); err == nil {
+			dockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "Dockerfile*"))
+			util.CheckErr(err)
+			preDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "pre.Dockerfile*"))
+			util.CheckErr(err)
+			dockerFiles = append(dockerFiles, preDockerFiles...)
+			dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
+				return strings.HasSuffix(s, ".example")
+			})
+			if len(dockerFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(dockerFiles)
+				util.Warning("Using custom %s configuration: %v", buildType, printableFiles)
+				customConfig = true
+			}
 		}
 	}
 
