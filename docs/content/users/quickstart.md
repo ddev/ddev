@@ -639,8 +639,8 @@ ddev config --project-type=php --docroot=public --upload-dirs=uploads --database
 ddev start
 ddev composer create sulu/skeleton
 # Create your default webspace configuration `config/webspaces/my-sulu-site.xml`
-# from `config/webspaces/website.xml`. The command below will adjust the values
-# for `<name>` and `<key>`, so that they are matching your project:
+# from `config/webspaces/website.xml`. Alternately, the command below will adjust the values
+# for `<name>` and `<key>` to match the project you have set up:
 # <name>My Sulu Site</name>
 # <key>my-sulu-site</key>
 ddev exec 'name="$(echo "${DDEV_PROJECT}" | sed "s/\b\(.\)/\U\1/g" | tr "-" " ")"; key="${DDEV_PROJECT}"; xmlstarlet ed -u "//_:webspace/_:name" -v "${name}" -u "//_:webspace/_:key" -v "${key}" -u "//_:portals/_:portal/_:name" -v "${name}" -u "//_:portals/_:portal/_:key" -v "${key}" config/webspaces/website.xml > config/webspaces/${DDEV_PROJECT}.xml && rm -f config/webspaces/website.xml'
