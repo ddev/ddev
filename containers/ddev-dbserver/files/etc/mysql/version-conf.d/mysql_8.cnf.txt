@@ -1,0 +1,7 @@
+[mysqld]
+
+# caching_sha2_password is the default for mysql 8.0 and 8.4, no config required
+# default-authentication-plugin=caching_sha2_password
+
+# In mysql 8+ this replaces innodb-log-file-size etc
+innodb-redo-log-capacity=100663296

@@ -1,6 +1,0 @@
-[mysqld]
-
-mysql-native-password=ON
-
-# In mysql 8+ this replaces innodb-log-file-size etc
-innodb-redo-log-capacity=100663296
