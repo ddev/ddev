@@ -13,9 +13,9 @@ CURRENT_ARCH=$(shell ../get_arch.sh)
 # So has to explicitly declare anything it might need from there (like SHELL)
 SHELL = /bin/bash
 
-BUILD_TARGETS=mariadb_5.5_amd64 mariadb_10.0_amd64 mariadb_10.1_both mariadb_10.2_both mariadb_10.3_both mariadb_10.4_both mariadb_10.5_both mariadb_10.6_both mariadb_10.7_both mariadb_10.8_both mariadb_10.11_both mariadb_11.4_both mysql_5.5_amd64 mysql_5.6_amd64 mysql_5.7_both mysql_8.0_both_8.0.36
+BUILD_TARGETS=mariadb_5.5_amd64 mariadb_10.0_amd64 mariadb_10.1_both mariadb_10.2_both mariadb_10.3_both mariadb_10.4_both mariadb_10.5_both mariadb_10.6_both mariadb_10.7_both mariadb_10.8_both mariadb_10.11_both mariadb_11.4_both mysql_5.5_amd64 mysql_5.6_amd64 mysql_5.7_both mysql_8.0_both mysql_8.4_both
 TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
-	echo "mariadb_5.5_test mariadb_10.0_test mariadb_10.1_test mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test mariadb_10.7_test mariadb_10.8_test mariadb_10.11_test mariadb_11.4_test mysql_5.5_test mysql_5.6_test mysql_5.7_test mysql_8.0_test"; \
+	echo "mariadb_5.5_test mariadb_10.0_test mariadb_10.1_test mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test mariadb_10.7_test mariadb_10.8_test mariadb_10.11_test mariadb_11.4_test mysql_5.5_test mysql_5.6_test mysql_5.7_test mysql_8.0_test mysql_8.4_test"; \
 	else \
 	  echo "mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test mariadb_10.7_test mariadb_10.8_test mariadb_10.11_test mariadb_11.4_test mysql_5.7_test mysql_8.0_test"; \
   	fi )
@@ -39,10 +39,13 @@ mariadb_11.4: mariadb_11.4_both
 mysql_5.5: mysql_5.5_amd64
 mysql_5.6: mysql_5.6_amd64
 mysql_5.7: mysql_5.7_both
+mysql_8.0: mysql_8.0_both
+mysql_8.4: mysql_8.4_both
 
+#TODO: Review this comment and see if we can get rid of it,
+# And do we need to add the 8.0.36 again?
 # Mysql 8.0 often must be pinned because xtrabackup is not ready for latest 8.0
 # So check whether xtrabackup is available for latest 8.0 before changing pin
-mysql_8.0: mysql_8.0_both_8.0.36
 
 
 # Examples:
@@ -81,7 +84,7 @@ $(TEST_TARGETS):
 	@export DB_TYPE=$(word 1, $(subst _, ,$@)) && \
 	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
 	export ARCH=$(CURRENT_ARCH) && \
-	printf "\n\n\n==== Testing $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)" && \
+	printf "\n\n\n==== Testing $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION) " && \
 	./test/test_dbserver.sh $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)
 
 clean:
