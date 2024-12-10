@@ -17,7 +17,6 @@ mkdir -p ${DATADIR:-/var/lib/mysql} /mnt/ddev_config/mysql && rm -f ${DATADIR:-/
 # On Github Actions, it seems that Apparmor prevents mysqld from having access to /etc/my.cnf, so
 # copy to a simpler directory
 cp /etc/my.cnf /var/tmp
-echo "pid-file=/var/tmp/mysqld.pid" >> /var/tmp/my.cnf
 
 echo 'Initializing mysql'
 mysqld --version
