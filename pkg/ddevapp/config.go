@@ -1193,13 +1193,6 @@ ENV HOME=""
 `
 	}
 
-	if (app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB) && strings.Contains(fullpath, "dbimageBuild") {
-		contents = contents + `
-ARG uid
-ARG gid
-RUN chown -R $uid:$gid /var/run/mysqld
-`
-	}
 	//  The ENV HOME="" is added for bitnami/mysql habit of overriding ENV HOME=/
 	contents = contents + `
 ARG TARGETPLATFORM
