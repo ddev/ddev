@@ -454,26 +454,27 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
             ```
 
     ```bash
-    mkdir my-magento2-site && cd my-magento2-site
+    export MAGENTO_HOSTNAME=my-magento2-site
+    mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
     ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
     ddev add-on get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
 
-    # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
-    --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-    --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
-    --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
-    --admin-user=admin --admin-password=Password123 --language=en_US
+    ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
+        --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
+        --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
+        --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
+        --admin-user=admin --admin-password=Password123 --language=en_US
 
     ddev magento deploy:mode:set developer
     ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
     ddev config --disable-settings-management=false
-    ddev magento info:adminuri
-    # Append the URI returned by the previous command either to ddev launch, like for example ddev launch /admin_XXXXXXX, or just run ddev launch and append the URI to the path in the browser
-    ddev launch
+    # Change the backend frontname URL to /admin_ddev
+    ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
+    # Login using `admin` user and `Password123` password
+    ddev launch /admin_ddev
     ```
 
     Change the admin name and related information as needed.
@@ -532,7 +533,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ``` bash
     mkdir my-pimcore-site && cd my-pimcore-site
-    ddev config --docroot=public
+    ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
 
     ddev start
     ddev composer create pimcore/skeleton
@@ -542,7 +543,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         command: 'while true; do /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance pimcore_scheduled_tasks pimcore_image_optimize pimcore_asset_update --memory-limit=250M --time-limit=3600; done'
         directory: /var/www/html" >.ddev/config.pimcore.yaml
 
-    ddev start
+    ddev restart
     ddev launch /admin
     ```
 
@@ -638,7 +639,7 @@ ddev start
 ddev composer create sulu/skeleton
 ```
 
-Create your default webspace configuration `mv config/webspaces/example.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
+Create your default webspace configuration `mv config/webspaces/website.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
 
 ```bash
 <?xml version="1.0" encoding="utf-8"?>
@@ -647,24 +648,30 @@ Create your default webspace configuration `mv config/webspaces/example.xml conf
           xsi:schemaLocation="http://schemas.sulu.io/webspace/webspace http://schemas.sulu.io/webspace/webspace-1.1.xsd">
     <!-- See: http://docs.sulu.io/en/latest/book/webspaces.html how to configure your webspace-->
 
-    <name>My Sulu CMS</name>
-    <key>my-sulu-cms</key>
+    <name>My Sulu Site</name>
+    <key>my-sulu-site</key>
+```
+
+Alternatively, use the following commands to adjust the values for `<name>` and `<key>` to match your project setup:
+
+```bash
+export SULU_PROJECT_NAME="My Sulu Site"
+export SULU_PROJECT_KEY="my-sulu-site"
+export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
+ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
+ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
 ```
 
 !!!warning "Caution"
     Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
 
-The information for the database connection is set in the environment variable `DATABASE_URL`. The installation will have created a `.env.local` file.  Set `DATABASE_URL` in the `.env.local` file so it looks like this:
+Now build the database. Building with the `dev` argument adds the user `admin` with the password `admin` to your project.
 
 ```bash
-APP_ENV=dev
-DATABASE_URL="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
-```
-
-Now build the database. Building with the `dev` argument adds a user `admin`with the the password `admin` to your project.
-
-```bash
-ddev exec bin/adminconsole sulu:build dev
+# Set APP_ENV and DATABASE_URL in .env.local
+ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
+ddev exec bin/adminconsole sulu:build dev --no-interaction
+# Login using `admin` user and `admin` password
 ddev launch /admin
 ```
 
