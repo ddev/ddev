@@ -454,15 +454,15 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
             ```
 
     ```bash
-    mkdir my-magento2-site && cd my-magento2-site
+    export MAGENTO_HOSTNAME=my-magento2-site
+    mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
     ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
     ddev add-on get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
 
-    # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
+    ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
         --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
         --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
         --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
@@ -638,8 +638,8 @@ ddev config --project-type=php --docroot=public --upload-dirs=uploads --database
 ddev start
 ddev composer create sulu/skeleton
 # Create your default webspace configuration `config/webspaces/my-sulu-site.xml`
-# from `config/webspaces/website.xml`. The command below will adjust the values
-# for `<name>` and `<key>`, so that they are matching your project:
+# from `config/webspaces/website.xml`. Alternately, the command below will adjust the values
+# for `<name>` and `<key>` to match the project you have set up:
 # <name>My Sulu Site</name>
 # <key>my-sulu-site</key>
 ddev exec 'name="$(echo "${DDEV_PROJECT}" | sed "s/\b\(.\)/\U\1/g" | tr "-" " ")"; key="${DDEV_PROJECT}"; xmlstarlet ed -u "//_:webspace/_:name" -v "${name}" -u "//_:webspace/_:key" -v "${key}" -u "//_:portals/_:portal/_:name" -v "${name}" -u "//_:portals/_:portal/_:key" -v "${key}" config/webspaces/website.xml > config/webspaces/${DDEV_PROJECT}.xml && rm -f config/webspaces/website.xml'
