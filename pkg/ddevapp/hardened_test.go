@@ -8,7 +8,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -20,8 +19,8 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if dockerutil.IsLima() || dockerutil.IsColima() || (nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop()) {
-		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms")
+	if nodeps.IsAppleSilicon() {
+		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms, no need to test hardened on arm64")
 	}
 
 	assert := asrt.New(t)
