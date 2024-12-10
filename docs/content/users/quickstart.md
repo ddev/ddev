@@ -196,6 +196,18 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ddev launch $(ddev drush uli)
     ```
 
+=== "Drupal CMS"
+
+    ```bash
+    mkdir my-drupal-cms && cd my-drupal-cms
+    ddev config --project-type=drupal11 --docroot=web
+    ddev composer create --stability="beta" drupal/cms
+    ddev drush site:install --account-name=admin --account-pass=admin -y
+    ddev launch
+    # or automatically log in with
+    ddev launch $(ddev drush uli)
+    ```
+
 === "Drupal 10"
 
     ```bash
