@@ -187,10 +187,10 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
 
     ```bash
     mkdir my-drupal11-site && cd my-drupal11-site
-    ddev config --project-type=drupal11 --docroot=web
-    ddev composer create drupal/recommended-project:^11
+    ddev config --project-type=drupal --docroot=web
+    ddev composer create drupal/recommended-project
     ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
+    ddev drush site:install -y
     ddev launch
     # or automatically log in with
     ddev launch $(ddev drush uli)
@@ -203,7 +203,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ddev config --project-type=drupal10 --docroot=web
     ddev composer create drupal/recommended-project:^10
     ddev composer require drush/drush
-    ddev drush site:install --account-name=admin --account-pass=admin -y
+    ddev drush site:install -y
     ddev launch
     # or automatically log in with
     ddev launch $(ddev drush uli)
