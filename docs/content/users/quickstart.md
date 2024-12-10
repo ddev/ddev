@@ -461,8 +461,9 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
 
-    # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url="https://my-magento2-site.ddev.site/" \
+    export MAGENTO_HOSTNAME=my-magento2-site
+    mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
+    ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
         --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
         --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
         --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
