@@ -42,12 +42,6 @@ mysql_5.7: mysql_5.7_both
 mysql_8.0: mysql_8.0_both
 mysql_8.4: mysql_8.4_both
 
-#TODO: Review this comment and see if we can get rid of it,
-# And do we need to add the 8.0.36 again?
-# Mysql 8.0 often must be pinned because xtrabackup is not ready for latest 8.0
-# So check whether xtrabackup is available for latest 8.0 before changing pin
-
-
 # Examples:
 # make <dbtype>_<dbmajor>_[both|amd64]_<pin>  # pin is optional, often needed for mysql 8.0
 # make mariadb_10.3_both VERSION=someversion PUSH=true
