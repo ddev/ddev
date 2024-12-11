@@ -84,7 +84,7 @@ The web image ships by default with a small number of locales, which work for mo
 
 If you need other locales, you can install all of them by adding `locales-all` to your `webimage_extra_packages`. For example, in `.ddev/config.yaml`:
 
-```
+```yaml
 webimage_extra_packages: [locales-all]
 ```
 
@@ -177,6 +177,18 @@ An example of using `$TARGETARCH` would be:
 ```dockerfile
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}"
 ```
+
+## Adding unsupported PHP versions
+
+If your project requires multiple PHP versions (e.g., you're using PHP 8.3 but also need PHP 7.4 for certain scripts), and you don’t want to switch completely to PHP 7.4 using `ddev config --php-version=7.4`, you can install it using the `pre.Dockerfile.*` technique from the previous section.
+
+Create a `.ddev/web-build/pre.Dockerfile.php7.4` file with the following content:
+
+```dockerfile
+RUN /usr/local/bin/install_php_extensions.sh "php7.4" "${TARGETARCH}"
+```
+
+After restarting the project, you can use PHP 7.4 with the command `ddev exec php7.4 -v`.
 
 ## Installing into the home directory
 
