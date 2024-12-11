@@ -84,11 +84,7 @@ RUN mkdir -p /var/lib/mysql
 ADD files /
 
 # On bitnami-derived images, remove their default config so we get ours
-RUN <<BITNAMI_EOF
-if [ -d /opt/bitnami/mysql ]; then
-    rm -rf /opt/bitnami/mysql/conf
-fi
-BITNAMI_EOF
+RUN rm -rf /opt/bitnami/mysql/conf
 
 ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d

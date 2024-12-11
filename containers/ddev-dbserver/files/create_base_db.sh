@@ -34,7 +34,6 @@ else
     fi
     mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=${DATADIR:-/var/lib/mysql}
 fi
-# TODO: Why was this changed to MYSQL_UNIX_PORT, review
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
 mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
 pid="$!"
