@@ -93,6 +93,13 @@ var AuthSSHCommand = &cobra.Command{
 			addedKeys[filename] = struct{}{}
 			keyPath = util.WindowsPathToCygwinPath(keyPath)
 			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
+			// Mount optional OpenSSH certificate
+			// https://www.man7.org/linux/man-pages/man1/ssh-keygen.1.html#CERTIFICATES
+			certPath := keyPath + "-cert.pub"
+			if fileutil.FileIsReadable(certPath) {
+				certName := filename + "-cert.pub"
+				mounts = append(mounts, "--mount=type=bind,src="+certPath+",dst=/tmp/sshtmp/"+certName)
+			}
 		}
 
 		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint="}
