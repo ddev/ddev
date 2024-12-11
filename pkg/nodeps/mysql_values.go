@@ -8,7 +8,7 @@ var ValidMySQLVersions = map[string]bool{
 	MySQL56: true,
 	MySQL57: true,
 	MySQL80: true,
-	// MYSQL84: true,
+	MySQL84: true,
 }
 
 // Oracle MySQL versions
