@@ -24,8 +24,8 @@ function basic_setup {
 }
 
 function teardown {
-  docker rm -f ${CONTAINER_NAME}
-  docker volume rm $VOLUME || true
+  docker rm -f ${CONTAINER_NAME} >/dev/null
+  docker volume rm $VOLUME >/dev/null || true
 }
 
 # Wait for container to be ready.
