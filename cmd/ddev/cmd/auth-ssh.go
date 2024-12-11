@@ -94,10 +94,7 @@ var AuthSSHCommand = &cobra.Command{
 			keyPath = util.WindowsPathToCygwinPath(keyPath)
 			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
 			// Mount optional OpenSSH certificate
-			// https://www.man7.org/linux/man-pages/man1/ssh-keygen.1.html#CERTIFICATES
-			certPath := keyPath + "-cert.pub"
-			if fileutil.FileIsReadable(certPath) {
-				certName := filename + "-cert.pub"
+			if certPath, certName := getCertificateForPrivateKey(keyPath, filename); certPath != "" && certName != "" {
 				mounts = append(mounts, "--mount=type=bind,src="+certPath+",dst=/tmp/sshtmp/"+certName)
 			}
 		}
@@ -178,6 +175,28 @@ func fileIsPrivateKey(filePath string) bool {
 		return false
 	}
 	return string(buffer) == string(prefix)
+}
+
+// getCertificateForPrivateKey returns path and name for optional OpenSSH certificate
+// https://www.man7.org/linux/man-pages/man1/ssh-keygen.1.html#CERTIFICATES
+// https://github.com/ddev/ddev/issues/6832
+func getCertificateForPrivateKey(path string, name string) (string, string) {
+	cert := path + "-cert.pub"
+	if !fileutil.FileExists(cert) {
+		return "", ""
+	}
+	certPath, err := filepath.EvalSymlinks(cert)
+	if err != nil {
+		util.Warning("Unable to read %s file: %v", cert, err)
+		return "", ""
+	}
+	if !fileutil.FileIsReadable(certPath) {
+		util.Warning("Unable to read %s file: file is not readable", certPath)
+		return "", ""
+	}
+	certPath = util.WindowsPathToCygwinPath(certPath)
+	certName := name + "-cert.pub"
+	return certPath, certName
 }
 
 // echoDockerCmd formats the Docker command to be more readable.
