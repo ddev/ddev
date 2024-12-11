@@ -53,6 +53,10 @@ func SetInstrumentationBaseTags() {
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
 		nodeps.InstrumentationTags["timezone"] = timezone
 		nodeps.InstrumentationTags["language"] = lang
+		nodeps.InstrumentationTags["CI"] = "false"
+		if os.Getenv("CI") == "true" {
+			nodeps.InstrumentationTags["CI"] = "true"
+		}
 	}
 }
 
