@@ -125,6 +125,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     vim-tiny \
     zip
+RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
@@ -262,7 +263,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     rsync \
     sqlite3 \
     unzip \
+    vim-tiny \
     zip
+RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
