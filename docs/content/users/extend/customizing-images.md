@@ -178,9 +178,9 @@ An example of using `$TARGETARCH` would be:
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}"
 ```
 
-## Adding unsupported PHP versions
+## Adding EOL Versions of PHP
 
-If your project requires multiple PHP versions (e.g., you're using PHP 8.3 but also need PHP 7.4 for certain scripts), and you don’t want to switch completely to PHP 7.4 using `ddev config --php-version=7.4`, you can install it using the `pre.Dockerfile.*` technique from the previous section.
+If your project requires multiple versions of PHP—such as using PHP 8.3 but also needing an older, unsupported, unmaintained version like PHP 7.4 for specific scripts—and you don’t want to fully switch to PHP 7.4 with `ddev config --php-version=7.4`, you can install it using the `pre.Dockerfile.*` technique from the previous section.
 
 Create a `.ddev/web-build/pre.Dockerfile.php7.4` file with the following content:
 
