@@ -112,7 +112,7 @@ While it’s more error-prone, images can be pushed from the command line:
 
 ## Maintaining `ddev-dbserver` MySQL 5.7 ARM64 Images
 
-There are no ARM64 Docker images for MySQL 5.7, so we have our own process to maintain [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images).
+We don't currently have a way to get `xtrabackup` for ARM64 Docker images for MySQL 5.7, so we have our own process to maintain [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images), which uses Ubuntu 18.04 Docker images, where `xtrabackup` was available.
 
 * `ddev/mysql:5.7` uses Ubuntu 18.04 as the base image, and Ubuntu 18.04 ARM64 has `mysql-server` 5.7 in it, so we can install.
 * To build `ddev/mysql` (5.7) ARM64 images, follow the instructions on [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images). After the files, you can push a new release and the proper images will be pushed. Since MySQL 5.7 (and Ubuntu 18.04) are EOL, it's unlikely that there will be any new minor releases.
