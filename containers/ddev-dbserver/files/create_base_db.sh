@@ -75,7 +75,7 @@ EOF
 
 mysqladmin -uroot --socket=${MYSQL_UNIX_PORT} password root
 
-if [[  "${mysqld_version%%%.*}" = ^8.[04]$ ]]; then
+if [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]]; then
     mysql -uroot -proot --socket=${MYSQL_UNIX_PORT} <<EOF
     ALTER USER 'db'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_PASSWORD';
     ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
