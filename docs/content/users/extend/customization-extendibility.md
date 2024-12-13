@@ -85,7 +85,9 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php
 
 ### Older Versions of PHP
 
-[Support for older versions of PHP is available on ddev-contrib](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom docker-compose files](custom-compose-files.md).
+[Support for older versions of PHP (< 5.6) is available on ddev-contrib](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom docker-compose files](custom-compose-files.md).
+
+If your project requires multiple versions of PHP, and one of them is EOL, you can install it using [this technique](customizing-images.md#adding-eol-versions-of-php).
 
 ## Changing Web Server Type
 
