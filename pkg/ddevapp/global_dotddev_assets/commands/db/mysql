@@ -8,4 +8,4 @@
 ## DBTypes: mysql,mariadb
 ## ExecRaw: true
 
-mysql -udb -pdb "$@"
+mysql -udb -pdb --pager "$@"
