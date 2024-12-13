@@ -1807,7 +1807,7 @@ func TestDdevAllDatabases(t *testing.T) {
 				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
 			})
 			assert.NoError(err)
-			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr)
+			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr, "did not find expected timezone value on %v", dbTypeVersion)
 			// Delete override file for next dbType test
 			err = os.Remove(app.GetConfigPath("mysql/override_param_test.cnf"))
 			require.NoError(t, err)
