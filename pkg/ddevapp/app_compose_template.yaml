@@ -14,6 +14,13 @@ services:
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     cap_add:
       - SYS_NICE
+    # For innodb_use_native_aio=ON mariadb versions need this, see
+    # https://github.com/MariaDB/mariadb-docker/issues/454#issuecomment-1212040735
+    privileged: true
+    ulimits:
+      memlock:
+        soft: "-1"
+        hard: "-1"
     stop_grace_period: 60s
     working_dir: "{{ .DBWorkingDir }}"
     volumes:
