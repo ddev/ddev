@@ -10,30 +10,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// Row defines a single row in the Table.
-type Row []interface{}
-
-func (r Row) findColumnNumber(colName string) int {
-	for colIdx, col := range r {
-		if fmt.Sprint(col) == colName {
-			return colIdx + 1
-		}
-	}
-	return 0
-}
-
-// RowPainter is a custom function that takes a Row as input and returns the
-// text.Colors{} to use on the entire row
-type RowPainter func(row Row) text.Colors
-
-// rowStr defines a single row in the Table comprised of just string objects.
-type rowStr []string
-
-// areEqual returns true if the contents of the 2 given columns are the same
-func (row rowStr) areEqual(colIdx1 int, colIdx2 int) bool {
-	return colIdx1 >= 0 && colIdx2 < len(row) && row[colIdx1] == row[colIdx2]
-}
-
 // Table helps print a 2-dimensional array in a human-readable pretty-table.
 type Table struct {
 	// allowedRowLength is the max allowed length for a row (or line of output)
@@ -74,7 +50,7 @@ type Table struct {
 	// rows stores the rows that make up the body (in string form)
 	rows []rowStr
 	// rowsColors stores the text.Colors over-rides for each row as defined by
-	// rowPainter
+	// rowPainter or rowPainterWithAttributes
 	rowsColors []text.Colors
 	// rowsConfigs stores RowConfig for each row
 	rowsConfigMap map[int]RowConfig
@@ -95,6 +71,8 @@ type Table struct {
 	// rowPainter is a custom function that given a Row, returns the colors to
 	// use on the entire row
 	rowPainter RowPainter
+	// rowPainterWithAttributes is same as rowPainter, but with attributes
+	rowPainterWithAttributes RowPainterWithAttributes
 	// rowSeparator is a dummy row that contains the separator columns (dashes
 	// that make up the separator between header/body/footer
 	rowSeparator rowStr
@@ -103,6 +81,8 @@ type Table struct {
 	separators map[int]bool
 	// sortBy stores a map of Column
 	sortBy []SortBy
+	// sortedRowIndices is the output of sorting
+	sortedRowIndices []int
 	// style contains all the strings used to draw the table, and more
 	style *Style
 	// suppressEmptyColumns hides columns which have no content on all regular
@@ -309,12 +289,37 @@ func (t *Table) SetPageSize(numLines int) {
 	t.pager.size = numLines
 }
 
-// SetRowPainter sets the RowPainter function which determines the colors to use
-// on a row. Before rendering, this function is invoked on all rows and the
-// color of each row is determined. This color takes precedence over other ways
-// to set color (ColumnConfig.Color*, SetColor*()).
-func (t *Table) SetRowPainter(painter RowPainter) {
-	t.rowPainter = painter
+// SetRowPainter sets up the function which determines the colors to use on a
+// row. Before rendering, this function is invoked on all rows and the color
+// of each row is determined. This color takes precedence over other ways to
+// set color (ColumnConfig.Color*, SetColor*()).
+func (t *Table) SetRowPainter(painter interface{}) {
+	// TODO: fix interface on major version bump to accept only
+	// one type of RowPainter: RowPainterWithAttributes renamed to RowPainter
+
+	// reset both so only one is set at any given time
+	t.rowPainter = nil
+	t.rowPainterWithAttributes = nil
+
+	// if called as SetRowPainter(RowPainter(func...))
+	switch painter.(type) {
+	case RowPainter:
+		t.rowPainter = painter.(RowPainter)
+		return
+	case RowPainterWithAttributes:
+		t.rowPainterWithAttributes = painter.(RowPainterWithAttributes)
+		return
+	}
+
+	// if called as SetRowPainter(func...)
+	switch fmt.Sprintf("%T", painter) {
+	case "func(table.Row) text.Colors":
+		t.rowPainter = painter.(func(row Row) text.Colors)
+		return
+	case "func(table.Row, table.RowAttributes) text.Colors":
+		t.rowPainterWithAttributes = painter.(func(row Row, attr RowAttributes) text.Colors)
+		return
+	}
 }
 
 // SetStyle overrides the DefaultStyle with the provided one.
@@ -461,7 +466,7 @@ func (t *Table) getColumnColors(colIdx int, hint renderHint) text.Colors {
 			return colors
 		}
 	}
-	if t.rowPainter != nil && hint.isRegularNonSeparatorRow() && !t.isIndexColumn(colIdx, hint) {
+	if t.hasRowPainter() && hint.isRegularNonSeparatorRow() && !t.isIndexColumn(colIdx, hint) {
 		if colors := t.rowsColors[hint.rowNumber-1]; colors != nil {
 			return colors
 		}
@@ -598,9 +603,9 @@ func (t *Table) getFormat(hint renderHint) text.Format {
 
 func (t *Table) getMaxColumnLengthForMerging(colIdx int) int {
 	maxColumnLength := t.maxColumnLengths[colIdx]
-	maxColumnLength += text.RuneWidthWithoutEscSequences(t.style.Box.PaddingRight + t.style.Box.PaddingLeft)
+	maxColumnLength += text.StringWidthWithoutEscSequences(t.style.Box.PaddingRight + t.style.Box.PaddingLeft)
 	if t.style.Options.SeparateColumns {
-		maxColumnLength += text.RuneWidthWithoutEscSequences(t.style.Box.EmptySeparator)
+		maxColumnLength += text.StringWidthWithoutEscSequences(t.style.Box.EmptySeparator)
 	}
 	return maxColumnLength
 }
@@ -715,6 +720,10 @@ func (t *Table) hasHiddenColumns() bool {
 		}
 	}
 	return false
+}
+
+func (t *Table) hasRowPainter() bool {
+	return t.rowPainter != nil || t.rowPainterWithAttributes != nil
 }
 
 func (t *Table) hideColumns() map[int]int {
