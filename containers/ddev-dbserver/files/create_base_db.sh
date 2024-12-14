@@ -40,7 +40,7 @@ pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
 # or if the process dies.
-for i in {90..0}; do
+for i in {120..0}; do
 	if mysqladmin ping -uroot --socket=${MYSQL_UNIX_PORT} 2>/dev/null; then
 		break
 	fi
