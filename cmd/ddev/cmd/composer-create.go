@@ -365,15 +365,12 @@ func appendAllArgsAtTheEnd(args []string, containerInstallPath string, app *ddev
 			}
 			composerDirectoryArg = strings.TrimPrefix(absComposerDirectory, appRoot)
 			composerDirectoryArg = strings.TrimPrefix(composerDirectoryArg, "/")
+			// Don't allow to create a project in a subdirectory
 			if composerDirectoryArg != "" {
-				util.Warning("Installing the project in the '%s' subdirectory is uncommon.", composerDirectoryArg)
-				util.Warning("DDEV won't properly apply CMS configuration in a subdirectory.")
-				util.Warning("This will be similar to running 'composer create-project' without DDEV.")
-				if yes := util.Confirm("Continue?"); !yes {
-					util.Warning("Aborting: no permission to install in the '%s' subdirectory", composerDirectoryArg)
-					util.Warning("You can retry using '.' (current directory) as the directory argument.")
-					os.Exit(1)
-				}
+				util.Warning("Installing the project in the '%s' subdirectory is unsupported.", composerDirectoryArg)
+				util.Warning("Replace the subdirectory with a dot '.' and try again.")
+				util.Warning("Or use 'ddev ssh' to run 'composer create-project' in the web container.")
+				os.Exit(1)
 			}
 			composerArgs = append(composerArgs, path.Join(containerInstallPath, composerDirectoryArg))
 		} else {
