@@ -144,12 +144,6 @@ It’s probably easiest, however, to shut down one before using the other.
 
 For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then run [`ddev poweroff`](../usage/commands.md#poweroff) before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. The [troubleshooting](troubleshooting.md) section goes into more detail about identifying and resolving port conflicts.
 
-### Can I run DDEV on an older Mac?
-
-Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
-
-Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
-
 ## Performance & Troubleshooting
 
 ### How can I get the best performance?
