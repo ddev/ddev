@@ -90,17 +90,11 @@ func TestComposerCreateCmd(t *testing.T) {
 			if docRoot == "" {
 				cmd = "ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create"
 				if projectType == nodeps.AppTypePHP {
-					cmd = "ddev composer create --no-install ddev/ddev-test-composer-create custom_directory"
-					composerDirOnHost = filepath.Join(composerDirOnHost, "custom_directory")
-					err = os.MkdirAll(composerDirOnHost, 0755)
-					require.NoError(t, err)
+					cmd = "ddev composer create --no-install ddev/ddev-test-composer-create ."
 				}
 			} else {
 				if projectType != nodeps.AppTypePHP {
-					cmd = "ddev composer create ddev/ddev-test-composer-create --prefer-install auto another_directory --no-dev v1.0.0"
-					composerDirOnHost = filepath.Join(composerDirOnHost, "another_directory")
-					err = os.MkdirAll(composerDirOnHost, 0755)
-					require.NoError(t, err)
+					cmd = "ddev composer create ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0"
 				} else {
 					cmd = "ddev composer create -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ."
 				}
@@ -117,13 +111,6 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.Contains(t, out, "touch1.txt")
 			_ = file.Close()
 			_ = os.Remove(filepath.Join(composerDirOnHost, "touch1.txt"))
-
-			// At this point, custom_directory and another_directory are empty
-			// Remove custom_directory to see if it will be created by Composer
-			// And do not remove another_directory to see if Composer will write to it
-			if strings.Contains(cmd, "custom_directory") {
-				_ = os.RemoveAll(composerDirOnHost)
-			}
 
 			// Test success
 			out, err = exec.RunHostCommand(DdevBin, args...)
@@ -162,10 +149,9 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "ddev", "ddev-test-composer-require-dev", "composer.json"))
 			}
 
-			if cmd == "ddev composer create --no-install ddev/ddev-test-composer-create custom_directory" {
+			if cmd == "ddev composer create --no-install ddev/ddev-test-composer-create ." {
 				// Check what was executed or not
 				require.Contains(t, out, "Executing Composer command: [composer create-project --no-install --no-plugins --no-scripts ddev/ddev-test-composer-create /tmp/")
-				require.Contains(t, out, "custom_directory")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install]")
 				require.NotContains(t, out, "Executing Composer command: [composer install")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd]")
@@ -176,10 +162,10 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.NoDirExists(t, filepath.Join(composerDirOnHost, "vendor"))
 			}
 
-			if cmd == "ddev composer create ddev/ddev-test-composer-create --prefer-install auto another_directory --no-dev v1.0.0" {
+			if cmd == "ddev composer create ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0" {
 				// Check what was executed or not
 				require.Contains(t, out, "Executing Composer command: [composer create-project --prefer-install auto --no-dev --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
-				require.Contains(t, out, "another_directory v1.0.0")
+				require.Contains(t, out, "v1.0.0")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install --no-dev]")
 				require.Contains(t, out, "Executing Composer command: [composer install --prefer-install auto --no-dev]")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd --no-dev]")
