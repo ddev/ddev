@@ -38,25 +38,14 @@ RUN apt-get install -y postgresql-common && /usr/share/postgresql-common/pgdg/ap
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     bash-completion \
-    fontconfig \
     gettext \
-    git \
     graphviz \
-    iproute2 \
-    iputils-ping \
-    jq \
     less \
     libcap2-bin \
     libldap-common \
     libmagickcore-6.q16-6-extra \
-    libpcre3 \
     locales \
     mariadb-client \
-    nano \
-    ncurses-bin \
-    netcat-traditional \
-    openssh-client \
-    patch \
     postgresql-client \
     pv \
     python-is-python3 \
@@ -124,6 +113,17 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire \
     blackfire-php \
+    fontconfig \
+    git \
+    iproute2 \
+    iputils-ping \
+    jq \
+    libpcre3 \
+    nano \
+    ncurses-bin \
+    netcat-traditional \
+    openssh-client \
+    patch \
     sudo \
     telnet \
     tree
