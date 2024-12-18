@@ -44,6 +44,7 @@ USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 RUN mkdir -p /var/lib/apt/lists/partial
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim-tiny wget
+RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
 RUN <<EOF
     set -eu -o pipefail
