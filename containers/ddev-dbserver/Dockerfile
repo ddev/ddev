@@ -5,6 +5,7 @@ SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 
 # This must be reiterated because everything is emptied on FROM
 ARG BASE_IMAGE
+ARG DB_TYPE
 ARG DB_MAJOR_VERSION
 
 #TODO: 2024-12-07: Currently the "testing" repository, change to the real one when they release

@@ -46,13 +46,13 @@ for i in {120..0}; do
 	fi
 	# Test to make sure we got it started in the first place. kill -s 0 just tests to see if process exists.
 	if ! kill -s 0 $pid 2>/dev/null; then
-		echo "MariaDB initialization startup failed"
+		echo "mysqld initialization startup failed"
 		exit 3
 	fi
 	sleep 1
 done
 if [ "$i" -eq 0 ]; then
-	echo 'MariaDB initialization startup process timed out.'
+	echo 'mysqld initialization startup process timed out.'
 	exit 4
 fi
 
@@ -74,14 +74,6 @@ mysql -uroot --socket=${MYSQL_UNIX_PORT} <<EOF
 EOF
 
 mysqladmin -uroot --socket=${MYSQL_UNIX_PORT} password root
-
-if [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]]; then
-    mysql -uroot -proot --socket=${MYSQL_UNIX_PORT} <<EOF
-    ALTER USER 'db'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_PASSWORD';
-    ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
-    ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
-EOF
-fi
 
 mysql -uroot -proot --socket=${MYSQL_UNIX_PORT} -e "SELECT @@character_set_database, @@collation_database;"
 
