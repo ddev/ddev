@@ -18,7 +18,7 @@ if [ "${MYSQL_VERSION}" = "5.6" ] || [ "${MYSQL_VERSION}" = "5.5" ]; then
   MYSQL_VERSION="5.7"
 fi
 
-TARBALL_VERSION=v0.2.3
+TARBALL_VERSION=v0.2.4
 TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBALL_VERSION}/mysql-${MYSQL_VERSION}-${ARCH}.tar.gz
 
 # Install the related mysql client if available
