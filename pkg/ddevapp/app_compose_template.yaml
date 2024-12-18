@@ -71,6 +71,7 @@ services:
       - POSTGRES_PASSWORD=db
       - POSTGRES_USER=db
       - POSTGRES_DB=db
+      - PAGER=less -SFX
       - TZ={{ .Timezone }}
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}
@@ -211,6 +212,7 @@ services:
     - MYSQL_PWD=db
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
     - npm_config_cache=/mnt/ddev-global-cache/npm
+    - PAGER=less -SFX
     - PGDATABASE=db
     - PGHOST=db
     - PGPASSWORD=db
