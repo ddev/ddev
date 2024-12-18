@@ -35,7 +35,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				t.Logf("== SKIP drupal6 projects uses a very old php version and composer create is very unlikely to be used")
 				continue
 			}
-			t.Logf("== BEGIN TestComposerCreateCmd for project of type '%s' with docroot  '%s'\n", projectType, docRoot)
+			t.Logf("== BEGIN TestComposerCreateCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
 			tmpDir := testcommon.CreateTmpDir(t.Name() + projectType)
 			err = os.Chdir(tmpDir)
 			require.NoError(t, err)
@@ -84,46 +84,28 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.NoError(t, err)
 			require.Contains(t, out, fmt.Sprintf("Composer version %s", composerVersionForThisTest))
 
-			composerCommandTypeCheck := ""
-			args := []string{}
-
+			cmd := ""
 			// These are different conditions to test different composer flag combinations
 			// Conditions for docRoot and projectType are not important here, they are only needed to make the test act different each time
 			if docRoot == "" {
-				composerCommandTypeCheck = "installation with --no-plugins --no-scripts"
+				cmd = "ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create"
 				if projectType == nodeps.AppTypePHP {
-					composerCommandTypeCheck = "installation with -vvv --fake-flag"
+					cmd = "ddev composer create --no-install ddev/ddev-test-composer-create ."
 				}
 			} else {
-				composerCommandTypeCheck = "installation with --no-install --prefer-install auto"
-				if projectType == nodeps.AppTypePHP {
-					composerCommandTypeCheck = "installation with --no-dev --prefer-install=auto"
+				if projectType != nodeps.AppTypePHP {
+					cmd = "ddev composer create ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0"
+				} else {
+					cmd = "ddev composer create -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ."
 				}
 			}
 
-			t.Logf("Attempting composerCommandTypeCheck='%s' with docroot='%s' projectType=%s", composerCommandTypeCheck, docRoot, projectType)
-			// ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with --no-plugins --no-scripts" {
-				args = []string{"composer", "create", "--no-plugins", "--no-scripts", "ddev/ddev-test-composer-create"}
-			}
-
-			// ddev composer create -vvv --fake-flag ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with -vvv --fake-flag" {
-				args = []string{"composer", "create", "-vvv", "--fake-flag", "ddev/ddev-test-composer-create"}
-			}
-
-			// ddev composer create --no-install --prefer-install auto ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with --no-install --prefer-install auto" {
-				args = []string{"composer", "create", "--no-install", "--prefer-install", "auto", "ddev/ddev-test-composer-create"}
-			}
-
-			// ddev composer create --no-dev --prefer-install=auto ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with --no-dev --prefer-install=auto" {
-				args = []string{"composer", "create", "--no-dev", "--prefer-install=auto", "ddev/ddev-test-composer-create"}
-			}
+			t.Logf("Attempting cmd='%s' with docroot='%s' composer_root='%s' type='%s'", cmd, docRoot, docRoot, projectType)
+			args := strings.Split(strings.TrimPrefix(cmd, "ddev "), " ")
 
 			// If a file exists in the composer root then composer create should fail
 			file, err := os.Create(filepath.Join(composerDirOnHost, "touch1.txt"))
+			require.NoError(t, err)
 			out, err = exec.RunHostCommand(DdevBin, args...)
 			require.Error(t, err)
 			require.Contains(t, out, "touch1.txt")
@@ -132,14 +114,13 @@ func TestComposerCreateCmd(t *testing.T) {
 
 			// Test success
 			out, err = exec.RunHostCommand(DdevBin, args...)
-			require.NoError(t, err, "['%s'] failed to run %v: err=%v, output=\n=====\n%s\n=====\n", composerCommandTypeCheck, args, err, out)
+			require.NoError(t, err, "['%s'] failed to run %v: err=%v, output=\n=====\n%s\n=====\n", cmd, args, err, out)
 			require.Contains(t, out, "Created project in ")
 			require.FileExists(t, filepath.Join(composerDirOnHost, "composer.json"))
 
-			// ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with --no-plugins --no-scripts" {
+			if cmd == "ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create" {
 				// Check what was executed or not
-				require.Contains(t, out, "Executing Composer command: [composer create-project --no-plugins --no-scripts ddev/ddev-test-composer-create --no-install")
+				require.Contains(t, out, "Executing Composer command: [composer create-project --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
 				require.NotContains(t, out, "Executing Composer command: [composer run-script post-root-package-install")
 				require.Contains(t, out, "Executing Composer command: [composer install --no-plugins --no-scripts]")
 				require.NotContains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd")
@@ -152,12 +133,11 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "ddev", "ddev-test-composer-require-dev", "composer.json"))
 			}
 
-			// ddev composer create -vvv --fake-flag ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with -vvv --fake-flag" {
+			if cmd == "ddev composer create -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ." {
 				// Check what was executed or not
-				require.Contains(t, out, "Executing Composer command: [composer create-project -vvv ddev/ddev-test-composer-create --no-plugins --no-scripts --no-install")
+				require.Contains(t, out, "Executing Composer command: [composer create-project -vvv --prefer-install=auto --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install -vvv]")
-				require.Contains(t, out, "Executing Composer command: [composer install -vvv]")
+				require.Contains(t, out, "Executing Composer command: [composer install -vvv --prefer-install=auto]")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd -vvv]")
 				require.NotContains(t, out, "--fake-flag")
 				// Check the actual result of executing composer scripts
@@ -169,10 +149,9 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "ddev", "ddev-test-composer-require-dev", "composer.json"))
 			}
 
-			// ddev composer create --no-install --prefer-install auto ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with --no-install --prefer-install auto" {
+			if cmd == "ddev composer create --no-install ddev/ddev-test-composer-create ." {
 				// Check what was executed or not
-				require.Contains(t, out, "Executing Composer command: [composer create-project --no-install --prefer-install auto ddev/ddev-test-composer-create --no-plugins --no-scripts")
+				require.Contains(t, out, "Executing Composer command: [composer create-project --no-install --no-plugins --no-scripts ddev/ddev-test-composer-create /tmp/")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install]")
 				require.NotContains(t, out, "Executing Composer command: [composer install")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd]")
@@ -183,12 +162,12 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.NoDirExists(t, filepath.Join(composerDirOnHost, "vendor"))
 			}
 
-			// ddev composer create --no-dev --prefer-install=auto ddev/ddev-test-composer-create
-			if composerCommandTypeCheck == "installation with --no-dev --prefer-install=auto" {
+			if cmd == "ddev composer create ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0" {
 				// Check what was executed or not
-				require.Contains(t, out, "Executing Composer command: [composer create-project --no-dev --prefer-install=auto ddev/ddev-test-composer-create --no-plugins --no-scripts --no-install")
+				require.Contains(t, out, "Executing Composer command: [composer create-project --prefer-install auto --no-dev --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
+				require.Contains(t, out, "v1.0.0")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install --no-dev]")
-				require.Contains(t, out, "Executing Composer command: [composer install --no-dev --prefer-install=auto]")
+				require.Contains(t, out, "Executing Composer command: [composer install --prefer-install auto --no-dev]")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-create-project-cmd --no-dev]")
 				// Check the actual result of executing composer scripts
 				require.FileExists(t, filepath.Join(composerDirOnHost, "created-by-post-root-package-install"))

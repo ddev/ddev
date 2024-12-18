@@ -392,19 +392,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	// Ensure that the docroot exists
 	if docrootRelPathArg != "" {
 		app.Docroot = docrootRelPathArg
-		if _, err = os.Stat(docrootRelPathArg); os.IsNotExist(err) {
-			var docrootAbsPath string
-			docrootAbsPath, err = filepath.Abs(app.Docroot)
-			if err != nil {
-				util.Failed("Could not create docroot at %s: %v", docrootRelPathArg, err)
-			}
-
-			if err = os.MkdirAll(docrootAbsPath, 0755); err != nil {
-				util.Failed("Could not create docroot at %s: %v", docrootAbsPath, err)
-			}
-
-			util.Success("Created docroot directory at %s", docrootAbsPath)
+		if err = app.CreateDocroot(); err != nil {
+			util.Failed("Could not create docroot at %s: %v", app.Docroot, err)
 		}
+		util.Success("Created docroot directory at %s", app.GetAbsDocroot(false))
 	} else if !cmd.Flags().Changed("docroot") {
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 	}
