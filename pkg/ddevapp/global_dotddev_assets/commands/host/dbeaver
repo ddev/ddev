@@ -29,7 +29,7 @@ if [ "${type}" = "postgres" ]; then
 fi
 
 # See: https://dbeaver.com/docs/wiki/Command-Line/#connection-parameters
-CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|showSystemObjects=true|showUtilityObjects=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
+CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|showSystemObjects=true|showUtilityObjects=true|prop.allowPublicKeyRetrieval=true|prop.useSSL=false|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
 
 case $OSTYPE in
   "linux-gnu")
