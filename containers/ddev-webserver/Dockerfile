@@ -38,15 +38,27 @@ RUN apt-get install -y postgresql-common && /usr/share/postgresql-common/pgdg/ap
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     bash-completion \
+    gettext \
+    graphviz \
+    less \
     libcap2-bin \
+    libldap-common \
     libmagickcore-6.q16-6-extra \
     locales \
     mariadb-client \
     postgresql-client \
     pv \
+    python-is-python3 \
+    rsync \
+    sqlite3 \
     supervisor \
     symfony-cli \
-    xz-utils
+    unzip \
+    vim-tiny \
+    xz-utils \
+    zip
+
+RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
 RUN printf "${DEFAULT_LOCALES}" > /etc/locale.gen && locale-gen
 
@@ -102,29 +114,19 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     blackfire \
     blackfire-php \
     fontconfig \
-    gettext \
     git \
-    graphviz \
     iproute2 \
     iputils-ping \
     jq \
-    less \
-    libldap-common \
     libpcre3 \
     nano \
     ncurses-bin \
     netcat-traditional \
     openssh-client \
     patch \
-    python-is-python3 \
-    rsync \
-    sqlite3 \
     sudo \
     telnet \
-    tree \
-    unzip \
-    vim-tiny \
-    zip
+    tree
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
@@ -246,23 +248,7 @@ RUN apt-get update
 
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
-    blackfire-php \
-    fontconfig \
-    gettext \
-    git \
-    iproute2 \
-    iputils-ping \
-    jq \
-    libpcre3 \
-    nano \
-    ncurses-bin \
-    netcat-traditional \
-    openssh-client \
-    patch \
-    rsync \
-    sqlite3 \
-    unzip \
-    zip
+    blackfire-php
 
 # Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
 RUN rm /etc/apt/sources.list.d/blackfire.list
