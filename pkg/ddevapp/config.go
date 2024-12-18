@@ -257,36 +257,14 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
+	// The .ddev directory may still need to be populated, especially in tests
+	err = PopulateExamplesCommandsHomeadditions(appcopy.Name)
+	if err != nil {
+		return err
+	}
+
 	// Allow project-specific post-config action
 	err = appcopy.PostConfigAction()
-	if err != nil {
-		return err
-	}
-
-	// Write example Dockerfiles into build directories
-	contents := []byte(`
-## #ddev-generated
-## You can copy this Dockerfile.example to Dockerfile to add configuration
-## or packages or anything else to your webimage
-## These additions will be appended last to DDEV's own Dockerfile
-## See examples here https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage
-# RUN echo "Built on $(date)" > /build-date.txt
-`)
-
-	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
-	if err != nil {
-		return err
-	}
-	contents = []byte(`
-## #ddev-generated
-## You can copy this Dockerfile.example to Dockerfile to add configuration
-## or packages or anything else to your dbimage
-## These additions will be appended last to DDEV's own Dockerfile
-## See examples here https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage
-# RUN echo "Built on $(date)" > /build-date.txt
-`)
-
-	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
 	if err != nil {
 		return err
 	}
@@ -1220,6 +1198,10 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		}
 
 		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
 			userContents, err := fileutil.ReadFileIntoString(file)
 			if err != nil {
 				return err
@@ -1321,8 +1303,8 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 		}
 
 		for _, file := range files {
-			// Skip the example file
-			if file == filepath.Join(userDockerfilePath, "Dockerfile.example") {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
 				continue
 			}
 
@@ -1343,9 +1325,13 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 	}
 
 	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
-	// This actually copies the Dockerfile, but it is then immediately overwritten by WriteImageDockerfile()
 	if userDockerfilePath != "" {
-		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath))
+		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath), copy2.Options{
+			Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
+				// Do not copy file if it's not a context file
+				return isNotDockerfileContextFile(userDockerfilePath, src)
+			},
+		})
 		if err != nil {
 			return err
 		}
@@ -1526,18 +1512,6 @@ func PrepDdevDirectory(app *DdevApp) error {
 		}
 	}
 
-	// Pre-create a few dirs so we can be sure they are owned by the user and not root.
-	dirs := []string{
-		"web-entrypoint.d",
-		"xhprof",
-	}
-	for _, subdir := range dirs {
-		err = os.MkdirAll(filepath.Join(dir, subdir), 0755)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Some of the listed items are wildcards or directories, and if they are, there's an error
 	// opening them and they innately get added to the .gitignore.
 	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "config.*.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "sequelpro.spf", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
@@ -1622,4 +1596,36 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
+}
+
+// isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file
+// We consider files in the .ddev/web-build and .ddev/db-build directory to be context files
+// excluding /Dockerfile*, /pre.Dockerfile*, and /README.txt
+func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, error) {
+	// Directories are always context.
+	if fileutil.IsDirectory(file) {
+		return false, nil
+	}
+	// Get the relative path of the file from userDockerfilePath
+	relPath, err := filepath.Rel(userDockerfilePath, file)
+	if err != nil {
+		return false, err
+	}
+	// If this is not a top-level file, it's a context file
+	if strings.Contains(relPath, string(filepath.Separator)) {
+		return false, nil
+	}
+	filename := filepath.Base(file)
+	// Return true for not context Dockerfiles
+	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") {
+		return true, nil
+	}
+	// Return true for not context README.txt if it is managed by DDEV
+	if filename == "README.txt" {
+		if err := fileutil.CheckSignatureOrNoFile(file, nodeps.DdevFileSignature); err == nil {
+			return true, nil
+		}
+	}
+	// Otherwise, it's a context file
+	return false, nil
 }
