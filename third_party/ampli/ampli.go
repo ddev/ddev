@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 9
+// Tracking Plan Version: 11
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -353,6 +353,7 @@ type ProjectBuilder interface {
 	Build() ProjectEvent
 	AddOns(addOns []string) ProjectBuilder
 	BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder
+	Ci(ci bool) ProjectBuilder
 	Containers(containers []string) ProjectBuilder
 	ContainersOmitted(containersOmitted []string) ProjectBuilder
 	CorepackEnable(corepackEnable bool) ProjectBuilder
@@ -431,6 +432,12 @@ func (b *projectBuilder) AddOns(addOns []string) ProjectBuilder {
 
 func (b *projectBuilder) BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder {
 	b.properties[`Bind All Interfaces`] = bindAllInterfaces
+
+	return b
+}
+
+func (b *projectBuilder) Ci(ci bool) ProjectBuilder {
+	b.properties[`CI`] = ci
 
 	return b
 }
@@ -562,8 +569,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `9`,
-			VersionID: `0672776d-9124-4f21-8b4e-5a4f90ea8244`,
+			Version:   `11`,
+			VersionID: `08f7dfd4-d068-4082-9786-249d924e38e0`,
 		}
 	}
 
