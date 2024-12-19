@@ -1659,10 +1659,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			ALTER USER 'db'@'localhost' IDENTIFIED WITH mysql_native_password BY 'db';
 			ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
 			ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';`
+		userOutFunc := util.CaptureUserOut()
 		_, _, err = app.Exec(&ExecOpts{
 			Cmd:     fmt.Sprintf(`mysql -uroot -proot -e "%s"`, alterString),
 			Service: `db`,
 		})
+		_ = userOutFunc()
 		if err != nil {
 			util.Warning("unable to set mysql_native_password db password: %v", err)
 		}
