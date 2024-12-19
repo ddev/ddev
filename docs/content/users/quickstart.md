@@ -70,6 +70,35 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ddev launch
     ```
 
+## CiviCRM (Standalone)
+
+[CiviCRM Standalone](https://civicrm.org/blog/ufundo/next-steps-civicrm-standalone) allows running [CiviCRM](https://civicrm.org/) without a CMS.
+
+```bash
+curl -L https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz > civicrm-standalone.tar.gz
+tar -xzf civicrm-standalone.tar.gz
+cd civicrm-standalone
+ddev config --project-type=php
+ddev start
+curl -LsS https://download.civicrm.org/cv/cv.phar --create-dirs -o bin/cv
+chmod +x bin/cv
+# The parameter `-m loadGenerated=1` includes sample data
+ddev exec cv core:install \
+    --cms-base-url="https://civicrm-standalone.ddev.site" \
+    --db=mysql://db:db@db/db \
+    -m loadGenerated=1 \
+    -m extras.adminUser=admin \
+    -m extras.adminPass=admin \
+    -m extras.adminEmail=admin@example.com
+ddev launch
+```
+
+In the web browser, log in using `admin` and `admin`.
+
+Alternatively, install manually via https://civicrm-standalone.ddev.site/
+
+Visit [Install CiviCRM (Standalone)](https://docs.civicrm.org/installation/en/latest/standalone) for more installation details.
+
 ## Contao
 
 Further information on the DDEV procedure can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
