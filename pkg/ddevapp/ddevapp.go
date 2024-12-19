@@ -1654,8 +1654,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	output.UserOut.Printf("Waiting for containers to become ready: %v", dependers)
 	waitErr := app.Wait(dependers)
 
-	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
+	if !slices.Contains(app.OmitContainers, "db") && app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
 		alterString := `ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY 'db';
+			ALTER USER 'db'@'localhost' IDENTIFIED WITH mysql_native_password BY 'db';
 			ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
 			ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';`
 		_, _, err = app.Exec(&ExecOpts{
@@ -1665,7 +1666,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if err != nil {
 			util.Warning("unable to set mysql_native_password db password: %v", err)
 		}
-		util.Debug(`mysql 8, php 5-7.3, set mysql_native_password`)
+		util.Debug(`mysql 8, php 5.6-7.3, set mysql_native_password`)
 	}
 
 	err = PopulateGlobalCustomCommandFiles()
