@@ -38,6 +38,7 @@ func TestDBTypeVersionFromString(t *testing.T) {
 		"mariadb_11.4":  "mariadb:11.4",
 		"mysql_5.7":     "mysql:5.7",
 		"mysql_8.0":     "mysql:8.0",
+		"mysql_8.4":     "mysql:8.4",
 	}
 
 	for input, expectation := range expectations {
