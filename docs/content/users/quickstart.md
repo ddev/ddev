@@ -79,7 +79,7 @@ mkdir my-civicrm-site && cd my-civicrm-site
 ddev config --project-type=php
 ddev start
 ddev exec curl -L https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz > civicrm-standalone.tar.gz
-ddev exec tar --strip-components=1 -xzf civicrm-standalone.tar.gz
+ddev exec tar --strip-components=1 -xzf civicrm-standalone.tar.gz && ddev exec rm civicrm-standalone.tar.gz
 ddev exec curl -LsS https://download.civicrm.org/cv/cv.phar --create-dirs -o bin/cv
 ddev exec chmod +x bin/cv
 # You can now install CiviCRM manually in your browser using `ddev launch`
