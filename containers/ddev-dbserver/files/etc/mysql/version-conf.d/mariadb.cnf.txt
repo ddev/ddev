@@ -6,3 +6,4 @@ query-cache-type               = 0
 query-cache-size               = 0
 
 innodb_large_prefix=true
+innodb_log_file_size=50331648
