@@ -78,10 +78,9 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 mkdir my-civicrm-site && cd my-civicrm-site
 ddev config --project-type=php
 ddev start
-ddev exec curl -L https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz > civicrm-standalone.tar.gz
-ddev exec tar --strip-components=1 -xzf civicrm-standalone.tar.gz && ddev exec rm civicrm-standalone.tar.gz
-ddev exec curl -LsS https://download.civicrm.org/cv/cv.phar --create-dirs -o bin/cv
-ddev exec chmod +x bin/cv
+ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
+ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
+ddev exec "curl -LsS https://download.civicrm.org/cv/cv.phar --create-dirs -o bin/cv && chmod +x bin/cv"
 # You can now install CiviCRM manually in your browser using `ddev launch`
 # and selecting `db` for the server and `db` for database/username/password
 # or do the same automatically using the command below:
