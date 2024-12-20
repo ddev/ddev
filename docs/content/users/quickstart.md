@@ -74,7 +74,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
 [CiviCRM Standalone](https://civicrm.org/blog/ufundo/next-steps-civicrm-standalone) allows running [CiviCRM](https://civicrm.org/) without a CMS.
 
-=== "MacOS and Linux"
+=== "macOS and Linux"
 
     ```bash
     curl -L https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz > civicrm-standalone.tar.gz
