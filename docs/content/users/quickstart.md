@@ -76,7 +76,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
 ```bash
 mkdir my-civicrm-site && cd my-civicrm-site
-ddev config --project-type=php
+ddev config --project-type=php --upload-dirs=public/media
 echo "RUN curl -L --fail -o /tmp/civicrm-standalone.tar.gz -sSL https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz" > .ddev/web-build/Dockerfile.civicrm-standalone
 echo "RUN curl -L --fail -o /usr/local/bin/cv -sSL https://download.civicrm.org/cv/cv.phar && chmod ugo+wx /usr/local/bin/cv" > .ddev/web-build/Dockerfile.cv
 ddev start
