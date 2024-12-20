@@ -6,6 +6,7 @@ query-cache-type               = 0
 query-cache-size               = 0
 
 innodb_large_prefix=true
+innodb_log_file_size=50331648
 
 # mariadb 10.8 and higher don't seem to be able to work with innodb_use_native_aio
 # without a privileged container, which seems like too much risk
