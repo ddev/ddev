@@ -41,7 +41,7 @@ You can export in the same way: `ddev export-db -f mysite.sql.gz` will export yo
 
 ## Database Query Examples
 
-You can do anything with the DDEV server that you would do on a server.
+You can manage databases in DDEV like you would do on a regular server.
 
 To create an empty, extra database for later usage run this command:
 ```
