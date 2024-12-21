@@ -39,6 +39,18 @@ You can easily create and populate additional databases. For example, `ddev impo
 
 You can export in the same way: `ddev export-db -f mysite.sql.gz` will export your default database (`db`). `ddev export-db --database=backend -f backend-export.sql.gz` will dump the database named `backend`.
 
+## Database Query Examples
+
+You can manage databases in DDEV like you would do on a regular server.
+
+To create an empty, extra database for later usage run this command:
+
+```
+ddev mysql -uroot -proot -e 'CREATE DATABASE newdatabase; GRANT ALL on newdatabase.* to "db"@"%";'
+```
+
+Alternatively, create an empty file and import it.
+
 ## Snapshots
 
 Snapshots let you easily save the entire status of all of your databases, which can be great when you’re working incrementally on migrations or updates and want to save state so you can start right back where you were.
