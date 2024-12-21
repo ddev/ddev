@@ -4,5 +4,3 @@ skip-host-cache
 symbolic-links=0
 query-cache-type               = 0
 query-cache-size               = 0
-
-innodb_log_file_size=50331648
