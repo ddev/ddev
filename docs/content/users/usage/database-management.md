@@ -44,6 +44,7 @@ You can export in the same way: `ddev export-db -f mysite.sql.gz` will export yo
 You can manage databases in DDEV like you would do on a regular server.
 
 To create an empty, extra database for later usage run this command:
+
 ```
 ddev mysql -uroot -proot -e 'CREATE DATABASE newdatabase; GRANT ALL on newdatabase.* to "db"@"%";'
 ```
