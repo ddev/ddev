@@ -1,16 +1,24 @@
 ARG BASE_IMAGE="scratch"
 ARG DB_PINNED_VERSION="latest"
 FROM ${BASE_IMAGE}:${DB_PINNED_VERSION}
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 
 # This must be reiterated because everything is emptied on FROM
 ARG BASE_IMAGE
-ARG DB_VERSION
+ARG DB_TYPE
+ARG DB_MAJOR_VERSION
+
+#TODO: 2024-12-07: Currently the "testing" repository, change to the real one when they release
+# See https://perconadev.atlassian.net/browse/PXB-3361
+ARG PERCONA_SETUP_URL=https://repo.percona.com/prel/apt/pool/testing/p/percona-release/percona-release_1.0-30.generic_all.deb
 
 ENV LANG=C.UTF-8
 ENV MYSQL_DATABASE=db
 ENV MYSQL_USER=db
-ENV MYSQL_PASSWORD=db
-ENV MYSQL_ROOT_PASSWORD=root
+ARG PUBLIC_MYSQL_PASSWORD=db
+ENV MYSQL_PASSWORD=${PUBLIC_MYSQL_PASSWORD}
+ARG PUBLIC_MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_ROOT_PASSWORD=${PUBLIC_MYSQL_ROOT_PASSWORD}
 
 SHELL ["/bin/bash", "-c"]
 
@@ -33,23 +41,43 @@ RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
 # look there when doing apt-get update. And we don't use new packages from there.
 # And we're going to install our own percona.list if needed, so get that if needed
 # and remove it here
+USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
+RUN mkdir -p /var/lib/apt/lists/partial
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim-tiny wget
+RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
-RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim wget
+RUN <<EOF
+    set -eu -o pipefail
+    arch=$(dpkg --print-architecture)
+    set -x;
+    if ( ! command -v xtrabackup && ! command -v mariabackup ); then
+        curl -o /tmp/percona_release_latest.deb --fail -sSL ${PERCONA_SETUP_URL}
+        apt-get install -y /tmp/percona_release_latest.deb
+        rm /tmp/percona_release_latest.deb
 
-# If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
-# Use http when connecting. This currently only affects MariaDB 5.5
-RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch) != "aarch64" ] ); then \
-    curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
-    dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
-    rm percona-release*.deb ; \
-    percona_setup=pxb24; \
-    xtrabackup_version=percona-xtrabackup-24 ; \
-    if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi; \
-    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; percona_setup=pxb80; fi ; \
-    percona-release setup ${percona_setup}; \
-    apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
-fi
+        # Use http when connecting. This only affects MariaDB 5.5
+        if [ "$(lsb_release -i -s)" = "Ubuntu" ] && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi
+
+        case ${DB_MAJOR_VERSION} in
+            "8.0")
+                percona-release setup pxb80
+                apt-get update && apt-get -qq install -y percona-xtrabackup-80
+                ;;
+
+            "8.4")
+                percona-release setup pxb84lts
+                apt-get update && apt-get -qq install -y percona-xtrabackup-84
+                ;;
+            # Older versions of mysql and a few mariadb use pxb24
+            *)
+                percona-release setup pxb24
+                apt-get update && apt-get install -qq -y percona-xtrabackup-24
+                ;;
+        esac
+    fi
+EOF
+
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql /etc/mysql
@@ -57,8 +85,13 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
+# On bitnami-derived images, remove their default config so we get ours
+RUN rm -rf /opt/bitnami/mysql/conf
+
+ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
-RUN ln -s -f /dev/stderr /var/log/mysqld.err
+RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
+RUN if ! id mysql &>/dev/null ; then useradd -u 112 mysql; fi
 
 # Build a starter base db
 RUN /create_base_db.sh
@@ -70,20 +103,12 @@ RUN chmod ugo+wx /mnt /var/tmp
 
 RUN rm -rf /var/lib/mysql/*
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
+# version-conf.d should be writable so we can symlink, but the actual config files should not be
+RUN chmod ugo+w /etc/mysql/version-conf.d && chmod -R ugo-w /etc/mysql/version-conf.d/*
 
-RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
+RUN mkdir -p /var/run/mysqld && chmod 755 /var/run/mysqld
 
 RUN /sbin/mkhomedir_helper www-data
-
-# Remove the /etc/apt entry so that if they don't renew the key
-# apt-get update will continue to function
-# Remove MySQL published key that expires 2022-02-15
-# Have requested them to update this in https://bugs.mysql.com/bug.php?id=105632
-# But they haven't done it, and it will break things when it expires.
-RUN rm -f /etc/apt/sources.list.d/mysql.list && \
-    for item in "A4A9 4068 76FC BD3C 4567  70C8 8C71 8D3B 5072 E1F5" ; do \
-        apt-key remove "${item}" || true; \
-    done;
 
 # Normal upstream image doesn't actually have /home/mysql created
 # Make sure it's there in case user 999 (mysql) is using this image.

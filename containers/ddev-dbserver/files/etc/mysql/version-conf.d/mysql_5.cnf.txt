@@ -1,0 +1,11 @@
+[mysqld]
+
+# skip-host-cache is no longer valid in mysql 8.x, but still works in mysql 5
+skip-host-cache
+symbolic-links=0
+query-cache-type               = 0
+query-cache-size               = 0
+
+innodb_large_prefix=true
+innodb_file_format=barracuda
+secure_file_priv=""

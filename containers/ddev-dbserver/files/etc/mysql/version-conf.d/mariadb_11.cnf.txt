@@ -1,0 +1,19 @@
+[mysqld]
+
+skip-host-cache
+symbolic-links=0
+query-cache-type               = 0
+query-cache-size               = 0
+
+# mariadb 10.8 and higher don't seem to be able to work with innodb_use_native_aio
+# without a privileged container, which seems like too much risk
+innodb-use-native-aio=0
+
+# These docker-compose overrides were able to make innodb-use-native-aio work
+# For innodb_use_native_aio=ON mariadb versions need this, see
+# https://github.com/MariaDB/mariadb-docker/issues/454#issuecomment-1212040735
+#privileged: true
+#ulimits:
+#  memlock:
+#    soft: "-1"
+#    hard: "-1"

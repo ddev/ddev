@@ -17,7 +17,7 @@ var WebTag = "20241212_wazum_vim-tiny-vi" // Note that this can be overridden by
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20241210_rfay_mysql_tests"
+var BaseDBTag = "20231216_bitnami_base_for_mysql"
 
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.1"
 

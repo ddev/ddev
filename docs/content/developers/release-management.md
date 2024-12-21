@@ -110,16 +110,12 @@ While it’s more error-prone, images can be pushed from the command line:
 5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.
 6. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
 
-## Maintaining `ddev-dbserver` MySQL 5.7 and 8.0 ARM64 Images
+## Maintaining `ddev-dbserver` MySQL 5.7 ARM64 Images
 
-Sadly, there are no ARM64 Docker images for MySQL 5.7 and 8.0, so we have our own process to maintain [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images) and [ddev/xtrabackup-build](https://github.com/ddev/xtrabackup-build) images for DDEV.
+We don't currently have a way to get `xtrabackup` for ARM64 Docker images for MySQL 5.7, so we have our own process to maintain [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images), which uses Ubuntu 18.04 Docker images, where `xtrabackup` was available.
 
 * `ddev/mysql:5.7` uses Ubuntu 18.04 as the base image, and Ubuntu 18.04 ARM64 has `mysql-server` 5.7 in it, so we can install.
-* `ddev/mysql:8.0` uses Ubuntu 20.04 as the base image, and Ubuntu 20.04 ARM64 has `mysql-server` 8.0 in it, so we can install it from packages.
-* Unfortunately, the [`ddev snapshot`](../users/usage/commands.md#snapshot) command depends on `xtrabackup` 8.0 being installed for `mysql:8.0`. There are no ARM64 packages or binaries provided by Percona for `xtrabackup`, so we build it from source with [ddev/xtrabackup-build](https://github.com/ddev/xtrabackup-build). **There’s a catch, however:** `xtrabackup`’s development cycle lags behind `mysql:8.0`’s development cycle, so you can’t build a usable `ddev/mysql:8.0` image until there’s an `xtrabackup` version released. Further, when Ubuntu bumps `mysql-server-8.0` to a new version, there’s no way to use the old one. So the only time that you can maintain `ddev/mysql:8.0` is when Ubuntu 20.04 has the same version that’s released for `percona-xtrabackup`. (In the case at this writeup, I was finally able to build `percona-xtrabackup` 8.0.28, and the same day Ubuntu bumped its packages to 8.0.29, meaning that it was unusable.)
-* To build percona-xtrabackup, follow the instructions on [ddev/xtrabackup-build](https://github.com/ddev/xtrabackup-build). Create a release with the release of Percona xtrabackup, for example `8.0.29-21`. When that succeeds, then there is an upstream xtrabackup to be used in the ddev/mysql:8.0 build.
-* To build `ddev/mysql` (both 5.7 and 8.0) ARM64 images, follow the instructions on [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images). After the various files are updated, you can push a new release and the proper images will be pushed.
-* After building a new set of `ddev/mysql` images, you’ll need to push `ddev/ddev-dbserver` with new tags. Make sure to update the [ddev/`ddev-dbserver` Makefile](https://github.com/ddev/ddev/blob/master/containers/ddev-dbserver/Makefile) to set the explicit version of the upstream `mysql:8.0` (for example, 8.0.29, if you’ve succeeded in getting 8.0.29 for `percona-xtrabackup` and `mysql:8.0`).
+* To build `ddev/mysql` (5.7) ARM64 images, follow the instructions on [ddev/mysql-arm64-images](https://github.com/ddev/mysql-arm64-images). After the files, you can push a new release and the proper images will be pushed. Since MySQL 5.7 (and Ubuntu 18.04) are EOL, it's unlikely that there will be any new minor releases.
 
 ## Actual Release Docker Image Updates
 
@@ -129,7 +125,7 @@ But here are the steps for building:
 
 1. The `ddev/ddev-php-base` image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
 2. The `ddev/ddev-webserver` Dockerfile must `FROM ddev/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the GitHub Actions or the manual technique.
-3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7 & 8.0 ARM64 Images](#maintaining-ddev-dbserver-mysql-57-and-80-arm64-images) instructions.
+3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7](#maintaining-ddev-dbserver-mysql-57-arm64-images) instructions.
 4. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
 
 ## Manually Updating Homebrew Formulas

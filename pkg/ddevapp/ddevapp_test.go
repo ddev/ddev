@@ -1601,7 +1601,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1807,7 +1807,7 @@ func TestDdevAllDatabases(t *testing.T) {
 				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
 			})
 			assert.NoError(err)
-			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr)
+			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr, "did not find expected timezone value on %v", dbTypeVersion)
 			// Delete override file for next dbType test
 			err = os.Remove(app.GetConfigPath("mysql/override_param_test.cnf"))
 			require.NoError(t, err)
@@ -2014,8 +2014,7 @@ func TestDdevExportDB(t *testing.T) {
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	// TODO: Add MySQL84 when it gets added to DDEV
-	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4"}
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
