@@ -397,6 +397,35 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev launch
     ```
 
+=== "Laravel Installer"
+
+    ```bash
+    mkdir my-laravel-site && cd my-laravel-site
+    ddev config --project-type=laravel --docroot=public
+
+    # Temporarily add the Laravel installer
+    echo 'ARG COMPOSER_HOME=/usr/local/composer
+    RUN composer global require laravel/installer
+    RUN ln -s $COMPOSER_HOME/vendor/bin/laravel /usr/local/bin/laravel
+    ' > .ddev/web-build/Dockerfile.laravel
+
+    # Start the project and select a starter kit of your choice
+    # The database is temporarily set to SQLite and will be switched to MariaDB
+    ddev start
+    ddev exec laravel new temp --database=sqlite
+
+    # Move the installed files
+    ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
+
+    # Remove the Laravel installer and the .env file
+    ddev exec 'rm -rf .ddev/web-build/Dockerfile.laravel .env'
+
+    # Restart the project and execute the post-install actions
+    ddev restart
+    ddev composer run-script post-create-project-cmd
+    ddev launch
+    ```
+
 === "Git Clone"
 
     ```bash
