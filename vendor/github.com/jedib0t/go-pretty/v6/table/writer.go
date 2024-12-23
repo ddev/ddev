@@ -27,7 +27,7 @@ type Writer interface {
 	SetColumnConfigs(configs []ColumnConfig)
 	SetIndexColumn(colNum int)
 	SetOutputMirror(mirror io.Writer)
-	SetRowPainter(painter RowPainter)
+	SetRowPainter(painter interface{})
 	SetStyle(style Style)
 	SetTitle(format string, a ...interface{})
 	SortBy(sortBy []SortBy)
