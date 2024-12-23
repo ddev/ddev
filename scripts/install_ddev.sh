@@ -11,7 +11,7 @@ set -o nounset
 if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
 
 GITHUB_OWNER=${GITHUB_OWNER:-ddev}
-ARTIFACTS="ddev mkcert macos_ddev_nfs_setup.sh"
+ARTIFACTS="ddev mkcert"
 TMPDIR=/tmp
 
 RED='\033[31m'
@@ -140,7 +140,6 @@ fi
 
 curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$TARBALL${RESET}\n" && exit 108)
 curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$SHAFILE${RESET}\n" && exit 109)
-curl -fsSL "https://raw.githubusercontent.com/${GITHUB_OWNER}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh" || (printf "${RED}Failed downloading "https://raw.githubusercontent.com/${GITHUB_OWNER}/ddev/master/scripts/macos_ddev_nfs_setup.sh"${RESET}\n" && exit 110)
 
 cd $TMPDIR
 $SHACMD -c "$SHAFILE"
