@@ -2111,7 +2111,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		require.NoError(t, err, "mysql db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysqldump -uroot -proot db > dbdump.sql",
+			Cmd: "mysqldump db > dbdump.sql",
 		})
 		require.NoError(t, err, "mysqldump failed, stdout=%s, stderr=%s", stdout, stderr)
 

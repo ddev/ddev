@@ -1115,16 +1115,18 @@ ddev mutagen version
 
 ## `mysql`
 
-Run MySQL client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.
+*Alias: `mariadb`.*
+
+Run MySQL or MariaDB client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.
 
 Example:
 
 ```shell
-# Run the database container’s MySQL client
+# Run the database container’s MySQL client as root user
 ddev mysql
 
-# Run the database container’s MySQL client as root user
-ddev mysql -uroot -proot
+# Run the database container’s MySQL client as db user
+ddev mysql -udb -pdb
 
 # Pipe the `SHOW TABLES;` command to the MySQL client to see a list of tables
 echo 'SHOW TABLES;' | ddev mysql

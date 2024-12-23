@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
 ## #ddev-generated
-## Description: run mysql client in db container
+## Description: run mysql or mariadb client in db container with 'root' user privileges
 ## Usage: mysql [flags] [args]
-## Example: "ddev mysql" or "ddev mysql -uroot -proot" or "echo 'SHOW TABLES;' | ddev mysql"
-## `ddev mysql --database=mysql -uroot -proot` gets you to the 'mysql' database with root privileges
+## Example: "ddev mysql" or "ddev mysql -udb -pdb" or "echo 'SHOW TABLES;' | ddev mysql"
+## `ddev mysql --database=mysql -udb -pdb` gets you to the 'mysql' database with 'db' user privileges
+## Aliases: mariadb
 ## DBTypes: mysql,mariadb
 ## ExecRaw: true
 
-mysql -udb -pdb --pager "$@"
+# Prefer mariadb instead of mysql if available
+if [[ "${DDEV_DATABASE}" == "mariadb"* ]] && command -v mariadb >/dev/null 2>&1; then
+    mysql() { mariadb "$@"; }
+fi
+mysql "$@"
