@@ -54,6 +54,7 @@ type GlobalConfig struct {
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
+	NoConfigHere                     []string                    `yaml:"no_config_here"`
 	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
 	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
 	ProjectTldGlobal                 string                      `yaml:"project_tld"`

@@ -75,9 +75,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.AppRoot = appRoot
 	}
 
-	homeDir, _ := os.UserHomeDir()
-	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
+	if err := IsAllowedProjectLocation(app); err != nil {
+		return nil, err
 	}
 
 	if _, err := os.Stat(app.AppRoot); err != nil {
@@ -1378,6 +1377,21 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 	err = os.WriteFile(fullpath, contents, 0644)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// IsAllowedProjectLocation returns an error if the project location is not allowed
+func IsAllowedProjectLocation(app *DdevApp) error {
+	homeDir, _ := os.UserHomeDir()
+	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+		return fmt.Errorf("'ddev config' is not useful in your home directory (%v)", homeDir)
+	}
+	noConfigDirs := globalconfig.DdevGlobalConfig.NoConfigHere
+	for _, noConfigDir := range noConfigDirs {
+		if app.AppRoot == filepath.Join(noConfigDir) {
+			return fmt.Errorf("'ddev config' is not allowed in the %s directory, use 'ddev config global --no-config-here=false' if you want to allow it", noConfigDir)
+		}
 	}
 	return nil
 }

@@ -378,6 +378,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--mailpit-http-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
 * `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
+* `--no-config-here`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-config-here=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
