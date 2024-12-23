@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"os"
-
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -48,6 +48,12 @@ ddev exec --raw -- ls -lR`,
 			Dir:     execDirArg,
 			Cmd:     strings.Join(args, " "),
 			Tty:     true,
+		}
+
+		// Load mariadb changes in names to avoid warnings for mysql
+		// Deprecated program name. It will be removed in a future release
+		if opts.Service == "db" && app.Database.Type == nodeps.MariaDB {
+			opts.Cmd = "source /etc/profile.d/00-mariadb.sh >/dev/null 2>&1; " + opts.Cmd
 		}
 
 		// If they've chosen raw, use the actual passed values
