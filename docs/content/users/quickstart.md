@@ -409,9 +409,11 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     RUN ln -s $COMPOSER_HOME/vendor/bin/laravel /usr/local/bin/laravel
     ' > .ddev/web-build/Dockerfile.laravel
 
-    # Start the project and select a starter kit of your choice
-    # The database is temporarily set to SQLite and will be switched to MariaDB
+    # Start the project
     ddev start
+
+    # Select a starter kit of your choice.
+    # The database is temporarily set to SQLite and will be switched to MariaDB
     ddev exec laravel new temp --database=sqlite
 
     # Move the installed files
