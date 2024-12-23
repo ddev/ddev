@@ -368,6 +368,14 @@ Whether to not use Docker bind mounts.
 
 Some Docker environments (like remote Docker) do not allow bind mounts, so when `true` this turns those off, turns on Mutagen, and uses volume copies to do what bind mounts would otherwise do.
 
+## `no_config_here`
+
+Whether to disable `ddev config` in the current directory. The project's parent directory is automatically disabled when running `ddev config`. Use `ddev config global --no-config-here=false` to re-enable it.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can `true` or `false`.
+
 ## `no_project_mount`
 
 Whether to skip mounting project into web container.

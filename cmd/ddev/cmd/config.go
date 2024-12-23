@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -149,9 +150,9 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed(err.Error())
 	}
 
-	homeDir, _ := os.UserHomeDir()
-	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		util.Failed("Please do not use `ddev config` in your home directory")
+	err = ddevapp.IsAllowedProjectLocation(app)
+	if err != nil {
+		util.Failed("Unable to run `ddev config`: %v", err)
 	}
 
 	err = app.CheckExistingAppInApproot()
@@ -196,6 +197,16 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	err = app.ProcessHooks("post-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
+	}
+
+	// Exclude project's parent directory from accidental 'ddev config'
+	projectParentDir := filepath.Dir(app.AppRoot)
+	if !slices.Contains(globalconfig.DdevGlobalConfig.NoConfigHere, projectParentDir) {
+		globalconfig.DdevGlobalConfig.NoConfigHere = append(globalconfig.DdevGlobalConfig.NoConfigHere, projectParentDir)
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			util.Failed("Failed to update global config: %v", err)
+		}
 	}
 
 	util.Success("Configuration complete. You may now run 'ddev start'.")
