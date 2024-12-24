@@ -858,18 +858,12 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 		}
 
-		mariadbOverride := ""
-		if app.Database.Type == nodeps.MariaDB {
-			// Prefer mariadb instead of mysql if available
-			mariadbOverride = `mysql() { command -v mariadb >/dev/null 2>&1 && mariadb "$@" || command mysql "$@"; }; `
-		}
-
 		// Case for reading from file
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s mysql -e "%s" && pv %s/*.*sql | perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s`, mariadbOverride, preImportSQL, insideContainerImportPath, "`", targetDB)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 
 		// Alternate case where we are reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s mysql -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, mariadbOverride, preImportSQL, "`", targetDB)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 		}
 
 	case nodeps.Postgres:
@@ -936,14 +930,12 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 		targetDB = "db"
 	}
 
-	exportCmd := "mysqldump " + targetDB
+	exportCmd := "mysqldump " + targetDB + nodeps.MySQLRemoveDeprecatedMessage
 	if app.Database.Type == "postgres" {
 		exportCmd = "pg_dump -U db " + targetDB
 	}
 
 	if app.Database.Type == nodeps.MariaDB {
-		// Prefer mariadb-dump instead of mysqldump if available
-		exportCmd = `mysqldump() { command -v mariadb-dump >/dev/null 2>&1 && mariadb-dump "$@" || command mysqldump "$@"; }; ` + exportCmd
 		// The `tail --lines=+2` is a workaround that removes the new mariadb directive added
 		// 2024-05 in mariadb-dump. It removes the first line of the dump, which has
 		// the offending /*!999999\- enable the sandbox mode */. See

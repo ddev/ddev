@@ -11,6 +11,7 @@
 
 # Prefer mariadb instead of mysql if available
 if [[ "${DDEV_DATABASE}" == "mariadb"* ]] && command -v mariadb >/dev/null 2>&1; then
-    mysql() { mariadb "$@"; }
+    mariadb "$@"
+else
+    mysql "$@"
 fi
-mysql "$@"

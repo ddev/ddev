@@ -10,6 +10,7 @@
 
 # Prefer mariadb-dump instead of mysqldump if available
 if [[ "${DDEV_DATABASE}" == "mariadb"* ]] && command -v mariadb-dump >/dev/null 2>&1; then
-    mysqldump() { mariadb-dump "$@"; }
+    mariadb-dump "$@"
+else
+    mysqldump "$@"
 fi
-mysqldump "$@"
