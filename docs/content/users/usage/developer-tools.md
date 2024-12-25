@@ -20,6 +20,11 @@ Hundreds of useful developer tools are included inside the containers and can be
 * `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
 * `node`
 * `sqlite3`
+* [CiviCRM CLI Tools](https://github.com/civicrm/civicrm-cli-tools):
+  * `civistrings` - Manage and manipulate strings and translations for CiviCRM.
+  * `civix` - Utility for managing CiviCRM extension development.
+  * `coworker` - Run tasks and worker threads for CiviCRM.
+  * `cv` - A general-purpose CiviCRM CLI for tasks like flushing caches or upgrading databases.
 
 These tools can be accessed for single commands using [`ddev exec <command>`](cli.md#executing-commands-in-containers) or [`ddev ssh`](cli.md#ssh-into-containers) for an interactive `bash` or `sh` session.
 
