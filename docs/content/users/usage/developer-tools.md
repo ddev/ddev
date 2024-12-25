@@ -20,7 +20,7 @@ Hundreds of useful developer tools are included inside the containers and can be
 * `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
 * `node`
 * `sqlite3`
-* [CiviCRM CLI Tools](https://github.com/civicrm/civicrm-cli-tools):
+* [civicrm-cli-tools](https://github.com/civicrm/civicrm-cli-tools):
   * `civistrings` - Manage and manipulate strings and translations for CiviCRM.
   * `civix` - Utility for managing CiviCRM extension development.
   * `coworker` - Run tasks and worker threads for CiviCRM.
@@ -81,7 +81,7 @@ Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the contai
 * On some older configurations of Docker Desktop for Windows, symlinks are created in the container as “simulated symlinks”, or XSym files. These special text files behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (On the CIFS filesystem used by Docker for Windows, inside the container, there is no capability to create real symlinks even though Windows now has this capability.)
 * DDEV attempts to clean up for this situation. Since Windows 10/11+ (in developer mode) can create real symlinks, DDEV scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to “Developer Mode”.
 * To enable developer mode on Windows 10/11+, search for “developer” in settings:
-    ![Finding developer mode](../../images/developer-mode-1.png)  
+    ![Finding developer mode](../../images/developer-mode-1.png)
     ![Setting developer mode](../../images/developer-mode-2.png)
 
 ## Email Capture and Review (Mailpit)
