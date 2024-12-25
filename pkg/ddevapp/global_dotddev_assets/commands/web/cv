@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run cv CLI inside the web container
+## Usage: cv [flags] [args]
+## Example: "ddev cv flush" or "ddev cv upgrade:db" or "ddev cv --version"
+## Aliases: cv
+## ProjectTypes: drupal,drupal11,drupal10,drupal9,drupal8,drupal7,backdrop
+## ExecRaw: true
+
+if ! command -v cv >/dev/null; then
+  echo "cv is not available. You may need to 'ddev composer require civicrm/cli-tools'"
+  exit 1
+fi
+./vendor/bin/cv "$@"

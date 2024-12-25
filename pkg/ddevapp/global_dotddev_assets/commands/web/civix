@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run civix CLI inside the web container
+## Usage: civix [flags] [args]
+## Example: "ddev civix build:zip" or "ddev civix upgrade" or "ddev civix --version"
+## Aliases: cvx
+## ProjectTypes: drupal,drupal11,drupal10,drupal9,drupal8,drupal7,backdrop
+## ExecRaw: true
+
+if ! command -v civix >/dev/null; then
+  echo "civix is not available. You may need to 'ddev composer require civicrm/cli-tools'"
+  exit 1
+fi
+./vendor/bin/civix "$@"

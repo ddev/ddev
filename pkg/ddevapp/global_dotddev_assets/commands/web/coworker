@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run coworker CLI inside the web container
+## Usage: coworker [flags] [args]
+## Example: "ddev coworker list" or "ddev coworker debug" or "ddev coworker --version"
+## Aliases: cowkr
+## ProjectTypes: drupal,drupal11,drupal10,drupal9,drupal8,drupal7,backdrop
+## ExecRaw: true
+
+if ! command -v coworker >/dev/null; then
+  echo "coworker is not available. You may need to 'ddev composer require civicrm/cli-tools'"
+  exit 1
+fi
+./vendor/bin/coworker "$@"

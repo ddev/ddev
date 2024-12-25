@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run civistrings CLI inside the web container
+## Usage: civistrings [flags] [args]
+## Example: "ddev civistrings -o myfile.pot myfolder" or "ddev civistrings --version"
+## Aliases: cvstr
+## ProjectTypes: drupal,drupal11,drupal10,drupal9,drupal8,drupal7,backdrop
+## ExecRaw: true
+
+if ! command -v civistrings >/dev/null; then
+  echo "civistrings is not available. You may need to 'ddev composer require civicrm/cli-tools'"
+  exit 1
+fi
+./vendor/bin/civistrings "$@"
