@@ -403,7 +403,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
 
-    # Temporarily add the Laravel installer
+    # Temporarily add the Laravel installer as /usr/local/bin/laravel in the web container
     echo 'ARG COMPOSER_HOME=/usr/local/composer
     RUN composer global require laravel/installer
     RUN ln -s $COMPOSER_HOME/vendor/bin/laravel /usr/local/bin/laravel
