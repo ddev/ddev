@@ -68,7 +68,7 @@ Click on the local repository path and add `/var/www/html` as the *Absolute path
     ![PhpStorm debug start](../../images/phpstorm-config-debug-button.png)
 
 !!!tip "If you’re using [additional_hostnames](../extend/additional-hostnames.md)"
-    If you also want xdebug to trigger when using a URL other than the primary URL (as with  `additional_hostnames` or `additional_fqdns`), create a copy of the PhpStorm `server` (Settings->PHP->Servers) with the current settings and change the host and name to the desired ones. This will tell PHP Storm to listen to that hostname with the appropriate mapping.
+    If you also want Xdebug to trigger when using a URL other than the primary URL (as with  `additional_hostnames` or `additional_fqdns`), create a copy of the PhpStorm `server` (Settings->PHP->Servers) with the current settings and change the host and name to the desired ones. This will tell PHP Storm to listen to that hostname with the appropriate mapping.
 
 #### PhpStorm and Command-Line Debugging
 

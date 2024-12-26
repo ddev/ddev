@@ -44,7 +44,7 @@ To add a new project type:
     * Create a new release and attach the database and file artifacts.
     * Transfer the repository to DDEV, we will maintain your access. (Ask us to do this after opening the PR.)
 * Update the documentation:
-    * If it doesn't pass our spellcheck, add the word to `.spellcheckwordlist.txt`
+    * If it doesn't pass our spell check, add the word to `.spellcheckwordlist.txt`
     * Add the new type to `users/configuration/config.md`
     * Update the `users/quickstart.md`
     * If there is a new command, add it to `users/usage/commands.md` and `users/usage/cli.md`
