@@ -32,7 +32,8 @@ permissions:
 jobs:
   build:
     name: Docs check (spellcheck, links, markdownlint, textlint)
-    runs-on: ubuntu-24.04
+    # linkspector seems to fail with "No usable sandbox"
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up Homebrew
