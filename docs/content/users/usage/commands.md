@@ -1019,6 +1019,23 @@ Example:
 ddev mailpit
 ```
 
+## `mariadb`
+
+Run MariaDB client in the database container (global shell db container command). This is only available on projects that use the `mariadb` database type.
+
+Example:
+
+```shell
+# Run the database container’s MariaDB client as root user
+ddev mariadb
+
+# Run the database container’s MariaDB client as db user
+ddev mariadb -udb -pdb
+
+# Pipe the `SHOW TABLES;` command to the MariaDB client to see a list of tables
+echo 'SHOW TABLES;' | ddev mariadb
+```
+
 ## `mutagen`
 
 Commands for [Mutagen](../install/performance.md#mutagen) status and sync, etc.
@@ -1115,9 +1132,7 @@ ddev mutagen version
 
 ## `mysql`
 
-*Alias: `mariadb`.*
-
-Run MySQL or MariaDB client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.
+Run MySQL client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.
 
 Example:
 

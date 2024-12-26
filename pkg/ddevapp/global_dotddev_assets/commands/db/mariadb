@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+## #ddev-generated
+## Description: run mariadb client in db container with 'root' user privileges
+## Usage: mariadb [flags] [args]
+## Example: "ddev mariadb" or "ddev mariadb -udb -pdb" or "echo 'SHOW TABLES;' | ddev mariadb"
+## `ddev mariadb --database=mariadb -udb -pdb` gets you to the 'mariadb' database with 'db' user privileges
+## DBTypes: mariadb
+## ExecRaw: true
+
+# Prefer 'mariadb' instead of 'mysql' (older versions of MariaDB only have the 'mysql' binary)
+if command -v mariadb >/dev/null 2>&1; then
+    mariadb "$@"
+else
+    mysql "$@"
+fi
