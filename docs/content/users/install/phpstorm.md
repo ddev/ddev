@@ -1,5 +1,6 @@
 # PhpStorm Setup
 
+Link to [providers](../providers/upsun.md#usagebroken)
 If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you can configure it for tight integration with DDEV and Docker to more easily run actions, access services, enable autocompletion, and enjoy a more convenient development experience.
 
 ## Before Starting
