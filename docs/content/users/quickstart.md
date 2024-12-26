@@ -397,6 +397,38 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev launch
     ```
 
+=== "Laravel Installer"
+
+    ```bash
+    mkdir my-laravel-site && cd my-laravel-site
+    ddev config --project-type=laravel --docroot=public
+
+    # Temporarily add the Laravel installer as /usr/local/bin/laravel in the web container
+    echo 'ARG COMPOSER_HOME=/usr/local/composer
+    RUN composer global require laravel/installer
+    RUN ln -s $COMPOSER_HOME/vendor/bin/laravel /usr/local/bin/laravel
+    ' > .ddev/web-build/Dockerfile.laravel
+
+    # Start the project
+    ddev start
+
+    # Select a starter kit of your choice.
+    # The database is temporarily set to SQLite and will be switched to MariaDB
+    ddev exec laravel new temp --database=sqlite
+
+    # 'laravel new' can't install in the current directory right away,
+    # so we use 'rsync' to move the installed files one level up
+    ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
+
+    # Remove the Laravel installer and the .env file
+    rm -rf .ddev/web-build/Dockerfile.laravel .env
+
+    # Restart the project and execute the post-install actions
+    ddev restart
+    ddev composer run-script post-create-project-cmd
+    ddev launch
+    ```
+
 === "Git Clone"
 
     ```bash
@@ -707,6 +739,8 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --version="7.1.*" --webapp
+    # 'symfony new' can't install in the current directory right away,
+    # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
     ddev launch
     ```
