@@ -50,6 +50,13 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
+      - name: Run linkspector to check links
+        uses: umbrelladocs/action-linkspector@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          fail_on_error: true
+
       - name: Run markdownlint
         uses: docker://avtodev/markdown-lint:v1
         with:
