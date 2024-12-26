@@ -416,7 +416,8 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     # The database is temporarily set to SQLite and will be switched to MariaDB
     ddev exec laravel new temp --database=sqlite
 
-    # Move the installed files
+    # 'laravel new' can't install in the current directory right away,
+    # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
 
     # Remove the Laravel installer and the .env file
@@ -738,6 +739,8 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --version="7.1.*" --webapp
+    # 'symfony new' can't install in the current directory right away,
+    # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
     ddev launch
     ```
