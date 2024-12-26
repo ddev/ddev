@@ -1,7 +1,5 @@
 # Performance
 
-Performance is always a thing. You'll want to look at [ddev.com](https://ddev.com/get-started-now).
-
 DDEV is continually focused on quick project startup and fast responses to its web requests. DDEV’s performance is mostly an issue of how Docker runs on your workstation.
 
 On Linux, including Windows WSL2 and Gitpod, Docker is fast. Most people are happy with Linux performance and don’t need to change anything.

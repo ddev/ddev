@@ -1,6 +1,6 @@
 # Docker Installation
 
-You’ll need a Docker provider on your system before you can [install DDEV](xxx-ddev-installation.md).
+You’ll need a Docker provider on your system before you can [install DDEV](ddev-installation.md).
 
 === "macOS"
 
