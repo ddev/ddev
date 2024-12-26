@@ -1,7 +1,7 @@
 dirs: docs/content
 ignorePatterns:
-  -pattern: "^https*://127.0.0.1"
-  - pattern: "^https://www.drupal.org/(u|project|about|forum|slack|join-slack)"
+  - pattern: '^https*://127.0.0.1'
+  - pattern: '^https://www.drupal.org/(u|project|about|forum|slack|join-slack)'
   - pattern: "^https://deb.sury.org"
   - pattern: "^https://nssm.cc/"
   - pattern: "^https://www.php.net/manual/"

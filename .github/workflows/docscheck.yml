@@ -31,8 +31,8 @@ permissions:
 
 jobs:
   build:
-    name: Docs check (spellcheck, markdownlint, textlint)
-    runs-on: ubuntu-latest
+    name: Docs check (spellcheck, links, markdownlint, textlint)
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up Homebrew
@@ -64,13 +64,6 @@ jobs:
           args: '*.md docs/content'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
-      - name: Check links in Markdown
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          use-quiet-mode: 'yes'
-          folder-path: 'docs/'
-          file-path: "README.md"
-          config-file: 'markdown-link-check.json'
       - name: Test mkdocs
         env:
           MKDOCS_GITHUB_USER: ${{ secrets.MKDOCS_GITHUB_USER }}
