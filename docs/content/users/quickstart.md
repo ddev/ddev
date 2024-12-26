@@ -80,7 +80,7 @@ ddev config --project-type=php --composer-root=core --upload-dirs=public/media
 ddev start
 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
-ddev exec "curl -LsS https://download.civicrm.org/cv/cv.phar --create-dirs -o bin/cv && chmod +x bin/cv"
+ddev composer require civicrm/cli-tools --no-scripts
 # You can now install CiviCRM manually in your browser using `ddev launch`
 # and selecting `db` for the server and `db` for database/username/password
 # or do the same automatically using the command below:
