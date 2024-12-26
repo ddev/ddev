@@ -31,8 +31,9 @@ permissions:
 
 jobs:
   build:
-    name: Docs check (spellcheck, markdownlint, textlint)
-    runs-on: ubuntu-latest
+    name: Docs check (spellcheck, links, markdownlint, textlint)
+    # linkspector seems to fail with "No usable sandbox"
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up Homebrew
@@ -47,9 +48,16 @@ jobs:
       - name: Run textlint
         uses: tsuyoshicho/action-textlint@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
+      - name: Run linkspector to check links
+        uses: umbrelladocs/action-linkspector@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          fail_on_error: true
+          config_file: '.linkspector.yml'
       - name: Run markdownlint
         uses: docker://avtodev/markdown-lint:v1
         with:
@@ -57,13 +65,6 @@ jobs:
           args: '*.md docs/content'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
-      - name: Check links in Markdown
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          use-quiet-mode: 'yes'
-          folder-path: 'docs/'
-          file-path: "README.md"
-          config-file: 'markdown-link-check.json'
       - name: Test mkdocs
         env:
           MKDOCS_GITHUB_USER: ${{ secrets.MKDOCS_GITHUB_USER }}

@@ -174,13 +174,13 @@ mkdocs-serve:
 	fi; \
 	set +x
 
-# Install markdown-link-check locally with "npm install -g markdown-link-check"
+# Install markdown-link-check locally with "sudo npm install -g @umbrelladocs/linkspector"
 markdown-link-check:
-	@echo "markdown-link-check: "
-	if command -v markdown-link-check >/dev/null 2>&1; then \
-  		find docs *.md -name "*.md" -exec markdown-link-check -q -c markdown-link-check.json {} \; 2>&1  ;\
+	@echo "markdown-link-check (linkspector): "
+	if command -v linkspector >/dev/null 2>&1; then \
+		linkspector check; \
 	else \
-		echo "Not running markdown-link-check because it's not installed"; \
+		echo "Not running linkspector because it's not installed"; \
 	fi
 
 # Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requries aspell, `sudo apt-get install aspell"
