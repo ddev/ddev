@@ -76,7 +76,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
 ```bash
 mkdir my-civicrm-site && cd my-civicrm-site
-ddev config --project-type=php --upload-dirs=public/media
+ddev config --project-type=php --composer-root=core --upload-dirs=public/media
 ddev start
 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
