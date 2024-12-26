@@ -421,7 +421,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
 
     # Remove the Laravel installer and the .env file
-    ddev exec 'rm -rf .ddev/web-build/Dockerfile.laravel .env'
+    rm -rf .ddev/web-build/Dockerfile.laravel .env
 
     # Restart the project and execute the post-install actions
     ddev restart
