@@ -56,7 +56,7 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
           fail_on_error: true
-
+          config_file: '.linkspector.yml'
       - name: Run markdownlint
         uses: docker://avtodev/markdown-lint:v1
         with:
