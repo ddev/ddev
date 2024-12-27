@@ -1170,7 +1170,13 @@ func TestDdevMysqlWorks(t *testing.T) {
 	// Test that MySQL + .my.cnf works on web container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SELECT USER();' | grep 'db@'",
+		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@'",
+	})
+	assert.NoError(err)
+	// Test that the 'db' user works
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "mysql -udb -pdb -e 'SELECT USER();' | grep 'db@'",
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1183,6 +1189,12 @@ func TestDdevMysqlWorks(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@localhost'",
+	})
+	assert.NoError(err)
+	// Test that the 'db' user works
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "mysql -udb -pdb -e 'SELECT USER();' | grep 'db@localhost'",
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -2111,7 +2123,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		require.NoError(t, err, "mysql db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysqldump -uroot -proot db > dbdump.sql",
+			Cmd: "mysqldump db > dbdump.sql",
 		})
 		require.NoError(t, err, "mysqldump failed, stdout=%s, stderr=%s", stdout, stderr)
 

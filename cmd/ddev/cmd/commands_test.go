@@ -187,7 +187,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
 
-	for _, c := range []string{"mysql", "npm", "php", "yarn"} {
+	for _, c := range []string{"mariadb", "mysql", "npm", "php", "yarn"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "--version")
 		assert.NoError(err, "Failed to run ddev %s --version", c)
 	}

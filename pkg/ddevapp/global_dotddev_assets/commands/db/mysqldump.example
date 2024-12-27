@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
 ## #ddev-generated
-## Description: run mysqldump in web container
+## Description: run mysqldump or mariadb-dump in web container
 ## Usage: mysqldump [flags] [args]
 ## Example: "ddev mysqldump db" or "ddev mysqldump otherdb" or "ddev mysqldump db | gzip >db.sql.gz"
+## Aliases: mariadb-dump
+## DBTypes: mysql,mariadb
+## ExecRaw: true
 
-mysqldump -uroot -proot $@
+# Prefer mariadb-dump instead of mysqldump if available
+if [[ "${DDEV_DATABASE}" == "mariadb"* ]] && command -v mariadb-dump >/dev/null 2>&1; then
+    mariadb-dump "$@"
+else
+    mysqldump "$@"
+fi

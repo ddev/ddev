@@ -11,13 +11,13 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20241212_wazum_vim-tiny-vi" // Note that this can be overridden by make
+var WebTag = "20241223_stasadev_build_warn" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20231216_bitnami_base_for_mysql"
+var BaseDBTag = "20241223_stasadev_build_warn"
 
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.1"
 
@@ -25,7 +25,7 @@ const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.1"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.24.1"
+var SSHAuthTag = "20241223_stasadev_build_warn"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"

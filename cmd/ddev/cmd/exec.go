@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
