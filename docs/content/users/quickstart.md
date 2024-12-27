@@ -210,7 +210,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ```
     CMS_VERSION=1.0.0-rc2
     curl -o drupal-cms.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
-    unzip drupal-cms.zip
+    unzip drupal-cms.zip && rm drupal-cms.zip
     cd drupal-cms
     ./launch-drupal-cms.sh
     ```
