@@ -286,6 +286,10 @@ golangci-lint:
 		echo "Skipping golangci-lint as not installed"; \
 	fi
 
+quickstart-test:
+	@echo "quickstart-test:"
+	cd docs && bats test.bats
+
 version:
 	@echo VERSION:$(VERSION)
 

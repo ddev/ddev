@@ -1,0 +1,48 @@
+name: Quickstart test
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    paths:
+      - "docs/content/users/quickstart.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  actions: write
+
+jobs:
+  build:
+    name: Docs Quickstart test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Docker and deps (Linux)
+        run: ./.github/workflows/linux-setup.sh
+
+      - name: DDEV build
+        run: |
+          make
+          sudo ln -sf $PWD/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
+
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
+      - name: Run quickstart test
+        run: |
+          make quickstart-test
+
