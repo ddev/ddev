@@ -80,7 +80,7 @@ If you’d like to use a GUI database client, you’ll need the right connection
 
 ## Database Query Examples
 
-You can query, update, or alter databases in DDEV like you would do on a regular server, using `ddev mysql`,  `ddev mariadb`, or `ddev psql` or using those CLI tools inside the web or DB containers. Some examples are given below.
+You can query, update, or alter databases in DDEV like you would do on a regular server, using `ddev mysql`,  `ddev mariadb`, or `ddev psql` or using those command-line tools inside the web or DB containers. Some examples are given below.
 
 * Create a new empty database named `newdatabase`:
 
