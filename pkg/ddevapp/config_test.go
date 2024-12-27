@@ -85,7 +85,7 @@ func TestDisasterConfig(t *testing.T) {
 	tmpDir, _ := os.UserHomeDir()
 	_, err := ddevapp.NewApp(tmpDir, false)
 	assert.Error(err)
-	assert.Contains(err.Error(), "ddev config is not useful")
+	assert.Contains(err.Error(), "'ddev config' is not useful")
 	_ = os.Chdir(origDir)
 
 	// Create a temporary directory and change to it for the duration of this test.
