@@ -51,7 +51,7 @@ This will launch a web server on port 8000 and automatically refresh pages as th
     pipx ensurepath
     ```
 
-!!!tip "Installing mkdocs locally on Debian/Ubuntu Linux"
+!!!tip "Installing mkdocs locally on Debian/Ubuntu Linux or WSL2 with Ubuntu"
 
     ```bash
     sudo apt update && sudo apt install python3-full python-is-python3 pipx
