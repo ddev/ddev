@@ -202,10 +202,17 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     mkdir my-drupal-cms && cd my-drupal-cms
     ddev config --project-type=drupal11 --docroot=web
     ddev composer create --stability="RC" drupal/cms
-    ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
-    # or automatically log in with
-    ddev launch $(ddev drush uli)
+    ```
+
+    or use the Zip file download technique:
+
+    ```
+    CMS_VERSION=1.0.0-rc2
+    curl -o drupal-cms.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
+    unzip drupal-cms.zip
+    cd drupal-cms
+    ./launch-drupal-cms.sh
     ```
 
 === "Drupal 10"
