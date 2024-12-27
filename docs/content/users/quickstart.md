@@ -72,7 +72,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
 ## CiviCRM (Standalone)
 
-[CiviCRM Standalone](https://civicrm.org/blog/ufundo/next-steps-civicrm-standalone) allows running [CiviCRM](https://civicrm.org/) without a CMS.
+[CiviCRM Standalone](https://civicrm.org/blog/ufundo/next-steps-civicrm-standalone) allows running [CiviCRM](https://civicrm.org/) without a CMS. Visit [Install CiviCRM (Standalone)](https://docs.civicrm.org/installation/en/latest/standalone) for more installation details.
 
 ```bash
 mkdir my-civicrm-site && cd my-civicrm-site
@@ -94,8 +94,6 @@ ddev exec cv core:install \
     -m extras.adminEmail=admin@example.com
 ddev launch
 ```
-
-Visit [Install CiviCRM (Standalone)](https://docs.civicrm.org/installation/en/latest/standalone) for more installation details.
 
 ## Contao
 
