@@ -16,6 +16,8 @@ In `.ddev/config.yaml`, [`use_dns_when_possible: false`](../configuration/config
 
 You can also set up a local DNS server like [dnsmasq](https://dnsmasq.org) (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the `project_tld` that you choose, and DNS resolution will work fine. You’ll likely want a wildcard A record pointing to `127.0.0.1` on most DDEV installations. If you use dnsmasq, you must configure it to allow DNS rebinding.
 
+To understand what's going on with name resolution and your browser and offline use, we recommend [Hostnames and Wildcards and DDEV Oh My! on ddev.com](https://ddev.com/blog/ddev-name-resolution-wildcards/).
+
 !!!note "Administrative Privileges Required"
 
     If you `ddev start` when offline, DDEV will try to add `<projectname>.ddev.site` to your `/etc/hosts` file. You must have administrative privileges to edit the hosts file on any operating system.
