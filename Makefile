@@ -147,7 +147,8 @@ markdownlint:
 		echo "Skipping markdownlint as not installed"; \
 	fi
 
-# Best to install mkdocs locally with "sudo pip3 install -r docs/mkdocs-pip-requirements"
+# Install mkdocs locally using
+# https://ddev.readthedocs.io/en/stable/developers/testing-docs/
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
@@ -157,22 +158,15 @@ mkdocs:
 		echo "Not running mkdocs because it's not installed"; \
 	fi
 
-# To see what the docs build will be, you can use `make mkdocs-serve`
-# It works best with mkdocs installed, `pip3 install mkdocs`,
-# see https://www.mkdocs.org/user-guide/installation/
-# But it will also work using docker.
-MKDOCS_TAG := 1.5.2
-ifeq ($(BUILD_ARCH),arm64)
-    MKDOCS_TAG := arm64v8-$(MKDOCS_TAG)
-endif
+# To see what the docs will look like, you can use `make mkdocs-serve`
+# It does require installing mkdocs and its requirements
+# See https://ddev.readthedocs.io/en/stable/developers/testing-docs/
 mkdocs-serve:
-	set -x; \
-	if command -v mkdocs >/dev/null ; then \
+	@if command -v mkdocs >/dev/null ; then \
   		mkdocs serve; \
 	else \
-		docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" "polinux/mkdocs:$(MKDOCS_TAG)"; \
+		echo "mkdocs is not installed." && exit 2; \
 	fi; \
-	set +x
 
 # Install markdown-link-check locally with "sudo npm install -g @umbrelladocs/linkspector"
 markdown-link-check:
