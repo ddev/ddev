@@ -1021,7 +1021,7 @@ ddev mailpit
 
 ## `mariadb`
 
-Run MariaDB client in the database container (global shell db container command). This is only available on projects that use the `mariadb` database type.
+Run MariaDB client in the database container (global shell db container command). This is only available on projects that use the `mariadb` database type. (This is the same as the `mysql` command, but MariaDB is changing the name of their CLI client.)
 
 Example:
 
