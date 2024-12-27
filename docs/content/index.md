@@ -17,7 +17,7 @@ These environments can be extended, version controlled, and shared, so you can t
 
     Runs natively on ARM64 (Apple Silicon) and AMD64 machines.
 
-    * macOS Big Sur (11) or higher
+    * macOS Ventura (13) or higher. This is primarily driven by the available Docker providers.
     * RAM: 8GB
     * Storage: 256GB
     * [OrbStack](https://orbstack.dev/) or [Lima](https://github.com/lima-vm/lima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Rancher Desktop](https://rancherdesktop.io/) or [Colima](https://github.com/abiosoft/colima)
