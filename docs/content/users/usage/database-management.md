@@ -39,18 +39,6 @@ You can easily create and populate additional databases. For example, `ddev impo
 
 You can export in the same way: `ddev export-db -f mysite.sql.gz` will export your default database (`db`). `ddev export-db --database=backend -f backend-export.sql.gz` will dump the database named `backend`.
 
-## Database Query Examples
-
-You can manage databases in DDEV like you would do on a regular server.
-
-To create an empty, extra database for later usage run this command:
-
-```
-ddev mysql -uroot -proot -e 'CREATE DATABASE newdatabase; GRANT ALL on newdatabase.* to "db"@"%";'
-```
-
-Alternatively, create an empty file and import it.
-
 ## Snapshots
 
 Snapshots let you easily save the entire status of all of your databases, which can be great when you’re working incrementally on migrations or updates and want to save state so you can start right back where you were.
@@ -89,3 +77,45 @@ If you’d like to use a GUI database client, you’ll need the right connection
 * There’s a sample custom command that will run the free MySQL Workbench on macOS, Windows or Linux. To use it, run:
     * `cp ~/.ddev/commands/host/mysqlworkbench.example ~/.ddev/commands/host/mysqlworkbench`
     * `ddev mysqlworkbench`
+
+## Database Query Examples
+
+You can query, update, or alter databases in DDEV like you would do on a regular server, using `ddev mysql`,  `ddev mariadb`, or `ddev psql` or using those CLI tools inside the web or DB containers. Some examples are given below.
+
+* Create a new empty database named `newdatabase`:
+
+    ```bash
+    ddev mysql -e 'CREATE DATABASE newdatabase; GRANT ALL ON newdatabase.* TO "db"@"%";'
+    ```
+
+* Show tables whose name begins with `node` :
+
+    ```bash
+    ddev mysql -e 'SHOW TABLES LIKE "node%";'
+    ```
+
+* Use `ddev mysql` or `ddev mariadb` and issue interactive queries:
+
+    ```bash
+    ddev mariadb
+  
+    Reading table information for completion of table and column names
+    You can turn off this feature to get a quicker startup with -A
+    
+    Welcome to the MariaDB monitor.  Commands end with ; or \g.
+    Your MariaDB connection id is 28
+    Server version: 10.11.10-MariaDB-ubu2204-log mariadb.org binary distribution
+    
+    Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+    
+    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+    
+    MariaDB [db]> SELECT * FROM node WHERE type="article";
+    +-----+------+---------+--------------------------------------+----------+
+    | nid | vid  | type    | uuid                                 | langcode |
+    +-----+------+---------+--------------------------------------+----------+
+    |  11 |   56 | article | 8af917ea-b150-4006-aeb9-877b53ebf289 | en       |
+    |  12 |   54 | article | 27a53763-9fd8-4813-853b-b476f0a73849 | en       |
+    +-----+------+---------+--------------------------------------+----------+
+    2 rows in set (0.007 sec) 
+    ```
