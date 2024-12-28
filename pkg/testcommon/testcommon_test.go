@@ -2,6 +2,12 @@ package testcommon
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"testing"
+	"time"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -9,11 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"runtime"
-	"testing"
-	"time"
 )
 
 var DdevBin = "ddev"
@@ -192,33 +193,29 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 // TestGetCachedArchive tests download and extraction of archives for test sites
 // to testcache directory.
 func TestGetCachedArchive(t *testing.T) {
-	assert := asrt.New(t)
-
 	sourceURL := "https://raw.githubusercontent.com/ddev/ddev/master/.gitignore"
 	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
-	assert.Error(err)
+	require.Error(t, err)
 	if err != nil {
-		assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
+		require.Contains(t, err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
 	}
 
 	err = os.RemoveAll(exPath)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = os.RemoveAll(archPath)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	sourceURL = "http://invalid_domain/somefilethatdoesnotexists"
 	exPath, archPath, err = GetCachedArchive("TestInvalidDownloadURL", "test", "", sourceURL)
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), fmt.Sprintf("failed to download url=%s into %s", sourceURL, archPath))
-	}
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf("failed to download url=%s into %s", sourceURL, archPath))
 
 	err = os.RemoveAll(exPath)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = os.RemoveAll(archPath)
-	assert.NoError(err)
+	require.NoError(t, err)
 }
 
 // TestPretestAndEnv tests that the testsite PretestCmd works along with WebEvironment
