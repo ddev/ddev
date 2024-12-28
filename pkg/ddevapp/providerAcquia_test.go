@@ -88,8 +88,8 @@ func TestAcquiaPull(t *testing.T) {
 		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
-
 		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(app.AppRoot)
 	})
 
 	app.Name = t.Name()
