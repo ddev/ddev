@@ -2423,6 +2423,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
+		_ = os.RemoveAll(app.AppRoot)
 		assert.NoError(err)
 
 		runTime()
