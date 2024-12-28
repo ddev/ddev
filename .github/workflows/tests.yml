@@ -61,7 +61,7 @@ jobs:
 
       fail-fast: false
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     env:
       CGO_ENABLED: 0
@@ -109,7 +109,14 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
 
       - name: Remove unnecessary items on disk
-        run: sudo rm -rf /usr/local/lib/android && df -h .
+        run: |
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/{aws*,julia*}
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/lib/node_modules
+          sudo rm -rf /usr/local/bin/minikube,bin/terraform,bin/oc
+          sudo rm -rf /usr/local/share/chromium /usr/local/share/powershell /usr/local/share/vcpkg
+          df -h .
 
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
