@@ -43,7 +43,6 @@ func lagoonSetupSSHKey(t *testing.T) string {
 
 // TestLagoonPull ensures we can pull from lagoon
 func TestLagoonPull(t *testing.T) {
-	assert := asrt.New(t)
 	var err error
 
 	sshKey := lagoonSetupSSHKey(t)
@@ -58,9 +57,9 @@ func TestLagoonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	err = os.Chdir(siteDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	app, err := ddevapp.NewApp(siteDir, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal11
 	err = app.Stop(true, false)
@@ -72,10 +71,10 @@ func TestLagoonPull(t *testing.T) {
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		err = os.Chdir(origDir)
-		assert.NoError(err)
+		require.NoError(t, err)
 		_ = os.RemoveAll(siteDir)
 	})
 
@@ -107,10 +106,11 @@ func TestLagoonPull(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
+	require.FileExists(t, filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))
-	assert.NoError(err)
-	assert.True(strings.HasSuffix(out, "\n1\n"))
+	require.NoError(t, err)
+	out = strings.Trim(out, " \n")
+	require.Equal(t, "1", out)
 }
 
 // TestLagoonPush ensures we can push to lagoon for a configured environment.
