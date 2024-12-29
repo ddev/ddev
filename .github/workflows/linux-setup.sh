@@ -13,7 +13,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get update -qq >/dev/null
-sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev postgresql-client >/dev/null
+sudo apt-get install -y -qq build-essential expect libnss3-tools libcurl4-gnutls-dev postgresql-client >/dev/null
 
 curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
   | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
