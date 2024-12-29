@@ -3818,12 +3818,7 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific performance_mode: nfs and etc
 func TestNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsOrbstack() {
-		t.Skip("Skipping on WSL2/Lima/Colima")
-	}
-	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
-		t.Skip("Skipping because mutagen/nobindmounts enabled")
-	}
+	t.Skip("Skipping because NFS is deprecated")
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
