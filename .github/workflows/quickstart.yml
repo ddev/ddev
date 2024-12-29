@@ -42,11 +42,6 @@ jobs:
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
 
-      - name: DDEV build
-        run: |
-          make
-          sudo ln -sf $PWD/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
-
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
