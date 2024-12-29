@@ -117,10 +117,11 @@ func TestAcquiaPull(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "chocolate-brownie-umami.jpg"))
+	require.FileExists(t, filepath.Join(app.GetHostUploadDirFullPath(), "chocolate-brownie-umami.jpg"))
 	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -B --skip-column-names `, DdevBin)})
-	assert.NoError(err)
-	assert.True(strings.HasSuffix(out, "\n1\n"), "out is unexpected '%s'", out)
+	require.NoError(t, err)
+	out = strings.Trim(out, " \n")
+	require.Equal(t, "1", out)
 }
 
 // TestAcquiaPush ensures we can push to acquia for a configured environment.
