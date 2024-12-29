@@ -103,16 +103,16 @@ var (
 		// 4: backdrop
 		{
 			Name:                          "TestPkgBackdrop",
-			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.22.0.tar.gz",
-			ArchiveInternalExtractionPath: "backdrop-1.22.0/",
-			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/backdrop_db.11.0.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
+			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.29.2.tar.gz",
+			ArchiveInternalExtractionPath: "backdrop-1.29.2/",
+			DBTarURL:                      "https://github.com/ddev/test-backdrop/releases/download/1.29.2/db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-backdrop/releases/download/1.29.2/files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeBackdrop,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
-			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/your-first-post", Expect: "This is your first post! You may edit or delete it."},
+			FilesImageURI:                 "/files/styles/card/public/field/image/card1-layout.png",
 		},
 		// 5: typo3
 		{
