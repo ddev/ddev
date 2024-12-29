@@ -11,7 +11,7 @@ teardown() {
   _common_teardown
 }
 
-@test "backdrop new-project quickstart" {
+@test "backdrop new-project quickstart with $(ddev --version)" {
   # mkdir my-backdrop-site && cd my-backdrop-site
   run mkdir -p my-backdrop-site && cd my-backdrop-site
   assert_success
@@ -38,7 +38,7 @@ teardown() {
   assert_output --partial "HTTP/2 302"
 }
 
-@test "backdrop existing project" {
+@test "backdrop existing project with $(ddev --version)" {
   # PROJECT_GIT_URL=https://github.com/ddev/test-backdrop.git
   PROJECT_GIT_URL=https://github.com/ddev/test-backdrop.git
   # git clone ${PROJECT_GIT_URL} my-backdrop-site
