@@ -10,6 +10,13 @@ on:
   pull_request:
     paths:
       - "docs/content/users/quickstart.md"
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Enable debug mode'
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
