@@ -4,6 +4,7 @@ _common_setup() {
     TEST_BREW_PREFIX="$(brew --prefix)"
     load "${TEST_BREW_PREFIX}/lib/bats-support/load.bash"
     load "${TEST_BREW_PREFIX}/lib/bats-assert/load.bash"
+    mkdir -p ~/tmp
     tmpdir=$(mktemp -d ~/tmp/${PROJNAME}.XXXXXX)
     export DDEV_NO_INSTRUMENTATION=true
     mkdir -p ${tmpdir} && cd ${tmpdir} || exit
