@@ -288,7 +288,7 @@ golangci-lint:
 
 quickstart-test:
 	@echo "quickstart-test:"
-	cd docs && bats test.bats
+	cd docs && bats tests
 
 version:
 	@echo VERSION:$(VERSION)
