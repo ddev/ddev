@@ -26,18 +26,24 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 
     ```bash
     # Clone an existing repository (or navigate to a local project directory):
-    git clone https://github.com/example/example-site my-backdrop-site
+    # Set PROJECT_GIT_URL to your project's git URL.
+    PROJECT_GIT_URL=https://github.com/ddev/test-backdrop.git
+    git clone ${PROJECT_GIT_URL} my-backdrop-site
     cd my-backdrop-site
 
     # Set up the DDEV environment:
     ddev config --project-type=backdrop
 
-    # Boot the project and install Composer packages (if required):
+    # Start the project
     ddev start
-    ddev composer install
 
-    # Import a database backup and open the site in your browser:
+    # Import a database backup:
     ddev import-db --file=/path/to/db.sql.gz
+
+    # Import files backup
+    ddev import-files --source=/path/to/files.tar.gz
+
+    # open the site in your browser
     ddev launch
     ```
 

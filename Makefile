@@ -286,6 +286,11 @@ golangci-lint:
 		echo "Skipping golangci-lint as not installed"; \
 	fi
 
+quickstart-test: build
+	@echo "quickstart-test:"
+	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); bats docs/tests
+
 version:
 	@echo VERSION:$(VERSION)
 
