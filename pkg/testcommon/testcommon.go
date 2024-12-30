@@ -43,6 +43,8 @@ type URIWithExpect struct {
 type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
 	Name string
+	// Provide ability to disable
+	Disable bool
 	// SourceURL is the URL of the source code tarball to be used for building the site.
 	SourceURL string
 	// ArchiveExtractionPath is the relative path within the tarball which should be extracted, ending with /

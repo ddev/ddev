@@ -171,6 +171,7 @@ func TestPantheonPush(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(app.AppRoot)
 	})
 
 	app.Name = t.Name()

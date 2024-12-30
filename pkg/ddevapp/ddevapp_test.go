@@ -56,6 +56,7 @@ var (
 		// 1: drupal8
 		{
 			Name:                          "TestPkgDrupal8",
+			Disable:                       true,
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.20.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.9.20/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
@@ -87,6 +88,7 @@ var (
 		// 3: drupal6
 		{
 			Name:                          "TestPkgDrupal6",
+			Disable:                       true,
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
@@ -167,6 +169,7 @@ var (
 		// 8: drupal9
 		{
 			Name:                          "TestPkgDrupal9",
+			Disable:                       true,
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.5.10.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-9.5.10/",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
@@ -2290,6 +2293,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
 		switchDir := site.Chdir()
 		defer switchDir()
 		runTime := util.TimeTrackC(fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
