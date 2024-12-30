@@ -53,9 +53,6 @@ teardown() {
   # ddev start
   run ddev start
   assert_success
-  # if [ -f composer.json ] ; then ddev composer install; fi
-  run bash -c "if [ -f composer.json ]; then ddev composer install; fi"
-  assert_success
   run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.29.2/db.sql.gz
   assert_success
   # ddev import-db --file=/path/to/db.sql.gz
