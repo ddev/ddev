@@ -160,6 +160,8 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     PATH=$PATH:/usr/local/bin:/opt/homebrew/bin
     ```
 
+30. In macOS Settings visit "full disk access" and grant access to `buildkite-agent`, `docker`, `iterm`, `orbstack`. This may prevent startup modal dialogs that prevent `buildkite-agent` or `docker` from continuing properly.
+
 ## Additional Colima macOS setup
 
 1. `brew install colima`
