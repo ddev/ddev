@@ -20,7 +20,9 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   function cleanup {
     command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
     sleep 3 # Since we backgrounded orb stop, make sure it completes
-    if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
+    if [ -f /Applications/Docker.app ]; then
+      echo "Stopping Docker Desktop..." && (docker desktop stop || true)
+    fi
     command -v colima 2>/dev/null && echo "Stopping colima" && (colima stop || true)
     command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop vz || true)
     command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop lima-vz || true)
@@ -31,8 +33,8 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       docker context use orbstack
       echo "Starting orbstack" && (nohup orb start &)
     else
+      docker desktop start
       docker context use desktop-linux
-      open -a Docker
     fi
     sleep 5
   }
@@ -64,7 +66,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       ;;
 
     "docker-desktop")
-      open -a Docker
+      docker desktop start
       docker context use desktop-linux
       ;;
 
@@ -98,6 +100,10 @@ if [ ${OSTYPE%%-*} = "linux" ]; then
 fi
 
 # Make sure docker is working
+# Try to improve reliability of Docker Desktop by restarting at beginning
+if [ ${DOCKER_TYPE:-none} = "docker-desktop" ]; then
+  docker desktop restart
+fi
 echo "Waiting for docker provider to come up: $(date)"
 date && ${TIMEOUT_CMD} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
