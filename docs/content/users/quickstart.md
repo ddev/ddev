@@ -38,7 +38,7 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
     ddev start
     if [ -f composer.json ] ; then ddev composer install; fi
 
-    # Import a f backup:
+    # Import a database backup:
     ddev import-db --file=/path/to/db.sql.gz
 
     # Import files backup
