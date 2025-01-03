@@ -84,8 +84,8 @@ func TestDisasterConfig(t *testing.T) {
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := os.UserHomeDir()
 	_, err := ddevapp.NewApp(tmpDir, false)
-	assert.Error(err)
-	assert.Contains(err.Error(), "ddev config is not useful")
+	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
+	assert.Contains(err.Error(), "'ddev config' is not useful")
 	_ = os.Chdir(origDir)
 
 	// Create a temporary directory and change to it for the duration of this test.
@@ -118,6 +118,17 @@ func TestDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	_ = subdirApp
 
+	// Make sure we're not allowed to config in any project parent directory
+	// Checking the project parent directory here
+	_, err = ddevapp.NewApp(filepath.Dir(tmpDir), false)
+	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(tmpDir))
+	assert.Contains(err.Error(), "'ddev config' is not allowed")
+
+	// Make sure we're not allowed to config in any project parent directory
+	// Checking parent directory of the project parent directory here
+	_, err = ddevapp.NewApp(filepath.Dir(filepath.Dir(tmpDir)), false)
+	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(filepath.Dir(tmpDir)))
+	assert.Contains(err.Error(), "'ddev config' is not allowed")
 }
 
 // TestAllowedAppType tests the IsValidAppType function.

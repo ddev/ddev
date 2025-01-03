@@ -10,7 +10,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -149,9 +148,9 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed(err.Error())
 	}
 
-	homeDir, _ := os.UserHomeDir()
-	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		util.Failed("Please do not use `ddev config` in your home directory")
+	err = ddevapp.IsAllowedProjectLocation(app)
+	if err != nil {
+		util.Failed("Unable to run `ddev config`: %v", err)
 	}
 
 	err = app.CheckExistingAppInApproot()
@@ -334,7 +333,7 @@ func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
 	// Check for an existing config in a parent dir
 	otherRoot, _ := ddevapp.CheckForConf(appRoot)
 	if otherRoot != "" && otherRoot != appRoot {
-		return nil, fmt.Errorf("it usually does not make sense to `ddev config` in a subdirectory of an existing project. Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
+		appRoot = otherRoot
 	}
 	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
