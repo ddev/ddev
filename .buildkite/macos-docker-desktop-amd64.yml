@@ -1,6 +1,6 @@
 # Docker Desktop on macOS amd64
 # See https://buildkite.com/ddev/ddev-macos-amd64-mutagen/settings/repository
-# Runs on master only, not on PRs
+# Runs on main only, not on PRs
 
   - command: ".buildkite/test.sh"
     if: |

@@ -1,6 +1,6 @@
 # macOS Lima on arm64 with VZ/Virtiofs
 # See https://buildkite.com/ddev/macos-lima/settings/repository
-# Runs on master and PRs, including forked PRs
+# Runs on main and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
     if: |

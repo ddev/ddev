@@ -521,7 +521,7 @@ workflows:
     - lx_arm64_fpm_test:
         filters:
           branches:
-            only: master
+            only: main
             ignore:
               - gh-pages
 #    - lx_arm64_container_test
@@ -556,7 +556,7 @@ workflows:
 #          filters:
 #            branches:
 #              only:
-#                - master
+#                - main
 #                - "pull/[0-9]+"
 #    jobs:
 #    - lx_amd64_container_test

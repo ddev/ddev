@@ -1,6 +1,6 @@
 # Docker Desktop on macOS arm64
 # See https://buildkite.com/ddev/ddev-macos-arm64-mutagen/settings/repository
-# Runs on master and PRs, including forked PRs
+# Runs on main and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
     if: |

@@ -5,9 +5,9 @@ defaults:
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, master ]
     # Only run when something changes in the actual containers
     paths:
     - "containers/**"

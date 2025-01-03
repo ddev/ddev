@@ -157,7 +157,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
         ddev debug mutagen sync list --template "{{ json (index . 0) }}" | docker run -i --rm ddev/ddev-utilities jq -r
         ddev debug mutagen sync monitor <projectname> -l
         ```
-    * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
+    * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
     * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the Mutagen daemon if you suspect it’s hanging.
     * Use `ddev mutagen reset` if you suspect trouble, and *always* after changing `.ddev/mutagen/mutagen.yml`. This restarts the project’s Mutagen data (Docker volume + Mutagen session) from scratch.
     * `ddev mutagen monitor` can help watch Mutagen behavior. It’s the same as `~/.ddev/bin/mutagen sync monitor <syncname>`.
@@ -259,10 +259,10 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     === "macOS NFS Setup"
 
-        Download, inspect, make executable, and run [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh):
+        Download, inspect, make executable, and run [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/macos_ddev_nfs_setup.sh):
 
         ```
-        curl -O https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh
+        curl -O https://raw.githubusercontent.com/ddev/ddev/main/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh
         ```
 
         This one-time setup stops running DDEV projects, adds your home directory to the `/etc/exports` config file that `nfsd` uses, and enables `nfsd` to run on your computer.

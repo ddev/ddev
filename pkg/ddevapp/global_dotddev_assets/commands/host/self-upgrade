@@ -21,7 +21,7 @@ for ddev_path in $(which -a ddev | uniq); do
 
     "/usr/local/bin/ddev")
       if [ ! -L /usr/local/bin/ddev ]; then
-        printf "DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.\ncurl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash\n"
+        printf "DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.\ncurl -fsSL https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev.sh | bash\n"
       elif command -v brew; then
         echo "DDEV appears to have been installed with Homebrew, upgrade with 'brew update && brew upgrade ddev'"
       fi

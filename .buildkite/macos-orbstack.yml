@@ -1,6 +1,6 @@
 # Orbstack on macOS arm64
 # See https://buildkite.com/ddev/macos-orbstack/settings/repository
-# Runs on master and PRs, including forked PRs
+# Runs on main and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
     if: |
@@ -9,7 +9,7 @@
       - "os=macos"
       - "orbstack=true"
       - "architecture=arm64"
-#    branches: "master"
+#    branches: "main"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds

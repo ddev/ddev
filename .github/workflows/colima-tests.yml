@@ -115,12 +115,12 @@ jobs:
           colima restart
 
       - name: Build ddev
-        run: | 
+        run: |
           make
           ln -s $PWD/.gotmp/bin/darwin_amd64/ddev /usr/local/bin/ddev
 
       - name: Basic ddev usage
-        run: | 
+        run: |
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
           ddev config --project-type=drupal9 --docroot=web
           ddev debug download-images

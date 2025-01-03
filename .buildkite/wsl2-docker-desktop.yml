@@ -1,6 +1,6 @@
 # WSL2 using Docker Desktop
 # See https://buildkite.com/ddev/wsl2-docker-desktop/settings/repository
-# Runs on master and PRs, not including forked PRs
+# Runs on main and PRs, not including forked PRs
 
   - command: ".buildkite/test.sh"
     if: |

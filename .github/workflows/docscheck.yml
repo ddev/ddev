@@ -5,8 +5,7 @@ defaults:
 
 on:
   push:
-    branches:
-      - master
+    branches: [ main, master ]
   pull_request:
     paths:
       - "docs/**"

@@ -193,7 +193,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 // TestGetCachedArchive tests download and extraction of archives for test sites
 // to testcache directory.
 func TestGetCachedArchive(t *testing.T) {
-	sourceURL := "https://raw.githubusercontent.com/ddev/ddev/master/.gitignore"
+	sourceURL := "https://raw.githubusercontent.com/ddev/ddev/main/.gitignore"
 	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
 	require.Error(t, err)
 	if err != nil {
