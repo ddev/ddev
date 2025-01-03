@@ -10,7 +10,7 @@ ignorePatterns:
   - pattern: "^https://.*blackfire.io"
   - pattern: "^https://twitter.com/search"
   - pattern: "^https://www.cyberciti.biz/"
-  - pattern: "^https://nightly.link/ddev/ddev/workflows/master-build/master"
+  - pattern: "^https://nightly.link/ddev/ddev/workflows/master-build/main"
   - pattern: "^https://github.com/ddev/maintainer-info"
   - pattern: "^https://buildkite.com/organizations/ddev"
   - pattern: "^https://github.com/orgs/ddev"

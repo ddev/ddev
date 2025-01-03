@@ -6,8 +6,8 @@ search:
 
 ## Release process and tools
 
-* [GoReleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml). GoReleaser Pro is a licensed product that requires separate installation and a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
-* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the GoReleaser actions and provides the needed secrets.
+* [GoReleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml). GoReleaser Pro is a licensed product that requires separate installation and a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
+* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/main/.github/workflows/master-build.yml) does the actual running of the GoReleaser actions and provides the needed secrets.
 
 ## GitHub Actions Required Secrets
 
@@ -62,11 +62,11 @@ The following “Repository secret” environment variables must be configured i
 ### Prerelease Tasks
 
 * Create and execute a test plan.
-* Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/master/version-history.md) is up to date.
+* Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/main/version-history.md) is up to date.
 * Push the new version of `ddev/ddev-php-base`.
 * Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
-* Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
+* Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
 
 ### Actual Release Creation
 
@@ -95,7 +95,7 @@ If you need to push from a forked PR, you’ll have to do this from your fork (f
 * Visit `https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml`.
 * Click the “Push tagged image” workflow on the left side of the page.
 * Click the “Run workflow” button in the blue section above the workflow runs.
-* Choose the branch to build from (usually `master`).
+* Choose the branch to build from (usually `main`).
 * Enter the image (`ddev-webserver`, `ddev-php-base`, etc.).
 * Enter the tag that will be used in `pkg/version/version.go`.
 
@@ -107,7 +107,7 @@ While it’s more error-prone, images can be pushed from the command line:
 2. `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use`.
 3. `cd containers/<image>`.
 4. Before pushing `ddev-webserver`, make sure you’ve pushed a version of `ddev-php-base` and updated `ddev-webserver`’s Dockerfile to use that as a base.
-5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/master/containers/push-all.sh) script to update all of them, but it takes forever.
+5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/main/containers/push-all.sh) script to update all of them, but it takes forever.
 6. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
 
 ## Maintaining `ddev-dbserver` MySQL 5.7 ARM64 Images
@@ -132,7 +132,7 @@ But here are the steps for building:
 
 Homebrew formulas normally update with the release process, so nothing needs to be done.
 
-If you have to temporarily update the Homebrew formulas, you can do that with a commit to <https://github.com/ddev/homebrew-ddev> and <https://github.com/ddev/homebrew-ddev-edge>. The bottles and checksums for macOS (High Sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/ddev/ddev/blob/master/.ci-scripts/bump_homebrew.sh)). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
+If you have to temporarily update the Homebrew formulas, you can do that with a commit to <https://github.com/ddev/homebrew-ddev> and <https://github.com/ddev/homebrew-ddev-edge>. The bottles and checksums for macOS (High Sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/ddev/ddev/blob/main/.ci-scripts/bump_homebrew.sh)). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
 
 ## Manually Updating Chocolatey
 
@@ -188,7 +188,7 @@ This is done automatically by the release build on a dedicated Windows test runn
 
 ## APT and YUM/RPM Package Management
 
-The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml) file.
+The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) file.
 
 * The actual packages are served by [gemfury.com](https://gemfury.com/).
 * The name of the organization in GemFury is `drud`, managed at `https://manage.fury.io/dashboard/drud`.

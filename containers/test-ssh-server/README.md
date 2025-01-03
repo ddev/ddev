@@ -25,7 +25,7 @@ docker run -it --rm ddev/test-ssh-server:<tag> bash
 
 ## Source:
 
-[https://github.com/ddev/ddev/tree/master/containers/test-ssh-server](https://github.com/ddev/ddev/tree/master/containers/test-ssh-server)
+[https://github.com/ddev/ddev/tree/main/containers/test-ssh-server](https://github.com/ddev/ddev/tree/main/containers/test-ssh-server)
 
 ## Maintained by:
 
@@ -53,7 +53,7 @@ These environments can be extended, version controlled, and shared, so you can t
 
 ## License
 
-View [license information](https://github.com/ddev/ddev/blob/master/LICENSE) for the software contained in this image.
+View [license information](https://github.com/ddev/ddev/blob/main/LICENSE) for the software contained in this image.
 
 As with all Docker images, these likely also contain other software which may be under other licenses (such as Bash, etc from the base distribution, along with any direct or indirect dependencies of the primary software being contained).
 

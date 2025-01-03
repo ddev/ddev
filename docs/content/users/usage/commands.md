@@ -622,7 +622,7 @@ ddev debug rebuild --all
 
 ### `debug test`
 
-Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/master/cmd/ddev/cmd/scripts/test_ddev.sh).
+Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/scripts/test_ddev.sh).
 
 Example:
 

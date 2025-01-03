@@ -38,7 +38,7 @@ class Ddev < Formula
   url "${SOURCE_URL}"
   sha256 "${SOURCE_SHA}"
   license "apache-2.0"
-  head "https://github.com/ddev/ddev.git", branch: "master"
+  head "https://github.com/ddev/ddev.git", branch: "main"
 
   depends_on "mkcert" => :run
   depends_on "nss" => :run
