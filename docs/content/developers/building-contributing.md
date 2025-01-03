@@ -8,7 +8,7 @@ search:
 
 There are several ways to use DDEV’s latest-committed HEAD version:
 
-* **Download** the latest main branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/master-build/main). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
+* **Download** the latest `main` branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/main-build/main). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
 * **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased.
 * **Install via script**: You can download and run the [install_ddev_head.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_head.sh)  script, or run it automatically:
 
@@ -47,7 +47,7 @@ rm ddev-macos-arm64.zip
 
 ![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
 
-Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nightly builds](https://nightly.link/ddev/ddev/workflows/master-build/main).
+Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nightly builds](https://nightly.link/ddev/ddev/workflows/main-build/main).
 
 ???warning "macOS and Unsigned Binaries (click me)"
     macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
@@ -56,7 +56,7 @@ Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nigh
     xattr -r -d com.apple.quarantine ~/bin/ddev
     ```
 
-    (The binaries on the main branch and the final release binaries _are_ signed.)
+    (The binaries on the `main` branch and the final release binaries _are_ signed.)
 
 Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`. Valuable commands for debugging are `which -a ddev` and `echo $PATH`.
 
@@ -222,8 +222,8 @@ ampli pull
 ```
 
 Once the changes are ready to be merged, merge the changes made in the new
-branch to the main branch in the Amplitude backend and switch back to the
-main branch:
+branch to the `main` branch in the Amplitude backend and switch back to the
+`main` branch:
 
 ```bash
 ampli checkout main
