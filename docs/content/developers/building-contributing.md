@@ -72,7 +72,7 @@ rm ~/bin/ddev
 
 [Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. For any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pull/<YOUR-PR>` to open that PR and build it in Gitpod.
 
-It also allows you to work on the DDEV main branch and test modifiying DDEV's source code.
+It also allows you to work on the DDEV `main` branch and test modifying DDEV's source code.
 
 To get started use the button below:
 
