@@ -333,7 +333,7 @@ func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
 	// Check for an existing config in a parent dir
 	otherRoot, _ := ddevapp.CheckForConf(appRoot)
 	if otherRoot != "" && otherRoot != appRoot {
-		return nil, fmt.Errorf("it usually does not make sense to `ddev config` in a subdirectory of an existing project. Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
+		appRoot = otherRoot
 	}
 	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
