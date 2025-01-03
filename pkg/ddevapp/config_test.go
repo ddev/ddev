@@ -84,7 +84,7 @@ func TestDisasterConfig(t *testing.T) {
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := os.UserHomeDir()
 	_, err := ddevapp.NewApp(tmpDir, false)
-	assert.Error(err)
+	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
 	assert.Contains(err.Error(), "'ddev config' is not useful")
 	_ = os.Chdir(origDir)
 
@@ -98,13 +98,13 @@ func TestDisasterConfig(t *testing.T) {
 	// Make sure we're not allowed to config in any project parent directory
 	// Checking the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(tmpDir), false)
-	assert.Error(err)
+	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(tmpDir))
 	assert.Contains(err.Error(), "'ddev config' is not allowed")
 
 	// Make sure we're not allowed to config in any project parent directory
 	// Checking parent directory of the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(filepath.Dir(tmpDir)), false)
-	assert.Error(err)
+	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(filepath.Dir(tmpDir)))
 	assert.Contains(err.Error(), "'ddev config' is not allowed")
 
 	t.Cleanup(func() {
