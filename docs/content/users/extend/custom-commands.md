@@ -10,9 +10,9 @@ This involves adding a Bash script to the project in `.ddev/commands/host`, a sp
 
 Example commands in `ddev/commands/*/*.example` can be copied, moved, or symlinked.
 
-For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a `ddev mysqlworkbench` command. Rename it from `mysqlworkbench.example` to `mysqlworkbench`. If you’re on macOS or Linux (or some configurations of Windows) you can `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
+For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a `ddev mysqlworkbench` command. Rename it from `mysqlworkbench.example` to `mysqlworkbench`. If you’re on macOS or Linux (or some configurations of Windows) you can `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
 
-The [`ddev mysql`](../usage/commands.md#mysql) runs the `mysql` client inside the `db` container command using this technique. See the [`ddev mysql` command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
+The [`ddev mysql`](../usage/commands.md#mysql) runs the `mysql` client inside the `db` container command using this technique. See the [`ddev mysql` command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
 
 ## Notes for All Command Types
 
@@ -38,7 +38,7 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 ## Container Commands
 
-To provide a command which will execute in a container, add a Bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The Bash script will be executed inside the named container. For example, see the [several standard DDEV script-based web container commands](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web).
+To provide a command which will execute in a container, add a Bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The Bash script will be executed inside the named container. For example, see the [several standard DDEV script-based web container commands](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web).
 
 You can run commands in custom containers as well as standard DDEV `web` and `db` containers. Use the service name, like `.ddev/commands/solr/<command>`. The only catch with a custom container is that your service must mount `/mnt/ddev-global-cache` like the `web` and `db` containers do; the `volumes` section of `docker-compose.<servicename>.yaml` needs:
 
@@ -67,7 +67,7 @@ Changes to the command files in the global `.ddev` directory need a `ddev start`
 
 ## Shell Command Examples
 
-There are many examples of [global](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `~/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
+There are many examples of [global](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `~/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
 
 ## Command Line Completion
 
@@ -85,7 +85,7 @@ For example:
 
 The autocomplete script should echo the valid arguments as a string separated by line breaks. You don't need to filter the arguments by the last argument string (e.g. if the last argument is `som`, you don't need to filter out any arguments that don't start with `som`). That will be handled for you before the result is given to your shell as completion suggestions.
 
-The web container's [`nvm` autocomplete script](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web/autocomplete/nvm) shows how this can be used to forward completion requests to a relevant script in the container.
+The web container's [`nvm` autocomplete script](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/autocomplete/nvm) shows how this can be used to forward completion requests to a relevant script in the container.
 
 ## Environment Variables Provided
 

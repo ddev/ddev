@@ -1,6 +1,6 @@
 # Colima with VZ and virtiofs
 # See https://buildkite.com/ddev/macos-colima-vz/settings/repository
-# Runs on master and PRs, including forked PRs
+# Runs on main and PRs, including forked PRs
 
   - command: ".buildkite/test.sh"
     if: |

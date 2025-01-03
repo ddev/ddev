@@ -20,7 +20,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Install Script
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
+    The [install script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
 
     ```bash
     # Download and run the install script
@@ -125,7 +125,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
     <h3 id="install-script-linux">Install Script<a class="headerlink" href="#install-script-linux" title="Permanent link">¶</a></h3>
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
+    The [install script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
 
     ```bash
     # Download and run the install script
@@ -161,16 +161,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       Use `wsl.exe -l -v` to see the versions of the distros you are using they should be v2.
     * WSL2 is supported on Windows 10 and 11.
       All Windows 10/11 editions, including Windows 10 Home support WSL2.
-    * WSL2 offers a faster, smoother experience.  
+    * WSL2 offers a faster, smoother experience.
       It’s vastly more performant, and you’re less likely to have obscure Windows problems.
 
-    * Execute DDEV commands inside WSL2.   
+    * Execute DDEV commands inside WSL2.
       You’ll want to run DDEV commands inside Ubuntu, for example, and never on the Windows side in PowerShell or Git Bash.
-    * Projects should live under the home directory of the Linux filesystem.  
+    * Projects should live under the home directory of the Linux filesystem.
       WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster and has proper permissions, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
-    * Custom hostnames are managed via the Windows hosts file, not within WSL2.  
+    * Custom hostnames are managed via the Windows hosts file, not within WSL2.
       DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\system32\drivers\etc\hosts`—and it can only do this if it’s installed on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you’re all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The WSL2 scripts below install DDEV on the Windows side, taking care of that for you.) If you frequently run into Windows UAC Escalation, you can calm it down by running `gsudo.exe cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
-    * WSL2 is not the same as Docker Desktop’s WSL2 engine.  
+    * WSL2 is not the same as Docker Desktop’s WSL2 engine.
       Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
 
     The WSL2 install process involves:
@@ -184,10 +184,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### WSL2 + Docker CE Inside Install Script
 
-    This technique is our favorite, as it uses the most reliable WSL2 Docker provider (`docker-ce`), which is also free and open-source. 
-    
+    This technique is our favorite, as it uses the most reliable WSL2 Docker provider (`docker-ce`), which is also free and open-source.
+
     This script prepares your default WSL2 Ubuntu distro and doesn’t require Docker Desktop, and you can run the script multiple times without breaking anything.
-        
+
     In all cases:
 
     1. Install WSL2 with an Ubuntu distro.
@@ -199,16 +199,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * Reboot if required. (Usually required.)
 
-        * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.  
+        * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.
           If you have WSL2 but not an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. If this doesn’t work, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
         * Verify that your Ubuntu default distro is WSL v2 using `wsl -l -v`.
 
-    2. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
+    2. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1'))
         ```
     3. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
@@ -217,7 +217,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ### WSL2 + Docker Desktop Install Script
 
     WSL2 with Docker Desktop is a less-favored choice because Docker Desktop may be lightly supported, and has many features not required for use with DDEV that do not add particular value. It is also not free software (although smaller organizations can use it free of charge) and it is not open-source.
-    
+
     The script here prepares your default WSL2 Ubuntu distro for use with Docker Desktop, and you can run the script multiple times without breaking anything.
 
     In all cases:
@@ -229,7 +229,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * Verify that you have an Ubuntu distro set as the default default with `wsl -l -v`.
 
-        * If you have WSL2 but not an Ubuntu distro, install one with `wsl --install Ubuntu`.  
+        * If you have WSL2 but not an Ubuntu distro, install one with `wsl --install Ubuntu`.
           If that doesn't work for you, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
         If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-24.04`.
@@ -239,11 +239,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     6. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop`. Otherwise [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     7. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
     8. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
-    9. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    9. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
@@ -338,7 +338,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     4. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fddev%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.
         It’s easiest to drag the link into your bookmarks. When you’re on a Git repository, click the bookmark to open it with DDEV in Gitpod. It does the same thing as the second option, but it works on non-Chrome browsers and you can use native browser keyboard shortcuts.
 
-    It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://ddev.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
+    It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://ddev.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers)—for each project.
 
 === "Codespaces"
 
@@ -364,16 +364,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     <div style="text-align:center;"><img style="max-width:400px;" src="./../../../images/codespaces-setting-up.png" alt="Screenshot of codespace create dialog in a repository on GitHub"></div>
 
-    DDEV is now available within your new codespace instance:  
+    DDEV is now available within your new codespace instance:
 
     <div style="text-align:center;"><img src="./../../../images/codespaces-hello-screen.png" alt=""></div>
 
     Run `ddev config` to [start a new blank project](./../project.md) - or [install a CMS](./../quickstart.md).
-    
+
     Run `ddev start` if there is already a configured DDEV project in your repository.
 
     **Troubleshooting**:
-    
+
     If there are errors after restarting a codespace, use `ddev restart` or `ddev poweroff`.
 
     You can also use the commands
@@ -381,28 +381,28 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     - "Codespaces: Rebuild container"
     - "Codespaces: Full rebuild container" (Beware: database will be deleted)
 
-    via the [Visual Studio Code Command Palette](https://docs.github.com/en/enterprise-cloud@latest/codespaces/codespaces-reference/using-the-vs-code-command-palette-in-codespaces):  
+    via the [Visual Studio Code Command Palette](https://docs.github.com/en/enterprise-cloud@latest/codespaces/codespaces-reference/using-the-vs-code-command-palette-in-codespaces):
 
     - <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac
     - <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows/Linux
     - from the Application Menu, click View > Command Palette (Firefox)
-    
+
     If you need DDEV-specific assistance or have further questions, see [support](./../support.md).
 
-    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section. 
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `install-ddev` in the `features` section.
 
     !!!note "Normal Linux installation also works"
         You can also install DDEV as if it were on any normal [Linux installation](#linux).
 
     ### Docker integration
 
-    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`. Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.  
+    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`. Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.
 
     ###  DDEV's router is not used
 
-    Since Codespaces handles all the routing, the internal DDEV router will not be used on Codespaces. Therefore config settings like [`web_extra_exposed_ports`](./../configuration/config.md#web_extra_exposed_ports) will have no effect. 
+    Since Codespaces handles all the routing, the internal DDEV router will not be used on Codespaces. Therefore config settings like [`web_extra_exposed_ports`](./../configuration/config.md#web_extra_exposed_ports) will have no effect.
 
-    You can expose ports via the `ports` setting, which is usually not recommended if you work locally due to port conflicts. But you can load these additional Docker compose files only when Codespaces is detected. See [Defining Additional Services](./../extend/custom-compose-files.md#docker-composeyaml-examples) for more information. 
+    You can expose ports via the `ports` setting, which is usually not recommended if you work locally due to port conflicts. But you can load these additional Docker compose files only when Codespaces is detected. See [Defining Additional Services](./../extend/custom-compose-files.md#docker-composeyaml-examples) for more information.
 
     ```yaml
     services:
@@ -414,9 +414,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ### Default environment variables
 
     Codespace instances already provide some [default environment values](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace). You can inherit and inject them in your `.ddev/config.yaml`:
-    
+
     ```yaml
-    web_environment: 
+    web_environment:
         - CODESPACES
         - CODESPACE_NAME
         - GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
@@ -424,13 +424,13 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Advanced usage via devcontainer.json
 
-    A lot more customization is possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/). You can install Visual Studio Code extensions by default or run commands automatically. 
+    A lot more customization is possible via the [`devcontainer.json`-configuration](https://containers.dev/implementors/json_reference/). You can install Visual Studio Code extensions by default or run commands automatically.
 
     #### postCreateCommand
 
     The [`postCreateCommand`](https://containers.dev/implementors/json_reference/) lets you run commands automatically when a new codespace is launched. DDEV commands are available here.
 
-    The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept. 
+    The event is triggered on: fresh creation, rebuilds and full rebuilds. `ddev poweroff` is used in this example to avoid errors on rebuilds since some Docker containers are kept.
 
     You usually want to use a separate bash script to do this, as docker [might not yet be available when the command starts to run](https://github.com/devcontainers/features/issues/780).
 
@@ -456,8 +456,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         },
         "postCreateCommand": "bash .devcontainer/setup_project.sh"
     }
-    ``` 
-    
+    ```
+
     ```bash
     #!/usr/bin/env bash
     set -ex
@@ -481,15 +481,15 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # start ddev project automatically
     ddev start -y
 
-    # further automated install / setup steps, e.g. 
-    ddev composer install 
+    # further automated install / setup steps, e.g.
+    ddev composer install
     ```
 
-    To check for errors during the `postCreateCommand` action, use the command 
-    
-    - "Codespaces: View creation log” 
-    
-    via the [Visual Studio Code Command Palette](https://docs.github.com/en/enterprise-cloud@latest/codespaces/codespaces-reference/using-the-vs-code-command-palette-in-codespaces):  
+    To check for errors during the `postCreateCommand` action, use the command
+
+    - "Codespaces: View creation log”
+
+    via the [Visual Studio Code Command Palette](https://docs.github.com/en/enterprise-cloud@latest/codespaces/codespaces-reference/using-the-vs-code-command-palette-in-codespaces):
 
     - <kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac
     - <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows/Linux

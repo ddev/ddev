@@ -190,7 +190,7 @@ brews:
 
   custom_block: |
     head do
-      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
+      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "main"
       depends_on "go" => :build
       depends_on "make" => :build
     end
@@ -232,7 +232,7 @@ brews:
     - name: mkcert
   custom_block: |
     head do
-      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "master"
+      url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "main"
       depends_on "go" => :build
       depends_on "make" => :build
     end
@@ -515,7 +515,7 @@ dockerhub:
 #chocolateys:
 #    name: ddev-test
 #
-#    package_source_url: https://github.com/ddev/ddev/tree/master/winpkg/chocolatey
+#    package_source_url: https://github.com/ddev/ddev/tree/main/winpkg/chocolatey
 #
 #    # Your app's owner.
 #    # It basically means you.
@@ -550,7 +550,7 @@ dockerhub:
 #    # Templates: allowed.
 #    copyright: DDEV Foundation
 #
-#    license_url: https://github.com/ddev/ddev/blob/master/LICENSE
+#    license_url: https://github.com/ddev/ddev/blob/main/LICENSE
 #    require_license_acceptance: true
 #
 #    # Your app's source url.

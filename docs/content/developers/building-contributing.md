@@ -8,13 +8,13 @@ search:
 
 There are several ways to use DDEV’s latest-committed HEAD version:
 
-* **Download** the latest master branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/master-build/master). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
+* **Download** the latest main branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/master-build/main). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
 * **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased.
-* **Install via script**: You can download and run the [install_ddev_head.sh](https://raw.githubusercontent.com/ddev/ddev/refs/heads/master/scripts/install_ddev_head.sh)  script, or run it automatically:
+* **Install via script**: You can download and run the [install_ddev_head.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_head.sh)  script, or run it automatically:
 
     ```bash
     # Download and run the install script
-    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/refs/heads/master/scripts/install_ddev_head.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_head.sh | bash
     ```
 
 * **Build manually**: If you have normal build tools like `make` and `go` installed, you can check out the code and run `make`.
@@ -47,7 +47,7 @@ rm ddev-macos-arm64.zip
 
 ![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
 
-Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nightly builds](https://nightly.link/ddev/ddev/workflows/master-build/master).
+Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nightly builds](https://nightly.link/ddev/ddev/workflows/master-build/main).
 
 ???warning "macOS and Unsigned Binaries (click me)"
     macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
@@ -56,7 +56,7 @@ Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nigh
     xattr -r -d com.apple.quarantine ~/bin/ddev
     ```
 
-    (The binaries on the master branch and the final release binaries _are_ signed.)
+    (The binaries on the main branch and the final release binaries _are_ signed.)
 
 Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.23.5-98-g3c93ae87e`, instead of the regular `ddev version v1.23.5`. Valuable commands for debugging are `which -a ddev` and `echo $PATH`.
 
@@ -72,7 +72,7 @@ rm ~/bin/ddev
 
 [Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. For any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pull/<YOUR-PR>` to open that PR and build it in Gitpod.
 
-It also allows you to work on the DDEV master branch and test modifiying DDEV's source code.
+It also allows you to work on the DDEV main branch and test modifiying DDEV's source code.
 
 To get started use the button below:
 
@@ -185,13 +185,13 @@ To manually push using GitHub Actions,
 
 * Visit [Actions → Push tagged image](https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml)
 * Click “Run workflow” in the blue band near the top.
-* Choose the branch, usually `master` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc. Also you can use `all` to build and push all of them. Include a tag for the pushed image and GitHub will do all the work.
+* Choose the branch, usually `main` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc. Also you can use `all` to build and push all of them. Include a tag for the pushed image and GitHub will do all the work.
 
 #### For `ddev-dbserver`
 
 * Visit [Actions → Push tagged db image](https://github.com/ddev/ddev/actions/workflows/push-tagged-dbimage.yml)
 * Click “Run workflow” in the blue band near the top.
-* Choose the branch, usually `master`. Include a tag for the pushed image and GitHub will do all the work.
+* Choose the branch, usually `main`. Include a tag for the pushed image and GitHub will do all the work.
 
 ## Instrumentation
 
@@ -304,7 +304,7 @@ To test with race detection, `make test TESTARGS="-race"` for example.
 
 To see which DDEV commands the tests are executing, set the environment variable `DDEV_DEBUG=true`.
 
-Use `GOTEST_SHORT=true` to run one CMS in each test, or `GOTEST_SHORT=<integer>` to run exactly one project type from the list of project types in the [TestSites array](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make test TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` against TYPO3.
+Use `GOTEST_SHORT=true` to run one CMS in each test, or `GOTEST_SHORT=<integer>` to run exactly one project type from the list of project types in the [TestSites array](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make test TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` against TYPO3.
 
 To run a test (in the `cmd` package) against a individually-compiled DDEV binary, set the `DDEV_BINARY_FULLPATH` environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
 
@@ -348,7 +348,7 @@ When preparing your pull request, please use a branch name like `YYYYMMDD_<your_
 
 ### Pull Request Title Guidelines
 
-We have very precise rules over how our PR titles (and thus master-branch commits) are to be formatted. This leads to **more readable messages** that are easy to follow when looking through the **project history**. But also, we use the master-branch Git commit messages to **generate the changelog** for the releases.
+We have very precise rules over how our PR titles (and thus main-branch commits) are to be formatted. This leads to **more readable messages** that are easy to follow when looking through the **project history**. But also, we use the main-branch Git commit messages to **generate the changelog** for the releases.
 
 The pull request title must follow this convention which is based on the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification:
 

@@ -71,7 +71,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 RUN apt-get remove php${DDEV_PHP_VERSION}-xdebug || true
 RUN pecl install ${extension}
 # Use the standard xdebug.ini from source
-ADD https://raw.githubusercontent.com/ddev/ddev/master/containers/ddev-php-base/ddev-php-files/etc/php/8.2/mods-available/xdebug.ini /etc/php/${DDEV_PHP_VERSION}/mods-available
+ADD https://raw.githubusercontent.com/ddev/ddev/main/containers/ddev-php-base/ddev-php-files/etc/php/8.2/mods-available/xdebug.ini /etc/php/${DDEV_PHP_VERSION}/mods-available
 RUN chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/xdebug.ini
 # ddev xdebug handles enabling module so we don't enable here
 #RUN phpenmod ${extension}

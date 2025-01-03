@@ -45,4 +45,4 @@ RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dl
     done && go clean -modcache
 RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
 
-RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/master/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements
+RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/main/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements
