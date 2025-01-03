@@ -95,6 +95,18 @@ func TestDisasterConfig(t *testing.T) {
 	app, err := ddevapp.NewApp(tmpDir, false)
 	assert.NoError(err)
 
+	// Make sure we're not allowed to config in any project parent directory
+	// Checking the project parent directory here
+	_, err = ddevapp.NewApp(filepath.Dir(tmpDir), false)
+	assert.Error(err)
+	assert.Contains(err.Error(), "'ddev config' is not allowed")
+
+	// Make sure we're not allowed to config in any project parent directory
+	// Checking parent directory of the project parent directory here
+	_, err = ddevapp.NewApp(filepath.Dir(filepath.Dir(tmpDir)), false)
+	assert.Error(err)
+	assert.Contains(err.Error(), "'ddev config' is not allowed")
+
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
