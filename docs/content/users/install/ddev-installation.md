@@ -157,20 +157,20 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Important Considerations for WSL2 and DDEV
 
-    * You **must** use WSL2, not WSL version 1.
+    * You **must** use WSL2, not WSL version 1.  
       Use `wsl.exe -l -v` to see the versions of the distros you are using they should be v2.
-    * WSL2 is supported on Windows 10 and 11.
+    * WSL2 is supported on Windows 10 and 11.  
       All Windows 10/11 editions, including Windows 10 Home support WSL2.
-    * WSL2 offers a faster, smoother experience.
+    * WSL2 offers a faster, smoother experience.  
       It’s vastly more performant, and you’re less likely to have obscure Windows problems.
 
-    * Execute DDEV commands inside WSL2.
+    * Execute DDEV commands inside WSL2.  
       You’ll want to run DDEV commands inside Ubuntu, for example, and never on the Windows side in PowerShell or Git Bash.
-    * Projects should live under the home directory of the Linux filesystem.
+    * Projects should live under the home directory of the Linux filesystem.  
       WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster and has proper permissions, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
-    * Custom hostnames are managed via the Windows hosts file, not within WSL2.
+    * Custom hostnames are managed via the Windows hosts file, not within WSL2.  
       DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\system32\drivers\etc\hosts`—and it can only do this if it’s installed on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you’re all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The WSL2 scripts below install DDEV on the Windows side, taking care of that for you.) If you frequently run into Windows UAC Escalation, you can calm it down by running `gsudo.exe cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
-    * WSL2 is not the same as Docker Desktop’s WSL2 engine.
+    * WSL2 is not the same as Docker Desktop’s WSL2 engine.  
       Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
 
     The WSL2 install process involves:
@@ -193,13 +193,13 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     1. Install WSL2 with an Ubuntu distro.
 
         * Install WSL:
-            ```
+            ```powershell
             wsl --install
             ```
 
         * Reboot if required. (Usually required.)
 
-        * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.
+        * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.  
           If you have WSL2 but not an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. If this doesn’t work, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
         * Verify that your Ubuntu default distro is WSL v2 using `wsl -l -v`.
@@ -229,7 +229,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * Verify that you have an Ubuntu distro set as the default default with `wsl -l -v`.
 
-        * If you have WSL2 but not an Ubuntu distro, install one with `wsl --install Ubuntu`.
+        * If you have WSL2 but not an Ubuntu distro, install one with `wsl --install Ubuntu`.  
           If that doesn't work for you, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
         If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-24.04`.
