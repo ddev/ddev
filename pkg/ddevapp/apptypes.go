@@ -207,6 +207,11 @@ func init() {
 			importFilesAction:    magentoImportFilesAction,
 		},
 
+		// TODO: Fill it in.
+		nodeps.AppTypeNodeJS: {
+			configOverrideAction: nodejsConfigOverrideAction,
+		},
+
 		nodeps.AppTypePHP: {
 			postStartAction: nil,
 		},
