@@ -2,15 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"reflect"
-	"slices"
 	"sort"
 	"strings"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	globalconfigTypes "github.com/ddev/ddev/pkg/globalconfig/types"
@@ -204,31 +200,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("no-config-here").Changed {
-		cwd, _ := os.Getwd()
-		homeDir, _ := os.UserHomeDir()
-		if cwd == filepath.Dir(globalconfig.GetGlobalDdevDir()) || cwd == homeDir {
-			util.Error("'ddev config' is always disabled in your home directory (%v), --no-config-here is ignored", homeDir)
-		} else {
-			val, _ := cmd.Flags().GetBool("no-config-here")
-			if val {
-				if project, err := ddevapp.GetActiveApp(""); err == nil {
-					util.Error("unable to set --no-config-here, it's ignored in the '%s' project context", project.GetName())
-				} else {
-					if !slices.Contains(globalconfig.DdevGlobalConfig.NoConfigHere, cwd) {
-						globalconfig.DdevGlobalConfig.NoConfigHere = append(globalconfig.DdevGlobalConfig.NoConfigHere, cwd)
-						dirty = true
-					}
-				}
-			} else {
-				if slices.Contains(globalconfig.DdevGlobalConfig.NoConfigHere, cwd) {
-					globalconfig.DdevGlobalConfig.NoConfigHere = nodeps.RemoveItemFromSlice(globalconfig.DdevGlobalConfig.NoConfigHere, cwd)
-					dirty = true
-				}
-			}
-		}
-	}
-
 	if cmd.Flag("wsl2-no-windows-hosts-mgt").Changed {
 		val, _ := cmd.Flags().GetBool("wsl2-no-windows-hosts-mgt")
 		globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt = val
@@ -325,7 +296,6 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, fmt.Sprintf("If true, use docker-compose from path instead of private %s (used only in development testing)", fileutil.ShortHomeJoin(globalconfig.GetDDEVBinDir(), "docker-compose")))
 	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote Docker where bind-mounts are impossible")
-	configGlobalCommand.Flags().Bool("no-config-here", true, "Disables `ddev config` in the current directory, use 'ddev config global --no-config-here=false' to re-enable it")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The default router HTTP port for all projects")

@@ -71,10 +71,6 @@
       "description": "Whether to not use Docker bind mounts.",
       "type": "boolean"
     },
-    "no_config_here": {
-      "description": "Whether to disable 'ddev config' in the current directory.",
-      "type": "boolean"
-    },
     "omit_containers": {
       "description": "A list of container types that should not be started when the project is started.",
       "type": "array",
