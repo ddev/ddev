@@ -1387,10 +1387,15 @@ func IsAllowedProjectLocation(app *DdevApp) error {
 	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
 		return fmt.Errorf("'ddev config' is not useful in your home directory (%v)", homeDir)
 	}
-	noConfigDirs := globalconfig.DdevGlobalConfig.NoConfigHere
-	for _, noConfigDir := range noConfigDirs {
-		if app.AppRoot == filepath.Join(noConfigDir) {
-			return fmt.Errorf("'ddev config' is not allowed in the %s directory, use 'ddev config global --no-config-here=false' if you want to allow it", noConfigDir)
+	projectList := globalconfig.GetGlobalProjectList()
+	for _, project := range projectList {
+		if app.AppRoot == project.AppRoot {
+			return nil
+		}
+		// Do not allow 'ddev config' in any parent directory of any project
+		rel, err := filepath.Rel(app.AppRoot, project.AppRoot)
+		if err == nil && !strings.HasPrefix(rel, "..") {
+			return fmt.Errorf("'ddev config' is not allowed in the %s directory because it has a project in the subdirectory %s", app.AppRoot, project.AppRoot)
 		}
 	}
 	return nil

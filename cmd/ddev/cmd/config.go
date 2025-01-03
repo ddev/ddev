@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -197,16 +195,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	err = app.ProcessHooks("post-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
-	}
-
-	// Exclude project's parent directory from accidental 'ddev config'
-	projectParentDir := filepath.Dir(app.AppRoot)
-	if !slices.Contains(globalconfig.DdevGlobalConfig.NoConfigHere, projectParentDir) {
-		globalconfig.DdevGlobalConfig.NoConfigHere = append(globalconfig.DdevGlobalConfig.NoConfigHere, projectParentDir)
-		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		if err != nil {
-			util.Failed("Failed to update global config: %v", err)
-		}
 	}
 
 	util.Success("Configuration complete. You may now run 'ddev start'.")
