@@ -471,7 +471,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that 'ddev config' in a subdir doesn't give an error for existing project
-	out, err = exec.RunHostCommand(DdevBin, "config", "--web-environment-add=FOO=BAR")
+	_, err = exec.RunHostCommand(DdevBin, "config", "--web-environment-add=FOO=BAR")
 	assert.NoError(err)
 	assert.NoFileExists(filepath.Join(subdir, ".ddev/config.yaml"))
 	assert.FileExists(filepath.Join(tmpDir, ".ddev/config.yaml"))
