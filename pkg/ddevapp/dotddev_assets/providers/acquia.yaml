@@ -58,7 +58,7 @@ files_import_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    acli -n pull:files ${ACQUIA_ENVIRONMENT_ID}
+    acli -n pull:files ${ACQUIA_ENVIRONMENT_ID} default
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
