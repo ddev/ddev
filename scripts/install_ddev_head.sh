@@ -55,7 +55,7 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 
 # Define artifact URLs based on OS and architecture
-ARTIFACTS_BASE_URL="https://nightly.link/${GITHUB_OWNER}/ddev/workflows/master-build/main"
+ARTIFACTS_BASE_URL="https://nightly.link/${GITHUB_OWNER}/ddev/workflows/main-build/main"
 BINARY_ARTIFACT_URL="${ARTIFACTS_BASE_URL}/ddev-${OS}-${ARCH}.zip"
 
 printf "${GREEN}Downloading artifacts for ${OS}_${ARCH}...${RESET}\n"

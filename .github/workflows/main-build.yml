@@ -1,5 +1,5 @@
 # Signs windows and macOS binaries and installers
-name: Master branch build/release (signed)
+name: Main branch build/release (signed)
 defaults:
   run:
     shell: bash

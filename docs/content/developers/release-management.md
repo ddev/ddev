@@ -7,7 +7,7 @@ search:
 ## Release process and tools
 
 * [GoReleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml). GoReleaser Pro is a licensed product that requires separate installation and a license key, which is in the GitHub Workflow configuration and is available in 1Password to DDEV maintainers who need it.
-* The [Master Build/Release GitHub Action](https://github.com/ddev/ddev/blob/main/.github/workflows/master-build.yml) does the actual running of the GoReleaser actions and provides the needed secrets.
+* The [Main Build/Release GitHub Action](https://github.com/ddev/ddev/blob/main/.github/workflows/main-build.yml) does the actual running of the GoReleaser actions and provides the needed secrets.
 
 ## GitHub Actions Required Secrets
 
