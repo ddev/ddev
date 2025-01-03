@@ -1395,7 +1395,7 @@ func IsAllowedProjectLocation(app *DdevApp) error {
 		// Do not allow 'ddev config' in any parent directory of any project
 		rel, err := filepath.Rel(app.AppRoot, project.AppRoot)
 		if err == nil && !strings.HasPrefix(rel, "..") {
-			return fmt.Errorf("'ddev config' is not allowed in the %s directory because it has a project in the subdirectory %s", app.AppRoot, project.AppRoot)
+			return fmt.Errorf("'ddev config' is not allowed in the %s directory because it has a project in the subdirectory %s\nTo use 'ddev config' here, please 'ddev delete' the project in the subdirectory first", app.AppRoot, project.AppRoot)
 		}
 	}
 	return nil
