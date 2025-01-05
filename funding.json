@@ -43,13 +43,13 @@
       {
         "guid": "bank-wire",                 
         "type": "bank",                 
-        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Account Number: 8775865358, Swift: WFBIUS6S",              
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Contact for account number or Swift",
         "description": ""           
       },
       {
         "guid": "ach",                 
         "type": "bank",                 
-        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Account Number: 8775865358, Swift: WFBIUS6S",              
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Contact for account number of Swift",
         "description": ""           
       },
       {
@@ -61,14 +61,14 @@
       {
         "guid": "paypal",                 
         "type": "payment-provider",                 
-        "address": "accounts@ddev.com",              
+        "address": "accounts (at) ddev.com",
         "description": ""           
       },
       {
         "guid": "invoice",                 
         "type": "other",                 
-        "address": "accounts@ddev.com",              
-        "description": "We are happy to invoice your organization monthly, and provide various transfer options there."           
+        "address": "accounts (at) ddev.com",
+        "description": "We are happy to invoice your organization monthly or annually, and provide various transfer options there."
       }
     ],
 
@@ -105,7 +105,6 @@
         "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              
       }
     ]
-
   }
 }
 
