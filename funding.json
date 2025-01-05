@@ -1,0 +1,110 @@
+{
+  "version": "v1.0.0",
+
+  "entity": {
+    "type": "organisation",
+    "role": "maintainer",                     
+    "name": "DDEV Foundation",                     
+    "email": "accounts@ddev.com",
+    "phone": "1-970-462-7450",
+    "description": "Maintainer of DDEV open-source web development toolkit. US 501(c)(3) nonprofit",              
+    "webpageUrl": {
+      "url": "https://ddev.com/foundation",                  
+      "wellKnown": "https://ddev.com/.well-known/funding-manifest-urls"
+    }
+  },
+
+  "projects": [{
+    "guid": "ddev",                     
+    "name": "DDEV",                     
+    "description": "Open-source web developer tool, allows PHP and Node.js developers to build their entire project on local machine,and for teams to share the exact configuration",              
+    "webpageUrl": {
+      "url": "https://ddev.com",
+      "wellKnown": "https://ddev.com/.well-known/funding-manifest-urls"
+    },
+    "repositoryUrl": {
+      "url": "https://github.com/ddev/ddev",
+      "wellKnown": "https://github.com/ddev/ddev/blob/master/.well-known/funding-manifest-urls"
+    },
+    "licenses": ["spdx:Apache-2.0"],                 
+    "tags": ["development", "developer-tools", "web-development"]                      
+  }],
+
+  
+  "funding": {
+    
+    "channels": [
+      {
+        "guid": "check",                 
+        "type": "cheque",                 
+        "address": "DDEV Foundation, 848 Montclair Dr, Palisade, CO 81526 USA",              
+        "description": ""           
+      },
+      {
+        "guid": "bank-wire",                 
+        "type": "bank",                 
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Contact for account number or Swift",
+        "description": ""           
+      },
+      {
+        "guid": "ach",                 
+        "type": "bank",                 
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Contact for account number",
+        "description": ""           
+      },
+      {
+        "guid": "github-sponsors",                 
+        "type": "payment-provider",                 
+        "address": "https://github.com/sponsors/ddev",              
+        "description": "GitHub Sponsors"           
+      },
+      {
+        "guid": "paypal",                 
+        "type": "payment-provider",                 
+        "address": "accounts@ddev.com",
+        "description": ""           
+      },
+      {
+        "guid": "invoice",                 
+        "type": "other",                 
+        "address": "accounts@ddev.com",
+        "description": "We are happy to invoice your organization monthly or annually, and provide various transfer options there."
+      }
+    ],
+
+    
+    "plans": [
+      {
+        "guid": "partner",                 
+        "status": "active",               
+        "name": "partner",                 
+        "description": "Key funding plan for agencies, CMS organizations, hosting organizations",          
+        "amount": 2000,                
+        "currency": "USD",             
+        "frequency": "monthly",            
+        "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              
+      },
+      {
+        "guid": "agency",                 
+        "status": "active",               
+        "name": "agency",                 
+        "description": "agency-level funding",
+        "amount": 100,                
+        "currency": "USD",             
+        "frequency": "monthly",            
+        "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              
+      },
+      {
+        "guid": "individual",                 
+        "status": "active",               
+        "name": "individual",                 
+        "description": "individual funding",          
+        "amount": 25,                
+        "currency": "USD",             
+        "frequency": "monthly",            
+        "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              
+      }
+    ]
+  }
+}
+
