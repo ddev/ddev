@@ -10,7 +10,7 @@
     "description": "Maintainer of DDEV open-source web development toolkit. US 501(c)(3) nonprofit",              
     "webpageUrl": {
       "url": "https://ddev.com/foundation",                  
-      "wellKnown": "https://github.com/ddev/ddev"             
+      "wellKnown": "https://ddev.com/.well-known/funding-manifest-urls"
     }
   },
 
@@ -19,12 +19,12 @@
     "name": "DDEV",                     
     "description": "Open-source web developer tool, allows PHP and Node.js developers to build their entire project on local machine,and for teams to share the exact configuration",              
     "webpageUrl": {
-      "url": "https://ddev.com",                  
-      "wellKnown": "https://github.com/ddev/ddev"             
+      "url": "https://ddev.com",
+      "wellKnown": "https://ddev.com/.well-known/funding-manifest-urls"
     },
     "repositoryUrl": {
-      "url": "https://github.com/ddev/ddev",                  
-      "wellKnown": "https://github.com/ddev/ddev"             
+      "url": "https://github.com/ddev/ddev",
+      "wellKnown": "https://github.com/ddev/ddev/blob/master/.well-known/funding-manifest-urls"
     },
     "licenses": ["spdx:Apache-2.0"],                 
     "tags": ["development", "developer-tools", "web-development"]                      
