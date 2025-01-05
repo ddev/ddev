@@ -88,7 +88,7 @@
         "guid": "agency",                 
         "status": "active",               
         "name": "agency",                 
-        "description": "organization funding",          
+        "description": "agency-level funding",
         "amount": 100,                
         "currency": "USD",             
         "frequency": "monthly",            
