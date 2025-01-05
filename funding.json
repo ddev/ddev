@@ -2,11 +2,11 @@
   "version": "v1.0.0",
 
   "entity": {
-    "type": "organization",                     
+    "type": "organisation",
     "role": "maintainer",                     
     "name": "DDEV Foundation",                     
     "email": "accounts@ddev.com",                    
-    "phone": "+1 9704627450",                    
+    "phone": "1-970-462-7450",
     "description": "Maintainer of DDEV open-source web development toolkit. US 501(c)(3) nonprofit",              
     "webpageUrl": {
       "url": "https://ddev.com/foundation",                  
