@@ -49,7 +49,7 @@
       {
         "guid": "ach",                 
         "type": "bank",                 
-        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Contact for account number of Swift",
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Contact for account number",
         "description": ""           
       },
       {
