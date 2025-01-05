@@ -1,0 +1,113 @@
+{
+  "version": "v1.0.0",
+
+
+  "entity": {
+    "type": "organization",                     // Required. [individual, group, organisation, other]. Use the closest approximation.
+    "role": "maintainer",                     // Required. [owner, steward, maintainer, contributor, other]. Use the closest approximation.
+    "name": "DDEV Foundation",                     // Required. Name of the entity. Max len 250.
+    "email": "accounts@ddev.com",                    // Required. Max len 250.
+    "phone": "+1 9704627450",                    // Optional. Generally suitable for organisations. Max len 32.
+    "description": "Maintainer of DDEV open-source web development toolkit. US 501(c)(3) nonprofit",              // Required. Information about the entity. Max len 2000.
+    "webpageUrl": {
+      "url": "https://ddev.com/foundation",                  // Required. Webpage with information about the entity. Starts with https:// or http://. Max len 250.
+      "wellKnown": "https://github.com/ddev/ddev"             // Optional. Required if the above url and the URL of the funding.json manifest do not have the same hostname. Starts with https:// or http://. Max len 250.
+    }
+  },
+
+  // Optional. One or more projects for which the funding is solicited.
+  "projects": [{
+    "guid": "ddev",                     // Required. A short unique ID for the project. Lowercase-alphanumeric-dashes only. eg: my-cool-project. Max len 32.
+    "name": "DDEV",                     // Required. Name of the project. Max len 250.
+    "description": "Open-source web developer tool, allows PHP and Node.js developers to build their entire project on local machine,and for teams to share the exact configuration",              // Required. Description of the project. Max len 2000.
+    "webpageUrl": {
+      "url": "https://ddev.com",                  // Required. Webpage with information about the project. Starts with https:// or http://. Max len 250.
+      "wellKnown": "https://github.com/ddev/ddev"             // Optional. Required if the above url and the URL of the funding.json manifest do not have the same hostname. Starts with https:// or http://. Max len 250.
+    },
+    "repositoryUrl": {
+      "url": "https://github.com/ddev/ddev",                  // Required. URL of the repository where the project's source code and other assets are available. Starts with https:// or http://. Max len 250.
+      "wellKnown": "https://github.com/ddev/ddev"             // Optional. Required if the above url and the URL of the funding.json manifest do not have the same hostname. Starts with https:// or http://. Max len 250.
+    },
+    "licenses": ["spdx:Apache-2.0"],                 // Required. The project's licenses (up to 5). For standard licenses, use the license ID from the SDPX index prefixed by "spdx:". eg: "spdx:GPL-3.0", "spdx:CC-BY-SA-4.0"
+    "tags": ["development", "developer-tools", "web-development"]                      // Required. Up to 10 general tags describing the project. Lowercase-alphanumeric-dashes (max 32 chars). eg: ["programming", "developer-tools"]. For reference, see tags.txt
+  }],
+
+  // Required.
+  "funding": {
+    // Required. This describes one or more channels via which the entity can receive funds.
+    "channels": [
+      {
+        "guid": "check",                 // Required. A short unique ID for the channel. Lowercase-alphanumeric-dashes only. eg: mybank, my-paypal. Max len 32.
+        "type": "cheque",                 // Required. [bank, payment-provider, cheque, cash, other].
+        "address": "DDEV Foundation, 848 Montclair Dr, Palisade, CO 81526 USA",              // Optional. A short unstructured textual representation of the payment address for the channel. eg: "Account: 12345 (branch: ABCX)", "mypaypal@domain.com", "https://payment-url.com", or a physical address for cheques. Max len 250.
+        "description": ""           // Optional. Any additional description or instructions for the payment channel. Max len 500.
+      },
+      {
+        "guid": "bank-wire",                 // Required. A short unique ID for the channel. Lowercase-alphanumeric-dashes only. eg: mybank, my-paypal. Max len 32.
+        "type": "bank",                 // Required. [bank, payment-provider, cheque, cash, other].
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Account Number: 8775865358, Swift: WFBIUS6S",              // Optional. A short unstructured textual representation of the payment address for the channel. eg: "Account: 12345 (branch: ABCX)", "mypaypal@domain.com", "https://payment-url.com", or a physical address for cheques. Max len 250.
+        "description": ""           // Optional. Any additional description or instructions for the payment channel. Max len 500.
+      },
+      {
+        "guid": "ach",                 // Required. A short unique ID for the channel. Lowercase-alphanumeric-dashes only. eg: mybank, my-paypal. Max len 32.
+        "type": "bank",                 // Required. [bank, payment-provider, cheque, cash, other].
+        "address": "Bank Name: Wells Fargo Bank,420 Montgomery St, SF, CA 94104, Account Name: DDEV Foundation, Routing Number: 102000076, Account Number: 8775865358, Swift: WFBIUS6S",              // Optional. A short unstructured textual representation of the payment address for the channel. eg: "Account: 12345 (branch: ABCX)", "mypaypal@domain.com", "https://payment-url.com", or a physical address for cheques. Max len 250.
+        "description": ""           // Optional. Any additional description or instructions for the payment channel. Max len 500.
+      },
+      {
+        "guid": "github-sponsors",                 // Required. A short unique ID for the channel. Lowercase-alphanumeric-dashes only. eg: mybank, my-paypal. Max len 32.
+        "type": "payment-provider",                 // Required. [bank, payment-provider, cheque, cash, other].
+        "address": "https://github.com/sponsors/ddev",              // Optional. A short unstructured textual representation of the payment address for the channel. eg: "Account: 12345 (branch: ABCX)", "mypaypal@domain.com", "https://payment-url.com", or a physical address for cheques. Max len 250.
+        "description": "GitHub Sponsors"           // Optional. Any additional description or instructions for the payment channel. Max len 500.
+      },
+      {
+        "guid": "paypal",                 // Required. A short unique ID for the channel. Lowercase-alphanumeric-dashes only. eg: mybank, my-paypal. Max len 32.
+        "type": "payment-provider",                 // Required. [bank, payment-provider, cheque, cash, other].
+        "address": "accounts@ddev.com",              // Optional. A short unstructured textual representation of the payment address for the channel. eg: "Account: 12345 (branch: ABCX)", "mypaypal@domain.com", "https://payment-url.com", or a physical address for cheques. Max len 250.
+        "description": ""           // Optional. Any additional description or instructions for the payment channel. Max len 500.
+      },
+      {
+        "guid": "invoice",                 // Required. A short unique ID for the channel. Lowercase-alphanumeric-dashes only. eg: mybank, my-paypal. Max len 32.
+        "type": "other",                 // Required. [bank, payment-provider, cheque, cash, other].
+        "address": "accounts@ddev.com",              // Optional. A short unstructured textual representation of the payment address for the channel. eg: "Account: 12345 (branch: ABCX)", "mypaypal@domain.com", "https://payment-url.com", or a physical address for cheques. Max len 250.
+        "description": "We are happy to invoice your organization monthly, and provide various transfer options there."           // Optional. Any additional description or instructions for the payment channel. Max len 500.
+      }
+    ],
+
+    // Required. One or more funding and payment plans.
+    "plans": [
+      {
+        "guid": "partner",                 // Required. A short unique ID for the plan. Lowercase-alphanumeric-dashes only. eg: mybank, paypal. Max len 32.
+        "status": "active",               // Required. [active, inactive]. Indicates whether this plan is currently active or inactive.
+        "name": "partner",                 // Required. Name of the funding plan. eg: "Starter support plan", "Infra hosting", "Monthly funding plan".
+        "description": "Key funding plan for agencies, CMS organizations, hosting organizations",          // Optional. Any additional description or instructions for the funding plan.
+        "amount": 2000,                // Required. The solicited amount for this plan. 0 is a wildcard that indicates "any amount".
+        "currency": "USD",             // Required. Three letter ISO 4217 currency code. eg: USD
+        "frequency": "monthly",            // Required. [one-time, weekly, fortnightly, monthly, yearly, other]
+        "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              // Required. One or more channel IDs defined in channels[] via which this plan can accept payments.
+      },
+      {
+        "guid": "agency",                 // Required. A short unique ID for the plan. Lowercase-alphanumeric-dashes only. eg: mybank, paypal. Max len 32.
+        "status": "active",               // Required. [active, inactive]. Indicates whether this plan is currently active or inactive.
+        "name": "agency",                 // Required. Name of the funding plan. eg: "Starter support plan", "Infra hosting", "Monthly funding plan".
+        "description": "organization funding",          // Optional. Any additional description or instructions for the funding plan.
+        "amount": 100,                // Required. The solicited amount for this plan. 0 is a wildcard that indicates "any amount".
+        "currency": "USD",             // Required. Three letter ISO 4217 currency code. eg: USD
+        "frequency": "monthly",            // Required. [one-time, weekly, fortnightly, monthly, yearly, other]
+        "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              // Required. One or more channel IDs defined in channels[] via which this plan can accept payments.
+      },
+      {
+        "guid": "individual",                 // Required. A short unique ID for the plan. Lowercase-alphanumeric-dashes only. eg: mybank, paypal. Max len 32.
+        "status": "active",               // Required. [active, inactive]. Indicates whether this plan is currently active or inactive.
+        "name": "individual",                 // Required. Name of the funding plan. eg: "Starter support plan", "Infra hosting", "Monthly funding plan".
+        "description": "individual funding",          // Optional. Any additional description or instructions for the funding plan.
+        "amount": 25,                // Required. The solicited amount for this plan. 0 is a wildcard that indicates "any amount".
+        "currency": "USD",             // Required. Three letter ISO 4217 currency code. eg: USD
+        "frequency": "monthly",            // Required. [one-time, weekly, fortnightly, monthly, yearly, other]
+        "channels": ["ach", "bank-wire", "check", "github-sponsors", "paypal", "invoice"]              // Required. One or more channel IDs defined in channels[] via which this plan can accept payments.
+      }
+    ]
+
+  }
+}
+
