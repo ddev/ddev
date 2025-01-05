@@ -5,7 +5,7 @@
     "type": "organisation",
     "role": "maintainer",                     
     "name": "DDEV Foundation",                     
-    "email": "accounts@ddev.com",                    
+    "email": "accounts@ddev.com",
     "phone": "1-970-462-7450",
     "description": "Maintainer of DDEV open-source web development toolkit. US 501(c)(3) nonprofit",              
     "webpageUrl": {
@@ -61,13 +61,13 @@
       {
         "guid": "paypal",                 
         "type": "payment-provider",                 
-        "address": "accounts (at) ddev.com",
+        "address": "accounts@ddev.com",
         "description": ""           
       },
       {
         "guid": "invoice",                 
         "type": "other",                 
-        "address": "accounts (at) ddev.com",
+        "address": "accounts@ddev.com",
         "description": "We are happy to invoice your organization monthly or annually, and provide various transfer options there."
       }
     ],
