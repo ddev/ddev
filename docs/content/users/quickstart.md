@@ -644,25 +644,50 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
 To get started with [ProcessWire](https://processwire.com/), create a new directory and use composer to require the desired version.
 
-=== "MAIN Branch"
+=== "Composer"
 
     ```bash
     mkdir my-processwire-site && cd my-processwire-site
-    curl -LJO https://github.com/processwire/processwire/archive/master.zip
-    unzip ./processwire-master.zip && rm -f processwire-master.zip && mv -f ./processwire-master/{.,}* . ; rm -rf processwire-master
     ddev config --webserver-type=apache-fpm
-    ddev start && ddev launch
+    ddev composer create processwire/processwire:^3
+    ddev launch
     ```
-
-=== "DEV Branch"
+    
+=== "Git"
 
     ```bash
     mkdir my-processwire-site && cd my-processwire-site
-    curl -LJO https://github.com/processwire/processwire/archive/dev.zip
-    unzip ./processwire-dev.zip && rm -f processwire-dev.zip && mv -f ./processwire-dev/{.,}* . ; rm -rf processwire-dev
+
+    # clone the main branch (stable release) in the current directory
+    git clone https://github.com/processwire/processwire.git .
+
+    # clone the dev branch (latest features) in the current directory
+    # git clone -b dev https://github.com/processwire/processwire.git .
+    
     ddev config --webserver-type=apache-fpm
-    ddev start && ddev launch
+    ddev start
+    ddev launch
     ```
+
+- When the installation wizard prompts for database settings, enter the following:
+    - DB Name = `db`
+    - DB User = `db`
+    - DB Pass = `db`
+    - DB Host = `db` (not `localhost`!)
+- Compatibility Check
+    - Simply hit refresh if you get a warning about `Apache mod_rewrite`
+- Mutagen `upload_dirs` warning
+    - If you get a warning about missing `upload_dirs` when using Mutagen, add the following lines to your ddev config after ProcessWire has been installed (not earlier, otherwise it will break the installer!):
+
+```yaml
+upload_dirs:
+  - site/assets/files
+```
+
+Enjoy!
+
+If you have any questions head over to the dedicated DDEV thread in the ProcessWire forum:
+- https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/
 
 ## Shopware
 
