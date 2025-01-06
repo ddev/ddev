@@ -658,10 +658,10 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     ```bash
     mkdir my-processwire-site && cd my-processwire-site
 
-    # clone the main branch (stable release) in the current directory
+    # clone the main branch (stable release) into the current directory
     git clone https://github.com/processwire/processwire.git .
 
-    # clone the dev branch (latest features) in the current directory
+    # clone the dev branch (latest features) into the current directory
     # git clone -b dev https://github.com/processwire/processwire.git .
     
     ddev config --webserver-type=apache-fpm
