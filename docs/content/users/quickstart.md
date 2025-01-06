@@ -642,7 +642,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     
 ## ProcessWire
 
-To get started with [ProcessWire](https://processwire.com/), clone the project repository and navigate to the project directory.
+To get started with [ProcessWire](https://processwire.com/), create a new directory and use composer to require the desired version.
 
 === "MAIN Branch"
 
