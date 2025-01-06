@@ -639,6 +639,30 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev restart
     ddev launch /admin
     ```
+    
+## ProcessWire
+
+To get started with [ProcessWire](https://processwire.com/), clone the project repository and navigate to the project directory.
+
+=== "MAIN Branch"
+
+    ```bash
+    mkdir my-processwire-site && cd my-processwire-site
+    curl -LJO https://github.com/processwire/processwire/archive/master.zip
+    unzip ./processwire-master.zip && rm -f processwire-master.zip && mv -f ./processwire-master/{.,}* . ; rm -rf processwire-master
+    ddev config --webserver-type=apache-fpm
+    ddev start && ddev launch
+    ```
+
+=== "DEV Branch"
+
+    ```bash
+    mkdir my-processwire-site && cd my-processwire-site
+    curl -LJO https://github.com/processwire/processwire/archive/dev.zip
+    unzip ./processwire-dev.zip && rm -f processwire-dev.zip && mv -f ./processwire-dev/{.,}* . ; rm -rf processwire-dev
+    ddev config --webserver-type=apache-fpm
+    ddev start && ddev launch
+    ```
 
 ## Shopware
 
