@@ -4,9 +4,7 @@
 # To use this configuration,
 
 # 1. Get your Acquia API token from your Account Settings->API Tokens.
-# 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
-# 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull).
-# 4. Add / update the web_environment section in ~/.ddev/global_config.yaml with the API keys:
+# 2. Add / update the web_environment section in ~/.ddev/global_config.yaml with the API keys:
 #    ```yaml
 #    web_environment:
 #        - ACQUIA_API_KEY=xxxxxxxx
@@ -14,7 +12,7 @@
 #    ```
 #    You can also do this with `ddev config global --web-environment-add="ACQUIA_API_KEY=xxxxxxxx,ACQUIA_API_SECRET=xxxxx"`.
 #
-# 5. Add the ACQUIA_ENVIRONMENT_ID environment variable to your project `.ddev/config.yaml`, for example:
+# 3. Add the ACQUIA_ENVIRONMENT_ID environment variable to your project `.ddev/config.yaml`, for example:
 #    ```yaml
 #    web_environment:
 #        - ACQUIA_ENVIRONMENT_ID=project1.dev
