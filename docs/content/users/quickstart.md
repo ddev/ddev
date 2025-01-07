@@ -147,7 +147,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 === "Demo Website"
 
     The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo).
-    Via the Contao Manager you can simply select this option during the first installation.
+    Via the Contao Manager you can select this option during the first installation.
 
 ## Craft CMS
 
@@ -675,7 +675,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     - DB Pass = `db`
     - DB Host = `db` (not `localhost`!)
 - Compatibility Check
-    - Simply hit refresh if you get a warning about `Apache mod_rewrite`
+    - Hit refresh if you get a warning about `Apache mod_rewrite`
 - Mutagen `upload_dirs` warning
     - If you get a warning about missing `upload_dirs` when using Mutagen, add the following lines to your ddev config after ProcessWire has been installed (not earlier, otherwise it will break the installer!):
 
