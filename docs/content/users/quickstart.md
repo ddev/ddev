@@ -687,6 +687,7 @@ upload_dirs:
 Enjoy!
 
 If you have any questions head over to the dedicated DDEV thread in the ProcessWire forum:
+
 - https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/
 
 ## Shopware
