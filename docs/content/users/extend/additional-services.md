@@ -189,7 +189,7 @@ yaml_read_files:
 
 then `value1` can be used throughout the `install.yaml` as `{{ example.value1 }}` and it will be replaced with the value `xxx`.
 
-More exotic template-based replacements can be seen in an advanced test [example](https://github.com/ddev/ddev/blob/master/cmd/ddev/cmd/testdata/TestCmdAddonComplex/recipe/install.yaml).
+More exotic template-based replacements can be seen in an advanced test [example](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/testdata/TestCmdAddonComplex/recipe/install.yaml).
 
 Go templating resources:
 

@@ -69,7 +69,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		}
 		util.Success("Output file written to:\n%s\nfile://%s\nPlease provide the file for support in Discord or the issue queue.", outputFilename, outputFilename)
 		if testErr != nil {
-			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", testErr)
+			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", testErr)
 		}
 	},
 }

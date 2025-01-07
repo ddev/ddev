@@ -6,7 +6,7 @@ Hosting provider integration allows connecting with your upstream hosting. `ddev
 
 DDEV provides ready-to-go integrations for Platform.sh, Acquia, and Lagoon in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
 
-In addition, each project includes [example recipes](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) for Pantheon, Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
+In addition, each project includes [example recipes](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers) for Pantheon, Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
 
 DDEV provides the `pull` command with whatever recipes you have configured. For example, `ddev pull platform` is available by default, and `ddev pull pantheon` is available if you have created `.ddev/providers/pantheon.yaml`.
 
@@ -14,16 +14,16 @@ DDEV also provides the `push` command to push database and files to upstream. Th
 
 Each provider recipe is a YAML file that can have whatever name you want. The examples are mostly named after the hosting providers, but they could be named `upstream.yaml` or `live.yaml`, so you could `ddev pull upstream` or `ddev pull live`. If you wanted different upstream environments to pull from, you could name one “prod” and one “dev” and `ddev pull prod` and `ddev pull dev`.
 
-[Recipes](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/) are provided for:
+[Recipes](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/) are provided for:
 
-- [Acquia](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/acquia.yaml)
-- [Git](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example)
-- [Lagoon](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/lagoon.yaml)
-- [Local files](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) (like Dropbox, for example)
-- [Pantheon](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/pantheon.yaml.example)
-- [Platform.sh](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/platform.yaml)
-- [rsync](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/rsync.yaml.example)
-- [Upsun](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/upsun.yaml)
+- [Acquia](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/acquia.yaml)
+- [Git](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/git.yaml.example)
+- [Lagoon](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/lagoon.yaml)
+- [Local files](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) (like Dropbox, for example)
+- [Pantheon](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/pantheon.yaml.example)
+- [Platform.sh](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/platform.yaml)
+- [rsync](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/rsync.yaml.example)
+- [Upsun](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/upsun.yaml)
 
 We know you’ll find improvements to these examples and will have lots to contribute for other hosting providers, and we look forward to your contributions as pull requests here or as new add-ons.
 
@@ -31,9 +31,9 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 - `environment_variables`: Environment variables will be created in the web container for each of these during pull or push operations. They’re used to provide context (project ID, environment name, etc.) for each of the other stanzas. This stanza is not used in more recent hosting integrations, since providing the environment variables in `config.yaml` or via `ddev pull xxx --environment=VARIABLE=value` is preferred.
 - `db_pull_command`: A script that determines how DDEV should obtain a database. Its job is to create a gzipped database dump in `/var/www/html/.ddev/.downloads/db.sql.gz`. This is optional; if nothing has to be done to obtain the database dump, this step can be omitted.
-- `db_import_command`: (optional) A script that imports the downloaded database. This is for advanced usages like multiple databases. The default behavior only imports a single database into the `db` database. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
+- `db_import_command`: (optional) A script that imports the downloaded database. This is for advanced usages like multiple databases. The default behavior only imports a single database into the `db` database. The [localfile example](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 - `files_pull_command`: A script that determines how DDEV can get user-generated files from upstream. Its job is to copy the files from upstream to `/var/www/html/.ddev/.downloads/files`. If nothing has to be done to obtain the files, this step can run `true`.
-- `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
+- `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 - `db_push_command`: A script that determines how DDEV should push a database. Its job is to take a gzipped database dump from `/var/www/html/.ddev/.downloads/db.sql.gz` and load it on the hosting provider.
 - `files_push_command`: A script that determines how DDEV push user-generated files to upstream. Its job is to copy the files from the project’s user-files directories (`$DDEV_FILES_DIRS`) to the correct places on the upstream provider.
 
@@ -43,7 +43,7 @@ There are [hooks](../configuration/hooks.md) available to execute commands befor
 
 ## Example Integrations and Hints
 
-- All of the [supplied integrations](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are examples of what you can do.
+- All of the [supplied integrations](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers) are examples of what you can do.
 - You can name a provider anything you want. For example, an Acquia integration doesn’t have to be named “acquia”, it can be named “upstream”. This is a great technique for [downloading a particular multisite](https://stackoverflow.com/a/68553116/215713).
 
 ## Provider Debugging

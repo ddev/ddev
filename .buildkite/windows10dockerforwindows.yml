@@ -1,6 +1,6 @@
 # Windows native with Mutagen, used by ddev-windows-mutagen
 # See https://buildkite.com/ddev/ddev-windows-mutagen/settings/repository
-# Runs on master and PRs, not including forked PRs
+# Runs on main and PRs, not including forked PRs
 
   - command: ".buildkite/test.cmd"
     if: |

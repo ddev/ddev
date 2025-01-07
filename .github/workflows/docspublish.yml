@@ -1,9 +1,7 @@
 name: docspublish
 on:
   push:
-    branches:
-      - 20220710_mkdocs_material
-      - master
+    branches: [ main, master ]
 env:
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

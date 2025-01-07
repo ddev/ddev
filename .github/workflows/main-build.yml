@@ -1,11 +1,11 @@
 # Signs windows and macOS binaries and installers
-name: Master branch build/release (signed)
+name: Main branch build/release (signed)
 defaults:
   run:
     shell: bash
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main, master ]
   release:
     types: [ created ]
   workflow_dispatch:
@@ -21,7 +21,7 @@ on:
 # to prevent builds on commits that don't matter.
 #concurrency:
 #  group: ${{ github.workflow }}-${{ github.ref }}
-#  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+#  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}

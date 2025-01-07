@@ -24,7 +24,7 @@
     },
     "repositoryUrl": {
       "url": "https://github.com/ddev/ddev",
-      "wellKnown": "https://github.com/ddev/ddev/blob/master/.well-known/funding-manifest-urls"
+      "wellKnown": "https://github.com/ddev/ddev/blob/main/.well-known/funding-manifest-urls"
     },
     "licenses": ["spdx:Apache-2.0"],
     "tags": ["development", "developer-tools", "web-development"]

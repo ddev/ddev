@@ -27,7 +27,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 13. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
 14. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
 15. `git config --global --add safe.directory '*'`.
-16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 17. Run `.buildkite/sanetestbot.sh` to check your work.
 18. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
 19. Verify that `go`, `ddev`, `git-bash` are in the path.
@@ -82,7 +82,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 1. Install Docker Desktop on Windows
 2. In Docker Desktop, enable WSL2 integration with this distro (and this distro only, not default distro).
 3. Install DDEV using the [standard WSL2 Docker Desktop installation](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#wsl2-docker-desktop-install-script)
-4. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+4. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 5. Run `.buildkite/sanetestbot.sh` to check your work.
 
 ## Windows Setup for WSL2+Docker-Inside Testing
@@ -100,7 +100,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     ```
 
 4. Install DDEV using the [standard WSL2 Docker CE installation](https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/#wsl2-docker-ce-inside-install-script)
-5. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+5. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 6. Run `.buildkite/sanetestbot.sh` to check your work.
 7. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
 8. Turn off the settings that cause the "windows experience" prompts after new upgrades:

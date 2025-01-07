@@ -77,7 +77,7 @@ pyspelling:
 Spelling check passed :)
 ```
 
-If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/ddev/ddev/blob/master/.spellcheckwordlist.txt).
+If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/ddev/ddev/blob/main/.spellcheckwordlist.txt).
 
 !!!warning "`pyspelling` and `aspell` required!"
     It’s probably best to install packages locally before attempting to run `make pyspelling`:

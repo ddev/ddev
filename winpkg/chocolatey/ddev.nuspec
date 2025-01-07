@@ -6,13 +6,13 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/ddev/ddev/tree/master/winpkg/chocolatey</packageSourceUrl>
+    <packageSourceUrl>https://github.com/ddev/ddev/tree/main/winpkg/chocolatey</packageSourceUrl>
     <owners>Randy Fay</owners>
 
     <title>ddev (Install)</title>
     <authors>DDEV Foundation</authors>
     <projectUrl>https://github.com/ddev/ddev</projectUrl>
-    <licenseUrl>https://github.com/ddev/ddev/blob/master/LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/ddev/ddev/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
     <bugTrackerUrl>https://github.com/ddev/ddev/issues</bugTrackerUrl>

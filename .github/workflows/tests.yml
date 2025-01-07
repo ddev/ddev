@@ -9,7 +9,7 @@ on:
       - "vendor/**"
       - ".github/workflows/**"
   push:
-    branches: [ master, main ]
+    branches: [ main, master ]
 
 #  schedule:
 #    - cron: '01 00 * * *'
@@ -88,7 +88,7 @@ jobs:
 
       - name: DDEV test cache
         uses: actions/cache@v4
-        if: github.ref == 'refs/heads/master' && matrix.name == 'pull-push-test-platforms'
+        if: github.ref == 'refs/heads/main' && matrix.name == 'pull-push-test-platforms'
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -97,7 +97,7 @@ jobs:
 
       - name: DDEV test cache/restore
         uses: actions/cache/restore@v4
-        if: github.ref != 'refs/heads/master' || matrix.name != 'pull-push-test-platforms'
+        if: github.ref != 'refs/heads/main' || matrix.name != 'pull-push-test-platforms'
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}

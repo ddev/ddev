@@ -11,7 +11,7 @@ Hosting provider integration allows connecting with your upstream hosting. `ddev
 
 DDEV provides ready-to-go integrations for Platform.sh, Acquia, and Lagoon in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
 
-In addition, each project includes example recipes https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers for Pantheon, Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
+In addition, each project includes example recipes https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers for Pantheon, Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
 
 DDEV provides the `pull` command with whatever recipes you have configured. For example, `ddev pull platform` is available by default, and `ddev pull pantheon` is available if you have created `.ddev/providers/pantheon.yaml`.
 
@@ -35,9 +35,9 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 - `environment_variables`: Environment variables will be created in the web container for each of these during pull or push operations. They’re used to provide context (project ID, environment name, etc.) for each of the other stanzas. This stanza is not used in more recent hosting integrations, since providing the environment variables in `config.yaml` or via `ddev pull xxx --environment=VARIABLE=value` is preferred.
 - `db_pull_command`: A script that determines how DDEV should obtain a database. Its job is to create a gzipped database dump in `/var/www/html/.ddev/.downloads/db.sql.gz`. This is optional; if nothing has to be done to obtain the database dump, this step can be omitted.
-- `db_import_command`: (optional) A script that imports the downloaded database. This is for advanced usages like multiple databases. The default behavior only imports a single database into the `db` database. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
+- `db_import_command`: (optional) A script that imports the downloaded database. This is for advanced usages like multiple databases. The default behavior only imports a single database into the `db` database. The [localfile example](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 - `files_pull_command`: A script that determines how DDEV can get user-generated files from upstream. Its job is to copy the files from upstream to `/var/www/html/.ddev/.downloads/files`. If nothing has to be done to obtain the files, this step can run `true`.
-- `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
+- `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 - `db_push_command`: A script that determines how DDEV should push a database. Its job is to take a gzipped database dump from `/var/www/html/.ddev/.downloads/db.sql.gz` and load it on the hosting provider.
 - `files_push_command`: A script that determines how DDEV push user-generated files to upstream. Its job is to copy the files from the project’s user-files directories (`$DDEV_FILES_DIRS`) to the correct places on the upstream provider.
 
@@ -47,7 +47,7 @@ There are hooks (see https://ddev.readthedocs.io/en/stable/users/configuration/h
 
 ## Example Integrations and Hints
 
-- All of the [supplied integrations](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are examples of what you can do.
+- All of the [supplied integrations](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers) are examples of what you can do.
 - You can name a provider anything you want. For example, an Acquia integration doesn’t have to be named “acquia”, it can be named “upstream”. This is a great technique for downloading a particular multisite (see https://stackoverflow.com/a/68553116/215713).
 
 ### Provider Debugging
