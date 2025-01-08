@@ -54,7 +54,6 @@ db_pull_command:
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     export PLATFORMSH_CLI_NO_INTERACTION=1
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     # /tmp/db_relationships.yaml is the full yaml output of the database relationships
     db_relationships_file=/tmp/db_relationships.yaml
     PLATFORM_RELATIONSHIPS="" platform relationships -y  -e "${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} | yq 'with_entries(select(.[][].type == "mariadb:*" or .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
@@ -94,7 +93,6 @@ db_push_command:
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     export PLATFORMSH_CLI_NO_INTERACTION=1
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     if [ "${PLATFORM_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
       rel="--relationship ${PLATFORM_PRIMARY_RELATIONSHIP}"
