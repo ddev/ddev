@@ -75,7 +75,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.AppRoot = appRoot
 	}
 
-	if err := IsAllowedProjectLocation(app); err != nil {
+	if err := HasRecommendedLocation(app); err != nil {
 		return nil, err
 	}
 
@@ -1381,11 +1381,19 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 	return nil
 }
 
-// IsAllowedProjectLocation returns an error if the project location is not allowed
-func IsAllowedProjectLocation(app *DdevApp) error {
+// HasRecommendedLocation returns an error if the project location is not recommended
+func HasRecommendedLocation(app *DdevApp) error {
 	homeDir, _ := os.UserHomeDir()
-	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		return fmt.Errorf("'ddev config' is not recommended in your home directory (%v)", homeDir)
+	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
+		return fmt.Errorf("'ddev config' is not recommended in your home directory (%v)", app.AppRoot)
+	}
+	rel, err := filepath.Rel(app.AppRoot, homeDir)
+	if err == nil && !strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("'ddev config' is not recommended in the parent directories of your home directory (%v)", app.AppRoot)
+	}
+	rel, err = filepath.Rel(globalconfig.GetGlobalDdevDir(), app.AppRoot)
+	if err == nil && !strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("'ddev config' is not recommended in your global config directory (%v)", app.AppRoot)
 	}
 	projectList := globalconfig.GetGlobalProjectList()
 	for _, project := range projectList {
@@ -1393,9 +1401,9 @@ func IsAllowedProjectLocation(app *DdevApp) error {
 			return nil
 		}
 		// Do not allow 'ddev config' in any parent directory of any project
-		rel, err := filepath.Rel(app.AppRoot, project.AppRoot)
+		rel, err = filepath.Rel(app.AppRoot, project.AppRoot)
 		if err == nil && !strings.HasPrefix(rel, "..") {
-			return fmt.Errorf("'ddev config' is not allowed in the %s directory because it has a project in the subdirectory %s\nTo use 'ddev config' here, please 'ddev delete' the project in the subdirectory first", app.AppRoot, project.AppRoot)
+			return fmt.Errorf("'ddev config' is not recommended in the %s directory because a project exists in the subdirectory %s\nTo use 'ddev config' here, run 'ddev stop --unlist' for all projects in subdirectories of this directory first", app.AppRoot, project.AppRoot)
 		}
 	}
 	return nil

@@ -75,8 +75,8 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(app.Type, loadedConfig.Type)
 }
 
-// TestDisasterConfig tests for disaster opportunities (configing wrong directory, home dir, etc).
-func TestDisasterConfig(t *testing.T) {
+// TestConfigRecommendedLocation tests for disaster opportunities (configuring wrong directory, home dir, etc).
+func TestConfigRecommendedLocation(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -84,7 +84,7 @@ func TestDisasterConfig(t *testing.T) {
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := os.UserHomeDir()
 	_, err := ddevapp.NewApp(tmpDir, false)
-	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
+	require.Error(t, err, "'ddev config' must not be recommended in %s", tmpDir)
 	assert.Contains(err.Error(), "'ddev config' is not recommended")
 	_ = os.Chdir(origDir)
 
@@ -121,14 +121,14 @@ func TestDisasterConfig(t *testing.T) {
 	// Make sure we're not allowed to config in any project parent directory
 	// Checking the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(tmpDir), false)
-	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(tmpDir))
-	assert.Contains(err.Error(), "'ddev config' is not allowed")
+	require.Error(t, err, "'ddev config' must not be recommended in %s", filepath.Dir(tmpDir))
+	assert.Contains(err.Error(), "'ddev config' is not recommended")
 
 	// Make sure we're not allowed to config in any project parent directory
 	// Checking parent directory of the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(filepath.Dir(tmpDir)), false)
-	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(filepath.Dir(tmpDir)))
-	assert.Contains(err.Error(), "'ddev config' is not allowed")
+	require.Error(t, err, "'ddev config' must not be recommended in %s", filepath.Dir(filepath.Dir(tmpDir)))
+	assert.Contains(err.Error(), "'ddev config' is not recommended")
 }
 
 // TestAllowedAppType tests the IsValidAppType function.

@@ -430,9 +430,9 @@ func TestConfigInvalidProjectname(t *testing.T) {
 
 }
 
-// TestCmdDisasterConfig tests to make sure we can't accidentally
-// config in homedir, and that config in a subdir is handled correctly
-func TestCmdDisasterConfig(t *testing.T) {
+// TestCmdConfigRecommendedLocation tests to make sure we can't accidentally
+// config in homedir, and that config in a subdir is handled correctly, etc.
+func TestCmdConfigRecommendedLocation(t *testing.T) {
 	var err error
 	assert := asrt.New(t)
 

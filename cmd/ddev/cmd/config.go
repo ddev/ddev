@@ -143,12 +143,9 @@ var ConfigCommand = &cobra.Command{
 
 // handleConfigRun handles all the flag processing for any provider
 func handleConfigRun(cmd *cobra.Command, args []string) {
-	app, err := getConfigApp(providerName)
-	if err != nil {
-		util.Failed(err.Error())
-	}
+	app := getConfigApp(providerName)
 
-	err = ddevapp.IsAllowedProjectLocation(app)
+	err := ddevapp.HasRecommendedLocation(app)
 	if err != nil {
 		util.Failed("Unable to run `ddev config`: %v", err)
 	}
@@ -324,10 +321,10 @@ func init() {
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
-func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
+func getConfigApp(_ string) *ddevapp.DdevApp {
 	appRoot, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("could not determine current working directory: %v", err)
+		util.Failed("Could not determine the current working directory: %v", err)
 	}
 
 	// Check for an existing config in a parent dir
@@ -341,9 +338,9 @@ func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
 	}
 	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
-		return nil, fmt.Errorf("could not create new config: %v", err)
+		util.Failed("Could not create a new config: %v", err)
 	}
-	return app, nil
+	return app
 }
 
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)
