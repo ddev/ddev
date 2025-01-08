@@ -443,7 +443,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-type=php")
 	assert.Error(err)
-	assert.Contains(out, "not useful in")
+	assert.Contains(out, "not recommended in")
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())

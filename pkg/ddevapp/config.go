@@ -1385,7 +1385,7 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 func IsAllowedProjectLocation(app *DdevApp) error {
 	homeDir, _ := os.UserHomeDir()
 	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		return fmt.Errorf("'ddev config' is not useful in your home directory (%v)", homeDir)
+		return fmt.Errorf("'ddev config' is not recommended in your home directory (%v)", homeDir)
 	}
 	projectList := globalconfig.GetGlobalProjectList()
 	for _, project := range projectList {
