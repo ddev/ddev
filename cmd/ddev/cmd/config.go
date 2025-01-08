@@ -334,6 +334,10 @@ func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
 	otherRoot, _ := ddevapp.CheckForConf(appRoot)
 	if otherRoot != "" && otherRoot != appRoot {
 		appRoot = otherRoot
+		err = os.Chdir(appRoot)
+		if err != nil {
+			util.Failed("Unable to chdir to %v: %v", appRoot, err)
+		}
 	}
 	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
