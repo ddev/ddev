@@ -37,11 +37,15 @@ const acquiaSiteExpectation = "Super easy vegetarian pasta"
 func TestAcquiaPull(t *testing.T) {
 	acquiaKey := ""
 	acquiaSecret := ""
+	sshkey := ""
 	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
 		t.Skipf("No DDEV_ACQUIA_API_KEY env var has been set. Skipping %v", t.Name())
 	}
 	if acquiaSecret = os.Getenv("DDEV_ACQUIA_API_SECRET"); acquiaSecret == "" {
 		t.Skipf("No DDEV_ACQUIA_SECRET env var has been set. Skipping %v", t.Name())
+	}
+	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
+		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 
 	require.True(t, isPullSiteValid(acquiaPullSiteURL, acquiaSiteExpectation), "acquiaPullSiteURL %s isn't working right", acquiaPullSiteURL)
@@ -73,6 +77,9 @@ func TestAcquiaPull(t *testing.T) {
 		Type:    nodeps.MySQL,
 		Version: nodeps.MySQL57,
 	}
+
+	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -121,6 +128,7 @@ func TestAcquiaPull(t *testing.T) {
 func TestAcquiaPush(t *testing.T) {
 	acquiaKey := ""
 	acquiaSecret := ""
+	sshkey := ""
 	if os.Getenv("DDEV_ALLOW_ACQUIA_PUSH") != "true" {
 		t.Skip("TestAcquiaPush is currently embargoed by DDEV_ALLOW_ACQUIA_PUSH not set to true")
 	}
@@ -129,6 +137,9 @@ func TestAcquiaPush(t *testing.T) {
 	}
 	if acquiaSecret = os.Getenv("DDEV_ACQUIA_API_SECRET"); acquiaSecret == "" {
 		t.Skipf("No DDEV_ACQUIA_API_SECRET env var has been set. Skipping %v", t.Name())
+	}
+	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
+		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.
@@ -159,6 +170,9 @@ func TestAcquiaPush(t *testing.T) {
 		Type:    nodeps.MySQL,
 		Version: nodeps.MySQL57,
 	}
+
+	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
