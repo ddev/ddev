@@ -430,9 +430,10 @@ func TestConfigInvalidProjectname(t *testing.T) {
 
 }
 
-// TestCmdConfigRecommendedLocation tests to make sure we can't accidentally
-// config in homedir, and that config in a subdir is handled correctly, etc.
-func TestCmdConfigRecommendedLocation(t *testing.T) {
+// TestCmdConfigHasRecommendedLocation tests to ensure that 'ddev config'
+// can't be accidentally run in the home directory, while also verifying that
+// 'ddev config' can run in a subdirectory, except when configuring a new project.
+func TestCmdConfigHasRecommendedLocation(t *testing.T) {
 	var err error
 	assert := asrt.New(t)
 

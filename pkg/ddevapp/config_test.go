@@ -75,8 +75,10 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(app.Type, loadedConfig.Type)
 }
 
-// TestConfigRecommendedLocation tests for disaster opportunities (configuring wrong directory, home dir, etc).
-func TestConfigRecommendedLocation(t *testing.T) {
+// TestConfigHasRecommendedLocation tests to ensure that a new project
+// cannot be configured in the home directory, its parent directories,
+// or the global config directory, but allows reconfiguration in a subdirectory.
+func TestConfigHasRecommendedLocation(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -85,7 +87,20 @@ func TestConfigRecommendedLocation(t *testing.T) {
 	tmpDir, _ := os.UserHomeDir()
 	_, err := ddevapp.NewApp(tmpDir, false)
 	require.Error(t, err, "'ddev config' must not be recommended in %s", tmpDir)
-	assert.Contains(err.Error(), "'ddev config' is not recommended")
+	assert.Contains(err.Error(), "'ddev config' is not recommended in your home directory")
+
+	// Make sure we're not allowed to config in the parent directory of the home directory.
+	tmpDir = filepath.Dir(tmpDir)
+	_, err = ddevapp.NewApp(tmpDir, false)
+	require.Error(t, err, "'ddev config' must not be recommended in %s", tmpDir)
+	assert.Contains(err.Error(), "'ddev config' is not recommended in the parent directories of your home directory")
+
+	// Make sure we're not allowed to config in global config directory.
+	tmpDir = globalconfig.GetGlobalDdevDir()
+	_, err = ddevapp.NewApp(tmpDir, false)
+	require.Error(t, err, "'ddev config' must not be recommended in %s", tmpDir)
+	assert.Contains(err.Error(), "'ddev config' is not recommended in your global config directory")
+
 	_ = os.Chdir(origDir)
 
 	// Create a temporary directory and change to it for the duration of this test.
@@ -123,12 +138,14 @@ func TestConfigRecommendedLocation(t *testing.T) {
 	_, err = ddevapp.NewApp(filepath.Dir(tmpDir), false)
 	require.Error(t, err, "'ddev config' must not be recommended in %s", filepath.Dir(tmpDir))
 	assert.Contains(err.Error(), "'ddev config' is not recommended")
+	assert.Contains(err.Error(), "because a project exists in the subdirectory")
 
 	// Make sure we're not allowed to config in any project parent directory
 	// Checking parent directory of the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(filepath.Dir(tmpDir)), false)
 	require.Error(t, err, "'ddev config' must not be recommended in %s", filepath.Dir(filepath.Dir(tmpDir)))
 	assert.Contains(err.Error(), "'ddev config' is not recommended")
+	assert.Contains(err.Error(), "because a project exists in the subdirectory")
 }
 
 // TestAllowedAppType tests the IsValidAppType function.
