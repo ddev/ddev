@@ -10,7 +10,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -144,14 +143,11 @@ var ConfigCommand = &cobra.Command{
 
 // handleConfigRun handles all the flag processing for any provider
 func handleConfigRun(cmd *cobra.Command, args []string) {
-	app, err := getConfigApp(providerName)
-	if err != nil {
-		util.Failed(err.Error())
-	}
+	app := getConfigApp(providerName)
 
-	homeDir, _ := os.UserHomeDir()
-	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		util.Failed("Please do not use `ddev config` in your home directory")
+	err := ddevapp.HasAllowedLocation(app)
+	if err != nil {
+		util.Failed("Unable to run `ddev config`: %v", err)
 	}
 
 	err = app.CheckExistingAppInApproot()
@@ -325,22 +321,26 @@ func init() {
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
-func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
+func getConfigApp(_ string) *ddevapp.DdevApp {
 	appRoot, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("could not determine current working directory: %v", err)
+		util.Failed("Could not determine the current working directory: %v", err)
 	}
 
 	// Check for an existing config in a parent dir
 	otherRoot, _ := ddevapp.CheckForConf(appRoot)
 	if otherRoot != "" && otherRoot != appRoot {
-		return nil, fmt.Errorf("it usually does not make sense to `ddev config` in a subdirectory of an existing project. Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
+		appRoot = otherRoot
+		err = os.Chdir(appRoot)
+		if err != nil {
+			util.Failed("Unable to chdir to %v: %v", appRoot, err)
+		}
 	}
 	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
-		return nil, fmt.Errorf("could not create new config: %v", err)
+		util.Failed("Could not create a new config: %v", err)
 	}
-	return app, nil
+	return app
 }
 
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)

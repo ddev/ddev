@@ -430,9 +430,10 @@ func TestConfigInvalidProjectname(t *testing.T) {
 
 }
 
-// TestCmdDisasterConfig tests to make sure we can't accidentally
-// config in homedir, and that config in a subdir is handled correctly
-func TestCmdDisasterConfig(t *testing.T) {
+// TestCmdConfigHasAllowedLocation tests to ensure that 'ddev config'
+// can't be accidentally run in the home directory, while also verifying that
+// 'ddev config' can run in a subdirectory, except when configuring a new project.
+func TestCmdConfigHasAllowedLocation(t *testing.T) {
 	var err error
 	assert := asrt.New(t)
 
@@ -443,7 +444,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-type=php")
 	assert.Error(err)
-	assert.Contains(out, "not useful in")
+	assert.Contains(out, "not allowed in")
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -470,11 +471,20 @@ func TestCmdDisasterConfig(t *testing.T) {
 	err = os.Chdir(subdir)
 	assert.NoError(err)
 
-	// Make sure that ddev config in a subdir gives an error
+	// Make sure that 'ddev config' in a subdir doesn't give an error for existing project
+	_, err = exec.RunHostCommand(DdevBin, "config", "--web-environment-add=FOO=BAR")
+	assert.NoError(err)
+	assert.NoFileExists(filepath.Join(subdir, ".ddev/config.yaml"))
+	assert.FileExists(filepath.Join(tmpDir, ".ddev/config.yaml"))
+	configFileContents, err := os.ReadFile(filepath.Join(tmpDir, ".ddev/config.yaml"))
+	assert.NoError(err)
+	assert.Contains(string(configFileContents), "FOO=BAR")
+
+	// Make sure that 'ddev config' in a subdir gives an error for new projects
 	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name()+"_subdir")
 	assert.Error(err)
-	assert.Contains(out, "possible you wanted to")
-	assert.Contains(out, fmt.Sprintf("parent directory %s?", tmpDir))
+	assert.Contains(out, fmt.Sprintf("project root '%s' already contains a project", tmpDir))
+	assert.Contains(out, "You may want to remove the existing project")
 	assert.NoFileExists(filepath.Join(subdir, ".ddev/config.yaml"))
 }
 

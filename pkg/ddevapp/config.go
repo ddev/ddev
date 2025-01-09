@@ -75,9 +75,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.AppRoot = appRoot
 	}
 
-	homeDir, _ := os.UserHomeDir()
-	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
+	if err := HasAllowedLocation(app); err != nil {
+		return nil, err
 	}
 
 	if _, err := os.Stat(app.AppRoot); err != nil {
@@ -1378,6 +1377,37 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 	err = os.WriteFile(fullpath, contents, 0644)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// HasAllowedLocation returns an error if the project location is not recommended
+func HasAllowedLocation(app *DdevApp) error {
+	homeDir, _ := os.UserHomeDir()
+	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
+		return fmt.Errorf("'ddev config' is not allowed in your home directory (%v)", app.AppRoot)
+	}
+	rel, err := filepath.Rel(app.AppRoot, homeDir)
+	if err == nil && !strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("'ddev config' is not allowed in the parent directory of your home directory (%v)", app.AppRoot)
+	}
+	rel, err = filepath.Rel(globalconfig.GetGlobalDdevDir(), app.AppRoot)
+	if err == nil && !strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("'ddev config' is not allowed in your global config directory (%v)", app.AppRoot)
+	}
+	if fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev/main.go")) && fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev_gen_autocomplete/ddev_gen_autocomplete.go")) {
+		return fmt.Errorf("'ddev config' is not allowed in the directory used for DDEV development (%v)", app.AppRoot)
+	}
+	projectList := globalconfig.GetGlobalProjectList()
+	for _, project := range projectList {
+		if app.AppRoot == project.AppRoot {
+			return nil
+		}
+		// Do not allow 'ddev config' in any parent directory of any project
+		rel, err = filepath.Rel(app.AppRoot, project.AppRoot)
+		if err == nil && !strings.HasPrefix(rel, "..") {
+			return fmt.Errorf("'ddev config' is not allowed in %s because a project exists in the subdirectory %s\nRun 'ddev stop --unlist' for all projects in subdirectories of the current directory first to reenable 'ddev config'", app.AppRoot, project.AppRoot)
+		}
 	}
 	return nil
 }
