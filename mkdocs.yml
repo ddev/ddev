@@ -224,6 +224,7 @@ nav:
       - developers/buildkite-testmachine-setup.md
       - developers/github-selfhosted-setup.md
       - developers/project-types.md
+      - developers/quickstart-maintenance.md
       - developers/release-management.md
       - developers/brand-guide.md
       - developers/testing-docs.md
