@@ -75,10 +75,10 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(app.Type, loadedConfig.Type)
 }
 
-// TestConfigHasRecommendedLocation tests to ensure that a new project
+// TestConfigHasAllowedLocation tests to ensure that a new project
 // cannot be configured in the home directory, its parent directories,
 // or the global config directory, but allows reconfiguration in a subdirectory.
-func TestConfigHasRecommendedLocation(t *testing.T) {
+func TestConfigHasAllowedLocation(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()

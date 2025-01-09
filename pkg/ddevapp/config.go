@@ -75,7 +75,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.AppRoot = appRoot
 	}
 
-	if err := HasRecommendedLocation(app); err != nil {
+	if err := HasAllowedLocation(app); err != nil {
 		return nil, err
 	}
 
@@ -1381,8 +1381,8 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 	return nil
 }
 
-// HasRecommendedLocation returns an error if the project location is not recommended
-func HasRecommendedLocation(app *DdevApp) error {
+// HasAllowedLocation returns an error if the project location is not recommended
+func HasAllowedLocation(app *DdevApp) error {
 	homeDir, _ := os.UserHomeDir()
 	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
 		return fmt.Errorf("'ddev config' is not allowed in your home directory (%v)", app.AppRoot)

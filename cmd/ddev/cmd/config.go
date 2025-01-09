@@ -145,7 +145,7 @@ var ConfigCommand = &cobra.Command{
 func handleConfigRun(cmd *cobra.Command, args []string) {
 	app := getConfigApp(providerName)
 
-	err := ddevapp.HasRecommendedLocation(app)
+	err := ddevapp.HasAllowedLocation(app)
 	if err != nil {
 		util.Failed("Unable to run `ddev config`: %v", err)
 	}
