@@ -136,7 +136,7 @@ jobs:
           echo "MAKE_TARGET=test" >> $GITHUB_ENV
           echo "GOTEST_SHORT=" >> $GITHUB_ENV
           # When TestAcquiaPush actually works this can be enabled
-          echo "DDEV_ALLOW_ACQUIA_PUSH=false" >> $GITHUB_ENV
+          echo "DDEV_ALLOW_ACQUIA_PUSH=true" >> $GITHUB_ENV
           # In push-pull-test-platforms we want to run all tests
           # that limit their scope when running with any value of GOTEST_SHORT
           TP=(
