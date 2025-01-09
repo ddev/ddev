@@ -2647,7 +2647,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to snapshot database, \nyour db container in project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --omit-snapshot --yes', \nwhich will destroy your database", app.Name)
 	}
-	
+
 	util.Success("Creating database snapshot %s", snapshotName)
 
 	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotFile))
