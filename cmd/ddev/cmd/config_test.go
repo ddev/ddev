@@ -444,7 +444,7 @@ func TestCmdConfigHasRecommendedLocation(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-type=php")
 	assert.Error(err)
-	assert.Contains(out, "not recommended in")
+	assert.Contains(out, "not allowed in")
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())

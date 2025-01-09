@@ -1385,15 +1385,15 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 func HasRecommendedLocation(app *DdevApp) error {
 	homeDir, _ := os.UserHomeDir()
 	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
-		return fmt.Errorf("'ddev config' is not recommended in your home directory (%v)", app.AppRoot)
+		return fmt.Errorf("'ddev config' is not allowed in your home directory (%v)", app.AppRoot)
 	}
 	rel, err := filepath.Rel(app.AppRoot, homeDir)
 	if err == nil && !strings.HasPrefix(rel, "..") {
-		return fmt.Errorf("'ddev config' is not recommended in the parent directories of your home directory (%v)", app.AppRoot)
+		return fmt.Errorf("'ddev config' is not allowed in the parent directory of your home directory (%v)", app.AppRoot)
 	}
 	rel, err = filepath.Rel(globalconfig.GetGlobalDdevDir(), app.AppRoot)
 	if err == nil && !strings.HasPrefix(rel, "..") {
-		return fmt.Errorf("'ddev config' is not recommended in your global config directory (%v)", app.AppRoot)
+		return fmt.Errorf("'ddev config' is not allowed in your global config directory (%v)", app.AppRoot)
 	}
 	projectList := globalconfig.GetGlobalProjectList()
 	for _, project := range projectList {
@@ -1403,7 +1403,7 @@ func HasRecommendedLocation(app *DdevApp) error {
 		// Do not allow 'ddev config' in any parent directory of any project
 		rel, err = filepath.Rel(app.AppRoot, project.AppRoot)
 		if err == nil && !strings.HasPrefix(rel, "..") {
-			return fmt.Errorf("'ddev config' is not recommended in the %s directory because a project exists in the subdirectory %s\nTo use 'ddev config' here, run 'ddev stop --unlist' for all projects in subdirectories of this directory first", app.AppRoot, project.AppRoot)
+			return fmt.Errorf("'ddev config' is not allowed in %s because a project exists in the subdirectory %s\nRun 'ddev stop --unlist' for all projects in subdirectories of the current directory first to reenable 'ddev config'", app.AppRoot, project.AppRoot)
 		}
 	}
 	return nil
