@@ -15,11 +15,11 @@ ARG DB_MAJOR_VERSION
 # See https://perconadev.atlassian.net/browse/PXB-3361
 ARG PERCONA_SETUP_URL=https://repo.percona.com/prel/apt/pool/testing/p/percona-release/percona-release_1.0-30.generic_all.deb
 
-ENV LANG=C.UTF-8
-ENV MYSQL_DATABASE=db
-ENV MYSQL_USER=db
-ENV MYSQL_PASSWORD=db
-ENV MYSQL_ROOT_PASSWORD=root
+ARG LANG=C.UTF-8
+ARG MYSQL_DATABASE=db
+ARG MYSQL_USER=db
+ARG MYSQL_PASSWORD=db
+ARG MYSQL_ROOT_PASSWORD=root
 
 SHELL ["/bin/bash", "-c"]
 
