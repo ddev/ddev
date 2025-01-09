@@ -63,7 +63,7 @@ files_import_command:
 db_push_command:
   command: |
     set -eu -o pipefail
-    export ACLI_DB_HOST=db ACLI_DB_NAME=db ACLI_DB_USER=db ACLI_DB_PASSWORD=db
+    export ACLI_DB_HOST=db ACLI_DB_NAME=db ACLI_DB_USER=root ACLI_DB_PASSWORD=root
     set -x   # You can enable bash debugging output by uncommenting
     acli push:db ${ACQUIA_ENVIRONMENT_ID} --no-interaction
 
