@@ -26,11 +26,11 @@ import (
  * defined in the constants below.
  */
 
-const upsunTestSiteID = "nqorjgl7ohua4"
+const upsunTestSiteID = "5dxxbe2vazzdo"
 const upsunPullTestSiteEnvironment = "pull"
 const upsunPushTestSiteEnvironment = "push"
 
-const upsunPullSiteURL = "https://pull-yx2voha-nqorjgl7ohua4.ca-1.platformsh.site/"
+const upsunPullSiteURL = "https://pull-yx2voha-5dxxbe2vazzdo.ca-1.platformsh.site/"
 const upsunSiteExpectation = "Super easy vegetarian pasta"
 
 // Note that these tests won't run with GitHub actions on a forked PR.
