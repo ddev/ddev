@@ -101,6 +101,13 @@ func TestConfigHasAllowedLocation(t *testing.T) {
 	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
 	assert.Contains(err.Error(), "'ddev config' is not allowed in your global config directory")
 
+	// Make sure we're not allowed to config in the root of ddev/ddev project itself.
+	// origDir is "pkg/ddevapp", we need to go two levels up.
+	tmpDir = filepath.Dir(filepath.Dir(origDir))
+	_, err = ddevapp.NewApp(tmpDir, false)
+	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
+	assert.Contains(err.Error(), "'ddev config' is not allowed in the directory used for DDEV development")
+
 	_ = os.Chdir(origDir)
 
 	// Create a temporary directory and change to it for the duration of this test.

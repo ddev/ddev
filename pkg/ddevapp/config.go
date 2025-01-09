@@ -1395,6 +1395,9 @@ func HasAllowedLocation(app *DdevApp) error {
 	if err == nil && !strings.HasPrefix(rel, "..") {
 		return fmt.Errorf("'ddev config' is not allowed in your global config directory (%v)", app.AppRoot)
 	}
+	if fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev/main.go")) && fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev_gen_autocomplete/ddev_gen_autocomplete.go")) {
+		return fmt.Errorf("'ddev config' is not allowed in the directory used for DDEV development (%v)", app.AppRoot)
+	}
 	projectList := globalconfig.GetGlobalProjectList()
 	for _, project := range projectList {
 		if app.AppRoot == project.AppRoot {
