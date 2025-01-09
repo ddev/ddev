@@ -89,7 +89,7 @@ ADD files /
 # On bitnami-derived images, remove their default config so we get ours
 RUN rm -rf /opt/bitnami/mysql/conf
 
-ENV MYSQL_UNIX_PORT=/var/tmp/mysql.sock
+ARG MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
 RUN if ! id mysql &>/dev/null ; then useradd -u 112 mysql; fi
