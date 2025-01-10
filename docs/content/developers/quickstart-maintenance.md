@@ -21,6 +21,7 @@ In general:
 2. Composer-based recipes are preferable, unless the project does not use or prefer composer.
 3. If your project type does not yet appear in the DDEV documentation, its name may need to be added to the [.spellcheckwordlist.txt](https://github.com/ddev/ddev/blob/main/.spellcheckwordlist.txt) so it can pass the spellcheck test.
 4. If your project type includes folders that accept public files (such as images), for example, `public/media`, make sure to add them to the [config](../users/configuration/config.md#upload_dirs) command:
+
     ```bash
     ddev config ... --upload-dirs=public/media
     ```
@@ -33,7 +34,9 @@ Testing:
     - See [`bats-core` documentation](https://bats-core.readthedocs.io/en/stable/).
     - See [`bats assert` and `bats-support` libraries documentation](https://github.com/ztombol/bats-docs).
     - If you install `bats` libraries manually (without package managers), make sure to set the `BATS_LIB_PATH` environment variable to the appropriate path. For example:
+
         ```bash
         export BATS_LIB_PATH=/path/to/bats
         ```
+
     - To run the docs tests, `cd docs && bats tests` or `bats tests/backdrop.bats` for example.
