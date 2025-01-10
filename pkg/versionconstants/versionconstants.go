@@ -17,7 +17,7 @@ var WebTag = "20241223_stasadev_build_warn" // Note that this can be overridden 
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20241223_stasadev_build_warn"
+var BaseDBTag = "20250109_rfay_mysql_db_user"
 
 const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.1"
 
