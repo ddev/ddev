@@ -648,8 +648,9 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
     ```bash
     mkdir my-processwire-site && cd my-processwire-site
-    ddev config --webserver-type=apache-fpm
-    ddev composer create processwire/processwire:^3
+    ddev config --project-type=php --webserver-type=apache-fpm
+    ddev start
+    ddev composer create "processwire/processwire:^3"
     ddev launch
     ```
     
