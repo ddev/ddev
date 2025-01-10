@@ -671,19 +671,19 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     ```
 
 - When the installation wizard prompts for database settings, enter the following:
-    - DB Name = `db`
-    - DB User = `db`
-    - DB Pass = `db`
-    - DB Host = `db` (**not** `localhost`!)
-    - DB Charset = `utf8mb4`
-    - DB Engine = `InnoDB`
+    - `DB Name` = `db`
+    - `DB User` = `db`
+    - `DB Pass` = `db`
+    - `DB Host` = `db` (**not** `localhost`!)
+    - `DB Charset` = `utf8mb4`
+    - `DB Engine` = `InnoDB`
 - Compatibility Check
     - Hit refresh if you get a warning about `Apache mod_rewrite`
 - **After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
 
-  ```
-  ddev config --upload-dirs=sites/assets/files`.
-  ```
+    ```
+    ddev config --upload-dirs=sites/assets/files` && ddev restart
+    ```
   
 If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).
 
