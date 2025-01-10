@@ -10,7 +10,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. In admin PowerShell, `wsl --install`.
-3. Install [Docker Desktop for Windows](https://docs.docker.com/desktop/release-notes/) (from the release notes page, which is best maintained)
+3. (WSL2/Docker Desktop and traditional Windows only): Install [Docker Desktop for Windows](https://docs.docker.com/desktop/release-notes/) (from the release notes page, which is best maintained)
 4. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`.
 5. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
 6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make` are only required for a traditional Windows test machine. `choco install -y git jq  mysql-cli golang make mkcert netcat zip`.
@@ -18,20 +18,20 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 7. (Traditional Windows test runner only): Download and run [`windows_buildkite-testmachine_setup.sh`](scripts/windows_buildkite_setup.sh).
 8. (Traditional Windows test runner only): Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh).
 9. Launch Docker. It may require you to take further actions.
-   * Check "Launch on login"
+   * Check "Start Docker Desktop when you sign in"
    * Check "Add the *.docker.internal names to the host's /etc/hosts file"
    * Uncheck "SBOM Indexing"
    * Under "Resources" uncheck "Resource Saver"
 10. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
-11. Enable gd, fileinfo, and curl extensions in `/c/tools/php*/php.ini`.
+11. (Traditional Windows test runner only): Enable gd, fileinfo, and curl extensions in `/c/tools/php*/php.ini`.
 12. Set the “Sleep after time” setting in settings to never.
 13. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
-14. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
-15. `git config --global --add safe.directory '*'`.
-16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-17. Run `.buildkite/sanetestbot.sh` to check your work.
-18. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
-19. Verify that `go`, `ddev`, `git-bash` are in the path.
+14. (Traditional Windows test runner only): Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
+15. (Traditional Windows test runner only): `git config --global --add safe.directory '*'`.
+16. (Traditional Windows test runner only): Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+17. (Traditional Windows test runner only): Run `.buildkite/sanetestbot.sh` to check your work.
+18. (Traditional Windows test runner only): Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
+19. (Traditional Windows test runner only): Verify that `go`, `ddev`, `git-bash` are in the path.
 20. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
 21. Turn off the settings that cause the "windows experience" prompts after new upgrades:
 ![disable_windows_experience](../images/disable_windows_experience.png)
