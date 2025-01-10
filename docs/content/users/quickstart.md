@@ -673,22 +673,16 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     - DB Name = `db`
     - DB User = `db`
     - DB Pass = `db`
-    - DB Host = `db` (not `localhost`!)
+    - DB Host = `db` (**not** `localhost`!)
 - Compatibility Check
     - Hit refresh if you get a warning about `Apache mod_rewrite`
-- Mutagen `upload_dirs` warning
-    - If you get a warning about missing `upload_dirs` when using Mutagen, add the following lines to your ddev config after ProcessWire has been installed (not earlier, otherwise it will break the installer!):
+- **After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
 
-```yaml
-upload_dirs:
-  - site/assets/files
-```
-
-Enjoy!
-
-If you have any questions head over to the dedicated DDEV thread in the ProcessWire forum:
-
-- https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/
+  ```
+  ddev config --upload-dirs=sites/assets/files`.
+  ```
+  
+If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).
 
 ## Shopware
 
