@@ -40,5 +40,3 @@ nssm.exe status buildkite-agent || true
 
 # Get firewall set up with a single run
 winpty docker run -it --rm -p 80 busybox:stable ls
-
-bash "/c/Program Files/ddev/windows_ddev_nfs_setup.sh"
