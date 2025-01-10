@@ -51,7 +51,6 @@ db_pull_command:
     echo "Using ACQUIA_ENVIRONMENT_ID=${ACQUIA_ENVIRONMENT_ID}"
     set -x   # You can enable bash debugging output by uncommenting
     db_dump=$(acli pull:db ${ACQUIA_ENVIRONMENT_ID} default --no-interaction --no-import | tail -2l | xargs |  sed 's/^.* //')
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     cp ${db_dump} /var/www/html/.ddev/.downloads/db.sql.gz
 
 files_import_command:
@@ -64,7 +63,7 @@ files_import_command:
 db_push_command:
   command: |
     set -eu -o pipefail
-    export ACLI_DB_HOST=db ACLI_DB_NAME=db ACLI_DB_USER=db ACLI_DB_PASSWORD=db
+    export ACLI_DB_HOST=db ACLI_DB_NAME=db ACLI_DB_USER=root ACLI_DB_PASSWORD=root
     set -x   # You can enable bash debugging output by uncommenting
     acli push:db ${ACQUIA_ENVIRONMENT_ID} --no-interaction
 

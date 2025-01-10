@@ -56,7 +56,6 @@ db_pull_command:
   command: |
     set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
     terminus backup:get ${project} --element=db --to=db.sql.gz
 
@@ -64,7 +63,6 @@ files_pull_command:
   command: |
     set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     terminus backup:get ${project} --element=files --to=files.tgz
     mkdir -p files && tar --strip-components=1 -C files -zxf files.tgz
@@ -75,7 +73,6 @@ db_push_command:
     set -x   # You can enable bash debugging output by uncommenting
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     set -eu -o pipefail
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     terminus remote:drush ${project} -- sql-drop -y
     gzip -dc db.sql.gz | terminus remote:drush ${project} -- sql-cli

@@ -26,11 +26,11 @@ import (
  * defined in the constants below.
  */
 
-const platformTestSiteID = "5bviezdszcmrg"
+const platformTestSiteID = "uwok34bf5555a"
 const platformPullTestSiteEnvironment = "platform-pull"
 const platformPushTestSiteEnvironment = "platform-push"
 
-const platformPullSiteURL = "https://platform-pull-7tsp6cq-5bviezdszcmrg.ca-1.platformsh.site/"
+const platformPullSiteURL = "https://platform-pull-7tsp6cq-uwok34bf5555a.ca-1.platformsh.site/"
 const platformSiteExpectation = "Super easy vegetarian pasta"
 
 // Note that these tests won't run with GitHub actions on a forked PR.
