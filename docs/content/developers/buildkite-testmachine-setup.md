@@ -39,7 +39,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## Both Docker Desktop/WSL2 and Docker-ce/WSL2
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent`
-2. Set the hostname in `/etc/wsl.conf` in the network section, for example:
+2. (Optionally if hostname is not same as appropriate hostname for WSL2) set the hostname in `/etc/wsl.conf` in the network section, for example:
 
     ```
     [network]
@@ -48,13 +48,6 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 3. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
 4. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
-5. `sudo apt update && sudo apt install -y apt-transport-https autojump build-essential ca-certificates curl dirmngr etckeeper expect git gnupg icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client nagios-plugins postgresql-client unzip vim zip`
-6. `sudo snap install --classic go`
-7. Install `ngrok` with the [`linux apt` technique](https://ngrok.com/download).
-8. `curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg`
-9. `echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list`
-10. `sudo apt-get update && sudo apt-get install -y buildkite-agent`
-11. Change `buildkite-agent` home directory to `/var/lib/buildkite-agent`: `sudo usermod -d /var/lib/buildkite-agent buildkite-agent`
 12. Configure buildkite agent in /etc/buildkite-agent:
      * `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"`
      * token="xxx"
