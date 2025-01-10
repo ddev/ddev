@@ -639,7 +639,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev restart
     ddev launch /admin
     ```
-    
+
 ## ProcessWire
 
 To get started with [ProcessWire](https://processwire.com/), create a new directory and use composer to require the desired version.
@@ -652,8 +652,8 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     ddev start
     ddev composer create "processwire/processwire:^3"
     ddev launch
-    ```
-    
+    ``` 
+
 === "Git"
 
     ```bash
@@ -675,6 +675,8 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     - DB User = `db`
     - DB Pass = `db`
     - DB Host = `db` (**not** `localhost`!)
+    - DB Charset = `utf8mb4`
+    - DB Engine = `InnoDB`
 - Compatibility Check
     - Hit refresh if you get a warning about `Apache mod_rewrite`
 - **After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
