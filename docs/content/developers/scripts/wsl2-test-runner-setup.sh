@@ -62,9 +62,6 @@ echo "tags=\"os=wsl2,architecture=amd64,dockertype=${BUILDKITE_DOCKER_TYPE:-}\""
 
 sudo systemctl enable buildkite-agent
 
-# Check out ddev
-mkdir ~/workspace && pushd ~/workspace && git clone -o upstream https://github.com/ddev/ddev && popd
-
 # Setup sudo
 (echo "ALL ALL=NOPASSWD: ALL" | sudo tee /etc/sudoers.d/all) && sudo chmod 440 /etc/sudoers.d/all
 
@@ -90,6 +87,13 @@ sudo vipw || true
 sudo systemctl start buildkite-agent
 
 # nagios for icinga2 needs to be in docker group
+if ! getent group docker > /dev/null; then
+    sudo groupadd docker
+fi
 sudo usermod -aG docker nagios
+sudo usermod -aG docker buildkite-agent
+
+# Check out ddev code for later use
+mkdir -p /var/lib/buildkite-agent/workspace && pushd /var/lib/buildkite-agent/workspace && git clone -o upstream https://github.com/ddev/ddev && popd
 
 echo "Now reboot the distro with 'wsl.exe -t Ubuntu' and restart it"
