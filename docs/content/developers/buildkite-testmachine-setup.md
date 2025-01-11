@@ -40,17 +40,18 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## Both Docker Desktop/WSL2 and Docker-ce/WSL2
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent` and the password used for `ddevtestbot@gmail.com`.
-2. (Optionally if hostname is not same as appropriate hostname for WSL2) set the hostname in `/etc/wsl.conf` in the network section, for example:
+2. Stop Docker Desktop if it is running.
+3. (Optionally if hostname is not same as appropriate hostname for WSL2) set the hostname in `/etc/wsl.conf` in the network section, for example:
 
     ```
     [network]
     hostname=tb-wsl-16-dockerce
     ```
 
-3. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
-4. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
-5. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
-6. Optionally edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
+4. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
+5. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
+6. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+7. Optionally edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
 
     ```
     memory=12GB
@@ -58,39 +59,15 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     autoMemoryReclaim=dropcache
     ```
 
-## Windows Setup for WSL2+Docker Desktop
-
-1. Stop Docker Desktop so it doesn't panic when the Ubuntu distro exits for reboot.
-2. In the Ubuntu distro:
-   1. `export BUILDKITE_AGENT_TOKEN=<token>` with the token from 1Password `BUILDKITE_AGENT_TOKEN`.
-   2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2`
-   3. Optionally `export NGROK_TOKEN=<token>` with the `NGROK_TOKEN` from 1Password ngrok.com `nopaid` account.
-   4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro.
-3. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
-4. Start Docker Desktop.
-5. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
-6. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
-
-## Windows Setup for WSL2+Docker-Inside Testing
-
-1. Make sure Docker Desktop is not integrated with this distro.
-2. Remove any entries (especially `host.docker.internal`) that Docker Desktop might have added in `C:\Windows\system32\drivers\etc\hosts`.
-3. Install Docker and basics in WSL2:
-
-    ```bash
-    sudo mkdir -p /etc/apt/keyrings
-    sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli etckeeper containerd.io docker-compose-plugin
-    sudo usermod -aG docker $USER
-    ```
-
-4. Install DDEV using the [standard WSL2 Docker CE installation](https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/#wsl2-docker-ce-inside-install-script)
-5. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-6. Run `.buildkite/sanetestbot.sh` to check your work.
-7. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
-8. Turn off the settings that cause the "windows experience" prompts after new upgrades:
-   ![disable_windows_experience](../images/disable_windows_experience.png)
+8. In the Ubuntu distro:
+    1. `export BUILDKITE_AGENT_TOKEN=<token>` with the token from 1Password `BUILDKITE_AGENT_TOKEN`.
+    2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2`
+    3. Optionally `export NGROK_TOKEN=<token>` with the `NGROK_TOKEN` from 1Password ngrok.com `nopaid` account.
+    4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro.
+9. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
+10. If using Docker Desktop, start Docker Desktop.
+11. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
+12. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
 
 ## Icinga2 monitoring setup for WSL2 instances
 

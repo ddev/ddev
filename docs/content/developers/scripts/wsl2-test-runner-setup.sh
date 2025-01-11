@@ -9,6 +9,8 @@
 
 set -eu -o pipefail
 
+echo "Please enter your sudo password if requested" && sudo ls
+
 # BUILDKITE_AGENT_TOKEN must be set
 if [ "${BUILDKITE_AGENT_TOKEN:-}" = "" ]; then
   echo "BUILDKITE_AGENT_TOKEN must be set, export BUILDKITE_AGENT_TOKEN=token" && exit 1
@@ -19,8 +21,18 @@ if [ "${BUILDKITE_DOCKER_TYPE:-}" = "" ]; then
   echo "BUILDKITE_DOCKER_TYPE must be set to dockerforwindows or wsl2, export BUILDKITE_DOCKER_TYPE=dockerforwindows" && exit 2
 fi
 
+set -x
 sudo apt-get update -qq >/dev/null && sudo apt-get upgrade -qq -y >/dev/null
 sudo apt-get install -qq -y apt-transport-https autojump bats build-essential ca-certificates ccache clang curl dirmngr etckeeper expect git gnupg htop icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client mkcert monitoring-plugins-contrib nagios-plugins postgresql-client unzip vim wslu xdg-utils zip >/dev/null
+
+# docker-ce if required
+if [ "${BUILDKITE_DOCKER_TYPE:-}" = "wsl2" ]; then
+  sudo mkdir -p /etc/apt/keyrings
+  sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get -qq update >/dev/null && sudo apt-get install -qq -y docker-ce docker-ce-cli etckeeper containerd.io docker-compose-plugin >/dev/null
+  sudo usermod -aG docker $USER
+fi
 
 # golang
 sudo snap install --classic go
