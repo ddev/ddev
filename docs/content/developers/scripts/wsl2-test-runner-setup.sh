@@ -20,7 +20,7 @@ if [ "${BUILDKITE_DOCKER_TYPE:-}" = "" ]; then
 fi
 
 sudo apt-get update -qq >/dev/null && sudo apt-get upgrade -qq -y >/dev/null
-sudo apt-get install -qq -y apt-transport-https autojump bats build-essential ca-certificates ccache clang curl dirmngr etckeeper expect git gnupg htop icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client mkcert nagios-plugins postgresql-client unzip vim wslu xdg-utils zip >/dev/null
+sudo apt-get install -qq -y apt-transport-https autojump bats build-essential ca-certificates ccache clang curl dirmngr etckeeper expect git gnupg htop icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client mkcert monitoring-plugins-contrib nagios-plugins postgresql-client unzip vim wslu xdg-utils zip >/dev/null
 
 # golang
 sudo snap install --classic go
@@ -76,5 +76,8 @@ echo "Press any key to continue..."
 read x
 sudo vipw || true
 sudo systemctl start buildkite-agent
+
+# nagios for icinga2 needs to be in docker group
+sudo usermod -aG docker nagios
 
 echo "Now reboot the distro with 'wsl.exe -t Ubuntu' and restart it"
