@@ -16,7 +16,7 @@ The quickstart can be based on one of the existing [quickstarts](../users/quicks
 The general intention is that it should be a *teaching* tool. It will not cover all the complexities of the project type being discussed. Try for the most straightforward, repeatable, testable approach so that a naive person with no experience on the project type can walk through it.
 
 In general:
-
+1. Add a link to the upstream installation or "Getting Started" web page, so people can know where the instructions are coming from.
 1. Use `mkdir my-<projecttype>-site && cd my-<projecttype>-site` as the opener.
 2. Composer-based recipes are preferable, unless the project does not use or prefer composer.
 3. If your project type does not yet appear in the DDEV documentation, its name may need to be added to the [.spellcheckwordlist.txt](https://github.com/ddev/ddev/blob/main/.spellcheckwordlist.txt) so it can pass the spellcheck test.
