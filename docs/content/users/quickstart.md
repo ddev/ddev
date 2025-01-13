@@ -212,10 +212,6 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 ## Drupal
 
-The legacy type `drupal` will be interpreted as the latest stable version of Drupal, so in 2024, `ddev config --project-type=drupal` will configure a Drupal 11 project. `drupal` can also be used as the project type in the `.ddev/config.yaml` but it will be interpreted as the latest stable version.
-
-### Drupal Core
-
 === "Drupal 11"
 
     ```bash
@@ -228,6 +224,26 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ddev launch
     # or automatically log in with
     ddev launch $(ddev drush uli)
+    ```
+
+=== "Drupal CMS"
+
+    ```bash
+    mkdir my-drupal-site && cd my-drupal-site
+    ddev config --project-type=drupal11 --docroot=web
+    ddev start
+    ddev composer create --stability="RC" drupal/cms
+    ddev launch
+    ```
+
+    or use the ZIP file download technique:
+
+    ```bash
+    CMS_VERSION=1.0.0-rc2
+    curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-1.0.0-${CMS_VERSION}.zip
+    unzip drupal-cms.zip && rm drupal-cms.zip
+    cd drupal-cms
+    ./launch-drupal-cms.sh
     ```
 
 === "Drupal 10"
@@ -261,34 +277,14 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
 === "Git Clone"
 
     ```bash
-    mkdir my-drupal-site && cd my-drupal-site
-    git clone https://github.com/ddev/test-drupal11 .
-    ddev config # Follow the prompts to set Drupal version and docroot
-    ddev start
-    ddev composer install # If a composer build
-    ddev launch
-    ```
-
-### Drupal CMS
-
-=== "Composer"
-
-    ```bash
-    mkdir my-drupal-site && cd my-drupal-site
+    PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
+    git clone ${PROJECT_GIT_URL} my-drupal-site
+    cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
     ddev start
-    ddev composer create drupal/cms
+    ddev composer install # If a composer build
+    ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
-    ```
-
-=== "ZIP File"
-
-    ```bash
-    CMS_VERSION=1.0.0
-    curl -o drupal-cms.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
-    unzip drupal-cms.zip && rm drupal-cms.zip
-    cd drupal-cms
-    ./launch-drupal-cms.sh
     ```
 
 ## ExpressionEngine
