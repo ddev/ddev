@@ -274,7 +274,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
 === "Composer"
 
     ```bash
-    mkdir my-drupal-cms && cd my-drupal-cms
+    mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
     ddev start
     ddev composer create drupal/cms
