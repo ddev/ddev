@@ -291,7 +291,6 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ./launch-drupal-cms.sh
     ```
 
-
 ## ExpressionEngine
 
 === "ExpressionEngine ZIP File Download"
