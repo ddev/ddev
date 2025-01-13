@@ -281,7 +281,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ddev launch
     ```
 
-=== "Zip file"
+=== "ZIP File"
 
     ```bash
     CMS_VERSION=1.0.0
