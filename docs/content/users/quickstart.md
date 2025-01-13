@@ -214,7 +214,7 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 The legacy type `drupal` will be interpreted as the latest stable version of Drupal, so in 2024, `ddev config --project-type=drupal` will configure a Drupal 11 project. `drupal` can also be used as the project type in the `.ddev/config.yaml` but it will be interpreted as the latest stable version.
 
-### Drupal core
+### Drupal Core
 
 === "Drupal 11"
 
