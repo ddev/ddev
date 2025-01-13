@@ -221,6 +221,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ```bash
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
+    ddev start
     ddev composer create drupal/recommended-project:^11
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
@@ -234,6 +235,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ```bash
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal10 --docroot=web
+    ddev start
     ddev composer create drupal/recommended-project:^10
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
@@ -262,6 +264,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     mkdir my-drupal-site && cd my-drupal-site
     git clone https://github.com/ddev/test-drupal11 .
     ddev config # Follow the prompts to set Drupal version and docroot
+    ddev start
     ddev composer install # If a composer build
     ddev launch
     ```
@@ -273,6 +276,7 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ```bash
     mkdir my-drupal-cms && cd my-drupal-cms
     ddev config --project-type=drupal11 --docroot=web
+    ddev start
     ddev composer create drupal/cms
     ddev launch
     ```
