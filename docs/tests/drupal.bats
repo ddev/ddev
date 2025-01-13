@@ -129,7 +129,7 @@ teardown() {
   cd ${tmpdir}/${PROJNAME}
   assert_success
   # execute launch script
-  run ./launch-drupal-cms.sh
+  run DDEV_DEBUG=true ./launch-drupal-cms.sh
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
