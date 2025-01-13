@@ -15,7 +15,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 5. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
 6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make` are only required for a traditional Windows test machine. `choco install -y git jq  mysql-cli golang make mkcert netcat zip`.
 7. After restart, in **administrative** Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`.
-8. (Traditional Windows test runner only): Download and run [`windows_buildkite-testmachine_setup.sh`](scripts/windows_buildkite_setup.sh).
+8. (Traditional Windows test runner only): Download and run [windows_buildkite_setup.sh](scripts/windows_buildkite_setup.sh).
 9. (Traditional Windows test runner only): Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh).
 10. Launch Docker. It may require you to take further actions.
     * Check "Start Docker Desktop when you sign in"
