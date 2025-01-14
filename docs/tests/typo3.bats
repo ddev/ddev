@@ -39,7 +39,6 @@ teardown() {
 }
 
 @test "TYPO3 git based quickstart with $(ddev --version)" {
-  skip
   # PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
   PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
   # git clone ${PROJECT_GIT_URL} ${PROJNAME}
