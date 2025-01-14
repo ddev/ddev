@@ -830,7 +830,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev start
     ddev composer create "typo3/cms-base-distribution"
     ddev exec touch public/FIRST_INSTALL
-    ddev launch
+    ddev launch /typo3/install.php
     ```
 
 === "Git Clone"
@@ -842,7 +842,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev start
     ddev composer install
     ddev exec touch public/FIRST_INSTALL
-    ddev launch
+    ddev launch /typo3/install.php
     ```
 
 ## WordPress

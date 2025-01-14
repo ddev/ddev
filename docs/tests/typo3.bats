@@ -61,11 +61,11 @@ teardown() {
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
+  run curl -sfI https://${PROJNAME}.ddev.site/typo3/install.php
   assert_success
-  assert_output --partial "location: /typo3/install.php"
-  assert_output --partial "HTTP/2 302"
+  assert_output --partial "content-security-policy: default-src 'self'; script-src 'self'"
+  assert_output --partial "HTTP/2 200"
 }
