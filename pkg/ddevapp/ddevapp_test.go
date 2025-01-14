@@ -118,16 +118,16 @@ var (
 		{
 			Name: "TestPkgTypo3",
 			// tar -czf .tarballs/typo3v11_source.tgz --exclude=var --exclude=public/fileadmin .
-			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/typo3v11_source.tgz",
-			ArchiveInternalExtractionPath: "",
-			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/typo3v11_db.sql.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/typo3v11_fileadmin.tgz",
+			SourceURL:                     "https://github.com/ddev/test-typo3/archive/refs/tags/v13.4.3.tar.gz",
+			ArchiveInternalExtractionPath: "test-typo3-13.4.3/",
+			DBTarURL:                      "https://github.com/ddev/test-typo3/releases/download/v13.4.3/typo3.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-typo3/releases/download/v13.4.3/files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is test text for TestDdevFullSiteSetup"},
-			FilesImageURI:                 "/fileadmin/user_upload/Logo.png",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/fileadmin/README.txt", Expect: "junk readme simply for reading"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/testpage", Expect: "This is test text for TestDdevFullSiteSetup"},
+			FilesImageURI:                 "/fileadmin/introduction/images/map.png",
 		},
 		// 6: magento1
 		{
