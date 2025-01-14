@@ -869,7 +869,7 @@ There are several easy ways to use DDEV with WordPress:
 
     # OR use the following installation command
     # (we need to use single quotes to get the primary site URL from `.ddev/config.yaml` as variable)
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
     # Launch WordPress admin dashboard in your browser
     ddev launch wp-admin/
