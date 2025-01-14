@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - "docs/content/users/quickstart.md"
+      - "docs/tests/**"
   workflow_dispatch:
     inputs:
       debug_enabled:
