@@ -37,3 +37,36 @@ teardown() {
   assert_output --partial "location: /typo3/install.php"
   assert_output --partial "HTTP/2 302"
 }
+
+@test "TYPO3 git based quickstart with $(ddev --version)" {
+  skip
+  # PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
+  PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
+  # git clone ${PROJECT_GIT_URL} ${PROJNAME}
+  run git clone ${PROJECT_GIT_URL} ${PROJNAME}
+  assert_success
+  # cd my-typo3-site
+  cd ${PROJNAME} || exit 2
+  assert_success
+  # ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  assert_success
+  # ddev start
+  run ddev start
+  assert_success
+  # ddev composer install
+  run ddev composer install
+  assert_success
+  # ddev exec touch public/FIRST_INSTALL
+  run ddev exec touch public/FIRST_INSTALL
+  assert_success
+  # ddev launch
+  run bash -c "DDEV_DEBUG=true ddev launch"
+  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_success
+  # validate running project
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "location: /typo3/install.php"
+  assert_output --partial "HTTP/2 302"
+}
