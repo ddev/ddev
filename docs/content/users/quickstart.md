@@ -241,7 +241,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ```bash
     CMS_VERSION=1.0.0-rc2
     curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
-    unzip drupal-cms.zip && rm drupal-cms.zip
+    unzip my-drupal-site.zip && rm my-drupal-site.zip
     cd drupal-cms
     ./launch-drupal-cms.sh
     ```
