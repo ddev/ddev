@@ -898,7 +898,12 @@ There are several easy ways to use DDEV with WordPress:
     WP_ENV=development
     ```
 
-    You can then run [`ddev start`](../users/usage/commands.md#start) and [`ddev launch`](../users/usage/commands.md#launch).
+    You can then install the site with WP-CLI and log into the admin interface:
+
+    ```bash
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev launch wp-admin/
+    ```
 
     For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
 
