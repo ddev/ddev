@@ -869,7 +869,7 @@ There are several easy ways to use DDEV with WordPress:
 
     # OR use the following installation command
     # (we need to use single quotes to get the primary site URL from `.ddev/config.yaml` as variable)
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
     # Launch WordPress admin dashboard in your browser
     ddev launch wp-admin/
@@ -880,7 +880,7 @@ There are several easy ways to use DDEV with WordPress:
     [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation in WordPress:
 
     ```bash
-    mkdir my-wp-bedrock-site && cd my-wp-bedrock-site
+    mkdir my-wp-site && cd my-wp-site
     ddev config --project-type=wordpress --docroot=web
     ddev start
     ddev composer create roots/bedrock
