@@ -864,6 +864,9 @@ There are several easy ways to use DDEV with WordPress:
     # Download WordPress
     ddev wp core download
 
+    # Shuffle the salts
+    ddev wp config shuffle-salts
+
     # Launch in browser to finish installation
     ddev launch
 
@@ -914,7 +917,11 @@ There are several easy ways to use DDEV with WordPress:
     ```bash
     git clone https://github.com/example/my-site.git my-wp-site
     cd my-wp-site
-    ddev config
+    ddev config --project-type=wordpress
+    ddev start
+    ddev wp config shuffle-salts
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev launch wp-admin/
     ```
 
     You’ll see a message like:

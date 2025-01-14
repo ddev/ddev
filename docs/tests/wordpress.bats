@@ -24,6 +24,9 @@ teardown() {
   # ddev wp core download
   run ddev wp core download
   assert_success
+  # ddev wp config shuffle-salts
+  run ddev wp config shuffle-salts
+  assert_success
   # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
@@ -94,5 +97,42 @@ teardown() {
   assert_success
   assert_output --partial "location: https://${PROJNAME}.ddev.site/wp/wp-admin/"
   assert_output --partial "link: <https://${PROJNAME}.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
+  assert_output --partial "HTTP/2 302"
+}
+
+@test "WordPress git based quickstart with $(ddev --version)" {
+  # PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
+  PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
+  # git clone ${PROJECT_GIT_URL} ${PROJNAME}
+  run git clone ${PROJECT_GIT_URL} ${PROJNAME}
+  assert_success
+  # cd my-typo3-site
+  cd ${PROJNAME} || exit 2
+  assert_success
+  # ddev config --project-type=wordpress
+  run ddev config --project-type=wordpress
+  assert_success
+  # ddev start
+  run ddev start
+  assert_success
+  # ddev wp config shuffle-salts
+  run ddev wp config shuffle-salts
+  assert_success
+  # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  assert_success
+  # ddev launch
+  run bash -c "DDEV_DEBUG=true ddev launch"
+  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_success
+  # validate running project
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "link: <https://my-wp-site.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
+  assert_output --partial "HTTP/2 200"
+  # validate running project
+  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
+  assert_success
+  assert_output --partial "location: https://my-wp-site.ddev.site/wp-login.php"
   assert_output --partial "HTTP/2 302"
 }
