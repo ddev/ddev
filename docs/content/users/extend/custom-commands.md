@@ -96,6 +96,8 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_GID`: The GID the web container runs as
+* `DDEV_GOARCH`: Architecture (`arm64`, `amd64`)
+* `DDEV_GOOS`: Operating system (`windows`, `darwin`, `linux`)
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
 * `DDEV_HOST_HTTPS_PORT`: Localhost port for HTTPS on web server
@@ -115,8 +117,6 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_UID`: The UID the web container runs as
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm` or `apache-fpm`
-* `GOARCH`: Architecture (`arm64`, `amd64`)
-* `GOOS`: Operating system (`windows`, `darwin`, `linux`)
 
 Useful variables for container scripts are:
 
