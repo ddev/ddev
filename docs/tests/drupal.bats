@@ -129,7 +129,7 @@ teardown() {
 }
 
 @test "Drupal CMS zip file quickstart with $(ddev --version)" {
- # CMS_VERSION=1.0.0
+  # CMS_VERSION=1.0.0
   CMS_VERSION=1.0.0
   # curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-1.0.0-${CMS_VERSION}.zip
   run curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
