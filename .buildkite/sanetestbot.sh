@@ -3,7 +3,7 @@
 # Check a testbot or test environment to make sure it's likely to be sane.
 # We should add to this script whenever a testbot fails and we can figure out why.
 
-MIN_DDEV_VERSION=v1.11.0
+MIN_DDEV_VERSION=v1.24.0
 
 set -o errexit
 set -o pipefail
