@@ -8,5 +8,5 @@ set -eu -o pipefail
 printf "You executed 'ddev $*' inside the web container\nbut many DDEV commands are not available.\n"
 
 if [ $# -ge 1 ] && command -v "$1" >/dev/null 2>&1; then
-  printf "\nHowever, you may be able to use just the command '$*'\n".
+  printf "\nHowever, you may be able to use a command like:\n\n$*\n".
 fi
