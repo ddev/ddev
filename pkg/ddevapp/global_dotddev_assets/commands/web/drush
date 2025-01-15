@@ -8,6 +8,9 @@
 ## ProjectTypes: drupal,drupal11,drupal10,drupal9,drupal8,drupal7,backdrop
 ## ExecRaw: true
 
+# Ignore anything we find in the mounted global commands
+PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
+
 if ! command -v drush >/dev/null; then
   echo "drush is not available. You may need to 'ddev composer require drush/drush'"
   exit 1

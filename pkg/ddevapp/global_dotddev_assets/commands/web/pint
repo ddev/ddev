@@ -3,8 +3,11 @@
 #ddev-generated
 ## Description: Run Pint inside the web container
 ## Usage: pint [flags] [args]
-## Example: "ddev pint --dirty" for fixing your current changes lint errors or "ddev pint --test app/Models" for only analyzing your models without autofix. 
+## Example: "ddev pint --dirty" for fixing your current changes lint errors or "ddev pint --test app/Models" for only analyzing your models without autofix.
 ## ProjectTypes: laravel
+
+# Ignore anything we find in the mounted global commands
+PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
 
 if ! command -v pint >/dev/null; then
   echo "pint is not available. You may need to 'ddev composer require laravel/pint'"
