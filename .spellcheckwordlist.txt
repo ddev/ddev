@@ -127,6 +127,7 @@ PathMaps
 PhpStorm
 PhpStorm's
 PowerShell
+ProcessWire
 Pull
 Quickstart
 RabbitMQ
