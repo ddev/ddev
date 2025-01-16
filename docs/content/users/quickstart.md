@@ -226,8 +226,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev launch $(ddev drush uli)
     ```
 
-    Read more about:
-    [[Drupal Core](https://new.drupal.org/about/overview/technical)][[Documentation](https://www.drupal.org/docs)]
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
 
 === "Drupal CMS"
 
@@ -249,8 +248,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ./launch-drupal-cms.sh
     ```
 
-    Read more about:
-    [[Drupal CMS](https://new.drupal.org/drupal-cms)][[Documentation](https://new.drupal.org/docs/drupal-cms)]
+    Read more about: [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms)
 
 === "Drupal 10"
 
@@ -266,8 +264,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev launch $(ddev drush uli)
     ```
 
-    Read more about:
-    [[Drupal Core](https://new.drupal.org/about/overview/technical)][[Documentation](https://www.drupal.org/docs)]
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
 
 === "Drupal 6/7"
 
