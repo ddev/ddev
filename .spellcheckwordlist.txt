@@ -167,6 +167,7 @@ VNC
 VPN
 VPNs
 WAMP
+WP-CLI
 WSL
 WSL2
 WantedBy

@@ -869,7 +869,7 @@ There are several easy ways to use DDEV with WordPress:
 
     # OR use the following installation command
     # (we need to use single quotes to get the primary site URL from `.ddev/config.yaml` as variable)
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
     # Launch WordPress admin dashboard in your browser
     ddev launch wp-admin/
@@ -880,7 +880,7 @@ There are several easy ways to use DDEV with WordPress:
     [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation in WordPress:
 
     ```bash
-    mkdir my-wp-bedrock-site && cd my-wp-bedrock-site
+    mkdir my-wp-site && cd my-wp-site
     ddev config --project-type=wordpress --docroot=web
     ddev start
     ddev composer create roots/bedrock
@@ -898,7 +898,12 @@ There are several easy ways to use DDEV with WordPress:
     WP_ENV=development
     ```
 
-    You can then run [`ddev start`](../users/usage/commands.md#start) and [`ddev launch`](../users/usage/commands.md#launch).
+    You can then install the site with WP-CLI and log into the admin interface:
+
+    ```bash
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev launch wp-admin/
+    ```
 
     For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
 
@@ -907,9 +912,13 @@ There are several easy ways to use DDEV with WordPress:
     To get started using DDEV with an existing WordPress project, clone the project’s repository.
 
     ```bash
-    git clone https://github.com/example/my-site.git my-wp-site
+    PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
+    git clone ${PROJECT_GIT_URL} my-wp-site
     cd my-wp-site
-    ddev config
+    ddev config --project-type=wordpress
+    ddev start
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev launch wp-admin/
     ```
 
     You’ll see a message like:
