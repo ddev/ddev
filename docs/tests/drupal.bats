@@ -136,7 +136,7 @@ teardown() {
   run curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
   assert_success
   # unzip my-drupal-cms-zip.zip && rm my-drupal-cms-zip.zip
-  run unzip my-drupal-site.zip && rm my-drupal-site.zip
+  run unzip my-drupal-site.zip && rm -f my-drupal-site.zip
   assert_success
   # mv drupal-cms my-drupal-site
   # (Not contained in quickstart but necessary to use PROJNAME in this test )
