@@ -212,13 +212,12 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 ## Drupal
 
-The legacy type `drupal` will be interpreted as the latest stable version of Drupal, so in 2024, `ddev config --project-type=drupal` will configure a Drupal 11 project. `drupal` can also be used as the project type in the `.ddev/config.yaml` but it will be interpreted as the latest stable version.
-
 === "Drupal 11"
 
     ```bash
-    mkdir my-drupal11-site && cd my-drupal11-site
+    mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
+    ddev start
     ddev composer create drupal/recommended-project:^11
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
@@ -227,30 +226,36 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     ddev launch $(ddev drush uli)
     ```
 
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
+
 === "Drupal CMS"
 
     ```bash
-    mkdir my-drupal-cms && cd my-drupal-cms
+    mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
-    ddev composer create --stability="RC" drupal/cms
+    ddev start
+    ddev composer create drupal/cms
     ddev launch
     ```
 
-    or use the Zip file download technique:
+    or use the ZIP file download technique:
 
-    ```
-    CMS_VERSION=1.0.0-rc2
-    curl -o drupal-cms.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
-    unzip drupal-cms.zip && rm drupal-cms.zip
+    ```bash
+    CMS_VERSION=1.0.0
+    curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
+    unzip my-drupal-site.zip && rm my-drupal-site.zip
     cd drupal-cms
     ./launch-drupal-cms.sh
     ```
 
+    Read more about: [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms)
+
 === "Drupal 10"
 
     ```bash
-    mkdir my-drupal10-site && cd my-drupal10-site
+    mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal10 --docroot=web
+    ddev start
     ddev composer create drupal/recommended-project:^10
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
@@ -258,6 +263,8 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
     # or automatically log in with
     ddev launch $(ddev drush uli)
     ```
+
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
 
 === "Drupal 6/7"
 
@@ -276,12 +283,17 @@ The legacy type `drupal` will be interpreted as the latest stable version of Dru
 === "Git Clone"
 
     ```bash
-    git clone https://github.com/example/my-drupal-site
+    PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
+    git clone ${PROJECT_GIT_URL} my-drupal-site
     cd my-drupal-site
-    ddev config # Follow the prompts to set Drupal version and docroot
+    ddev config --project-type=drupal11 --docroot=web
+    ddev start
     ddev composer install # If a composer build
+    ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
     ```
+
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
 
 ## ExpressionEngine
 
