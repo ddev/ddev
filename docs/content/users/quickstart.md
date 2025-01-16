@@ -293,8 +293,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev launch
     ```
 
-    Read more about:
-    [[Drupal Core](https://new.drupal.org/about/overview/technical)][[Documentation](https://www.drupal.org/docs)]
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
 
 ## ExpressionEngine
 
