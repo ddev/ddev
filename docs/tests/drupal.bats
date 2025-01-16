@@ -130,10 +130,8 @@ teardown() {
 
 @test "Drupal CMS zip file quickstart with $(ddev --version)" {
   skip "Skipping until script doesn't erroneously create a -1 on project name"
-  # CMS_VERSION=1.0.0
-  CMS_VERSION=1.0.0
   # curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-1.0.0-${CMS_VERSION}.zip
-  run curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
+  run curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
   assert_success
   # unzip my-drupal-cms-zip.zip && rm my-drupal-cms-zip.zip
   run unzip my-drupal-site.zip && rm -f my-drupal-site.zip
