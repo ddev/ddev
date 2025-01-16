@@ -24,9 +24,6 @@ teardown() {
   # ddev wp core download
   run ddev wp core download
   assert_success
-  # ddev wp config shuffle-salts
-  run ddev wp config shuffle-salts
-  assert_success
   # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
@@ -114,9 +111,6 @@ teardown() {
   assert_success
   # ddev start
   run ddev start
-  assert_success
-  # ddev wp config shuffle-salts
-  run ddev wp config shuffle-salts
   assert_success
   # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
