@@ -912,7 +912,8 @@ There are several easy ways to use DDEV with WordPress:
     To get started using DDEV with an existing WordPress project, clone the project’s repository.
 
     ```bash
-    git clone https://github.com/ddev/test-wordpress.git my-wp-site
+    PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
+    git clone ${PROJECT_GIT_URL} my-wp-site
     cd my-wp-site
     ddev config --project-type=wordpress
     ddev start
