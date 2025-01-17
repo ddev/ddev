@@ -1491,9 +1491,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Build extra layers on web and db images if necessary
-	output.UserOut.Printf("Building project images...")
+	fmt.Print("Building project images...")
 	buildDurationStart := util.ElapsedDuration(time.Now())
 	progress := "plain"
+	// Add a new line to display the debug output
+	// on the next line after "Building project images..."
+	if globalconfig.DdevDebug {
+		output.UserOut.Debugln()
+	}
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
 	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
