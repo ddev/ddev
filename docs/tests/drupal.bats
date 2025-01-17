@@ -133,7 +133,7 @@ teardown() {
   # curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
   run curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
   assert_success
-  # unzip my-drupal-cms-zip.zip && rm my-drupal-cms-zip.zip
+  # unzip my-drupal-cms-zip.zip && rm -f my-drupal-cms-zip.zip
   run unzip my-drupal-site.zip && rm -f my-drupal-site.zip
   assert_success
   # mv drupal-cms my-drupal-site
