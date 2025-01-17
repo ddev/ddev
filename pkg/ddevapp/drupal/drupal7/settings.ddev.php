@@ -29,6 +29,13 @@ $databases['default']['default']['port'] = $port;
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
 
+// This will prevent Drupal from setting read-only permissions on sites/default.
+$conf['skip_permissions_hardening'] = TRUE;
+
+// This will ensure the site can only be accessed through the intended host
+// names. Additional host patterns can be added for custom configurations.
+$conf['trusted_host_patterns'] = ['.*'];
+
 // Enable verbose logging for errors.
 // https://www.drupal.org/docs/7/creating-custom-modules/show-all-errors-while-developing
 $conf['error_level'] = 2;
