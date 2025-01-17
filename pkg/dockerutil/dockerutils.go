@@ -1928,8 +1928,9 @@ func GetLiveDockerComposeVersion() (string, error) {
 }
 
 // GetContainerNames takes an array of Container
-// and returns an array of strings with container names
-func GetContainerNames(containers []dockerTypes.Container, excludeContainerNames []string) []string {
+// and returns an array of strings with container names.
+// Use removePrefix to get short container names.
+func GetContainerNames(containers []dockerTypes.Container, excludeContainerNames []string, removePrefix string) []string {
 	var names []string
 	for _, container := range containers {
 		if len(container.Names) == 0 {
@@ -1938,6 +1939,9 @@ func GetContainerNames(containers []dockerTypes.Container, excludeContainerNames
 		name := container.Names[0][1:] // Trimming the leading '/' from the container name
 		if slices.Contains(excludeContainerNames, name) {
 			continue
+		}
+		if removePrefix != "" {
+			name = strings.TrimPrefix(name, removePrefix)
 		}
 		names = append(names, name)
 	}

@@ -1736,7 +1736,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if err != nil {
 		return err
 	}
-	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")})
+	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
 	if len(containerNames) > 0 {
 		output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
 	}
