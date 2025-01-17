@@ -1491,14 +1491,20 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Build extra layers on web and db images if necessary
-	fmt.Print("Building project images...")
+	if output.JSONOutput {
+		output.UserOut.Printf("Building project images...")
+	} else {
+		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
+		// See https://github.com/sirupsen/logrus/issues/167
+		// We want the progress dots to appear on the same line.
+		fmt.Print("Building project images...")
+		// Print a newline before util.Debug below
+		if globalconfig.DdevDebug {
+			output.UserOut.Debugln()
+		}
+	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
 	progress := "plain"
-	// Add a new line to display the debug output
-	// on the next line after "Building project images..."
-	if globalconfig.DdevDebug {
-		output.UserOut.Debugln()
-	}
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
 	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
