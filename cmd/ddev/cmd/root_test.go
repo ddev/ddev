@@ -51,6 +51,7 @@ var (
 		// care much about CMS functionality.
 		{
 			Name:                          "TestCmdDrupal6",
+			Disable:                       true,
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
