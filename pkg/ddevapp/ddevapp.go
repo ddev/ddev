@@ -1615,7 +1615,18 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if !mounted {
 			util.Failed("Mutagen Docker volume is not mounted. Please use `ddev restart`")
 		}
-		output.UserOut.Printf("Starting Mutagen sync process...")
+		if output.JSONOutput {
+			output.UserOut.Printf("Starting Mutagen sync process...")
+		} else {
+			// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
+			// See https://github.com/sirupsen/logrus/issues/167
+			// We want the progress dots to appear on the same line.
+			fmt.Print("Starting Mutagen sync process...")
+			// Print a newline before util.Debug below
+			if globalconfig.DdevDebug {
+				output.UserOut.Debugln()
+			}
+		}
 		mutagenDuration := util.ElapsedDuration(time.Now())
 
 		err = SetMutagenVolumeOwnership(app)
