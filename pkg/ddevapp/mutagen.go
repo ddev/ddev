@@ -284,6 +284,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		select {
 		// Complete when the MutagenSyncFlush() completes
 		case err = <-flushErr:
+			_, _ = fmt.Fprintln(os.Stderr)
 			return err
 		case outputComing = <-firstOutputReceived:
 
