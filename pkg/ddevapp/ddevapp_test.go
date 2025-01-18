@@ -3675,11 +3675,18 @@ func TestGetAllURLs(t *testing.T) {
 	runTime()
 }
 
-// TestPHPWebserverType checks that webserver_type:apache-fpm does the right thing
+// TestPHPWebserverType checks usage of
+// - webserver_type
+// - nginx_full/nginx-site.conf version installed
+// - Actual headers from site when nginx/apache installed per TestSite
 func TestPHPWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
 		runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		app := new(ddevapp.DdevApp)
@@ -3725,9 +3732,27 @@ func TestPHPWebserverType(t *testing.T) {
 			require.NotEmpty(t, resp.Header["Server"])
 			require.NotEmpty(t, resp.Header["Server"][0])
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
-			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
+			require.Contains(t, out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
+
+			// Inspect first line of .ddev/nginx_full/nginx-site.conf to make sure we
+			// have the right nginx config
+			nginxConfigFile, err := os.Open(app.GetConfigPath("nginx_full/nginx-site.conf"))
+			require.NoError(t, err)
+			defer nginxConfigFile.Close()
+			scanner := bufio.NewScanner(nginxConfigFile)
+			// Read the first line
+			if scanner.Scan() {
+				firstLine := scanner.Text()
+				// First line is like "# ddev drupal11 config"
+				parts := strings.Split(firstLine, " ")
+				require.Greater(t, len(parts), 3)
+				require.Equal(t, app.Type, parts[2])
+			}
+			err = scanner.Err()
+			require.NoError(t, err)
+
 			err = app.Stop(true, false)
-			assert.NoError(err)
+			require.NoError(t, err)
 		}
 
 		// Set the apptype back to whatever the default was so we don't break any following tests.
