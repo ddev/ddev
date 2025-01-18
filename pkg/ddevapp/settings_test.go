@@ -93,7 +93,12 @@ func TestWriteDrushConfig(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		runTime := util.TimeTrackC(fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()

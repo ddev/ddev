@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"testing"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -21,7 +22,12 @@ func TestCmdStop(t *testing.T) {
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		cleanup := site.Chdir()
 
 		out, err := exec.RunHostCommand(DdevBin, "stop")

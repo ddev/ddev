@@ -74,7 +74,11 @@ func TestCmdDescribe(t *testing.T) {
 	globalconfig.EnsureGlobalConfig()
 
 	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
-	for _, v := range TestSites {
+	for i, v := range TestSites {
+		if v.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", v.Name, i)
+			continue
+		}
 		err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "docker-compose.override.yaml"), filepath.Join(v.Dir, ".ddev", "docker-compose.override.yaml"))
 		assert.NoError(err)
 
@@ -278,6 +282,11 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	for i, v := range TestSites {
+		if v.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", v.Name, i)
+			continue
+		}
+
 		err := os.Chdir(v.Dir)
 		require.NoError(t, err)
 
@@ -320,7 +329,12 @@ func TestCmdDescribeAppUsingSitename(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	for _, v := range TestSites {
+	for i, v := range TestSites {
+		if v.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", v.Name, i)
+			continue
+		}
+
 		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
 		desc, err := app.Describe(false)
