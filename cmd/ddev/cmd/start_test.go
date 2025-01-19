@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"os"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/stretchr/testify/require"
 	"slices"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
+	"os"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -30,12 +30,7 @@ func TestCmdStart(t *testing.T) {
 	testcommon.CheckGoroutineOutput(t, out)
 
 	apps := []*ddevapp.DdevApp{}
-	for i, testSite := range TestSites {
-		if testSite.Disable {
-			t.Logf("Skipping TestSite %s=%d because disabled", testSite.Name, i)
-			continue
-		}
-
+	for _, testSite := range TestSites {
 		app, err := ddevapp.NewApp(testSite.Dir, false)
 		require.NoError(t, err)
 		apps = append(apps, app)

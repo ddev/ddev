@@ -53,12 +53,7 @@ func TestCmdList(t *testing.T) {
 	siteList := getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList), "didn't find expected number of sites in list: %v", siteList)
 
-	for i, v := range TestSites {
-		if v.Disable {
-			t.Logf("Skipping TestSite %s=%d because disabled", v.Name, i)
-			continue
-		}
-
+	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
 

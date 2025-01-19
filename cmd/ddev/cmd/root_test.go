@@ -2,14 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	osexec "os/exec"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
-	"testing"
-
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -24,6 +16,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"testing"
 )
 
 func init() {
@@ -95,12 +94,7 @@ func TestMain(m *testing.M) {
 	}
 
 	log.Debugln("Preparing TestSites")
-	for i, site := range TestSites {
-		if site.Disable {
-			log.Debugf("Skipping TestSite %s=%d because disabled", site.Name, i)
-			continue
-		}
-
+	for i := range TestSites {
 		oldProject := globalconfig.GetProject(TestSites[i].Name)
 		if oldProject != nil {
 			out, err := osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
@@ -132,10 +126,7 @@ func TestMain(m *testing.M) {
 
 	// Avoid being in any of the directories we're cleaning up.
 	_ = os.Chdir(os.TempDir())
-	for i, v := range TestSites {
-		if v.Disable {
-			continue
-		}
+	for i := range TestSites {
 		TestSites[i].Cleanup()
 	}
 
@@ -220,10 +211,6 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			// Because the start will have done a poweroff (new version),
 			// make sure sites are running again.
 			for _, site := range TestSites {
-				if site.Disable {
-					continue
-				}
-
 				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
 			}
 		})
@@ -284,10 +271,6 @@ func TestCopyGlobalDdevDir(t *testing.T) {
 		// Because the start will have done a poweroff (new version),
 		// make sure sites are running again.
 		for _, site := range TestSites {
-			if site.Disable {
-				continue
-			}
-
 			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
 		}
 	})
@@ -392,10 +375,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		// Because the start has done a poweroff (new DDEV version),
 		// make sure sites are running again.
 		for _, site := range TestSites {
-			if site.Disable {
-				continue
-			}
-
 			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
 		}
 
@@ -452,12 +431,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 // addSites runs `ddev start` on the test apps
 func addSites() error {
 	log.Debugln("Removing any existing TestSites")
-	for i, site := range TestSites {
-		if site.Disable {
-			log.Debugf("Skipping TestSite %s=%d because disabled", site.Name, i)
-			continue
-		}
-
+	for _, site := range TestSites {
 		// Make sure the site is gone in case it was hanging around
 		_, _ = exec.RunHostCommand(DdevBin, "stop", "-RO", site.Name)
 	}
@@ -467,10 +441,6 @@ func addSites() error {
 		_ = os.Chdir(origDir)
 	}()
 	for _, site := range TestSites {
-		if site.Disable {
-			continue
-		}
-
 		err := os.Chdir(site.Dir)
 		if err != nil {
 			log.Fatalf("Failed to Chdir to %v", site.Dir)
@@ -486,10 +456,6 @@ func addSites() error {
 // removeSites runs `ddev remove` on the test apps
 func removeSites() {
 	for _, site := range TestSites {
-		if site.Disable {
-			continue
-		}
-
 		_ = site.Chdir()
 
 		args := []string{"stop", "-RO"}
