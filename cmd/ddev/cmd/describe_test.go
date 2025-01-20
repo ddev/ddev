@@ -301,7 +301,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 
 		desc, err := app.Describe(false)
 		require.NoError(t, err)
-		require.EqualValues(t, t, ddevapp.SiteRunning, desc["status"])
+		require.EqualValues(t, ddevapp.SiteRunning, desc["status"])
 		require.EqualValues(t, ddevapp.SiteRunning, desc["status_desc"])
 		require.EqualValues(t, app.GetName(), desc["name"])
 		require.EqualValues(t, ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
