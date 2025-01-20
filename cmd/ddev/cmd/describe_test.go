@@ -54,13 +54,10 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
-	origDir, _ := os.Getwd()
 	tmpDir := testcommon.CreateTmpDir("")
 
 	t.Cleanup(func() {
@@ -75,11 +72,18 @@ func TestCmdDescribe(t *testing.T) {
 
 	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
 	for _, v := range TestSites {
-		err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "docker-compose.override.yaml"), filepath.Join(v.Dir, ".ddev", "docker-compose.override.yaml"))
-		assert.NoError(err)
-
 		app, err := ddevapp.NewApp(v.Dir, false)
 		require.NoError(t, err)
+		overrideFile := app.GetConfigPath("docker-compose.override.yaml")
+		err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.override.yaml"), overrideFile)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err = os.Remove(overrideFile)
+			require.NoError(t, err)
+			err = app.Start()
+			require.NoError(t, err)
+		})
 		err = app.Start()
 		require.NoError(t, err)
 
@@ -268,8 +272,12 @@ func TestCmdDescribe(t *testing.T) {
 		require.Equal(t, "", busybox2["host_ports"].(string))
 		require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
 		require.Contains(t, busybox2, "host_ports_mapping")
-
 		require.NotEmpty(t, item["msg"])
+
+		// Project must be stopped or later projects will collide on
+		// the docker-compose.override ports
+		err = app.Stop(false, false)
+		require.NoError(t, err)
 	}
 }
 
