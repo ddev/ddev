@@ -241,9 +241,8 @@ Read more about customizing the environment and persisting configuration in [Pro
     or use the ZIP file download technique:
 
     ```bash
-    CMS_VERSION=1.0.0
-    curl -o my-drupal-site.zip -fL https://ftp.drupal.org/files/projects/cms-${CMS_VERSION}.zip
-    unzip my-drupal-site.zip && rm my-drupal-site.zip
+    curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
+    unzip my-drupal-site.zip && rm -f my-drupal-site.zip
     cd drupal-cms
     ./launch-drupal-cms.sh
     ```
