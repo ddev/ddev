@@ -54,13 +54,10 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
-	origDir, _ := os.Getwd()
 	tmpDir := testcommon.CreateTmpDir("")
 
 	t.Cleanup(func() {
@@ -75,11 +72,18 @@ func TestCmdDescribe(t *testing.T) {
 
 	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
 	for _, v := range TestSites {
-		err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "docker-compose.override.yaml"), filepath.Join(v.Dir, ".ddev", "docker-compose.override.yaml"))
-		assert.NoError(err)
-
 		app, err := ddevapp.NewApp(v.Dir, false)
 		require.NoError(t, err)
+		overrideFile := app.GetConfigPath("docker-compose.override.yaml")
+		err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.override.yaml"), overrideFile)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err = os.Remove(overrideFile)
+			require.NoError(t, err)
+			err = app.Start()
+			require.NoError(t, err)
+		})
 		err = app.Start()
 		require.NoError(t, err)
 
@@ -268,46 +272,51 @@ func TestCmdDescribe(t *testing.T) {
 		require.Equal(t, "", busybox2["host_ports"].(string))
 		require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
 		require.Contains(t, busybox2, "host_ports_mapping")
-
 		require.NotEmpty(t, item["msg"])
+
+		// Project must be stopped or later projects will collide on
+		// the docker-compose.override ports
+		err = app.Stop(false, false)
+		require.NoError(t, err)
 	}
 }
 
 // TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestCmdDescribeAppFunction(t *testing.T) {
-	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	for i, v := range TestSites {
 		err := os.Chdir(v.Dir)
 		require.NoError(t, err)
 
 		app, err := ddevapp.GetActiveApp("")
-		assert.NoError(err)
+		require.NoError(t, err)
+
+		err = app.Start()
+		require.NoError(t, err)
+
 		t.Cleanup(func() {
-			err := os.Chdir(origDir)
-			assert.NoError(err)
-			err = app.Restart()
-			assert.NoError(err)
+			_ = os.Chdir(origDir)
+			_ = app.Restart()
 		})
 
 		desc, err := app.Describe(false)
-		assert.NoError(err)
-		assert.EqualValues(ddevapp.SiteRunning, desc["status"])
-		assert.EqualValues(ddevapp.SiteRunning, desc["status_desc"])
-		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
-		assert.EqualValues(v.Dir, desc["approot"].(string))
-		assert.Equal(app.GetHTTPURL(), desc["httpurl"])
-		assert.Equal(app.GetName(), desc["name"])
-		assert.Equal("healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
-		assert.Equal(v.Dir, desc["approot"])
+		require.NoError(t, err)
+		require.EqualValues(t, ddevapp.SiteRunning, desc["status"])
+		require.EqualValues(t, ddevapp.SiteRunning, desc["status_desc"])
+		require.EqualValues(t, app.GetName(), desc["name"])
+		require.EqualValues(t, ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		require.EqualValues(t, v.Dir, desc["approot"].(string))
+		require.Equal(t, app.GetHTTPURL(), desc["httpurl"])
+		require.Equal(t, app.GetName(), desc["name"])
+		require.Equal(t, "healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
+		require.Equal(t, v.Dir, desc["approot"])
 
 		// Stop the router using Docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
-		assert.NoError(err)
+		require.NoError(t, err)
 		desc, err = app.Describe(false)
-		assert.NoError(err)
-		assert.Equal("exited", desc["router_status"])
+		require.NoError(t, err)
+		require.Equal(t, "exited", desc["router_status"])
 	}
 }
 

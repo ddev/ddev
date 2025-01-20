@@ -368,6 +368,10 @@ func TestMain(m *testing.M) {
 	}
 
 	for i, site := range TestSites {
+		if site.Disable {
+			continue
+		}
+
 		app := &ddevapp.DdevApp{Name: site.Name}
 		_ = app.Stop(true, false)
 		_ = globalconfig.RemoveProjectInfo(site.Name)
@@ -430,6 +434,10 @@ func TestMain(m *testing.M) {
 	}
 
 	for i, site := range TestSites {
+		if site.Disable {
+			continue
+		}
+
 		testcommon.ClearDockerEnv()
 
 		app := &ddevapp.DdevApp{}
@@ -654,7 +662,12 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		runTime := util.TimeTrackC(fmt.Sprintf("%s DdevStartMultipleHostnames", site.Name))
 		testcommon.ClearDockerEnv()
 
@@ -1241,7 +1254,12 @@ func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Start the apps.
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		testcommon.ClearDockerEnv()
 		app := &ddevapp.DdevApp{}
 
@@ -1260,7 +1278,12 @@ func TestGetApps(t *testing.T) {
 
 	apps := ddevapp.GetActiveProjects()
 
-	for _, testSite := range TestSites {
+	for i, testSite := range TestSites {
+		if testSite.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", testSite.Name, i)
+			continue
+		}
+
 		var found bool
 		for _, app := range apps {
 			if testSite.Name == app.GetName() {
@@ -1273,6 +1296,10 @@ func TestGetApps(t *testing.T) {
 
 	// Now shut down all sites as we expect them to be shut down.
 	for _, site := range TestSites {
+		if site.Disable {
+			continue
+		}
+
 		testcommon.ClearDockerEnv()
 		app := &ddevapp.DdevApp{}
 
@@ -2587,7 +2614,12 @@ func TestDdevImportFilesDir(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		if site.FilesTarballURL == "" && site.FilesZipballURL == "" {
 			t.Logf("== SKIP TestDdevImportFilesDir for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
 			continue
@@ -2645,7 +2677,12 @@ func TestDdevImportFiles(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		if site.Type == "php" || (site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "") {
 			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided) or type php\n", site.Name)
 			continue
@@ -2755,7 +2792,12 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeSilverstripe: {"assets"},
 	}
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		switchDir := site.Chdir()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -2783,7 +2825,12 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
+		if site.Disable {
+			t.Logf("Skipping TestSite %s=%d because disabled", site.Name, i)
+			continue
+		}
+
 		switchDir := site.Chdir()
 		t.Logf("== BEGIN TestDdevImportFilesCustomUploadDir for %s\n", site.Name)
 
@@ -3227,6 +3274,10 @@ func TestGetAppsEmpty(t *testing.T) {
 
 	// Ensure test sites are removed
 	for _, site := range TestSites {
+		if site.Disable {
+			continue
+		}
+
 		app := &ddevapp.DdevApp{}
 
 		switchDir := site.Chdir()
