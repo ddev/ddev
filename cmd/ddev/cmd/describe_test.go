@@ -283,39 +283,40 @@ func TestCmdDescribe(t *testing.T) {
 
 // TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestCmdDescribeAppFunction(t *testing.T) {
-	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	for i, v := range TestSites {
 		err := os.Chdir(v.Dir)
 		require.NoError(t, err)
 
 		app, err := ddevapp.GetActiveApp("")
-		assert.NoError(err)
+		require.NoError(t, err)
+
+		err = app.Start()
+		require.NoError(t, err)
+
 		t.Cleanup(func() {
-			err := os.Chdir(origDir)
-			assert.NoError(err)
-			err = app.Restart()
-			assert.NoError(err)
+			_ = os.Chdir(origDir)
+			_ = app.Restart()
 		})
 
 		desc, err := app.Describe(false)
-		assert.NoError(err)
-		assert.EqualValues(ddevapp.SiteRunning, desc["status"])
-		assert.EqualValues(ddevapp.SiteRunning, desc["status_desc"])
-		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
-		assert.EqualValues(v.Dir, desc["approot"].(string))
-		assert.Equal(app.GetHTTPURL(), desc["httpurl"])
-		assert.Equal(app.GetName(), desc["name"])
-		assert.Equal("healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
-		assert.Equal(v.Dir, desc["approot"])
+		require.NoError(t, err)
+		require.EqualValues(t, t, ddevapp.SiteRunning, desc["status"])
+		require.EqualValues(t, ddevapp.SiteRunning, desc["status_desc"])
+		require.EqualValues(t, app.GetName(), desc["name"])
+		require.EqualValues(t, ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		require.EqualValues(t, v.Dir, desc["approot"].(string))
+		require.Equal(t, app.GetHTTPURL(), desc["httpurl"])
+		require.Equal(t, app.GetName(), desc["name"])
+		require.Equal(t, "healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
+		require.Equal(t, v.Dir, desc["approot"])
 
 		// Stop the router using Docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
-		assert.NoError(err)
+		require.NoError(t, err)
 		desc, err = app.Describe(false)
-		assert.NoError(err)
-		assert.Equal("exited", desc["router_status"])
+		require.NoError(t, err)
+		require.Equal(t, "exited", desc["router_status"])
 	}
 }
 
