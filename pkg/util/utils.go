@@ -93,6 +93,7 @@ func ShowDots() chan bool {
 		for {
 			select {
 			case <-done:
+				_, _ = fmt.Fprintln(os.Stderr)
 				return
 			default:
 				_, _ = fmt.Fprintf(os.Stderr, ".")

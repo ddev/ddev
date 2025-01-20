@@ -1491,7 +1491,18 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Build extra layers on web and db images if necessary
-	output.UserOut.Printf("Building project images...")
+	if output.JSONOutput {
+		output.UserOut.Printf("Building project images...")
+	} else {
+		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
+		// See https://github.com/sirupsen/logrus/issues/167
+		// We want the progress dots to appear on the same line.
+		fmt.Print("Building project images...")
+		// Print a newline before util.Debug below
+		if globalconfig.DdevDebug {
+			output.UserOut.Debugln()
+		}
+	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
 	progress := "plain"
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
@@ -1604,7 +1615,18 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if !mounted {
 			util.Failed("Mutagen Docker volume is not mounted. Please use `ddev restart`")
 		}
-		output.UserOut.Printf("Starting Mutagen sync process...")
+		if output.JSONOutput {
+			output.UserOut.Printf("Starting Mutagen sync process...")
+		} else {
+			// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
+			// See https://github.com/sirupsen/logrus/issues/167
+			// We want the progress dots to appear on the same line.
+			fmt.Print("Starting Mutagen sync process...")
+			// Print a newline before util.Debug below
+			if globalconfig.DdevDebug {
+				output.UserOut.Debugln()
+			}
+		}
 		mutagenDuration := util.ElapsedDuration(time.Now())
 
 		err = SetMutagenVolumeOwnership(app)
@@ -1731,7 +1753,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if err != nil {
 		return err
 	}
-	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")})
+	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
 	if len(containerNames) > 0 {
 		output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
 	}
