@@ -56,6 +56,9 @@ ARG XDEBUG_MODE=off
 ### See https://github.com/ddev/ddev/issues/6159
 RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
 RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
+### Bump the Xdebug version to 3.4.1 because of https://bugs.xdebug.org/view.php?id=2307
+RUN /usr/local/bin/build_php_extension.sh "php8.3" "xdebug" "3.4.1" "/usr/lib/php/20230831/xdebug.so"
+RUN /usr/local/bin/build_php_extension.sh "php8.4" "xdebug" "3.4.1" "/usr/lib/php/20240924/xdebug.so"
 #END ddev-php-extension-build
 
 ### ---------------------------ddev-php-base--------------------------------------
@@ -117,9 +120,11 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 ### The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 ARG XDEBUG_MODE=off
-RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
+RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug php8.3-xdebug php8.4-xdebug
 COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
 COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
+COPY --from=ddev-php-extension-build /usr/lib/php/20230831/xdebug.so /usr/lib/php/20230831/xdebug.so
+COPY --from=ddev-php-extension-build /usr/lib/php/20240924/xdebug.so /usr/lib/php/20240924/xdebug.so
 #END ddev-php-extension-build
 RUN phpdismod xhprof xdebug
 RUN apt-get -qq autoremove -y
