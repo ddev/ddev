@@ -54,7 +54,7 @@ Here’s how to try it for yourself:
 
     ```yaml
     certificatesResolvers:
-    acme-tlsChallenge:
+      acme-tlsChallenge:
         acme:
             caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
     ```
