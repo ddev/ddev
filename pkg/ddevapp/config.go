@@ -1398,7 +1398,7 @@ func HasAllowedLocation(app *DdevApp) error {
 		return fmt.Errorf("a project is not allowed in your global config directory (%v)", app.AppRoot)
 	}
 	if fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev/main.go")) && fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev_gen_autocomplete/ddev_gen_autocomplete.go")) {
-		return fmt.Errorf("a project is not allowed in the directory used for DDEV development (%v)", app.AppRoot)
+		return fmt.Errorf("a project cannot be created in the DDEV source code (%v)", app.AppRoot)
 	}
 	projectMap := globalconfig.GetGlobalProjectList()
 	projectList := make([]*globalconfig.ProjectInfo, 0, len(projectMap))
