@@ -1406,11 +1406,13 @@ func HasAllowedLocation(app *DdevApp) error {
 		projectList = append(projectList, project)
 	}
 	// Sort the projects by AppRoot in reverse alphabetical order,
-	// so deeper-level projects (longer paths) take precedence
+	// this ensures that subdirectory projects are checked first.
 	sort.Slice(projectList, func(i, j int) bool {
 		return projectList[i].AppRoot > projectList[j].AppRoot
 	})
 	for _, project := range projectList {
+		// Without sorting, a parent directory might be matched first,
+		// causing the function to return without checking the project in the subdirectory.
 		if app.AppRoot == project.AppRoot {
 			return nil
 		}
