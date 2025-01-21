@@ -101,6 +101,8 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * Configure it to automatically start and download updates, see ![OrbStack configuration](../images/orbstack_configuration.png).
 18. If Rancher Desktop will be deployed, install it.
     * Turn off kubernetes.
+    * Set virtualization to VZ
+    * Set mount type to VirtioFS
 19. Run iTerm. You may need to allow full disk access permissions.
 20. Run `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev`.
 21. Set up `nfsd` by running `bash ~/workspace/ddev/scripts/macos_ddev_nfs_setup.sh`.
