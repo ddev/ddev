@@ -75,10 +75,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.AppRoot = appRoot
 	}
 
-	if RunValidateConfig {
-		if err := HasAllowedLocation(app); err != nil {
-			return app, err
-		}
+	if err := HasAllowedLocation(app); err != nil {
+		return app, err
 	}
 
 	if _, err := os.Stat(app.AppRoot); err != nil {
@@ -1385,6 +1383,10 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 
 // HasAllowedLocation returns an error if the project location is not recommended
 func HasAllowedLocation(app *DdevApp) error {
+	// Do not run this check if we want to delete the project.
+	if !RunValidateConfig {
+		return nil
+	}
 	homeDir, _ := os.UserHomeDir()
 	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
 		return fmt.Errorf("a project is not allowed in your home directory (%v)", app.AppRoot)
