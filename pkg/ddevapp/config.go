@@ -1417,7 +1417,7 @@ func HasAllowedLocation(app *DdevApp) error {
 		// Do not allow 'ddev config' in any parent directory of any project
 		rel, err = filepath.Rel(app.AppRoot, project.AppRoot)
 		if err == nil && !strings.HasPrefix(rel, "..") {
-			return fmt.Errorf("a project is not allowed in %s because another project exists in the subdirectory %s\nUnlist this project with 'cd \"%s\" && ddev stop --unlist'\nOr run 'ddev stop --unlist' for all projects in the subdirectories of this project directory", app.AppRoot, project.AppRoot, app.AppRoot)
+			return fmt.Errorf("a project is not allowed in %s because another project exists in the subdirectory %s\nUnlist this project (if it exists) with 'cd \"%s\" && ddev stop --unlist'\nOr run 'ddev stop --unlist' for all projects in the subdirectories of this project directory", app.AppRoot, project.AppRoot, app.AppRoot)
 		}
 	}
 	return nil
