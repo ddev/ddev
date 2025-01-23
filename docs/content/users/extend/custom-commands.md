@@ -116,7 +116,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_UID`: The UID the web container runs as
-* `DDEV_WEBSERVER_TYPE`: `nginx-fpm` or `apache-fpm`
+* `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, `generic`
 
 Useful variables for container scripts are:
 
@@ -133,7 +133,7 @@ Useful variables for container scripts are:
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
-* `DDEV_WEBSERVER_TYPE`: `nginx-fpm` or `apache-fpm`
+* `DDEV_WEBSERVER_TYPE`: `nginx-fpm` ,`apache-fpm`, `generic`
 * `IS_DDEV_PROJECT`: If `true`, PHP is running under DDEV
 
 ## Annotations Supported

@@ -1107,10 +1107,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 		_ = os.RemoveAll(projDir)
 	})
 
-	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
-	for k := range nodeps.ValidWebserverTypes {
-		webserverKeys = append(webserverKeys, k)
-	}
+	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
 	if os.Getenv("GOTEST_SHORT") != "" {
 		webserverKeys = []string{nodeps.WebserverDefault}

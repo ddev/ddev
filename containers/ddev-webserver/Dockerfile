@@ -22,6 +22,8 @@ ARG DEFAULT_LOCALES="en_CA.UTF-8 UTF-8\nen_US.UTF-8 UTF-8\nen_GB.UTF-8 UTF-8\nes
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
 
+RUN curl -I https://packages.sury.org/php/dists/bookworm/InRelease
+
 # symfony cli
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
 
@@ -33,9 +35,9 @@ RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
 
+RUN apt-get -qq update
 RUN apt-get install -y postgresql-common && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
 
-RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     bash-completion \
     gettext \

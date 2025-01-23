@@ -42,6 +42,15 @@ fi
 # If DDEV_WEBSERVER_TYPE is not set, use reasonable default
 DDEV_WEBSERVER_TYPE=${DDEV_WEBSERVER_TYPE:-nginx-fpm}
 
+if [ "${DDEV_WEBSERVER_TYPE}" = "generic" ] ; then
+  if [ "${htmlaccess}" = "true" ]; then
+    touch /tmp/healthy
+    exit 0
+  else 
+    exit 2
+  fi
+fi
+
 if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm" ]; then
   if curl --fail -s 127.0.0.1/phpstatus >/dev/null; then
     phpstatus="true"
