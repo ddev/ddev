@@ -220,8 +220,10 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["docroot"] = app.GetDocroot()
 	appDesc["shortroot"] = shortRoot
-	appDesc["httpurl"] = app.GetHTTPURL()
-	appDesc["httpsurl"] = app.GetHTTPSURL()
+	if app.WebserverType == nodeps.WebserverGeneric {
+		appDesc["httpurl"] = app.GetHTTPURL()
+		appDesc["httpsurl"] = app.GetHTTPSURL()
+	}
 	appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
 	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
