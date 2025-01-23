@@ -178,6 +178,10 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeGeneric: {
+			postStartAction: nil,
+		},
+
 		nodeps.AppTypeLaravel: {
 			appTypeDetect:   isLaravelApp,
 			postStartAction: laravelPostStartAction,

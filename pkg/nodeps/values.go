@@ -84,6 +84,7 @@ var GoroutineLimit = 10
 var ValidWebserverTypes = map[string]bool{
 	WebserverNginxFPM:  true,
 	WebserverApacheFPM: true,
+	WebserverGeneric:   true,
 }
 
 const AppTypeDrupalLatestStable = AppTypeDrupal11
@@ -102,6 +103,7 @@ const (
 	AppTypeDrupal11 = "drupal11"
 	// AppTypeDrupal is an alias for "most recent Drupal version"
 	AppTypeDrupal       = "drupal"
+	AppTypeGeneric      = "generic"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"
 	AppTypeSymfony      = "symfony"
