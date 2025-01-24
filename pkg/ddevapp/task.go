@@ -165,16 +165,6 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec/exec_raw value, not executing it: %v", e)
-
-	} else if e, ok = ytask["exec"]; ok {
-		if v, ok := e.(string); ok {
-			t := ExecTask{app: app, exec: v}
-			if t.service, ok = ytask["service"].(string); !ok {
-				t.service = nodeps.WebContainer
-			}
-			return t
-		}
-		util.Warning("Invalid exec value, not executing it: %v", e)
 	}
 	return nil
 }
