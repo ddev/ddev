@@ -4,5 +4,7 @@
     "go.testEnvVars": {
         "DDEV_DEBUG": "true",
         "GOTEST_SHORT": "true"
-    }
+    },
+    "workbench.preferredHighContrastLightColorTheme": "Visual Studio Dark",
+    "editor.formatOnSave": true
 }

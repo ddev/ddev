@@ -3410,7 +3410,7 @@ func TestHttpsRedirection(t *testing.T) {
 	}
 
 	// The simple redirect logic in `landed.php` and /subdir can only handle default ports 80 and 443
-	if app.GetRouterHTTPSPort() == "443" && app.GetRouterHTTPPort() == "80" {
+	if app.GetPrimaryRouterHTTPSPort() == "443" && app.GetPrimaryRouterHTTPPort() == "80" {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php"})
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php"})
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
@@ -4301,7 +4301,7 @@ func TestCustomCerts(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetPrimaryRouterHTTPSPort(), app.GetHostname()),
 	})
 	require.NoError(t, err, "failed to run openssl command, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
@@ -4328,7 +4328,7 @@ func TestCustomCerts(t *testing.T) {
 	_ = app.MutagenSyncFlush()
 
 	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
+		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetPrimaryRouterHTTPSPort(), app.GetHostname()),
 	})
 	require.NoError(t, err, "openssl command failed, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
@@ -4386,8 +4386,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_PRIMARY_URL":       app.GetPrimaryURL(),
 		"DDEV_PROJECT":           app.Name,
 		"DDEV_PROJECT_TYPE":      app.Type,
-		"DDEV_ROUTER_HTTP_PORT":  app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT": app.GetRouterHTTPSPort(),
+		"DDEV_ROUTER_HTTP_PORT":  app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT": app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_SITENAME":          app.Name,
 		"DDEV_TLD":               app.ProjectTLD,
 		"DDEV_VERSION":           versionconstants.DdevVersion,
@@ -4439,8 +4439,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_PROJECT":             app.Name,
 		"DDEV_PROJECT_TYPE":        app.Type,
-		"DDEV_ROUTER_HTTP_PORT":    app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":   app.GetRouterHTTPSPort(),
+		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_SITENAME":            app.Name,
 		"DDEV_TLD":                 app.ProjectTLD,
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
