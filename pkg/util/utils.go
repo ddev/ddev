@@ -324,16 +324,21 @@ func Killall(processName string) {
 }
 
 // InterfaceSliceToStringSlice converts a slice of interfaces to a slice of strings
-func InterfaceSliceToStringSlice(v []interface{}) ([]string, error) {
-	raw := make([]string, len(v))
-	for i := range v {
-		if s, ok := v[i].(string); ok {
-			raw[i] = s
-		} else {
-			return nil, fmt.Errorf("%v is not a string", v[i])
+func InterfaceSliceToStringSlice(input interface{}) ([]string, error) {
+	switch v := input.(type) {
+	case []interface{}:
+		raw := make([]string, len(v))
+		for i := range v {
+			if s, ok := v[i].(string); ok {
+				raw[i] = s
+			} else {
+				return nil, fmt.Errorf("%v is not a string", v[i])
+			}
 		}
+		return raw, nil
+	default:
+		return nil, fmt.Errorf("unexpected type: %T", input)
 	}
-	return raw, nil
 }
 
 // SliceToUniqueSlice processes a slice of string to make sure there are no duplicates

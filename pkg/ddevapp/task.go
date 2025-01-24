@@ -132,9 +132,9 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 
 		// Handle the new-style `composer: [install]`
 		if v, ok := ytask["exec_raw"]; ok {
-			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			raw, err := util.InterfaceSliceToStringSlice(v)
 			if err != nil {
-				util.Warning("Invalid composer/exec_raw value, not executing it: %v", e)
+				util.Warning("Invalid composer/exec_raw value, not executing it: %v", err)
 				return nil
 			}
 
@@ -152,9 +152,9 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		}
 
 		if v, ok := ytask["exec_raw"]; ok {
-			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			raw, err := util.InterfaceSliceToStringSlice(v)
 			if err != nil {
-				util.Warning("Invalid exec/exec_raw value, not executing it: %v", e)
+				util.Warning("Invalid exec/exec_raw value, not executing it: %v", err)
 				return nil
 			}
 
@@ -164,7 +164,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			}
 			return t
 		}
-		util.Warning("Invalid exec_raw value, not executing it: %v", e)
+		util.Warning("Invalid exec/exec_raw value, not executing it: %v", e)
 
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
