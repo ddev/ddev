@@ -409,13 +409,16 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 				portValStr := portMapping
 				portSpecs := strings.Split(portValStr, ",")
-				// There might be more than one exposed UI port, but this only handles the first listed,
-				// most often there's only one.
+				// There might be more than one exposed UI port, for example
+				// the web container has https, http, and mailpit
 				if len(portSpecs) > 0 {
 					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
-
-					services[shortName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
+					// It doesn't make sense to report the mailpit port here
+		
+					if ports[0] != app.GetMailpitHTTPPort() && ports[0] != app.GetMailpitHTTPSPort() {
+						services[shortName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
+					}
 				}
 			}
 		}
