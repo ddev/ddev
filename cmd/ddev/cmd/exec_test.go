@@ -99,13 +99,10 @@ func TestCmdExec(t *testing.T) {
 
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-all-in-one.txt"))
 
-	_, err = exec.RunHostCommand(DdevBin, "exec", "true", "&&", "touch", "/var/www/html/TestCmdExec-touch-separate-args.txt")
+	// Complex commands with spaces should also work, even without the --raw flag
+	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "-c", "for i; do echo $i; done", "_", "string with spaces")
 	assert.NoError(err)
-
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-separate-args.txt"))
+	assert.Equal("string with spaces", strings.TrimSpace(out))
 
 	bashPath := util.FindBashPath()
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
