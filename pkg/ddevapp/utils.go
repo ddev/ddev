@@ -523,8 +523,6 @@ func (app *DdevApp) HasCustomCert() bool {
 
 // CanUseHTTPOnly returns true if the project can be accessed via http only
 func (app *DdevApp) CanUseHTTPOnly() bool {
-	// TODO: TESTING ONLY, remove this
-	// return true
 	switch {
 	// Gitpod and Codespaces have their own router with TLS termination
 	case nodeps.IsGitpod() || nodeps.IsCodespaces():
