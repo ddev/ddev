@@ -29,7 +29,7 @@ DDEV is an Apache License 2.0 open-source project with its ongoing development m
 
 #### Thanks to JetBrains for IDE Licenses
 
-<a href="https://jb.gg/OpenSourceSupport">
+<a href="https://www.jetbrains.com/community/opensource/?utm_source=ddev&utm_medium=readme">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://www.jetbrains.com/company/brand/img/logo_jb_dos_3.svg">
     <img alt="JetBrains logos with light and dark mode variants" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg">
