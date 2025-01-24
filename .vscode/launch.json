@@ -30,9 +30,8 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../sv2",
             "env": {"DDEV_DEBUG": "true"},
-            "args": ["describe"],
+            "args": ["describe", "sv2"],
             "showLog": true
         },
         {

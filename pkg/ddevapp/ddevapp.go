@@ -22,6 +22,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -398,19 +399,15 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					continue
 				}
 
-				// If the HTTP port is 80 (default), it doesn't get included in URL
-				portDefault := "80"
 				attributeName := "http_url"
 				protocol := "http://"
 
 				if name == "HTTPS_EXPOSE" {
-					// If the HTTPS port is 443 (default), it doesn't get included in URL
-					portDefault = "443"
 					attributeName = "https_url"
 					protocol = "https://"
 				}
 
-				portValStr := fmt.Sprintf("%s", portMapping)
+				portValStr := portMapping
 				portSpecs := strings.Split(portValStr, ",")
 				// There might be more than one exposed UI port, but this only handles the first listed,
 				// most often there's only one.
@@ -418,11 +415,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
 
-					services[shortName][attributeName] = protocol + appHostname
-
-					if ports[0] != portDefault {
-						services[shortName][attributeName] = services[shortName][attributeName].(string) + ":" + ports[0]
-					}
+					services[shortName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
 				}
 			}
 		}
@@ -567,7 +560,7 @@ func (app *DdevApp) GetWebserverType() string {
 
 // GetPrimaryRouterHTTPPort returns app's router primary http port
 // This can be port 80 (default) or the item in HTTP_EXPOSE
-// matching the default router port
+// matching the default router port. If there is no port, returns ""
 func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	proposedPrimaryRouterHTTPPort := "80"
 	if globalconfig.DdevGlobalConfig.RouterHTTPPort != "" {
@@ -2985,7 +2978,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	if nodeps.IsGitpod() {
 		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
 		if err == nil {
-			url = strings.Trim(url, "\n")
+			url = netutil.NormalizeURL(strings.Trim(url, "\n"))
 			httpsURLs = append(httpsURLs, url)
 		}
 	}
@@ -2994,29 +2987,23 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		previewDomain := os.Getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
 		if codespaceName != "" && previewDomain != "" {
 			url := fmt.Sprintf("https://%s-%s.%s", codespaceName, app.HostWebserverPort, previewDomain)
-			httpsURLs = append(httpsURLs, url)
+			httpsURLs = append(httpsURLs, netutil.NormalizeURL(url))
 		}
 	}
 
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
-		httpPort := ""
-		httpsPort := ""
-		// add the port to URL only if it's not the default port
-		if p := app.GetPrimaryRouterHTTPPort(); p != "80" {
-			httpPort = ":" + p
-		}
-		// If the HTTPS port is 443 (default), it doesn't get included in URL
-		if p := app.GetPrimaryRouterHTTPSPort(); p != "443" {
-			httpsPort = ":" + p
-		}
+		httpPort := app.GetPrimaryRouterHTTPPort()
+		httpsPort := app.GetPrimaryRouterHTTPSPort()
 
 		// It's possible for no https default to be configured
-		if !app.CanUseHTTPOnly() && httpsPort != ":" {
-			httpsURLs = append(httpsURLs, "https://"+name+httpsPort)
+		if !app.CanUseHTTPOnly() && httpsPort != "" {
+			httpsURL := netutil.NormalizeURL("https://" + name + ":" + httpsPort)
+			httpsURLs = append(httpsURLs, httpsURL)
 		}
-		if httpPort != ":" {
-			httpURLs = append(httpURLs, "http://"+name+httpPort)
+		if httpPort != "" {
+			httpURL := netutil.NormalizeURL("http://" + name + ":" + httpPort)
+			httpURLs = append(httpURLs, httpURL)
 		}
 	}
 
