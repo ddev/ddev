@@ -5,10 +5,10 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-// GetExposedPort returns the internal exposed port (as a string) for the given service.
+// GetInternalPort returns the internal exposed port (as a string) for the given service.
 // This can be used to find a given port for docker-compose manifests,
 // or for automated testing.
-func GetExposedPort(app *DdevApp, service string) string {
+func GetInternalPort(app *DdevApp, service string) string {
 	switch service {
 	case "db":
 		if app.Database.Type == nodeps.Postgres {

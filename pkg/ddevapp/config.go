@@ -805,6 +805,7 @@ type composeYAMLVars struct {
 	Name                            string
 	Plugin                          string
 	AppType                         string
+	WebserverType                   string
 	MailpitPort                     string
 	HostMailpitPort                 string
 	DBType                          string
@@ -862,6 +863,7 @@ type composeYAMLVars struct {
 	WebExtraHTTPSPorts              string
 	WebExtraExposedPorts            string
 	BitnamiVolumeDir                string
+	UseHardenedImages               bool
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -910,12 +912,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                      app.Name,
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
-		MailpitPort:               GetExposedPort(app, "mailpit"),
+		WebserverType:             app.WebserverType,
+		MailpitPort:               GetInternalPort(app, "mailpit"),
 		HostMailpitPort:           app.HostMailpitPort,
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",
-		DBPort:                    GetExposedPort(app, "db"),
+		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		NFSServerAddr:             nfsServerAddr,
@@ -960,6 +963,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 		BitnamiVolumeDir:                "",
+		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
 	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

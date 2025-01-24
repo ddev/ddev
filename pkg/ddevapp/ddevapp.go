@@ -220,7 +220,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["docroot"] = app.GetDocroot()
 	appDesc["shortroot"] = shortRoot
-	if app.WebserverType == nodeps.WebserverGeneric {
+	if app.WebserverType != nodeps.WebserverGeneric {
 		appDesc["httpurl"] = app.GetHTTPURL()
 		appDesc["httpsurl"] = app.GetHTTPSURL()
 	}
@@ -267,7 +267,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			if err != nil {
 				util.Warning("failed to GetPublishedPort(db): %v", err)
 			}
-			dbinfo["dbPort"] = GetExposedPort(app, "db")
+			dbinfo["dbPort"] = GetInternalPort(app, "db")
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = nodeps.MariaDB // default
 			dbinfo["database_type"] = app.Database.Type
@@ -442,7 +442,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 // GetPublishedPort returns the host-exposed public port of a container.
 func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
-	exposedPort := GetExposedPort(app, serviceName)
+	exposedPort := GetInternalPort(app, serviceName)
 	exposedPortInt, err := strconv.Atoi(exposedPort)
 	if err != nil {
 		return -1, err

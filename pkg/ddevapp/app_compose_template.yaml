@@ -161,12 +161,14 @@ services:
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
 
+{{- if ne .WebserverType "generic") }}
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_HTTP_PORT:80"
       - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
-    {{ if .HostMailpitPort }}
-      - "{{ .DockerIP }}:{{ .HostMailpitPort }}:8025"
-    {{ end }}
+    {{- if .MailpitPort }}
+      - "{{ .DockerIP }}:{{ .HostMailpitPort }}:{{ .MailpitPort }}"
+    {{- end }}
+{{- end }}
     environment:
     - COLUMNS
     - COREPACK_ENABLE_DOWNLOAD_PROMPT=0

@@ -230,7 +230,6 @@ ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
 
 COPY --from=ddev-webserver-dev-base / /
-EXPOSE 80 8025
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 #END ddev-webserver

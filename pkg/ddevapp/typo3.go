@@ -79,7 +79,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if app.Database.Type == nodeps.Postgres {
 		dbDriver = "pdo_pgsql"
 	}
-	settings := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetExposedPort(app, "db")}
+	settings := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetInternalPort(app, "db")}
 
 	// Ensure target directory exists and is writable
 	if err := util.Chmod(dir, 0755); os.IsNotExist(err) {
