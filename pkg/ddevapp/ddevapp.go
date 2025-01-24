@@ -415,7 +415,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
 					// It doesn't make sense to report the mailpit port here
-		
+
 					if ports[0] != app.GetMailpitHTTPPort() && ports[0] != app.GetMailpitHTTPSPort() {
 						services[shortName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
 					}
