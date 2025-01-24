@@ -27,6 +27,9 @@ DDEV is an Apache License 2.0 open-source project with its ongoing development m
   <img alt="DDEV Sponsor logos with light and dark mode variants" src="https://ddev.com/resources/featured-sponsors.svg">
 </picture>
 
+#### Thanks to Jetbrains for IDE Licenses
+[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSourceSupport)
+
 ## Contributing
 
 See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io/en/stable/users/usage/faq/), and the [Contributing](CONTRIBUTING.md) page.
