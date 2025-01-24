@@ -6,5 +6,6 @@
         "GOTEST_SHORT": "true"
     },
     "workbench.preferredHighContrastLightColorTheme": "Visual Studio Dark",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "go.formatTool": "gofmt"
 }

@@ -3046,11 +3046,10 @@ func (app *DdevApp) GetWebContainerDirectHTTPURL() string {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
 	port, err := app.GetWebContainerDirectHTTPPort()
-	if err == nil {
-		return fmt.Sprintf("http://%s:%d", dockerIP, port)
-	} else {
+	if err != nil {
 		return ""
 	}
+	return fmt.Sprintf("http://%s:%d", dockerIP, port)
 }
 
 // GetWebContainerDirectHTTPSURL returns the URL that can be used without the router to get to web container via https.
@@ -3061,11 +3060,10 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
 	port, err := app.GetWebContainerHTTPSPublicPort()
-	if err == nil {
-		return fmt.Sprintf("https://%s:%d", dockerIP, port)
-	} else {
+	if err != nil {
 		return ""
 	}
+	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
 // GetWebContainerPublicPort returns the direct-access public tcp port for http
