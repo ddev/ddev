@@ -49,10 +49,11 @@ ddev exec --raw -- ls -lR`,
 			Tty:     true,
 		}
 
+		// If they've chosen raw, use the actual passed values.
 		// If there are multiple arguments, treat them as a raw command.
 		// This avoids splitting quoted strings with spaces into separate arguments.
 		// Also, retrieve and preserve the current $PATH to ensure the environment is consistent.
-		if len(args) > 1 {
+		if cmd.Flag("raw").Changed || len(args) > 1 {
 			var env []string
 			path, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: serviceType,
@@ -78,7 +79,6 @@ func init() {
 	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Defines the execution directory within the container")
 	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with Bash inside container)")
-	_ = DdevExecCmd.Flags().MarkHidden("raw")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)
