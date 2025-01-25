@@ -1142,10 +1142,16 @@ func GetExposedContainerPorts(containerID string) ([]string, error) {
 	}
 
 	portMap := map[string]bool{}
-	for _, portMapping := range inspectInfo.NetworkSettings.Ports {
-		if portMapping != nil && len(portMapping) > 0 {
-			for _, item := range portMapping {
-				portMap[item.HostPort] = true
+
+	if inspectInfo.HostConfig != nil && inspectInfo.HostConfig.PortBindings != nil {
+		for _, portBindings := range inspectInfo.HostConfig.PortBindings {
+			if len(portBindings) > 0 {
+				for _, binding := range portBindings {
+					// Only include ports with a non-empty HostPort
+					if binding.HostPort != "" {
+						portMap[binding.HostPort] = true
+					}
+				}
 			}
 		}
 	}
