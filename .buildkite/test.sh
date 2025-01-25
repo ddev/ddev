@@ -44,6 +44,10 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   echo "starting docker context situation:"
   docker context ls
 
+  # For Lima and Colima, as of Lima 1.0.4, having orbstack running
+  # makes lima fail, see https://github.com/lima-vm/lima/issues/3145#issuecomment-2613728408
+  orb stop || true
+
   # Now start the docker provider we want
   case ${DOCKER_TYPE:=none} in
     "colima")
