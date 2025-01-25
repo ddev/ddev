@@ -1131,9 +1131,9 @@ func Pull(imageName string) error {
 	return err
 }
 
-// GetExposedContainerPorts takes a container pointer and returns an array
+// GetBoundHostPorts takes a container pointer and returns an array
 // of exposed ports (and error)
-func GetExposedContainerPorts(containerID string) ([]string, error) {
+func GetBoundHostPorts(containerID string) ([]string, error) {
 	ctx, client := GetDockerClient()
 	inspectInfo, err := client.ContainerInspect(ctx, containerID)
 

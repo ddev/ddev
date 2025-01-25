@@ -491,15 +491,15 @@ func TestRunSimpleContainer(t *testing.T) {
 	}
 }
 
-// TestGetExposedContainerPorts() checks to see that the ports expected
+// TestGetBoundHostPorts() checks to see that the ports expected
 // to be exposed on a container actually are exposed.
-func TestGetExposedContainerPorts(t *testing.T) {
+func TestGetBoundHostPorts(t *testing.T) {
 	assert := asrt.New(t)
 
 	testContainer, err := dockerutil.FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 	require.NoError(t, err)
 	require.NotNil(t, testContainer)
-	ports, err := dockerutil.GetExposedContainerPorts(testContainer.ID)
+	ports, err := dockerutil.GetBoundHostPorts(testContainer.ID)
 	assert.NoError(err)
 	assert.NotNil(ports)
 	assert.Equal([]string{"8889", "8890"}, ports)
