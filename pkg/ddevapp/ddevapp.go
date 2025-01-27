@@ -2436,6 +2436,10 @@ func (app *DdevApp) DockerEnv() {
 		dbFamily = "postgres"
 	}
 
+	// JAVA_HOME is not useful to us and can make `mkcert` fail when set wrong
+	// see https://stackoverflow.com/questions/78865612/ddev-mkcert-install-fails-or-hangs-when-java-home-misconfigured
+	_ = os.Unsetenv("JAVA_HOME")
+
 	envVars := map[string]string{
 		// The compose project name can no longer contain dots; must be lower-case
 		"COMPOSE_PROJECT_NAME":           app.GetComposeProjectName(),
