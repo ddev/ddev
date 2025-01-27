@@ -43,6 +43,42 @@ func TestGetInput(t *testing.T) {
 	assert.EqualValues(input, result)
 	_ = restoreOutput()
 
+	// GetInput should remove single quotes from start and end
+	input = `'Input"I'WantToSee'`
+	restoreOutput = util.CaptureUserOut()
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+	result = util.GetInput("nodefault")
+	assert.EqualValues(`Input"I'WantToSee`, result)
+	_ = restoreOutput()
+
+	// GetInput should remove double quotes from start and end
+	input = `"'Input"I'WantToSee"`
+	restoreOutput = util.CaptureUserOut()
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+	result = util.GetInput("nodefault")
+	assert.EqualValues(`'Input"I'WantToSee`, result)
+	_ = restoreOutput()
+
+	// GetInput should only remove the nearest quotes (checking single quotes)
+	input = `'"InputIWantToSee"'`
+	restoreOutput = util.CaptureUserOut()
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+	result = util.GetInput("nodefault")
+	assert.EqualValues(`"InputIWantToSee"`, result)
+	_ = restoreOutput()
+
+	// GetInput should only remove the nearest quotes (checking double quotes)
+	input = `"'InputIWantToSee'"`
+	restoreOutput = util.CaptureUserOut()
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+	result = util.GetInput("nodefault")
+	assert.EqualValues("'InputIWantToSee'", result)
+	_ = restoreOutput()
+
 	// Try Prompt() with a default value which is overridden
 	input = "InputIWantToSee"
 	restoreOutput = util.CaptureUserOut()
