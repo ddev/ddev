@@ -441,25 +441,25 @@ func TestCmdConfigHasAllowedLocation(t *testing.T) {
 	// Make sure we're not allowed to config in home directory.
 	home, _ := os.UserHomeDir()
 	err = os.Chdir(home)
-	assert.NoError(err)
+	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-type=php")
-	assert.Error(err)
-	assert.Contains(out, "not allowed in")
+	require.Error(t, err)
+	require.Contains(t, out, "not allowed in")
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 	err = os.Chdir(tmpDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	// Create a project
 	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name())
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name()+"_subdir")
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name()+"-subdir")
 		assert.NoError(err)
 		_ = os.RemoveAll(tmpDir)
 	})
@@ -467,25 +467,45 @@ func TestCmdConfigHasAllowedLocation(t *testing.T) {
 	subdirName := t.Name() + fileutil.RandomFilenameBase()
 	subdir := filepath.Join(tmpDir, subdirName)
 	err = os.Mkdir(subdir, 0777)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = os.Chdir(subdir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Make sure that 'ddev config' in a subdir doesn't give an error for existing project
 	_, err = exec.RunHostCommand(DdevBin, "config", "--web-environment-add=FOO=BAR")
-	assert.NoError(err)
-	assert.NoFileExists(filepath.Join(subdir, ".ddev/config.yaml"))
-	assert.FileExists(filepath.Join(tmpDir, ".ddev/config.yaml"))
+	require.NoError(t, err)
+	require.NoFileExists(t, filepath.Join(subdir, ".ddev/config.yaml"))
+	require.FileExists(t, filepath.Join(tmpDir, ".ddev/config.yaml"))
 	configFileContents, err := os.ReadFile(filepath.Join(tmpDir, ".ddev/config.yaml"))
-	assert.NoError(err)
-	assert.Contains(string(configFileContents), "FOO=BAR")
+	require.NoError(t, err)
+	require.Contains(t, string(configFileContents), "FOO=BAR")
 
 	// Make sure that 'ddev config' in a subdir gives an error for new projects
-	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name()+"_subdir")
-	assert.Error(err)
-	assert.Contains(out, fmt.Sprintf("project root '%s' already contains a project", tmpDir))
-	assert.Contains(out, "You may want to remove the existing project")
-	assert.NoFileExists(filepath.Join(subdir, ".ddev/config.yaml"))
+	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name()+"-subdir")
+	require.Error(t, err)
+	require.Contains(t, out, fmt.Sprintf("project root '%s' already contains a project", tmpDir))
+	require.Contains(t, out, "You may want to remove the existing project")
+	require.NoFileExists(t, filepath.Join(subdir, ".ddev/config.yaml"))
+
+	// Create a dummy config file to make it look like it's an existing project
+	err = os.MkdirAll(filepath.Join(subdir, ".ddev"), 0777)
+	require.NoError(t, err)
+	_, err = os.Create(filepath.Join(subdir, ".ddev/config.yaml"))
+	require.NoError(t, err)
+
+	// Make sure that 'ddev config' in the subdir works fine for existing projects
+	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name()+"-subdir")
+	require.NoError(t, err)
+	require.Contains(t, out, "'"+t.Name()+"-subdir'")
+	require.Contains(t, out, "Configuration complete")
+
+	// Make sure that 'ddev config' in the parent directory works fine for existing projects
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
+	out, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err)
+	require.Contains(t, out, "'"+t.Name()+"'")
+	require.Contains(t, out, "Configuration complete")
 }
 
 // TestConfigDatabaseVersion checks to make sure that both

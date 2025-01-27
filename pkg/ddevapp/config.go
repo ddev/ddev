@@ -1418,6 +1418,10 @@ func HasAllowedLocation(app *DdevApp) error {
 		if app.AppRoot == project.AppRoot {
 			return nil
 		}
+		// If this is an existing project, allow it
+		if fileutil.FileExists(app.GetConfigPath("config.yaml")) {
+			return nil
+		}
 		// Do not allow 'ddev config' in any parent directory of any project
 		rel, err = filepath.Rel(app.AppRoot, project.AppRoot)
 		if err == nil && !strings.HasPrefix(rel, "..") {
