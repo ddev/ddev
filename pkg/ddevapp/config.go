@@ -859,6 +859,7 @@ type composeYAMLVars struct {
 	DefaultContainerTimeout         string
 	StartScriptTimeout              string
 	UseHostDockerInternalExtraHosts bool
+	WebExtraContainerPorts          []int
 	WebExtraHTTPPorts               string
 	WebExtraHTTPSPorts              string
 	WebExtraExposedPorts            string
@@ -972,19 +973,20 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	webimageExtraHTTPPorts := []string{}
 	webimageExtraHTTPSPorts := []string{}
-	exposedPorts := []int{}
+	webExtraContainerPorts := []int{}
 	for _, a := range app.WebExtraExposedPorts {
 		webimageExtraHTTPPorts = append(webimageExtraHTTPPorts, fmt.Sprintf("%d:%d", a.HTTPPort, a.WebContainerPort))
 		webimageExtraHTTPSPorts = append(webimageExtraHTTPSPorts, fmt.Sprintf("%d:%d", a.HTTPSPort, a.WebContainerPort))
-		exposedPorts = append(exposedPorts, a.WebContainerPort)
+		webExtraContainerPorts = append(webExtraContainerPorts, a.WebContainerPort)
 	}
-	if len(exposedPorts) != 0 {
+	templateVars.WebExtraContainerPorts = webExtraContainerPorts
+	if len(webExtraContainerPorts) != 0 {
 		templateVars.WebExtraHTTPPorts = "," + strings.Join(webimageExtraHTTPPorts, ",")
 		templateVars.WebExtraHTTPSPorts = "," + strings.Join(webimageExtraHTTPSPorts, ",")
 
 		templateVars.WebExtraExposedPorts = "expose:\n    - "
 		// Odd way to join ints into a string from https://stackoverflow.com/a/37533144/215713
-		templateVars.WebExtraExposedPorts = templateVars.WebExtraExposedPorts + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(exposedPorts)), "\n    - "), "[]")
+		templateVars.WebExtraExposedPorts = templateVars.WebExtraExposedPorts + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(webExtraContainerPorts)), "\n    - "), "[]")
 	}
 
 	if app.Database.Type == nodeps.Postgres {

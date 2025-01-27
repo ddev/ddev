@@ -175,9 +175,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// Get extra info for web container
 			if k == "web" {
-				// For generic type, we don't show PHP version or docroot
+				// For generic type, we don't show PHP version
 				if app.WebserverType != nodeps.WebserverGeneric {
-					extraInfo = append(extraInfo, fmt.Sprintf("%s PHP%s\n%s\ndocroot:'%s'", desc["type"], desc["php_version"], desc["webserver_type"], desc["docroot"]))
+					extraInfo = append(extraInfo, fmt.Sprintf("%s \n%s\ndocroot:'%s'", desc["type"], desc["webserver_type"], desc["docroot"]))
 				} else {
 					extraInfo = append(extraInfo, fmt.Sprintf("%s", desc["type"]))
 				}
