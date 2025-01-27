@@ -87,26 +87,26 @@ func TestConfigHasAllowedLocation(t *testing.T) {
 	tmpDir, _ := os.UserHomeDir()
 	_, err := ddevapp.NewApp(tmpDir, false)
 	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
-	assert.Contains(err.Error(), "'ddev config' is not allowed in your home directory")
+	require.Contains(t, err.Error(), "is not allowed in your home directory")
 
 	// Make sure we're not allowed to config in the parent directory of the home directory.
 	tmpDir = filepath.Dir(tmpDir)
 	_, err = ddevapp.NewApp(tmpDir, false)
 	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
-	assert.Contains(err.Error(), "'ddev config' is not allowed in the parent directory of your home directory")
+	require.Contains(t, err.Error(), "is not allowed in the parent directory of your home directory")
 
 	// Make sure we're not allowed to config in global config directory.
 	tmpDir = globalconfig.GetGlobalDdevDir()
 	_, err = ddevapp.NewApp(tmpDir, false)
 	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
-	assert.Contains(err.Error(), "'ddev config' is not allowed in your global config directory")
+	require.Contains(t, err.Error(), "is not allowed in your global config directory")
 
 	// Make sure we're not allowed to config in the root of ddev/ddev project itself.
 	// origDir is "pkg/ddevapp", we need to go two levels up.
 	tmpDir = filepath.Dir(filepath.Dir(origDir))
 	_, err = ddevapp.NewApp(tmpDir, false)
 	require.Error(t, err, "'ddev config' must not be allowed in %s", tmpDir)
-	assert.Contains(err.Error(), "'ddev config' is not allowed in the directory used for DDEV development")
+	require.Contains(t, err.Error(), "cannot be created in the DDEV source code")
 
 	_ = os.Chdir(origDir)
 
@@ -144,15 +144,15 @@ func TestConfigHasAllowedLocation(t *testing.T) {
 	// Checking the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(tmpDir), false)
 	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(tmpDir))
-	assert.Contains(err.Error(), "'ddev config' is not allowed")
-	assert.Contains(err.Error(), "because a project exists in the subdirectory")
+	require.Contains(t, err.Error(), "is not allowed")
+	require.Contains(t, err.Error(), "because another project exists in the subdirectory")
 
 	// Make sure we're not allowed to config in any project parent directory
 	// Checking parent directory of the project parent directory here
 	_, err = ddevapp.NewApp(filepath.Dir(filepath.Dir(tmpDir)), false)
 	require.Error(t, err, "'ddev config' must not be allowed in %s", filepath.Dir(filepath.Dir(tmpDir)))
-	assert.Contains(err.Error(), "'ddev config' is not allowed")
-	assert.Contains(err.Error(), "because a project exists in the subdirectory")
+	require.Contains(t, err.Error(), "is not allowed")
+	require.Contains(t, err.Error(), "because another project exists in the subdirectory")
 }
 
 // TestAllowedAppType tests the IsValidAppType function.

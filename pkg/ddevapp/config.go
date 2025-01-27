@@ -76,7 +76,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	}
 
 	if err := HasAllowedLocation(app); err != nil {
-		return nil, err
+		return app, err
 	}
 
 	if _, err := os.Stat(app.AppRoot); err != nil {
@@ -1383,30 +1383,45 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 
 // HasAllowedLocation returns an error if the project location is not recommended
 func HasAllowedLocation(app *DdevApp) error {
+	// Do not run this check if we want to delete the project.
+	if !RunValidateConfig {
+		return nil
+	}
 	homeDir, _ := os.UserHomeDir()
 	if app.AppRoot == homeDir || app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) {
-		return fmt.Errorf("'ddev config' is not allowed in your home directory (%v)", app.AppRoot)
+		return fmt.Errorf("a project is not allowed in your home directory (%v)", app.AppRoot)
 	}
 	rel, err := filepath.Rel(app.AppRoot, homeDir)
 	if err == nil && !strings.HasPrefix(rel, "..") {
-		return fmt.Errorf("'ddev config' is not allowed in the parent directory of your home directory (%v)", app.AppRoot)
+		return fmt.Errorf("a project is not allowed in the parent directory of your home directory (%v)", app.AppRoot)
 	}
 	rel, err = filepath.Rel(globalconfig.GetGlobalDdevDir(), app.AppRoot)
 	if err == nil && !strings.HasPrefix(rel, "..") {
-		return fmt.Errorf("'ddev config' is not allowed in your global config directory (%v)", app.AppRoot)
+		return fmt.Errorf("a project is not allowed in your global config directory (%v)", app.AppRoot)
 	}
 	if fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev/main.go")) && fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev_gen_autocomplete/ddev_gen_autocomplete.go")) {
-		return fmt.Errorf("'ddev config' is not allowed in the directory used for DDEV development (%v)", app.AppRoot)
+		return fmt.Errorf("a project cannot be created in the DDEV source code (%v)", app.AppRoot)
 	}
-	projectList := globalconfig.GetGlobalProjectList()
+	projectMap := globalconfig.GetGlobalProjectList()
+	projectList := make([]*globalconfig.ProjectInfo, 0, len(projectMap))
+	for _, project := range projectMap {
+		projectList = append(projectList, project)
+	}
+	// Sort the projects by AppRoot in reverse alphabetical order,
+	// this ensures that subdirectory projects are checked first.
+	sort.Slice(projectList, func(i, j int) bool {
+		return projectList[i].AppRoot > projectList[j].AppRoot
+	})
 	for _, project := range projectList {
+		// Without sorting, a parent directory might be matched first,
+		// causing the function to return without checking the project in the subdirectory.
 		if app.AppRoot == project.AppRoot {
 			return nil
 		}
 		// Do not allow 'ddev config' in any parent directory of any project
 		rel, err = filepath.Rel(app.AppRoot, project.AppRoot)
 		if err == nil && !strings.HasPrefix(rel, "..") {
-			return fmt.Errorf("'ddev config' is not allowed in %s because a project exists in the subdirectory %s\nRun 'ddev stop --unlist' for all projects in subdirectories of the current directory first to reenable 'ddev config'", app.AppRoot, project.AppRoot)
+			return fmt.Errorf("a project is not allowed in %s because another project exists in the subdirectory %s\nUnlist this project (if it exists) with 'cd \"%s\" && ddev stop --unlist'\nOr run 'ddev stop --unlist' for all projects in the subdirectories of this project directory", app.AppRoot, project.AppRoot, app.AppRoot)
 		}
 	}
 	return nil
