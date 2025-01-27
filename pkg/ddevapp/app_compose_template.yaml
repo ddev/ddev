@@ -210,7 +210,7 @@ services:
     # To expose a container port to a different host port, define the port as hostPort:containerPort
     # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
     # To expose an HTTPS port, define the port as securePort:containerPort.
-    {{ if eq .AppType "generic" }}
+    {{ if eq .WebserverType "generic" }}
     - HTTP_EXPOSE=${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
     - HTTPS_EXPOSE=${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
     {{ else }}
