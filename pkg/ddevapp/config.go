@@ -1402,6 +1402,11 @@ func HasAllowedLocation(app *DdevApp) error {
 	if fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev/main.go")) && fileutil.FileExists(filepath.Join(app.AppRoot, "cmd/ddev_gen_autocomplete/ddev_gen_autocomplete.go")) {
 		return fmt.Errorf("a project cannot be created in the DDEV source code (%v)", app.AppRoot)
 	}
+	// If this is an existing project, allow it.
+	if fileutil.FileExists(app.GetConfigPath("config.yaml")) {
+		return nil
+	}
+	// Check all projects if they are located in the subdirectories of the project we are in.
 	projectMap := globalconfig.GetGlobalProjectList()
 	projectList := make([]*globalconfig.ProjectInfo, 0, len(projectMap))
 	for _, project := range projectMap {
@@ -1416,10 +1421,6 @@ func HasAllowedLocation(app *DdevApp) error {
 		// Without sorting, a parent directory might be matched first,
 		// causing the function to return without checking the project in the subdirectory.
 		if app.AppRoot == project.AppRoot {
-			return nil
-		}
-		// If this is an existing project, allow it
-		if fileutil.FileExists(app.GetConfigPath("config.yaml")) {
 			return nil
 		}
 		// Do not allow 'ddev config' in any parent directory of any project
