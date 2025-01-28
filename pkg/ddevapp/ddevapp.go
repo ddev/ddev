@@ -573,10 +573,10 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 		proposedPrimaryRouterHTTPPort = app.RouterHTTPPort
 	}
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
-		util.Debug("GetPrimaryRouterHTTPPort(): HTTP_EXPOSE='%s'", httpExpose)
+		//util.Debug("GetPrimaryRouterHTTPPort(): HTTP_EXPOSE='%s'", httpExpose)
 		httpPort := app.RouterPortFromExposeVariable(httpExpose, proposedPrimaryRouterHTTPPort)
 		if httpPort == "" {
-			util.Debug("GetPrimaryRouterHTTPPort(): no primary router port found in %s", httpExpose)
+			//util.Debug("GetPrimaryRouterHTTPPort(): no primary router port found in %s", httpExpose)
 			proposedPrimaryRouterHTTPPort = ""
 		}
 	}
@@ -659,7 +659,7 @@ func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 		proposedPrimaryRouterHTTPSPort = app.RouterHTTPSPort
 	}
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
-		util.Debug("GetPrimaryRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
+		//util.Debug("GetPrimaryRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
 		// TODO: The problem here is we're looking for the HTTPS_EXPOSE stanza
 		// that is 80 in container, and we actually want to look for the
 		// stanza that matches 443 on router. So "8026:8025,443:3000"
@@ -668,7 +668,7 @@ func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 		// So why don't we just return the 443 instead of looking at HTTPS_EXPOSE?
 		httpsPort := app.RouterPortFromExposeVariable(httpsExpose, proposedPrimaryRouterHTTPSPort)
 		if httpsPort == "" {
-			util.Debug("GetPrimaryRouterHTTPSPort(): no primary router port found in %s", httpsExpose)
+			//util.Debug("GetPrimaryRouterHTTPSPort(): no primary router port found in %s", httpsExpose)
 			proposedPrimaryRouterHTTPSPort = ""
 		}
 	}
