@@ -38,12 +38,41 @@ echo $PATH
 
 Download a ZIP file for your OS and architecture by clicking the link (the result is something like `ddev-macos-arm64.zip`) or using `wget`, `curl`, `dl` and unzip it, make it executable, and move it to the `~/bin` folder:
 
-```bash
-# Example for macOS Apple Silicon:
-unzip ddev-macos-arm64.zip
-chmod +x ddev && mv ddev ~/bin/ddev
-rm ddev-macos-arm64.zip
-```
+=== "macOS Apple Silicon"
+
+    ```bash
+    # Example for macOS Apple Silicon:
+    unzip ddev-macos-arm64.zip
+    chmod +x ddev && mv ddev ~/bin/ddev
+    rm -f ddev-macos-arm64.zip
+    ```
+
+=== "macOS Intel"
+
+    ```bash
+    # Example for macOS Intel:
+    unzip ddev-macos-amd64.zip
+    chmod +x ddev && mv ddev ~/bin/ddev
+    rm -f ddev-macos-amd64.zip
+    ```
+
+=== "Linux and WSL2"
+
+    ```bash
+    # Example for Linux and WSL2:
+    unzip ddev-linux-amd64.zip
+    chmod +x ddev && mv ddev ~/bin/ddev
+    rm -f ddev-linux-amd64.zip
+    ```
+
+=== "Linux and WSL2 ARM64"
+
+    ```bash
+    # Example for Linux and WSL2 ARM64:
+    unzip ddev-linux-arm64.zip
+    chmod +x ddev && mv ddev ~/bin/ddev
+    rm -f ddev-linux-arm64.zip
+    ```
 
 ![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
 
