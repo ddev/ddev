@@ -3066,7 +3066,8 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
-// GetWebContainerPublicPort returns the direct-access public tcp port for http
+// GetWebContainerPublicPort returns the first direct-access public tcp port for http
+// It excludes 8025, mailpit
 func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 	// There may not always be a public direct port
 	// But if there is, we need to figure out which one it is
@@ -3077,7 +3078,8 @@ func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 	}
 
 	for _, p := range webContainer.Ports {
-		if p.PrivatePort == 80 {
+		// Exclude mailpit port (internal is wired to 8025)
+		if p.PrivatePort != 8025 {
 			return int(p.PublicPort), nil
 		}
 	}

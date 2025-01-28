@@ -309,7 +309,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
-		// 20: Symfony
+		// 17: Symfony
 		{
 			Name:                          "TestPkgSymfony",
 			SourceURL:                     "https://github.com/ddev/test-symfony/archive/refs/tags/v2.6.0.tar.gz",
@@ -320,6 +320,19 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Symfony Demo"},
 			FilesImageURI:                 "/apple-touch-icon.png",
+		},
+		// 18: Sveltekit (Node.js example)
+		{
+			Name:                          "TestPkgSveltekit",
+			SourceURL:                     "https://github.com/ddev/test-sveltekit/archive/refs/tags/v2.16.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-sveltekit-2.16.1/",
+			Type:                          nodeps.AppTypeGeneric,
+			Docroot:                       "",
+			PretestCmd:                    "cd /var/www/html && npm i && npm run build",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/about", Expect: "Test page for DDEV"},
+			// The dynamic URI here is not quite right, we should be able to curl the game and check things
+			DynamicURI:    testcommon.URIWithExpect{URI: "/sverdle", Expect: "How to play"},
+			FilesImageURI: "/_app/immutable/assets/svelte-welcome.0pIiHnVF.webp",
 		},
 	}
 
@@ -2358,6 +2371,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 		out := restoreOutput()
 		assert.NotContains(out, "Unable to create settings file")
+		assert.NotContains(out, "Unable to start web_extra_daemons")
 
 		// Validate Mailpit is working and "connected"
 		mailpitAPIURL := "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort() + "/api/v1/messages"
@@ -2389,13 +2403,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			}
 		}
 
-		startErr := app.StartAndWait(2)
-		if startErr != nil {
-			appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(getLogsErr)
-			t.Fatalf("app.StartAndWait() failure err=%v; health=\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
-		}
-
 		// Test static content.
 		if site.Safe200URIWithExpectation.URI != "" {
 			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
@@ -2418,8 +2425,8 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if site.FilesImageURI != "" {
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+site.FilesImageURI)
 			assert.NoError(err, "failed ImageURI response on project %s", site.Name)
-			if err != nil && resp != nil {
-				assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
+			if err == nil && resp != nil {
+				assert.Contains(resp.Header["Content-Type"][0], "image/")
 			}
 		}
 

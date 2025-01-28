@@ -65,7 +65,8 @@ type TestSite struct {
 	HTTPProbeURI string
 	// WebEnvironment is strings that will be used in web_environment
 	WebEnvironment []string
-	// PretestCmd will be executed on host before test
+	// PretestCmd will be executed in web-entrypoint.d script before
+	// daemons are started inside the web container
 	PretestCmd string
 	// Docroot is the subdirectory within the site that is the root/index.php
 	Docroot string
@@ -133,16 +134,19 @@ func (site *TestSite) Prepare() error {
 	app.UploadDirs = site.UploadDirs
 	app.Type = site.Type
 	detectedType := app.DetectAppType()
-	if app.Type != detectedType {
+	if app.Type != detectedType && app.Type != nodeps.AppTypeGeneric {
 		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)
 	}
 
 	app.WebEnvironment = site.WebEnvironment
 	if site.PretestCmd != "" {
-		app.Hooks = map[string][]ddevapp.YAMLTask{
-			"post-start": {
-				{"exec-host": site.PretestCmd},
-			},
+		err = os.MkdirAll(app.GetConfigPath("web-entrypoint.d"), 0755)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(app.GetConfigPath("web-entrypoint.d/pretest.sh"), []byte(site.PretestCmd), 0755)
+		if err != nil {
+			return errors.Errorf("Failed to write pretest.sh, err=%v", err)
 		}
 	}
 	err = app.ConfigFileOverrideAction(false)
