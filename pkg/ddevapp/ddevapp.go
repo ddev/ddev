@@ -3079,7 +3079,9 @@ func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 
 	for _, p := range webContainer.Ports {
 		// Exclude mailpit port (internal is wired to 8025)
-		if p.PrivatePort != 8025 {
+		// Also assume that 443 is https, so we won't return it from this one.
+		// It's https with nginx and apache
+		if p.PrivatePort != 8025 && p.PrivatePort != 443 {
 			return int(p.PublicPort), nil
 		}
 	}
