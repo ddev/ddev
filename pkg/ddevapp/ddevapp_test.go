@@ -906,6 +906,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	projDir := testcommon.CreateTmpDir(t.Name())
 	app, err := ddevapp.NewApp(projDir, false)
 	require.NoError(t, err)
+
+	if app.GetWebserverType() == nodeps.AppTypeGeneric {
+		t.Skip("Xdebug is not tested on generic webserver")
+	}
+
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -1087,6 +1092,11 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	projDir := testcommon.CreateTmpDir(t.Name())
 	app, err := ddevapp.NewApp(projDir, false)
 	require.NoError(t, err)
+
+	if app.GetWebserverType() == nodeps.AppTypeGeneric {
+		t.Skip("Xhprof is not tested on generic webserver")
+	}
+
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	require.NoError(t, err)
