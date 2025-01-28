@@ -32,6 +32,7 @@ func GetInput(defaultValue string) string {
 func GetQuotedInput(defaultValue string) string {
 	input := GetInput(defaultValue)
 
+	// Remove surrounding quotes, but only the closest ones.
 	if len(input) >= 2 && (input[0] == '\'' && input[len(input)-1] == '\'' || input[0] == '"' && input[len(input)-1] == '"') {
 		input = input[1 : len(input)-1]
 	}
