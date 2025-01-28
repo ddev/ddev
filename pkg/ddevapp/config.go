@@ -1076,6 +1076,7 @@ startretries=15
 stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true
+stopasgroup=true
 `, appStart.Name, appStart.Command, appStart.Directory)
 		err = os.WriteFile(app.GetConfigPath(fmt.Sprintf(".webimageBuild/%s.conf", appStart.Name)), []byte(supervisorConf), 0755)
 		if err != nil {
