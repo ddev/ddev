@@ -42,14 +42,14 @@ Download a ZIP file for your OS and architecture by clicking the link (the resul
 # Example for macOS Apple Silicon:
 unzip ddev-macos-arm64.zip
 chmod +x ddev && mv ddev ~/bin/ddev
-rm ddev-macos-arm64.zip
+rm -f ddev-macos-arm64.zip
 ```
 
 ```bash
 # Example for Linux and WSL2:
 unzip ddev-linux-amd64.zip
 chmod +x ddev && mv ddev ~/bin/ddev
-rm ddev-linux-amd64.zip
+rm -f ddev-linux-amd64.zip
 ```
 
 ![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
