@@ -152,7 +152,7 @@ hooks:
 
 ### Running Extra Daemons Using `web_extra_daemons`
 
-If you need extra daemons to start up automatically inside the web container, you can easily add them using [`web_extra_daemons`](../configuration/config.md#web_extra_daemons) in `.ddev/config.yaml`.
+If you need extra daemons to start up automatically inside the web container, you can add them using [`web_extra_daemons`](../configuration/config.md#web_extra_daemons) in `.ddev/config.yaml`.
 
 You might be running Node.js daemons that serve a particular purpose, like `browsersync`, or more general daemons like a `cron` daemon.
 
@@ -175,6 +175,8 @@ web_extra_daemons:
 * `command` is best as a simple binary with its arguments, but Bash features like `cd` or `&&` work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
 * `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
 * Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
+* To debug and/or get your daemon running to begin with, experiment with running it manually inside `ddev ssh`. Then when it works perfectly implement auto-start with `web_extra_daemons`.
+* You can manually restart all daemons with `ddev exec supervisorctl restart webextradaemons:*` or `ddev exec supervisorctl restart webextradaemons:<yourdaemon>`. (`supervisorctl stop` and `supervisorctl start` are available as you would expect.)
 
 ## Exposing Extra Ports via `ddev-router`
 
