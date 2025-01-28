@@ -18,14 +18,26 @@ func SetInputScanner(scanner *bufio.Scanner) {
 func GetInput(defaultValue string) string {
 	inputScanner.Scan()
 	input := inputScanner.Text()
-	value := strings.TrimSpace(input)
 
-	// Check for surrounding single or double quotes and remove them.
-	if len(value) >= 2 && (value[0] == '\'' && value[len(value)-1] == '\'' || value[0] == '"' && value[len(value)-1] == '"') {
-		value = value[1 : len(value)-1]
+	// If the value from the input buffer is blank, then use the default instead.
+	value := strings.TrimSpace(input)
+	if value == "" {
+		value = defaultValue
+	}
+
+	return value
+}
+
+// GetQuotedInput reads input from an input buffer in single or double quotes and returns the result as a string.
+func GetQuotedInput(defaultValue string) string {
+	input := GetInput(defaultValue)
+
+	if len(input) >= 2 && (input[0] == '\'' && input[len(input)-1] == '\'' || input[0] == '"' && input[len(input)-1] == '"') {
+		input = input[1 : len(input)-1]
 	}
 
 	// If the value from the input buffer is blank, then use the default instead.
+	value := strings.TrimSpace(input)
 	if value == "" {
 		value = defaultValue
 	}

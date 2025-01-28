@@ -133,7 +133,7 @@ func promptForFileSource(val *string) {
 	// prompting until something is entered
 	for {
 		fmt.Print("Path to file(s): ")
-		*val = util.GetInput("")
+		*val = util.GetQuotedInput("")
 		if len(*val) > 0 {
 			break
 		}
@@ -150,7 +150,7 @@ func promptForExtractPath(val *string) {
 	// An empty string is acceptable in this case, indicating
 	// no particular extraction path
 	fmt.Print("Archive extraction path: ")
-	*val = util.GetInput("")
+	*val = util.GetQuotedInput("")
 }
 
 func init() {

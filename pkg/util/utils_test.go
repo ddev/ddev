@@ -43,42 +43,6 @@ func TestGetInput(t *testing.T) {
 	assert.EqualValues(input, result)
 	_ = restoreOutput()
 
-	// GetInput should remove single quotes from start and end
-	input = `'Input"I'WantToSee'`
-	restoreOutput = util.CaptureUserOut()
-	scanner = bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
-	result = util.GetInput("nodefault")
-	assert.EqualValues(`Input"I'WantToSee`, result)
-	_ = restoreOutput()
-
-	// GetInput should remove double quotes from start and end
-	input = `"'Input"I'WantToSee"`
-	restoreOutput = util.CaptureUserOut()
-	scanner = bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
-	result = util.GetInput("nodefault")
-	assert.EqualValues(`'Input"I'WantToSee`, result)
-	_ = restoreOutput()
-
-	// GetInput should only remove the nearest quotes (checking single quotes)
-	input = `'"InputIWantToSee"'`
-	restoreOutput = util.CaptureUserOut()
-	scanner = bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
-	result = util.GetInput("nodefault")
-	assert.EqualValues(`"InputIWantToSee"`, result)
-	_ = restoreOutput()
-
-	// GetInput should only remove the nearest quotes (checking double quotes)
-	input = `"'InputIWantToSee'"`
-	restoreOutput = util.CaptureUserOut()
-	scanner = bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
-	result = util.GetInput("nodefault")
-	assert.EqualValues("'InputIWantToSee'", result)
-	_ = restoreOutput()
-
 	// Try Prompt() with a default value which is overridden
 	input = "InputIWantToSee"
 	restoreOutput = util.CaptureUserOut()
@@ -97,6 +61,34 @@ func TestGetInput(t *testing.T) {
 	assert.EqualValues("expected default", result)
 	_ = restoreOutput()
 	println() // Just lets goland find the PASS or FAIL
+}
+
+// TestGetQuotedInput tests GetQuotedInput
+func TestGetQuotedInput(t *testing.T) {
+	testCases := []struct {
+		description string
+		input       string
+		expected    string
+	}{
+		{"Remove single quotes", `'/path/to/file'`, `/path/to/file`},
+		{"Remove double quotes", `"/path/to/file"`, `/path/to/file`},
+		{"Remove spaces", `  /path/to/file  `, `/path/to/file`},
+		{"Remove spaces in single quotes", ` '  /path/to/file ' `, `/path/to/file`},
+		{"Remove spaces in double quotes", ` "  /path/to/file " `, `/path/to/file`},
+		{"Remove only closest quotes (single)", `'"/path/to/file"'`, `"/path/to/file"`},
+		{"Remove only closest quotes (double)", `"'/path/to/file'"`, `'/path/to/file'`},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			assert := asrt.New(t)
+			restoreOutput := util.CaptureUserOut()
+			scanner := bufio.NewScanner(strings.NewReader(tc.input))
+			util.SetInputScanner(scanner)
+			result := util.GetQuotedInput("nodefault")
+			assert.EqualValues(tc.expected, result)
+			_ = restoreOutput()
+		})
+	}
 }
 
 // TestCaptureUserOut ensures capturing of stdout works as expected.
