@@ -45,6 +45,13 @@ chmod +x ddev && mv ddev ~/bin/ddev
 rm ddev-macos-arm64.zip
 ```
 
+```bash
+# Example for Linux and WSL2:
+unzip ddev-linux-amd64.zip
+chmod +x ddev && mv ddev ~/bin/ddev
+rm ddev-linux-amd64.zip
+```
+
 ![Github Action PR Comment ZIP files](../images/github-action-pr-comment.png)
 
 Tip: If you need a zip-file to try out the "Testing a PR" process, see the [nightly builds](https://nightly.link/ddev/ddev/workflows/main-build/main).
