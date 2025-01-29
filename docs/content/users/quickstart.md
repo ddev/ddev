@@ -632,7 +632,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --project-type=generic --webserver-type=generic
     ddev start
     
-    cat <<EOF >> .ddev/config.sveltekit.yaml
+    cat <<EOF > .ddev/config.sveltekit.yaml
     web_extra_exposed_ports:
     - name: svelte
       container_port: 3000
@@ -662,7 +662,6 @@ SvelteKit requires just a bit of configuration to make it run. There are many wa
 
 * `svelte.config.js` example uses `adapter-node`.
 * `vite.config.js` uses port 3000 and `allowedHosts: true`
-
 
 === "Node.js webserver"
 
