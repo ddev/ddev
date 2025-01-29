@@ -61,7 +61,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 			return
 		}
 
-		err := dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
+		err := dockerutil.CheckDockerVersion()
 		if err != nil {
 			if err.Error() == "no docker" {
 				if os.Args[1] != "version" {

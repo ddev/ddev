@@ -58,7 +58,7 @@ var DebugDockercheckCmd = &cobra.Command{
 			util.Failed("Unable to get Docker version: %v", err)
 		}
 		util.Success("Docker version: %s", dockerVersion)
-		err = dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
+		err = dockerutil.CheckDockerVersion()
 		if err != nil {
 			if err.Error() == "no docker" {
 				util.Failed("Docker is not installed or the Docker client is not available in the $PATH")

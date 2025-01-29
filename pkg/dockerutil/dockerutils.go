@@ -44,6 +44,8 @@ import (
 
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
+const requiredDockerVersion = ">= 24.0.0"
+const requiredDockerAPIVersion = ">= 1.43"
 
 type ComposeCmdOpts struct {
 	ComposeFiles []string
@@ -796,7 +798,7 @@ func GetContainerEnv(key string, container dockerTypes.Container) string {
 // CheckDockerVersion determines if the Docker version of the host system meets the provided version
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-func CheckDockerVersion(versionConstraint string, apiVersionConstraint string) error {
+func CheckDockerVersion() error {
 	defer util.TimeTrack()()
 
 	currentVersion, err := GetDockerVersion()
@@ -822,7 +824,7 @@ func CheckDockerVersion(versionConstraint string, apiVersionConstraint string) e
 		}
 	}
 
-	constraint, err := semver.NewConstraint(versionConstraint)
+	constraint, err := semver.NewConstraint(requiredDockerVersion)
 	if err != nil {
 		return err
 	}
@@ -850,7 +852,7 @@ func CheckDockerVersion(versionConstraint string, apiVersionConstraint string) e
 		return err
 	}
 
-	apiConstraint, err := semver.NewConstraint(apiVersionConstraint)
+	apiConstraint, err := semver.NewConstraint(requiredDockerAPIVersion)
 	if err != nil {
 		return err
 	}
