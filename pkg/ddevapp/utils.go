@@ -190,8 +190,24 @@ func getTemplateFuncMap() map[string]interface{} {
 
 	// Add helpful utilities on top of it
 	m["joinPath"] = path.Join
+	m["templateCanUse"] = templateCanUse
 
 	return m
+}
+
+// templateCanUse will return true if the given feature is available.
+// This is used in YAML templates to determine whether to use a feature or not.
+func templateCanUse(feature string) bool {
+	// healthcheck.start_interval requires Docker Engine v25 or later
+	// See https://github.com/docker/compose/pull/10939
+	if feature == "healthcheck.start_interval" {
+		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
+		if err != nil {
+			return false
+		}
+		return dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, "1.44")
+	}
+	return false
 }
 
 // gitIgnoreTemplate will write a .gitignore file.
