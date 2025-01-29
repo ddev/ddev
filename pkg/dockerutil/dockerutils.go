@@ -796,7 +796,7 @@ func GetContainerEnv(key string, container dockerTypes.Container) string {
 // CheckDockerVersion determines if the Docker version of the host system meets the provided version
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-func CheckDockerVersion(versionConstraint string) error {
+func CheckDockerVersion(versionConstraint string, apiVersionConstraint string) error {
 	defer util.TimeTrack()()
 
 	currentVersion, err := GetDockerVersion()
@@ -839,6 +839,35 @@ func CheckDockerVersion(versionConstraint string) error {
 		}
 		return fmt.Errorf("%s", msgs)
 	}
+
+	// Check Docker API version
+	currentAPIVersion, err := GetDockerAPIVersion()
+	if err != nil {
+		return fmt.Errorf("unable to get Docker API version: %v", err)
+	}
+	apiVersion, err := semver.NewVersion(currentAPIVersion)
+	if err != nil {
+		return err
+	}
+
+	apiConstraint, err := semver.NewConstraint(apiVersionConstraint)
+	if err != nil {
+		return err
+	}
+
+	apiMatch, apiErrs := apiConstraint.Validate(apiVersion)
+	if !apiMatch {
+		if len(apiErrs) <= 1 {
+			return apiErrs[0]
+		}
+
+		apiMsgs := "\n"
+		for _, err := range apiErrs {
+			apiMsgs = fmt.Sprint(apiMsgs, err, "\n")
+		}
+		return fmt.Errorf("%s", apiMsgs)
+	}
+
 	return nil
 }
 
