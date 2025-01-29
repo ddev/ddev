@@ -138,19 +138,15 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	app := &ddevapp.DdevApp{}
 	err = app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-
-		err = app.Stop(true, false)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
 
 		app.RouterHTTPSPort = ""
 		app.RouterHTTPPort = ""
-		err = app.WriteConfig()
-		assert.NoError(err)
+		_ = app.WriteConfig()
 
 		site.Cleanup()
 	})

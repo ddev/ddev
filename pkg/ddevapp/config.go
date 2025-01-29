@@ -138,6 +138,10 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.Database = DatabaseDefault
 	}
 
+	if app.WebserverType == "" {
+		app.WebserverType = nodeps.WebserverDefault
+	}
+
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 		// On Windows the default timeout may be too short for mutagen to succeed.
