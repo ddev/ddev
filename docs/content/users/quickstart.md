@@ -658,27 +658,39 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev launch
     ```
 
-SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways.
+    SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways.
+    
+    * `svelte.config.js` example uses `adapter-node`.
+    * `vite.config.js` uses port 3000 and `allowedHosts: true`
 
-* `svelte.config.js` example uses `adapter-node`.
-* `vite.config.js` uses port 3000 and `allowedHosts: true`
-
-=== "Node.js webserver"
+=== "Node.js Webserver"
 
     ```bash
-    mkdir my-magento1-site && cd my-magento1-site
-    tag=$(curl -L "https://api.github.com/repos/OpenMage/magento-lts/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/OpenMage/magento-lts/releases/download/$tag/openmage-$tag.zip" -o openmage.zip
-    unzip ./openmage.zip && rm -f openmage.zip
-    ddev config --project-type=magento --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    export NODEJS_SITENAME=my-nodejs-site
+    mkdir ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
+    ddev config --project-type=generic --webserver-type=generic
     ddev start
-    # Install openmage and optionally install sample data
-    ddev openmage-install
-    ddev launch /admin
+    ddev npm install express
 
-    # Note that openmage itself provides several custom DDEV commands, including
-    # `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
-    # and `php-cs-fixer`.
+    cat <<EOF > .ddev/config.nodejs.yaml
+    web_extra_exposed_ports:
+    - name: node-example
+      container_port: 3000
+      http_port: 80
+      https_port: 443
+    
+    web_extra_daemons:
+    - name: "node-example"
+      command: "node server.js"
+      directory: /var/www/html
+    EOF
+
+    ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/refs/heads/main/server.js
+    ddev restart
+    ddev launch
     ```
+
+    The [`server.js`](https://github.com/ddev/test-nodejs/blob/main/server.js) used here is a trivial Express-based Node.js webserver. Yours will be more extensive.
 
 ## Pimcore
 
