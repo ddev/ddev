@@ -65,6 +65,8 @@ type TestSite struct {
 	HTTPProbeURI string
 	// WebEnvironment is strings that will be used in web_environment
 	WebEnvironment []string
+	// WebserverType if needed (apache-fpm, generic)
+	WebserverType string
 	// PretestCmd will be executed in web-entrypoint.d script before
 	// daemons are started inside the web container
 	PretestCmd string
@@ -133,6 +135,7 @@ func (site *TestSite) Prepare() error {
 	app.Docroot = site.Docroot
 	app.UploadDirs = site.UploadDirs
 	app.Type = site.Type
+	app.WebserverType = site.WebserverType
 	detectedType := app.DetectAppType()
 	if app.Type != detectedType && app.Type != nodeps.AppTypeGeneric {
 		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)

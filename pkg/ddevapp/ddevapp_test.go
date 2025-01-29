@@ -345,6 +345,21 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "DDEV experimental Node.js"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/greet/TestPkgNodejs", Expect: "Hello, TestPkgNodejs! Hope"},
 		},
+		// 20: frankenphp
+		{
+			Name:                          "TestPkgFrankenPHP",
+			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-frankenphp-11.1.1/",
+			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/db.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal11,
+			Docroot:                       "web",
+			WebserverType:                 nodeps.WebserverGeneric,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/3", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
+			FilesImageURI:                 "/sites/default/files/Logo.png",
+		},
 	}
 
 	FullTestSites = TestSites
