@@ -63,6 +63,7 @@ FSTYPE
 Flags
 Flatpak
 FQDNs
+FrankenPHP
 Fritzbox
 GitLab
 GUI

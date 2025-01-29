@@ -328,6 +328,47 @@ Read more about customizing the environment and persisting configuration in [Pro
 
     When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
 
+## FrankenPHP
+
+FrankenPHP in DDEV is an experimental first step in using [FrankenPHP](https://frankenphp.dev/). It is in its infancy and may someday become a full-fledges Webserver Type. Your feedback is welcome.
+
+This particular example uses a `drupal11` project with FrankenPHP, which then uses its own PHP 8.4 interpreter. The normal DDEV database container is used for database access.
+
+In this example, the normal PHP configuration (and PHP overrides) are not applied to FrankenPHP, and inside the web container the normal `php` CLI use used for CLI activities.
+
+```bash
+export FRANKENPHP_SITENAME=my-frankenphp-site
+mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
+ddev config --project-type=drupal11 --webserver-type=generic --docroot=web --php-version=8.4
+ddev start
+
+cat <<'EOF' > .ddev/config.frankenphp.yaml
+web_extra_daemons:
+    - name: "frankenphp"
+      command: "frankenphp php-server --listen 0.0.0.0:80 --root ${DDEV_DOCROOT} -v -a"
+      directory: /var/www/html
+web_extra_exposed_ports:
+    - name: "frankenphp"
+      container_port: 80
+      http_port: 80
+      https_port: 443
+EOF
+
+cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
+RUN curl -s https://frankenphp.dev/install.sh | sh
+RUN mv frankenphp /usr/local/bin/
+RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
+DOCKERFILEEND
+
+ddev composer create drupal/recommended-project
+ddev composer require drush/drush
+ddev restart
+ddev drush site:install demo_umami --account-name=admin --account-pass=admin -y
+ddev launch
+# or automatically log in with
+ddev launch $(ddev drush uli)
+```
+
 ## Grav
 
 === "Composer"
