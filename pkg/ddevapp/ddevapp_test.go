@@ -3707,6 +3707,10 @@ func TestPHPWebserverType(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		if app.GetWebserverType() == nodeps.WebserverGeneric || app.GetType() == nodeps.AppTypeGeneric {
+			t.Logf("Skipping TestSite %s=%d because generic webserver or generic type", site.Name, i)
+			continue
+		}
 
 		t.Cleanup(func() {
 			err = app.Stop(true, false)
