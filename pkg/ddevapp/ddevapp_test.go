@@ -334,6 +334,17 @@ var (
 			DynamicURI:    testcommon.URIWithExpect{URI: "/sverdle", Expect: "How to play"},
 			FilesImageURI: "/_app/immutable/assets/svelte-welcome.0pIiHnVF.webp",
 		},
+		// 19: Node.js example
+		{
+			Name:                          "TestPkgNodejs",
+			SourceURL:                     "https://github.com/ddev/test-nodejs/archive/refs/tags/v0.0.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-nodejs-0.0.1/",
+			Type:                          nodeps.AppTypeGeneric,
+			Docroot:                       "",
+			PretestCmd:                    "cd /var/www/html && npm i && npm i express",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "DDEV experimental Node.js"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/greet/TestPkgNodejs", Expect: "Hello, TestPkgNodejs! Hope"},
+		},
 	}
 
 	FullTestSites = TestSites
