@@ -370,7 +370,7 @@ type ProjectBuilder interface {
 	WebExtraDaemonsDetails(webExtraDaemonsDetails []string) ProjectBuilder
 	WebExtraDaemonsNames(webExtraDaemonsNames []string) ProjectBuilder
 	WebExtraExposedPortsDetails(webExtraExposedPortsDetails []string) ProjectBuilder
-	WebExtraExposedPortsNames(webExtraExposedPortsNames []interface{}) ProjectBuilder
+	WebExtraExposedPortsNames(webExtraExposedPortsNames []string) ProjectBuilder
 	WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder
 }
 
@@ -542,7 +542,7 @@ func (b *projectBuilder) WebExtraExposedPortsDetails(webExtraExposedPortsDetails
 	return b
 }
 
-func (b *projectBuilder) WebExtraExposedPortsNames(webExtraExposedPortsNames []interface{}) ProjectBuilder {
+func (b *projectBuilder) WebExtraExposedPortsNames(webExtraExposedPortsNames []string) ProjectBuilder {
 	b.properties[`WebExtraExposedPortsNames`] = webExtraExposedPortsNames
 
 	return b
