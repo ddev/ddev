@@ -10,9 +10,9 @@
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/web_extra_exposed_ports/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/web_extra_exposed_ports/latest/getting-started/ddev
 //
 
 package ampli
@@ -367,6 +367,10 @@ type ProjectBuilder interface {
 	NodejsVersion(nodejsVersion string) ProjectBuilder
 	Router(router string) ProjectBuilder
 	RouterDisabled(routerDisabled bool) ProjectBuilder
+	WebExtraDaemonsDetails(webExtraDaemonsDetails []string) ProjectBuilder
+	WebExtraDaemonsNames(webExtraDaemonsNames []string) ProjectBuilder
+	WebExtraExposedPortsDetails(webExtraExposedPortsDetails []string) ProjectBuilder
+	WebExtraExposedPortsNames(webExtraExposedPortsNames []interface{}) ProjectBuilder
 	WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder
 }
 
@@ -520,6 +524,30 @@ func (b *projectBuilder) RouterDisabled(routerDisabled bool) ProjectBuilder {
 	return b
 }
 
+func (b *projectBuilder) WebExtraDaemonsDetails(webExtraDaemonsDetails []string) ProjectBuilder {
+	b.properties[`WebExtraDaemonsDetails`] = webExtraDaemonsDetails
+
+	return b
+}
+
+func (b *projectBuilder) WebExtraDaemonsNames(webExtraDaemonsNames []string) ProjectBuilder {
+	b.properties[`WebExtraDaemonsNames`] = webExtraDaemonsNames
+
+	return b
+}
+
+func (b *projectBuilder) WebExtraExposedPortsDetails(webExtraExposedPortsDetails []string) ProjectBuilder {
+	b.properties[`WebExtraExposedPortsDetails`] = webExtraExposedPortsDetails
+
+	return b
+}
+
+func (b *projectBuilder) WebExtraExposedPortsNames(webExtraExposedPortsNames []interface{}) ProjectBuilder {
+	b.properties[`WebExtraExposedPortsNames`] = webExtraExposedPortsNames
+
+	return b
+}
+
 func (b *projectBuilder) WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder {
 	b.properties[`Webimage Extra Packages`] = webimageExtraPackages
 
@@ -567,10 +595,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `main`,
+			Branch:    `web_extra_exposed_ports`,
 			Source:    `ddev`,
 			Version:   `11`,
-			VersionID: `08f7dfd4-d068-4082-9786-249d924e38e0`,
+			VersionID: `9844c246-d4ac-4963-b4ec-1f4af07d4bd8`,
 		}
 	}
 
