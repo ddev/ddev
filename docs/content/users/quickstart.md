@@ -618,6 +618,69 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     !!!tip
         Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
 
+## Node.js
+
+=== "SvelteKit"
+
+    This example installation sets up the SvelteKit demo in DDEV with the `generic` webserver.
+
+    Node.js support as in this example is experimental, and your suggestions and improvements are welcome.
+
+    ```bash
+    export SVELTEKIT_SITENAME=my-sveltekit-site
+    mkdir ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
+    ddev config --project-type=generic --webserver-type=generic
+    ddev start
+    
+    cat <<EOF >> .ddev/config.sveltekit.yaml
+    web_extra_exposed_ports:
+    - name: svelte
+      container_port: 3000
+      http_port: 80
+      https_port: 443
+    web_extra_daemons:
+    - name: "sveltekit-demo"
+      command: "node build"
+      directory: /var/www/html
+    EOF
+
+    ddev exec "npx sv create --template=demo --types=ts --no-add-ons . --no-add-ons --no-install"
+    # When it prompts "Directory not empty. Continue?", choose Yes.
+
+    # Install an example svelte.config.js that uses adapter-node
+    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/refs/heads/main/svelte.config.js
+    # Install an example vite.config.ts that sets the port and allows all hostnames
+    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/refs/heads/main/vite.config.ts
+    ddev npm install @sveltejs/adapter-node
+    ddev npm install
+    ddev npm run build
+    ddev restart
+    ddev launch
+    ```
+
+SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways.
+
+* `svelte.config.js` example uses `adapter-node`.
+* `vite.config.js` uses port 3000 and `allowedHosts: true`
+
+
+=== "Node.js webserver"
+
+    ```bash
+    mkdir my-magento1-site && cd my-magento1-site
+    tag=$(curl -L "https://api.github.com/repos/OpenMage/magento-lts/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/OpenMage/magento-lts/releases/download/$tag/openmage-$tag.zip" -o openmage.zip
+    unzip ./openmage.zip && rm -f openmage.zip
+    ddev config --project-type=magento --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev start
+    # Install openmage and optionally install sample data
+    ddev openmage-install
+    ddev launch /admin
+
+    # Note that openmage itself provides several custom DDEV commands, including
+    # `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
+    # and `php-cs-fixer`.
+    ```
+
 ## Pimcore
 
 === "Composer"

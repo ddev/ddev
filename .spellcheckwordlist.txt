@@ -149,6 +149,8 @@ Starts
 Statamic
 Sulu
 Support
+Svelte
+SvelteKit
 Symfony
 TablePlus
 Traefik
