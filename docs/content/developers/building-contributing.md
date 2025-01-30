@@ -251,7 +251,7 @@ ampli pull
 ```
 
 Once the changes are ready to be merged, merge the changes made in the new
-branch to the `main` branch in the Amplitude backend and switch back to the
+branch to the `main` branch in the Amplitude backend (the `Merge` button is on the `Activity` tab on the left) and switch back to the
 `main` branch:
 
 ```bash
