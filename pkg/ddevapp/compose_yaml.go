@@ -102,6 +102,11 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		return nil, err
 	}
 
+	dockerIP, _ := dockerutil.GetDockerIP()
+	if app.BindAllInterfaces {
+		dockerIP = "0.0.0.0"
+	}
+
 	// Ensure that some important network properties are not overridden by users
 	for name, network := range tempMap["networks"].(map[string]interface{}) {
 		if network == nil {
@@ -171,6 +176,24 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 							// The same thing is done in `docker-compose config`
 							// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
 							environmentMap[envKey] = strings.ReplaceAll(envValue, `$`, `$$`)
+						}
+					}
+				}
+			}
+		}
+		// Assign the host_ip for each port if it's not already set.
+		// This is needed for custom-defined user ports. For example:
+		// ports:
+		//   - 3000:3000
+		// Without this, Docker doesn't add a Docker IP, like this:
+		// ports:
+		//   - 127.0.0.1:3000:3000
+		if dockerIP != "" {
+			if ports, ok := serviceMap["ports"].([]interface{}); ok {
+				for _, port := range ports {
+					if portMap, ok := port.(map[string]interface{}); ok {
+						if _, exists := portMap["host_ip"]; !exists {
+							portMap["host_ip"] = dockerIP
 						}
 					}
 				}
