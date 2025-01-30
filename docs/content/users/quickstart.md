@@ -328,13 +328,15 @@ Read more about customizing the environment and persisting configuration in [Pro
 
     When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
 
-## FrankenPHP
+## Generic (FrankenPHP)
 
-FrankenPHP in DDEV is an experimental first step in using [FrankenPHP](https://frankenphp.dev/). It is in its infancy and may someday become a full-fledges Webserver Type. Your feedback is welcome.
+This example of the `webserver_type: generic` puts [FrankenPHP](https://frankenphp.dev/) into DDEV as an experimental first step in using the innovative Golang-based PHP interpreter. It is in its infancy and may someday become a full-fledges Webserver Type. Your feedback and improvements are welcome.
 
 This particular example uses a `drupal11` project with FrankenPHP, which then uses its own PHP 8.4 interpreter. The normal DDEV database container is used for database access.
 
-In this example, the normal PHP configuration (and PHP overrides) are not applied to FrankenPHP, and inside the web container the normal `php` CLI use used for CLI activities.
+In this example, inside the web container the normal `php` CLI use used for CLI activities. Xdebug (and `ddev xdebug`) do not yet work.
+
+The `generic` `webserver_type` is used here, so the `ddev-webserver` does not start the `nginx` or `php-fpm` daemons, and the `frankenphp` process does all the work.
 
 ```bash
 export FRANKENPHP_SITENAME=my-frankenphp-site
