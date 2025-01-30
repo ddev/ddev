@@ -327,6 +327,7 @@ var (
 			SourceURL:                     "https://github.com/ddev/test-sveltekit/archive/refs/tags/v2.16.1.tar.gz",
 			ArchiveInternalExtractionPath: "test-sveltekit-2.16.1/",
 			Type:                          nodeps.AppTypeGeneric,
+			WebserverType:                 nodeps.WebserverGeneric,
 			Docroot:                       "",
 			PretestCmd:                    "cd /var/www/html && npm i && npm run build",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/about", Expect: "Test page for DDEV"},
@@ -340,6 +341,7 @@ var (
 			SourceURL:                     "https://github.com/ddev/test-nodejs/archive/refs/tags/v0.0.1.tar.gz",
 			ArchiveInternalExtractionPath: "test-nodejs-0.0.1/",
 			Type:                          nodeps.AppTypeGeneric,
+			WebserverType:                 nodeps.WebserverGeneric,
 			Docroot:                       "",
 			PretestCmd:                    "cd /var/www/html && npm i && npm i express",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "DDEV experimental Node.js"},
@@ -2359,7 +2361,7 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
