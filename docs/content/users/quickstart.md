@@ -330,7 +330,7 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 ## Generic (FrankenPHP)
 
-This example of the `webserver_type: generic` puts [FrankenPHP](https://frankenphp.dev/) into DDEV as an experimental first step in using the innovative Golang-based PHP interpreter. It is in its infancy and may someday become a full-fledges Webserver Type. Your feedback and improvements are welcome.
+This example of the `webserver_type: generic` puts [FrankenPHP](https://frankenphp.dev/) into DDEV as an experimental first step in using the innovative Golang-based PHP interpreter. It is in its infancy and may someday become a full-fledged Webserver Type. Your feedback and improvements are welcome.
 
 This particular example uses a `drupal11` project with FrankenPHP, which then uses its own PHP 8.4 interpreter. The normal DDEV database container is used for database access.
 
