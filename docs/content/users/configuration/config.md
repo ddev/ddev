@@ -685,7 +685,8 @@ To change from the default `nginx-fpm` to `apache-fpm`, for example, you would n
 ```yaml
 webserver_type: apache-fpm
 ```
-This is the same as `ddev config --webserver-type=apache-fpm`
+
+This is the same as `ddev config --webserver-type=apache-fpm`.
 
 Then run [`ddev restart`](../usage/commands.md#restart) to have the change take effect.
 
