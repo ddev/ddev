@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 11
+// Tracking Plan Version: 12
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -367,6 +367,10 @@ type ProjectBuilder interface {
 	NodejsVersion(nodejsVersion string) ProjectBuilder
 	Router(router string) ProjectBuilder
 	RouterDisabled(routerDisabled bool) ProjectBuilder
+	WebExtraDaemonsDetails(webExtraDaemonsDetails []string) ProjectBuilder
+	WebExtraDaemonsNames(webExtraDaemonsNames []string) ProjectBuilder
+	WebExtraExposedPortsDetails(webExtraExposedPortsDetails []string) ProjectBuilder
+	WebExtraExposedPortsNames(webExtraExposedPortsNames []string) ProjectBuilder
 	WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder
 }
 
@@ -520,6 +524,30 @@ func (b *projectBuilder) RouterDisabled(routerDisabled bool) ProjectBuilder {
 	return b
 }
 
+func (b *projectBuilder) WebExtraDaemonsDetails(webExtraDaemonsDetails []string) ProjectBuilder {
+	b.properties[`WebExtraDaemonsDetails`] = webExtraDaemonsDetails
+
+	return b
+}
+
+func (b *projectBuilder) WebExtraDaemonsNames(webExtraDaemonsNames []string) ProjectBuilder {
+	b.properties[`WebExtraDaemonsNames`] = webExtraDaemonsNames
+
+	return b
+}
+
+func (b *projectBuilder) WebExtraExposedPortsDetails(webExtraExposedPortsDetails []string) ProjectBuilder {
+	b.properties[`WebExtraExposedPortsDetails`] = webExtraExposedPortsDetails
+
+	return b
+}
+
+func (b *projectBuilder) WebExtraExposedPortsNames(webExtraExposedPortsNames []string) ProjectBuilder {
+	b.properties[`WebExtraExposedPortsNames`] = webExtraExposedPortsNames
+
+	return b
+}
+
 func (b *projectBuilder) WebimageExtraPackages(webimageExtraPackages []string) ProjectBuilder {
 	b.properties[`Webimage Extra Packages`] = webimageExtraPackages
 
@@ -569,8 +597,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `11`,
-			VersionID: `08f7dfd4-d068-4082-9786-249d924e38e0`,
+			Version:   `12`,
+			VersionID: `fccb5108-a049-4205-a5af-a27817e8c5d0`,
 		}
 	}
 

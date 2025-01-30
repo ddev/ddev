@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/third_party/ampli"
 	"github.com/denisbrodbeck/machineid"
 )
@@ -60,6 +62,10 @@ func (app *DdevApp) TrackProject() {
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
 		NodejsVersion(app.NodeJSVersion).
 		RouterDisabled(IsRouterDisabled(app)).
+		WebExtraDaemonsDetails(webExtraDaemonsDetails(app)).
+		WebExtraDaemonsNames(webExtraDaemonsNames(app)).
+		WebExtraExposedPortsDetails(webExtraExposedPortsDetails(app)).
+		WebExtraExposedPortsNames(webExtraExposedPortsNames(app)).
 		WebimageExtraPackages(app.WebImageExtraPackages).
 		DbImageExtraPackages(app.DBImageExtraPackages).
 		BindAllInterfaces(app.BindAllInterfaces).
@@ -79,4 +85,54 @@ func (app *DdevApp) TrackProject() {
 	}
 
 	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
+}
+
+// webExtraExposedPortsNames extracts and returns a list of names from the WebExtraExposedPorts field of the provided DdevApp instance.
+func webExtraExposedPortsNames(app *DdevApp) []string {
+	var exposedPortsNames []string
+	for _, exposedPortDetail := range app.WebExtraExposedPorts {
+
+		exposedPortsNames = append(exposedPortsNames, exposedPortDetail.Name)
+	}
+	return exposedPortsNames
+}
+
+// webExtraDaemonsNames extracts and returns a list of names from the WebExtraDaemons field of the provided DdevApp instance.
+func webExtraDaemonsNames(app *DdevApp) []string {
+	var extraDaemonNames []string
+	for _, daemon := range app.WebExtraDaemons {
+
+		extraDaemonNames = append(extraDaemonNames, daemon.Name)
+	}
+	return extraDaemonNames
+}
+
+// webExtraDaemonsDetails generates a JSON representation of the app's WebExtraDaemons and returns it as a string slice.
+// If a marshalling error occurs, it logs a warning and returns nil.
+func webExtraDaemonsDetails(app *DdevApp) []string {
+	extraDaemonDetails := make([]string, len(app.WebExtraDaemons))
+	for i, daemon := range app.WebExtraDaemons {
+		jsonData, err := json.Marshal(daemon)
+		if err != nil {
+			util.Warning("Error marshalling JSON: %v (%v)", err, daemon)
+			return nil
+		}
+		extraDaemonDetails[i] = string(jsonData)
+	}
+	return extraDaemonDetails
+}
+
+// webExtraExposedPortsDetails serializes the WebExtraExposedPorts field of a DdevApp instance into a slice of JSON strings.
+// If JSON marshalling fails, it logs a warning and returns nil.
+func webExtraExposedPortsDetails(app *DdevApp) []string {
+	extraPortsDetails := make([]string, len(app.WebExtraExposedPorts))
+	for i, portDetail := range app.WebExtraExposedPorts {
+		jsonData, err := json.Marshal(portDetail)
+		if err != nil {
+			util.Warning("Error marshalling JSON: %v (%v)", err, portDetail)
+			return nil
+		}
+		extraPortsDetails[i] = string(jsonData)
+	}
+	return extraPortsDetails
 }
