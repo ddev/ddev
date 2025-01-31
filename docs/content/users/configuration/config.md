@@ -455,7 +455,7 @@ Defines the performance optimization mode to be used. Currently [Mutagen asynchr
 
 This is typically a global setting. The project-specific value will override global config.
 
-The [NFS section in the "performance" doc](../install/performance.md#performance) explains the deprecated `nfs` option.
+The [NFS section in the "performance" doc](../install/performance.md#filesystem-performance-nfs) explains the deprecated `nfs` option.
 
 ## `php_version`
 
@@ -690,7 +690,7 @@ This is the same as `ddev config --webserver-type=apache-fpm`.
 
 Then run [`ddev restart`](../usage/commands.md#restart) to have the change take effect.
 
-The `generic` type is special: It tells DDEV not to run any webserver daemons, and the user can configure their own with the [`web_extra_daemons`](#web_extra_daemons) option.
+The `generic` type is special: It tells DDEV not to run any web server daemons, and the user can configure their own with the [`web_extra_daemons`](#web_extra_daemons) option.
 
 ## `working_dir`
 

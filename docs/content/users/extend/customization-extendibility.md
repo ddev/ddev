@@ -115,9 +115,9 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 !!!tip "Please share your techniques!"
     There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md) and [Stack Overflow](https://stackoverflow.com/tags/ddev).
 
-### Using Node.js as DDEV's primary webserver
+### Using Node.js as DDEV's primary web server
 
-In DDEV v1.24.3+, you can use the `generic` webserver type and provide your own webserver inside the `web` container. As a result, you can use `webserver_type: generic` and use [`web_extra_daemons`](#running-extra-daemons-using-web_extra_daemons) and [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router) to provide your own webserver. The [Node.js](../quickstart.md#nodejs) quickstart shows how to do this with an Express Node.js server and also with a SvelteKit server.
+In DDEV v1.24.3+, you can use the `generic` web server type and provide your own web server inside the `web` container. As a result, you can use `webserver_type: generic` and use [`web_extra_daemons`](#running-extra-daemons-using-web_extra_daemons) and [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router) to provide your own web server. The [Node.js](../quickstart.md#nodejs) quickstart shows how to do this with an Express Node.js server and also with a SvelteKit server.
 
 ## Running Extra Daemons in the Web Container
 

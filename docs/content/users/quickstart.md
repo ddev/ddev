@@ -330,7 +330,7 @@ Read more about customizing the environment and persisting configuration in [Pro
 
 ## Generic (FrankenPHP)
 
-This example of the `webserver_type: generic` puts [FrankenPHP](https://frankenphp.dev/) into DDEV as an experimental first step in using the innovative Golang-based PHP interpreter. It is in its infancy and may someday become a full-fledged Webserver Type. Your feedback and improvements are welcome.
+This example of the `webserver_type: generic` puts [FrankenPHP](https://frankenphp.dev/) into DDEV as an experimental first step in using the innovative Golang-based PHP interpreter. It is in its infancy and may someday become a full-fledged `webserver_type`. Your feedback and improvements are welcome.
 
 This particular example uses a `drupal11` project with FrankenPHP, which then uses its own PHP 8.4 interpreter. The normal DDEV database container is used for database access.
 
@@ -347,7 +347,7 @@ ddev start
 cat <<'EOF' > .ddev/config.frankenphp.yaml
 web_extra_daemons:
     - name: "frankenphp"
-      command: "frankenphp php-server --listen 0.0.0.0:80 --root=\"/var/www/html/${DDEV_DOCROOT:-}\" -v -a"
+      command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"${DDEV_DOCROOT:-/var/www/html}\" -v -a"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "frankenphp"
@@ -687,7 +687,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
       directory: /var/www/html
     EOF
 
-    ddev exec "npx sv create --template=demo --types=ts --no-add-ons . --no-add-ons --no-install"
+    ddev exec "npx sv create --template=demo --types=ts --no-add-ons --no-install ."
     # When it prompts "Directory not empty. Continue?", choose Yes.
 
     # Install an example svelte.config.js that uses adapter-node
@@ -706,7 +706,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     * `svelte.config.js` example uses `adapter-node`.
     * `vite.config.js` uses port 3000 and `allowedHosts: true`
 
-=== "Node.js Webserver"
+=== "Node.js Web Server"
 
     ```bash
     export NODEJS_SITENAME=my-nodejs-site
