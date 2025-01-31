@@ -151,7 +151,7 @@ markdownlint:
 # https://ddev.readthedocs.io/en/stable/developers/testing-docs/
 mkdocs:
 	@echo "mkdocs: "
-	@CMD="mkdocs build -d /tmp/mkdocsbuild"; \
+	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
 	if command -v mkdocs >/dev/null 2>&1; then \
 		$$CMD ; \
 	else \
@@ -168,9 +168,9 @@ mkdocs-serve:
 		echo "mkdocs is not installed." && exit 2; \
 	fi; \
 
-# Install linkspector locally with "sudo npm install -g @umbrelladocs/linkspector"
-linkspector:
-	@echo "linkspector: "
+# Install markdown-link-check locally with "sudo npm install -g @umbrelladocs/linkspector"
+markdown-link-check:
+	@echo "markdown-link-check (linkspector): "
 	if command -v linkspector >/dev/null 2>&1; then \
 		linkspector check; \
 	else \
