@@ -642,7 +642,18 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
 ## ProcessWire
 
-To get started with [ProcessWire](https://processwire.com/), create a new directory and use composer to require the desired version.
+To get started with [ProcessWire](https://processwire.com/), create a new directory and use the Zip file download, composer, or Git checkout to build. These instructions are adapted from [ProcessWire Install Documentation](https://processwire.com/docs/start/install/new/#installing-processwire).
+
+=== "Zip File"
+
+    ```bash
+    mkdir my-processwire-site && cd my-processwire-site
+    curl -LJOf https://github.com/processwire/processwire/archive/master.zip
+    unzip processwire-master.zip && rm -f processwire-master.zip && mv processwire-master/* . && mv processwire-master/.* . 2>/dev/null && rm -rf processwire-master
+    ddev config --project-type=php --webserver-type=apache-fpm
+    ddev start
+    ddev launch
+    ```
 
 === "Composer"
 
@@ -670,16 +681,18 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     ddev launch
     ```
 
-- When the installation wizard prompts for database settings, enter the following:
-    - `DB Name` = `db`
-    - `DB User` = `db`
-    - `DB Pass` = `db`
-    - `DB Host` = `db` (**not** `localhost`!)
-    - `DB Charset` = `utf8mb4`
-    - `DB Engine` = `InnoDB`
-- Compatibility Check
-    - Hit refresh if you get a warning about `Apache mod_rewrite`
-- **After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
+When the installation wizard prompts for database settings, enter:
+
+- `DB Name` = `db`
+- `DB User` = `db`
+- `DB Pass` = `db`
+- `DB Host` = `db` (**not** `localhost`!)
+- `DB Charset` = `utf8mb4`
+- `DB Engine` = `InnoDB`
+
+If you get a warning about "Apache mod_rewrite" during the compatibility check, Click "refresh".
+
+**After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
 
     ```
     ddev config --upload-dirs=sites/assets/files` && ddev restart
