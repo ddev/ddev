@@ -388,6 +388,7 @@
         "drupal9",
         "drupal10",
         "drupal11",
+        "generic",
         "laravel",
         "magento",
         "magento2",
@@ -474,7 +475,8 @@
       "type": "string",
       "enum": [
         "nginx-fpm",
-        "apache-fpm"
+        "apache-fpm",
+        "generic"
       ]
     },
     "working_dir": {
