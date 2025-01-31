@@ -99,6 +99,16 @@ func TestCmdExec(t *testing.T) {
 
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-all-in-one.txt"))
 
+	// Checking how '&&' works in Bash
+	bash := util.FindBashPath()
+	out, err = exec.RunHostCommand(bash, "-c", fmt.Sprintf("%s exec 'true && pwd'", DdevBin))
+	assert.NoError(err)
+	assert.Equal("/var/www/html", strings.TrimSpace(out))
+
+	out, err = exec.RunHostCommand(bash, "-c", fmt.Sprintf("%s exec true && pwd", DdevBin))
+	assert.NoError(err)
+	assert.NotEqual("/var/www/html", strings.TrimSpace(out))
+
 	// Complex commands with spaces should also work, even without the --raw flag
 	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "-c", "for i; do echo $i; done", "_", "string with spaces")
 	assert.NoError(err)
