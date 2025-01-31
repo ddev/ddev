@@ -642,9 +642,9 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
 ## ProcessWire
 
-To get started with [ProcessWire](https://processwire.com/), create a new directory and use the Zip file download, composer, or Git checkout to build. These instructions are adapted from [ProcessWire Install Documentation](https://processwire.com/docs/start/install/new/#installing-processwire).
+To get started with [ProcessWire](https://processwire.com/), create a new directory and use the ZIP file download, composer, or Git checkout to build. These instructions are adapted from [ProcessWire Install Documentation](https://processwire.com/docs/start/install/new/#installing-processwire).
 
-=== "Zip File"
+=== "ZIP File"
 
     ```bash
     mkdir my-processwire-site && cd my-processwire-site
@@ -695,7 +695,7 @@ If you get a warning about "Apache mod_rewrite" during the compatibility check, 
 **After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
 
     ```
-    ddev config --upload-dirs=sites/assets/files` && ddev restart
+    ddev config --upload-dirs=sites/assets/files && ddev restart
     ```
   
 If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).

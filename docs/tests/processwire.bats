@@ -58,6 +58,7 @@ teardown() {
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
   assert_output --partial "server: Apache"
+  assert_output --partial "HTTP/2 200"
   run curl -sf https://${PROJNAME}.ddev.site
   assert_success
   assert_output --partial "This tool will guide you through the installation process."
