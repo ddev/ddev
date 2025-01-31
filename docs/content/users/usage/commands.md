@@ -583,7 +583,7 @@ ddev debug mutagen sync list
 
 ### `debug nfsmount`
 
-Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
+Checks to see if [NFS mounting](../install/performance.md#nfs-broken) works for current project.
 
 Example:
 
