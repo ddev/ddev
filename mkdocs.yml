@@ -81,6 +81,14 @@ plugins:
 #    repository: https://github.com/ddev/ddev
 #    token: !ENV GH_TOKEN
 
+# Fail the entire build if the validation fails
+strict: true
+# Validation
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
 
 # Customization
 extra:
