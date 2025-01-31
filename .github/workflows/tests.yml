@@ -8,7 +8,7 @@ on:
       - "Makefile"
       - "vendor/**"
       - ".github/workflows/**"
-      - "!.github/workflows/docs*"
+      - "!.github/workflows/docs**"
   push:
     branches: [ main, master ]
 

@@ -12,7 +12,7 @@ on:
     paths:
     - "containers/**"
     - ".github/workflows/**"
-    - "!.github/workflows/docs*"
+    - "!.github/workflows/docs**"
   schedule:
     - cron: '01 00 * * *'
 
