@@ -8,6 +8,7 @@ on:
       - "Makefile"
       - "vendor/**"
       - ".github/workflows/**"
+      - "!.github/workflows/docs*"
   push:
     branches: [ main, master ]
   workflow_dispatch:
