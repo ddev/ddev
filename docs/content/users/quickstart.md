@@ -6,7 +6,7 @@ Before proceeding, make sure your installation of DDEV is up to date. In a new a
 
 ## Backdrop
 
-To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
+To get started with [Backdrop](https://backdropcms123.org), clone the project repository and navigate to the project directory.
 
 === "New projects"
 
