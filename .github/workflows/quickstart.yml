@@ -43,14 +43,14 @@ jobs:
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
 
-      - name: Load 1password secret(s) magento2 etc
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.TESTS_SERVICE_ACCOUNT_TOKEN }}"
-          MAGENTO2_PUBLIC_ACCESS_KEY: "op://test-secrets/MAGENTO2_ACCESS_KEYS/public_access_key"
-          MAGENTO2_PRIVATE_ACCESS_KEY: "op://test-secrets/MAGENTO2_ACCESS_KEYS/private_access_key"
+#      - name: Load 1password secret(s) magento2 etc
+#        uses: 1password/load-secrets-action@v2
+#        with:
+#          export-env: true
+#        env:
+#          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.TESTS_SERVICE_ACCOUNT_TOKEN }}"
+#          MAGENTO2_PUBLIC_ACCESS_KEY: "op://test-secrets/MAGENTO2_ACCESS_KEYS/public_access_key"
+#          MAGENTO2_PRIVATE_ACCESS_KEY: "op://test-secrets/MAGENTO2_ACCESS_KEYS/private_access_key"
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
