@@ -15,7 +15,6 @@ on:
       - "mkdocs.yml"
       - ".readthedocs.yaml"
       - ".github/workflows/**"
-      - "markdown-link-check.json"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -50,12 +49,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
-      - name: Run linkspector to check links
+      - name: Run linkspector to check external links
         uses: umbrelladocs/action-linkspector@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           fail_on_error: true
+          # Check links only in the added lines for PRs, but check everything otherwise
+          filter_mode: ${{ github.event_name == 'pull_request' && 'added' || 'nofilter' }}
           config_file: '.linkspector.yml'
       - name: Run markdownlint
         uses: docker://avtodev/markdown-lint:v1
@@ -72,4 +73,4 @@ jobs:
         run: |
           sudo pip3 install setuptools
           sudo pip3 install -r docs/mkdocs-pip-requirements
-          mkdocs -q build -d /tmp/mkdocsbuild
+          mkdocs build -d /tmp/mkdocsbuild

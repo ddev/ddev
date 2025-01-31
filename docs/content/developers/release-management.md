@@ -42,7 +42,6 @@ These are normally configured in the repository environment variables.
 
 ### 1Password secrets required
 
-<!-- markdown-link-check-disable-next-line -->
 The following “Repository secret” environment variables must be configured in 1Password:
 
 * `AUR_SSH_PRIVATE_KEY`: Private SSH key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
@@ -84,12 +83,10 @@ The easiest way to push Docker images is to use the GitHub Actions workflow, esp
 2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
-<!-- markdown-link-check-disable-next-line -->
 You can push all images besides `ddev-dbserver` at <https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml>
-<!-- markdown-link-check-disable-next-line -->
+
 You can push `ddev-dbserver` images at <https://github.com/ddev/ddev/actions/workflows/push-tagged-dbimage.yml>
 
-<!-- markdown-link-check-disable-next-line -->
 If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/rfay/ddev/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`. You can do the same with `ddev-dbserver` at `https://github.com/rfay/ddev/actions/workflows/push-tagged-dbimage.yml` for example.
 
 * Visit `https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml`.
