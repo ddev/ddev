@@ -455,7 +455,7 @@ Defines the performance optimization mode to be used. Currently [Mutagen asynchr
 
 This is typically a global setting. The project-specific value will override global config.
 
-The [NFS section in the "performance" doc](../install/performance.md#filesystem-performance-nfs) explains the deprecated `nfs` option.
+The [NFS section in the "performance" doc](../install/performance.md#nfs) explains the deprecated `nfs` option.
 
 ## `php_version`
 
