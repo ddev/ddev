@@ -53,7 +53,7 @@ jobs:
         uses: umbrelladocs/action-linkspector@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
+          reporter: github-check
           fail_on_error: true
           # Check links only in the added lines for PRs, but check everything otherwise
           filter_mode: ${{ github.event_name == 'pull_request' && 'added' || 'nofilter' }}
