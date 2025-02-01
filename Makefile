@@ -163,7 +163,7 @@ mkdocs:
 # See https://ddev.readthedocs.io/en/stable/developers/testing-docs/
 mkdocs-serve:
 	@if command -v mkdocs >/dev/null ; then \
-  		mkdocs serve; \
+		mkdocs serve; \
 	else \
 		echo "mkdocs is not installed." && exit 2; \
 	fi; \
@@ -171,7 +171,7 @@ mkdocs-serve:
 # Install linkspector locally with "sudo npm install -g @umbrelladocs/linkspector"
 linkspector:
 	@echo "linkspector: "
-	if command -v linkspector >/dev/null 2>&1; then \
+	@if command -v linkspector >/dev/null 2>&1; then \
 		linkspector check; \
 	else \
 		echo "Not running linkspector because it's not installed"; \
