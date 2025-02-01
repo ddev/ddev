@@ -147,7 +147,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 === "Demo Website"
 
     The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo).
-    Via the Contao Manager you can simply select this option during the first installation.
+    Via the Contao Manager you can select this option during the first installation.
 
 ## Craft CMS
 
@@ -639,6 +639,66 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev restart
     ddev launch /admin
     ```
+
+## ProcessWire
+
+To get started with [ProcessWire](https://processwire.com/), create a new directory and use the ZIP file download, composer, or Git checkout to build. These instructions are adapted from [ProcessWire Install Documentation](https://processwire.com/docs/start/install/new/#installing-processwire).
+
+=== "ZIP File"
+
+    ```bash
+    mkdir my-processwire-site && cd my-processwire-site
+    curl -LJOf https://github.com/processwire/processwire/archive/master.zip
+    unzip processwire-master.zip && rm -f processwire-master.zip && mv processwire-master/* . && mv processwire-master/.* . 2>/dev/null && rm -rf processwire-master
+    ddev config --project-type=php --webserver-type=apache-fpm
+    ddev start
+    ddev launch
+    ```
+
+=== "Composer"
+
+    ```bash
+    mkdir my-processwire-site && cd my-processwire-site
+    ddev config --project-type=php --webserver-type=apache-fpm
+    ddev start
+    ddev composer create "processwire/processwire:^3"
+    ddev launch
+    ``` 
+
+=== "Git"
+
+    ```bash
+    mkdir my-processwire-site && cd my-processwire-site
+
+    # clone the main branch (stable release) into the current directory
+    git clone https://github.com/processwire/processwire.git .
+
+    # clone the dev branch (latest features) into the current directory
+    # git clone -b dev https://github.com/processwire/processwire.git .
+    
+    ddev config --webserver-type=apache-fpm
+    ddev start
+    ddev launch
+    ```
+
+When the installation wizard prompts for database settings, enter:
+
+- `DB Name` = `db`
+- `DB User` = `db`
+- `DB Pass` = `db`
+- `DB Host` = `db` (**not** `localhost`!)
+- `DB Charset` = `utf8mb4`
+- `DB Engine` = `InnoDB`
+
+If you get a warning about "Apache mod_rewrite" during the compatibility check, Click "refresh".
+
+**After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
+
+    ```
+    ddev config --upload-dirs=sites/assets/files && ddev restart
+    ```
+  
+If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).
 
 ## Shopware
 
