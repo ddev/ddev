@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"sort"
@@ -2652,6 +2653,10 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	if snapshotName == "" {
 		t := time.Now()
 		snapshotName = app.Name + "_" + t.Format("20060102150405")
+	}
+
+	if !regexp.MustCompile(`^[\w-]+$`).MatchString(snapshotName) {
+		return "", fmt.Errorf("invalid snapshot name '%s': it may only contain letters, numbers, hyphens, and underscores", snapshotName)
 	}
 
 	snapshotFile := snapshotName + "-" + app.Database.Type + "_" + app.Database.Version + ".gz"
