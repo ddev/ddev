@@ -37,6 +37,7 @@ import (
 	dockerNetwork "github.com/docker/docker/api/types/network"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
+	dockerVersions "github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
@@ -44,8 +45,15 @@ import (
 
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
-const requiredDockerVersion = ">= 24.0.0"
-const requiredDockerAPIVersion = ">= 1.43"
+
+// DockerVersionConstraint is the current minimum version of Docker required for DDEV.
+// See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
+// for examples defining version constraints.
+// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
+// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
+// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
+const DockerVersionConstraint = ">= 24.0.0"
+const minimalDockerAPIVersion = "1.43"
 
 type ComposeCmdOpts struct {
 	ComposeFiles []string
@@ -824,7 +832,7 @@ func CheckDockerVersion() error {
 		}
 	}
 
-	constraint, err := semver.NewConstraint(requiredDockerVersion)
+	constraint, err := semver.NewConstraint(DockerVersionConstraint)
 	if err != nil {
 		return err
 	}
@@ -841,35 +849,14 @@ func CheckDockerVersion() error {
 		}
 		return fmt.Errorf("%s", msgs)
 	}
-
-	// Check Docker API version
-	currentAPIVersion, err := GetDockerAPIVersion()
+	
+	dockerAPIVersion, err := GetDockerAPIVersion()
 	if err != nil {
 		return fmt.Errorf("unable to get Docker API version: %v", err)
 	}
-	apiVersion, err := semver.NewVersion(currentAPIVersion)
-	if err != nil {
-		return err
+	if !dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, minimalDockerAPIVersion) {
+		return fmt.Errorf("your version of Docker API (%s) doesn't match the minimum (%s)", dockerAPIVersion, minimalDockerAPIVersion)
 	}
-
-	apiConstraint, err := semver.NewConstraint(requiredDockerAPIVersion)
-	if err != nil {
-		return err
-	}
-
-	apiMatch, apiErrs := apiConstraint.Validate(apiVersion)
-	if !apiMatch {
-		if len(apiErrs) <= 1 {
-			return apiErrs[0]
-		}
-
-		apiMsgs := "\n"
-		for _, err := range apiErrs {
-			apiMsgs = fmt.Sprint(apiMsgs, err, "\n")
-		}
-		return fmt.Errorf("%s", apiMsgs)
-	}
-
 	return nil
 }
 
@@ -1863,14 +1850,6 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 
 	return nil
 }
-
-// DockerVersionConstraint is the current minimum version of Docker required for DDEV.
-// See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
-// for examples defining version constraints.
-// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
-// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
-var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
 // DockerVersion is cached version of Docker provider engine
 var DockerVersion = ""
