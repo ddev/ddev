@@ -81,11 +81,11 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--TEST", "custom value")
 	require.Error(t, err, "out=%s", out)
-	require.Contains(t, out, "the flag must be lowercase and start with a letter")
+	require.Contains(t, out, "the flag must consist of lowercase letters, numbers, and hyphens")
 
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--1test", "custom value")
 	require.Error(t, err, "out=%s", out)
-	require.Contains(t, out, "the flag must be lowercase and start with a letter")
+	require.Contains(t, out, "the flag must consist of lowercase letters, numbers, and hyphens")
 
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--test-value", "--test-value-2")
 	require.Error(t, err, "out=%s", out)
