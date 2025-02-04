@@ -73,10 +73,8 @@ func TestGetQuotedInput(t *testing.T) {
 		{"Remove single quotes", `'/path/to/file'`, `/path/to/file`},
 		{"Remove double quotes", `"/path/to/file"`, `/path/to/file`},
 		{"Remove spaces", `  /path/to/file  `, `/path/to/file`},
-		{"Remove spaces in single quotes", ` '  /path/to/file ' `, `/path/to/file`},
-		{"Remove spaces in double quotes", ` "  /path/to/file " `, `/path/to/file`},
-		{"Remove only closest quotes (single)", `'"/path/to/file"'`, `"/path/to/file"`},
-		{"Remove only closest quotes (double)", `"'/path/to/file'"`, `'/path/to/file'`},
+		{"Remove all quotes and spaces", `  ''' """ /path/to/file '''  """ `, `/path/to/file`},
+		{"Quotes and spaces are not removed from the middle", `/path/'" to/file`, `/path/'" to/file`},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {

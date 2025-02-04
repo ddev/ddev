@@ -32,13 +32,8 @@ func GetInput(defaultValue string) string {
 func GetQuotedInput(defaultValue string) string {
 	input := GetInput(defaultValue)
 
-	// Remove surrounding quotes, but only the closest ones.
-	if len(input) >= 2 && (input[0] == '\'' && input[len(input)-1] == '\'' || input[0] == '"' && input[len(input)-1] == '"') {
-		input = input[1 : len(input)-1]
-	}
-
 	// If the value from the input buffer is blank, then use the default instead.
-	value := strings.TrimSpace(input)
+	value := strings.Trim(input, `"' `)
 	if value == "" {
 		value = defaultValue
 	}
