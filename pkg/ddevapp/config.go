@@ -1501,7 +1501,7 @@ func (app *DdevApp) CreateDocroot() error {
 		relPath = ""
 	}
 	// Normalize docroot
-	app.Docroot = relPath
+	app.Docroot = util.WindowsPathToCygwinPath(relPath)
 	if !fileutil.IsDirectory(docrootAbsPath) {
 		if err := os.MkdirAll(docrootAbsPath, 0755); err != nil {
 			return err
