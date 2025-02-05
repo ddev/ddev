@@ -198,6 +198,19 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	_, err = app.Snapshot("d7testerTest1")
 	assert.Error(err)
 
+	// Name should contain only allowed characters
+	_, err = app.Snapshot(`name with spaces`)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid snapshot name")
+
+	_, err = app.Snapshot(`single'quotes`)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid snapshot name")
+
+	_, err = app.Snapshot(`double"quotes`)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid snapshot name")
+
 	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 
