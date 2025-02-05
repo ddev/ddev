@@ -852,10 +852,10 @@ func CheckDockerVersion() error {
 	
 	dockerAPIVersion, err := GetDockerAPIVersion()
 	if err != nil {
-		return fmt.Errorf("unable to get Docker API version: %v", err)
+		return fmt.Errorf("unable to determine Docker API version: %v", err)
 	}
 	if !dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, minimalDockerAPIVersion) {
-		return fmt.Errorf("your version of Docker API (%s) doesn't match the minimum (%s)", dockerAPIVersion, minimalDockerAPIVersion)
+		return fmt.Errorf("your version of Docker API (%s) doesn't meet the minimum (%s) - see (%s) for more information", dockerAPIVersion, minimalDockerAPIVersion, "https://ddev.rtfd.io/page/users/install/docker-installation/#testing-and-troubleshooting-your-docker-installation")
 	}
 	return nil
 }
