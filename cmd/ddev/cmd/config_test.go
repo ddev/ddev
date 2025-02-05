@@ -375,6 +375,51 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal("FOO=bar", app.WebEnvironment[1])
 	assert.Equal("SPACES=with spaces", app.WebEnvironment[3])
 	assert.Equal(webEnv, app.WebEnvironment[2])
+
+	// test docroot locations
+	testMatrix := []struct {
+		description string
+		input       string
+		expected    string
+		error       string
+	}{
+		{"empty docroot", "", "", ""},
+		{"dot docroot", ".", "", ""},
+		{"fail for outside approot", "..", "", "is outside the project root"},
+		{"fail for absolute path outside approot", "/test", "", "is outside the project root"},
+		{"ok for absolute path inside approot", tmpDir, "", ""},
+		{"dot with slash docroot", "./", "", ""},
+		{"dot with slash and dir docroot", "./test", "test", ""},
+		{"subdir docroot", "test/dir", "test/dir", ""},
+		{"dir docroot", "test", "test", ""},
+		{"dot with slash and subdir docroot", "./test/dir", "test/dir", ""},
+	}
+
+	for _, tc := range testMatrix {
+		t.Run(tc.description, func(t *testing.T) {
+			args = []string{
+				"config",
+				"--docroot", tc.input,
+			}
+
+			out, err = exec.RunHostCommand(DdevBin, args...)
+			if tc.error != "" {
+				require.Error(t, err)
+				require.Contains(t, out, tc.error)
+				return
+			}
+			require.NoError(t, err)
+
+			configContents, err = os.ReadFile(configFile)
+			require.NoError(t, err, "Unable to read %s: %v", configFile, err)
+
+			app = &ddevapp.DdevApp{}
+			err = yaml.Unmarshal(configContents, app)
+			require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
+
+			require.Equal(t, tc.expected, app.Docroot)
+		})
+	}
 }
 
 // TestConfigInvalidProjectname tests to make sure that invalid projectnames
