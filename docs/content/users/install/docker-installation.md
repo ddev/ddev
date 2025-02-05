@@ -87,7 +87,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     !!!warning "Avoid Docker Desktop for Linux"
         Current releases of Docker Desktop for Linux are not usable with DDEV for a number of reasons, and also exhibit some of the problems Docker Desktop has on other platforms. Please use the normal `docker-ce` installation described here.
 
-    Docker installation on Linux depends on what flavor you’re using. It’s best to use your native package repository (`apt`, `yum`, etc.):
+    The best way to install Docker on Linux is to use your native package management tool (`apt`, `dnf`, etc.) with the official Docker repository. While many Linux distributions provide Docker packages in their own repositories, these are often outdated and may not include the latest features required for stability in a development environment like DDEV. To ensure you're using a supported version, install Docker directly from the official Docker repository. 
+
+    Follow these distribution-specific instructions to set up Docker from the official respository:
 
     * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
     * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
@@ -159,3 +161,4 @@ If you get an error or don’t see the contents of your project directory, you�
 * If you’re seeing “The path (...) is not shared and is not known to Docker”, find *File sharing* in your Docker settings make sure the appropriate path or drive is included.
 * “Error response from daemon: Get registry-1.docker.io/v2/” may mean Docker isn’t running or you don’t have internet access. Try starting or restarting Docker, and confirm you have a working internet connection.
 * If you’re seeing “403 authentication required” trying to [`ddev start`](../usage/commands.md#start), run `docker logout` and try again. Docker authentication is *not* required for any normal DDEV action.
+* If you see the error message "Your version of Docker API (A.B.C) doesn't meet the minimum (X.Y.Z)," you need to upgrade your Docker engine. The best way to do this is by updating Docker from the official Docker repository. If you're using a version from your distribution's default package repository, it's likely outdated. In that case, uninstall Docker Engine and follow the installation instructions above to install a supported version from the official Docker repository.
