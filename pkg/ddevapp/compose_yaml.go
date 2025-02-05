@@ -102,9 +102,9 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		return nil, err
 	}
 
-	dockerIP, _ := dockerutil.GetDockerIP()
+	bindIP, _ := dockerutil.GetDockerIP()
 	if app.BindAllInterfaces {
-		dockerIP = "0.0.0.0"
+		bindIP = "0.0.0.0"
 	}
 
 	// Ensure that some important network properties are not overridden by users
@@ -188,12 +188,12 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		// Without this, Docker doesn't add a Docker IP, like this:
 		// ports:
 		//   - 127.0.0.1:3000:3000
-		if dockerIP != "" {
+		if bindIP != "" {
 			if ports, ok := serviceMap["ports"].([]interface{}); ok {
 				for _, port := range ports {
 					if portMap, ok := port.(map[string]interface{}); ok {
 						if _, exists := portMap["host_ip"]; !exists {
-							portMap["host_ip"] = dockerIP
+							portMap["host_ip"] = bindIP
 						}
 					}
 				}
