@@ -63,6 +63,32 @@ func TestGetInput(t *testing.T) {
 	println() // Just lets goland find the PASS or FAIL
 }
 
+// TestGetQuotedInput tests GetQuotedInput
+func TestGetQuotedInput(t *testing.T) {
+	testCases := []struct {
+		description string
+		input       string
+		expected    string
+	}{
+		{"Remove single quotes", `'/path/to/file'`, `/path/to/file`},
+		{"Remove double quotes", `"/path/to/file"`, `/path/to/file`},
+		{"Remove spaces", `  /path/to/file  `, `/path/to/file`},
+		{"Remove all quotes and spaces", `  ''' """ /path/to/file '''  """ `, `/path/to/file`},
+		{"Quotes and spaces are not removed from the middle", `/path/'" to/file`, `/path/'" to/file`},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			assert := asrt.New(t)
+			restoreOutput := util.CaptureUserOut()
+			scanner := bufio.NewScanner(strings.NewReader(tc.input))
+			util.SetInputScanner(scanner)
+			result := util.GetQuotedInput("nodefault")
+			assert.EqualValues(tc.expected, result)
+			_ = restoreOutput()
+		})
+	}
+}
+
 // TestCaptureUserOut ensures capturing of stdout works as expected.
 func TestCaptureUserOut(t *testing.T) {
 	assert := asrt.New(t)

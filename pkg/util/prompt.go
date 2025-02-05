@@ -28,6 +28,19 @@ func GetInput(defaultValue string) string {
 	return value
 }
 
+// GetQuotedInput reads input from an input buffer in single or double quotes and returns the result as a string.
+func GetQuotedInput(defaultValue string) string {
+	input := GetInput(defaultValue)
+
+	// If the value from the input buffer is blank, then use the default instead.
+	value := strings.Trim(input, `"' `)
+	if value == "" {
+		value = defaultValue
+	}
+
+	return value
+}
+
 // Prompt gets input with a prompt and returns the input
 func Prompt(prompt string, defaultValue string) string {
 	fullPrompt := fmt.Sprintf("%s (%s)", prompt, defaultValue)

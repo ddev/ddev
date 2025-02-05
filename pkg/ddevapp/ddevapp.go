@@ -736,7 +736,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		output.UserOut.Println("Provide the path to the database you want to import.")
 		fmt.Print("Path to file: ")
 
-		dumpFile = util.GetInput("")
+		dumpFile = util.GetQuotedInput("")
 	}
 
 	if dumpFile != "" {
@@ -746,7 +746,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 				output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
 				fmt.Print("Archive extraction path:")
 
-				extractPath = util.GetInput("")
+				extractPath = util.GetQuotedInput("")
 			} else {
 				return fmt.Errorf("unable to validate import asset %s: %s", dumpFile, err)
 			}
