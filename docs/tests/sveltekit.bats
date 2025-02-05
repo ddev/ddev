@@ -37,10 +37,10 @@ EOF
   run ddev exec "yes | npx sv create --template=demo --types=ts --no-add-ons --no-install ."
   assert_success
 
-  run ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/refs/heads/main/svelte.config.js
+  run ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/svelte.config.js
   assert_success
 
-  run ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/refs/heads/main/vite.config.ts
+  run ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/vite.config.ts
   assert_success
 
   run ddev npm install @sveltejs/adapter-node

@@ -347,7 +347,7 @@ ddev start
 cat <<'EOF' > .ddev/config.frankenphp.yaml
 web_extra_daemons:
     - name: "frankenphp"
-      command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"${DDEV_DOCROOT:-/var/www/html}\" -v -a"
+      command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"/var/www/html/${DDEV_DOCROOT:-}\" -v -a"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "frankenphp"
@@ -691,9 +691,9 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     # When it prompts "Directory not empty. Continue?", choose Yes.
 
     # Install an example svelte.config.js that uses adapter-node
-    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/refs/heads/main/svelte.config.js
+    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/svelte.config.js
     # Install an example vite.config.ts that sets the port and allows all hostnames
-    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/refs/heads/main/vite.config.ts
+    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/vite.config.ts
     ddev npm install @sveltejs/adapter-node
     ddev npm install
     ddev npm run build
@@ -728,7 +728,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
       directory: /var/www/html
     EOF
 
-    ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/refs/heads/main/server.js
+    ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
     ddev restart
     ddev launch
     ```

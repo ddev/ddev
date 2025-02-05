@@ -3067,7 +3067,7 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 }
 
 // GetWebContainerPublicPort returns the first direct-access public tcp port for http
-// It excludes 8025, mailpit
+// It excludes 8025 (mailpit) and 443 (nginx and apache)
 func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 	// There may not always be a public direct port
 	// But if there is, we need to figure out which one it is

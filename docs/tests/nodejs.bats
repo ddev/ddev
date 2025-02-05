@@ -38,7 +38,7 @@ web_extra_daemons:
 EOF
   assert_success
 
-  run ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/refs/heads/main/server.js
+  run ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
   assert_success
 
   run ddev restart -y

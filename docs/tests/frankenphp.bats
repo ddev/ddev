@@ -24,7 +24,7 @@ setup() {
   cat <<'EOF' > .ddev/config.frankenphp.yaml
 web_extra_daemons:
     - name: "frankenphp"
-      command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"${DDEV_DOCROOT:-/var/www/html}\" -v -a"
+      command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"/var/www/html/${DDEV_DOCROOT:-}\" -v -a"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "frankenphp"
