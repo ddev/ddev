@@ -124,7 +124,7 @@ func GetUnknownFlags(cmd *cobra.Command) (map[string]string, error) {
 		if !flagRegex.MatchString(arg) {
 			// Fail if the value is not a valid flag
 			if strings.HasPrefix(arg, "-") {
-				return unknownFlags, fmt.Errorf("the flag must be lowercase and start with a letter, but received %s", arg)
+				return unknownFlags, fmt.Errorf("the flag must consist of lowercase letters, numbers, and hyphens, and it must start with a letter, but received %s", arg)
 			}
 			// Skip if the value is not a flag, but an argument
 			continue
