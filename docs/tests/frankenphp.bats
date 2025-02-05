@@ -7,9 +7,9 @@ setup() {
 }
 
 # executed after each test
-#teardown() {
-#  _common_teardown
-#}
+teardown() {
+  _common_teardown
+}
 
 @test "FrankenPHP Drupal 11 quickstart with $(ddev --version)" {
   FRANKENPHP_SITENAME=${PROJNAME}
