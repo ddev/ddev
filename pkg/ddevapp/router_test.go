@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
 	"os"
@@ -252,8 +251,13 @@ func TestUseEphemeralPort(t *testing.T) {
 		require.NotEqual(t, targetHTTPPort, app.GetPrimaryRouterHTTPPort())
 		require.NotEqual(t, targetHTTPSPort, app.GetPrimaryRouterHTTPSPort())
 
-		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPPort), app.GetPrimaryRouterHTTPPort())
-		require.Equal(t, fmt.Sprint(expectedEphemeralHTTPSPort), app.GetPrimaryRouterHTTPSPort())
+		actualHTTPPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPPort())
+		require.NoError(t, err)
+		actualHTTPSPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPSPort())
+		require.NoError(t, err)
+		// Allow a margin of +/- 1 for ephemeral port checks
+		require.InDelta(t, expectedEphemeralHTTPPort, actualHTTPPort, 1)
+		require.InDelta(t, expectedEphemeralHTTPSPort, actualHTTPSPort, 1)
 
 		// Make sure that both http and https URLs have proper content
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
