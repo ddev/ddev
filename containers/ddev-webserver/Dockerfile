@@ -50,6 +50,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     libmagickcore-6.q16-6-extra \
     locales \
     mariadb-client \
+    patch \
     postgresql-client \
     pv \
     python-is-python3 \
@@ -127,7 +128,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     ncurses-bin \
     netcat-traditional \
     openssh-client \
-    patch \
     sudo \
     telnet \
     tree
