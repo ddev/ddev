@@ -412,7 +412,7 @@ func CheckRouterPorts() error {
 	var existingExposedPorts []string
 	var err error
 	if routerContainer != nil {
-		existingExposedPorts, err = dockerutil.GetExposedContainerPorts(routerContainer.ID)
+		existingExposedPorts, err = dockerutil.GetBoundHostPorts(routerContainer.ID)
 		if err != nil {
 			return err
 		}
@@ -470,7 +470,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 		}
 
 		// Check if the proposedPort is already being handled by the router.
-		routerPortsAlreadyBound, err := dockerutil.GetExposedContainerPorts(r.ID)
+		routerPortsAlreadyBound, err := dockerutil.GetBoundHostPorts(r.ID)
 		if err != nil {
 			// If error getting ports (mostly impossible)
 			return proposedPort, "", false

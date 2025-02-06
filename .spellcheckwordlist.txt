@@ -63,6 +63,7 @@ FSTYPE
 Flags
 Flatpak
 FQDNs
+FrankenPHP
 Fritzbox
 GitLab
 GUI
@@ -149,6 +150,8 @@ Starts
 Statamic
 Sulu
 Support
+Svelte
+SvelteKit
 Symfony
 TablePlus
 Traefik

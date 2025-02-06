@@ -138,6 +138,10 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.Database = DatabaseDefault
 	}
 
+	if app.WebserverType == "" {
+		app.WebserverType = nodeps.WebserverDefault
+	}
+
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 		// On Windows the default timeout may be too short for mutagen to succeed.
@@ -805,6 +809,7 @@ type composeYAMLVars struct {
 	Name                            string
 	Plugin                          string
 	AppType                         string
+	WebserverType                   string
 	MailpitPort                     string
 	HostMailpitPort                 string
 	DBType                          string
@@ -858,10 +863,12 @@ type composeYAMLVars struct {
 	DefaultContainerTimeout         string
 	StartScriptTimeout              string
 	UseHostDockerInternalExtraHosts bool
+	WebExtraContainerPorts          []int
 	WebExtraHTTPPorts               string
 	WebExtraHTTPSPorts              string
 	WebExtraExposedPorts            string
 	BitnamiVolumeDir                string
+	UseHardenedImages               bool
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -910,12 +917,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                      app.Name,
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
-		MailpitPort:               GetExposedPort(app, "mailpit"),
+		WebserverType:             app.WebserverType,
+		MailpitPort:               GetInternalPort(app, "mailpit"),
 		HostMailpitPort:           app.HostMailpitPort,
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",
-		DBPort:                    GetExposedPort(app, "db"),
+		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		NFSServerAddr:             nfsServerAddr,
@@ -960,6 +968,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 		BitnamiVolumeDir:                "",
+		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
 	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
@@ -968,19 +977,20 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	webimageExtraHTTPPorts := []string{}
 	webimageExtraHTTPSPorts := []string{}
-	exposedPorts := []int{}
+	webExtraContainerPorts := []int{}
 	for _, a := range app.WebExtraExposedPorts {
 		webimageExtraHTTPPorts = append(webimageExtraHTTPPorts, fmt.Sprintf("%d:%d", a.HTTPPort, a.WebContainerPort))
 		webimageExtraHTTPSPorts = append(webimageExtraHTTPSPorts, fmt.Sprintf("%d:%d", a.HTTPSPort, a.WebContainerPort))
-		exposedPorts = append(exposedPorts, a.WebContainerPort)
+		webExtraContainerPorts = append(webExtraContainerPorts, a.WebContainerPort)
 	}
-	if len(exposedPorts) != 0 {
+	templateVars.WebExtraContainerPorts = webExtraContainerPorts
+	if len(webExtraContainerPorts) != 0 {
 		templateVars.WebExtraHTTPPorts = "," + strings.Join(webimageExtraHTTPPorts, ",")
 		templateVars.WebExtraHTTPSPorts = "," + strings.Join(webimageExtraHTTPSPorts, ",")
 
 		templateVars.WebExtraExposedPorts = "expose:\n    - "
 		// Odd way to join ints into a string from https://stackoverflow.com/a/37533144/215713
-		templateVars.WebExtraExposedPorts = templateVars.WebExtraExposedPorts + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(exposedPorts)), "\n    - "), "[]")
+		templateVars.WebExtraExposedPorts = templateVars.WebExtraExposedPorts + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(webExtraContainerPorts)), "\n    - "), "[]")
 	}
 
 	if app.Database.Type == nodeps.Postgres {
@@ -1070,6 +1080,7 @@ startretries=15
 stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true
+stopasgroup=true
 `, appStart.Name, appStart.Command, appStart.Directory)
 		err = os.WriteFile(app.GetConfigPath(fmt.Sprintf(".webimageBuild/%s.conf", appStart.Name)), []byte(supervisorConf), 0755)
 		if err != nil {

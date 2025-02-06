@@ -451,12 +451,11 @@ Defines the performance optimization mode to be used. Currently [Mutagen asynchr
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`, or `nfs`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`, or (deprecated) `nfs`.
 
 This is typically a global setting. The project-specific value will override global config.
 
-!!!tip "Workstation configuration is required to use NFS!"
-    See the [NFS section](../install/performance.md#nfs) on the Performance page.
+The [NFS section in the "performance" doc](../install/performance.md#nfs) explains the deprecated `nfs` option.
 
 ## `php_version`
 
@@ -565,11 +564,13 @@ The DDEV-specific project type.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `cakephp`, `craftcms`, `drupal`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`, `drupal11`,   `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `symfony`, `typo3`, or `wordpress`.
+| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `cakephp`, `craftcms`, `drupal`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`, `drupal11`, `generic`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `symfony`, `typo3`, or `wordpress`.
 
 The `php` type doesn’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 
-The many versions of the Drupal project types can be used, for example `drupal11` or `drupal6`. There is also a special `drupal` type that is interpreted as "latest stable Drupal version", so in late 2024, `drupal` means `drupal11`.
+The many versions of the Drupal project types can be used, for example `drupal11` or `drupal6`. There is also a special `drupal` type that is interpreted as "latest stable Drupal version", so in 2025, `drupal` means `drupal11`.
+
+The special `generic` project type does nothing and implies nothing. It is normally used with `webserver_type: generic`.
 
 ## `upload_dirs`
 
@@ -677,7 +678,7 @@ Which available [web server type](../extend/customization-extendibility.md#chang
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm` or `apache-fpm`.
+| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm`, `apache-fpm`, `generic`.
 
 To change from the default `nginx-fpm` to `apache-fpm`, for example, you would need to edit your project’s `.ddev/config.yaml` to include the following:
 
@@ -685,7 +686,11 @@ To change from the default `nginx-fpm` to `apache-fpm`, for example, you would n
 webserver_type: apache-fpm
 ```
 
-Then run the [`ddev restart`](../usage/commands.md#restart) command to have the change take effect.
+This is the same as `ddev config --webserver-type=apache-fpm`.
+
+Then run [`ddev restart`](../usage/commands.md#restart) to have the change take effect.
+
+The `generic` type is special: It tells DDEV not to run any web server daemons, and the user can configure their own with the [`web_extra_daemons`](#web_extra_daemons) option.
 
 ## `working_dir`
 

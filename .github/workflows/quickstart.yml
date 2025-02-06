@@ -43,6 +43,7 @@ jobs:
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
 
+# The magento secrets don't yet work on forked PR, and magento quickstart not done
 #      - name: Load 1password secret(s) magento2 etc
 #        uses: 1password/load-secrets-action@v2
 #        with:

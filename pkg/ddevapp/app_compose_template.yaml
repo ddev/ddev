@@ -162,11 +162,17 @@ services:
     hostname: {{ .Name }}-web
 
     ports:
-      - "{{ .DockerIP }}:$DDEV_HOST_HTTP_PORT:80"
-      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
-    {{ if .HostMailpitPort }}
-      - "{{ .DockerIP }}:{{ .HostMailpitPort }}:8025"
-    {{ end }}
+    {{- if ne .WebserverType "generic" }}
+      - "{{ $.DockerIP }}:$DDEV_HOST_HTTP_PORT:80"
+      - "{{ $.DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
+    {{- end }}
+    {{- range .WebExtraContainerPorts }}
+      - "{{ $.DockerIP }}::{{ . }}"
+    {{- end }}
+    {{- if .MailpitPort }}
+      - "{{ $.DockerIP }}:{{ .HostMailpitPort }}:{{ .MailpitPort }}"
+    {{- end }}
+
     environment:
     - COLUMNS
     - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
@@ -202,10 +208,15 @@ services:
     - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
     # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
     # To expose a container port to a different host port, define the port as hostPort:containerPort
-    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
     # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
     # To expose an HTTPS port, define the port as securePort:containerPort.
+    {{ if eq .WebserverType "generic" }}
+    - HTTP_EXPOSE=${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
+    - HTTPS_EXPOSE=${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
+    {{ else }}
+    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILPIT_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPPorts }}
     - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
+    {{ end }}
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history

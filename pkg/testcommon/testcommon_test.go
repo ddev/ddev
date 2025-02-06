@@ -138,19 +138,15 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	app := &ddevapp.DdevApp{}
 	err = app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-
-		err = app.Stop(true, false)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
 
 		app.RouterHTTPSPort = ""
 		app.RouterHTTPPort = ""
-		err = app.WriteConfig()
-		assert.NoError(err)
+		_ = app.WriteConfig()
 
 		site.Cleanup()
 	})
@@ -230,7 +226,7 @@ func TestPretestAndEnv(t *testing.T) {
 	_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", site.Name})
 
 	site.WebEnvironment = []string{"SOMEVAR=somevar"}
-	site.PretestCmd = fmt.Sprintf("%s exec 'touch /var/tmp/%s'", DdevBin, t.Name())
+	site.PretestCmd = fmt.Sprintf("touch /var/tmp/%s", t.Name())
 	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 

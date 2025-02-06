@@ -40,6 +40,7 @@ const (
 const (
 	WebserverNginxFPM  = "nginx-fpm"
 	WebserverApacheFPM = "apache-fpm"
+	WebserverGeneric   = "generic"
 )
 
 // ValidOmitContainers is the list of things that can be omitted
@@ -83,6 +84,7 @@ var GoroutineLimit = 10
 var ValidWebserverTypes = map[string]bool{
 	WebserverNginxFPM:  true,
 	WebserverApacheFPM: true,
+	WebserverGeneric:   true,
 }
 
 const AppTypeDrupalLatestStable = AppTypeDrupal11
@@ -101,6 +103,7 @@ const (
 	AppTypeDrupal11 = "drupal11"
 	// AppTypeDrupal is an alias for "most recent Drupal version"
 	AppTypeDrupal       = "drupal"
+	AppTypeGeneric      = "generic"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"
 	AppTypeSymfony      = "symfony"
@@ -259,6 +262,21 @@ func GetValidWebserverTypes() []string {
 	s := make([]string, 0, len(ValidWebserverTypes))
 
 	for p := range ValidWebserverTypes {
+		s = append(s, p)
+	}
+
+	return s
+}
+
+// GetPHPWebserverTypes is a helper function that returns a list of valid webserver types for PHP apps.
+// It excludes Generic so tests that don't involve PHP can eliminate "generic"
+func GetPHPWebserverTypes() []string {
+	s := make([]string, 0, len(ValidWebserverTypes))
+
+	for p := range ValidWebserverTypes {
+		if p == WebserverGeneric {
+			continue
+		}
 		s = append(s, p)
 	}
 

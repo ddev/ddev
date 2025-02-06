@@ -8,6 +8,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
@@ -132,9 +133,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			// Normal case, using ddev-router based URLs
 			case !ddevapp.IsRouterDisabled(app):
 				if httpsURL, ok := v["https_url"].(string); ok && !app.CanUseHTTPOnly() {
-					urlPortParts = append(urlPortParts, httpsURL)
+					urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpsURL))
 				} else if httpURL, ok = v["http_url"].(string); ok {
-					urlPortParts = append(urlPortParts, httpURL)
+					urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))
 				}
 
 			// Gitpod, web container only, using port proxied by Gitpod
@@ -144,7 +145,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			// Router disabled, but not because of Gitpod, use direct http url
 			case ddevapp.IsRouterDisabled(app):
 				if httpURL, ok := v["host_http_url"].(string); ok && httpURL != "" {
-					urlPortParts = append(urlPortParts, httpURL)
+					urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))
 				}
 			}
 
@@ -174,10 +175,15 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// Get extra info for web container
 			if k == "web" {
-				extraInfo = append(extraInfo, fmt.Sprintf("%s PHP%s\n%s\ndocroot:'%s'", desc["type"], desc["php_version"], desc["webserver_type"], desc["docroot"]))
+				projectType := fmt.Sprintf("%s PHP %s", desc["type"], desc["php_version"])
+				// For generic type, we don't show PHP version
+				if app.WebserverType == nodeps.WebserverGeneric {
+					projectType = fmt.Sprintf("%s", desc["type"])
+				}
+				extraInfo = append(extraInfo, fmt.Sprintf("%s\nServer: %s\nDocroot: '%s'", projectType, desc["webserver_type"], desc["docroot"]))
 				extraInfo = append(extraInfo, fmt.Sprintf("Perf mode: %s", desc["performance_mode"].(string)))
 				if v, ok := desc["nodejs_version"].(string); ok {
-					extraInfo = append(extraInfo, fmt.Sprintf("NodeJS:%s", v))
+					extraInfo = append(extraInfo, fmt.Sprintf("Node.js: %s", v))
 				}
 			}
 
@@ -203,9 +209,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			//WebExtraExposedPorts stanza
 			for _, extraPort := range app.WebExtraExposedPorts {
 				if app.CanUseHTTPOnly() {
-					t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("http://%s:%d\nInDocker: web:%d", app.GetHostname(), extraPort.HTTPPort, extraPort.WebContainerPort)})
+					url := netutil.NormalizeURL(fmt.Sprintf("http://%s:%d", app.GetHostname(), extraPort.HTTPPort))
+					t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", url, extraPort.WebContainerPort)})
 				} else {
-					t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("https://%s:%d\nInDocker: web:%d", app.GetHostname(), extraPort.HTTPSPort, extraPort.WebContainerPort)})
+					url := netutil.NormalizeURL(fmt.Sprintf("https://%s:%d", app.GetHostname(), extraPort.HTTPSPort))
+					t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", url, extraPort.WebContainerPort)})
 				}
 			}
 

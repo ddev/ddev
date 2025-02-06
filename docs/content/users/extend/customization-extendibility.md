@@ -115,6 +115,10 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 !!!tip "Please share your techniques!"
     There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md) and [Stack Overflow](https://stackoverflow.com/tags/ddev).
 
+### Using Node.js as DDEV's primary web server
+
+In DDEV v1.24.3+, you can use the `generic` web server type and provide your own web server inside the `web` container. As a result, you can use `webserver_type: generic` and use [`web_extra_daemons`](#running-extra-daemons-using-web_extra_daemons) and [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router) to provide your own web server. The [Node.js](../quickstart.md#nodejs) quickstart shows how to do this with an Express Node.js server and also with a SvelteKit server.
+
 ## Running Extra Daemons in the Web Container
 
 There are several ways to run processes inside the `web` container.
@@ -152,7 +156,7 @@ hooks:
 
 ### Running Extra Daemons Using `web_extra_daemons`
 
-If you need extra daemons to start up automatically inside the web container, you can easily add them using [`web_extra_daemons`](../configuration/config.md#web_extra_daemons) in `.ddev/config.yaml`.
+If you need extra daemons to start up automatically inside the web container, you can add them using [`web_extra_daemons`](../configuration/config.md#web_extra_daemons) in `.ddev/config.yaml`.
 
 You might be running Node.js daemons that serve a particular purpose, like `browsersync`, or more general daemons like a `cron` daemon.
 
@@ -175,6 +179,8 @@ web_extra_daemons:
 * `command` is best as a simple binary with its arguments, but Bash features like `cd` or `&&` work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
 * `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
 * Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
+* To debug and/or get your daemon running to begin with, experiment with running it manually inside `ddev ssh`. Then when it works perfectly implement auto-start with `web_extra_daemons`.
+* You can manually restart all daemons with `ddev exec supervisorctl restart webextradaemons:*` or `ddev exec supervisorctl restart webextradaemons:<yourdaemon>`. (`supervisorctl stop` and `supervisorctl start` are available as you would expect.)
 
 ## Exposing Extra Ports via `ddev-router`
 

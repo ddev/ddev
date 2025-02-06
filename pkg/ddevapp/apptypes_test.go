@@ -20,21 +20,20 @@ import (
 // TestDetectAppType does a simple test of various filesystem setups to make
 // sure the expected apptype is returned.
 func TestDetectAppType(t *testing.T) {
-	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	appTypes := ddevapp.GetValidAppTypes()
 	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
-		// we don't detect "drupal" app type
-		if t != nodeps.AppTypePHP && t != nodeps.AppTypeDrupal {
+		// we don't detect "generic", "php", "drupal" app types
+		// They can't be "detected" anyway
+		if t != nodeps.AppTypePHP && t != nodeps.AppTypeDrupal && t != nodeps.AppTypeGeneric {
 			notSimplePHPAppTypes = append(notSimplePHPAppTypes, t)
 		}
 	}
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 
 	t.Cleanup(func() {
-		err := os.Chdir(origDir)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
 		_ = os.RemoveAll(tmpDir)
 	})
 
@@ -42,15 +41,14 @@ func TestDetectAppType(t *testing.T) {
 	require.NoError(t, err)
 	for _, appType := range notSimplePHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
-		assert.NoError(err)
+		require.NoError(t, err)
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 		t.Cleanup(func() {
-			err = app.Stop(true, false)
-			assert.NoError(err)
+			_ = app.Stop(true, false)
 		})
 
 		foundType := app.DetectAppType()
-		assert.EqualValues(appType, foundType)
+		require.EqualValues(t, appType, foundType)
 	}
 }
 

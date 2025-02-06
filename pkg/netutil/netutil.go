@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"strings"
 	"syscall"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -110,4 +111,20 @@ func BaseURLFromFullURL(fullURL string) string {
 	}
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Hostname())
 	return baseURL
+}
+
+// NormalizeURL removes the port from a URL if it is the default port for the scheme
+func NormalizeURL(rawURL string) string {
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		util.Warning("Failed to parse URL %s: %v", rawURL, err)
+		return ""
+	}
+
+	if (parsedURL.Scheme == "http" && parsedURL.Port() == "80") ||
+		(parsedURL.Scheme == "https" && parsedURL.Port() == "443") {
+		parsedURL.Host = strings.TrimSuffix(parsedURL.Host, ":"+parsedURL.Port())
+	}
+
+	return parsedURL.String()
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -221,8 +222,10 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["docroot"] = app.GetDocroot()
 	appDesc["shortroot"] = shortRoot
-	appDesc["httpurl"] = app.GetHTTPURL()
-	appDesc["httpsurl"] = app.GetHTTPSURL()
+	if app.WebserverType != nodeps.WebserverGeneric {
+		appDesc["httpurl"] = app.GetHTTPURL()
+		appDesc["httpsurl"] = app.GetHTTPSURL()
+	}
 	appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
 	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
@@ -266,7 +269,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			if err != nil {
 				util.Warning("failed to GetPublishedPort(db): %v", err)
 			}
-			dbinfo["dbPort"] = GetExposedPort(app, "db")
+			dbinfo["dbPort"] = GetInternalPort(app, "db")
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = nodeps.MariaDB // default
 			dbinfo["database_type"] = app.Database.Type
@@ -283,8 +286,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
-	appDesc["router_http_port"] = app.GetRouterHTTPPort()
-	appDesc["router_https_port"] = app.GetRouterHTTPSPort()
+	appDesc["router_http_port"] = app.GetPrimaryRouterHTTPPort()
+	appDesc["router_https_port"] = app.GetPrimaryRouterHTTPSPort()
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
@@ -397,30 +400,25 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					continue
 				}
 
-				// If the HTTP port is 80 (default), it doesn't get included in URL
-				portDefault := "80"
 				attributeName := "http_url"
 				protocol := "http://"
 
 				if name == "HTTPS_EXPOSE" {
-					// If the HTTPS port is 443 (default), it doesn't get included in URL
-					portDefault = "443"
 					attributeName = "https_url"
 					protocol = "https://"
 				}
 
-				portValStr := fmt.Sprintf("%s", portMapping)
+				portValStr := portMapping
 				portSpecs := strings.Split(portValStr, ",")
-				// There might be more than one exposed UI port, but this only handles the first listed,
-				// most often there's only one.
+				// There might be more than one exposed UI port, for example
+				// the web container has https, http, and mailpit
 				if len(portSpecs) > 0 {
 					// HTTP(S) portSpecs typically look like <exposed>:<containerPort>, for example - HTTP_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
+					// It doesn't make sense to report the mailpit port here
 
-					services[shortName][attributeName] = protocol + appHostname
-
-					if ports[0] != portDefault {
-						services[shortName][attributeName] = services[shortName][attributeName].(string) + ":" + ports[0]
+					if ports[0] != app.GetMailpitHTTPPort() && ports[0] != app.GetMailpitHTTPSPort() {
+						services[shortName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
 					}
 				}
 			}
@@ -441,7 +439,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 // GetPublishedPort returns the host-exposed public port of a container.
 func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
-	exposedPort := GetExposedPort(app, serviceName)
+	exposedPort := GetInternalPort(app, serviceName)
 	exposedPortInt, err := strconv.Atoi(exposedPort)
 	if err != nil {
 		return -1, err
@@ -555,7 +553,7 @@ func (app *DdevApp) GetPhpVersion() string {
 	return v
 }
 
-// GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm)
+// GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/generic)
 func (app *DdevApp) GetWebserverType() string {
 	v := nodeps.WebserverDefault
 	if app.WebserverType != "" {
@@ -564,33 +562,26 @@ func (app *DdevApp) GetWebserverType() string {
 	return v
 }
 
-// GetRouterHTTPPort returns app's router http port
-func (app *DdevApp) GetRouterHTTPPort() string {
-
-	// If the web container is running and HTTP_EXPOSE has a mapping,
-	// return the host-side mapped port
+// GetPrimaryRouterHTTPPort returns app's router primary http port
+// This can be port 80 (default) or the item in HTTP_EXPOSE
+// matching the default router port. If there is no port, returns ""
+func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
+	proposedPrimaryRouterHTTPPort := "80"
+	if globalconfig.DdevGlobalConfig.RouterHTTPPort != "" {
+		proposedPrimaryRouterHTTPPort = globalconfig.DdevGlobalConfig.RouterHTTPPort
+	}
+	if app.RouterHTTPPort != "" {
+		proposedPrimaryRouterHTTPPort = app.RouterHTTPPort
+	}
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
-		//util.Debug("GetRouterHTTPPort(): HTTP_EXPOSE=%s", httpExpose)
-		httpPort := app.PortFromExposeVariable(httpExpose, "80")
-		if httpPort != "" {
-			//util.Debug("GetRouterHTTPPort(): returning httpPort=%s found from HTTP_EXPOSE=%s", httpPort, httpExpose)
-			return httpPort
+		//util.Debug("GetPrimaryRouterHTTPPort(): HTTP_EXPOSE='%s'", httpExpose)
+		httpPort := app.RouterPortFromExposeVariable(httpExpose, proposedPrimaryRouterHTTPPort)
+		if httpPort == "" {
+			//util.Debug("GetPrimaryRouterHTTPPort(): no primary router port found in %s", httpExpose)
+			proposedPrimaryRouterHTTPPort = ""
 		}
 	}
-
-	// If the project-level RouterHTTPPort is set, it takes priority
-	// over the global RouterHTTPPort, so return that
-	if app.RouterHTTPPort != "" {
-		//util.Debug("GetRouterHTTPPort(): returning app.RouterHTTPPort=%s", app.RouterHTTPPort)
-		return app.RouterHTTPPort
-	}
-
-	// Finally, return whatever is in the global RouterHTTPPort,
-	// which will be port 80 by default, but could be something else
-	// if configured there
-
-	//util.Debug("GetRouterHTTPPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPPort)
-	return globalconfig.DdevGlobalConfig.RouterHTTPPort
+	return proposedPrimaryRouterHTTPPort
 }
 
 // GetWebEnvVar() gets an environment variable from
@@ -606,13 +597,13 @@ func (app *DdevApp) GetWebEnvVar(name string) string {
 	return ""
 }
 
-// PortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
 // comma-delimted list of colon-delimited port-pairs
 // Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related port to be exposed on the router.
 // It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
 // found or no valid port mapping is found.
-func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort string) string {
+func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort string) string {
 	// Get the var
 	// split it via comma
 	// split it via colon into a map: rhs is the key, lhs is the value
@@ -630,28 +621,59 @@ func (app *DdevApp) PortFromExposeVariable(exposeEnvVar string, targetPort strin
 	return ""
 }
 
-// GetRouterHTTPSPort returns app's router https port
+// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// comma-delimted list of colon-delimited port-pairs
+// Given a router port (often "80" or "443") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
+// the related container target port.
+// It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
+// found or no valid port mapping is found.
+func (app *DdevApp) RouterPortFromExposeVariable(exposeEnvVar string, routerPort string) string {
+	// Get the var
+	// split it via comma
+	// split it via colon into a map: rhs is the key, lhs is the value
+	portMap := make(map[string]string)
+	items := strings.Split(exposeEnvVar, ",")
+	for _, item := range items {
+		portPair := strings.Split(item, ":")
+		if len(portPair) == 2 {
+			portMap[portPair[0]] = portPair[1]
+		}
+	}
+	if _, ok := portMap[routerPort]; ok {
+		return routerPort
+	}
+	return ""
+}
+
+// GetPrimaryRouterHTTPSPort returns app's router https port
 // It has to choose from (highest to lowest priority):
 // 1. The actual port configured into running container via HTTPS_EXPOSE
 // 2. The project router_http_port
 // 3. The global router_http_port
-func (app *DdevApp) GetRouterHTTPSPort() string {
+func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
+
+	proposedPrimaryRouterHTTPSPort := "443"
+	if globalconfig.DdevGlobalConfig.RouterHTTPSPort != "" {
+		proposedPrimaryRouterHTTPSPort = globalconfig.DdevGlobalConfig.RouterHTTPSPort
+	}
+	if app.RouterHTTPSPort != "" {
+		proposedPrimaryRouterHTTPSPort = app.RouterHTTPSPort
+	}
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
-		//util.Debug("GetRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
-		httpsPort := app.PortFromExposeVariable(httpsExpose, "80")
-		if httpsPort != "" {
-			//util.Debug("GetRouterHTTPSPort(): returning httpsPort=%s derived from HTTPS_EXPOSE=%s", httpsPort, httpsExpose)
-			return httpsPort
+		//util.Debug("GetPrimaryRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
+		// TODO: The problem here is we're looking for the HTTPS_EXPOSE stanza
+		// that is 80 in container, and we actually want to look for the
+		// stanza that matches 443 on router. So "8026:8025,443:3000"
+		// would tell us that because target=443 (or other router port) we
+		// should use that one. But... we're only interested in the 443 anyway.
+		// So why don't we just return the 443 instead of looking at HTTPS_EXPOSE?
+		httpsPort := app.RouterPortFromExposeVariable(httpsExpose, proposedPrimaryRouterHTTPSPort)
+		if httpsPort == "" {
+			//util.Debug("GetPrimaryRouterHTTPSPort(): no primary router port found in %s", httpsExpose)
+			proposedPrimaryRouterHTTPSPort = ""
 		}
 	}
-
-	if app.RouterHTTPSPort != "" {
-		//util.Debug("GetRouterHTTPSPort(): app.RouterHTTPSPort=%s", app.RouterHTTPSPort)
-		return app.RouterHTTPSPort
-	}
-
-	//util.Debug("GetRouterHTTPSPort(): returning globalconfig.DdevGlobalConfig.RouterHTTPSPort=%s", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
-	return globalconfig.DdevGlobalConfig.RouterHTTPSPort
+	return proposedPrimaryRouterHTTPSPort
 }
 
 // GetMailpitHTTPPort returns app's mailpit router http port
@@ -660,7 +682,7 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 func (app *DdevApp) GetMailpitHTTPPort() string {
 
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
-		httpPort := app.PortFromExposeVariable(httpExpose, "8025")
+		httpPort := app.TargetPortFromExposeVariable(httpExpose, "8025")
 		if httpPort != "" {
 			return httpPort
 		}
@@ -682,7 +704,7 @@ func (app *DdevApp) GetMailpitHTTPPort() string {
 func (app *DdevApp) GetMailpitHTTPSPort() string {
 
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
-		httpsPort := app.PortFromExposeVariable(httpsExpose, "8025")
+		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, "8025")
 		if httpsPort != "" {
 			return httpsPort
 		}
@@ -1246,8 +1268,8 @@ func (app *DdevApp) Start() error {
 	app.ComposeYaml = nil
 
 	// Set up ports to be replaced with ephemeral ports if needed
-	app.RouterHTTPPort = app.GetRouterHTTPPort()
-	app.RouterHTTPSPort = app.GetRouterHTTPSPort()
+	app.RouterHTTPPort = app.GetPrimaryRouterHTTPPort()
+	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
 	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
 	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
 	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
@@ -2478,8 +2500,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PHP_VERSION":         app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
 		"DDEV_PROJECT_TYPE":        app.Type,
-		"DDEV_ROUTER_HTTP_PORT":    app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":   app.GetRouterHTTPSPort(),
+		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_VERSION":             versionconstants.DdevVersion,
@@ -2934,8 +2956,8 @@ func (app *DdevApp) GetHTTPURL() string {
 	if !IsRouterDisabled(app) {
 		url = "http://" + app.GetHostname()
 		// If the HTTP port is the default "80", it's not included in the URL
-		if app.GetRouterHTTPPort() != "80" {
-			url = url + ":" + app.GetRouterHTTPPort()
+		if app.GetPrimaryRouterHTTPPort() != "80" {
+			url = url + ":" + app.GetPrimaryRouterHTTPPort()
 		}
 	} else {
 		url = app.GetWebContainerDirectHTTPURL()
@@ -2943,12 +2965,12 @@ func (app *DdevApp) GetHTTPURL() string {
 	return url
 }
 
-// GetHTTPSURL returns the HTTPS URL for an app.
+// GetHTTPSURL returns the primary HTTPS URL for an app.
 func (app *DdevApp) GetHTTPSURL() string {
 	url := ""
 	if !IsRouterDisabled(app) {
 		url = "https://" + app.GetHostname()
-		p := app.GetRouterHTTPSPort()
+		p := app.GetPrimaryRouterHTTPSPort()
 		// If the HTTPS port is 443 (default), it doesn't get included in URL
 		if p != "443" {
 			url = url + ":" + p
@@ -2964,7 +2986,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	if nodeps.IsGitpod() {
 		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
 		if err == nil {
-			url = strings.Trim(url, "\n")
+			url = netutil.NormalizeURL(strings.Trim(url, "\n"))
 			httpsURLs = append(httpsURLs, url)
 		}
 	}
@@ -2973,32 +2995,34 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		previewDomain := os.Getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
 		if codespaceName != "" && previewDomain != "" {
 			url := fmt.Sprintf("https://%s-%s.%s", codespaceName, app.HostWebserverPort, previewDomain)
-			httpsURLs = append(httpsURLs, url)
+			httpsURLs = append(httpsURLs, netutil.NormalizeURL(url))
 		}
 	}
 
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
-		httpPort := ""
-		httpsPort := ""
-		if app.GetRouterHTTPPort() != "80" {
-			httpPort = ":" + app.GetRouterHTTPPort()
-		}
-		// If the HTTPS port is 443 (default), it doesn't get included in URL
-		if app.GetRouterHTTPSPort() != "443" {
-			httpsPort = ":" + app.GetRouterHTTPSPort()
-		}
+		httpPort := app.GetPrimaryRouterHTTPPort()
+		httpsPort := app.GetPrimaryRouterHTTPSPort()
 
-		if !app.CanUseHTTPOnly() {
-			httpsURLs = append(httpsURLs, "https://"+name+httpsPort)
+		// It's possible for no https default to be configured
+		if !app.CanUseHTTPOnly() && httpsPort != "" {
+			httpsURL := netutil.NormalizeURL("https://" + name + ":" + httpsPort)
+			httpsURLs = append(httpsURLs, httpsURL)
 		}
-		httpURLs = append(httpURLs, "http://"+name+httpPort)
+		if httpPort != "" {
+			httpURL := netutil.NormalizeURL("http://" + name + ":" + httpPort)
+			httpURLs = append(httpURLs, httpURL)
+		}
 	}
 
 	if !IsRouterDisabled(app) && !app.CanUseHTTPOnly() {
-		httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
+		if directHTTPSURL := app.GetWebContainerDirectHTTPSURL(); directHTTPSURL != "" {
+			httpsURLs = append(httpsURLs, directHTTPSURL)
+		}
 	}
-	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
+	if directHTTPURL := app.GetWebContainerDirectHTTPURL(); directHTTPURL != "" {
+		httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
+	}
 
 	allURLs = append(httpsURLs, httpURLs...)
 	return httpURLs, httpsURLs, allURLs
@@ -3026,7 +3050,10 @@ func (app *DdevApp) GetWebContainerDirectHTTPURL() string {
 	if err != nil {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
-	port, _ := app.GetWebContainerPublicPort()
+	port, err := app.GetWebContainerDirectHTTPPort()
+	if err != nil {
+		return ""
+	}
 	return fmt.Sprintf("http://%s:%d", dockerIP, port)
 }
 
@@ -3037,23 +3064,33 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	if err != nil {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
-	port, _ := app.GetWebContainerHTTPSPublicPort()
+	port, err := app.GetWebContainerHTTPSPublicPort()
+	if err != nil {
+		return ""
+	}
 	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
-// GetWebContainerPublicPort returns the direct-access public tcp port for http
-func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
-
+// GetWebContainerPublicPort returns the first direct-access public tcp port for http
+// It excludes 8025 (mailpit) and 443 (nginx and apache)
+func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
+	// There may not always be a public direct port
+	// But if there is, we need to figure out which one it is
+	// using HTTP_EXPOSE
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
 		return -1, fmt.Errorf("unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
 	for _, p := range webContainer.Ports {
-		if p.PrivatePort == 80 {
+		// Exclude mailpit port (internal is wired to 8025)
+		// Also assume that 443 is https, so we won't return it from this one.
+		// It's https with nginx and apache
+		if p.PrivatePort != 8025 && p.PrivatePort != 443 {
 			return int(p.PublicPort), nil
 		}
 	}
+	// Alternately, we could just bail in this situation and handle the -1
 	return -1, fmt.Errorf("no public port found for private port 80")
 }
 

@@ -309,7 +309,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
-		// 20: Symfony
+		// 17: Symfony
 		{
 			Name:                          "TestPkgSymfony",
 			SourceURL:                     "https://github.com/ddev/test-symfony/archive/refs/tags/v2.6.0.tar.gz",
@@ -320,6 +320,47 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Symfony Demo"},
 			FilesImageURI:                 "/apple-touch-icon.png",
+		},
+		// 18: Sveltekit (Node.js example)
+		{
+			Name:                          "TestPkgSveltekit",
+			SourceURL:                     "https://github.com/ddev/test-sveltekit/archive/refs/tags/v2.16.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-sveltekit-2.16.1/",
+			Type:                          nodeps.AppTypeGeneric,
+			WebserverType:                 nodeps.WebserverGeneric,
+			Docroot:                       "",
+			PretestCmd:                    "cd /var/www/html && npm i && npm run build",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/about", Expect: "Test page for DDEV"},
+			// The dynamic URI here is not quite right, we should be able to curl the game and check things
+			DynamicURI:    testcommon.URIWithExpect{URI: "/sverdle", Expect: "How to play"},
+			FilesImageURI: "/_app/immutable/assets/svelte-welcome.0pIiHnVF.webp",
+		},
+		// 19: Node.js example
+		{
+			Name:                          "TestPkgNodejs",
+			SourceURL:                     "https://github.com/ddev/test-nodejs/archive/refs/tags/v0.0.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-nodejs-0.0.1/",
+			Type:                          nodeps.AppTypeGeneric,
+			WebserverType:                 nodeps.WebserverGeneric,
+			Docroot:                       "",
+			PretestCmd:                    "cd /var/www/html && npm i && npm i express",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "DDEV experimental Node.js"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/greet/TestPkgNodejs", Expect: "Hello, TestPkgNodejs! Hope"},
+		},
+		// 20: frankenphp
+		{
+			Name:                          "TestPkgFrankenPHP",
+			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-frankenphp-11.1.1/",
+			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/db.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal11,
+			Docroot:                       "web",
+			WebserverType:                 nodeps.WebserverGeneric,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/3", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
+			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
 	}
 
@@ -893,6 +934,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	projDir := testcommon.CreateTmpDir(t.Name())
 	app, err := ddevapp.NewApp(projDir, false)
 	require.NoError(t, err)
+
+	if app.GetWebserverType() == nodeps.AppTypeGeneric {
+		t.Skip("Xdebug is not tested on generic webserver")
+	}
+
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -1074,6 +1120,11 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	projDir := testcommon.CreateTmpDir(t.Name())
 	app, err := ddevapp.NewApp(projDir, false)
 	require.NoError(t, err)
+
+	if app.GetWebserverType() == nodeps.AppTypeGeneric {
+		t.Skip("Xhprof is not tested on generic webserver")
+	}
+
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -1107,10 +1158,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 		_ = os.RemoveAll(projDir)
 	})
 
-	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
-	for k := range nodeps.ValidWebserverTypes {
-		webserverKeys = append(webserverKeys, k)
-	}
+	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
 	if os.Getenv("GOTEST_SHORT") != "" {
 		webserverKeys = []string{nodeps.WebserverDefault}
@@ -2313,7 +2361,7 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
@@ -2361,6 +2409,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 		out := restoreOutput()
 		assert.NotContains(out, "Unable to create settings file")
+		assert.NotContains(out, "Unable to start web_extra_daemons")
 
 		// Validate Mailpit is working and "connected"
 		mailpitAPIURL := "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort() + "/api/v1/messages"
@@ -2392,13 +2441,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			}
 		}
 
-		startErr := app.StartAndWait(2)
-		if startErr != nil {
-			appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(getLogsErr)
-			t.Fatalf("app.StartAndWait() failure err=%v; health=\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
-		}
-
 		// Test static content.
 		if site.Safe200URIWithExpectation.URI != "" {
 			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
@@ -2421,8 +2463,8 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if site.FilesImageURI != "" {
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+site.FilesImageURI)
 			assert.NoError(err, "failed ImageURI response on project %s", site.Name)
-			if err != nil && resp != nil {
-				assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
+			if err == nil && resp != nil {
+				assert.Contains(resp.Header["Content-Type"][0], "image/")
 			}
 		}
 
@@ -3413,7 +3455,7 @@ func TestHttpsRedirection(t *testing.T) {
 	}
 
 	// The simple redirect logic in `landed.php` and /subdir can only handle default ports 80 and 443
-	if app.GetRouterHTTPSPort() == "443" && app.GetRouterHTTPPort() == "80" {
+	if app.GetPrimaryRouterHTTPSPort() == "443" && app.GetPrimaryRouterHTTPPort() == "80" {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php"})
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php"})
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
@@ -3693,6 +3735,10 @@ func TestPHPWebserverType(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		if app.GetWebserverType() == nodeps.WebserverGeneric || app.GetType() == nodeps.AppTypeGeneric {
+			t.Logf("Skipping TestSite %s=%d because generic webserver or generic type", site.Name, i)
+			continue
+		}
 
 		t.Cleanup(func() {
 			err = app.Stop(true, false)
@@ -4304,7 +4350,7 @@ func TestCustomCerts(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetPrimaryRouterHTTPSPort(), app.GetHostname()),
 	})
 	require.NoError(t, err, "failed to run openssl command, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
@@ -4331,7 +4377,7 @@ func TestCustomCerts(t *testing.T) {
 	_ = app.MutagenSyncFlush()
 
 	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetRouterHTTPSPort(), app.GetHostname()),
+		Cmd: fmt.Sprintf("set -eu -o pipefail; openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetPrimaryRouterHTTPSPort(), app.GetHostname()),
 	})
 	require.NoError(t, err, "openssl command failed, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
@@ -4389,8 +4435,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_PRIMARY_URL":       app.GetPrimaryURL(),
 		"DDEV_PROJECT":           app.Name,
 		"DDEV_PROJECT_TYPE":      app.Type,
-		"DDEV_ROUTER_HTTP_PORT":  app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT": app.GetRouterHTTPSPort(),
+		"DDEV_ROUTER_HTTP_PORT":  app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT": app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_SITENAME":          app.Name,
 		"DDEV_TLD":               app.ProjectTLD,
 		"DDEV_VERSION":           versionconstants.DdevVersion,
@@ -4442,8 +4488,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_PROJECT":             app.Name,
 		"DDEV_PROJECT_TYPE":        app.Type,
-		"DDEV_ROUTER_HTTP_PORT":    app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":   app.GetRouterHTTPSPort(),
+		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_SITENAME":            app.Name,
 		"DDEV_TLD":                 app.ProjectTLD,
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
