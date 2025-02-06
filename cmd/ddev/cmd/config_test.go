@@ -386,7 +386,7 @@ func TestConfigSetValues(t *testing.T) {
 		{"empty docroot", "", "", ""},
 		{"dot docroot", ".", "", ""},
 		{"fail for outside approot", "..", "", "is outside the project root"},
-		{"fail for absolute path outside approot", "/test", "", "is outside the project root"},
+		{"fail for absolute path outside approot", "//test", "", "is outside the project root"},
 		{"ok for absolute path inside approot", tmpDir, "", ""},
 		{"dot with slash docroot", "./", "", ""},
 		{"dot with slash and dir docroot", "./test", "test", ""},
