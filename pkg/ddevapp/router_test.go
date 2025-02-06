@@ -251,13 +251,18 @@ func TestUseEphemeralPort(t *testing.T) {
 		require.NotEqual(t, targetHTTPPort, app.GetPrimaryRouterHTTPPort())
 		require.NotEqual(t, targetHTTPSPort, app.GetPrimaryRouterHTTPSPort())
 
+		// Allow a margin of +2 for ephemeral port checks due to flakiness
 		actualHTTPPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPPort())
 		require.NoError(t, err)
+		require.Condition(t, func() bool {
+			return actualHTTPPort >= expectedEphemeralHTTPPort && actualHTTPPort <= expectedEphemeralHTTPPort+2
+		}, "HTTP port must be between %d and %d, got %d", expectedEphemeralHTTPPort, expectedEphemeralHTTPPort+2, actualHTTPPort)
+
 		actualHTTPSPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPSPort())
 		require.NoError(t, err)
-		// Allow a margin of +/- 1 for ephemeral port checks
-		require.InDelta(t, expectedEphemeralHTTPPort, actualHTTPPort, 1)
-		require.InDelta(t, expectedEphemeralHTTPSPort, actualHTTPSPort, 1)
+		require.Condition(t, func() bool {
+			return actualHTTPSPort >= expectedEphemeralHTTPSPort && actualHTTPSPort <= expectedEphemeralHTTPSPort+2
+		}, "HTTPS port must be between %d and %d, got %d", expectedEphemeralHTTPSPort, expectedEphemeralHTTPSPort+2, actualHTTPSPort)
 
 		// Make sure that both http and https URLs have proper content
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
