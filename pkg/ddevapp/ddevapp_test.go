@@ -3559,7 +3559,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
 	require.NotEmpty(t, files)
-	assert.Equal(5, len(files))
+	assert.Equal(6, len(files))
 	require.Equal(t, app.GetConfigPath(".ddev-docker-compose-base.yaml"), files[0])
 	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
 
@@ -3578,7 +3578,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 				assert.Equal("2", env["DUMMY_COMPOSE_TWO"])
 				assert.Equal("override", env["DUMMY_COMPOSE_OVERRIDE"])
 			} else {
-				t.Error("Failed to parse environment")
+				t.Errorf("Failed to parse web environment: %v", w)
 			}
 			// Verify that users can add and override network properties
 			if networks, ok := w["networks"].(map[string]interface{}); ok {
@@ -3586,18 +3586,50 @@ func TestMultipleComposeFiles(t *testing.T) {
 				if network, ok := networks["default"].(map[string]interface{}); ok {
 					assert.Equal(1, network["priority"])
 				} else {
-					t.Error("Failed to parse default network")
+					t.Errorf("Failed to parse web default network: %v", networks)
 				}
 				if network, ok := networks["dummy"].(map[string]interface{}); ok {
 					assert.Equal(2, network["priority"])
 				} else {
-					t.Error("Failed to parse dummy network")
+					t.Errorf("Failed to parse web dummy network: %v", networks)
 				}
 			} else {
-				t.Error("Failed to parse web service networks")
+				t.Errorf("Failed to parse web service networks: %v", w)
+			}
+			// Verify that all ports have host_ip set to DOCKER_IP
+			if ports, ok := w["ports"].([]interface{}); ok {
+				hostIP12345 := ""
+				for _, port := range ports {
+					if portMap, ok := port.(map[string]interface{}); ok {
+						if _, exists := portMap["host_ip"]; exists {
+							// check all ports have host_ip set to default 127.0.0.1
+							assert.Equal("127.0.0.1", portMap["host_ip"])
+							// and another explicit port check for docker-compose.ports.yaml
+							if target, exists := portMap["target"]; exists {
+								if targetInt, ok := target.(int); ok && targetInt == 12345 {
+									// Check if host_ip exists and is a string
+									if hostIP, ok := portMap["host_ip"].(string); ok {
+										hostIP12345 = hostIP
+									} else {
+										t.Errorf("host_ip is not a string in web port: %v", portMap)
+									}
+								}
+							} else {
+								t.Errorf("target not found in web port: %v", portMap)
+							}
+						} else {
+							t.Errorf("host_ip not found in web port: %v", portMap)
+						}
+					} else {
+						t.Errorf("failed to parse web port: %v", port)
+					}
+				}
+				assert.Equal("127.0.0.1", hostIP12345, "host_ip not set for port 12345 in docker-compose.ports.yaml")
+			} else {
+				t.Errorf("failed to parse web ports: %v", w)
 			}
 		} else {
-			t.Error("failed to parse web service")
+			t.Errorf("failed to parse web services: %v", services)
 		}
 
 	} else {

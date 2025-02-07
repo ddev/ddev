@@ -1,0 +1,5 @@
+services:
+  web:
+    ports:
+      # host_ip (like 127.0.0.1) should be added automatically
+      - ":12345"
