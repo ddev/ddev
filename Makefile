@@ -144,7 +144,7 @@ markdownlint:
 	if command -v markdownlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Skipping markdownlint as not installed"; \
+		echo "Skipping markdownlint as not installed (see .envrc file)"; \
 	fi
 
 # Install mkdocs locally using
@@ -155,7 +155,7 @@ mkdocs:
 	if command -v mkdocs >/dev/null 2>&1; then \
 		$$CMD ; \
 	else \
-		echo "Not running mkdocs because it's not installed"; \
+		echo "Not running mkdocs because it's not installed (see .envrc file)"; \
 	fi
 
 # To see what the docs will look like, you can use `make mkdocs-serve`
@@ -165,7 +165,7 @@ mkdocs-serve:
 	@if command -v mkdocs >/dev/null ; then \
 		mkdocs serve; \
 	else \
-		echo "mkdocs is not installed." && exit 2; \
+		echo "mkdocs is not installed (see .envrc file)" && exit 2; \
 	fi; \
 
 # Install linkspector locally with "sudo npm install -g @umbrelladocs/linkspector"
@@ -174,10 +174,10 @@ linkspector:
 	@if command -v linkspector >/dev/null 2>&1; then \
 		linkspector check; \
 	else \
-		echo "Not running linkspector because it's not installed"; \
+		echo "Not running linkspector because it's not installed (see .envrc file)"; \
 	fi
 
-# Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requries aspell, `sudo apt-get install aspell"
+# Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requires aspell, `sudo apt-get install aspell"
 pyspelling:
 	@echo "pyspelling: "
 	@CMD="pyspelling --config .spellcheck.yml"; \
@@ -185,7 +185,7 @@ pyspelling:
 	if command -v pyspelling >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Not running pyspelling because it's not installed"; \
+		echo "Not running pyspelling because it's not installed (see .envrc file)"; \
 	fi
 
 # Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
@@ -196,7 +196,7 @@ textlint:
 	if command -v textlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "textlint is not installed"; \
+		echo "textlint is not installed (see .envrc file)"; \
 	fi
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
@@ -297,7 +297,7 @@ version:
 clean: bin-clean
 
 bin-clean:
-	@rm -rf bin
+	@rm -rf bin .cache
 	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP) && rm -rf $(GOTMP); fi )
 
 # print-ANYVAR prints the expanded variable
