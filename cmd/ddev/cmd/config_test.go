@@ -375,6 +375,35 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal("FOO=bar", app.WebEnvironment[1])
 	assert.Equal("SPACES=with spaces", app.WebEnvironment[3])
 	assert.Equal(webEnv, app.WebEnvironment[2])
+}
+
+// TestConfigCreateDocroot sets the docroot, then confirms that the
+// value have been correctly written to the config file and docroot is created.
+func TestConfigCreateDocroot(t *testing.T) {
+	assert := asrt.New(t)
+
+	projectName := strings.ToLower(t.Name())
+	origDir, _ := os.Getwd()
+	_, _ = exec.RunHostCommand(DdevBin, "stop", "--unlist", projectName)
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(tmpDir)
+
+	var err error
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", projectName)
+		assert.NoError(err, "output=%s", out)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	_ = os.Chdir(tmpDir)
+
+	configFile := filepath.Join(tmpDir, ".ddev", "config.yaml")
+	require.NoError(t, err, "Unable to read '%s'", configFile)
 
 	// test docroot locations
 	testMatrix := []struct {
@@ -385,9 +414,8 @@ func TestConfigSetValues(t *testing.T) {
 	}{
 		{"empty docroot", "", "", ""},
 		{"dot docroot", ".", "", ""},
-		{"fail for outside approot", "..", "", "is outside the project root"},
-		{"fail for absolute path outside approot", "//test", "", "is outside the project root"},
-		{"ok for absolute path inside approot", tmpDir, "", ""},
+		{"fail for outside approot", "../somewhere-else", "", "is outside the project root"},
+		{"fail for absolute path", "//test", "", "must be relative"},
 		{"dot with slash docroot", "./", "", ""},
 		{"dot with slash and dir docroot", "./test", "test", ""},
 		{"subdir docroot", "test/dir", "test/dir", ""},
@@ -397,12 +425,12 @@ func TestConfigSetValues(t *testing.T) {
 
 	for _, tc := range testMatrix {
 		t.Run(tc.description, func(t *testing.T) {
-			args = []string{
+			args := []string{
 				"config",
 				"--docroot", tc.input,
 			}
 
-			out, err = exec.RunHostCommand(DdevBin, args...)
+			out, err := exec.RunHostCommand(DdevBin, args...)
 			if tc.error != "" {
 				require.Error(t, err)
 				require.Contains(t, out, tc.error)
@@ -410,16 +438,20 @@ func TestConfigSetValues(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			configContents, err = os.ReadFile(configFile)
+			configContents, err := os.ReadFile(configFile)
 			require.NoError(t, err, "Unable to read %s: %v", configFile, err)
 
-			app = &ddevapp.DdevApp{}
+			app := &ddevapp.DdevApp{}
 			err = yaml.Unmarshal(configContents, app)
 			require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
 
 			require.Equal(t, tc.expected, app.Docroot)
+
+			// Confirm that the docroot is created
+			require.DirExists(t, filepath.Join(tmpDir, tc.expected))
 		})
 	}
+
 }
 
 // TestConfigInvalidProjectname tests to make sure that invalid projectnames
