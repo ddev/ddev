@@ -18,9 +18,3 @@ setup() {
 		docker exec -t $CONTAINER_NAME bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 107; fi'
   fi
 }
-
-@test "verify that both nginx logs and fpm logs are being tailed ($project_type)" {
-    curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/fatal.php
-	docker logs $CONTAINER_NAME 2>&1 | grep "WARNING:.* said into stderr:.*fatal.php on line " >/dev/null
-	docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr: .PHP message: PHP Fatal error:" >/dev/null
-}

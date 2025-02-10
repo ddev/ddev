@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 # Run these tests from the repo root directory, for example
-# bats tests/ddev-websever-dev/php_webserver.bats
+# bats tests/ddev-webserver/php_webserver.bats
 
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
@@ -96,6 +96,21 @@
   run docker exec -t $CONTAINER_NAME disable_xhprof
 }
 
+@test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
+  curl -sSL http://127.0.0.1:$HOST_HTTP_PORT/test/fatal.php >/dev/null 2>&1
+  # php-fpm message direct
+  docker logs ${CONTAINER_NAME} 2>&1 | grep "^NOTICE: PHP message: PHP Fatal error:"
+  # Apache and nginx variants
+  case "${WEBSERVER_TYPE}" in
+    "nginx-fpm")
+      docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr:" >/dev/null
+      ;;
+    "apache-fpm")
+      docker logs $CONTAINER_NAME 2>&1 | fgrep "[proxy_fcgi:error]" >/dev/null
+      ;;
+  esac
+}
+
 @test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   docker cp tests/ddev-webserver/testdata/nginx/auth.conf ${CONTAINER_NAME}:/etc/nginx/common.d
   docker cp tests/ddev-webserver/testdata/nginx/junkpass ${CONTAINER_NAME}:/tmp
@@ -123,4 +138,6 @@
   curl --fail --header "Authorization: Basic $AUTH" 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
   docker exec ${CONTAINER_NAME} rm /etc/nginx/common.d/auth.conf /etc/apache2/conf-enabled/auth.conf
   docker exec ${CONTAINER_NAME} kill -HUP 1
+  docker exec ${CONTAINER_NAME} kill -USR2 1
 }
+
