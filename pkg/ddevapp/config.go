@@ -1486,16 +1486,14 @@ func (app *DdevApp) CreateDocroot() error {
 	if app.Docroot == "" {
 		return nil
 	}
-	docrootAbsPath := ""
 	if filepath.IsAbs(app.Docroot) {
-		docrootAbsPath = app.Docroot
-	} else {
-		docrootAbsPath = app.GetAbsDocroot(false)
+		return fmt.Errorf("docroot %s must be relative", app.Docroot)
 	}
+	docrootAbsPath := app.GetAbsDocroot(false)
 	// If user provided something like "./some/path", filepath.Rel will convert it to "some/path"
 	relPath, err := filepath.Rel(app.GetAbsAppRoot(false), docrootAbsPath)
 	if err != nil || strings.HasPrefix(relPath, "..") {
-		return fmt.Errorf("the provided docroot %s is outside the project root", app.Docroot)
+		return fmt.Errorf("docroot %s is outside the project root", app.Docroot)
 	}
 	if relPath == "." {
 		relPath = ""
