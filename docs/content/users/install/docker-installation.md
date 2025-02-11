@@ -121,12 +121,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     See [WSL2 DDEV Installation](ddev-installation.md#wsl2-docker-desktop-install-script) for help installing DDEV with Docker Desktop on WSL2.
 
-=== "Gitpod"
-
-    ## Gitpod
-
-    With [Gitpod](https://www.gitpod.io) you don’t have to install anything at all. Docker is all set up for you.
-
 === "Codespaces"
 
     ## GitHub Codespaces

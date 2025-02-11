@@ -137,7 +137,7 @@ Normally the release process does okay with pushing to Chocolatey, but at times 
 
 Note that if an existing approved release is being updated you have to have a new version. So for example, if `v1.21.3` failed, you'll need to work with `v1.21.3.1`, so `make chocolatey VERSION=v1.21.3.1` below.
 
-* Open up Gitpod, <https://gitpod.io/#https://github.com/ddev/ddev> and
+* Open up GitHub Codespaces and
 
 ```bash
 cd /workspace/ddev

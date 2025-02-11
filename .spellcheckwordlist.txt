@@ -319,7 +319,6 @@ dotfiles
 dropdown
 drupal
 drupalize
-drupalpod
 drush
 dumpfile
 ef
