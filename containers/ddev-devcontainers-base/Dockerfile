@@ -1,4 +1,4 @@
-FROM buildpack-deps:bookworm
+FROM buildpack-deps:bookworm AS ddev-devcontainers-base
 
 SHELL ["/bin/bash", "-c"]
 USER root
