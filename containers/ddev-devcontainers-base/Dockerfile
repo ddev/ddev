@@ -21,6 +21,7 @@ RUN apt-get install -y \
     file \
     fish \
     git \
+    gopls \
     htop \
     iputils-ping \
     jq \
@@ -45,7 +46,6 @@ RUN apt-get install -y \
 RUN locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
 
-
 # When we need mkdocs we can get it in here better.
 #RUN pip3 install mkdocs pyspelling pymdown-extensions
 RUN npm install -g markdownlint-cli
@@ -67,12 +67,27 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # a gcc instance named gcc-5 is required for some vscode installations
 RUN ln -sf $(which gcc) /usr/local/bin/gcc-5
 
-# Some ~/.cache and related have been created by root
-RUN chown -R ${USER} ~
+RUN useradd -l -u 33333 -G sudo -md /home/ddevuser -s /bin/bash -p ddevuser ddevuser \
+    # Remove `use_pty` option and enable passwordless sudo for users in the 'sudo' group
+    && sed -i.bkp -e '/Defaults\tuse_pty/d' -e 's/%sudo\s\+ALL=(ALL\(:ALL\)\?)\s\+ALL/%sudo ALL=NOPASSWD:ALL/g' /etc/sudoers \
+    # To emulate the workspace-session behavior within dazzle build env
+    && mkdir -p /workspace && chown -hR ddevuser:ddevuser /workspace
 
+ENV HOME=/home/ddevuser
+WORKDIR $HOME
+# custom Bash prompt
+RUN { echo && echo "PS1='\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\]\$(__git_ps1 \" (%s)\") $ '" ; } >> .bashrc
+
+RUN echo "[safe]\n         	directory = * default.gitconfig /etc/gitconfig" >/etc/gitconfig
+RUN cp /etc/gitconfig /home/ddevuser/.gitconfig
+
+# Some ~/.cache and related have been created by root
+RUN chown -R ddevuser ~
+
+USER ddevuser
+
+ENV CGO_ENABLED=0
 RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
         go install $item; \
     done && go clean -modcache
 RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
-
-RUN cd /tmp && curl -LO --fail https://raw.githubusercontent.com/ddev/ddev/main/docs/mkdocs-pip-requirements && pip3 install -r /tmp/mkdocs-pip-requirements
