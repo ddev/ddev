@@ -12,7 +12,7 @@ on:
         default: ddev-webserver
         type: choice
         options:
-          - ddev-gitpod-base
+          - ddev-devcontainers-base
           - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent

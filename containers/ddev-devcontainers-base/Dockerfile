@@ -1,9 +1,34 @@
-# https://github.com/ddev/ddev/pull/6613 had an attempt to build our own
-# multi-arch workspace-base image, but it had its own problems and was abandoned.
-FROM gitpod/workspace-base:latest AS ddev-gitpod-base
-SHELL ["/bin/bash", "-c"]
+FROM buildpack-deps:bookworm
 
+SHELL ["/bin/bash", "-c"]
 USER root
+
+RUN apt-get update >/dev/null && apt-get install -qq -y \
+    bash-completion \
+    build-essential \
+    clang \
+    fish \
+    git \
+    htop \
+    iputils-ping \
+    jq \
+    less \
+    locales \
+    lsof \
+    man-db \
+    nano \
+    software-properties-common \
+    ssl-cert \
+    stow \
+    sudo \
+    time \
+    unzip \
+    vim \
+    zip \
+    zsh \
+    && locale-gen en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
 
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
@@ -19,8 +44,6 @@ RUN npm install -g markdownlint-cli
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin
 
 RUN rm -rf /usr/local/go && curl -sL -o /tmp/go.tar.gz https://go.dev/dl/$(curl -fsSL "https://go.dev/dl/?mode=json" | jq -r ".[0].version").linux-amd64.tar.gz && tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz && ln -s /usr/local/go/bin/go /usr/local/bin/go
-
-USER gitpod
 
 RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" ]; then . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh"; fi' >>~/.bashrc
 
@@ -39,7 +62,8 @@ RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
 
 # Some ~/.cache and related have been created by root
-RUN sudo chown -R gitpod ~
+RUN sudo chown -R ${USER} ~
+
 RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
         go install $item; \
     done && go clean -modcache

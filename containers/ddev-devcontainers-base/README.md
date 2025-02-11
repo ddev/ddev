@@ -1,18 +1,18 @@
-# ddev-gitpod-base docker image
+# ddev-devcontainers-base docker image
 
 ## Overview
 
-ddev/ddev-gitpod-base is a base image for Gitpod integration with [DDEV](https://github.com/ddev/ddev).
+ddev/ddev-devcontainers-base is a base image for devcontainers integration with [DDEV](https://github.com/ddev/ddev).
 
-Details about how it is used are in https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#gitpod
+Details about how it is used are in https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#devcontainers
 
 ### Features
 
-All the packages you expect to find to use DDEV on gitpod.
+All the packages you expect to find to use DDEV on devcontainers.
 
 ## Instructions
 
-Use [DDEV on Gitpod](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#gitpod)
+Use [DDEV on devcontainers](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#devcontainers)
 
 ### Building and pushing to Docker Hub
 
@@ -23,12 +23,12 @@ See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-managem
 To run the container by itself:
 
 ```bash
-docker run -it --rm ddev/ddev-gitpod-base:<tag> bash
+docker run -it --rm ddev/ddev-devcontainers-base:<tag> bash
 ```
 
 ## Source:
 
-[https://github.com/ddev/ddev/blob/main/containers/ddev-gitpod-base](https://github.com/ddev/ddev/blob/main/containers/ddev-gitpod-base)
+[https://github.com/ddev/ddev/blob/main/containers/ddev-devcontainers-base](https://github.com/ddev/ddev/blob/main/containers/ddev-devcontainers-base)
 
 ## Maintained by:
 
