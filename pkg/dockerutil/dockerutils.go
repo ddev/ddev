@@ -35,9 +35,9 @@ import (
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
 	dockerNetwork "github.com/docker/docker/api/types/network"
+	dockerVersions "github.com/docker/docker/api/types/versions"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
-	dockerVersions "github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
@@ -849,7 +849,7 @@ func CheckDockerVersion() error {
 		}
 		return fmt.Errorf("%s", msgs)
 	}
-	
+
 	dockerAPIVersion, err := GetDockerAPIVersion()
 	if err != nil {
 		return fmt.Errorf("unable to determine Docker API version: %v", err)
