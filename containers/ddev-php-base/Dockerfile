@@ -1,4 +1,4 @@
-### ---------------------------base--------------------------------------
+### ---------------------------------base-----------------------------------------
 ### Build the base Debian image that will be used in every other image
 FROM debian:bookworm-slim AS base
 ARG TARGETPLATFORM
@@ -46,17 +46,16 @@ RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/deb
 RUN rm -f /tmp/debsuryorg-archive-keyring.deb && \
     echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
 RUN apt-get -qq update
-#END base
+### -------------------------------END base---------------------------------------
 
-### ---------------------------ddev-php-extension-build--------------------------------------
-FROM base AS ddev-php-extension-build
-SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
-ARG XDEBUG_MODE=off
-### Xdebug compile specific version because 3.3 is not fully reliable
-### See https://github.com/ddev/ddev/issues/6159
-RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
-RUN /usr/local/bin/build_php_extension.sh "php8.2" "xdebug" "3.2.2" "/usr/lib/php/20220829/xdebug.so"
-#END ddev-php-extension-build
+### ------------------------ddev-php-extension-build------------------------------
+### Uncomment the lines below to enable custom PHP extension builds:
+#FROM base AS ddev-php-extension-build
+#SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
+### Use this section to add PHP extensions that need to be built manually.
+### Example: The following line installs Xdebug version 3.2.2 for PHP 8.1:
+#RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
+### -----------------------END ddev-php-extension-build---------------------------
 
 ### ---------------------------ddev-php-base--------------------------------------
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
@@ -113,14 +112,15 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
     chmod ugo+rx /usr/local/bin/* && \
     ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
-### ---------------------------ddev-php-extension-build--------------------------------------
-### The dates from /usr/lib/php/YYYYMMDD/ represent PHP API versions https://unix.stackexchange.com/a/591771
-SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
-ARG XDEBUG_MODE=off
-RUN apt-get -qq remove -y php8.1-xdebug php8.2-xdebug
-COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
-COPY --from=ddev-php-extension-build /usr/lib/php/20220829/xdebug.so /usr/lib/php/20220829/xdebug.so
-#END ddev-php-extension-build
+### ------------------------ddev-php-extension-build------------------------------
+### Remove any existing PHP extensions that will be replaced by custom-built versions:
+#RUN apt-get -qq remove -y php8.1-xdebug
+### After building the custom extensions, copy them from the multi-stage build:
+### Note: The dates in /usr/lib/php/YYYYMMDD/ represent PHP API versions.
+### For more info, see: https://unix.stackexchange.com/a/591771
+#COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
+### -----------------------END ddev-php-extension-build---------------------------
+
 RUN phpdismod xhprof xdebug
 RUN apt-get -qq autoremove -y
 RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer
@@ -139,7 +139,7 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
 RUN mkdir -p /run/php && chown -R www-data:www-data /run
 RUN chmod 777 /var/lib/php/sessions
-#END ddev-php-base
+### -------------------------END ddev-php-base------------------------------------
 
 ### ---------------------------ddev-php-prod--------------------------------------
 ### Build ddev-php-prod from ddev-php-base as a single layer
@@ -150,4 +150,4 @@ SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 COPY --from=ddev-php-base / /
 EXPOSE 8080 8585
 CMD ["/usr/sbin/php-fpm", "-F"]
-#END ddev-php-prod
+### -------------------------END ddev-php-prod------------------------------------

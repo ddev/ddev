@@ -1,9 +1,8 @@
-
-### ---------------------------ddev-webserver-base--------------------------------------
+### ---------------------------ddev-webserver-base--------------------------------
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:20250207_atomicptr_decorate_fpm AS ddev-webserver-base
+FROM ddev/ddev-php-base:20250211_stasadev_remove_pecl_xdebug AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -99,10 +98,9 @@ RUN mkdir -p /usr/local/sqlite3-drupal11 && cd /usr/local/sqlite3-drupal11 && \
     wget https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
     wget https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETARCH}.deb
 
-# END ddev-webserver-base
+### -------------------------END ddev-webserver-base------------------------------
 
-
-### ---------------------------ddev-webserver-dev-base--------------------------------------
+### -------------------------ddev-webserver-dev-base------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
 FROM ddev-webserver-base AS ddev-webserver-dev-base
 SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
@@ -112,8 +110,7 @@ ENV PHP_DEFAULT_VERSION="8.3"
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
-RUN apt-get update
-
+RUN apt-get -qq update
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire \
@@ -205,9 +202,9 @@ CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
-#END ddev-webserver-dev-base
+### -------------------------END ddev-webserver-dev-base--------------------------
 
-### ---------------------------ddev-webserver--------------------------------------
+### -----------------------------ddev-webserver-----------------------------------
 ### This could be known as ddev-webserver-dev as it's development-env targeted
 ### But for historical reasons, it's just ddev-webserver
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
@@ -232,9 +229,9 @@ ENV PLATFORMSH_CLI_UPDATES_CHECK=0
 COPY --from=ddev-webserver-dev-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-#END ddev-webserver
+### ----------------------------END ddev-webserver--------------------------------
 
-### ---------------------------ddev-webserver-prod-base--------------------------------------
+### -------------------------ddev-webserver-prod-base-----------------------------
 ### Build ddev-webserver-prod-base from ddev-webserver-base
 ### This image is aimed at actual hardened production environments
 FROM ddev-webserver-base AS ddev-webserver-prod-base
@@ -247,8 +244,7 @@ ARG TARGETARCH
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
-RUN apt-get update
-
+RUN apt-get -qq update
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire-php
@@ -300,9 +296,9 @@ CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 
-#END ddev-webserver-prod-base
+### -----------------------END ddev-webserver-prod-base---------------------------
 
-### ---------------------------ddev-webserver-prod--------------------------------------
+### ---------------------------ddev-webserver-prod--------------------------------
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 FROM scratch AS ddev-webserver-prod
@@ -324,4 +320,4 @@ ENV PLATFORMSH_CLI_UPDATES_CHECK=0
 COPY --from=ddev-webserver-prod-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-#END ddev-webserver-prod
+### -------------------------END ddev-webserver-prod------------------------------
