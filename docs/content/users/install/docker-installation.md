@@ -89,7 +89,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     The best way to install Docker on Linux is to use your native package management tool (`apt`, `dnf`, etc.) with the official Docker repository. While many Linux distributions provide Docker packages in their own repositories, these are often outdated and may not include the latest features required for stability in a development environment like DDEV. To ensure you're using a supported version, install Docker directly from the official Docker repository. 
 
-    Follow these distribution-specific instructions to set up Docker from the official respository:
+    Follow these distribution-specific instructions to set up Docker Engine from the official Docker repository:
 
     * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
     * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
