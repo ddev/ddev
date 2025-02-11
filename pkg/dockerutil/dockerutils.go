@@ -52,7 +52,7 @@ const NetName = "ddev_default"
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
-const DockerVersionConstraint = ">= 24.0.0"
+const DockerVersionConstraint = ">= 24.0.0-alpha1"
 const minimalDockerAPIVersion = "1.43"
 
 type ComposeCmdOpts struct {
