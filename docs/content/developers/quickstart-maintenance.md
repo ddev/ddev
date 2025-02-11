@@ -27,7 +27,7 @@ In general:
 1. Add a link to the upstream installation or "Getting Started" web page, so people can know where the instructions are coming from.
 2. Use `mkdir my-<projecttype>-site && cd my-<projecttype>-site` as the opener. (There are places like Magento 2 where the project name must be used later in the recipe, in those cases, use an environment variable, like `PROJECT_NAME=my-<projecttype>-site`.)
 3. Composer-based recipes are preferable, unless the project does not use or prefer composer.
-4. If your project type does not yet appear in the DDEV documentation, your PR should add the name to the [.spellcheckwordlist.txt](https://github.com/ddev/ddev/blob/main/.spellcheckwordlist.txt) so it can pass the spellcheck test.
+4. If your project type does not yet appear in the DDEV documentation, your PR should add the name to the [.spellcheckwordlist.txt](https://github.com/ddev/ddev/blob/main/.spellcheckwordlist.txt) so it can pass the spell check test.
 5. If your project installation requires providing an administrative username and/or password, make sure to indicate clearly in the instructions what it is.
 6. If your project type includes folders that accept public files (such as images), for example, `public/media`, make sure to add them to the [config](../users/configuration/config.md#upload_dirs) command:
 

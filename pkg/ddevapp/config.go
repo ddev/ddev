@@ -1481,6 +1481,34 @@ func AvailablePHPDocrootLocations() []string {
 	}
 }
 
+// CreateDocroot normalizes the docroot path and creates it for DDEV app if it doesn't exist
+func (app *DdevApp) CreateDocroot() error {
+	if app.Docroot == "" {
+		return nil
+	}
+	if filepath.IsAbs(app.Docroot) {
+		return fmt.Errorf("docroot %s must be relative", app.Docroot)
+	}
+	docrootAbsPath := app.GetAbsDocroot(false)
+	// If user provided something like "./some/path", filepath.Rel will convert it to "some/path"
+	relPath, err := filepath.Rel(app.GetAbsAppRoot(false), docrootAbsPath)
+	if err != nil || strings.HasPrefix(relPath, "..") {
+		return fmt.Errorf("docroot %s is outside the project root", app.Docroot)
+	}
+	if relPath == "." {
+		relPath = ""
+	}
+	// Normalize docroot
+	app.Docroot = util.WindowsPathToCygwinPath(relPath)
+	if !fileutil.IsDirectory(docrootAbsPath) {
+		if err := os.MkdirAll(docrootAbsPath, 0755); err != nil {
+			return err
+		}
+		util.Success("Created docroot at %s", docrootAbsPath)
+	}
+	return nil
+}
+
 // DiscoverDefaultDocroot returns the default docroot directory.
 func DiscoverDefaultDocroot(app *DdevApp) string {
 	// Provide use the app.Docroot as the default docroot option.
@@ -1505,31 +1533,22 @@ func (app *DdevApp) docrootPrompt() error {
 
 	// Determine the document root.
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s\n", app.AppRoot)
-	output.UserOut.Printf("Leave docroot empty (hit <RETURN>) to use the location shown in parentheses.\nOr specify a custom path if your index.php is in a different directory.\n")
+	output.UserOut.Printf("Leave docroot empty (hit <RETURN>) to use the location shown in parentheses.\nOr specify a custom path if your index.php is in a different directory.\nOr use '.' (a dot) to explicitly set it to the project root.\n")
 	var docrootPrompt = "Docroot Location"
 	var defaultDocroot = DiscoverDefaultDocroot(app)
 	// If there is a default docroot, display it in the prompt.
 	if defaultDocroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
-	} else if cd, _ := os.Getwd(); cd == filepath.Join(app.AppRoot, defaultDocroot) {
-		// Preserve the case where the docroot is the current directory
-		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	} else {
-		// Explicitly state 'project root' when in a subdirectory
 		docrootPrompt = fmt.Sprintf("%s (project root)", docrootPrompt)
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	app.Docroot = util.GetInput(defaultDocroot)
+	app.Docroot = util.GetQuotedInput(defaultDocroot)
 
-	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
-	fullPath := filepath.Join(app.AppRoot, app.Docroot)
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		if err = os.MkdirAll(fullPath, 0755); err != nil {
-			return fmt.Errorf("unable to create docroot: %v", err)
-		}
-
-		util.Success("Created docroot at %s.", fullPath)
+	// Ensure that the docroot exists
+	if err := app.CreateDocroot(); err != nil {
+		return fmt.Errorf("unable to create docroot at %s: %v", app.Docroot, err)
 	}
 
 	return nil
