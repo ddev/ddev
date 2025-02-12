@@ -1,4 +1,4 @@
-FROM buildpack-deps:bookworm AS ddev-devcontainers-base
+FROM mcr.microsoft.com/devcontainers/base:dev-debian12 AS ddev-devcontainers-base
 
 SHELL ["/bin/bash", "-eu", "-pipefail", "-c"]
 USER root
