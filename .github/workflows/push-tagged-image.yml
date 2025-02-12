@@ -39,7 +39,7 @@ permissions:
 jobs:
   push-tagged-image:
     name: "push tagged image"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Load 1password secret(s)
