@@ -19,7 +19,7 @@ RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/sl
     && chmod +x /usr/bin/slirp4netns
 
 RUN apt-get update >/dev/null
-RUN apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" \
     aspell \
     autojump \
     bash-completion \
@@ -36,7 +36,6 @@ RUN apt-get install -y \
     iputils-ping \
     jq \
     less \
-    locales \
     lsof \
     man-db \
     mariadb-client \
@@ -53,8 +52,6 @@ RUN apt-get install -y \
     vim \
     zip \
     zsh
-RUN locale-gen en_US.UTF-8
-ENV LANG=en_US.UTF-8
 
 # When we need mkdocs we can get it in here better.
 #RUN pip3 install mkdocs pyspelling pymdown-extensions
@@ -80,8 +77,8 @@ RUN ln -sf $(which gcc) /usr/local/bin/gcc-5
 RUN useradd -l -u 33333 -G sudo -md /home/ddevuser -s /bin/bash -p ddevuser ddevuser \
     # Remove `use_pty` option and enable passwordless sudo for users in the 'sudo' group
     && sed -i.bkp -e '/Defaults\tuse_pty/d' -e 's/%sudo\s\+ALL=(ALL\(:ALL\)\?)\s\+ALL/%sudo ALL=NOPASSWD:ALL/g' /etc/sudoers \
-    # To emulate the workspace-session behavior within dazzle build env
-    && mkdir -p /workspace && chown -hR ddevuser:ddevuser /workspace
+    && mkdir -p /workspace && chown -hR ddevuser:ddevuser /workspace \
+    && sudo usermod -aG docker ddevuser
 
 ENV HOME=/home/ddevuser
 WORKDIR $HOME
@@ -97,7 +94,8 @@ RUN chown -R ddevuser ~
 USER ddevuser
 
 ENV CGO_ENABLED=0
-RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
-        go install $item; \
-    done && go clean -modcache
-RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
+# Go stuff can be added after everything else starts to work.
+#RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
+#        go install $item; \
+#    done && go clean -modcache
+#RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
