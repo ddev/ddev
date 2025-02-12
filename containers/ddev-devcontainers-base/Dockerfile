@@ -78,7 +78,7 @@ WORKDIR $HOME
 # custom Bash prompt
 RUN { echo && echo "PS1='\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\]\$(__git_ps1 \" (%s)\") $ '" ; } >> .bashrc
 
-RUN echo "[safe]\n         	directory = * default.gitconfig /etc/gitconfig" >/etc/gitconfig
+RUN printf "[safe]\n         	directory = * default.gitconfig /etc/gitconfig" >/etc/gitconfig
 RUN cp /etc/gitconfig /home/ddevuser/.gitconfig
 
 # Some ~/.cache and related have been created by root
