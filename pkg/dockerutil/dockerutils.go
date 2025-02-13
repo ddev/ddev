@@ -46,14 +46,18 @@ import (
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
 
-// DockerVersionConstraint is the current minimum version of Docker required for DDEV.
+// DockerVersionConstraint is the current minimum version of Docker recommended for DDEV.
+// If this constraint is not met, we will warn the user, but not fail.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
 const DockerVersionConstraint = ">= 24.0.0-alpha1"
-const minimalDockerAPIVersion = "1.43"
+
+// DockerAPIVersionMinimum is the minimum version of Docker API required for DDEV.
+// See https://docs.docker.com/reference/api/engine/#api-version-matrix
+// If this API version is not met, we will fail on `ddev start`.
+const DockerAPIVersionMinimum = "1.43"
 
 type ComposeCmdOpts struct {
 	ComposeFiles []string
@@ -806,7 +810,7 @@ func GetContainerEnv(key string, container dockerTypes.Container) string {
 // CheckDockerVersion determines if the Docker version of the host system meets the provided version
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-func CheckDockerVersion() error {
+func CheckDockerVersion(versionConstraint string) error {
 	defer util.TimeTrack()()
 
 	currentVersion, err := GetDockerVersion()
@@ -832,7 +836,7 @@ func CheckDockerVersion() error {
 		}
 	}
 
-	constraint, err := semver.NewConstraint(DockerVersionConstraint)
+	constraint, err := semver.NewConstraint(versionConstraint)
 	if err != nil {
 		return err
 	}
@@ -849,15 +853,27 @@ func CheckDockerVersion() error {
 		}
 		return fmt.Errorf("%s", msgs)
 	}
+	return nil
+}
 
+// HasCompatibleDockerAPIVersion checks if the Docker API version of the host system is compatible with the required minimum version.
+func HasCompatibleDockerAPIVersion(minimumAPIVersion string) (bool, error) {
+	const (
+		versionMatrixURL   = "https://docs.docker.com/reference/api/engine/#api-version-matrix"
+		troubleshootingURL = "https://ddev.readthedocs.io/en/stable/users/install/docker-installation/#testing-and-troubleshooting-your-docker-installation"
+		helpfulLinks       = "\nSee API version matrix at %s\nTroubleshoot at %s"
+	)
 	dockerAPIVersion, err := GetDockerAPIVersion()
 	if err != nil {
-		return fmt.Errorf("unable to determine Docker API version: %v", err)
+		return false, fmt.Errorf("failed to get Docker API version: %v"+helpfulLinks, err, versionMatrixURL, troubleshootingURL)
 	}
-	if !dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, minimalDockerAPIVersion) {
-		return fmt.Errorf("your Docker API version (%s) doesn't meet the minimum (%s) - see %s for version matrix (%s) for more help", dockerAPIVersion, minimalDockerAPIVersion, "https://docs.docker.com/reference/api/engine/#api-version-matrix", "https://ddev.rtfd.io/page/users/install/docker-installation/#testing-and-troubleshooting-your-docker-installation")
+	if !dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, minimumAPIVersion) {
+		return false, fmt.Errorf(
+			"your Docker API version (%s) doesn't meet the required minimum (%s)."+helpfulLinks,
+			dockerAPIVersion, minimumAPIVersion, versionMatrixURL, troubleshootingURL,
+		)
 	}
-	return nil
+	return true, nil
 }
 
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This

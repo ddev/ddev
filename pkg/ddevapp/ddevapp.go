@@ -1243,6 +1243,9 @@ func (app *DdevApp) GetDBImage() string {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
+	if _, err = dockerutil.HasCompatibleDockerAPIVersion(dockerutil.DockerAPIVersionMinimum); err != nil {
+		util.Failed("Unable to start project %s: %s", app.GetName(), err)
+	}
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}

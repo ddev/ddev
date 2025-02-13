@@ -21,7 +21,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
-	dockerVersions "github.com/docker/docker/api/types/versions"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 )
@@ -201,11 +200,8 @@ func templateCanUse(feature string) bool {
 	// healthcheck.start_interval requires Docker Engine v25 or later
 	// See https://github.com/docker/compose/pull/10939
 	if feature == "healthcheck.start_interval" {
-		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
-		if err != nil {
-			return false
-		}
-		return dockerVersions.GreaterThanOrEqualTo(dockerAPIVersion, "1.44")
+		isCompatible, _ := dockerutil.HasCompatibleDockerAPIVersion("1.44")
+		return isCompatible
 	}
 	return false
 }
