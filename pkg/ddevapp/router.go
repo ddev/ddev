@@ -300,14 +300,19 @@ func RenderRouterStatus() string {
 
 		switch status {
 		case SiteStopped:
-			renderedStatus = util.ColorizeText(status, "red") + " " + badRouter
+			renderedStatus = util.ColorizeText(status, "red")
 		case "healthy":
 			renderedStatus = util.ColorizeText(status, "green")
 		case "exited":
 			fallthrough
 		default:
-			renderedStatus = util.ColorizeText(status, "red") + " " + badRouter + "\n" + logOutput
+			renderedStatus = util.ColorizeText(status, "red") + "\n" + badRouter
+			if logOutput != "" {
+				renderedStatus = renderedStatus + "\n" + logOutput
+			}
 		}
+	} else {
+		renderedStatus = "disabled"
 	}
 	return renderedStatus
 }

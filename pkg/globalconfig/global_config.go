@@ -873,7 +873,7 @@ func GetRequiredDockerComposeVersion() string {
 	return v
 }
 
-// Return the Traefik router URL
+// GetRouterURL Return the Traefik router URL
 func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value
