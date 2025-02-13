@@ -1,7 +1,11 @@
-FROM mcr.microsoft.com/devcontainers/base:dev-ubuntu22.04 AS ddev-devcontainers-base
+FROM ubuntu:22.04 AS ddev-devcontainers-base
 
 SHELL ["/bin/bash", "-c"]
 USER root
+# Codespaces may require specific docker version for docker-in-docker
+ARG DOCKER_VERSION="5:27.3.1-1~ubuntu.22.04~jammy"
+
+RUN apt-get update && apt-get install -y curl gpg
 
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
@@ -14,19 +18,20 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-
 RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.12/slirp4netns-$(uname -m) \
     && chmod +x /usr/bin/slirp4netns
 
-RUN apt-get update >/dev/null
+RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" \
     aspell \
     autojump \
     bash-completion \
     build-essential \
     clang \
-    docker-ce \
-    docker-ce-cli \
+    docker-ce=${DOCKER_VERSION} \
+    docker-ce-cli=${DOCKER_VERSION} \
+    docker-buildx-plugin \
+    docker-compose-plugin \
     containerd.io \
     file \
     fish \
