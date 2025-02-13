@@ -4,7 +4,7 @@ DDEV supports many versions of the MariaDB, MySQL, and PostgreSQL database serve
 
 The following database types are currently supported:
 
-- MariaDB 5.5-10.8, 10.11, and 11.4
+- MariaDB 5.5-10.8, 10.11, 11.4, 11.8
 - MySQL 5.5-8.4
 - Postgres 9-17
 

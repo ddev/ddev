@@ -15,7 +15,7 @@ MARIADB_VERSION=${DDEV_DATABASE#*:}
 
 # Search for CHANGE_MARIADB_CLIENT to update related code.
 # Add MariaDB versions that can have their own client here:
-if [ "${MARIADB_VERSION}" = "11.4" ]; then
+if [[ "${MARIADB_VERSION}" =~ 11.? ]]; then
   # Configure the correct repository for mariadb
   set -x
   log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import || exit $?
