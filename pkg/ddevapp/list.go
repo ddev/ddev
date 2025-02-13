@@ -6,6 +6,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
@@ -73,13 +74,13 @@ func List(settings ListCommandSettings) {
 			if routerStatus == SiteStopped {
 				routerURL = ""
 			}
-			var extendedRouterStatus = RenderRouterStatus()
-			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
-				extendedRouterStatus = "disabled"
+			extendedRouterStatus := RenderRouterStatus()
+			routerType := globalconfig.DdevGlobalConfig.Router
+			if len(types.GetValidRouterTypes()) < 2 {
+				routerType = ""
 			}
-			router := globalconfig.DdevGlobalConfig.Router
 			t.AppendFooter(table.Row{
-				"Router", routerStatus, fileutil.ShortHomeJoin(globalconfig.GetGlobalDdevDirLocation()), routerURL, router},
+				"Router", extendedRouterStatus, fileutil.ShortHomeJoin(globalconfig.GetGlobalDdevDirLocation()), routerURL, routerType},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
