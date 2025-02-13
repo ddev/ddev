@@ -84,15 +84,6 @@ func List(settings ListCommandSettings) {
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
-			if routerStatus != "healthy" {
-				rawResult := map[string]string{
-					"routerStatus":         routerStatus,
-					"extendedRouterStatus": extendedRouterStatus,
-				}
-				rawResult["routerStatus"] = routerStatus
-				rawResult["extendedStatus"] = extendedRouterStatus
-				output.UserOut.WithField("raw", rawResult)
-			}
 		}
 
 		if !settings.Continuous {
