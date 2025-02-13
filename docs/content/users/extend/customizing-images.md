@@ -67,7 +67,7 @@ SHELL ["/bin/bash", "-c"]
 RUN phpdismod xdebug
 # Install the needed development packages
 RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
-# Remove the standard xdebug provided by deb.sury.org
+# Remove the standard Xdebug provided by deb.sury.org
 RUN apt-get remove php${DDEV_PHP_VERSION}-xdebug || true
 RUN pecl install ${extension}
 # Use the standard xdebug.ini from source
