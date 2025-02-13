@@ -983,7 +983,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
+		t.Logf("Beginning Xdebug checks with Xdebug php%s\n", v)
 
 		err = app.Restart()
 		require.NoError(t, err)
