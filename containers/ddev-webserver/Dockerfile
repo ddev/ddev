@@ -129,9 +129,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     telnet \
     tree
 
-# Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
-RUN rm /etc/apt/sources.list.d/blackfire.list
-
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
 # blackfire user by default is set up with /dev/null as homedir, and 999 as uid, which
@@ -246,11 +243,9 @@ RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/b
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get -qq update
 
+# Blackfire outputs errors about not having systemd, but they do no harm to our usage
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
-    blackfire-php
-
-# Remove blackfire from apt sources, because we pin to a specific version, see https://github.com/ddev/ddev/issues/6078
-RUN rm /etc/apt/sources.list.d/blackfire.list
+    blackfire-php 2>/dev/null
 
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
