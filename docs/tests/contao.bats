@@ -35,7 +35,7 @@ teardown() {
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch contao"
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL https://${PROJNAME}.ddev.site/contao"
   assert_success
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site/contao/login
