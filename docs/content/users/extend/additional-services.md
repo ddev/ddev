@@ -9,91 +9,13 @@ DDEV projects can be extended to provide additional add-ons, including services.
 
 Anyone can create their own services with a `.ddev/docker-compose.*.yaml` file, and a growing number of popular services are supported and tested, and can be installed using the [`ddev add-on get`](../usage/commands.md#add-on-get) command.
 
-Use `ddev add-on list` to see available add-ons. To see all possible add-ons (not necessarily supported or tested), use `ddev add-on list --all`.
+!!!tip "Web-based Add-on Registry"
+    Use [DDEV Add-on Registry](https://addons.ddev.com/) to discover, explore, and leave comments on available add-ons.
 
-For example,
-
-```
-→  ddev add-on list
-┌──────────────────────────────────────┬────────────────────────────────────────────────────┐
-│ ADD-ON                               │ DESCRIPTION                                        │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-adminer                    │ Adminer service for DDEV*                          │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-beanstalkd                 │ Beanstalkd for DDEV*                               │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-browsersync                │ Auto-refresh HTTPS page on changes with DDEV*      │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-cron                       │ Schedule commands to execute within DDEV*          │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-drupal-contrib             │ DDEV integration for developing Drupal contrib     │
-│                                      │ projects*                                          │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-drupal-solr                │ Drupal Apache Solr installation for DDEV (please   │
-│                                      │ consider ddev/ddev-solr first)*                    │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                     │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-ioncube                    │ IonCube loaders for DDEV*                          │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-memcached                  │ Install Memcached as an extra service in DDEV*     │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-minio                      │ MinIO addon for DDEV*                              │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-mongo                      │ MongoDB add-on for DDEV*                           │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-opensearch                 │ OpenSearch add-on for DDEV*                        │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-pdfreactor                 │ PDFreactor service for DDEV*                       │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-phpmyadmin                 │ phpMyAdmin Add-on For DDEV*                        │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-platformsh                 │ Add integration with Platform.sh hosting service*  │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-proxy-support              │ Support HTTP/HTTPS proxies with DDEV*              │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-redis                      │ Redis service for DDEV*                            │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-redis-7                    │ Redis 7 service for DDEV*                          │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-redis-commander            │ Redis Commander for use with DDEV Redis service*   │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-selenium-standalone-chrome │ A DDEV service for running standalone Chrome*      │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-solr                       │ Solr service for DDEV*                             │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-sqlsrv                     │ MS SQL server add-on for DDEV*                     │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-typo3-solr                 │ Use Apache Solr (standalone) in your DDEV project  │
-│                                      │ *                                                  │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*             │
-├──────────────────────────────────────┼────────────────────────────────────────────────────┤
-│ ddev/ddev-xhgui                      │ XHGui service for a DDEV project*                  │
-└──────────────────────────────────────┴────────────────────────────────────────────────────┘
-25 repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.
-```
+In addition, the `ddev add-on list` shows a list of official add-ons. To see all possible add-ons (not necessarily supported or tested), use `ddev add-on list --all`.
 
 !!!tip
     If you need a service not provided here, see [Defining an Additional Service with Docker Compose](custom-compose-files.md).
-
-Officially-supported add-ons:
-
-* [Adminer](https://github.com/ddev/ddev-adminer): `ddev add-on get ddev/ddev-adminer`.
-* [Apache Solr for Drupal](https://github.com/ddev/ddev-drupal-solr): `ddev add-on get ddev/ddev-drupal-solr`.
-* [Beanstalkd](https://github.com/ddev/ddev-beanstalkd): `ddev add-on get ddev/ddev-beanstalkd`.
-* [Browsersync](https://github.com/ddev/ddev-browsersync): `ddev add-on get ddev/ddev-browsersync`.
-* [cron](https://github.com/ddev/ddev-cron): `ddev add-on get ddev/ddev-cron`.
-* [Elasticsearch](https://github.com/ddev/ddev-elasticsearch): `ddev add-on get ddev/ddev-elasticsearch`.
-* [Memcached](https://github.com/ddev/ddev-memcached): `ddev add-on get ddev/ddev-memcached`.
-* [MongoDB](https://github.com/ddev/ddev-mongo): `ddev add-on get ddev/ddev-mongo`.
-* [PDFreactor](https://github.com/ddev/ddev-pdfreactor): `ddev add-on get ddev/ddev-pdfreactor`
-* [Platform.sh](https://github.com/ddev/ddev-platformsh): `ddev add-on get ddev/ddev-platformsh`
-* [Proxy Support](https://github.com/ddev/ddev-proxy-support): `ddev add-on get ddev/ddev-proxy-support`.
-* [Redis Commander](https://github.com/ddev/ddev-redis-commander): `ddev add-on get ddev/ddev-redis-commander`.
-* [Redis](https://github.com/ddev/ddev-redis): `ddev add-on get ddev/ddev-redis`.
-* [Selenium Standalone Chrome](https://github.com/ddev/ddev-selenium-standalone-chrome): `ddev add-on get ddev/ddev-selenium-standalone-chrome`.
-* [Varnish](https://github.com/ddev/ddev-varnish): `ddev add-on get ddev/ddev-varnish`.
 
 ## Managing Installed Add-Ons
 
