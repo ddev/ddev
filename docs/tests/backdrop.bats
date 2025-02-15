@@ -24,7 +24,7 @@ teardown() {
   # ddev config --project-type=backdrop
   run ddev config --project-type=backdrop
   assert_success
-  # ddev start
+  # ddev start -y
   run ddev start -y
   assert_success
   # ddev launch
@@ -50,7 +50,7 @@ teardown() {
   # ddev config --project-type=backdrop
   run ddev config --project-type=backdrop
   assert_success
-  # ddev start
+  # ddev start -y
   run ddev start -y
   assert_success
   run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.29.2/db.sql.gz
