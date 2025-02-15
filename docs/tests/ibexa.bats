@@ -18,8 +18,8 @@ teardown() {
   # ddev config --project-type=php --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
   run ddev config --project-type=php --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create ibexa/oss-skeleton
   run ddev composer create ibexa/oss-skeleton
