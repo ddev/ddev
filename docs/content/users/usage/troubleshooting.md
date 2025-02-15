@@ -129,7 +129,7 @@ nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 You can also use the `netstat -anv -p tcp` command to examine processes running on specific ports:
 
 ```
-sudo netstat -anv -p tcp | egrep 'Proto|(\*\.(80|443))'
+$ sudo netstat -anv -p tcp | egrep 'Proto|(\*\.(80|443))'
 Proto Recv-Q Send-Q  Local Address          Foreign Address        (state)      rhiwat  shiwat    pid   epid state  options           gencnt    flags   flags1 usscnt rtncnt fltrs
 tcp4       0      0  *.80                   *.*                    LISTEN       131072  131072  10521      0 00100 00000006 000000000000965d 00000000 00000900      1      0 000001
 tcp4       0      0  *.443                  *.*                    LISTEN       131072  131072  10521      0 00100 00000006 000000000000965c 00000000 00000900      1      0 000001```
