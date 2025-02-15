@@ -929,7 +929,7 @@ Alternatively, use the following commands to adjust the values for `<name>` and 
 export SULU_PROJECT_NAME="My Sulu Site"
 export SULU_PROJECT_KEY="my-sulu-site"
 export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
-ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
+ddev exec "cp config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
 ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
 ```
 
