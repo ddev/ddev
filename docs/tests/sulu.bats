@@ -31,7 +31,7 @@ teardown() {
   export SULU_PROJECT_KEY="${PROJNAME}"
   assert_success
   # export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
-  export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
+  export SULU_PROJECT_CONFIG_FILE="config/webspaces/${PROJNAME}.xml"
   assert_success
   # ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
   run ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
