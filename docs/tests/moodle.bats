@@ -18,8 +18,8 @@ teardown() {
   # ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
   run ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create moodle/moodle
   run ddev composer create moodle/moodle
