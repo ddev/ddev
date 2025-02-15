@@ -18,6 +18,9 @@ teardown() {
   # ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
   run ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
   assert_success
+  # ddev start -y
+  run ddev start -y
+  assert_success
   # ddev composer create contao/managed-edition:5.3
   run ddev composer create contao/managed-edition:5.3
   assert_success
@@ -53,8 +56,8 @@ teardown() {
   # ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
   run ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
   run ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
