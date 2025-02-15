@@ -18,6 +18,9 @@ teardown() {
   # ddev config --project-type=shopware6 --docroot=public
   run ddev config --project-type=shopware6 --docroot=public
   assert_success
+  # ddev start -y
+  run ddev start -y
+  assert_success
   # ddev . echo x | ddev composer create shopware/production:^v6.5
   run ddev . echo x | ddev composer create shopware/production:^v6.5
   # ddev exec console system:install --basic-setup

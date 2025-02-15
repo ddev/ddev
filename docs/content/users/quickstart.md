@@ -674,7 +674,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     mkdir ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
     ddev config --project-type=generic --webserver-type=generic
     ddev start
-    
+
     cat <<EOF > .ddev/config.sveltekit.yaml
     web_extra_exposed_ports:
     - name: svelte
@@ -702,7 +702,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```
 
     SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways.
-    
+
     * `svelte.config.js` example uses `adapter-node`.
     * `vite.config.js` uses port 3000 and `allowedHosts: true`
 
@@ -721,7 +721,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
       container_port: 3000
       http_port: 80
       https_port: 443
-    
+
     web_extra_daemons:
     - name: "node-example"
       command: "node server.js"
@@ -780,7 +780,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     ddev start
     ddev composer create "processwire/processwire:^3"
     ddev launch
-    ``` 
+    ```
 
 === "Git"
 
@@ -792,7 +792,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
     # clone the dev branch (latest features) into the current directory
     # git clone -b dev https://github.com/processwire/processwire.git .
-    
+
     ddev config --webserver-type=apache-fpm
     ddev start
     ddev launch
@@ -814,7 +814,7 @@ If you get a warning about "Apache mod_rewrite" during the compatibility check, 
     ```
     ddev config --upload-dirs=sites/assets/files && ddev restart
     ```
-  
+
 If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).
 
 ## Shopware
@@ -826,6 +826,7 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
     ```bash
     mkdir my-shopware-site && cd my-shopware-site
     ddev config --project-type=shopware6 --docroot=public
+    ddev start -y
     ddev composer create shopware/production:^v6.5
     # If it asks `Do you want to include Docker configuration from recipes?`
     # answer `x`, as we're using DDEV for this rather than its recipes.
