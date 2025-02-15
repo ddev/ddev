@@ -37,6 +37,6 @@ The Blackfire CLI is built into the web container, so you don’t need to instal
 
 * `ddev blackfire on` and `ddev blackfire off`
 * [`ddev exec blackfire curl https://<yoursite>.ddev.site`](../usage/commands.md#exec)
-* `ddev exec blackfire drush st`
+* `ddev exec blackfire run drush st`
 * `ddev exec blackfire curl https://<yoursite>.ddev.site`
 * [`ddev ssh`](../usage/commands.md#ssh) and use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).
