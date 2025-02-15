@@ -42,8 +42,10 @@ teardown() {
   # Set APP_ENV and DATABASE_URL in .env.local
   # ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
   run ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
+  assert_success
   # ddev exec bin/adminconsole sulu:build dev --no-interaction
   run ddev exec bin/adminconsole sulu:build dev --no-interaction
+  assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /admin"
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
