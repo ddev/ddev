@@ -22,7 +22,7 @@ teardown() {
   # ddev config --project-type=php --webserver-type=apache-fpm
   run ddev config --project-type=php --webserver-type=apache-fpm
   assert_success
-  # ddev start
+  # ddev start -y
   run ddev start -y
   assert_success
   # ddev launch
@@ -45,7 +45,7 @@ teardown() {
   # ddev config --project-type=php --webserver-type=apache-fpm
   run ddev config --project-type=php --webserver-type=apache-fpm
   assert_success
-  # ddev start
+  # ddev start -y
   run ddev start -y
   assert_success
   # ddev composer create "processwire/processwire:^3"

@@ -18,8 +18,8 @@ teardown() {
   # ddev config --project-type=drupal11 --docroot=web
   run ddev config --project-type=drupal11 --docroot=web
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create drupal/recommended-project:^11
   run ddev composer create drupal/recommended-project:^11
@@ -48,8 +48,8 @@ teardown() {
   # ddev config --project-type=drupal10 --docroot=web
   run ddev config --project-type=drupal10 --docroot=web
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create drupal/recommended-project:^10
   run ddev composer create drupal/recommended-project:^10
@@ -83,8 +83,8 @@ teardown() {
   # ddev config --project-type=drupal11 --docroot=web
   run ddev config --project-type=drupal11 --docroot=web
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer install
   run ddev composer install
@@ -110,8 +110,8 @@ teardown() {
   # ddev config --project-type=drupal11 --docroot=web
   run ddev config --project-type=drupal11 --docroot=web
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create drupal/cms
   run ddev composer create drupal/cms
