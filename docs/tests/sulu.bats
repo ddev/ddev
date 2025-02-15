@@ -19,7 +19,7 @@ teardown() {
   run ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
   assert_success
   # ddev start
-  run ddev start
+  run ddev start -y
   assert_success
   # ddev composer create sulu/skeleton
   run ddev composer create sulu/skeleton
