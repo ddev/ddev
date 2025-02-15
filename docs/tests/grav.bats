@@ -18,8 +18,8 @@ teardown() {
   # ddev config --omit-containers=db
   run ddev config --omit-containers=db
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create getgrav/grav
   run ddev composer create getgrav/grav
@@ -50,8 +50,8 @@ teardown() {
   # ddev config --omit-containers=db
   run ddev config --omit-containers=db
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer install
   run ddev composer install
