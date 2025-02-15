@@ -18,8 +18,8 @@ teardown() {
   # ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
   run ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create pimcore/skeleton
   run ddev composer create pimcore/skeleton
@@ -36,8 +36,8 @@ teardown() {
        command: 'while true; do /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance pimcore_scheduled_tasks pimcore_image_optimize pimcore_asset_update --memory-limit=250M --time-limit=3600; done'
        directory: /var/www/html" >.ddev/config.pimcore.yaml
   assert_success
-  # ddev restart
-  run ddev restart
+  # ddev restart -y
+  run ddev restart -y
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /admin"
