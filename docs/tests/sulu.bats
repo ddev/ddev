@@ -25,16 +25,16 @@ teardown() {
   run ddev composer create sulu/skeleton
   assert_success
   # export SULU_PROJECT_NAME="My Sulu Site"
-  run ddev exec export SULU_PROJECT_NAME="My Sulu Site"
+  export SULU_PROJECT_NAME="My Sulu Site"
   assert_success
   # export SULU_PROJECT_KEY="${PROJNAME}"
-  run ddev exec export SULU_PROJECT_KEY="my-sulu-site"
+  export SULU_PROJECT_KEY="${PROJNAME}"
   assert_success
   # export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
-  run ddev exec export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
+  export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
   assert_success
   # ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
-  run ddev exec "cp config/webspaces/website.xml config/webspaces/my-sulu-site.xml"
+  run ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
   assert_success
   # ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
   run ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
