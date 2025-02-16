@@ -18,8 +18,8 @@ teardown() {
   # ddev config --project-type=wordpress
   run ddev config --project-type=wordpress
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev wp core download
   run ddev wp core download
@@ -50,8 +50,8 @@ teardown() {
   # ddev config --project-type=wordpress --docroot=web
   run ddev config --project-type=wordpress --docroot=web
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create roots/bedrock
   run ddev composer create roots/bedrock
@@ -109,8 +109,8 @@ teardown() {
   # ddev config --project-type=wordpress
   run ddev config --project-type=wordpress
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com

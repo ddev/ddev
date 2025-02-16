@@ -18,8 +18,8 @@ teardown() {
   # ddev config --project-type=typo3 --docroot=public --php-version=8.3
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer create "typo3/cms-base-distribution"
   run ddev composer create "typo3/cms-base-distribution"
@@ -50,8 +50,8 @@ teardown() {
   # ddev config --project-type=typo3 --docroot=public --php-version=8.3
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
-  # ddev start
-  run ddev start
+  # ddev start -y
+  run ddev start -y
   assert_success
   # ddev composer install
   run ddev composer install
