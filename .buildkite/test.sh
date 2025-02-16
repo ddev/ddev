@@ -165,12 +165,11 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
 fi
 
 # If this is a PR and the diff doesn't have code, skip it
-if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
+set -x
+if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ( ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null ); then
   echo "Skipping buildkite build since no code changes found"
   exit 0
 fi
-
-set -x
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
