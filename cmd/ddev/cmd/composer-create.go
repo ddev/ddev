@@ -54,7 +54,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		if status != ddevapp.SiteRunning {
 			err = app.CreateDocroot()
 			if err != nil {
-				util.Failed("Could not create docroot at %s: %v", app.Docroot, err)
+				util.Failed("Could not create docroot at %s: %v", app.GetAbsDocroot(false), err)
 			}
 			err = app.Start()
 			if err != nil {
@@ -475,7 +475,7 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 	if !fileutil.IsDirectory(app.GetAbsDocroot(false)) {
 		err := app.CreateDocroot()
 		if err != nil {
-			util.Failed("Could not create docroot at %s: %v", app.Docroot, err)
+			util.Failed("Could not create docroot at %s: %v", app.GetAbsDocroot(false), err)
 		}
 		// Restart the project after creating docroot
 		if err := app.Restart(); err != nil {

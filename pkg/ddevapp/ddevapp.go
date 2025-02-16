@@ -1989,7 +1989,7 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 			}
 		}
 		content := string(c)
-		docroot := path.Join("/var/www/html", app.Docroot)
+		docroot := app.GetAbsDocroot(true)
 		err = fileutil.TemplateStringToFile(content, map[string]interface{}{"Docroot": docroot}, configPath)
 		if err != nil {
 			return err
