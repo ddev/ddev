@@ -239,7 +239,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 func setWordpressSiteSettingsPaths(app *DdevApp) {
 	config := NewWordpressConfig(app, "")
 
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	settingsFileBasePath := app.GetAbsDocroot(false)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, config.SiteSettingsDdev)
 }
@@ -311,7 +311,7 @@ func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string
 func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	needle := "wp-settings.php"
 
-	curDirMatches, err := filepath.Glob(filepath.Join(app.AppRoot, app.Docroot, needle))
+	curDirMatches, err := filepath.Glob(filepath.Join(app.GetAbsDocroot(false), needle))
 	if err != nil {
 		return "", err
 	}
@@ -320,7 +320,7 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 		return "", nil
 	}
 
-	subDirMatches, err := filepath.Glob(filepath.Join(app.AppRoot, app.Docroot, "*", needle))
+	subDirMatches, err := filepath.Glob(filepath.Join(app.GetAbsDocroot(false), "*", needle))
 	if err != nil {
 		return "", err
 	}

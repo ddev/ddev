@@ -77,7 +77,7 @@ func (app *DdevApp) IsUploadDirsWarningDisabled() bool {
 // on the host or "" if there is none.
 func (app *DdevApp) calculateHostUploadDirFullPath(uploadDir string) string {
 	if uploadDir != "" {
-		return path.Clean(path.Join(app.AppRoot, app.Docroot, uploadDir))
+		return path.Clean(path.Join(app.GetAbsDocroot(false), uploadDir))
 	}
 
 	return ""
@@ -98,7 +98,7 @@ func (app *DdevApp) GetHostUploadDirFullPath() string {
 // directory in container or "" if there is none.
 func (app *DdevApp) calculateContainerUploadDirFullPath(uploadDir string) string {
 	if uploadDir != "" {
-		return path.Clean(path.Join("/var/www/html", app.Docroot, uploadDir))
+		return path.Clean(path.Join(app.GetAbsDocroot(true), uploadDir))
 	}
 
 	return ""
