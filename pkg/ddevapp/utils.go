@@ -200,8 +200,9 @@ func templateCanUse(feature string) bool {
 	// healthcheck.start_interval requires Docker Engine v25 or later
 	// See https://github.com/docker/compose/pull/10939
 	if feature == "healthcheck.start_interval" {
-		isCompatible, _ := dockerutil.HasCompatibleDockerAPIVersion("1.44")
-		return isCompatible
+		if err := dockerutil.CheckDockerVersion(dockerutil.DockerVersionMatrix{APIVersion: "1.44", Version: "25.0"}); err == nil {
+			return true
+		}
 	}
 	return false
 }

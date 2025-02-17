@@ -58,12 +58,12 @@ var DebugDockercheckCmd = &cobra.Command{
 			util.Failed("Unable to get Docker version: %v", err)
 		}
 		util.Success("Docker version: %s", dockerVersion)
-		err = dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
+		err = dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
 		if err != nil {
 			if err.Error() == "no docker" {
 				util.Failed("Docker is not installed or the Docker client is not available in the $PATH")
 			} else {
-				util.Warning("The Docker version currently installed does not seem to meet DDEV's requirements: %v", err)
+				util.Warning("Problem with your Docker provider: %v.", err)
 			}
 		}
 
@@ -72,10 +72,6 @@ var DebugDockercheckCmd = &cobra.Command{
 			util.Failed("Unable to get Docker API version: %v", err)
 		}
 		util.Success("Docker API version: %s", dockerAPIVersion)
-		_, err = dockerutil.HasCompatibleDockerAPIVersion(dockerutil.DockerAPIVersionMinimum)
-		if err != nil {
-			util.Warning("Incompatible Docker API version: %v", err)
-		}
 
 		_, client := dockerutil.GetDockerClient()
 		if client == nil {
