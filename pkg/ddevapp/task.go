@@ -117,15 +117,15 @@ func (c ComposerTask) GetDescription() string {
 // we need using the yaml description of the task.
 // Returns a task (of various types) or nil
 func NewTask(app *DdevApp, ytask YAMLTask) Task {
-	if e, ok := ytask["exec-host"]; ok {
-		if v, ok := e.(string); ok {
+	if value, ok := ytask["exec-host"]; ok {
+		if v, ok := value.(string); ok {
 			t := ExecHostTask{app: app, exec: v}
 			return t
 		}
-		util.Warning("Invalid exec-host value, not executing it: %v", e)
-	} else if e, ok = ytask["composer"]; ok {
+		util.Warning("Invalid exec-host value, not executing it: %v", value)
+	} else if value, ok = ytask["composer"]; ok {
 		// Handle the old-style `composer: install`
-		if v, ok := e.(string); ok {
+		if v, ok := value.(string); ok {
 			t := ComposerTask{app: app, execRaw: strings.Split(v, " ")}
 			return t
 		}
@@ -141,9 +141,9 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			t := ComposerTask{app: app, execRaw: raw}
 			return t
 		}
-		util.Warning("Invalid Composer value, not executing it: %v", e)
-	} else if e, ok = ytask["exec"]; ok {
-		if v, ok := e.(string); ok {
+		util.Warning("Invalid Composer value, not executing it: %v", value)
+	} else if value, ok = ytask["exec"]; ok {
+		if v, ok := value.(string); ok {
 			t := ExecTask{app: app, exec: v}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
@@ -164,7 +164,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			}
 			return t
 		}
-		util.Warning("Invalid exec/exec_raw value, not executing it: %v", e)
+		util.Warning("Invalid exec/exec_raw value, not executing it: %v", value)
 	}
 	return nil
 }
