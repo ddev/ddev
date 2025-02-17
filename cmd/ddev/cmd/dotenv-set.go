@@ -91,6 +91,10 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 			if err := ddevapp.WriteProjectEnvFile(envFile, changedEnvMap, envText); err != nil {
 				util.Failed("Error writing .env file: %v", err)
 			}
+			err = app.MutagenSyncFlush()
+			if err != nil {
+				util.Failed("failed to app.MutagenSyncFlush: %v", err)
+			}
 		}
 
 		// Sort before output, since the map order is not deterministic
@@ -103,10 +107,6 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 		var formattedVars []string
 		for _, k := range rawResultKeys {
 			formattedVars = append(formattedVars, fmt.Sprintf(`%s=%v`, k, ddevapp.EscapeEnvFileValue(changedEnvMap[k])))
-		}
-		err = app.MutagenSyncFlush()
-		if err != nil {
-			util.Failed("failed to app.MutagenSyncFlush: %v", err)
 		}
 		friendlyMsg := fmt.Sprintf("Updated %s with:\n\n%s", envFile, strings.Join(formattedVars, "\n"))
 		output.UserOut.WithField("raw", changedEnvMap).Print(friendlyMsg)
