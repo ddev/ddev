@@ -449,7 +449,9 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	if !app.IsMutagenEnabled() {
 		return nil
 	}
-
+	if stat, _ := app.SiteStatus(); stat == SiteStopped {
+		return nil
+	}
 	container, err := GetContainer(app, "web")
 	if err != nil {
 		return fmt.Errorf("failed to get web container, err='%v'", err)

@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/output"
 	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/output"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
@@ -19,7 +20,7 @@ var DotEnvSetCmd = &cobra.Command{
 	Use:   "set [file]",
 	Short: "Write values from the command line to a .env file",
 	Long: `Create or update a .env file with values specified via long flags from the command line.
-Flags in the format --env-key=value will be converted to environment variable names 
+Flags in the format --env-key=value will be converted to environment variable names
 like ENV_KEY="value". The .env file should be named .env or .env.<servicename> or .env.<something>
 All environment variables can be used and expanded in .ddev/docker-compose.*.yaml files.
 Provide the path relative to the project root when specifying the file.`,
@@ -89,6 +90,10 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 		if !reflect.DeepEqual(originalEnvMap, envMap) {
 			if err := ddevapp.WriteProjectEnvFile(envFile, changedEnvMap, envText); err != nil {
 				util.Failed("Error writing .env file: %v", err)
+			}
+			err = app.MutagenSyncFlush()
+			if err != nil {
+				util.Failed("failed to app.MutagenSyncFlush: %v", err)
 			}
 		}
 
