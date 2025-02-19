@@ -61,14 +61,12 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 			return
 		}
 
-		err := dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
+		err := dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
 		if err != nil {
 			if err.Error() == "no docker" {
-				if os.Args[1] != "version" {
-					util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
-				}
+				util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
 			} else {
-				util.Warning("The Docker version currently installed does not seem to meet DDEV's requirements: %v", err)
+				util.Warning("Problem with your Docker provider: %v.", err)
 			}
 		}
 
