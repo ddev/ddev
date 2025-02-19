@@ -15,7 +15,7 @@ teardown() {
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  #ddev config --project-type=php --composer-root=core --upload-dirs=public/media
+  # ddev config --project-type=php --composer-root=core --upload-dirs=public/media
   run ddev config --project-type=php --composer-root=core --upload-dirs=public/media
   assert_success
   # ddev start
