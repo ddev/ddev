@@ -110,16 +110,16 @@ func TestCmdExec(t *testing.T) {
 	assert.NotEqual("/var/www/html", strings.TrimSpace(out))
 
 	// Create a bash script for testing
-	_, err = exec.RunHostCommand(DdevBin, "exec", "echo 'for i; do echo $i; done' > echo_arg_with_spaces.sh")
+	_, err = exec.RunHostCommand(DdevBin, "exec", "echo 'for i; do echo $i; done' > echo_args.sh")
 	assert.NoError(err)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
-	assert.FileExists(filepath.Join(site.Dir, "echo_arg_with_spaces.sh"))
+	assert.FileExists(filepath.Join(site.Dir, "echo_args.sh"))
 
 	// Arguments with spaces should not be split
-	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "echo_arg_with_spaces.sh", "string with spaces")
+	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "echo_args.sh", `string with "quotes" and spaces`, "another string")
 	assert.NoError(err)
-	assert.Equal("string with spaces", strings.TrimSpace(out))
+	assert.Equal("string with \"quotes\" and spaces\nanother string", strings.TrimSpace(out))
 
 	// Bash expansion should work
 	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", "$IS_DDEV_PROJECT")
@@ -127,7 +127,7 @@ func TestCmdExec(t *testing.T) {
 	assert.Equal("true", strings.TrimSpace(out))
 
 	// Bash expansion should work (using arg with spaces)
-	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", "$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}")
+	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", `$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}`)
 	assert.NoError(err)
 	assert.Equal("true foobar", strings.TrimSpace(out))
 
