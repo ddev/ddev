@@ -14,7 +14,7 @@ import (
 
 // isMagentoApp returns true if the app is of type magento
 func isMagentoApp(app *DdevApp) bool {
-	ism1, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "README.md"), `Magento - Long Term Support`)
+	ism1, err := fileutil.FgrepStringInFile(filepath.Join(app.GetAbsDocroot(false), "README.md"), `Magento - Long Term Support`)
 	if err == nil && ism1 {
 		return true
 	}
@@ -23,7 +23,7 @@ func isMagentoApp(app *DdevApp) bool {
 
 // isMagento2App returns true if the app is of type magento2
 func isMagento2App(app *DdevApp) bool {
-	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "..", "SECURITY.md"), `https://hackerone.com/`)
+	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.GetAbsDocroot(false), "..", "SECURITY.md"), `https://hackerone.com/`)
 	if err == nil && ism2 {
 		return true
 	}
@@ -62,9 +62,9 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	return app.SiteDdevSettingsFile, nil
 }
 
-// setMagentoSiteSettingsPaths sets the paths to settings.php for templating.
+// setMagentoSiteSettingsPaths sets the paths to local.xml for templating.
 func setMagentoSiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "app", "etc", "local.xml")
+	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "app", "etc", "local.xml")
 }
 
 // magentoImportFilesAction defines the magento workflow for importing project files.
@@ -154,9 +154,9 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 	return app.SiteDdevSettingsFile, nil
 }
 
-// setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
+// setMagento2SiteSettingsPaths sets the paths to env.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "..", "app", "etc", "env.php")
+	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "..", "app", "etc", "env.php")
 }
 
 // magentoConfigOverrideAction is not currently required

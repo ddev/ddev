@@ -144,14 +144,14 @@ func setTypo3SiteSettingsPaths(app *DdevApp) {
 		// above. TYPO3 v12 or higher Core Development mono repository is basically a non-composer mode installation
 		// albeit having a composer.json in the project root folder. Set now the correct path and configuration file
 		// names suitable for these setups.
-		settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+		settingsFileBasePath := app.GetAbsDocroot(false)
 		settingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "system", "settings.php")
 		localSettingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "system", "additional.php")
 	} else if isTypo3LegacyV11OrLower(app) {
 		// Up to TYPO3 v11 configuration files had the same naming and resided in the `docroot/typo3conf/` folder
 		// which dates back to times before composer has been a gamechanger in the PHP ecosystem. TYPO3 Core Development
 		// mono repository shared the same and we do not have to differenciate between composer and legacy mode here.
-		settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+		settingsFileBasePath := app.GetAbsDocroot(false)
 		settingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "LocalConfiguration.php")
 		localSettingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "AdditionalConfiguration.php")
 	} else {
@@ -187,7 +187,7 @@ func isTypo3App(app *DdevApp) bool {
 // which make no difference in the way to detect both variants. TYPO3 Core Development monorepository also shared the
 // same filestem layout. Thus using only a simple docroot/typo3 folder check here and be fine.
 func isTypo3LegacyV11OrLower(app *DdevApp) bool {
-	typo3Folder := filepath.Join(app.AppRoot, app.Docroot, "typo3")
+	typo3Folder := filepath.Join(app.GetAbsDocroot(false), "typo3")
 
 	// Check if the folder exists, fails if a symlink target does not exist.
 	if _, err := os.Stat(typo3Folder); !os.IsNotExist(err) {
@@ -260,7 +260,7 @@ func isTypo3LegacyV12OrHigher(app *DdevApp) bool {
 		return false
 	}
 
-	typo3Folder := filepath.Join(app.AppRoot, app.Docroot, "typo3")
+	typo3Folder := filepath.Join(app.GetAbsDocroot(false), "typo3")
 
 	versionFilePath := filepath.Join(typo3Folder, "sysext", "core", "Classes", "Information", "Typo3Version.php")
 	versionFile, err := fileutil.ReadFileIntoString(versionFilePath)

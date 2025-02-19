@@ -515,7 +515,7 @@ func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
 
 // docrootWorkingDir handles the shared case in which the web service working directory is the docroot.
 func docrootWorkingDir(app *DdevApp, defaults map[string]string) map[string]string {
-	defaults["web"] = path.Join("/var/www/html", app.Docroot)
+	defaults["web"] = app.GetAbsDocroot(true)
 
 	return defaults
 }

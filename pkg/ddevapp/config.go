@@ -1487,7 +1487,7 @@ func (app *DdevApp) CreateDocroot() error {
 		return nil
 	}
 	if filepath.IsAbs(app.Docroot) {
-		return fmt.Errorf("docroot %s must be relative", app.Docroot)
+		return fmt.Errorf("docroot '%s' must be relative to project root directory", app.Docroot)
 	}
 	docrootAbsPath := app.GetAbsDocroot(false)
 	// If user provided something like "./some/path", filepath.Rel will convert it to "some/path"
@@ -1548,7 +1548,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 	// Ensure that the docroot exists
 	if err := app.CreateDocroot(); err != nil {
-		return fmt.Errorf("unable to create docroot at %s: %v", app.Docroot, err)
+		return fmt.Errorf("unable to create docroot at '%s': %v", app.GetAbsDocroot(false), err)
 	}
 
 	return nil
@@ -1568,7 +1568,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	detectedAppType := app.DetectAppType()
 
 	// If we found an application type set it and inform the user.
-	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
+	util.Success("Found a %s codebase at %s.", detectedAppType, app.GetAbsDocroot(false))
 
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
 	typePrompt := "Project Type [%s] (%s): "
