@@ -109,10 +109,37 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.NotEqual("/var/www/html", strings.TrimSpace(out))
 
-	// Complex commands with spaces should also work, even without the --raw flag
-	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "-c", "for i; do echo $i; done", "_", "string with spaces")
+	// Create a bash script for testing
+	_, err = exec.RunHostCommand(DdevBin, "exec", "echo 'for i; do echo $i; done' > echo_arg_with_spaces.sh")
+	assert.NoError(err)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	assert.FileExists(filepath.Join(site.Dir, "echo_arg_with_spaces.sh"))
+
+	// Arguments with spaces should not be split
+	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "echo_arg_with_spaces.sh", "string with spaces")
 	assert.NoError(err)
 	assert.Equal("string with spaces", strings.TrimSpace(out))
+
+	// Bash expansion should work
+	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", "$IS_DDEV_PROJECT")
+	assert.NoError(err)
+	assert.Equal("true", strings.TrimSpace(out))
+
+	// Bash expansion should work (using arg with spaces)
+	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", "$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}")
+	assert.NoError(err)
+	assert.Equal("true foobar", strings.TrimSpace(out))
+
+	// Bash expansion doesn't work with --raw, it's expected
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", `$IS_DDEV_PROJECT`)
+	assert.NoError(err)
+	assert.Equal(`$IS_DDEV_PROJECT`, strings.TrimSpace(out))
+
+	// Bash expansion doesn't work with --raw, it's expected (using arg with spaces)
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", `$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}`)
+	assert.NoError(err)
+	assert.Equal(`"$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}"`, strings.TrimSpace(out))
 
 	bashPath := util.FindBashPath()
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
