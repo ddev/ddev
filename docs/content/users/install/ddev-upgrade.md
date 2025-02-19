@@ -96,15 +96,6 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     Download and run the Windows installer (for your architecture, most often AMD64) for the latest [DDEV release](https://github.com/ddev/ddev/releases) (`ddev_windows_<architecture>_installer.<version>.exe`).
 
-=== "Gitpod"
-
-    ## Gitpod
-
-    ```bash
-    # Update package information and all packages including DDEV
-    sudo apt-get update && sudo apt-get upgrade -y
-    ```
-
 === "Codespaces"
 
     ## GitHub Codespaces

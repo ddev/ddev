@@ -204,7 +204,6 @@ Use backticks to differentiate between a product and command, like DDEV vs. `dde
 | Git | git
 | Git Bash | git bash
 | GitHub or `github` | Github
-| Gitpod or `gitpod` | Gitpod.io, GitPod
 | GoLand | Goland
 | Google | google
 | Homebrew | homebrew

@@ -2,7 +2,7 @@
 
 DDEV is continually focused on quick project startup and fast responses to its web requests. DDEV’s performance is mostly an issue of how Docker runs on your workstation.
 
-On Linux, including Windows WSL2 and Gitpod, Docker is fast. Most people are happy with Linux performance and don’t need to change anything.
+On Linux, including Windows WSL2, Docker is fast. Most people are happy with Linux performance and don’t need to change anything.
 
 On macOS and Windows with Docker Desktop, allocated resources and mounted filesystem performance can be significant bottlenecks. Taking a bit of time to optimize your setup can yield massive performance gains.
 
