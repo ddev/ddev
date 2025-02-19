@@ -24,8 +24,8 @@ teardown() {
   # ddev wp core download
   run ddev wp core download
   assert_success
-  # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
-  run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  # ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
@@ -60,11 +60,11 @@ teardown() {
   run cp .env.example .env
   assert_success
   # Set database name to db in .env
-  # ddev dotenv set .env --db-name=db --db-user=db --db-password=db --db-host=db --wp-home=${DDEV_PRIMARY_URL} --wp-siteurl=${WP_HOME}/wp
+  # ddev dotenv set .env --db-name=db --db-user=db --db-password=db --db-host=db --wp-home=https://${PROJNAME}.ddev.site --wp-siteurl=https://${PROJNAME}.ddev.site/wp
   run ddev dotenv set .env --db-name=db --db-user=db --db-password=db --db-host=db --wp-home=https://${PROJNAME}.ddev.site --wp-siteurl=https://${PROJNAME}.ddev.site/wp
   assert_success
-  # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
-  run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  # ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
@@ -98,8 +98,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
-  run ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  # ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
