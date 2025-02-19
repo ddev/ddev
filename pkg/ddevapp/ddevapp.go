@@ -2544,6 +2544,7 @@ func (app *DdevApp) Pause() error {
 
 	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Profiles:     []string{"optional"},
 		Action:       []string{"stop"},
 	}); err != nil {
 		return err
