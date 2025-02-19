@@ -1809,11 +1809,22 @@ func (app *DdevApp) StartOptional() error {
 		Profiles:     []string{"optional"},
 		Action:       []string{"up", "-d"},
 	})
+
 	if err != nil {
 		util.Warning("Failed to start optional compose profile: %v, stderr='%s'", err, stderr)
 		return err
 	}
+
+	if !IsRouterDisabled(app) {
+		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
+		err = StartDdevRouter()
+		if err != nil {
+			return err
+		}
+	}
+
 	util.Success("Started optional compose profile")
+
 	return nil
 }
 
