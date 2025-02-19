@@ -45,15 +45,13 @@ ddev exec --raw -- ls -lR`,
 		opts := &ddevapp.ExecOpts{
 			Service: serviceType,
 			Dir:     execDirArg,
-			Cmd:     strings.Join(args, " "),
+			Cmd:     quoteArgs(args),
 			Tty:     true,
 		}
 
 		// If they've chosen raw, use the actual passed values.
-		// If there are multiple arguments, treat them as a raw command.
-		// This avoids splitting quoted strings with spaces into separate arguments.
 		// Also, retrieve and preserve the current $PATH to ensure the environment is consistent.
-		if cmd.Flag("raw").Changed || len(args) > 1 {
+		if cmd.Flag("raw").Changed {
 			var env []string
 			path, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: serviceType,
@@ -73,6 +71,22 @@ ddev exec --raw -- ls -lR`,
 			util.Failed("Failed to execute command %s: %v", strings.Join(args, " "), err)
 		}
 	},
+}
+
+// quoteArgs quotes any arguments that contain spaces.
+// This avoids splitting quoted strings with spaces into separate arguments.
+func quoteArgs(args []string) string {
+	if len(args) > 1 {
+		for i, arg := range args {
+			// Check if the argument contains spaces
+			if strings.Contains(arg, " ") {
+				// Escape existing double quotes and wrap in double quotes
+				arg = `"` + strings.ReplaceAll(arg, `"`, `\"`) + `"`
+			}
+			args[i] = arg
+		}
+	}
+	return strings.Join(args, " ")
 }
 
 func init() {
