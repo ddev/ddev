@@ -1794,6 +1794,40 @@ If this seems to be a config issue, update it accordingly.`, app.Name)
 	return nil
 }
 
+// StartOptional starts services in the "optional" compose profile
+func (app *DdevApp) StartOptional() error {
+	var err error
+	if status, _ := app.SiteStatus(); status != SiteRunning {
+		err = app.Start()
+		if err != nil {
+			return err
+		}
+	}
+
+	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Profiles:     []string{"optional"},
+		Action:       []string{"up", "-d"},
+	})
+
+	if err != nil {
+		util.Warning("Failed to start optional compose profile: %v, stderr='%s'", err, stderr)
+		return err
+	}
+
+	if !IsRouterDisabled(app) {
+		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
+		err = StartDdevRouter()
+		if err != nil {
+			return err
+		}
+	}
+
+	util.Success("Started optional compose profile")
+
+	return nil
+}
+
 // Restart does a Stop() and a Start
 func (app *DdevApp) Restart() error {
 	err := app.Stop(false, false)
@@ -2544,6 +2578,7 @@ func (app *DdevApp) Pause() error {
 
 	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Profiles:     []string{"optional"},
 		Action:       []string{"stop"},
 	}); err != nil {
 		return err
