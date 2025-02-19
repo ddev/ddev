@@ -117,33 +117,33 @@ func (c ComposerTask) GetDescription() string {
 // we need using the yaml description of the task.
 // Returns a task (of various types) or nil
 func NewTask(app *DdevApp, ytask YAMLTask) Task {
-	if e, ok := ytask["exec-host"]; ok {
-		if v, ok := e.(string); ok {
+	if value, ok := ytask["exec-host"]; ok {
+		if v, ok := value.(string); ok {
 			t := ExecHostTask{app: app, exec: v}
 			return t
 		}
-		util.Warning("Invalid exec-host value, not executing it: %v", e)
-	} else if e, ok = ytask["composer"]; ok {
+		util.Warning("Invalid exec-host value, not executing it: %v", value)
+	} else if value, ok = ytask["composer"]; ok {
 		// Handle the old-style `composer: install`
-		if v, ok := e.(string); ok {
+		if v, ok := value.(string); ok {
 			t := ComposerTask{app: app, execRaw: strings.Split(v, " ")}
 			return t
 		}
 
 		// Handle the new-style `composer: [install]`
 		if v, ok := ytask["exec_raw"]; ok {
-			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			raw, err := util.InterfaceSliceToStringSlice(v)
 			if err != nil {
-				util.Warning("Invalid composer/exec_raw value, not executing it: %v", e)
+				util.Warning("Invalid composer/exec_raw value, not executing it: %v", err)
 				return nil
 			}
 
 			t := ComposerTask{app: app, execRaw: raw}
 			return t
 		}
-		util.Warning("Invalid Composer value, not executing it: %v", e)
-	} else if e, ok = ytask["exec"]; ok {
-		if v, ok := e.(string); ok {
+		util.Warning("Invalid Composer value, not executing it: %v", value)
+	} else if value, ok = ytask["exec"]; ok {
+		if v, ok := value.(string); ok {
 			t := ExecTask{app: app, exec: v}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
@@ -152,9 +152,9 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		}
 
 		if v, ok := ytask["exec_raw"]; ok {
-			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			raw, err := util.InterfaceSliceToStringSlice(v)
 			if err != nil {
-				util.Warning("Invalid exec/exec_raw value, not executing it: %v", e)
+				util.Warning("Invalid exec/exec_raw value, not executing it: %v", err)
 				return nil
 			}
 
@@ -164,17 +164,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			}
 			return t
 		}
-		util.Warning("Invalid exec_raw value, not executing it: %v", e)
-
-	} else if e, ok = ytask["exec"]; ok {
-		if v, ok := e.(string); ok {
-			t := ExecTask{app: app, exec: v}
-			if t.service, ok = ytask["service"].(string); !ok {
-				t.service = nodeps.WebContainer
-			}
-			return t
-		}
-		util.Warning("Invalid exec value, not executing it: %v", e)
+		util.Warning("Invalid exec/exec_raw value, not executing it: %v", value)
 	}
 	return nil
 }

@@ -49,11 +49,22 @@ ddev exec --raw -- ls -lR`,
 			Tty:     true,
 		}
 
-		// If they've chosen raw, use the actual passed values
-		if cmd.Flag("raw").Changed {
-			if useRaw, _ := cmd.Flags().GetBool("raw"); useRaw {
-				opts.RawCmd = args
+		// If they've chosen raw, use the actual passed values.
+		// If there are multiple arguments, treat them as a raw command.
+		// This avoids splitting quoted strings with spaces into separate arguments.
+		// Also, retrieve and preserve the current $PATH to ensure the environment is consistent.
+		if cmd.Flag("raw").Changed || len(args) > 1 {
+			var env []string
+			path, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: serviceType,
+				Cmd:     "echo $PATH",
+			})
+			path = strings.Trim(path, "\n")
+			if err == nil && path != "" {
+				env = append(env, "PATH="+path)
 			}
+			opts.RawCmd = args
+			opts.Env = env
 		}
 
 		_, _, err = app.Exec(opts)
