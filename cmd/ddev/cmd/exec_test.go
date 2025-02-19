@@ -116,10 +116,10 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.FileExists(filepath.Join(site.Dir, "echo_args.sh"))
 
-	// Arguments with spaces should not be split
-	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "echo_args.sh", `string with "quotes" and spaces`, "another string")
+	// Arguments with spaces should not be split, quotes should be preserved
+	out, err = exec.RunHostCommand(DdevBin, "exec", "bash", "echo_args.sh", "string with \"quotes\" and spaces", "another 'quoted' string")
 	assert.NoError(err)
-	assert.Equal("string with \"quotes\" and spaces\nanother string", strings.TrimSpace(out))
+	assert.Equal("string with \"quotes\" and spaces\nanother 'quoted' string", strings.TrimSpace(out))
 
 	// Bash expansion should work
 	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", "$IS_DDEV_PROJECT")
@@ -127,19 +127,19 @@ func TestCmdExec(t *testing.T) {
 	assert.Equal("true", strings.TrimSpace(out))
 
 	// Bash expansion should work (using arg with spaces)
-	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", `$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}`)
+	out, err = exec.RunHostCommand(DdevBin, "exec", "echo", "$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}")
 	assert.NoError(err)
 	assert.Equal("true foobar", strings.TrimSpace(out))
 
 	// Bash expansion doesn't work with --raw, it's expected
-	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", `$IS_DDEV_PROJECT`)
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", "$IS_DDEV_PROJECT")
 	assert.NoError(err)
-	assert.Equal(`$IS_DDEV_PROJECT`, strings.TrimSpace(out))
+	assert.Equal("$IS_DDEV_PROJECT", strings.TrimSpace(out))
 
 	// Bash expansion doesn't work with --raw, it's expected (using arg with spaces)
-	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", `$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}`)
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", "$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}")
 	assert.NoError(err)
-	assert.Equal(`"$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}"`, strings.TrimSpace(out))
+	assert.Equal("\"$IS_DDEV_PROJECT ${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}\"", strings.TrimSpace(out))
 
 	bashPath := util.FindBashPath()
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
