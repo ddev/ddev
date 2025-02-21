@@ -73,6 +73,9 @@ func TestCmdStartOptional(t *testing.T) {
 	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
 
+	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		_ = app.Stop(true, false)
 		// Remove the added docker-compose.busybox.yaml
