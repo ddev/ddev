@@ -1,12 +1,14 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 
-	"os"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -61,4 +63,39 @@ func TestCmdStart(t *testing.T) {
 			assert.Contains(out, app.GetPrimaryURL(), "The output should contain the primary URL, but it does not: %s", out)
 		}
 	}
+}
+
+// TestCmdStartOptional checks `ddev start --optional`
+func TestCmdStartOptional(t *testing.T) {
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		// Remove the added docker-compose.busybox.yaml
+		_ = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.busybox.yaml")))
+		_ = app.Start()
+	})
+
+	// Add extra service that is in the "optional" profile
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), app.GetConfigPath("docker-compose.busybox.yaml"))
+	require.NoError(t, err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"start", site.Name})
+	require.NoError(t, err)
+
+	// Make sure the busybox service didn't get started
+	container, err := ddevapp.GetContainer(app, "busybox")
+	require.Error(t, err)
+	require.Nil(t, container)
+
+	// Now ddev start --optional and make sure the service is there
+	_, err = exec.RunCommand(DdevBin, []string{"start", "--optional", site.Name})
+	require.NoError(t, err)
+	container, err = ddevapp.GetContainer(app, "busybox")
+	require.NoError(t, err)
+	require.NotNil(t, container)
 }
