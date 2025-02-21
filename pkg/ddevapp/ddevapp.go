@@ -1806,7 +1806,7 @@ func (app *DdevApp) StartOptional() error {
 
 	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Profiles:     []string{"optional"},
+		Profiles:     []string{nodeps.ComposeProfileOptional},
 		Action:       []string{"up", "-d"},
 	})
 
@@ -2177,9 +2177,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
 	files := []string{app.DockerComposeFullRenderedYAMLPath()}
-	if err != nil {
-		return "", "", err
-	}
 
 	stdout := os.Stdout
 	stderr := os.Stderr
@@ -2578,7 +2575,7 @@ func (app *DdevApp) Pause() error {
 
 	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Profiles:     []string{"optional"},
+		Profiles:     []string{nodeps.ComposeProfileOptional},
 		Action:       []string{"stop"},
 	}); err != nil {
 		return err

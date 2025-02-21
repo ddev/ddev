@@ -43,6 +43,11 @@ const (
 	WebserverGeneric   = "generic"
 )
 
+// Docker Compose Profiles
+const (
+	ComposeProfileOptional = "optional"
+)
+
 // ValidOmitContainers is the list of things that can be omitted
 var ValidOmitContainers = map[string]bool{
 	DBContainer:           true,

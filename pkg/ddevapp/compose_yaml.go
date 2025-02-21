@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"gopkg.in/yaml.v3"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
@@ -57,7 +58,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	}
 	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
-		Profiles:     []string{"optional"},
+		Profiles:     []string{nodeps.ComposeProfileOptional},
 		Action:       append(action, "config"),
 	})
 	if err != nil {

@@ -136,3 +136,16 @@ RUN export TARGETPLATFORM=linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm6
 RUN chmod +x /usr/local/bin/mkcert
 USER original_user
 ```
+
+## Optional Services
+
+Services in the Docker Compose "optional" profile will not automatically be started on `ddev start`. This is useful when you want to define a service that is not always needed, but can be started by an additional command when it is time to use it. In this way, it doesn't use system resources unless needed. 
+
+Example: 
+
+```yaml
+services:
+  someservice:
+    image: ubuntu
+
+```
