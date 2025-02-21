@@ -61,6 +61,7 @@ ddev exec --raw -- ls -lR`,
 			if err == nil && path != "" {
 				env = append(env, "PATH="+path)
 			}
+			// opts.RawCmd is used instead of opts.Cmd
 			opts.RawCmd = args
 			opts.Env = env
 		}
@@ -68,25 +69,32 @@ ddev exec --raw -- ls -lR`,
 		_, _, err = app.Exec(opts)
 
 		if err != nil {
-			util.Failed("Failed to execute command %s: %v", strings.Join(args, " "), err)
+			util.Failed("Failed to execute command `%s`: %v", opts.Cmd, err)
 		}
 	},
 }
 
 // quoteArgs quotes any arguments that contain spaces.
 // This avoids splitting quoted strings with spaces into separate arguments.
+// The function is adapted from the internal quoteArgs golang function.
 func quoteArgs(args []string) string {
-	if len(args) > 1 {
-		for i, arg := range args {
-			// Check if the argument contains spaces
-			if strings.Contains(arg, " ") {
-				// Escape existing double quotes and wrap in double quotes
-				arg = `"` + strings.ReplaceAll(arg, `"`, `\"`) + `"`
-			}
-			args[i] = arg
+	if len(args) < 2 {
+		return strings.Join(args, " ")
+	}
+	var b strings.Builder
+	for i, arg := range args {
+		if i > 0 {
+			b.WriteString(" ")
+		}
+		if strings.ContainsAny(arg, "\" \t\r\n#") {
+			b.WriteString(`"`)
+			b.WriteString(strings.ReplaceAll(arg, `"`, `\"`))
+			b.WriteString(`"`)
+		} else {
+			b.WriteString(arg)
 		}
 	}
-	return strings.Join(args, " ")
+	return b.String()
 }
 
 func init() {
