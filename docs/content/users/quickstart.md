@@ -1009,6 +1009,13 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev exec symfony server:log
     ```
 
+!!!tip "Web Debug Toolbar support for Apache (`apache-fpm`)"
+    
+    ```bash
+    ddev composer require symfony/apache-pack
+    # When asked to execute the recipe, choose "yes" with "y"
+    ```
+
 ## TYPO3
 
 === "Composer"
