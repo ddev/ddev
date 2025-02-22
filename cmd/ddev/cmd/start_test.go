@@ -96,8 +96,8 @@ func TestCmdStartOptional(t *testing.T) {
 	require.Nil(t, container)
 
 	// Now ddev start --optional and make sure the service is there
-	_, err = exec.RunCommand(DdevBin, []string{"start", "--optional", site.Name})
-	require.NoError(t, err)
+	out, err := exec.RunCommand(DdevBin, []string{"start", "--optional", site.Name})
+	require.NoError(t, err, "start --optional failed, output='%s'", out)
 	container, err = ddevapp.GetContainer(app, "busybox")
 	require.NoError(t, err)
 	require.NotNil(t, container)

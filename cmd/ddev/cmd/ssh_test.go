@@ -19,7 +19,7 @@ import (
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
 		t.Skip("Skipping TestCmdSSH on Apple Silicon because of intermittent failures to connect")
 	}
 	assert := asrt.New(t)
