@@ -166,7 +166,9 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
+		out, err := exec.RunHostCommand(DdevBin, "stop", site.Name)
+		assert.NoError(err, "output='%s'", out)
+		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
 		assert.NoError(err, "output='%s'", out)
 		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "bare-busybox")
 		assert.NoError(err, "output='%s'", out)

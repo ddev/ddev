@@ -1,3 +1,4 @@
+#ddev-generated
 services:
   busybox:
     container_name: ddev-${DDEV_SITENAME}-busybox
