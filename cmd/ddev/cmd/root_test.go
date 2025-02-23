@@ -2,6 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -16,13 +24,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	osexec "os/exec"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
-	"testing"
 )
 
 func init() {
@@ -66,6 +67,8 @@ var (
 
 func TestMain(m *testing.M) {
 	output.LogSetUp()
+
+	testcommon.ClearDockerEnv()
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
