@@ -67,6 +67,8 @@ func TestCmdStart(t *testing.T) {
 
 // TestCmdStartOptional checks `ddev start --optional`
 func TestCmdStartOptional(t *testing.T) {
+	testcommon.ClearDockerEnv()
+
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 
