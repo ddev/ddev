@@ -87,8 +87,8 @@ func TestCmdStartOptional(t *testing.T) {
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), app.GetConfigPath("docker-compose.busybox.yaml"))
 	require.NoError(t, err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start", site.Name})
-	require.NoError(t, err)
+	out, err := exec.RunCommand(DdevBin, []string{"start", site.Name})
+	require.NoError(t, err, "failed to start %s, output='%s'", site.Name, out)
 
 	// Make sure the busybox service didn't get started
 	container, err := ddevapp.GetContainer(app, "busybox")
@@ -96,7 +96,7 @@ func TestCmdStartOptional(t *testing.T) {
 	require.Nil(t, container)
 
 	// Now ddev start --optional and make sure the service is there
-	out, err := exec.RunCommand(DdevBin, []string{"start", "--optional", site.Name})
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--optional", site.Name})
 	require.NoError(t, err, "start --optional failed, output='%s'", out)
 	container, err = ddevapp.GetContainer(app, "busybox")
 	require.NoError(t, err)
