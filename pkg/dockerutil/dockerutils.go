@@ -35,6 +35,7 @@ import (
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
 	dockerNetwork "github.com/docker/docker/api/types/network"
+	dockerVersions "github.com/docker/docker/api/types/versions"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
@@ -44,6 +45,22 @@ import (
 
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
+
+type DockerVersionMatrix struct {
+	APIVersion string
+	Version    string
+}
+
+// DockerRequirements defines the minimum Docker version required by DDEV.
+// We compare using the APIVersion because it's a consistent and reliable value.
+// The Version is displayed to users as it's more readable and user-friendly.
+// The values correspond to the API version matrix found here:
+// https://docs.docker.com/reference/api/engine/#api-version-matrix
+// List of supported Docker versions: https://endoflife.date/docker-engine
+var DockerRequirements = DockerVersionMatrix{
+	APIVersion: "1.44",
+	Version:    "25.0",
+}
 
 type ComposeCmdOpts struct {
 	ComposeFiles []string
@@ -793,21 +810,18 @@ func GetContainerEnv(key string, container dockerTypes.Container) string {
 	return ""
 }
 
-// CheckDockerVersion determines if the Docker version of the host system meets the provided version
-// constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
-// for examples defining version constraints.
-func CheckDockerVersion(versionConstraint string) error {
+// CheckDockerVersion determines if the Docker version of the host system meets the provided
+// minimum for the Docker API Version.
+func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	defer util.TimeTrack()()
 
 	currentVersion, err := GetDockerVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
 	}
-	// If Docker version has "_ce", remove it. This happens on OpenSUSE Tumbleweed at least
-	currentVersion = strings.TrimSuffix(currentVersion, "_ce")
-	dockerVersion, err := semver.NewVersion(currentVersion)
+	currentAPIVersion, err := GetDockerAPIVersion()
 	if err != nil {
-		return err
+		return fmt.Errorf("no docker")
 	}
 
 	// See if they're using broken Docker Desktop on Linux
@@ -822,22 +836,9 @@ func CheckDockerVersion(versionConstraint string) error {
 		}
 	}
 
-	constraint, err := semver.NewConstraint(versionConstraint)
-	if err != nil {
-		return err
-	}
-
-	match, errs := constraint.Validate(dockerVersion)
-	if !match {
-		if len(errs) <= 1 {
-			return errs[0]
-		}
-
-		msgs := "\n"
-		for _, err := range errs {
-			msgs = fmt.Sprint(msgs, err, "\n")
-		}
-		return fmt.Errorf("%s", msgs)
+	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API
+	if !dockerVersions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
+		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
 	}
 	return nil
 }
@@ -1832,14 +1833,6 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 
 	return nil
 }
-
-// DockerVersionConstraint is the current minimum version of Docker required for DDEV.
-// See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
-// for examples defining version constraints.
-// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
-// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
-var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
 // DockerVersion is cached version of Docker provider engine
 var DockerVersion = ""
