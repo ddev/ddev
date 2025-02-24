@@ -81,13 +81,13 @@ These environments can be extended, version controlled, and shared, so you can t
     2. Install [DDEV for Linux](users/install/ddev-installation.md#linux).
     3. Launch your [first project](users/project.md) and start developing. 🚀
 
-=== "Gitpod & Codespaces"
+=== "GitHub Codespaces"
 
-    ### Gitpod and GitHub Codespaces
+    ### GitHub Codespaces
 
-    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything; you only need a browser and an internet connection.
+    With [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything; you only need a browser and an internet connection.
 
     **Next steps:**
 
-    1. Install DDEV within [Gitpod](users/install/ddev-installation.md#gitpod) or [GitHub Codespaces](users/install/ddev-installation.md#github-codespaces).
+    1. Install DDEV within [GitHub Codespaces](users/install/ddev-installation.md#github-codespaces).
     2. Launch your [first project](users/project.md) and start developing. 🚀
