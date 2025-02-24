@@ -78,7 +78,6 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "bin\netc\ngames\ninclude"), `expected '%v' to start with '%s'`, out, `bin\netc\games\include`)
 
-
 	// Test sudo
 	out, err = exec.RunHostCommand(DdevBin, "exec", "sudo", "whoami")
 	assert.NoError(err)
@@ -139,11 +138,17 @@ func TestCmdExec(t *testing.T) {
 	// Bash expansion doesn't work with --raw, it's expected
 	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", "$IS_DDEV_PROJECT")
 	assert.NoError(err)
+	// Expect a literal string here instead of a variable
+	// because this is not being run in Bash, i.e., not `docker-compose exec bash -c "command"`,
+	// but `docker-compose exec "command"`
 	assert.Equal("$IS_DDEV_PROJECT", strings.TrimSpace(out))
 
 	// Bash expansion doesn't work with --raw, it's expected (using arg with spaces)
 	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "echo", "$IS_DDEV_PROJECT\n${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}")
 	assert.NoError(err)
+	// Expect a literal string here instead of a variable
+	// because this is not being run in Bash, i.e., not `docker-compose exec bash -c "command"`,
+	// but `docker-compose exec "command"`
 	assert.Equal("$IS_DDEV_PROJECT\n${DDEV_NON_EXISTING_TEST_VARIABLE:-foobar}", strings.TrimSpace(out))
 
 	bashPath := util.FindBashPath()
