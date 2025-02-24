@@ -233,6 +233,15 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		if len(bindInfo) > 0 {
 			t.AppendRow(table.Row{"Network", "", strings.Join(bindInfo, "\n")})
 		}
+		if !ddevapp.IsRouterDisabled(app) {
+			// If there is a problem with the router, add it to the table
+			routerStatus, errorInfo := ddevapp.RenderRouterStatus()
+			if errorInfo != "" {
+				t.AppendFooter(table.Row{
+					"Router", routerStatus, text.WrapSoft(errorInfo, int(urlPortWidth)),
+				})
+			}
+		}
 	}
 
 	t.Render()

@@ -74,13 +74,17 @@ func List(settings ListCommandSettings) {
 			if routerStatus == SiteStopped {
 				routerURL = ""
 			}
-			extendedRouterStatus := RenderRouterStatus()
+			location := fileutil.ShortHomeJoin(globalconfig.GetGlobalDdevDirLocation())
+			extendedRouterStatus, errorInfo := RenderRouterStatus()
+			if errorInfo != "" {
+				location = text.WrapSoft(errorInfo, 35)
+			}
 			routerType := globalconfig.DdevGlobalConfig.Router
 			if len(types.GetValidRouterTypes()) < 2 {
 				routerType = ""
 			}
 			t.AppendFooter(table.Row{
-				"Router", extendedRouterStatus, fileutil.ShortHomeJoin(globalconfig.GetGlobalDdevDirLocation()), routerURL, routerType},
+				"Router", extendedRouterStatus, location, routerURL, routerType},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
