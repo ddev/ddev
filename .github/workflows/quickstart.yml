@@ -67,4 +67,6 @@ jobs:
 
       - name: Run quickstart test
         run: |
+          # Use mutagen by default as it may cause different behaviors
+          ddev config global --performance-mode=mutagen
           make quickstart-test
