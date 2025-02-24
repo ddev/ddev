@@ -378,6 +378,8 @@ func init() {
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
+	testcommon.ClearDockerEnv()
+
 	// Since this may be the first time DDEV has been used, we need the
 	// DDEV network available.
 	dockerutil.EnsureDdevNetwork()

@@ -41,6 +41,8 @@ func TestMain(m *testing.M) { os.Exit(testMain(m)) }
 func testMain(m *testing.M) int {
 	output.LogSetUp()
 
+	testcommon.ClearDockerEnv()
+
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
