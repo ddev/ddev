@@ -71,12 +71,13 @@ func TestCmdExec(t *testing.T) {
 	// Test with raw cmd
 	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "--", "ls", "/usr/local")
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "bin\netc\ngames\ninclude"), "expected '%v' to start with 'bin\\netc\\games\\include'", out)
+	assert.True(strings.HasPrefix(out, "bin\netc\ngames\ninclude"), `expected '%v' to start with '%s'`, out, `bin\netc\ngames\ninclude`)
 
 	// Test with raw cmd and bash
 	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "bash", "-c", "ls /usr/local")
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "bin\netc\ngames\ninclude"), "expected '%v' to start with 'bin\\netc\\games\\include'", out)
+	assert.True(strings.HasPrefix(out, "bin\netc\ngames\ninclude"), `expected '%v' to start with '%s'`, out, `bin\netc\games\include`)
+
 
 	// Test sudo
 	out, err = exec.RunHostCommand(DdevBin, "exec", "sudo", "whoami")
