@@ -45,15 +45,13 @@ ddev exec --raw -- ls -lR`,
 		opts := &ddevapp.ExecOpts{
 			Service: serviceType,
 			Dir:     execDirArg,
-			Cmd:     strings.Join(args, " "),
+			Cmd:     quoteArgs(args),
 			Tty:     true,
 		}
 
 		// If they've chosen raw, use the actual passed values.
-		// If there are multiple arguments, treat them as a raw command.
-		// This avoids splitting quoted strings with spaces into separate arguments.
 		// Also, retrieve and preserve the current $PATH to ensure the environment is consistent.
-		if cmd.Flag("raw").Changed || len(args) > 1 {
+		if cmd.Flag("raw").Changed {
 			var env []string
 			path, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: serviceType,
@@ -63,6 +61,7 @@ ddev exec --raw -- ls -lR`,
 			if err == nil && path != "" {
 				env = append(env, "PATH="+path)
 			}
+			// opts.RawCmd is used instead of opts.Cmd
 			opts.RawCmd = args
 			opts.Env = env
 		}
@@ -70,9 +69,32 @@ ddev exec --raw -- ls -lR`,
 		_, _, err = app.Exec(opts)
 
 		if err != nil {
-			util.Failed("Failed to execute command %s: %v", strings.Join(args, " "), err)
+			util.Failed("Failed to execute command `%s`: %v", opts.Cmd, err)
 		}
 	},
+}
+
+// quoteArgs quotes any arguments that contain spaces.
+// This avoids splitting quoted strings with spaces into separate arguments.
+// The function is adapted from the internal quoteArgs golang function.
+func quoteArgs(args []string) string {
+	if len(args) < 2 {
+		return strings.Join(args, " ")
+	}
+	var b strings.Builder
+	for i, arg := range args {
+		if i > 0 {
+			b.WriteString(" ")
+		}
+		if strings.ContainsAny(arg, "\" \t\r\n#") {
+			b.WriteString(`"`)
+			b.WriteString(strings.ReplaceAll(arg, `"`, `\"`))
+			b.WriteString(`"`)
+		} else {
+			b.WriteString(arg)
+		}
+	}
+	return b.String()
 }
 
 func init() {
