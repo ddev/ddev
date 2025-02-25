@@ -1506,6 +1506,9 @@ func (app *DdevApp) CreateDocroot() error {
 	if app.GetDocroot() == "" {
 		return nil
 	}
+	if err := ValidateDocroot(app.GetDocroot()); err != nil {
+		return err
+	}
 	docrootAbsPath := app.GetAbsDocroot(false)
 	if !fileutil.IsDirectory(docrootAbsPath) {
 		if err := os.MkdirAll(docrootAbsPath, 0755); err != nil {
