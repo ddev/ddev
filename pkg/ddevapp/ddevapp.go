@@ -474,7 +474,7 @@ func (app *DdevApp) AppConfDir() string {
 	return filepath.Join(app.AppRoot, ".ddev")
 }
 
-// GetDocroot returns the docroot path for DDEV app
+// GetDocroot returns the docroot path relative to project root
 func (app DdevApp) GetDocroot() string {
 	return app.Docroot
 }
@@ -2476,7 +2476,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
 		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
 		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
-		"DDEV_DOCROOT":             app.Docroot,
+		"DDEV_DOCROOT":             app.GetDocroot(),
 		"DDEV_HOSTNAME":            app.HostName(),
 		"DDEV_UID":                 uidStr,
 		"DDEV_GID":                 gidStr,
