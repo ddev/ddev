@@ -390,6 +390,9 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	if cmd.Flags().Changed("docroot") {
+		if err := ddevapp.ValidateDocroot(docrootRelPathArg); err != nil {
+			util.Failed("Failed to validate docroot: %v", err)
+		}
 		app.Docroot = docrootRelPathArg
 		// Ensure that the docroot exists
 		if err = app.CreateDocroot(); err != nil {
