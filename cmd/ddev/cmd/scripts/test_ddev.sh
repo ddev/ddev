@@ -132,6 +132,9 @@ if [ ${OSTYPE%-*} != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; the
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
 echo "docker version: " && docker version
+echo
+echo "docker context: " && docker context ls
+echo
 printf "\nDOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}\n"
 
 case $docker_platform in
