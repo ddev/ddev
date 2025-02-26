@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDdevApp_StartOptional makes sure that we can start an optional service appropriately
-func TestDdevApp_StartOptional(t *testing.T) {
+// TestDdevApp_StartOptionalProfile makes sure that we can start an optional service appropriately
+func TestDdevApp_StartOptionalProfile(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
@@ -38,7 +38,7 @@ func TestDdevApp_StartOptional(t *testing.T) {
 	require.Nil(t, container)
 
 	// Now StartOptionalProfile() and make sure the service is there
-	err = app.StartOptionalProfile("")
+	err = app.StartOptionalProfile("busybox")
 	require.NoError(t, err)
 	container, err = ddevapp.GetContainer(app, "busybox")
 	require.NoError(t, err)
