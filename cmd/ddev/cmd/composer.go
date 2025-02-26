@@ -23,7 +23,7 @@ the command with 'ddev'.`,
 	Example: `ddev composer install
 ddev composer require <package>
 ddev composer outdated --minor-only
-ddev composer create drupal/recommended-project`,
+ddev composer create-project drupal/recommended-project .`,
 	ValidArgsFunction: getComposerCompletionFunc(false),
 	Run: func(_ *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")

@@ -72,7 +72,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * **Beware simultaneous changes to the same file in both filesystems.**<br>
     As we pointed out above, any project likely to change the same file on the host *and* inside the container may encounter conflicts.
     * **Massive changes can cause problems.**<br>
-    Massive file changes on the host or in the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create`, but be aware of this issue. Changing Git branches, `npm install`, `yarn install`, or a script that deletes huge sections of the synced data are related behaviors that should raise caution. Again, use `ddev mutagen reset` before restarting the project if you want to be sure Mutagen starts out looking at the host machine’s files.
+    Massive file changes on the host or in the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create-project`, but be aware of this issue. Changing Git branches, `npm install`, `yarn install`, or a script that deletes huge sections of the synced data are related behaviors that should raise caution. Again, use `ddev mutagen reset` before restarting the project if you want to be sure Mutagen starts out looking at the host machine’s files.
     * **Mutagen is asynchronous.**<br>
     A massive change in either filesystem can result in lag as all changed files are handled. You can use `ddev mutagen monitor` to get a better look at what’s happening.
     * **You can manually trigger a sync.**<br>

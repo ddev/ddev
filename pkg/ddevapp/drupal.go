@@ -684,7 +684,7 @@ func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string
 	return nil
 }
 
-// getDrupalComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create
+// getDrupalComposerCreateAllowedPaths returns fullpaths that are allowed to be present when running composer create-project
 func getDrupalComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
 	var allowed []string
 

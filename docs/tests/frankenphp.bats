@@ -41,7 +41,7 @@ RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local
 DOCKERFILEEND
   assert_success
 
-  run ddev composer create drupal/recommended-project
+  run ddev composer create-project drupal/recommended-project .
   assert_success
   run ddev composer require drush/drush
   assert_success

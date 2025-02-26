@@ -26,7 +26,7 @@ To add a new project type:
     * `postStartAction` adds actions at the end of [`ddev start`](../users/usage/commands.md#start). You'll see several implementations of this, for things like creating needed default directories, or setting permissions on files, etc.
     * `importFilesAction` defines how [`ddev import-files`](../users/usage/commands.md#import-files) works for this project type.
     * `defaultWorkingDirMap` allows the project type to override the project’s [`working_dir`](../users/configuration/config.md#working_dir) (where [`ddev ssh`](../users/usage/commands.md#ssh) and [`ddev exec`](../users/usage/commands.md#exec) start by default). This is mostly not done anymore, as the `working_dir` is typically the project root.
-    * `composerCreateAllowedPaths` specifies the paths that can exist in a directory when `ddev composer create` is being used.
+    * `composerCreateAllowedPaths` specifies the paths that can exist in a directory when `ddev composer create-project` is being used.
 * You’ll likely need templates for settings files, use the Drupal or TYPO3 templates as examples, for example `pkg/ddevapp/drupal` and `pkg/ddevapp/typo3`. Those templates have to be loaded at runtime as well.
 * Implement `nginx-site-<project-type>.conf` in `webserver_config_assets`. You can use `webserver_config_assets/nginx-site-php.conf` as a pattern, or something from the upstream project.
 * Upload the project detection file stubs to the `testdata/TestDetectAppType` folder.

@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create moodle/moodle
-  run ddev composer create moodle/moodle
+  # ddev composer create-project moodle/moodle .
+  run ddev composer create-project moodle/moodle .
   assert_success
   # ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
   run ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'

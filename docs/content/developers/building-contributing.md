@@ -333,7 +333,7 @@ The pull request title must follow this convention which is based on the [Conven
 * `ci: enforce commit message convention, fixes #5037`
 * `docs: change code refs of Mac M1 to Apple Silicon`
 * `feat: allow multiple upload dirs, fixes #4190, fixes #4796`
-* `fix: create upload_dir if it doesn't exist in ddev composer create, fixes #5031`
+* `fix: create upload_dir if it doesn't exist in ddev composer create-project, fixes #5031`
 * `refactor: add new Amplitude Property DDEV-Environment`
 * `test: optimize caching of downloaded assets`
 

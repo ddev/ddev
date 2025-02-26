@@ -21,21 +21,20 @@ import (
 
 var composerDirectoryArg = ""
 
-// ComposerCreateCmd handles ddev composer create
-var ComposerCreateCmd = &cobra.Command{
+// ComposerCreateProjectCmd handles ddev composer create-project
+var ComposerCreateProjectCmd = &cobra.Command{
 	DisableFlagParsing: true,
-	Use:                "create [args] [flags]",
-	Aliases:            []string{"create-project"},
+	Use:                "create-project [args] [flags]",
 	Short:              "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the Composer root directory after install.`,
-	Example: `ddev composer create drupal/recommended-project
-ddev composer create drupal/recommended-project
-ddev composer create "typo3/cms-base-distribution:^10"
-ddev composer create drupal/recommended-project --no-install
-ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
-ddev composer create --prefer-dist --no-interaction --no-dev psr/log
+	Example: `ddev composer create-project drupal/recommended-project
+ddev composer create-project drupal/recommended-project .
+ddev composer create-project typo3/cms-base-distribution . "^10"
+ddev composer create-project drupal/recommended-project --no-install .
+ddev composer create-project --repository=https://repo.magento.com/ magento/project-community-edition .
+ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -75,7 +74,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		// Add some args to avoid troubles while cloning the project.
 		// We add the three options to "composer create-project": --no-plugins, --no-scripts, --no-install
-		// These options make the difference between "composer create-project" and "ddev composer create".
+		// These options make the difference between "composer create-project" and "ddev composer create-project".
 		var createArgs []string
 
 		for _, arg := range args {
@@ -301,7 +300,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			prepareAppForComposer(app)
 		}
 
-		util.Success("\nddev composer create was successful.")
+		util.Success("\nddev composer create-project was successful.")
 
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
@@ -309,11 +308,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 	},
 }
 
-// checkForComposerCreateAllowedPaths ensures that the project does not contain any paths that are not allowed to be present in the composer create command
+// checkForComposerCreateAllowedPaths ensures that the project does not contain any paths that are not allowed to be present in the composer create-project command
 func checkForComposerCreateAllowedPaths(app *ddevapp.DdevApp) {
 	appRoot := app.GetAbsAppRoot(false)
 	composerRoot := filepath.Join(app.GetComposerRoot(false, false), composerDirectoryArg)
-	skipDirs := []string{".ddev", ".git", ".tarballs"}
+	skipDirs := []string{".ddev", ".git", ".idea", ".tarballs", ".vscode"}
 	composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
 	err := filepath.Walk(composerRoot,
 		func(walkPath string, walkInfo os.FileInfo, err error) error {
@@ -327,7 +326,7 @@ func checkForComposerCreateAllowedPaths(app *ddevapp.DdevApp) {
 				return filepath.SkipDir
 			}
 			if !slices.Contains(composerCreateAllowedPaths, checkPath) {
-				return fmt.Errorf("'%s' is not allowed to be present. composer create needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
+				return fmt.Errorf("'%s' is not allowed to be present. composer create-project needs to be run on a clean/empty project with only the following paths: %v - please clean up the project before using 'ddev composer create-project'", filepath.Join(appRoot, checkPath), composerCreateAllowedPaths)
 			}
 			return err
 		})
@@ -497,6 +496,20 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 	}
 }
 
+// ComposerCreateCmd sends people to the right thing
+// when they try ddev composer create
+var ComposerCreateCmd = &cobra.Command{
+	Use:                "create",
+	Short:              `Use "ddev composer create-project" instead`,
+	DisableFlagParsing: true,
+	Hidden:             true,
+	Deprecated:         `use "create-project" instead`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ComposerCreateProjectCmd.Run(cmd, args)
+	},
+}
+
 func init() {
+	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }

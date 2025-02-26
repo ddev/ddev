@@ -340,7 +340,7 @@ func (app *DdevApp) GetHookDefaultComments() []byte {
 }
 
 // GetComposerCreateAllowedPaths gets all paths relative to the app root that are allowed to be present
-// for a given apptype when running ddev composer create
+// for a given apptype when running ddev composer create-project
 func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 	var allowed []string
 

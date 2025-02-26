@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestComposerCreateCmd(t *testing.T) {
+func TestComposerCreateProjectCmd(t *testing.T) {
 	composerVersionForThisTest := nodeps.ComposerDefault
 	//composerVersionForThisTest := "2.8.0"
 
@@ -31,11 +31,11 @@ func TestComposerCreateCmd(t *testing.T) {
 	for _, docRoot := range []string{"", "doc-root"} {
 		for _, projectType := range validAppTypes {
 			if projectType == nodeps.AppTypeDrupal6 {
-				t.Logf("== SKIP TestComposerCreateCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
-				t.Logf("== SKIP drupal6 projects uses a very old php version and composer create is very unlikely to be used")
+				t.Logf("== SKIP TestComposerCreateProjectCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
+				t.Logf("== SKIP drupal6 projects uses a very old php version and composer create-project is very unlikely to be used")
 				continue
 			}
-			t.Logf("== BEGIN TestComposerCreateCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
+			t.Logf("== BEGIN TestComposerCreateProjectCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
 			tmpDir := testcommon.CreateTmpDir(t.Name() + projectType)
 			err = os.Chdir(tmpDir)
 			require.NoError(t, err)
@@ -88,22 +88,22 @@ func TestComposerCreateCmd(t *testing.T) {
 			// These are different conditions to test different composer flag combinations
 			// Conditions for docRoot and projectType are not important here, they are only needed to make the test act different each time
 			if docRoot == "" {
-				cmd = "ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create"
+				cmd = "ddev composer create-project --no-plugins --no-scripts ddev/ddev-test-composer-create"
 				if projectType == nodeps.AppTypePHP {
-					cmd = "ddev composer create --no-install ddev/ddev-test-composer-create ."
+					cmd = "ddev composer create-project --no-install ddev/ddev-test-composer-create ."
 				}
 			} else {
 				if projectType != nodeps.AppTypePHP {
-					cmd = "ddev composer create ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0"
+					cmd = "ddev composer create-project ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0"
 				} else {
-					cmd = "ddev composer create -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ."
+					cmd = "ddev composer create-project -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ."
 				}
 			}
 
 			t.Logf("Attempting cmd='%s' with docroot='%s' composer_root='%s' type='%s'", cmd, docRoot, docRoot, projectType)
 			args := strings.Split(strings.TrimPrefix(cmd, "ddev "), " ")
 
-			// If a file exists in the composer root then composer create should fail
+			// If a file exists in the composer root then composer create-project should fail
 			file, err := os.Create(filepath.Join(composerDirOnHost, "touch1.txt"))
 			require.NoError(t, err)
 			out, err = exec.RunHostCommand(DdevBin, args...)
@@ -118,7 +118,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			require.Contains(t, out, "Created project in ")
 			require.FileExists(t, filepath.Join(composerDirOnHost, "composer.json"))
 
-			if cmd == "ddev composer create --no-plugins --no-scripts ddev/ddev-test-composer-create" {
+			if cmd == "ddev composer create-project --no-plugins --no-scripts ddev/ddev-test-composer-create" {
 				// Check what was executed or not
 				require.Contains(t, out, "Executing Composer command: [composer create-project --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
 				require.NotContains(t, out, "Executing Composer command: [composer run-script post-root-package-install")
@@ -133,7 +133,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "ddev", "ddev-test-composer-require-dev", "composer.json"))
 			}
 
-			if cmd == "ddev composer create -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ." {
+			if cmd == "ddev composer create-project -vvv ddev/ddev-test-composer-create --prefer-install=auto --fake-flag ." {
 				// Check what was executed or not
 				require.Contains(t, out, "Executing Composer command: [composer create-project -vvv --prefer-install=auto --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install -vvv]")
@@ -149,7 +149,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.FileExists(t, filepath.Join(composerDirOnHost, "vendor", "ddev", "ddev-test-composer-require-dev", "composer.json"))
 			}
 
-			if cmd == "ddev composer create --no-install ddev/ddev-test-composer-create ." {
+			if cmd == "ddev composer create-project --no-install ddev/ddev-test-composer-create ." {
 				// Check what was executed or not
 				require.Contains(t, out, "Executing Composer command: [composer create-project --no-install --no-plugins --no-scripts ddev/ddev-test-composer-create /tmp/")
 				require.Contains(t, out, "Executing Composer command: [composer run-script post-root-package-install]")
@@ -162,7 +162,7 @@ func TestComposerCreateCmd(t *testing.T) {
 				require.NoDirExists(t, filepath.Join(composerDirOnHost, "vendor"))
 			}
 
-			if cmd == "ddev composer create ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0" {
+			if cmd == "ddev composer create-project ddev/ddev-test-composer-create --prefer-install auto . --no-dev v1.0.0" {
 				// Check what was executed or not
 				require.Contains(t, out, "Executing Composer command: [composer create-project --prefer-install auto --no-dev --no-plugins --no-scripts --no-install ddev/ddev-test-composer-create /tmp/")
 				require.Contains(t, out, "v1.0.0")
@@ -179,7 +179,7 @@ func TestComposerCreateCmd(t *testing.T) {
 			}
 
 			require.Contains(t, out, "Moving install to Composer root")
-			require.Contains(t, out, "ddev composer create was successful")
+			require.Contains(t, out, "ddev composer create-project was successful")
 
 			// Check that resulting composer.json (copied from testdata) has post-root-package-install and post-create-project-cmd scripts
 			composerManifest, err := composer.NewManifest(filepath.Join(composerDirOnHost, "composer.json"))
@@ -217,7 +217,7 @@ func TestComposerCreateAutocomplete(t *testing.T) {
 	require.NoError(t, err)
 
 	// Pressing tab after `composer completion` should result in the completion "bash"
-	out, err := exec.RunHostCommand(DdevBin, "__complete", "composer", "create", "--")
+	out, err := exec.RunHostCommand(DdevBin, "__complete", "composer", "create-project", "--")
 	require.NoError(t, err)
 	// Completions are terminated with ":4", so just grab the stuff before that
 	completions, _, found := strings.Cut(out, ":")

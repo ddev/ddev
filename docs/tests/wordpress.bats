@@ -53,8 +53,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create roots/bedrock
-  run ddev composer create roots/bedrock
+  # ddev composer create-project roots/bedrock .
+  run ddev composer create-project roots/bedrock .
   assert_success
   # cp .env.example .env
   run cp .env.example .env

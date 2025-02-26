@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create "typo3/cms-base-distribution"
-  run ddev composer create "typo3/cms-base-distribution"
+  # ddev composer create-project typo3/cms-base-distribution .
+  run ddev composer create-project typo3/cms-base-distribution .
   assert_success
   # ddev exec touch public/FIRST_INSTALL
   run ddev exec touch public/FIRST_INSTALL
