@@ -62,6 +62,4 @@ if (-not(wsl -e docker ps)) {
 }
 wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nsystemd=true\n' >>/etc/wsl.conf; fi"
 
-refreshenv
-
 wsl ddev version
