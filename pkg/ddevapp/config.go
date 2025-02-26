@@ -555,10 +555,7 @@ func (app *DdevApp) ValidateConfig() error {
 
 // ValidateDocroot makes sure we have a usable docroot
 // The docroot must remain inside the project root.
-// TODO: Should this be "validate" or "normalize"???
-// If normalize, it might be able to remove leading /. Probably not.
 func ValidateDocroot(docroot string) error {
-
 	switch {
 	case filepath.IsAbs(docroot):
 		return fmt.Errorf("docroot ('%s') cannot be an absolute path, it must be a relative path from the project root", docroot)
