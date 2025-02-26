@@ -128,16 +128,14 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## Additional Colima macOS setup
 
 1. `brew install colima`
-2. `colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1`
-3. `colima stop`
-4. `colima start vz --cpu 4 --memory 6 --disk 60 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1`
-5. `colima stop vz`
+2. `colima start vz --cpu 4 --memory 6 --disk 60 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1`
+3. `colima stop vz`
 
-Then the Buildkite agent must be configured with tags `colima=true` and `colima_vz=true`.
+Then the Buildkite agent must be configured with tags `colima_vz=true`.
 
 ## Additional Lima macOS setup
 
-1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount-writable --mount="~/:w" --memory=6 --cpus=4 --disk=100 template://docker`
+1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount-writable --mount="~/:w" --memory=6 --cpus=4 --disk=60 template://docker`
 2. `limactl start lima-vz`
 3. `docker context use lima-lima-vz`
 
