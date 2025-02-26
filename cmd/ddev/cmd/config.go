@@ -390,10 +390,13 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	if cmd.Flags().Changed("docroot") {
+		if err := ddevapp.ValidateDocroot(docrootRelPathArg); err != nil {
+			util.Failed("Failed to validate docroot: %v", err)
+		}
 		app.Docroot = docrootRelPathArg
 		// Ensure that the docroot exists
 		if err = app.CreateDocroot(); err != nil {
-			util.Failed("Could not create docroot at %s: %v", app.Docroot, err)
+			util.Failed("Could not create docroot at %s: %v", app.GetAbsDocroot(false), err)
 		}
 	} else {
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
@@ -414,10 +417,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	detectedApptype := app.DetectAppType()
-	fullPath, pathErr := filepath.Abs(app.Docroot)
-	if pathErr != nil {
-		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
-	}
+	fullPath := app.GetAbsDocroot(false)
 
 	doUpdate, _ := cmd.Flags().GetBool("update")
 	switch {

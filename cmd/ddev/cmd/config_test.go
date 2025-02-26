@@ -413,14 +413,14 @@ func TestConfigCreateDocroot(t *testing.T) {
 		error       string
 	}{
 		{"empty docroot", "", "", ""},
-		{"dot docroot", ".", "", ""},
-		{"fail for outside approot", "../somewhere-else", "", "is outside the project root"},
-		{"fail for absolute path", "//test", "", "must be relative"},
-		{"dot with slash docroot", "./", "", ""},
-		{"dot with slash and dir docroot", "./test", "test", ""},
+		{"dot docroot", ".", ".", ""},
+		{"fail for outside approot", "../somewhere-else", "", "must remain inside the project"},
+		{"fail for absolute path", "//test", "", "cannot be an absolute path"},
+		{"dot with slash docroot", "./", "./", ""},
+		{"dot with slash and dir docroot", "./test", "./test", ""},
 		{"subdir docroot", "test/dir", "test/dir", ""},
 		{"dir docroot", "test", "test", ""},
-		{"dot with slash and subdir docroot", "./test/dir", "test/dir", ""},
+		{"dot with slash and subdir docroot", "./test/dir", "./test/dir", ""},
 	}
 
 	for _, tc := range testMatrix {

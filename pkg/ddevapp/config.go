@@ -447,6 +447,11 @@ func (app *DdevApp) ValidateConfig() error {
 		return err
 	}
 
+	// Validate docroot
+	if err := ValidateDocroot(app.Docroot); err != nil {
+		return err
+	}
+
 	// Skip any validation below this check if there is nothing to validate
 	if err := CheckForMissingProjectFiles(app); err != nil {
 		// Do not return an error here because not all DDEV commands should be stopped by this check
@@ -548,6 +553,18 @@ func (app *DdevApp) ValidateConfig() error {
 	return nil
 }
 
+// ValidateDocroot makes sure we have a usable docroot
+// The docroot must remain inside the project root.
+func ValidateDocroot(docroot string) error {
+	switch {
+	case filepath.IsAbs(docroot):
+		return fmt.Errorf("docroot ('%s') cannot be an absolute path, it must be a relative path from the project root", docroot)
+	case strings.HasPrefix(docroot, ".."):
+		return fmt.Errorf("docroot ('%s') cannot begin with '..', it should be a relative path from project root but must remain inside the project", docroot)
+	}
+	return nil
+}
+
 // DockerComposeYAMLPath returns the absolute path to where the
 // base generated yaml file should exist for this project.
 func (app *DdevApp) DockerComposeYAMLPath() string {
@@ -555,7 +572,7 @@ func (app *DdevApp) DockerComposeYAMLPath() string {
 }
 
 // DockerComposeFullRenderedYAMLPath returns the absolute path to where the
-// the complete generated yaml file should exist for this project.
+// complete generated yaml file should exist for this project.
 func (app *DdevApp) DockerComposeFullRenderedYAMLPath() string {
 	return app.GetConfigPath(".ddev-docker-compose-full.yaml")
 }
@@ -1481,25 +1498,15 @@ func AvailablePHPDocrootLocations() []string {
 	}
 }
 
-// CreateDocroot normalizes the docroot path and creates it for DDEV app if it doesn't exist
+// CreateDocroot creates the docroot for the project if it doesn't exist
 func (app *DdevApp) CreateDocroot() error {
-	if app.Docroot == "" {
+	if app.GetDocroot() == "" {
 		return nil
 	}
-	if filepath.IsAbs(app.Docroot) {
-		return fmt.Errorf("docroot %s must be relative", app.Docroot)
+	if err := ValidateDocroot(app.GetDocroot()); err != nil {
+		return err
 	}
 	docrootAbsPath := app.GetAbsDocroot(false)
-	// If user provided something like "./some/path", filepath.Rel will convert it to "some/path"
-	relPath, err := filepath.Rel(app.GetAbsAppRoot(false), docrootAbsPath)
-	if err != nil || strings.HasPrefix(relPath, "..") {
-		return fmt.Errorf("docroot %s is outside the project root", app.Docroot)
-	}
-	if relPath == "." {
-		relPath = ""
-	}
-	// Normalize docroot
-	app.Docroot = util.WindowsPathToCygwinPath(relPath)
 	if !fileutil.IsDirectory(docrootAbsPath) {
 		if err := os.MkdirAll(docrootAbsPath, 0755); err != nil {
 			return err
@@ -1548,7 +1555,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 	// Ensure that the docroot exists
 	if err := app.CreateDocroot(); err != nil {
-		return fmt.Errorf("unable to create docroot at %s: %v", app.Docroot, err)
+		return fmt.Errorf("unable to create docroot at '%s': %v", app.GetAbsDocroot(false), err)
 	}
 
 	return nil
@@ -1568,7 +1575,7 @@ func (app *DdevApp) AppTypePrompt() error {
 	detectedAppType := app.DetectAppType()
 
 	// If we found an application type set it and inform the user.
-	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
+	util.Success("Found a %s codebase at %s.", detectedAppType, app.GetAbsDocroot(false))
 
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
 	typePrompt := "Project Type [%s] (%s): "

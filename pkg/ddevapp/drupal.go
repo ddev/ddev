@@ -309,7 +309,7 @@ func getDrupalHooks() []byte {
 // for templating.
 func setDrupalSiteSettingsPaths(app *DdevApp) {
 	drupalConfig := NewDrupalSettings(app)
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	settingsFileBasePath := app.GetAbsDocroot(false)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettings)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
 }
@@ -326,7 +326,7 @@ func GetDrupalVersion(app *DdevApp) (string, error) {
 		return "7", nil
 	}
 	// Otherwise figure out the version from existing code
-	f := filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php")
+	f := filepath.Join(app.GetAbsDocroot(false), "core/lib/Drupal.php")
 	hasVersion, matches, err := fileutil.GrepStringInFile(f, `const VERSION = '([0-9]+)`)
 	v := ""
 	if hasVersion {
@@ -337,7 +337,7 @@ func GetDrupalVersion(app *DdevApp) (string, error) {
 
 // isDrupal6App returns true if the app is of type Drupal6
 func isDrupal6App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
+	if _, err := os.Stat(filepath.Join(app.GetAbsDocroot(false), "misc/ahah.js")); err == nil {
 		return true
 	}
 	return false
@@ -345,7 +345,7 @@ func isDrupal6App(app *DdevApp) bool {
 
 // isDrupal7App returns true if the app is of type drupal7
 func isDrupal7App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ajax.js")); err == nil {
+	if _, err := os.Stat(filepath.Join(app.GetAbsDocroot(false), "misc/ajax.js")); err == nil {
 		return true
 	}
 	return false
@@ -567,8 +567,8 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	// *inside* the container, allowing mutagen access to it again
 	if app.IsMutagenEnabled() {
 		settingsFiles := []string{
-			filepath.Join(app.Docroot, `sites/default`),
-			filepath.Join(app.Docroot, `sites/default/settings.php`),
+			path.Join(app.GetAbsDocroot(true), `sites/default`),
+			path.Join(app.GetAbsDocroot(true), `sites/default/settings.php`),
 		}
 		_, stderr, err := app.Exec(&ExecOpts{
 			Cmd: fmt.Sprintf(`chmod -f u+w %s`, strings.Join(settingsFiles, " ")),

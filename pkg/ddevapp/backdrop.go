@@ -145,14 +145,14 @@ func getBackdropHooks() []byte {
 // setBackdropSiteSettingsPaths sets the paths to settings.php for templating.
 func setBackdropSiteSettingsPaths(app *DdevApp) {
 	settings := NewBackdropSettings(app)
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	settingsFileBasePath := app.GetAbsDocroot(false)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
 }
 
 // isBackdropApp returns true if the app is of type "backdrop".
 func isBackdropApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/scripts/backdrop.sh")); err == nil {
+	if _, err := os.Stat(filepath.Join(app.GetAbsDocroot(false), "core/scripts/backdrop.sh")); err == nil {
 		return true
 	}
 	return false
