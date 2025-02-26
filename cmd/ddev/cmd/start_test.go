@@ -65,8 +65,8 @@ func TestCmdStart(t *testing.T) {
 	}
 }
 
-// TestCmdStartOptional checks `ddev start --optional`
-func TestCmdStartOptional(t *testing.T) {
+// TestCmdStartOptionalProfile checks `ddev start --profile`
+func TestCmdStartOptionalProfile(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	site := TestSites[0]
@@ -98,8 +98,8 @@ func TestCmdStartOptional(t *testing.T) {
 	require.Nil(t, container)
 
 	// Now ddev start --optional and make sure the service is there
-	out, err = exec.RunCommand(DdevBin, []string{"start", "--optional", site.Name})
-	require.NoError(t, err, "start --optional failed, output='%s'", out)
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--profile=busybox", site.Name})
+	require.NoError(t, err, "start --profile=busybox failed, output='%s'", out)
 	container, err = ddevapp.GetContainer(app, "busybox")
 	require.NoError(t, err)
 	require.NotNil(t, container)

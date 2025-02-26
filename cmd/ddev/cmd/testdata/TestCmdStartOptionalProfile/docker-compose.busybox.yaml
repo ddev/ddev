@@ -3,7 +3,7 @@ services:
     image: busybox:stable
     command: tail -f /dev/null
     profiles:
-      - optional
+      - busybox
     container_name: ddev-${DDEV_SITENAME}-busybox
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
