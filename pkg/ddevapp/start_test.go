@@ -37,8 +37,8 @@ func TestDdevApp_StartOptional(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, container)
 
-	// Now StartOptional() and make sure the service is there
-	err = app.StartOptional()
+	// Now StartOptionalProfile() and make sure the service is there
+	err = app.StartOptionalProfile("")
 	require.NoError(t, err)
 	container, err = ddevapp.GetContainer(app, "busybox")
 	require.NoError(t, err)
