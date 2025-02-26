@@ -292,29 +292,31 @@ func GetRouterBoundPorts() ([]uint16, error) {
 }
 
 // RenderRouterStatus returns a user-friendly string showing router-status
-func RenderRouterStatus() string {
-	var renderedStatus string
+func RenderRouterStatus() (string, string) {
+	var renderedStatus, errorInfo string
 	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
 		status, logOutput := GetRouterStatus()
-		badRouter := "The router is not healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev poweroff && ddev start' on a project to recreate it."
 
 		switch status {
 		case SiteStopped:
 			renderedStatus = util.ColorizeText(status, "red")
-		case "healthy":
-			renderedStatus = util.ColorizeText(status, "green")
-		case "exited":
+		case "exited", dockerTypes.Unhealthy:
+			renderedStatus = util.ColorizeText(status, "red")
+			errorInfo = "The router is not healthy, your projects may not be accessible, " +
+				"if it doesn't become healthy, run 'ddev poweroff && ddev start' on a project to recreate it."
+			if logOutput != "" {
+				errorInfo = errorInfo + "\n" + logOutput
+			}
+		case dockerTypes.Healthy:
+			status = "OK"
 			fallthrough
 		default:
-			renderedStatus = util.ColorizeText(status, "red") + "\n" + badRouter
-			if logOutput != "" {
-				renderedStatus = renderedStatus + "\n" + logOutput
-			}
+			renderedStatus = util.ColorizeText(status, "green")
 		}
 	} else {
 		renderedStatus = "disabled"
 	}
-	return renderedStatus
+	return renderedStatus, errorInfo
 }
 
 // GetRouterStatus returns router status and warning if not
