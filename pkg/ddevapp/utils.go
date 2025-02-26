@@ -112,7 +112,7 @@ func Cleanup(app *DdevApp) error {
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		_, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Profiles:     []string{nodeps.ComposeProfileOptional},
+			Profiles:     []string{`*`},
 			Action:       []string{"down"},
 		})
 		if err != nil {
