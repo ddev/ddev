@@ -11,21 +11,21 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250213_rfay_blackfire" // Note that this can be overridden by make
+var WebTag = "v1.24.3" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.2"
+var BaseDBTag = "v1.24.3"
 
-const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.2"
+const TraefikRouterImage = "ddev/ddev-traefik-router:v1.24.3"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.24.2"
+var SSHAuthTag = "v1.24.3"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
@@ -41,4 +41,4 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.18.1"
 
-const RequiredDockerComposeVersionDefault = "v2.32.4"
+const RequiredDockerComposeVersionDefault = "v2.33.1"
