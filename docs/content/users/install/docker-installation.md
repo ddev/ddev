@@ -98,7 +98,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
 
-    Linux installation **absolutely** requires adding your Linux user to the `docker` group, and configuring the Docker daemon to start at boot. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+    Linux installation **absolutely** requires adding your Linux user to the `docker` group, and configuring the Docker daemon to start at boot. Don't install rootless mode, it is not supported by DDEV. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
     !!!warning "Don’t `sudo` with `docker` or `ddev`"
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
