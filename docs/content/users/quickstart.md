@@ -497,7 +497,8 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
-    ddev composer create "laravel/laravel:^11"
+    ddev start
+    ddev composer create-project laravel/laravel . "^12"
     ddev launch
     ```
 
@@ -554,7 +555,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```
 
 !!!tip "Add Vite support?"
-    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/master/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
+    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
 
 ## Magento
 
