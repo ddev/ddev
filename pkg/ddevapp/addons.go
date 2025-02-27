@@ -146,7 +146,7 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 
 // GetAddonDdevDescription returns what follows #ddev-description: in any line in action
 func GetAddonDdevDescription(action string) string {
-	descLines := nodeps.GrepStringInBuffer(action, `[\r\n]+#ddev-description:.*[\r\n]+`)
+	descLines := nodeps.GrepStringInBuffer(action, `[\r\n]*#ddev-description:.*[\r\n]+`)
 	if len(descLines) > 0 {
 		d := strings.Split(descLines[0], ":")
 		if len(d) > 1 {
