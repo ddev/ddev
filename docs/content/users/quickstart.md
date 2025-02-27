@@ -542,14 +542,15 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
-    ddev php artisan key:generate
+    ddev composer run-script post-root-package-install
+    ddev composer run-script post-create-project-cmd
     ddev launch
     ```
 
 !!!tip "Want to use a SQLite database for Laravel?"
     DDEV defaults to using a MariaDB database to better represent a production environment.
 
-    To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
+    To select the [Laravel defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
     ```bash
     ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
     ```
