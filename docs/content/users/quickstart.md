@@ -519,10 +519,10 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     To switch an existing Laravel project to SQLite:
 
     ```bash
-    rm -f .env
     ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
     ddev restart
     ddev composer run-script post-root-package-install
+    ddev dotenv set .env --db-connection=sqlite
     ddev composer run-script post-create-project-cmd
     ddev launch
     ```
