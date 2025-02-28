@@ -126,9 +126,8 @@ func deleteDdevImages(deleteAll bool) error {
 					return err
 				}
 			}
-			// TODO: Verify the functionality here. May not work since GetRouterImage() returns full image spec
 			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, ddevImages.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
+			if strings.HasPrefix(tag, "ddev/ddev-traefik-router") && !strings.HasPrefix(tag, routerimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
