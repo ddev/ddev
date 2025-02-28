@@ -496,10 +496,13 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 	}
 }
 
-// ComposerCreateCmd sends people to the right thing
-// when they try ddev composer create
+// ComposerCreateCmd does the same thing as "ddev composer create-project".
+// This command was introduced a while ago and has always caused some confusion:
+// why "composer create-project" but "ddev composer create"?
+// As of DDEV v1.24.2, "ddev composer create-project" works almost the same as "composer create-project",
+// so we can now hide this command.
 var ComposerCreateCmd = &cobra.Command{
-	Use:                "create",
+	Use:                "create [args] [flags]",
 	Short:              `Use "ddev composer create-project" instead`,
 	DisableFlagParsing: true,
 	Hidden:             true,
