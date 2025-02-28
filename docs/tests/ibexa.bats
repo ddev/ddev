@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create-project ibexa/oss-skeleton .
-  run ddev composer create-project ibexa/oss-skeleton .
+  # ddev composer create ibexa/oss-skeleton
+  run ddev composer create ibexa/oss-skeleton
   assert_success
   # ddev exec console ibexa:install
   run ddev exec console ibexa:install

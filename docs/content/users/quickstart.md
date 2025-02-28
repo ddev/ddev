@@ -60,7 +60,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ```bash
     mkdir my-cakephp-site && cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
-    ddev composer create-project --prefer-dist --no-interaction cakephp/app . "~5.0"
+    ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
     ddev launch
     ```
 
@@ -110,7 +110,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
     ```bash
     mkdir my-contao-site && cd my-contao-site
     ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
-    ddev composer create-project contao/managed-edition . 5.3
+    ddev composer create contao/managed-edition:5.3
 
     # Set DATABASE_URL and MAILER_DSN in .env.local
     ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
@@ -169,11 +169,11 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     # Boot the project and install the starter project:
     ddev start
-    ddev composer create-project craftcms/craft .
+    ddev composer create craftcms/craft
     ddev launch
     ```
 
-    Third-party starter projects can by used the same way—substitute the package name when running `ddev composer create-project`.
+    Third-party starter projects can by used the same way—substitute the package name when running `ddev composer create`.
 
 === "Existing projects"
 
@@ -218,7 +218,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
     ddev start
-    ddev composer create-project drupal/recommended-project . "^11"
+    ddev composer create drupal/recommended-project:^11
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
@@ -234,7 +234,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
     ddev start
-    ddev composer create-project drupal/cms .
+    ddev composer create drupal/cms
     ddev launch
     ```
 
@@ -255,7 +255,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal10 --docroot=web
     ddev start
-    ddev composer create-project drupal/recommended-project . "^10"
+    ddev composer create drupal/recommended-project:^10
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
@@ -362,7 +362,7 @@ RUN mv frankenphp /usr/local/bin/
 RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
 DOCKERFILEEND
 
-ddev composer create-project drupal/recommended-project .
+ddev composer create drupal/recommended-project
 ddev composer require drush/drush
 ddev restart
 ddev drush site:install demo_umami --account-name=admin --account-pass=admin -y
@@ -379,7 +379,7 @@ ddev launch $(ddev drush uli)
     mkdir my-grav-site && cd my-grav-site
     ddev config --omit-containers=db
     ddev start
-    ddev composer create-project getgrav/grav .
+    ddev composer create getgrav/grav
     ddev exec gpm install admin -y
     ddev launch
     ```
@@ -420,7 +420,7 @@ Install [Ibexa DXP](https://www.ibexa.co) OSS Edition.
 mkdir my-ibexa-site && cd my-ibexa-site
 ddev config --project-type=php --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
 ddev start
-ddev composer create-project ibexa/oss-skeleton .
+ddev composer create ibexa/oss-skeleton
 ddev exec console ibexa:install
 ddev exec console ibexa:graphql:generate-schema
 ddev launch /admin/login
@@ -448,7 +448,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
 === "New projects"
 
-    Create a new Kirby CMS project from the official [Starterkit](https://github.com/getkirby/starterkit) using DDEV’s [`composer create-project` command](../users/usage/commands.md#composer):
+    Create a new Kirby CMS project from the official [Starterkit](https://github.com/getkirby/starterkit) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
 
     ```bash
     # Create a new project directory and navigate into it
@@ -459,7 +459,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
     # Spin up the project and install the Kirby Starterkit
     ddev start
-    ddev composer create-project getkirby/starterkit .
+    ddev composer create getkirby/starterkit
 
     # Open the site in your browser
     ddev launch
@@ -497,7 +497,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
-    ddev composer create-project laravel/laravel . "^11"
+    ddev composer create "laravel/laravel:^11"
     ddev launch
     ```
 
@@ -560,7 +560,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
 === "Magento 2"
 
-    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create-project`, it’s asking for your public key as "username" and private key as "password".
+    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
 
     !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
         If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
@@ -584,7 +584,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
                 docker_command+=("-v" "$auth_json_dir:$auth_json_dir")
             fi
             image="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null)"
-            docker_command+=("$image" "bash" "-c" "composer create-project --repository https://repo.magento.com/ magento/project-community-edition . --no-install")
+            docker_command+=("$image" "bash" "-c" "composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install")
             # Execute the command to store credentials
             "${docker_command[@]}"
             ```
@@ -595,7 +595,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
     ddev add-on get ddev/ddev-elasticsearch
     ddev start
-    ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition .
+    ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
 
     ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
@@ -649,7 +649,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     mkdir my-moodle-site && cd my-moodle-site
     ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
     ddev start
-    ddev composer create-project moodle/moodle .
+    ddev composer create moodle/moodle
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
@@ -746,7 +746,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
 
     ddev start
-    ddev composer create-project pimcore/skeleton .
+    ddev composer create pimcore/skeleton
     ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
     echo "web_extra_daemons:
       - name: consumer
@@ -778,7 +778,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     mkdir my-processwire-site && cd my-processwire-site
     ddev config --project-type=php --webserver-type=apache-fpm
     ddev start
-    ddev composer create-project processwire/processwire . "^3"
+    ddev composer create "processwire/processwire:^3"
     ddev launch
     ```
 
@@ -821,13 +821,13 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
 
 === "Composer"
 
-    Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV adds necessary information to it. When `ddev composer create-project` asks if you want to include Docker configuration, answer `x`, as this approach does not use their Docker configuration.
+    Though you can set up a Shopware 6 environment many ways, we recommend the following technique. DDEV creates a `.env.local` file for you by default; if you already have one DDEV adds necessary information to it. When `ddev composer create` asks if you want to include Docker configuration, answer `x`, as this approach does not use their Docker configuration.
 
     ```bash
     mkdir my-shopware-site && cd my-shopware-site
     ddev config --project-type=shopware6 --docroot=public
     ddev start -y
-    ddev composer create-project shopware/production . "^v6.5"
+    ddev composer create shopware/production:^v6.5
     # If it asks `Do you want to include Docker configuration from recipes?`
     # answer `x`, as we're using DDEV for this rather than its recipes.
     ddev exec console system:install --basic-setup
@@ -849,7 +849,7 @@ Use a new or existing Composer project, or clone a Git repository.
     mkdir my-silverstripe-site && cd my-silverstripe-site
     ddev config --project-type=silverstripe --docroot=public
     ddev start
-    ddev composer create-project --prefer-dist silverstripe/installer .
+    ddev composer create --prefer-dist silverstripe/installer
     ddev sake dev/build flush=all
     ddev launch /admin
     ```
@@ -885,7 +885,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     ```bash
     mkdir my-statamic-site && cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
-    ddev composer create-project --prefer-dist statamic/statamic .
+    ddev composer create --prefer-dist statamic/statamic
     ddev php please make:user
     ddev launch /cp
     ```
@@ -907,7 +907,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 mkdir my-sulu-site && cd my-sulu-site
 ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
 ddev start
-ddev composer create-project sulu/skeleton .
+ddev composer create sulu/skeleton
 ```
 
 Create your default webspace configuration `mv config/webspaces/website.xml config/webspaces/my-sulu-site.xml` and adjust the values for `<name>` and `<key>` so that they are matching your project:
@@ -964,7 +964,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
-    ddev composer create-project symfony/skeleton .
+    ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
     ddev launch
@@ -1017,7 +1017,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     mkdir my-typo3-site && cd my-typo3-site
     ddev config --project-type=typo3 --docroot=public --php-version=8.3
     ddev start
-    ddev composer create-project typo3/cms-base-distribution .
+    ddev composer create "typo3/cms-base-distribution"
     ddev exec touch public/FIRST_INSTALL
     ddev launch /typo3/install.php
     ```
@@ -1072,7 +1072,7 @@ There are several easy ways to use DDEV with WordPress:
     mkdir my-wp-site && cd my-wp-site
     ddev config --project-type=wordpress --docroot=web
     ddev start
-    ddev composer create-project roots/bedrock .
+    ddev composer create roots/bedrock
     ```
 
     Rename the file `.env.example` to `.env` in the project root and make the following adjustments:
