@@ -42,6 +42,13 @@ By default, Backdrop stores both active and staging configuration in the filesys
 
 Backdrop also allows you to store your active configuration in the database ([as of Backdrop 1.28.0](https://docs.backdropcms.org/change-records/swappable-config-storage)), which can be simpler while developing locally, especially if you are making use of DDEV's snapshot feature. In this case, the database and the active configuration are effectively bundled and refreshing the database also refreshes the active configuration.
 
+#### Command line tool
+
+Backdrop's command line tool, [Bee](https://github.com/backdrop-contrib/bee), can be included in a DDEV local using this command:
+```php
+ddev add-on get backdrop-ops/ddev-backdrop-bee
+```
+
 ### Drupal Specifics
 
 #### Drupal Settings Files
