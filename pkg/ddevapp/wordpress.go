@@ -337,3 +337,59 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 
 	return absPath, nil
 }
+
+// wordpressPostStartAction handles default post-start actions for wordpress app,
+// like creating wp-cli.yml
+func wordpressPostStartAction(app *DdevApp) error {
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return nil
+	}
+
+	err := writeWpCliYml(app, filepath.Join(app.AppRoot, "wp-cli.yml"))
+	if err != nil {
+		util.Warning("Failed to WriteWpCliYml: %v", err)
+	}
+
+	return nil
+}
+
+// writeWpCliYml writes out wp-cli.yml on startup to allow wp-cli
+// to work when the docroot has changed
+func writeWpCliYml(app *DdevApp, filePath string) error {
+	// Check if an existing WordPress settings file exists
+	if fileutil.FileExists(filePath) {
+		// Check if existing wp-cli.yml file is ddev-managed
+		sigExists, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, it is user controlled. Dont write new file
+		if !sigExists {
+			return nil
+		}
+	}
+
+	wpcliContents := fmt.Sprintf(`%s: Automatically generated wp-cli.yml file
+
+path: %s
+`, nodeps.DdevFileSignature, app.Docroot)
+
+	// Ensure target directory exists and is writable
+	dir := filepath.Dir(filePath)
+	if err := util.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	err := os.WriteFile(filePath, []byte(wpcliContents), 0666)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

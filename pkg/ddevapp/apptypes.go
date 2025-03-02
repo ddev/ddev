@@ -244,6 +244,7 @@ func init() {
 			uploadDirs:           getWordpressUploadDirs,
 			hookDefaultComments:  getWordpressHooks,
 			appTypeSettingsPaths: setWordpressSiteSettingsPaths,
+			postStartAction:      wordpressPostStartAction,
 			appTypeDetect:        isWordpressApp,
 			importFilesAction:    wordpressImportFilesAction,
 		},
@@ -417,7 +418,6 @@ func (app *DdevApp) DetectAppType() string {
 // PostImportDBAction calls each apptype's detector until it finds a match,
 // or returns 'php' as a last resort.
 func (app *DdevApp) PostImportDBAction() error {
-
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.postImportDBAction != nil {
 		return appFuncs.postImportDBAction(app)
 	}
