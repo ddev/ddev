@@ -1512,7 +1512,7 @@ Start a DDEV project.
 Flags:
 
 * `--all`, `-a`: Start all projects.
-* `--profile=<optional-compose-profile>`: Start services included in the Docker Compose profile named.
+* `--profiles=<optional-compose-profile-list>`: Start services labeled with the Docker Compose profiles in comma-separated list of profiles.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
 Example:
