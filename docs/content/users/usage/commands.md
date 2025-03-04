@@ -497,7 +497,7 @@ ddev debug configyaml my-project
 
 ### `debug dockercheck`
 
-Diagnose DDEV Docker/Colima setup.
+Diagnose DDEV Docker provider setup.
 
 Example:
 

@@ -12,7 +12,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     * [Lima](#lima): Free, open-source.
     * [Docker Desktop](#docker-desktop-for-mac): Familiar, popular, not open-source, may require license, may be unstable.
     * [Rancher Desktop](#rancher-desktop): Free, open-source, simple installation, slower startup.
-    * [Colima](#colima): Free, open-source, no longer recommended.
+    * [Colima](#colima): Free, open-source. Depends on separate Lima installation (managed by Homebrew).
 
     ### OrbStack
 
@@ -57,15 +57,15 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ### Colima
 
-    [Colima](https://github.com/abiosoft/colima) is a free and open-source project which bundles Lima. It is no longer a top recommendation because it has been unstable. You can migrate to other providers using [How can I migrate from one Docker provider to another?](../usage/faq.md#how-can-i-migrate-from-one-docker-provider-to-another).
+    [Colima](https://github.com/abiosoft/colima) is a free and open-source project which bundles Lima.
 
-    1. Install Colima with `brew install colima`.
+    1. Install Colima with `brew install colima`, which also installs Lima and other dependencies.
     2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
     3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
-    ```
-    colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
-    ```
-    (On macOS versions before Ventura, use `colima start --cpu 4 --memory 6 --disk 100 --mount-type=sshfs --dns=1.1.1.1` as the `--vm-type` option are not supported for older macOS versions.)
+
+        ```bash
+        colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
+        ```
 
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
 
