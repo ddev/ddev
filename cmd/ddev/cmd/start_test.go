@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -65,8 +66,8 @@ func TestCmdStart(t *testing.T) {
 	}
 }
 
-// TestCmdStartOptionalProfile checks `ddev start --profile`
-func TestCmdStartOptionalProfile(t *testing.T) {
+// TestCmdStartOptionalProfiles checks `ddev start --profiles=list,of,profiles`
+func TestCmdStartOptionalProfiles(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	site := TestSites[0]
@@ -97,10 +98,13 @@ func TestCmdStartOptionalProfile(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, container)
 
-	// Now ddev start --optional and make sure the service is there
-	out, err = exec.RunCommand(DdevBin, []string{"start", "--profile=busybox", site.Name})
-	require.NoError(t, err, "start --profile=busybox failed, output='%s'", out)
-	container, err = ddevapp.GetContainer(app, "busybox")
-	require.NoError(t, err)
-	require.NotNil(t, container)
+	profiles := []string{"busybox1", "busybox2"}
+	// Now ddev start --optional and make sure the services are there
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--profiles=" + strings.Join(profiles, ","), site.Name})
+	require.NoError(t, err, "start --profiles=%s failed, output='%s'", strings.Join(profiles, ","), out)
+	for _, prof := range profiles {
+		container, err = ddevapp.GetContainer(app, prof)
+		require.NoError(t, err)
+		require.NotNil(t, container)
+	}
 }

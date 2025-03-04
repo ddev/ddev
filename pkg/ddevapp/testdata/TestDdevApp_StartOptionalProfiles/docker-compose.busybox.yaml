@@ -1,0 +1,19 @@
+services:
+  busybox1:
+    image: busybox:stable
+    command: tail -f /dev/null
+    profiles:
+      - busybox1
+    container_name: ddev-${DDEV_SITENAME}-busybox1
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+  busybox2:
+    image: busybox:stable
+    command: tail -f /dev/null
+    profiles:
+      - busybox2
+    container_name: ddev-${DDEV_SITENAME}-busybox2
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}

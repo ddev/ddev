@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDdevApp_StartOptionalProfile makes sure that we can start an optional service appropriately
-func TestDdevApp_StartOptionalProfile(t *testing.T) {
+// TestDdevApp_StartOptionalProfiles makes sure that we can start an optional service appropriately
+func TestDdevApp_StartOptionalProfiles(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
@@ -25,22 +25,29 @@ func TestDdevApp_StartOptionalProfile(t *testing.T) {
 		_ = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.busybox.yaml")))
 	})
 
-	// Add extra service that is in the "optional" profile
+	// Add extra services with named profiles
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), app.GetConfigPath("docker-compose.busybox.yaml"))
 	require.NoError(t, err)
 
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Make sure the busybox service didn't get started
-	container, err := ddevapp.GetContainer(app, "busybox")
+	// Make sure the busybox services didn't get started
+	container, err := ddevapp.GetContainer(app, "busybox1")
+	require.Error(t, err)
+	require.Nil(t, container)
+
+	container, err = ddevapp.GetContainer(app, "busybox2")
 	require.Error(t, err)
 	require.Nil(t, container)
 
 	// Now StartOptionalProfiles() and make sure the service is there
-	err = app.StartOptionalProfiles([]string{"busybox"})
+	profiles := []string{"busybox1", "busybox2"}
+	err = app.StartOptionalProfiles(profiles)
 	require.NoError(t, err)
-	container, err = ddevapp.GetContainer(app, "busybox")
-	require.NoError(t, err)
-	require.NotNil(t, container)
+	for _, prof := range profiles {
+		container, err = ddevapp.GetContainer(app, prof)
+		require.NoError(t, err)
+		require.NotNil(t, container)
+	}
 }
