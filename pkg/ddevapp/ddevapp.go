@@ -1794,8 +1794,9 @@ If this seems to be a config issue, update it accordingly.`, app.Name)
 	return nil
 }
 
-// StartOptionalProfile starts services in the "optional" compose profile
-func (app *DdevApp) StartOptionalProfile(profile string) error {
+// StartOptionalProfiles starts services in the named compose profile(s)
+// The profiles can be a comma-separated list
+func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	var err error
 	if status, _ := app.SiteStatus(); status != SiteRunning {
 		err = app.Start()
@@ -1806,12 +1807,12 @@ func (app *DdevApp) StartOptionalProfile(profile string) error {
 
 	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Profiles:     []string{profile},
+		Profiles:     profiles,
 		Action:       []string{"up", "-d"},
 	})
 
 	if err != nil {
-		util.Warning("Failed to start optional compose profile '%s': %v, stderr='%s'", profile, err, stderr)
+		util.Warning("Failed to start optional compose profiles '%s': %v, stderr='%s'", profiles, err, stderr)
 		return err
 	}
 
@@ -1823,7 +1824,7 @@ func (app *DdevApp) StartOptionalProfile(profile string) error {
 		}
 	}
 
-	util.Success("Started optional compose profile '%s'", profile)
+	util.Success("Started optional compose profiles '%s'", profiles)
 
 	return nil
 }
