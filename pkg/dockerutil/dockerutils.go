@@ -713,8 +713,8 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		arg = append(arg, "-f", file)
 	}
 
-	if cmd.Profiles != nil {
-		arg = append(arg, "--profile", strings.Join(cmd.Profiles, ","))
+	for _, profile := range cmd.Profiles {
+		arg = append(arg, "--profile", profile)
 	}
 
 	arg = append(arg, cmd.Action...)
