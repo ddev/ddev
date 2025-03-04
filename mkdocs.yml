@@ -76,10 +76,7 @@ plugins:
 - minify:
     minify_html: true
 - git-revision-date-localized:
-#    enable_creation_date: true
-#- git-committers:
-#    repository: https://github.com/ddev/ddev
-#    token: !ENV GH_TOKEN
+    fallback_to_build_date: true
 
 # Fail the entire build if the validation fails
 strict: true

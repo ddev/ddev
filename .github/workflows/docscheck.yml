@@ -16,6 +16,14 @@ on:
       - ".readthedocs.yaml"
       - ".github/workflows/**"
 
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -34,9 +42,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
       - name: Spellcheck
         uses: rojopolis/spellcheck-github-actions@v0
       - name: Install textlint
