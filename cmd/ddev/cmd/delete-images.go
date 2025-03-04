@@ -121,7 +121,7 @@ func deleteDdevImages(deleteAll bool) error {
 					return err
 				}
 			}
-			if strings.HasPrefix(tag, "ddev/ddev-dbserver") && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
+			if strings.HasPrefix(tag, versionconstants.DBImg) && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
