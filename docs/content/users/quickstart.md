@@ -531,11 +531,12 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
+
+    # To use MariaDB, apply the following command
     ddev config --project-type=laravel --docroot=public
 
-    # This config uses MariaDB, but if you want to use SQLite instead,
-    # uncomment this line:
-    #ddev config --omit-containers=db --disable-settings-management=true
+    # To use SQLite, uncomment and use the following command instead
+    #ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
 
     # Temporarily add the Laravel installer
     # as /usr/local/bin/laravel in the web container
@@ -550,6 +551,8 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     # Follow the prompts, select a starter kit of your choice (or none),
     # and agree to run npm commands
+    # (SQLite is used here as other database types would fail due to
+    # the .env file not being ready, which DDEV will fix on 'ddev restart')
     ddev exec laravel new temp --database=sqlite
 
     # 'laravel new' can't install in the current directory right away,
