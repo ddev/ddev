@@ -23,7 +23,7 @@ var BaseDBTag = "v1.24.3"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "v1.24.3"
+var TraefikRouterTag = "20250304_stasadev_traefik_healthcheck"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
