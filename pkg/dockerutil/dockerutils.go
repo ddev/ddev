@@ -64,6 +64,7 @@ var DockerRequirements = DockerVersionMatrix{
 
 type ComposeCmdOpts struct {
 	ComposeFiles []string
+	Profiles     []string
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
 	Timeout      time.Duration
@@ -710,6 +711,10 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 	for _, file := range cmd.ComposeFiles {
 		arg = append(arg, "-f", file)
+	}
+
+	for _, profile := range cmd.Profiles {
+		arg = append(arg, "--profile", profile)
 	}
 
 	arg = append(arg, cmd.Action...)

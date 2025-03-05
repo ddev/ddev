@@ -1794,6 +1794,41 @@ If this seems to be a config issue, update it accordingly.`, app.Name)
 	return nil
 }
 
+// StartOptionalProfiles starts services in the named compose profile(s)
+// The profiles can be a comma-separated list
+func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
+	var err error
+	if status, _ := app.SiteStatus(); status != SiteRunning {
+		err = app.Start()
+		if err != nil {
+			return err
+		}
+	}
+
+	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Profiles:     profiles,
+		Action:       []string{"up", "-d"},
+	})
+
+	if err != nil {
+		util.Warning("Failed to start optional compose profiles '%s': %v, stderr='%s'", profiles, err, stderr)
+		return err
+	}
+
+	if !IsRouterDisabled(app) {
+		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
+		err = StartDdevRouter()
+		if err != nil {
+			return err
+		}
+	}
+
+	util.Success("Started optional compose profiles '%s'", profiles)
+
+	return nil
+}
+
 // Restart does a Stop() and a Start
 func (app *DdevApp) Restart() error {
 	err := app.Stop(false, false)
@@ -2143,9 +2178,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
 	files := []string{app.DockerComposeFullRenderedYAMLPath()}
-	if err != nil {
-		return "", "", err
-	}
 
 	stdout := os.Stdout
 	stderr := os.Stderr
@@ -2544,6 +2576,7 @@ func (app *DdevApp) Pause() error {
 
 	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Profiles:     []string{`*`},
 		Action:       []string{"stop"},
 	}); err != nil {
 		return err

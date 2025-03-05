@@ -132,8 +132,17 @@ ddev start --all`,
 			}
 
 			output.UserOut.Printf("Starting %s...", project.GetName())
-			if err := project.Start(); err != nil {
-				util.Failed("Failed to start %s: %v", project.GetName(), err)
+
+			// If --profiles, start the optional services, which also starts project
+			if optionalProfiles, err := cmd.Flags().GetString("profiles"); err == nil && optionalProfiles != "" {
+				if err := project.StartOptionalProfiles(strings.Split(optionalProfiles, ",")); err != nil {
+					util.Failed("Failed to start optional profiles '%s': %v", optionalProfiles, err)
+				}
+			} else {
+				// otherwise just start the project
+				if err := project.Start(); err != nil {
+					util.Failed("Failed to start %s: %v", project.GetName(), err)
+				}
 			}
 
 			util.Success("Successfully started %s", project.GetName())
@@ -150,6 +159,7 @@ func emitReachProjectMessage(project *ddevapp.DdevApp) {
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
+	StartCmd.Flags().String("profiles", "", "Start optional comma-separated docker compose profiles")
 	StartCmd.Flags().BoolP("select", "s", false, "Interactively select a project to start")
 	err := StartCmd.Flags().MarkHidden("select")
 	if err != nil {

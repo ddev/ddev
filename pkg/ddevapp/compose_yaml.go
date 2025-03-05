@@ -1,12 +1,13 @@
 package ddevapp
 
 import (
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/util"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/util"
+	"gopkg.in/yaml.v3"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -56,6 +57,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	}
 	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
+		Profiles:     []string{`*`},
 		Action:       append(action, "config"),
 	})
 	if err != nil {

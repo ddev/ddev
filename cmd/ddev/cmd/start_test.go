@@ -1,12 +1,15 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
-	"os"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -60,5 +63,48 @@ func TestCmdStart(t *testing.T) {
 		if len(globalconfig.DdevGlobalConfig.OmitContainersGlobal) == 0 {
 			assert.Contains(out, app.GetPrimaryURL(), "The output should contain the primary URL, but it does not: %s", out)
 		}
+	}
+}
+
+// TestCmdStartOptionalProfiles checks `ddev start --profiles=list,of,profiles`
+func TestCmdStartOptionalProfiles(t *testing.T) {
+	testcommon.ClearDockerEnv()
+
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		// Remove the added docker-compose.busybox.yaml
+		_ = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.busybox.yaml")))
+		_ = app.Start()
+	})
+
+	// Add extra service that is in the "optional" profile
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), app.GetConfigPath("docker-compose.busybox.yaml"))
+	require.NoError(t, err)
+
+	out, err := exec.RunCommand(DdevBin, []string{"start", site.Name})
+	require.NoError(t, err, "failed to start %s, output='%s'", site.Name, out)
+
+	// Make sure the busybox service didn't get started
+	container, err := ddevapp.GetContainer(app, "busybox")
+	require.Error(t, err)
+	require.Nil(t, container)
+
+	profiles := []string{"busybox1", "busybox2"}
+	// Now ddev start --optional and make sure the services are there
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--profiles=" + strings.Join(profiles, ","), site.Name})
+	require.NoError(t, err, "start --profiles=%s failed, output='%s'", strings.Join(profiles, ","), out)
+	for _, prof := range profiles {
+		container, err = ddevapp.GetContainer(app, prof)
+		require.NoError(t, err)
+		require.NotNil(t, container)
 	}
 }
