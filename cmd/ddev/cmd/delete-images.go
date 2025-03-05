@@ -121,14 +121,13 @@ func deleteDdevImages(deleteAll bool) error {
 					return err
 				}
 			}
-			if strings.HasPrefix(tag, "ddev/ddev-dbserver") && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
+			if strings.HasPrefix(tag, versionconstants.DBImg) && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
 			}
-			// TODO: Verify the functionality here. May not work since GetRouterImage() returns full image spec
 			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, ddevImages.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
+			if strings.HasPrefix(tag, versionconstants.TraefikRouterImage) && !strings.HasPrefix(tag, routerimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

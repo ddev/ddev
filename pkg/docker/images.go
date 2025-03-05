@@ -45,5 +45,5 @@ func GetSSHAuthImage() string {
 
 // GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
-	return versionconstants.TraefikRouterImage
+	return fmt.Sprintf("%s:%s", versionconstants.TraefikRouterImage, versionconstants.TraefikRouterTag)
 }
