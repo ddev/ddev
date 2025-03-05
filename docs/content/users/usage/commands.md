@@ -262,7 +262,7 @@ ddev clean my-project my-other-project
 
 Executes a [Composer command](../usage/developer-tools.md#ddev-and-composer) within the web container.
 
-`ddev composer create` is a special command that is an adaptation of `composer create-project`. See [DDEV and Composer](../usage/developer-tools.md#ddev-and-composer) for more information.
+`ddev composer create-project` is a special command that is an adaptation of `composer create-project`. See [DDEV and Composer](../usage/developer-tools.md#ddev-and-composer) for more information.
 
 Example:
 
@@ -271,11 +271,11 @@ Example:
 ddev composer install
 ```
 
-Example of `ddev composer create`:
+Example of `ddev composer create-project`:
 
 ```shell
 # Create a new Drupal project in the current directory
-ddev composer create drupal/recommended-project
+ddev composer create-project drupal/recommended-project .
 ```
 
 ## `config`

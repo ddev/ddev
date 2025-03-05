@@ -32,24 +32,24 @@ DDEV provides a built-in command to simplify use of PHP’s dependency manager, 
 * `ddev composer help` runs Composer’s help command to learn more about what’s available.
 * `ddev composer require <package>` tells Composer to require a specific PHP package for the current project.
 
-Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the composer root (normally `/var/www/html`). The package and version arguments are required:
+Additionally, Composer can be used to initialize new projects with `ddev composer create-project`. This command supports limited argument and flag options, and will install a new project to the composer root (normally `/var/www/html`). The package and version arguments are required:
 
-`ddev composer create [<flags>] "<package>:<version>"`
+`ddev composer create-project [options] [--] [<package> [<directory> [<version>]]]`
 
 For example:
 
-`ddev composer create --no-dev "typo3/cms-base-distribution:^9"`
+`ddev composer create-project --no-dev typo3/cms-base-distribution . "^9"`
 
-When using `ddev composer create` your project should be essentially empty or the command will refuse to run, to avoid loss of your files.
+When using `ddev composer create-project` your project should be essentially empty or the command will refuse to run, to avoid loss of your files.
 
-`ddev composer create` does these things in this order:
+`ddev composer create-project` does these things in this order:
 
 1. `composer create-project --no-plugins --no-scripts --no-install` clones a bare Composer package without any additional actions.
-2. `composer run-script post-root-package-install` runs if `--no-scripts` is not given as a flag to `ddev composer create`.
-3. `composer install` runs if `--no-install` is not given as a flag to `ddev composer create`.
-4. `composer run-script post-create-project-cmd` runs if `--no-scripts` is not given as a flag to `ddev composer create`.
+2. `composer run-script post-root-package-install` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
+3. `composer install` runs if `--no-install` is not given as a flag to `ddev composer create-project`.
+4. `composer run-script post-create-project-cmd` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
 
-All flags that you provide to `ddev composer create` are checked for validity. All invalid flags will be ignored. If they are valid for `composer create-project`, they will be also passed to `composer run-script` and `composer install`, but only if these commands support these flags.
+All flags that you provide to `ddev composer create-project` are checked for validity. All invalid flags will be ignored. If they are valid for `composer create-project`, they will be also passed to `composer run-script` and `composer install`, but only if these commands support these flags.
 
 To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing [`ddev ssh`](../usage/commands.md#ssh), or pass the full command to [`ddev exec`](../usage/commands.md#exec), like so:
 
