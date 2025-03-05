@@ -30,10 +30,20 @@ if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
 }
 $ErrorActionPreference = "Stop"
 
-# Install binaries required for updating the hosts file on windows.
+# Install DDEV on Windows to manipulate the local hosts file.  (Also requires mkcert & sudo; see below.)
+$TempDir = $env:TEMP
+$DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
+# TODO: To always fetch the latest EXE (e.g. https://github.com/<OWNER>/<REPO>/releases/latest/download/myprogram.exe),
+# there can't be version numbers in the file name so we need to remove the version number from the release artefact.
+# Until then, we can simply fetch the installer from the latest release, which we'll hardcode.
+Invoke-WebRequest `
+    -Uri "https://github.com/ddev/ddev/releases/download/v1.24.3/ddev_windows_amd64_installer.v1.24.3.exe" `
+    -OutFile $DdevInstallerPath
+Start-Process $DdevInstallerPath -Wait
+Remove-Item $DdevInstallerPath
 
-# Set the executable path for DDEV.
-$ExecutablesDirectoryPath = Join-Path $env:ProgramFiles "DDEV"
+# Install mkcert for Windows.
+$ExecutablesDirectoryPath = Join-Path $env:ProgramFiles "mkcert"
 if (!(Test-Path $ExecutablesDirectoryPath)) {
     New-Item -ItemType Directory -Path $ExecutablesDirectoryPath | Out-Null
 }
@@ -41,27 +51,19 @@ $existingPath = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\
 if ($existingPath -notlike "*$ExecutablesDirectoryPath*") {
     $newPath = $existingPath + ";" + $ExecutablesDirectoryPath
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $newPath
-    # Tell the running session to pick up the updated environment (though new processes will see it automatically)
     $env:Path = $env:Path + ";" + $ExecutablesDirectoryPath
 }
-
-# Install DDEV.
-$DdevBinaryPath = Join-Path $ExecutablesDirectoryPath "ddev.exe"
-# TODO: To use https://github.com/<OWNER>/<REPO>/releases/latest/download/myprogram.exe,
-# there can't be version numbers in the file name; it needs to be the same for every release.
-# For now, just use the latest one available.
+$MkcertBinaryPath = Join-Path $ExecutablesDirectoryPath "mkcert.exe"
+    # Because this is an external dependency, pin the release so we're not implicitly trusting their branch forever.
 Invoke-WebRequest `
-    -Uri "https://github.com/ddev/ddev/releases/download/v1.24.3/ddev_windows_amd64_installer.v1.24.3.exe" `
-    -OutFile $DdevBinaryPath
+    -Uri "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-windows-amd64.exe" `
+    -OutFile $MkcertBinaryPath
 
 # Install Sudo for Windows.
 Set-ExecutionPolicy RemoteSigned -scope Process
 [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
-# Don't use `master` here because that means we trust that project's branch forever,
-# which is a security risk. Stick to known trustworthy releases.
+# Because this is an external dependency, pin the release so we're not implicitly trusting their branch forever.
 iwr -UseBasicParsing https://raw.githubusercontent.com/gerardog/gsudo/v2.6.0/installgsudo.ps1 | iex
-
-# TODO: install mkcert
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
