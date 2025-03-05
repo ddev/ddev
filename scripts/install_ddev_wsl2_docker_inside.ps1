@@ -24,13 +24,6 @@ if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
 if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
-# Install Chocolatey if needed
-if (-not (Get-Command "choco" -errorAction SilentlyContinue))
-{
-    "Chocolatey does not appear to be installed yet, installing"
-    $ErrorActionPreference = "Stop"
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-}
 
 if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
     throw "Docker Desktop integration is enabled with the default distro and it must but turned off."
