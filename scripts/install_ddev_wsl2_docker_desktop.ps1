@@ -26,13 +26,6 @@ if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
 if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
-# Install Chocolatey if needed
-if (-not (Get-Command "choco" -errorAction SilentlyContinue))
-{
-    "Chocolatey does not appear to be installed yet, installing"
-    $ErrorActionPreference = "Stop"
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-}
 if (-not(Get-Command docker 2>&1 ) -Or -Not(docker ps ) ) {
     throw "\n\ndocker does not seem to be installed yet, or Docker Desktop is not running. Please install it or start it. For example, choco install -y docker-desktop"
 }
@@ -41,8 +34,41 @@ if (-not(wsl -e docker ps) ) {
     throw "Docker Desktop integration with the default distro does not seem to be enabled yet."
 }
 $ErrorActionPreference = "Stop"
-# Install needed choco items
-choco upgrade -y ddev gsudo mkcert
+
+# Install DDEV on Windows to manipulate the local hosts file.  (Also requires mkcert & sudo; see below.)
+$TempDir = $env:TEMP
+$DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
+# TODO: To always fetch the latest EXE (e.g. https://github.com/<OWNER>/<REPO>/releases/latest/download/myprogram.exe),
+# there can't be version numbers in the file name so we need to remove the version number from the release artefact.
+# Until then, we can simply fetch the installer from the latest release, which we'll hardcode.
+Invoke-WebRequest `
+    -Uri "https://github.com/ddev/ddev/releases/download/v1.24.3/ddev_windows_amd64_installer.v1.24.3.exe" `
+    -OutFile $DdevInstallerPath
+Start-Process $DdevInstallerPath -Wait
+Remove-Item $DdevInstallerPath
+
+# Install mkcert for Windows.
+$ExecutablesDirectoryPath = Join-Path $env:ProgramFiles "mkcert"
+if (!(Test-Path $ExecutablesDirectoryPath)) {
+    New-Item -ItemType Directory -Path $ExecutablesDirectoryPath | Out-Null
+}
+$existingPath = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
+if ($existingPath -notlike "*$ExecutablesDirectoryPath*") {
+    $newPath = $existingPath + ";" + $ExecutablesDirectoryPath
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $newPath
+    $env:Path = $env:Path + ";" + $ExecutablesDirectoryPath
+}
+$MkcertBinaryPath = Join-Path $ExecutablesDirectoryPath "mkcert.exe"
+    # Because this is an external dependency, pin the release so we're not implicitly trusting their branch forever.
+Invoke-WebRequest `
+    -Uri "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-windows-amd64.exe" `
+    -OutFile $MkcertBinaryPath
+
+# Install Sudo for Windows.
+Set-ExecutionPolicy RemoteSigned -scope Process
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+# Because this is an external dependency, pin the release so we're not implicitly trusting their branch forever.
+iwr -UseBasicParsing https://raw.githubusercontent.com/gerardog/gsudo/v2.6.0/installgsudo.ps1 | iex
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
