@@ -29,8 +29,39 @@ if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
     throw "Docker Desktop integration is enabled with the default distro and it must but turned off."
 }
 $ErrorActionPreference = "Stop"
-# Install needed choco items; ddev/gsudo needed for ddev inside wsl2 to update hosts file on windows
-choco upgrade -y ddev gsudo mkcert
+
+# Install binaries required for updating the hosts file on windows.
+
+# Set the executable path for DDEV.
+$ExecutablesDirectoryPath = Join-Path $env:ProgramFiles "DDEV"
+if (!(Test-Path $ExecutablesDirectoryPath)) {
+    New-Item -ItemType Directory -Path $ExecutablesDirectoryPath | Out-Null
+}
+$existingPath = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
+if ($existingPath -notlike "*$ExecutablesDirectoryPath*") {
+    $newPath = $existingPath + ";" + $ExecutablesDirectoryPath
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $newPath
+    # Tell the running session to pick up the updated environment (though new processes will see it automatically)
+    $env:Path = $env:Path + ";" + $ExecutablesDirectoryPath
+}
+
+# Install DDEV.
+$DdevBinaryPath = Join-Path $ExecutablesDirectoryPath "ddev.exe"
+# TODO: To use https://github.com/<OWNER>/<REPO>/releases/latest/download/myprogram.exe,
+# there can't be version numbers in the file name; it needs to be the same for every release.
+# For now, just use the latest one available.
+Invoke-WebRequest `
+    -Uri "https://github.com/ddev/ddev/releases/download/v1.24.3/ddev_windows_amd64_installer.v1.24.3.exe" `
+    -OutFile $DdevBinaryPath
+
+# Install Sudo for Windows.
+Set-ExecutionPolicy RemoteSigned -scope Process
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+# Don't use `master` here because that means we trust that project's branch forever,
+# which is a security risk. Stick to known trustworthy releases.
+iwr -UseBasicParsing https://raw.githubusercontent.com/gerardog/gsudo/v2.6.0/installgsudo.ps1 | iex
+
+# TODO: install mkcert
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
