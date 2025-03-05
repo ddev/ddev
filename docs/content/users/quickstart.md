@@ -494,10 +494,36 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
 === "Composer"
 
+    Laravel defaults to SQLite, but we use MariaDB to better mimic a production environment:
+
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
-    ddev composer create "laravel/laravel:^11"
+    ddev start
+    ddev composer create "laravel/laravel:^12"
+    ddev launch
+    ```
+
+=== "Composer (SQLite)"
+
+    To use the SQLite configuration provided by Laravel:
+
+    ```bash
+    mkdir my-laravel-site && cd my-laravel-site
+    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+    ddev start
+    ddev composer create "laravel/laravel:^12"
+    ddev launch
+    ```
+
+    To switch an existing Laravel project to SQLite:
+
+    ```bash
+    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+    ddev restart
+    ddev composer run-script post-root-package-install
+    ddev dotenv set .env --db-connection=sqlite
+    ddev composer run-script post-create-project-cmd
     ddev launch
     ```
 
@@ -505,19 +531,28 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
+
+    # To use MariaDB, apply the following command
     ddev config --project-type=laravel --docroot=public
 
-    # Temporarily add the Laravel installer as /usr/local/bin/laravel in the web container
-    echo 'ARG COMPOSER_HOME=/usr/local/composer
+    # To use SQLite, uncomment and use the following command instead
+    #ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+
+    # Temporarily add the Laravel installer
+    # as /usr/local/bin/laravel in the web container
+    cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.laravel
+    ARG COMPOSER_HOME=/usr/local/composer
     RUN composer global require laravel/installer
     RUN ln -s $COMPOSER_HOME/vendor/bin/laravel /usr/local/bin/laravel
-    ' > .ddev/web-build/Dockerfile.laravel
+    DOCKERFILEEND
 
     # Start the project
     ddev start
 
-    # Select a starter kit of your choice.
-    # The database is temporarily set to SQLite and will be switched to MariaDB
+    # Follow the prompts, select a starter kit of your choice (or none),
+    # and agree to run npm commands
+    # (SQLite is used here as other database types would fail due to
+    # the .env file not being ready, which DDEV will fix on 'ddev restart')
     ddev exec laravel new temp --database=sqlite
 
     # 'laravel new' can't install in the current directory right away,
@@ -525,10 +560,13 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
 
     # Remove the Laravel installer and the .env file
-    rm -rf .ddev/web-build/Dockerfile.laravel .env
+    rm -f .ddev/web-build/Dockerfile.laravel .env
 
-    # Restart the project and execute the post-install actions
+    # Restart the project
     ddev restart
+
+    # Execute the post-install actions and launch the project
+    ddev composer run-script post-root-package-install
     ddev composer run-script post-create-project-cmd
     ddev launch
     ```
@@ -541,20 +579,13 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ddev config --project-type=laravel --docroot=public
     ddev start
     ddev composer install
-    ddev php artisan key:generate
+    ddev composer run-script post-root-package-install
+    ddev composer run-script post-create-project-cmd
     ddev launch
     ```
 
-!!!tip "Want to use a SQLite database for Laravel?"
-    DDEV defaults to using a MariaDB database to better represent a production environment.
-
-    To select the [Laravel 11 defaults](https://laravel.com/docs/11.x/releases#application-defaults) for SQLite, use this command for `ddev config`:
-    ```bash
-    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
-    ```
-
 !!!tip "Add Vite support?"
-    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/master/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
+    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
 
 ## Magento
 
