@@ -139,7 +139,9 @@ USER original_user
 
 ## Optional Services
 
-Services in named Docker Compose profiles will not automatically be started on `ddev start`. This is useful when you want to define a service that is not always needed, but can be started by an additional command when it is time to use it. In this way, it doesn't use system resources unless needed. In this example, the `busybox` container will only be started if the `busybox` profile is requested, for example with `ddev start --profile=busybox`. More than one service can be labeled for a single Docker Compose profile.
+Services in named Docker Compose profiles will not automatically be started on `ddev start`. This is useful when you want to define a service that is not always needed, but can be started by an additional command when it is time to use it. In this way, it doesn't use system resources unless needed. In this example, the `busybox` container will only be started if the `busybox` profile is requested, for example with `ddev start --profiles=busybox`. More than one service can be labeled for a single Docker Compose profile.
+
+!!!tip "Run `ddev start --profiles='*'` to start all defined profiles."
 
 ```yaml
 services:
