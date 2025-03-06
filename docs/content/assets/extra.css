@@ -30,11 +30,6 @@ dt {
     padding: 10px;
 }
 
-/* only required if we have our svg logo out there */
-/*.md-logo {*/
-/*  filter:invert(40%)*/
-/*}*/
-
 /* typography */
 .md-typeset h1,
 .md-typeset h2,
@@ -121,4 +116,8 @@ dt {
     mask-size: cover;
     mask-position: center;
     -webkit-mask-position: center;
+}
+
+img[alt="Figurative Mark"], img[alt="Word/Figurative Mark"] {
+    height: 150px
 }
