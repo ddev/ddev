@@ -46,15 +46,15 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		DatabasePort:     GetInternalPort(app, "db"),
 		HashSalt:         util.HashSalt(app.Name),
 		Signature:        nodeps.DdevFileSignature,
-		SiteSettings:     "settings.php",
+		SiteSettings:     "settings.local.php",
 		SiteSettingsDdev: "settings.ddev.php",
 		DockerIP:         dockerIP,
 		DBPublishedPort:  dbPublishedPort,
 	}
 }
 
-// createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
-// If a settings.php file already exists, it will be modified to ensure that it includes
+// createBackdropSettingsFile manages creation and modification of settings.local.php and settings.ddev.php.
+// If a settings.local.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
 func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	settings := NewBackdropSettings(app)
@@ -82,7 +82,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	}
 
 	if err = writeBackdropSettingsDdevPHP(settings, app.SiteDdevSettingsFile, app); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
+		return "", fmt.Errorf("failed to write Backdrop settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
 	return app.SiteDdevSettingsFile, nil
@@ -142,7 +142,7 @@ func getBackdropHooks() []byte {
 	return []byte(backdropHooks)
 }
 
-// setBackdropSiteSettingsPaths sets the paths to settings.php for templating.
+// setBackdropSiteSettingsPaths sets the paths to settings.local.php for templating.
 func setBackdropSiteSettingsPaths(app *DdevApp) {
 	settings := NewBackdropSettings(app)
 	settingsFileBasePath := app.GetAbsDocroot(false)
