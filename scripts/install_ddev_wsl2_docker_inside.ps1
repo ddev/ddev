@@ -58,14 +58,11 @@ wsl bash -c 'sudo usermod -aG docker $USER'
 
 wsl bash -c 'echo CAROOT=$CAROOT'
 wsl -u root mkcert -install
-wsl -u root service docker start
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. "
 }
 # If docker desktop was previously set up, the .docker can break normal use of docker client.
 wsl rm -rf ~/.docker
-
-refreshenv
 
 wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nsystemd=true\n' >>/etc/wsl.conf; fi"
 
