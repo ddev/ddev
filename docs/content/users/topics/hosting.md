@@ -123,6 +123,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * `docker logs -f ddev-router` is a great way to see what's going on with the router.
 * You may want to see more than just error output. You can enable debug output with  `cp ~/.ddev/traefik/static_config.loglevel.yaml.example static_config.loglevel.yaml`  and then `ddev poweroff`. You can make additional changes to the logging level as needed.
 * Do not rename projects without going through the proper process in the [FAQ](../usage/faq.md#how-can-i-change-a-projects-name), and make sure you don't have conflicting `additional_hostnames` or `additional_fqdns` between projects.
+* If you're having trouble with a particular project's Traefik configuration, try `docker exec -it ddev-router bash -c "rm -r config/<projectname>.yaml"` and `rm -r .ddev/traefik` in the project, then `ddev poweroff && ddev start`. This deletes all existing Traefik configuration for that project and it will be regenerated.
 
 ## Caveats
 
