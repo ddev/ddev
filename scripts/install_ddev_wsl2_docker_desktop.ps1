@@ -35,7 +35,7 @@ if (-not(wsl -e docker ps) ) {
 }
 $ErrorActionPreference = "Stop"
 
-# Install DDEV on Windows to manipulate the local hosts file.  (Also requires mkcert & sudo; see below.)
+# Install DDEV on Windows to manipulate the host OS's hosts file.
 $TempDir = $env:TEMP
 $DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
 # TODO: To always fetch the latest EXE (e.g. https://github.com/<OWNER>/<REPO>/releases/latest/download/myprogram.exe),
@@ -46,29 +46,6 @@ Invoke-WebRequest `
     -OutFile $DdevInstallerPath
 Start-Process $DdevInstallerPath -Wait
 Remove-Item $DdevInstallerPath
-
-# Install mkcert for Windows.
-$ExecutablesDirectoryPath = Join-Path $env:ProgramFiles "mkcert"
-if (!(Test-Path $ExecutablesDirectoryPath)) {
-    New-Item -ItemType Directory -Path $ExecutablesDirectoryPath | Out-Null
-}
-$existingPath = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
-if ($existingPath -notlike "*$ExecutablesDirectoryPath*") {
-    $newPath = $existingPath + ";" + $ExecutablesDirectoryPath
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $newPath
-    $env:Path = $env:Path + ";" + $ExecutablesDirectoryPath
-}
-$MkcertBinaryPath = Join-Path $ExecutablesDirectoryPath "mkcert.exe"
-    # Because this is an external dependency, pin the release so we're not implicitly trusting their branch forever.
-Invoke-WebRequest `
-    -Uri "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-windows-amd64.exe" `
-    -OutFile $MkcertBinaryPath
-
-# Install Sudo for Windows.
-Set-ExecutionPolicy RemoteSigned -scope Process
-[Net.ServicePointManager]::SecurityProtocol = 'Tls12'
-# Because this is an external dependency, pin the release so we're not implicitly trusting their branch forever.
-iwr -UseBasicParsing https://raw.githubusercontent.com/gerardog/gsudo/v2.6.0/installgsudo.ps1 | iex
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
