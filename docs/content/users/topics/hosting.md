@@ -24,6 +24,7 @@ Here’s how to try it for yourself:
     ```
     ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
     ```
+
 9. Use a `.ddev/config.prod.yaml` to provide overrides for project configuration, rather than changing the `.ddev/config.yaml`, so that your checked-in local development code works as well as possible. An example `.ddev/config.prod.yaml` might be:
 
     ```yaml
@@ -33,7 +34,7 @@ Here’s how to try it for yourself:
       - www.hobobiker
     timezone: America/Denver
    ```
-   
+
 10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
 
      !!!warning "Complex configuration with apex domains"
