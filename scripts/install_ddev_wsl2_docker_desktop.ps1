@@ -36,14 +36,22 @@ if (-not(wsl -e docker ps) ) {
 $ErrorActionPreference = "Stop"
 
 # Install DDEV on Windows to manipulate the host OS's hosts file.
+$GitHubOwner = "ddev"
+$RepoName    = "ddev"
+# Get the latest release JSON from the GitHub API endpoint.
+$apiUrl = "https://api.github.com/repos/$GitHubOwner/$RepoName/releases/latest"
+$response = Invoke-WebRequest -UseBasicParsing `
+    -Headers @{ Accept = 'application/json' } `
+    -Uri $apiUrl
+$json = $response.Content | ConvertFrom-Json
+$tagName = $json.tag_name
+Write-Host "The latest $GitHubOwner/$RepoName version is $tagName."
+# Because the published artifact includes the version in its name, we have to insert $tagName into the filename.
+$downloadUrl = "https://github.com/$GitHubOwner/$RepoName/releases/download/$tagName/ddev_windows_amd64_installer.$tagName.exe"
+Write-Host "Downloading from $downloadUrl..."
 $TempDir = $env:TEMP
 $DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
-# TODO: To always fetch the latest EXE (e.g. https://github.com/<OWNER>/<REPO>/releases/latest/download/myprogram.exe),
-# there can't be version numbers in the file name so we need to remove the version number from the release artefact.
-# Until then, we can simply fetch the installer from the latest release, which we'll hardcode.
-Invoke-WebRequest `
-    -Uri "https://github.com/ddev/ddev/releases/download/v1.24.3/ddev_windows_amd64_installer.v1.24.3.exe" `
-    -OutFile $DdevInstallerPath
+Invoke-WebRequest -Uri $downloadUrl -OutFile $DdevInstallerPath
 Start-Process $DdevInstallerPath -Wait
 Remove-Item $DdevInstallerPath
 
