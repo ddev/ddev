@@ -129,7 +129,7 @@ func writeDrupalSettingsPHP(app *DdevApp) error {
 		appType = "drupal" + drupalVersion
 	}
 
-	content, err := bundledAssets.ReadFile(path.Join("drupal", appType, "settings.php"))
+	content, err := bundledAssets.ReadFile(path.Join("drupal", appType, app.SiteSettings))
 	if err != nil {
 		return err
 	}
