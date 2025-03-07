@@ -35,7 +35,7 @@ Here’s how to try it for yourself:
     timezone: America/Denver
     ```
 
-10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something", "www.something"]`.
+10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
 
     !!!warning "Complex configuration with apex domains"
 
@@ -64,9 +64,9 @@ Here’s how to try it for yourself:
 
     ```yaml
     certificatesResolvers:
-      acme-tlsChallenge:
-        acme:
-            caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+        acme-tlsChallenge:
+            acme:
+                caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
     ```
 
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs -f ddev-router` to see Let’s Encrypt activity.)
@@ -78,7 +78,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * You may want to generally tailor your PHP settings for hosting rather than local development. Error-reporting defaults in `php.ini`, for example, may be too verbose and expose too much information publicly. You may want something less:
 
     ```ini
-    ; Error handling and logging ;
+    ; Error handling and logging
     error_reporting = E_ALL
     display_errors = On
     display_startup_errors = On
@@ -121,7 +121,13 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 ## Troubleshooting
 
 * `docker logs -f ddev-router` is a great way to see what's going on with the router.
-* You may want to see more than just error output. You can enable debug output with `cp ~/.ddev/traefik/static_config.loglevel.yaml.example ~/.ddev/traefik/static_config.loglevel.yaml` and then `ddev poweroff`. You can make additional changes to the logging level as needed.
+* You may want to see more than just error output. You can enable debug output with the command below. You can make additional changes to the logging level as needed.
+
+    ```bash
+    cp ~/.ddev/traefik/static_config.loglevel.yaml.example ~/.ddev/traefik/static_config.loglevel.yaml
+    ddev poweroff
+    ```
+
 * Do not rename projects without going through the proper process in the [FAQ](../usage/faq.md#how-can-i-change-a-projects-name), and make sure you don't have conflicting `additional_hostnames` or `additional_fqdns` between projects.
 * If you're having trouble with a particular project's Traefik configuration, try `docker exec -it ddev-router bash -c "rm -f config/<projectname>.yaml"` and `rm -rf .ddev/traefik` in the project, then `ddev poweroff && ddev start`. This deletes all existing Traefik configuration for that project and it will be regenerated.
 
