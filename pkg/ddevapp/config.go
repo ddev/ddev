@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -884,6 +885,7 @@ type composeYAMLVars struct {
 	WebExtraExposedPorts            string
 	BitnamiVolumeDir                string
 	UseHardenedImages               bool
+	XhguiImage                      string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -979,6 +981,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		StartScriptTimeout:      app.GetStartScriptTimeout(),
+		XhguiImage:              versionconstants.XhguiImage,
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),

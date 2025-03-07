@@ -34,6 +34,8 @@ var SSHAuthTag = "v1.24.3"
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
 
+var XhguiImage = "ddev/ddev-xhgui:20250307_rfay_xhgui"
+
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities"
 

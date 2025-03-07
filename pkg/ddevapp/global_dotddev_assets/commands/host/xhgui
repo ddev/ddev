@@ -1,0 +1,15 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Launch a browser to XHGui
+## Usage: xhgui
+## Example: "xhgui"
+
+DDEV_XHGUI_PORT=8143
+DDEV_XHGUI_HTTPS_PORT=8142
+
+if [ ${DDEV_PRIMARY_URL%://*} = "http" ] || [ -n "${GITPOD_WORKSPACE_ID:-}" ] || [ "${CODESPACES:-}" = "true" ]; then
+    ddev launch :$DDEV_XHGUI_PORT
+else
+    ddev launch :$DDEV_XHGUI_HTTPS_PORT
+fi

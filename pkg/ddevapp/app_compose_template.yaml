@@ -262,6 +262,28 @@ services:
       {{- end }}
       timeout: "70s"
 
+  xhgui:
+    image: {{ .XhguiImage }}
+    container_name: ddev-${DDEV_SITENAME}-xhgui
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    profiles:
+      - xhgui
+    restart: "no"
+    environment:
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=8143:80
+      - HTTPS_EXPOSE=8142:80
+      - XHGUI_SAVE_HANDLER=pdo
+      - DDEV_DATABASE_FAMILY=${DDEV_DATABASE_FAMILY}
+      - XHGUI_PDO_USER=db
+      - XHGUI_PDO_PASS=db
+    links:
+      - db
+    depends_on:
+      - db
+
 networks:
   ddev_default:
     name: ddev_default
