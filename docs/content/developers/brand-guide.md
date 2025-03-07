@@ -26,22 +26,22 @@ svg_dir="docs/content/developers/logos/SVG"
 output_dirs=("1x" "2x" "3x" "4x")
 dpis=(96 192 288 384)
 for file in "$svg_dir"/*.svg; do
-    base_name=$(basename "${file%.svg}")
-    for i in "${!dpis[@]}"; do
-        dpi="${dpis[$i]}"
-        output_dir="${svg_dir}/../${output_dirs[$i]}"
-        mkdir -p "$output_dir"
-        if [[ "${dpi}" == "96" ]]; then
-            # No @1x for 1x resolution
-            output_filename="$output_dir/${base_name}.png"
-        else
-            output_filename="$output_dir/${base_name}@${output_dirs[$i]}.png"
-        fi
-        # Export PNG at the specified DPI
-        inkscape "$file" --export-dpi "$dpi" --export-filename "$output_filename"
-        # Optimize the PNG file (lossless)
-        oxipng -o max --strip safe --alpha "$output_filename"
-    done
+  base_name=$(basename "${file%.svg}")
+  for i in "${!dpis[@]}"; do
+    dpi="${dpis[$i]}"
+    output_dir="${svg_dir}/../${output_dirs[$i]}"
+    mkdir -p "$output_dir"
+    if [[ "${dpi}" == "96" ]]; then
+      # No @1x for 1x resolution
+      output_filename="$output_dir/${base_name}.png"
+    else
+      output_filename="$output_dir/${base_name}@${output_dirs[$i]}.png"
+    fi
+    # Export PNG at the specified DPI
+    inkscape "$file" --export-dpi "$dpi" --export-filename "$output_filename"
+    # Optimize the PNG file (lossless)
+    oxipng -o max --strip safe --alpha "$output_filename"
+  done
 done
 ```
 
