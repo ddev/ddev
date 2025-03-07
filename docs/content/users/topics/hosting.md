@@ -33,7 +33,7 @@ Here’s how to try it for yourself:
       - hobobiker
       - www.hobobiker
     timezone: America/Denver
-   ```
+    ```
 
 10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
 
