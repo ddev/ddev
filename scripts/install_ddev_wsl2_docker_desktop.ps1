@@ -35,25 +35,56 @@ if (-not(wsl -e docker ps) ) {
 }
 $ErrorActionPreference = "Stop"
 
+# Determine the architecture we're running on to fetch the correct installer.
+$realArchitecture = $env:PROCESSOR_ARCHITEW6432
+if (-not $realArchitecture) {
+    $realArchitecture = $env:PROCESSOR_ARCHITECTURE
+}
+switch ($realArchitecture) {
+    "AMD64" {
+        $architectureForInstaller = "amd64"
+    }
+    "ARM64" {
+        $architectureForInstaller = "arm64"
+    }
+    "x86" {
+        Write-Error "Error: x86 Windows detected, which is not supported."
+        exit 1
+    }
+    Default {
+        $architectureForInstaller = "amd64"
+    }
+}
+Write-Host "Detected OS architecture: $realArchitecture; using DDEV installer: $architectureForInstaller"
+
 # Install DDEV on Windows to manipulate the host OS's hosts file.
 $GitHubOwner = "ddev"
 $RepoName    = "ddev"
 # Get the latest release JSON from the GitHub API endpoint.
 $apiUrl = "https://api.github.com/repos/$GitHubOwner/$RepoName/releases/latest"
-$response = Invoke-WebRequest -UseBasicParsing `
-    -Headers @{ Accept = 'application/json' } `
-    -Uri $apiUrl
+try {
+    $response = Invoke-WebRequest -Headers @{ Accept = 'application/json' } -Uri $apiUrl
+} catch {
+    Write-Error "Could not fetch latest release info from $apiUrl. Details: $_"
+    exit 1
+}
 $json = $response.Content | ConvertFrom-Json
 $tagName = $json.tag_name
 Write-Host "The latest $GitHubOwner/$RepoName version is $tagName."
 # Because the published artifact includes the version in its name, we have to insert $tagName into the filename.
-$downloadUrl = "https://github.com/$GitHubOwner/$RepoName/releases/download/$tagName/ddev_windows_amd64_installer.$tagName.exe"
+$downloadUrl = "https://github.com/$GitHubOwner/$RepoName/releases/download/$tagName/ddev_windows_${architectureForInstaller}_installer.${tagName}.exe"
 Write-Host "Downloading from $downloadUrl..."
 $TempDir = $env:TEMP
 $DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
-Invoke-WebRequest -Uri $downloadUrl -OutFile $DdevInstallerPath
+try {
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $DdevInstallerPath
+} catch {
+    Write-Error "Could not download the installer from $downloadUrl. Details: $_"
+    exit 1
+}
 Start-Process $DdevInstallerPath -Wait
 Remove-Item $DdevInstallerPath
+Write-Host "DDEV installation complete."
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
