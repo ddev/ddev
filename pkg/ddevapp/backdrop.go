@@ -53,6 +53,61 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 	}
 }
 
+// writeBackdropSettingsPHP creates the project's settings.php if it doesn't exist
+func writeBackdropSettingsPHP(settings *BackdropSettings, app *DdevApp) error {
+
+	content, err := bundledAssets.ReadFile(path.Join("drupal", "backdrop", settings.SiteSettings))
+	if err != nil {
+		return err
+	}
+
+	// Ensure target directory exists and is writable
+	dir := filepath.Dir(app.SiteSettingsPath)
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	// Create file
+	err = os.WriteFile(app.SiteSettingsPath, content, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+// writeBackdropSettingsPHP creates the project's settings.php if it doesn't exist
+func writeBackdropSettingsPHP(settings *BackdropSettings, app *DdevApp) error {
+
+	content, err := bundledAssets.ReadFile(path.Join("drupal", "backdrop", settings.SiteSettings))
+	if err != nil {
+		return err
+	}
+
+	// Ensure target directory exists and is writable
+	dir := filepath.Dir(app.SiteSettingsPath)
+	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	// Create file
+	err = os.WriteFile(app.SiteSettingsPath, content, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // createBackdropSettingsFile manages creation and modification of settings.local.php and settings.ddev.php.
 // If a settings.local.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
@@ -61,7 +116,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
-		if err := writeDrupalSettingsPHP(app); err != nil {
+		if err := writeBackdropSettingsPHP(settings, app); err != nil {
 			return "", err
 		}
 	}
@@ -76,7 +131,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsDdev)
 
-		if err = appendIncludeToDrupalSettingsFile(app); err != nil {
+		if err = appendIncludeToBackdropSettingsFile(app); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsDdev, settings.SiteSettings, err)
 		}
 	}
@@ -141,6 +196,35 @@ func getBackdropHooks() []byte {
 `
 	return []byte(backdropHooks)
 }
+
+// appendIncludeToBackdropSettingsFile modifies the settings.php file to include the settings.ddev.php
+// file, which contains ddev-specific configuration.
+func appendIncludeToBackdropSettingsFile(settings *BackdropSettings, app *DdevApp) error {
+	// Check if file is empty
+	contents, err := os.ReadFile(app.SiteSettingsPath)
+	if err != nil {
+		return err
+	}
+
+	// If the file is empty, write the complete settings file and return
+	if len(contents) == 0 {
+		return writeBackdropSettingsPHP(settings, app)
+	}
+
+	// The file is not empty, open it for appending
+	file, err := os.OpenFile(app.SiteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	_, err = file.Write([]byte(settingsIncludeStanza))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 // setBackdropSiteSettingsPaths sets the paths to settings.local.php for templating.
 func setBackdropSiteSettingsPaths(app *DdevApp) {

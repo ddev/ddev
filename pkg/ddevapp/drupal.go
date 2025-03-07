@@ -119,17 +119,13 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error 
 func writeDrupalSettingsPHP(app *DdevApp) error {
 
 	var appType string
-	if app.Type == nodeps.AppTypeBackdrop {
-		appType = app.Type
-	} else {
-		drupalVersion, err := GetDrupalVersion(app)
-		if err != nil || drupalVersion == "" {
-			drupalVersion = DefaultDrupalSettingsVersion
-		}
-		appType = "drupal" + drupalVersion
+	drupalVersion, err := GetDrupalVersion(app)
+	if err != nil || drupalVersion == "" {
+		drupalVersion = DefaultDrupalSettingsVersion
 	}
+	appType = "drupal" + drupalVersion
 
-	content, err := bundledAssets.ReadFile(path.Join("drupal", appType, app.SiteSettings))
+	content, err := bundledAssets.ReadFile(path.Join("drupal", appType, "settings.php"))
 	if err != nil {
 		return err
 	}
