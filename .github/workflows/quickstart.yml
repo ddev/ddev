@@ -71,5 +71,8 @@ jobs:
           ddev config global --performance-mode=mutagen
           # bats refuses ever to exit until all processes started by it
           # have exited. So we don't want to let bats/ddev start mutagen
+          # ddev debug download-images makes sure we have mutagen available
+          ddev debug download-images
           ddev debug mutagen daemon start || true
           make quickstart-test
+          ddev poweroff
