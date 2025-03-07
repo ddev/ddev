@@ -69,4 +69,7 @@ jobs:
         run: |
           # Use mutagen by default as it may cause different behaviors
           ddev config global --performance-mode=mutagen
+          # bats refuses ever to exit until all processes started by it
+          # have exited. So we don't want to let bats/ddev start mutagen
+          ddev debug mutagen daemon start || true
           make quickstart-test

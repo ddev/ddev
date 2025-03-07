@@ -15,7 +15,5 @@ _common_setup() {
 
 _common_teardown() {
   ddev delete -Oy ${PROJNAME}
-  # Mutagen subprocess running makes bats never exit
-  ddev debug mutagen daemon stop || true
   rm -rf ${tmpdir}
 }
