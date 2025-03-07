@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"runtime"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -24,7 +23,7 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		if err != nil {
 			util.Warning("Unable to download docker-compose: %v", err)
 		}
-		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 			err = ddevapp.DownloadMutagenIfNeeded()
 			if err != nil {
 				util.Warning("Unable to download Mutagen: %v", err)
