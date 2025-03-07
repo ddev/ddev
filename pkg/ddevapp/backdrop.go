@@ -81,33 +81,6 @@ func writeBackdropSettingsPHP(settings *BackdropSettings, app *DdevApp) error {
 }
 
 
-// writeBackdropSettingsPHP creates the project's settings.php if it doesn't exist
-func writeBackdropSettingsPHP(settings *BackdropSettings, app *DdevApp) error {
-
-	content, err := bundledAssets.ReadFile(path.Join("drupal", "backdrop", settings.SiteSettings))
-	if err != nil {
-		return err
-	}
-
-	// Ensure target directory exists and is writable
-	dir := filepath.Dir(app.SiteSettingsPath)
-	if err = util.Chmod(dir, 0755); os.IsNotExist(err) {
-		if err = os.MkdirAll(dir, 0755); err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-
-	// Create file
-	err = os.WriteFile(app.SiteSettingsPath, content, 0755)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // createBackdropSettingsFile manages creation and modification of settings.local.php and settings.ddev.php.
 // If a settings.local.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
