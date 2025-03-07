@@ -30,33 +30,33 @@ Here’s how to try it for yourself:
     ```yaml
     project_tld: com
     additional_hostnames:
-      - hobobiker
-      - www.hobobiker
+        - hobobiker
+        - www.hobobiker
     timezone: America/Denver
     ```
 
-10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
+10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something", "www.something"]`.
 
-     !!!warning "Complex configuration with apex domains"
+    !!!warning "Complex configuration with apex domains"
 
-         Unfortunately, the `traefik` integration with Let's Encrypt does not work if you have hostnames specified that are not resolvable, so all hostnames referenced must be resolvable in DNS. (You can use `additional_fqdns` as well as `additional_hostnames`, but all combinations must be resolvable in DNS.) Some examples:
+        Unfortunately, the `traefik` integration with Let's Encrypt does not work if you have hostnames specified that are not resolvable, so all hostnames referenced must be resolvable in DNS. (You can use `additional_fqdns` as well as `additional_hostnames`, but all combinations must be resolvable in DNS.) Some examples:
 
-         **Project name = example, URL = `example.com`, also serving `www.example.com` and `mysite.com`**
-         ```yaml
-         project_tld: com
-         name: example
-         additional_hostnames:
-         - www.example
-         additional_fqdns:
-         - mysite.com
-         ```
+        **Project name = example, URL = `example.com`, also serving `www.example.com` and `mysite.com`**
+        ```yaml
+        project_tld: com
+        name: example
+        additional_hostnames:
+            - www.example
+        additional_fqdns:
+            - mysite.com
+        ```
 
-         **Project name = `stories`, URL = `stories.example.org`**
+        **Project name = `stories`, URL = `stories.example.org`**
 
-         ```yaml
-         name: stories
-         project_tld: example.org
-         ```
+        ```yaml
+        name: stories
+        project_tld: example.org
+        ```
 
 11. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
 12. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
@@ -121,9 +121,9 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 ## Troubleshooting
 
 * `docker logs -f ddev-router` is a great way to see what's going on with the router.
-* You may want to see more than just error output. You can enable debug output with  `cp ~/.ddev/traefik/static_config.loglevel.yaml.example static_config.loglevel.yaml`  and then `ddev poweroff`. You can make additional changes to the logging level as needed.
+* You may want to see more than just error output. You can enable debug output with `cp ~/.ddev/traefik/static_config.loglevel.yaml.example ~/.ddev/traefik/static_config.loglevel.yaml` and then `ddev poweroff`. You can make additional changes to the logging level as needed.
 * Do not rename projects without going through the proper process in the [FAQ](../usage/faq.md#how-can-i-change-a-projects-name), and make sure you don't have conflicting `additional_hostnames` or `additional_fqdns` between projects.
-* If you're having trouble with a particular project's Traefik configuration, try `docker exec -it ddev-router bash -c "rm -r config/<projectname>.yaml"` and `rm -r .ddev/traefik` in the project, then `ddev poweroff && ddev start`. This deletes all existing Traefik configuration for that project and it will be regenerated.
+* If you're having trouble with a particular project's Traefik configuration, try `docker exec -it ddev-router bash -c "rm -f config/<projectname>.yaml"` and `rm -rf .ddev/traefik` in the project, then `ddev poweroff && ddev start`. This deletes all existing Traefik configuration for that project and it will be regenerated.
 
 ## Caveats
 
