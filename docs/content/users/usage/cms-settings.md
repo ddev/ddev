@@ -34,6 +34,14 @@ This environment variable is set `true` by default in DDEV’s environment, and 
 
 ## CMS-Specific Help and Techniques
 
+### Backdrop Specifics
+
+#### Configuration considerations
+
+By default, Backdrop stores both active and staging configuration in the filesystem. In this case, if you are updating the database (either from a live site, or reloading while working locally) it can be important to also refresh the active configuration directory to make sure your database structure is in line with what your configuration is describing.
+
+Backdrop also allows you to store your active configuration in the database ([as of Backdrop 1.28.0](https://docs.backdropcms.org/change-records/swappable-config-storage)), which can be simpler while developing locally, especially if you are making use of DDEV's snapshot feature. In this case, the database and the active configuration are effectively bundled and refreshing the database also refreshes the active configuration.
+
 ### Drupal Specifics
 
 #### Drupal Settings Files
