@@ -25,7 +25,17 @@ Here’s how to try it for yourself:
     ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
     ```
 
-9. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
+9. Use a `.ddev/config.prod.yaml` to provide overrides for project configuration, rather than changing the `.ddev/config.yaml`, so that your checked-in local development code works as well as possible. An example `.ddev/config.prod.yaml` might be:
+
+    ```yaml
+    project_tld: com
+    additional_hostnames:
+        - hobobiker
+        - www.hobobiker
+    timezone: America/Denver
+    ```
+
+10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
 
     !!!warning "Complex configuration with apex domains"
 
@@ -36,9 +46,9 @@ Here’s how to try it for yourself:
         project_tld: com
         name: example
         additional_hostnames:
-        - www.example
+            - www.example
         additional_fqdns:
-        - mysite.com
+            - mysite.com
         ```
 
         **Project name = `stories`, URL = `stories.example.org`**
@@ -48,15 +58,15 @@ Here’s how to try it for yourself:
         project_tld: example.org
         ```
 
-10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
-11. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
-12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
+11. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
+12. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
+13. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
 
     ```yaml
     certificatesResolvers:
-      acme-tlsChallenge:
-        acme:
-            caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+        acme-tlsChallenge:
+            acme:
+                caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
     ```
 
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed for some reason or the DNS name is not yet resolving. (Use `docker logs -f ddev-router` to see Let’s Encrypt activity.)
@@ -68,7 +78,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * You may want to generally tailor your PHP settings for hosting rather than local development. Error-reporting defaults in `php.ini`, for example, may be too verbose and expose too much information publicly. You may want something less:
 
     ```ini
-    ; Error handling and logging ;
+    ; Error handling and logging
     error_reporting = E_ALL
     display_errors = On
     display_startup_errors = On
@@ -107,6 +117,19 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     display_errors = Off
     display_startup_errors = Off
     ```
+
+## Troubleshooting
+
+* `docker logs -f ddev-router` is a great way to see what's going on with the router.
+* You may want to see more than just error output. You can enable debug output with the command below. You can make additional changes to the logging level as needed.
+
+    ```bash
+    cp ~/.ddev/traefik/static_config.loglevel.yaml.example ~/.ddev/traefik/static_config.loglevel.yaml
+    ddev poweroff
+    ```
+
+* Do not rename projects without going through the proper process in the [FAQ](../usage/faq.md#how-can-i-change-a-projects-name), and make sure you don't have conflicting `additional_hostnames` or `additional_fqdns` between projects.
+* If you're having trouble with a particular project's Traefik configuration, try `docker exec -it ddev-router bash -c "rm -f config/<projectname>.yaml"` and `rm -rf .ddev/traefik` in the project, then `ddev poweroff && ddev start`. This deletes all existing Traefik configuration for that project and it will be regenerated.
 
 ## Caveats
 
