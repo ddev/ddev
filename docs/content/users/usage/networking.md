@@ -16,10 +16,10 @@ Several specific ways to sort this out are listed in the related [Stack Overflow
 2. Place the `.crt` files in your `.ddev/web-build` directory.
 3. Use a `.ddev/web-build/Dockerfile.vpn` to install the `.crt` files, as shown in this example `.ddev/web-build/Dockerfile.vpn`:
 
-  ```Dockerfile
+    ```Dockerfile
     COPY <yourcert>*.crt /usr/local/share/ca-certificates/
     RUN update-ca-certificates --fresh
-  ```
+    ```
 
 4. To test for success,
 
@@ -27,7 +27,8 @@ Several specific ways to sort this out are listed in the related [Stack Overflow
   ddev restart
   ddev exec curl -I https://www.google.com # Or any URL you need
   ```
-  and you should expect a "200 OK" response.
+
+  and you expect a "200 OK" response.
 
 ### Additional Resources
 
@@ -41,18 +42,17 @@ In most environments, the proxy will be configured at a system level. For exampl
 
 In each of these situations the configuration required is essentially this:
 
-- HTTP Proxy or "Web Proxy (HTTP)"
-- HTTPS Proxy or "Secure web proxy (HTTPS)"
-- "Ignore Hosts" or "Bypass proxy settings for these hosts"
+* HTTP Proxy or "Web Proxy (HTTP)"
+* HTTPS Proxy or "Secure web proxy (HTTPS)"
+* "Ignore Hosts" or "Bypass proxy settings for these hosts"
 
 Given a proxy with the hostname `yourproxy.intranet` with the IP address `192.168.1.254` and a port of `8888`, you would usually configure the HTTP and HTTPS Proxies as `yourproxy.intranet` with port `8888`. But it's usually important to tell your system *not* to proxy some hostnames and IP addresses, including `localhost`, `*.ddev.site`, `127.0.0.1`, and `::1`. These exclusions ensure that local development domains (such as *.ddev.site) and local network addresses (`127.0.0.1`, `::1`) are not mistakenly routed through the proxy, which could disrupt DDEV’s functionality.”
 
-
 System configuration in many environmets results in environment variables like these examples:
 
-- `HTTP_PROXY=http://yourproxy.intranet:8888`
-- `HTTPS_PROXY=http://yourproxy.intranet:8888`
-- `NO_PROXY=localhost,127.0.0.1,::1,*.ddev.site`
+* `HTTP_PROXY=http://yourproxy.intranet:8888`
+* `HTTPS_PROXY=http://yourproxy.intranet:8888`
+* `NO_PROXY=localhost,127.0.0.1,::1,*.ddev.site`
 
 If they are not set automatically, they can be set manually in your `.bash_profile` or similar configuration file.
 
@@ -95,7 +95,7 @@ If you are working with multiple DDEV projects, you will need to install ddev-pr
 
 ## Restrictive DNS servers, especially Fritzbox routers
 
-The normal use of DDEV involves project URLs (and hostnames) like `*.ddev.site`. So a project with the name `mytypo3` will have the default hostname `mytypo3.ddev.site` and the default URL `https://mytypo3.ddev.site`. The way this works is that `*.ddev.site` is a Domain Name System (DNS) entry which always resolves to `127.0.0.1`, or `localhost`. 
+The normal use of DDEV involves project URLs (and hostnames) like `*.ddev.site`. So a project with the name `mytypo3` will have the default hostname `mytypo3.ddev.site` and the default URL `https://mytypo3.ddev.site`. The way this works is that `*.ddev.site` is a Domain Name System (DNS) entry which always resolves to `127.0.0.1`, or `localhost`.
 
 There are a few DNS servers, mostly local Fritzbox routers, which do not allow a DNS lookup to result in `127.0.0.1`. In this situation, DDEV will ask you to use superuser (`sudo`) privileges to add the hostname to the system `hosts` file, often `/etc/hosts` or `C:\Windows\system32\drivers\etc\hosts`. **This is not the preferred behavior, as DDEV does not want to edit your system files.**
 
