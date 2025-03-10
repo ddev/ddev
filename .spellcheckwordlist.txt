@@ -681,6 +681,7 @@ vers
 version
 versions
 via
+vpn
 vpnkit
 vscode
 vset
@@ -724,6 +725,7 @@ your
 yoursite
 zcompdump
 zip
+zscaler
 zsh
 zshrc
 zxf
