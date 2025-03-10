@@ -48,7 +48,7 @@ In each of these situations the configuration required is essentially this:
 
 Given a proxy with the hostname `yourproxy.intranet` with the IP address `192.168.1.254` and a port of `8888`, you would usually configure the HTTP and HTTPS Proxies as `yourproxy.intranet` with port `8888`. But it's usually important to tell your system *not* to proxy some hostnames and IP addresses, including `localhost`, `*.ddev.site`, `127.0.0.1`, and `::1`. These exclusions ensure that local development domains (such as *.ddev.site) and local network addresses (`127.0.0.1`, `::1`) are not mistakenly routed through the proxy, which could disrupt DDEV’s functionality.”
 
-System configuration in many environmets results in environment variables like these examples:
+System configuration in many systems results in environment variables like these examples:
 
 * `HTTP_PROXY=http://yourproxy.intranet:8888`
 * `HTTPS_PROXY=http://yourproxy.intranet:8888`
