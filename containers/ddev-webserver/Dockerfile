@@ -42,6 +42,7 @@ RUN apt-get install -y postgresql-common && /usr/share/postgresql-common/pgdg/ap
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     bash-completion \
     gettext \
+    git \
     graphviz \
     less \
     libcap2-bin \
@@ -49,6 +50,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     libmagickcore-6.q16-6-extra \
     locales \
     mariadb-client \
+    openssh-client \
     patch \
     postgresql-client \
     pv \
@@ -116,7 +118,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     blackfire \
     blackfire-php \
     fontconfig \
-    git \
     iproute2 \
     iputils-ping \
     jq \
@@ -124,7 +125,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     nano \
     ncurses-bin \
     netcat-traditional \
-    openssh-client \
     sudo \
     telnet \
     tree
