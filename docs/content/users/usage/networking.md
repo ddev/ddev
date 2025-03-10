@@ -36,7 +36,7 @@ Several specific ways to sort this out are listed in the related [Stack Overflow
 
 ## Corporate or Internet Provider Proxy
 
-Some network environments, including some corporate networks, require that a "proxy" system be used to access the outside network. In these environments, most systems do not have direct access to the public internet, but instead must use a configured proxy host to access the public internet. A proxy is a system that receives HTTP and HTTPS traffic and then sends and receives traffic on behalf of the client that requests it.
+Some network environments, including some corporate networks, require a "proxy" system be used to access the outside network. In these environments, most systems do not have direct access to the public internet, but instead must use a configured proxy host to access the public internet. A proxy is a system that receives HTTP and HTTPS traffic and then sends and receives traffic on behalf of the client that requests it.
 
 In most environments, the proxy will be configured at a system level. For example, on macOS, it can be configured at `Settings -> Wi-Fi -> Connection -> Details -> Proxies`. On Ubuntu it's at `Settings -> Network -> Network Proxy`.
 
@@ -91,7 +91,7 @@ ddev add-on get ddev/ddev-proxy-support && ddev restart
 
 to make the DDEV project work correctly with the proxy.
 
-If you are working with multiple DDEV projects, you will need to install ddev-proxy-support into each project where a proxy is required.
+If you are working with multiple DDEV projects, you will need to install [ddev-proxy-support](https://github.com/ddev/ddev-proxy-support) into each project where a proxy is required.
 
 ## Restrictive DNS servers, especially Fritzbox routers
 
