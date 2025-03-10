@@ -21,6 +21,8 @@ You are responsible for your code and its deployment. DDEV does not alter any co
 
 When you are using commands like `ddev composer`, `ddev drush`, `ddev npm`, or `ddev yarn`, you are telling DDEV to execute that very command inside the web container. That is where the exact tool for the exact environment required by your project lives. It's possible to execute `composer install` without  prepending `ddev` in your project folder, but often you won't have the same PHP version on your host computer as your project is configured to use inside the container, or perhaps you'll have a different version of `composer` even. This can lead into workarounds like having to use `composer --ignore-platform-reqs` or even introducing incompatibilities  into your project. With tools like `ddev composer` you are able to run several projects at the same time, each with different configurations, but when you use the tool inside the container, you get the exact configuration for the project you've configured. You can run any tool inside the web container with `ddev exec`, but many commands like `ddev composer` have two-word shortcuts.
 
+However, if you prefer not to use `ddev` in front of commands, you can `ddev ssh` and execute the commands inside the web container.
+
 ### Where is my database stored in my DDEV project?
 
 The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker volume, which means it does not appear in your DDEV project's filesystem, and is not checked in. This configuration is for performance and portability reasons, but it means that if you change Docker providers or do a factory reset on your Docker provider, you will lose databases. By default many Docker providers do not keep Docker volumes where they are backed up by normal backup solutions. Remember to keep backups using `ddev export-db` or `ddev snapshot`. See [How can I migrate from one Docker provider to another](#how-can-i-migrate-from-one-docker-provider-to-another).
@@ -29,17 +31,17 @@ The MariaDB, MySQL, or PostgreSQL database for your project lives in a Docker vo
 
 We have automated testing and support for a staggering range of Docker providers.
 
-| Docker Provider            | Support Level                                                            |
-|----------------------------|--------------------------------------------------------------------------|
-| OrbStack (macOS)           | officially tested and supported on macOS                                 |
-| Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon          |
-| Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows          |
-| Colima (macOS)             | officially tested and supported                                          |
-| Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu. Recommended.   |
-| Rancher Desktop (macOS)    | officially tested and supported on macOS                                 |
+| Docker Provider            | Support Level                                                          |
+|----------------------------|------------------------------------------------------------------------|
+| OrbStack (macOS)           | officially tested and supported on macOS                               |
+| Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon        |
+| Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows        |
+| Colima (macOS)             | officially tested and supported                                        |
+| Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu. Recommended. |
+| Rancher Desktop (macOS)    | officially tested and supported on macOS                               |
 
-* Docker Desktop for Linux does *not* work with DDEV because it mounts all files into the container owned as root.
-* Rancher Desktop for Windows does not work with DDEV.
+* Docker Desktop for Linux *does not* work with DDEV because it mounts all files into the container owned as root.
+* Rancher Desktop for Windows *does not* work with DDEV.
 
 ### How can I migrate from one Docker provider to another?
 
@@ -137,7 +139,7 @@ To enable server-side HTTP/S communication (i.e. server-side API calls) between 
 
 ### Can I run DDEV with other development environments at the same time?
 
-Yes, as long as they’re configured with different ports. It doesn’t matter whether your other environments use Docker or not, it should only be a matter of avoiding port conflicts.
+Yes, as long as they’re configured to use different ports. It doesn’t matter whether your other environments use Docker or not, it should only be a matter of avoiding port conflicts.
 
 It’s probably easiest, however, to shut down one before using the other.
 
@@ -316,6 +318,16 @@ DDEV doesn’t have control over your computer’s name resolution, so it doesn�
 
 Use `ddev config --auto` to set the docroot and project type based on the discovered code.
 If anything in `.ddev/config.yaml` is wrong, you can edit that directly or use [`ddev config`](../usage/commands.md#config) commands to update settings.
+
+You can also use `ddev config --update` if the code is already in place and it will autodetect the project type and other needed settings.
+
+### I want to use the same code with various project names
+
+If you remove the `name` line from your project's `.ddev/config.yaml`, then the project will take the name of the directory it is in.
+
+This allows you to have multiple check-outs of the same project, each with different names.
+
+It can also allow team members to have the same project run using different hostnames and URLs.
 
 ## Getting Involved
 
