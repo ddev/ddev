@@ -35,11 +35,9 @@ Here’s how to try it for yourself:
     timezone: America/Denver
     ```
 
-10. Create your DDEV project, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`. For example, if you're serving a site at `something.example.com`, set `project_tld: example.com` and `additional_hostnames: ["something"]`.
-
     !!!warning "Complex configuration with apex domains"
 
-        Unfortunately, the `traefik` integration with Let's Encrypt does not work if you have hostnames specified that are not resolvable, so all hostnames referenced must be resolvable in DNS. (You can use `additional_fqdns` as well as `additional_hostnames`, but all combinations must be resolvable in DNS.) Some examples:
+        Unfortunately, the `traefik` integration with Let's Encrypt does not work if you have hostnames specified that are not resolvable, so every single hostname referenced must be resolvable in DNS. (You can use `additional_fqdns` as well as `additional_hostnames`, but all combinations must be resolvable in DNS.) Some examples:
 
         **Project name = example, URL = `example.com`, also serving `www.example.com` and `mysite.com`**
         ```yaml
@@ -58,9 +56,9 @@ Here’s how to try it for yourself:
         project_tld: example.org
         ```
 
-11. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
-12. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
-13. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
+10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
+11. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
+12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
 
     ```yaml
     certificatesResolvers:
