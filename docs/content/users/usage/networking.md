@@ -35,6 +35,63 @@ Several specific ways to sort this out are listed in the related [Stack Overflow
 
 ## Corporate or Internet Provider Proxy
 
+Some network environments, including some corporate networks, require that a "proxy" system be used to access the outside network. In these environments, most systems do not have direct access to the public internet, but instead must use a configured proxy host to access the public internet. A proxy is a system that receives HTTP and HTTPS traffic and then sends and receives traffic on behalf of the client that requests it.
+
+In most environments, the proxy will be configured at a system level. For example, on macOS, it can be configured at `Settings -> Wi-Fi -> Connection -> Details -> Proxies`. On Ubuntu it's at `Settings -> Network -> Network Proxy`.
+
+In each of these situations the configuration required is essentially this:
+
+- HTTP Proxy or "Web Proxy (HTTP)"
+- HTTPS Proxy or "Secure web proxy (HTTPS)"
+- "Ignore Hosts" or "Bypass proxy settings for these hosts"
+
+Given a proxy with the hostname `yourproxy.intranet` with the IP address `192.168.1.254` and a port of `8888`, you would usually configure the HTTP and HTTPS Proxies as `yourproxy.intranet` with port `8888`. But it's usually important to tell your system *not* to proxy some hostnames and IP addresses, including `localhost`, `*.ddev.site`, `127.0.0.1`, and `::1`. These exclusions ensure that local development domains (such as *.ddev.site) and local network addresses (`127.0.0.1`, `::1`) are not mistakenly routed through the proxy, which could disrupt DDEV’s functionality.”
+
+
+System configuration in many environmets results in environment variables like these examples:
+
+- `HTTP_PROXY=http://yourproxy.intranet:8888`
+- `HTTPS_PROXY=http://yourproxy.intranet:8888`
+- `NO_PROXY=localhost,127.0.0.1,::1,*.ddev.site`
+
+If they are not set automatically, they can be set manually in your `.bash_profile` or similar configuration file.
+
+### Configuring Proxy Information using Docker's Configuration
+
+The user's `~/.docker/config.json` is one way to tell the Docker CLI (and DDEV) how to use a required proxy. See [Docker docs](https://docs.docker.com/engine/cli/proxy/). It might have a stanza like this:
+
+```json
+{
+ "proxies":
+ {
+   "default":
+   {
+     "httpProxy": "http://username:pass@yourproxy.intranet:8888",
+     "httpsProxy": "http://username:pass@yourproxy.intranet:8888",
+     "noProxy": "localhost,127.0.0.1/8,::1,*.ddev.site"
+   }
+ }
+}
+
+```
+
+Docker Desktop and other providers also have proxy configuration of the same form.
+
+After updating proxy settings, restart your Docker provider to make the configuration take effect.
+
+### Configuring Proxy Information with DDEV's `ddev-proxy-support` Add-on
+
+If your system is already configured and working with a proxy, you don't have to configure Docker explicitly and can instead use DDEV's [ddev/ddev-proxy-support](https://github.com/ddev/ddev-proxy-support) add-on to help DDEV and its web container to use the proxy correctly. This technique will only help DDEV and the project that the add-on is installed in, and won't solve problems with other Docker containers.
+
+If your system is already working correctly with your proxy, you can often use
+
+```bash
+ddev add-on get ddev/ddev-proxy-support && ddev restart
+```
+
+to make the DDEV project work correctly with the proxy.
+
+If you are working with multiple DDEV projects, you will need to install ddev-proxy-support into each project where a proxy is required.
 
 
 ## Restrictive DNS servers
