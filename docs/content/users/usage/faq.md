@@ -40,8 +40,12 @@ We have automated testing and support for a staggering range of Docker providers
 | Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu. Recommended. |
 | Rancher Desktop (macOS)    | officially tested and supported on macOS                               |
 
-* Docker Desktop for Linux *does not* work with DDEV because it mounts all files into the container owned as root.
-* Rancher Desktop for Windows *does not* work with DDEV.
+#### Unsupported
+
+The following environments are *not* supported and have known issues with DDEV:
+
+* Docker Desktop for Linux (because it mounts all files into the container owned as root)
+* Rancher Desktop for Windows.
 
 ### How can I migrate from one Docker provider to another?
 
