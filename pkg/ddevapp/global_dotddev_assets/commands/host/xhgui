@@ -8,7 +8,19 @@
 DDEV_XHGUI_PORT=8143
 DDEV_XHGUI_HTTPS_PORT=8142
 
+# TODO: The logic here on host-side shell command should work, but there may be a more elegant technique
+# TODO: Also consider on/off/toggle/status for this
+
 ddev xhprof on
+
+if [[ "$DDEV_DATABASE_FAMILY" == "postgres" ]]; then
+  echo "Creating xhgui database"
+  echo "SELECT 'CREATE DATABASE xhgui' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'xhgui')\gexec" | ddev psql > /dev/null
+else
+  echo "Creating xhgui database"
+  ddev mysql -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* to 'db'@'%';"
+fi
+
 ddev start --profiles=xhgui
 
 if [ ${DDEV_PRIMARY_URL%://*} = "http" ] || [ -n "${GITPOD_WORKSPACE_ID:-}" ] || [ "${CODESPACES:-}" = "true" ]; then
