@@ -64,8 +64,7 @@ theme:
   - navigation.footer
   - search.suggest
   favicon: favicon.png
-  # readthedocs doesn't seem to do logo css right
-#  logo: /logo.svg
+  logo: logo.svg
 
 # Plugins
 plugins:
