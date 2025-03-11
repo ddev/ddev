@@ -166,9 +166,14 @@ fi
 
 # If this is a PR and the diff doesn't have code, skip it
 set -x
-if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ( ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null ); then
-  echo "Skipping buildkite build since no code changes found"
-  exit 0
+if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
+  # Find the merge base between the PR branch and the base branch
+  MERGE_BASE=$(git merge-base HEAD refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-})
+  # Check if there are any changes in the specified directories or files since the merge base
+  if ! git diff --name-only $MERGE_BASE | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
+    echo "Skipping buildkite build since no code changes found"
+    exit 0
+  fi
 fi
 
 # Run any testbot maintenance that may need to be done
