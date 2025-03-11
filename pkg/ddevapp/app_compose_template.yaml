@@ -142,7 +142,9 @@ services:
       - ddev-config:/mnt/ddev_config
       {{- else }}
       - .:/mnt/ddev_config:ro
+      {{- if eq .XHProfMode "prepend" }}
       - ./xhprof:/usr/local/bin/xhprof:rw
+      {{ end }}
         {{- if .MutagenEnabled }}
           {{- range $uploadDirMap := .UploadDirsMap}}
       - {{ $uploadDirMap }}:rw

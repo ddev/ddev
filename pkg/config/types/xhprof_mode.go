@@ -8,6 +8,7 @@ import (
 type XHProfMode = string
 
 const (
+	XHProfModeEmpty   XHProfMode = ""
 	XHProfModePrepend XHProfMode = "prepend"
 	XHProfModeXHGui   XHProfMode = "xhgui"
 	XHProfModeGlobal  XHProfMode = "global"
@@ -16,7 +17,6 @@ const (
 // ValidXHProfModeOptions returns a slice of valid xhprof mode
 // options for the project config or global config if global is true.
 func ValidXHProfModeOptions(configType ConfigType) []XHProfMode {
-	//TODO
 	switch configType {
 	case ConfigTypeGlobal:
 		return []XHProfMode{
@@ -37,15 +37,15 @@ func ValidXHProfModeOptions(configType ConfigType) []XHProfMode {
 // IsValidXHProfMode checks to see if the given xhprof mode
 // option is valid.
 func IsValidXHProfMode(XHProfMode string, configType ConfigType) bool {
-	//if XHProfMode == XHProfModeEmpty {
-	//	return true
-	//}
-	//
-	//for _, o := range ValidXHProfModeOptions(configType) {
-	//	if XHProfMode == o {
-	//		return true
-	//	}
-	//}
+	if XHProfMode == XHProfModeEmpty {
+		return true
+	}
+
+	for _, o := range ValidXHProfModeOptions(configType) {
+		if XHProfMode == o {
+			return true
+		}
+	}
 
 	return false
 }
@@ -54,13 +54,13 @@ func IsValidXHProfMode(XHProfMode string, configType ConfigType) bool {
 // is valid and returns an error in case the value is not valid.
 func CheckValidXHProfMode(xhprofMode string, configType ConfigType) error {
 	// TODO
-	//if !IsValidXHProfMode(XHProfMode, configType) {
-	//	return fmt.Errorf(
-	//		"\"%s\" is not a valid xhprof mode option. Valid options include \"%s\"",
-	//		XHProfMode,
-	//		strings.Join(ValidXHProfModeOptions(configType), "\", \""),
-	//	)
-	//}
+	if !IsValidXHProfMode(xhprofMode, configType) {
+		return fmt.Errorf(
+			"\"%s\" is not a valid xhprof_mode option. Valid options include \"%s\"",
+			xhprofMode,
+			strings.Join(ValidXHProfModeOptions(configType), "\", \""),
+		)
+	}
 
 	return nil
 }
