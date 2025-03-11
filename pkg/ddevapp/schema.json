@@ -411,7 +411,14 @@
       "description": "Use DNS for hostname resolution instead of /etc/hosts when possible.",
       "type": "boolean"
     },
-    "web_environment": {
+    "xhprof_mode": {
+      "description": "Defines the xhprof usage mode used by the project.",
+      "type": "string",
+      "enum": [
+        "prepend",
+        "xhgui"
+      ]
+    },    "web_environment": {
       "description": "Add environment variables to the web container.",
       "type": "array",
       "items": {
