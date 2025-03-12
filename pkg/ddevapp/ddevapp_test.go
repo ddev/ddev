@@ -1107,9 +1107,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime()
 }
 
-// TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
-func TestDdevXhprofEnabled(t *testing.T) {
-	if runtime.GOOS == "darwin" {
+// TestDdevXhprofPrependEnabled tests running with xhprof_enabled = true and xhprof_mode=prepend
+func TestDdevXhprofPrependEnabled(t *testing.T) {
+	if runtime.GOOS == "darwin" && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
 		// TODO: Return to this when working on xhprof xhgui etc.
 		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
 	}
@@ -1173,6 +1173,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			t.Logf("Beginning XHProf checks with XHProf webserver_type=%s php%s\n", webserverKey, v)
 			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
 			app.PHPVersion = v
+			app.XHProfMode = types.XHProfModePrepend
 
 			err = app.Restart()
 			require.NoError(t, err)
@@ -1195,7 +1196,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 				Cmd:     "php --ri xhprof",
 			})
 			require.NoError(t, err)
-			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
+			assert.Contains(stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
 
 			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
 			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
