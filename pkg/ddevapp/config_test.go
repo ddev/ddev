@@ -1349,6 +1349,18 @@ RUN touch /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test4"), []byte(`
 RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		assert.NoError(err)
+
+		// Testing stage.Dockerfile.* with a simple multi-stage build
+		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/stage.Dockerfile.test5"), []byte(`
+ARG BASE_IMAGE="scratch"
+FROM $BASE_IMAGE AS test5
+`+
+			`RUN touch /var/tmp/`+"added-by-"+item+"-test5.txt"))
+		assert.NoError(err)
+
+		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test5"), []byte(`
+COPY --from=test5 /var/tmp/`+"added-by-"+item+"-test5.txt /var/tmp/"+"added-by-"+item+"-test5.txt"))
+		assert.NoError(err)
 	}
 
 	// Make sure that DDEV_PHP_VERSION gets into the web build
@@ -1430,6 +1442,15 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt 2>/dev/null",
 		})
 		assert.Error(err)
+
+		// Dockerfiles should not be copied
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/stage.Dockerfile.test5"))
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.test5"))
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test5.txt >/dev/null",
+		})
+		assert.NoError(err)
 	}
 
 	// Dockerfiles should not be copied
