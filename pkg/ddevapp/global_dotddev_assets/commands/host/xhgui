@@ -14,10 +14,10 @@ DDEV_XHGUI_HTTPS_PORT=8142
 ddev xhprof on
 
 if [[ "$DDEV_DATABASE_FAMILY" == "postgres" ]]; then
-  echo "Creating xhgui database"
+  echo "Creating xhgui database if needed"
   echo "SELECT 'CREATE DATABASE xhgui' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'xhgui')\gexec" | ddev psql > /dev/null
 else
-  echo "Creating xhgui database"
+  echo "Creating xhgui database if needed"
   ddev mysql -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* to 'db'@'%';"
 fi
 

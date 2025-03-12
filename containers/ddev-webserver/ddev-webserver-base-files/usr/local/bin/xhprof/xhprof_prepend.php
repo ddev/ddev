@@ -1,6 +1,6 @@
 <?php
 // The xhprof_prepend.php is the default is nothing is mounted on top of it
-// It uses xhgui.
+// It uses invokes the xhgui collector.
 $homeDir = getenv('HOME');
 $globalAutoload = $homeDir . '/.composer/vendor/autoload.php';
 if (file_exists($globalAutoload)) {
@@ -9,6 +9,10 @@ if (file_exists($globalAutoload)) {
 } else {
     error_log("Global autoloader not found at: $globalAutoload");
 }
-if (file_exists("/mnt/ddev_config/xhgui/collector/xhgui.collector.php")) {
-    require_once "/mnt/ddev_config/xhgui/collector/xhgui.collector.php";
+
+$collector_php = "/usr/local/xhgui.collector/xhgui.collector.php";
+if (file_exists($collector_php)) {
+    require_once $collector_php;
+} else {
+    error_log("File '$collector_php' not found");
 }
