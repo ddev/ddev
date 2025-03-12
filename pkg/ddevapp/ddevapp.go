@@ -2515,6 +2515,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_XHPROF_MODE":         app.XHProfMode,
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_VERSION":             versionconstants.DdevVersion,
 		"DOCKER_SCAN_SUGGEST":      "false",

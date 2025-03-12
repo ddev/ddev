@@ -201,6 +201,7 @@ services:
     - DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
     - DDEV_WEBSERVER_TYPE
     - DDEV_XDEBUG_ENABLED
+    - DDEV_XHPROF_MODE
     - DDEV_VERSION
     - DEPLOY_NAME=local
     {{ if not .DisableSettingsManagement }}
