@@ -99,12 +99,19 @@ For more complex requirements, you can add:
 
 These files’ content will be inserted into the constructed Dockerfile for each image. They are inserted *after* most of the rest of the things that are done to build the image, and are done in alphabetical order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alphabetical order.
 
-For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* everything else:
+For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* what DDEV adds to build the image:
 
 * `.ddev/web-build/pre.Dockerfile.*`
 * `.ddev/web-build/pre.Dockerfile`
 * `.ddev/db-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile`
+
+Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/), you can use `stage.` variants for this that are inserted *before* everything else, *on top* of the generated Dockerfile.
+
+* `.ddev/web-build/stage.Dockerfile.*`
+* `.ddev/web-build/stage.Dockerfile`
+* `.ddev/db-build/stage.Dockerfile.*`
+* `.ddev/db-build/stage.Dockerfile`
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug rebuild`](../usage/commands.md#debug-rebuild). `ddev debug rebuild` is also great because it shows you the entire process of the build for debugging.
 
@@ -156,6 +163,9 @@ The following environment variables are available for the web Dockerfile to use 
 * `$TARGETARCH`: The build target architecture, like `arm64` or `amd64`
 * `$TARGETOS`: The build target operating system (always `linux`)
 * `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
+
+!!!warning "These variables won't be automatically available on `stage.Dockerfile*` variants"
+    If you need to use any of these variables you will need to manually add them to your `stage.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
 
 For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
 
