@@ -264,7 +264,7 @@ services:
       start_interval: "1s"
       {{- end }}
       timeout: "70s"
-
+  {{ if (not .OmitDB) }}
   xhgui:
     image: {{ .XhguiImage }}
     container_name: ddev-${DDEV_SITENAME}-xhgui
@@ -286,7 +286,7 @@ services:
       - db
     depends_on:
       - db
-
+  {{- end }}
 networks:
   ddev_default:
     name: ddev_default
