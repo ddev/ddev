@@ -1252,7 +1252,29 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 	// Normal starting content is the arg and base image
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
+`
+	// If there are user stage.Dockerfile.* files, insert their contents
+	if userDockerfilePath != "" {
+		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "stage.Dockerfile.*"))
+		if err != nil {
+			return err
+		}
 
+		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
+			userContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
+		}
+	}
+
+	contents = contents + `
 ### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
