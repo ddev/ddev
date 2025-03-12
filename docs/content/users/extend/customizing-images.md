@@ -106,7 +106,7 @@ For certain use cases, you might need to add directives very early on the Docker
 * `.ddev/db-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile`
 
-Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/), you can use `stage.` variants for this that are inserted *before* everything else, *on top* of the generated Dockerfile.
+Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/), you can use `stage.` variants that are inserted *before* everything else, *on top* of the generated Dockerfile.
 
 * `.ddev/web-build/stage.Dockerfile.*`
 * `.ddev/web-build/stage.Dockerfile`
