@@ -39,7 +39,7 @@ permissions:
 jobs:
   push-tagged-image:
     name: "push tagged image"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Load 1password secret(s)
@@ -52,8 +52,15 @@ jobs:
         DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
 
     - uses: actions/checkout@v4
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
+      with:
+        # special qemu version used due to many
+        # failures with "Cannot allocate memory" in
+        # apt-get install of arm64
+        image: tonistiigi/binfmt:qemu-v7.0.0-28
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Login to DockerHub
