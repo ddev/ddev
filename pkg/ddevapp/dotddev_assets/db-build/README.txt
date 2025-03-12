@@ -4,10 +4,16 @@ Files in this directory will be used to customize the dbimage, you can add:
 * .ddev/db-build/Dockerfile
 * .ddev/db-build/Dockerfile.*
 
-Additionally, you can use `pre.` variants that are inserted before everything else:
+Additionally, you can use `pre.` variants that are inserted before what DDEV adds :
 
 * .ddev/db-build/pre.Dockerfile
 * .ddev/db-build/pre.Dockerfile.*
+
+Finally, you can also use `stage.` variants that are inserted on top of the Dockerfile allowing for Multi-stage builds:
+See https://docs.docker.com/build/building/multi-stage/
+
+* .ddev/db-build/stage.Dockerfile
+* .ddev/db-build/stage.Dockerfile.*
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.dbimageBuild/Dockerfile`. You can force a rebuild with `ddev debug rebuild -s db`.
 
