@@ -720,7 +720,10 @@ func (app *DdevApp) CheckCustomConfig() {
 			util.CheckErr(err)
 			preDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "pre.Dockerfile*"))
 			util.CheckErr(err)
+			stageDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "stage.Dockerfile*"))
+			util.CheckErr(err)
 			dockerFiles = append(dockerFiles, preDockerFiles...)
+			dockerFiles = append(dockerFiles, stageDockerFiles...)
 			dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
 				return strings.HasSuffix(s, ".example")
 			})
@@ -1772,7 +1775,7 @@ func validateHookYAML(source []byte) error {
 
 // isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file
 // We consider files in the .ddev/web-build and .ddev/db-build directory to be context files
-// excluding /Dockerfile*, /pre.Dockerfile*, and /README.txt
+// excluding /Dockerfile*, /pre.Dockerfile*, /stage.Dockerfile.* and /README.txt
 func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, error) {
 	// Directories are always context.
 	if fileutil.IsDirectory(file) {
@@ -1789,7 +1792,7 @@ func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, e
 	}
 	filename := filepath.Base(file)
 	// Return true for not context Dockerfiles
-	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") {
+	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") || strings.HasPrefix(filename, "stage.Dockerfile") {
 		return true, nil
 	}
 	// Return true for not context README.txt if it is managed by DDEV
