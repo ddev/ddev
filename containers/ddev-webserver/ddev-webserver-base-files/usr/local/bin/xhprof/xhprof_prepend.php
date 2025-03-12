@@ -1,6 +1,8 @@
 <?php
-// The xhprof_prepend.php is the default is nothing is mounted on top of it
-// It uses invokes the xhgui collector.
+// This xhprof_prepend.php is the default if nothing is mounted on top of it
+// It invokes the xhgui collector by default.
+// However, if xhprof_mode=prepend in DDEV the .ddev/xhprof/xhprof_prepend.php will
+// be mounted on top of it.
 $homeDir = getenv('HOME');
 $globalAutoload = $homeDir . '/.composer/vendor/autoload.php';
 if (file_exists($globalAutoload)) {
