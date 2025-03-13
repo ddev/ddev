@@ -19,6 +19,6 @@ The concrete steps to install depend on the browser, but generally they are like
 3. Find the Certificate Manager there.
 4. Click on the "View Certificates" button.
 5. Select the tab "Authorities".
-6. Click to the "Import" button to import a custom authority cerificate.
+6. Click to the "Import" button to import a custom authority certificate.
 7. Import the root certificate authority file.
 
