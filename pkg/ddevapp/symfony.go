@@ -46,22 +46,27 @@ func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 	dbPort := ""
 	dbDriver := ""
 	dbVersion := ""
+	// todo: idealy the charset takes the mysql config into account
+	dbCharset := ""
 
 	switch app.Database.Type {
 	case nodeps.Postgres:
 		dbPort = "5432"
 		dbDriver = "postgres"
 		dbVersion = app.Database.Version
+		dbCharset = "utf8"
 	case nodeps.MySQL:
 		dbPort = "3306"
 		dbDriver = "mysql"
 		dbVersion = app.Database.Version
+		dbCharset = "utf8mb4"
 	case nodeps.MariaDB:
 		dbPort = "3306"
 		dbDriver = "mysql"
 		// doctrine requires mariadb version until its patch version so add 0 as default patch version
 		// https://symfony.com/doc/current/reference/configuration/doctrine.html#doctrine-dbal-configuration
 		dbVersion = fmt.Sprintf("%s.0-mariadb", app.Database.Version)
+		dbCharset = "utf8mb4"
 	}
 
 	if dbVersion != "" {
@@ -72,7 +77,7 @@ func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 		envMap["DATABASE_USER"] = "db"
 		envMap["DATABASE_PORT"] = dbPort
 		envMap["DATABASE_SERVER"] = fmt.Sprintf("%s://db:%s", dbDriver, dbPort)
-		envMap["DATABASE_URL"] = fmt.Sprintf("%s://db:db@db:%s/db?sslmode=disable&charset=utf8mb4&serverVersion=%s", dbDriver, dbPort, dbVersion)
+		envMap["DATABASE_URL"] = fmt.Sprintf("%s://db:db@db:%s/db?sslmode=disable&charset=%s&serverVersion=%s", dbDriver, dbPort, dbCharset, dbVersion)
 		envMap["DATABASE_VERSION"] = dbVersion
 	}
 }
