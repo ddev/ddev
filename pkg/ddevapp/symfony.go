@@ -72,7 +72,7 @@ func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 		envMap["DATABASE_USER"] = "db"
 		envMap["DATABASE_PORT"] = dbPort
 		envMap["DATABASE_SERVER"] = fmt.Sprintf("%s://db:%s", dbDriver, dbPort)
-		envMap["DATABASE_URL"] = fmt.Sprintf("%s://db:db@db:%s/db?sslmode=disable&charset=utf8&serverVersion=%s", dbDriver, dbPort, dbVersion)
+		envMap["DATABASE_URL"] = fmt.Sprintf("%s://db:db@db:%s/db?sslmode=disable&charset=utf8mb4&serverVersion=%s", dbDriver, dbPort, dbVersion)
 		envMap["DATABASE_VERSION"] = dbVersion
 	}
 }
