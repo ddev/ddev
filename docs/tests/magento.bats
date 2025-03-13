@@ -29,14 +29,14 @@ teardown() {
 
   # add the env variable credentials to auth.json
   run cat <<EOF > .ddev/homeadditions/.composer/auth.json
-  {
-      "http-basic": {
-          "repo.magento.com": {
-              "username": "'"$COMPOSER_USERNAME"'",
-              "password": "'"$COMPOSER_PASSWORD"'"
-          }
-      }
-  }
+{
+    "http-basic": {
+        "repo.magento.com": {
+            "username": "'"$COMPOSER_USERNAME"'",
+            "password": "'"$COMPOSER_PASSWORD"'"
+        }
+    }
+}
 EOF
   assert_success
 
