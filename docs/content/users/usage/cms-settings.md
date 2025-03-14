@@ -14,19 +14,19 @@ While this reduces setup time for new users, makes it easier to try out a CMS, a
 
 There are several ways to back off DDEV’s CMS settings management:
 
-1. **Take control of files by removing the `#ddev-generated` comment.**  
+1. **Take control of files by removing the `#ddev-generated` comment.**
 DDEV will automatically update any it’s added containing a `#ddev-generated` comment. This means you don’t need to touch that file, but also that any changes you make will be overwritten. As soon as you remove the comment, DDEV will ignore that file and leave you fully in control over it. (Don’t forget to check it into version control!)
 
     !!!tip "Reversing the change"
         If you change your mind and want DDEV to take over the file again, delete it and run [`ddev start`](../usage/commands.md#start). DDEV will recreate its own version, which you may want to remove from your Git project.
 
-2. **Disable settings management.**  
+2. **Disable settings management.**
 You can tell DDEV to use a specific project type without creating settings files by either setting [`disable_settings_management`](../configuration/config.md#disable_settings_management) to `true` or running [`ddev config --disable-settings-management`](../configuration/config.md#type).
 
-3. **Switch to the generic PHP project type.**  
+3. **Switch to the generic PHP project type.**
 If you don’t want DDEV’s CMS-specific settings, you can switch your project to the generic `php` type by editing [`type: php`](../configuration/config.md#type) in the project’s settings or running [`ddev config --project-type=php`](../usage/commands.md#config). DDEV will no longer create or tweak any settings files. You’ll lose any perks from the nginx configuration for the CMS, but you can always customize [nginx settings](../extend/customization-extendibility.md#custom-nginx-configuration) or [Apache settings](../extend/customization-extendibility.md#custom-apache-configuration) separately.
 
-4. **Un-set the `$IS_DDEV_PROJECT` environment variable.**  
+4. **Un-set the `$IS_DDEV_PROJECT` environment variable.**
 This environment variable is set `true` by default in DDEV’s environment, and can be used to fence off DDEV-specific behavior. When it’s empty, the important parts of `settings.ddev.php` and `AdditionalSettings.php` (for TYPO3) are not executed. This means that DDEV’s `settings.ddev.php` won’t be invoked if it somehow ends up in a production environment or in a non-DDEV local development environment.
 
 !!!tip "Ignore `.ddev/.gitignore`"
@@ -65,7 +65,7 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
 
 Drush 13+ disables Xdebug even when [Xdebug is enabled on DDEV](../debugging-profiling/step-debugging.md).
 
-As per [Drush docs](https://www.drush.org/13.x/commands/#xdebug) you can:  
+As per [Drush docs](https://www.drush.org/13.x/commands/#xdebug) you can:
 
 * Enable it for a single Drush command by running: `ddev drush --xdebug`
 * Set `DRUSH_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every Drush call to be run with Xdebug when the PHP extension is enabled.
@@ -143,3 +143,13 @@ baseVariants:
 ```
 
 See also [TYPO3 Documentation](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/SiteHandling/BaseVariants.html).
+
+### WordPress Specifics
+
+#### WP-CLI and changing webroot in config.yaml
+If you use something other than the root directory (`''`) for your webroot, wp-cli will not work properly. To fix this, create a `wp-cli.yml` file in the root directory that contains `path: {webroot/path}`.
+
+For example, if your webroot is `public`, your `wp-cli.yml` file should contain:
+```
+path: public
+```
