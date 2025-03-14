@@ -8,7 +8,7 @@ import (
 
 const (
 	SdkLibrary = "amplitude-go"
-	SdkVersion = "1.0.2"
+	SdkVersion = "1.2.0"
 
 	IdentifyEventType      = "$identify"
 	GroupIdentifyEventType = "$groupidentify"
@@ -20,6 +20,7 @@ const (
 	RevenueQuantity   = "$quantity"
 	RevenuePrice      = "$price"
 	RevenueType       = "$revenueType"
+	Currency          = "$currency"
 	RevenueReceipt    = "$receipt"
 	RevenueReceiptSig = "$receiptSig"
 	DefaultRevenue    = "$revenue"
