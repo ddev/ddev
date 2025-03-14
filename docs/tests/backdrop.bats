@@ -1,5 +1,6 @@
 #!/usr/bin/env bats
 
+# setup() does base setup
 setup() {
   PROJNAME=my-backdrop-site
   load 'common-setup'
