@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path"
 	"path/filepath"
@@ -260,7 +261,7 @@ func generateRouterCompose() (string, error) {
 
 // FindDdevRouter uses FindContainerByLabels to get our router container and
 // return it.
-func FindDdevRouter() (*dockerTypes.Container, error) {
+func FindDdevRouter() (*dockerContainer.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": nodeps.RouterContainer,
 	}
