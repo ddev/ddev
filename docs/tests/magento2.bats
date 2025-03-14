@@ -12,6 +12,11 @@ teardown() {
 }
 
 @test "Magento 2 quickstart with $(ddev --version)" {
+
+  if [ "${MAGENTO2_PUBLIC_ACCESS_KEY}" = "" ]; then
+    skip "MAGENTO_PUBLIC_ACCESS_KEY not provided (forked PR)"
+  fi
+  
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -32,8 +37,8 @@ teardown() {
 {
     "http-basic": {
         "repo.magento.com": {
-            "username": "'"$COMPOSER_USERNAME"'",
-            "password": "'"$COMPOSER_PASSWORD"'"
+            "username": "'"$MAGENTO2_PUBLIC_ACCESS_KEY"'",
+            "password": "'"$MAGENTO2_PRIVATE_ACCESS_KEY"'"
         }
     }
 }
