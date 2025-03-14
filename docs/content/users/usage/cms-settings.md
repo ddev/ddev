@@ -149,7 +149,7 @@ See also [TYPO3 Documentation](https://docs.typo3.org/m/typo3/reference-coreapi/
 #### WP-CLI and changing the docroot in config.yaml
 If you use something other than the root directory (`''`) for your webroot, wp-cli will not work properly. To fix this, create a `wp-cli.yml` file in the root directory that contains `path: {webroot/path}`.
 
-For example, if your webroot is `public`, your `wp-cli.yml` file should contain:
+For example, if your docroot is `public`, your `wp-cli.yml` file should contain:
 ```
 path: public
 ```
