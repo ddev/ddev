@@ -745,7 +745,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		util.CheckErr(err)
 		if len(entrypointFiles) > 0 {
 			printableFiles, _ := util.ArrayToReadableOutput(entrypointFiles)
-			util.Warning("Using custom config.*.yaml configuration: %v", printableFiles)
+			util.Warning("Using custom config.*.y*ml configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
