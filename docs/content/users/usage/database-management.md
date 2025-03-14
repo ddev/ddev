@@ -65,6 +65,8 @@ The PostgreSQL database container includes normal `pg` commands like `pg_dump`.
 
 If you’d like to use a GUI database client, you’ll need the right connection details and there may even be a command to launch it for you:
 
+!!!tip "If you’re using VS Code or any of its forks (Cursor, Windsurf, etc.)" You can use [DevDb]([url](https://marketplace.visualstudio.com/items?itemName=damms005.devdb)) extension to access your database right inside the IDE.
+
 * phpMyAdmin, formerly built into DDEV core, can be installed by running `ddev add-on get ddev/ddev-phpmyadmin`.
 * Adminer can be installed with `ddev add-on get ddev/ddev-adminer`
 * The [`ddev describe`](../usage/commands.md#describe) command displays the `Host:` details you’ll need to connect to the `db` container externally, for example if you're using an on-host database browser like SequelAce.
