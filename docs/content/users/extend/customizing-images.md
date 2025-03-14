@@ -113,6 +113,8 @@ Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/
 * `.ddev/db-build/stage.Dockerfile.*`
 * `.ddev/db-build/stage.Dockerfile`
 
+Multi-stage builds are useful to anyone who has struggled to optimize Dockerfiles while keeping them easy to read and maintain.
+
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug rebuild`](../usage/commands.md#debug-rebuild). `ddev debug rebuild` is also great because it shows you the entire process of the build for debugging.
 
 Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
@@ -148,6 +150,34 @@ RUN chmod -R ugo+rw $COMPOSER_HOME
 # Now turn it off, because ordinary users will want to be using the default.
 ENV COMPOSER_HOME=""
 ```
+
+An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) web image could have a  `.ddev/web-build/stage.Dockerfile`:
+
+```dockerfile
+# We must declare the build enviroment variables we want to use on stage.Dockerfile
+ARG BASE_IMAGE="scratch"
+FROM $BASE_IMAGE AS build-stage-go
+
+# We must declare the build enviroment variables we want to use on stage.Dockerfile
+ARG uid
+ARG gid
+
+# install go
+RUN set -eux; \
+    GO_VERSION=1.24.1; \
+    AARCH=$(dpkg --print-architecture); \
+    wget -q https://go.dev/dl/go${GO_VERSION}.linux-${AARCH}.tar.gz -O go.tar.gz; \
+    tar -C /usr/local -xzf go.tar.gz; \
+    rm go.tar.gz;
+```
+
+And then a `Dockerfile`:
+
+```dockerfile
+# Copy entire go directory from the build stage defined above.
+COPY --from=build-stage-go /usr/local/go /usr/local
+```
+
 
 **Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
 
