@@ -178,7 +178,6 @@ And then a `Dockerfile`:
 COPY --from=build-stage-go /usr/local/go /usr/local
 ```
 
-
 **Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
 
 ### Build Time Environment Variables
