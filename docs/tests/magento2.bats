@@ -37,8 +37,8 @@ teardown() {
 {
     "http-basic": {
         "repo.magento.com": {
-            "username": "'"$MAGENTO2_PUBLIC_ACCESS_KEY"'",
-            "password": "'"$MAGENTO2_PRIVATE_ACCESS_KEY"'"
+            "username": "${MAGENTO2_PUBLIC_ACCESS_KEY}",
+            "password": "${MAGENTO2_PRIVATE_ACCESS_KEY}"
         }
     }
 }
