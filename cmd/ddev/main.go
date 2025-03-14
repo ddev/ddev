@@ -7,7 +7,6 @@ import (
 	"os"
 )
 
-// This is a comment intended only to run tests, can be removed.
 func main() {
 	defer util.CheckGoroutines()
 	defer util.TimeTrack()()
