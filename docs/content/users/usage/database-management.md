@@ -77,6 +77,7 @@ If you’d like to use a GUI database client, you’ll need the right connection
     * Choose a static [`host_db_port`](../configuration/config.md#host_db_port) setting for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use [`ddev start`](../usage/commands.md#start) for it to take effect.
     * Use the “database” tool to create a source from “localhost”, with the proper type `mysql` or `postgresql` and the port you chose, username `db` + password `db`.
     * Explore away!
+* If you’re using VS Code or any of its forks (Cursor, Windsurf, etc.), you can use the [DevDb](https://marketplace.visualstudio.com/items?itemName=damms005.devdb) extension to access your database right inside the IDE.
 * There’s a sample custom command that will run the free MySQL Workbench on macOS, Windows or Linux. To use it, run:
     * `cp ~/.ddev/commands/host/mysqlworkbench.example ~/.ddev/commands/host/mysqlworkbench`
     * `ddev mysqlworkbench`
