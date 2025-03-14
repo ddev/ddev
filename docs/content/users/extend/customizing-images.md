@@ -164,9 +164,9 @@ ARG gid
 
 # install go
 RUN set -eux; \
-    GO_VERSION=1.24.1; \
+    GO_VERSION=$(curl -fsSL "https://go.dev/dl/?mode=json" | jq -r ".[0].version"); \
     AARCH=$(dpkg --print-architecture); \
-    wget -q https://go.dev/dl/go${GO_VERSION}.linux-${AARCH}.tar.gz -O go.tar.gz; \
+    wget -q https://go.dev/dl/${GO_VERSION}.linux-${AARCH}.tar.gz -O go.tar.gz; \
     tar -C /usr/local -xzf go.tar.gz; \
     rm go.tar.gz;
 ```
