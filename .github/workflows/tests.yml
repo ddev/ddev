@@ -168,6 +168,7 @@ jobs:
         if: ${{ matrix.pull-push-test-platforms }}
 
       - name: Load 1password secret(s) for push-pull-test-platforms
+        if: ${{ matrix.pull-push-test-platforms && secrets.TESTS_SERVICE_ACCOUNT_TOKEN != '' }}
         uses: 1password/load-secrets-action@v2
         with:
           export-env: true
@@ -181,7 +182,6 @@ jobs:
           DDEV_PANTHEON_SSH_KEY: "op://test-secrets/DDEV_PANTHEON_SSH_KEY/private key?ssh-format=openssh"
           DDEV_PLATFORM_API_TOKEN: "op://test-secrets/DDEV_PLATFORM_API_TOKEN/credential"
           DDEV_UPSUN_API_TOKEN: "op://test-secrets/DDEV_UPSUN_API_TOKEN/credential"
-        if: ${{ matrix.pull-push-test-platforms && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner) }}
 
       - name: Override environment variables for plain nginx-fpm
         if: ${{ matrix.webserver == 'nginx-fpm' }}
