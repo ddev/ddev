@@ -4,7 +4,7 @@ Files in this directory will be used to customize the webimage, you can add:
 * .ddev/web-build/Dockerfile
 * .ddev/web-build/Dockerfile.*
 
-Additionally, you can use `pre.` variants that are inserted before what DDEV adds :
+Additionally, you can use `pre.` variants that are inserted before what DDEV adds:
 
 * .ddev/web-build/pre.Dockerfile
 * .ddev/web-build/pre.Dockerfile.*
