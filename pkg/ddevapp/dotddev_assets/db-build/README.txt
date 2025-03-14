@@ -4,7 +4,7 @@ Files in this directory will be used to customize the dbimage, you can add:
 * .ddev/db-build/Dockerfile
 * .ddev/db-build/Dockerfile.*
 
-Additionally, you can use `pre.` variants that are inserted before what DDEV adds :
+Additionally, you can use `pre.` variants that are inserted before what DDEV adds:
 
 * .ddev/db-build/pre.Dockerfile
 * .ddev/db-build/pre.Dockerfile.*
