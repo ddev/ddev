@@ -1212,7 +1212,7 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 `
 	// If there are user stage.Dockerfile.* files, insert their contents
 	if userDockerfilePath != "" {
-		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "stage.Dockerfile.*"))
+		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "stage.Dockerfile*"))
 		if err != nil {
 			return err
 		}
