@@ -75,6 +75,7 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
+	XHProfMode               configTypes.XHProfMode  `yaml:"xhprof_mode"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info,omitempty"`
 }
 
@@ -322,6 +323,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	// Overwrite PerformanceMode with effective value if empty.
 	if cfgCopy.PerformanceMode == configTypes.PerformanceModeEmpty {
 		cfgCopy.PerformanceMode = cfgCopy.GetPerformanceMode()
+	}
+
+	if cfgCopy.XHProfMode == configTypes.XHProfModeEmpty {
+		cfgCopy.XHProfMode = nodeps.XHProfModeDefault
 	}
 
 	// We only have one router, so this field is old, and when writing we can omitempty

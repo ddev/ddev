@@ -92,6 +92,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.NodeJSVersion = nodeps.NodeJSDefault
 	app.WebserverType = nodeps.WebserverDefault
 	app.SetPerformanceMode(nodeps.PerformanceModeDefault)
+	app.XHProfMode = nodeps.XHProfModeDefault
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
