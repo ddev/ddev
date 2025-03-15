@@ -33,7 +33,7 @@ teardown() {
   assert_success
 
   # add the env variable credentials to auth.json
-  run cat <<EOF > .ddev/homeadditions/.composer/auth.json
+  cat <<EOF > .ddev/homeadditions/.composer/auth.json
 {
     "http-basic": {
         "repo.magento.com": {
