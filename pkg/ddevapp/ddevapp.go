@@ -277,6 +277,15 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			appDesc["dbinfo"] = dbinfo
 		}
+
+		appDesc["xhprof_mode"] = app.GetXHProfMode()
+		xhguiStatus := XHGuiStatus(app)
+		if xhguiStatus {
+			appDesc["xhgui_status"] = "enabled"
+		} else {
+			appDesc["xhgui_status"] = "disabled"
+		}
+
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
