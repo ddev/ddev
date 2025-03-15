@@ -823,6 +823,15 @@ func (app *DdevApp) FixObsolete() {
 			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacyCommandDir, err)
 		}
 	}
+
+	addOns := GetInstalledAddonNames(app)
+	if slices.Contains(addOns, "xhgui") {
+		util.Warning("The xhgui add-on is no longer necessary with this version of DDEV, removing it.")
+		err := RemoveAddon(app, "xhgui", nil, util.FindBashPath(), false, true)
+		if err != nil {
+			util.Warning("Error removing xhgui add-on: %v", err)
+		}
+	}
 }
 
 type composeYAMLVars struct {
