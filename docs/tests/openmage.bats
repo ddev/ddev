@@ -58,5 +58,5 @@ teardown() {
   # Check if the admin is working
   run curl -sf https://${PROJNAME}.ddev.site/index.php/admin/
   assert_success
-  assert_output --partial "2020 OpenMage Demo Store. All Rights Reserved."
+  assert_output --partial "Log into OpenMage Admin Page"
 }
