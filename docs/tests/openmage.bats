@@ -23,8 +23,8 @@ teardown() {
   cd ${PROJNAME} || exit 2
   assert_success
 
-  # ddev config --project-type=magento --php_version=8.1 --webserver_type=nginx-fpm
-  run ddev config --project-type=magento --php_version=8.1 --webserver_type=nginx-fpm
+  # ddev config --project-type=magento --php-version=8.1 --webserver-type=nginx-fpm
+  run ddev config --project-type=magento --php-version=8.1 --webserver-type=nginx-fpm
   assert_success
 
   # ddev start -y
