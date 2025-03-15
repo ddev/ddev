@@ -38,7 +38,7 @@ return [
     // Setup timezone for date formatting
     // Example: 'UTC', 'Europe/Tallinn'
     // If left empty, php default will be used (php.ini or compiled in default)
-    'timezone' => '',
+    'timezone' => getenv('TZ'),
 
     // Date format used when browsing XHGui pages.
     //

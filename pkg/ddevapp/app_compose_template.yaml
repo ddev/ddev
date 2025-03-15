@@ -282,6 +282,7 @@ services:
       - DDEV_DATABASE_FAMILY=${DDEV_DATABASE_FAMILY}
       - XHGUI_PDO_USER=db
       - XHGUI_PDO_PASS=db
+      - TZ={{ .Timezone }}
     links:
       - db
     depends_on:
