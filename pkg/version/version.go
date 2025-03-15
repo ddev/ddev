@@ -48,6 +48,7 @@ func GetVersionInfo() map[string]string {
 		versionInfo["docker-compose"] = fmt.Sprintf("Failed to GetDockerComposeVersion(): %v", err)
 	}
 	versionInfo["mutagen"] = versionconstants.RequiredMutagenVersion
+	versionInfo["xhgui-image"] = versionconstants.XhguiImage
 
 	if runtime.GOOS == "windows" {
 		versionInfo["docker type"] = "Docker Desktop For Windows"
