@@ -41,6 +41,10 @@ const ConfigInstructions = `
 # "ddev xhprof" to enable Xhprof and "ddev xhprof off" to disable it work better,
 # as leaving Xhprof enabled all the time is a big performance hit.
 
+# xhprof_mode: [prepend|xhgui]
+# Set to "xhgui" to enable XHGui features
+# "xhgui" will become default in a future major release
+
 # webserver_type: nginx-fpm, apache-fpm, generic
 
 # timezone: Europe/Berlin

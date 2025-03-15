@@ -754,7 +754,7 @@ func (app *DdevApp) CheckDeprecations() {
 // FixObsolete removes files that may be obsolete, etc.
 func (app *DdevApp) FixObsolete() {
 	// Remove old in-project commands (which have been moved to global)
-	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
+	for _, command := range []string{"db/mysql", "host/launch", "host/xhgui", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
@@ -775,11 +775,13 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn"} {
+	for _, command := range []string{"host/yarn", "host/xhgui"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
-		if _, err := os.Stat(cmdPath); err == nil {
-			err1 := os.Remove(cmdPath)
-			if err1 != nil {
+		// TODO: Consider checking for #ddev-generated
+		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(cmdPath)
+			if err != nil {
 				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", cmdPath, err)
 			}
 		}
