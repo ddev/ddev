@@ -149,7 +149,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     You can install DDEV on Windows three ways:
 
-    1. [Using WSL2 with Docker inside](#wsl2-docker-ce-inside-install-script) **Recommended, best performance, most reliable**
+    1. [Using WSL2 with Docker Engine](#wsl2-docker-engine-install-script) **Recommended, best performance, most reliable**
     2. [Using WSL2 with Docker Desktop](#wsl2-docker-desktop-install-script) **May require license, less reliable**
     3. [Installing directly on traditional Windows](#traditional-windows) with an installer **Legacy, slower performance**
 
@@ -182,9 +182,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     * Installing DDEV inside your distro; this is normally done by running one of the two scripts below, but can be done manually step-by-step as well.
     * Verify that your distro uses WSL version 2 with `wsl.exe -l -v`.
 
-    ### WSL2 + Docker CE Inside Install Script
+    ### WSL2 + Docker Engine Install Script
 
-    This technique is our favorite, as it uses the most reliable WSL2 Docker provider (`docker-ce`), which is also free and open-source.
+    This technique is our favorite, as it uses the most reliable WSL2 Docker provider, Docker Engine (`docker-ce`), which is also free and open-source.
 
     This script prepares your default WSL2 Ubuntu distro and doesn’t require Docker Desktop, and you can run the script multiple times without breaking anything.
 
