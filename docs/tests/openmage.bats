@@ -40,4 +40,23 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
+  # Install openmage and optionally install sample data
+  ddev openmage-install -s -q
+
+  # validate running project
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "server: nginx"
+  assert_output --partial "HTTP/2 200"
+  assert_output --partial "set-cookie: om_frontend"
+
+  # Check if the frontend is working
+  run curl -sf https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "2020 OpenMage Demo Store. All Rights Reserved."
+
+  # Check if the admin is working
+  run curl -sf https://${PROJNAME}.ddev.site/index.php/admin/
+  assert_success
+  assert_output --partial "2020 OpenMage Demo Store. All Rights Reserved."
 }
