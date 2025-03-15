@@ -54,12 +54,12 @@ ddev xhgui status
 				util.Warning("failed to launch xhgui: output='%s', err=%v", out, err)
 			}
 
-		case "on", "start":
+		case "on", "enable", "start", "true":
 			if err = ddevapp.XHGuiSetup(app); err != nil {
 				return err
 			}
 
-		case "off", "stop":
+		case "false", "off", "disable", "stop":
 			if err = ddevapp.XHProfDisable(app); err != nil {
 				return err
 			}
