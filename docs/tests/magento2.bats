@@ -25,12 +25,7 @@ teardown() {
   assert_success
 
   # mkdir -p .ddev/homeadditions/.composer
-  run mkdir -p ./.ddev/homeadditions/.composer
-  assert_success
-
-  # touch .ddev/homeadditions/.composer/auth.json
-  run touch ./.ddev/homeadditions/.composer/auth.json
-  assert_success
+  mkdir -p ./.ddev/homeadditions/.composer
 
   # add the env variable credentials to auth.json
   cat <<EOF > .ddev/homeadditions/.composer/auth.json
@@ -43,7 +38,6 @@ teardown() {
     }
 }
 EOF
-  assert_success
 
   # ddev add-on get ddev/ddev-elasticsearch
   run ddev add-on get ddev/ddev-elasticsearch
