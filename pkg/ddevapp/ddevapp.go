@@ -1820,7 +1820,7 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
-	util.Success("Started optional compose profiles '%s'", profiles)
+	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
 
 	return nil
 }
