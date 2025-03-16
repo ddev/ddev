@@ -17,7 +17,7 @@ func (c *GlobalConfig) GetXHProfMode() types.XHProfMode {
 
 // SetXHProfMode sets the xhprof mode config.
 func (c *GlobalConfig) SetXHProfMode(xhprofMode string) *GlobalConfig {
-	if types.IsValidPerformanceMode(xhprofMode, types.ConfigTypeGlobal) {
+	if types.IsValidXHProfMode(xhprofMode, types.ConfigTypeGlobal) {
 		c.XHProfMode = xhprofMode
 	}
 	return c
