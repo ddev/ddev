@@ -1822,7 +1822,7 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
+		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
