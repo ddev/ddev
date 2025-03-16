@@ -1587,18 +1587,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 
 		// If TLS supported and using Traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-			err = configureTraefikForApp(app)
-			if err != nil {
-				return err
-			}
+		err = configureTraefikForApp(app)
+		if err != nil {
+			return err
 		}
 
 		// Push custom certs
-		targetSubdir := "custom_certs"
-		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-			targetSubdir = path.Join("traefik", "certs")
-		}
+		targetSubdir := path.Join("traefik", "certs")
+
 		certPath := app.GetConfigPath("custom_certs")
 		uid, _, _ := util.GetContainerUIDGid()
 		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
@@ -2850,14 +2846,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() && status == SiteRunning {
-		_, _, err = app.Exec(&ExecOpts{
-			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
-		})
-		if err != nil {
-			util.Warning("Unable to clean up Traefik configuration: %v", err)
-		}
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
+	})
+	if err != nil {
+		util.Warning("Unable to clean up Traefik configuration: %v", err)
 	}
+
 	// Clean up ddev-global-cache
 	if removeData {
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)

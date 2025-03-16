@@ -849,11 +849,6 @@ func IsInternetActive() bool {
 	return active
 }
 
-// IsTraefikRouter returns true if the router is Traefik
-func (c *GlobalConfig) IsTraefikRouter() bool {
-	return c.Router == types.RouterTypeTraefik
-}
-
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
@@ -876,9 +871,7 @@ func GetRequiredDockerComposeVersion() string {
 // GetRouterURL Return the Traefik router URL
 func GetRouterURL() string {
 	routerURL := ""
-	// Until we figure out how to configure this, use static value
-	if DdevGlobalConfig.IsTraefikRouter() {
-		routerURL = "http://127.0.0.1:" + DdevGlobalConfig.TraefikMonitorPort
-	}
+	routerURL = "http://127.0.0.1:" + DdevGlobalConfig.TraefikMonitorPort
+
 	return routerURL
 }
