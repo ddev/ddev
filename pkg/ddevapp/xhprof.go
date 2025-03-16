@@ -16,10 +16,9 @@ func XHGuiSetup(app *DdevApp) error {
 	switch app.Database.Type {
 	case nodeps.Postgres:
 		dbCreationCommand = `
-			psql -q -c "SELECT 'CREATE DATABASE xhgui' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'xhgui')\gexec
-			GRANT ALL PRIVILEGES ON DATABASE xhgui TO db;
-			"
-			`
+	set -eo -o pipefail; echo "SELECT 'CREATE DATABASE xhgui' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'xhgui')\gexec
+	GRANT ALL PRIVILEGES ON DATABASE xhgui TO db;" | psql -q -d postgres
+`
 	case nodeps.MySQL, nodeps.MariaDB:
 		dbCreationCommand = `mysql -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* to 'db'@'%'; GRANT ALL ON xhgui.* TO 'db'@'%';"`
 	}
