@@ -1,6 +1,6 @@
 <!-- 
   PR titles have very precise rules, please read 
-  https://ddev.readthedocs.io/en/stable/developers/building-contributing/#open-pull-requests
+  https://ddev.readthedocs.io/en/stable/developers/building-contributing/#pull-request-title-guidelines
 -->
 
 ## The Issue
