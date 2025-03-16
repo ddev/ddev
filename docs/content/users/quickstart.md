@@ -458,7 +458,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     ddev config --omit-containers=db --webserver-type=apache-fpm
 
     # Spin up the project and install the Kirby Starterkit
-    ddev start
+    ddev start -y
     ddev composer create getkirby/starterkit
 
     # Open the site in your browser
@@ -477,7 +477,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     ddev config --omit-containers=db --webserver-type=apache-fpm
 
     # Spin up the project
-    ddev start
+    ddev start -y
 
     # Open the site in your browser
     ddev launch
