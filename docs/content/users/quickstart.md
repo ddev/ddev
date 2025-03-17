@@ -434,6 +434,8 @@ Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/insta
 
 ```bash
 mkdir my-joomla-site && cd my-joomla-site
+# Download the latest version of Joomla! and unzip it.
+# This can be manually downloaded from https://downloads.joomla.org/ or done using curl as here.
 curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
 unzip joomla.zip && rm -f joomla.zip
 ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
