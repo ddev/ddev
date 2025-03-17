@@ -396,6 +396,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # router_http_port: <port>  # Port to be used for http (defaults to 80)
 # router_https_port: <port> # Port for https (defaults to 443)
 
+# xhprof_mode: [prepend|xhgui]
+# Set to "xhgui" to enable XHGui features
+# "xhgui" will become default in a future major release
+
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
