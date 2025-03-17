@@ -16,7 +16,7 @@ teardown() {
   PROJECT_GIT_URL=https://github.com/OpenMage/magento-lts
 
   # git clone ${PROJECT_GIT_URL} ${PROJNAME}
-  run git clone ${PROJECT_GIT_URL} ${PROJNAME}
+  run git clone --depth=1 ${PROJECT_GIT_URL} ${PROJNAME}
   assert_success
 
   # cd magento-lts
