@@ -35,13 +35,13 @@ teardown() {
   run ddev composer install
   assert_success
 
+  # Install openmage and optionally install sample data
+  ddev openmage-install -s -q
+
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
-
-  # Install openmage and optionally install sample data
-  ddev openmage-install -s -q
 
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
