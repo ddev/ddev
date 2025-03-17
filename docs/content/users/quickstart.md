@@ -303,7 +303,8 @@ Read more about customizing the environment and persisting configuration in [Pro
 
     ```bash
     mkdir my-ee-site && cd my-ee-site
-    # Download the zip archive for ExpressionEngine at https://github.com/ExpressionEngine/ExpressionEngine/releases/latest unarchive and move its content into the root of the my-ee-site directory
+    curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    unzip ee.zip && rm -f ee.zip
     ddev config --database=mysql:8.0
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
@@ -318,14 +319,13 @@ Read more about customizing the environment and persisting configuration in [Pro
     Follow these steps based on the [ExpressionEngine Git Repository README.md](https://github.com/ExpressionEngine/ExpressionEngine#how-to-install):
 
     ```bash
-    git clone https://github.com/ExpressionEngine/ExpressionEngine my-ee-site # for example
-    cd my-ee-site
-    ddev config # Accept the defaults
+    mkdir my-ee-site && cd my-ee-site
+    git clone https://github.com/ExpressionEngine/ExpressionEngine .
+    ddev config --database=mysql:8.0
     ddev start
     ddev composer install
     touch system/user/config/config.php
     echo "EE_INSTALL_MODE=TRUE" >.env.php
-    ddev start
     ddev launch /admin.php  # Open installation wizard in browser
     ```
 
