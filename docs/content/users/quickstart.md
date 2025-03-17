@@ -303,7 +303,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
     unzip ee.zip && rm -f ee.zip
     ddev config --database=mysql:8.0
-    ddev start -y
+    ddev start
     ddev launch /admin.php # Open installation wizard in browser
     ```
 
@@ -319,7 +319,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     mkdir my-ee-site && cd my-ee-site
     git clone https://github.com/ExpressionEngine/ExpressionEngine .
     ddev config --database=mysql:8.0
-    ddev start -y
+    ddev start
     ddev composer install
     touch system/user/config/config.php
     echo "EE_INSTALL_MODE=TRUE" >.env.php
