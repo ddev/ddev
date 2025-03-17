@@ -2846,11 +2846,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	_, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
-	})
-	if err != nil {
-		util.Warning("Unable to clean up Traefik configuration: %v", err)
+	if status == SiteRunning {
+		_, _, err = app.Exec(&ExecOpts{
+			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
+		})
+		if err != nil {
+			util.Warning("Unable to clean up Traefik configuration: %v", err)
+		}
 	}
 
 	// Clean up ddev-global-cache
