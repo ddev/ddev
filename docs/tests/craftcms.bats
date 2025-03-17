@@ -7,10 +7,9 @@ setup() {
 }
 
 # executed after each test
-#teardown() {
-#  _common_teardown
-#}
-
+teardown() {
+  _common_teardown
+}
 @test "Craft CMS New Projects quickstart with $(ddev --version)" {
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
@@ -45,14 +44,12 @@ setup() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin/login"
   assert_success
 
-
   ## validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Craft CMS"
-
   run curl -sf https://${PROJNAME}.ddev.site
   assert_success
   assert_output --partial "<title>Welcome to Craft CMS</title>"
@@ -60,7 +57,6 @@ setup() {
   run curl -sf https://${PROJNAME}.ddev.site/admin/login
   assert_success
   assert_output --partial "<title>Sign In - ${PROJNAME}</title>"
-
 }
 
 @test "Craft CMS Existing Projects quickstart with $(ddev --version)" {
