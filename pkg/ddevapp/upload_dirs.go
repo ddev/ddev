@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -77,7 +78,7 @@ func (app *DdevApp) IsUploadDirsWarningDisabled() bool {
 // on the host or "" if there is none.
 func (app *DdevApp) calculateHostUploadDirFullPath(uploadDir string) string {
 	if uploadDir != "" {
-		return path.Clean(path.Join(app.GetAbsDocroot(false), uploadDir))
+		return filepath.Clean(filepath.Join(app.GetAbsDocroot(false), uploadDir))
 	}
 
 	return ""
