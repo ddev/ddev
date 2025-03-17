@@ -72,8 +72,8 @@ teardown() {
   assert_success
 
   # echo "EE_INSTALL_MODE=TRUE" >.env.php
-  run echo "EE_INSTALL_MODE=TRUE" >.env.php
-  assert_success
+  echo "EE_INSTALL_MODE=TRUE" >.env.php
+  assert_file_exist .env.php
 
   # validate ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /admin.php"
