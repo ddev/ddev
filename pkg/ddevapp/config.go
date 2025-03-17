@@ -898,6 +898,10 @@ type composeYAMLVars struct {
 	WebExtraExposedPorts            string
 	BitnamiVolumeDir                string
 	UseHardenedImages               bool
+	XHGuiHTTPPort                   string
+	XHGuiHTTPSPort                  string
+	XHGuiPort                       string
+	HostXHGuiPort                   string
 	XhguiImage                      string
 	XHProfMode                      types.XHProfMode
 }
@@ -995,6 +999,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		StartScriptTimeout:      app.GetStartScriptTimeout(),
+		XHGuiHTTPPort:           app.GetXHGuiHTTPPort(),
+		XHGuiHTTPSPort:          app.GetXHGuiHTTPSPort(),
+		XHGuiPort:               GetInternalPort(app, "xhgui"),
+		HostXHGuiPort:           app.HostXHGuiPort,
 		XhguiImage:              versionconstants.XhguiImage,
 		XHProfMode:              app.XHProfMode,
 

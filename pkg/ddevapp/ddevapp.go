@@ -137,6 +137,9 @@ type DdevApp struct {
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
+	XHGuiHTTPSPort            string                 `yaml:"xhgui_https_port,omitempty"`
+	XHGuiHTTPPort             string                 `yaml:"xhgui_http_port,omitempty"`
+	HostXHGuiPort             string                 `yaml:"host_xhgui_port,omitempty"`
 	XHProfMode                types.XHProfMode       `yaml:"xhprof_mode,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
@@ -2428,6 +2431,9 @@ func (app *DdevApp) DockerEnv() {
 		if app.HostMailpitPort == "" {
 			app.HostMailpitPort = "8027"
 		}
+		if app.HostXHGuiPort == "" {
+			app.HostXHGuiPort = nodeps.DdevDefaultXHGuiHTTPPort
+		}
 		app.BindAllInterfaces = true
 	}
 
@@ -2513,6 +2519,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
 		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
 		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
+		"DDEV_XHGUI_HTTP_PORT":     app.GetXHGuiHTTPPort(),
+		"DDEV_XHGUI_HTTPS_PORT":    app.GetXHGuiHTTPSPort(),
 		"DDEV_DOCROOT":             app.GetDocroot(),
 		"DDEV_HOSTNAME":            app.HostName(),
 		"DDEV_UID":                 uidStr,

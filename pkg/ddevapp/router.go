@@ -348,8 +348,7 @@ func determineRouterPorts() []string {
 	// Add potential ports that might not be in use by current containers
 	// 8142/8143 are for xhgui, which might not be enabled, but we don't want to
 	// have to rebuild traefik when it does get enabled.
-	// TODO: Make xhgui ports configurable.
-	routerPorts = []string{"8142", "8143"}
+	routerPorts = []string{nodeps.DdevDefaultXHGuiHTTPSPort, nodeps.DdevDefaultXHGuiHTTPPort}
 
 	// Loop through all containers with site-name label
 	for _, container := range containers {

@@ -19,6 +19,8 @@ func GetInternalPort(app *DdevApp, service string) string {
 		return "8025"
 	case "web":
 		return "80"
+	case "xhgui":
+		return "80"
 	}
 
 	util.Failed("Could not find port for service %s", service)

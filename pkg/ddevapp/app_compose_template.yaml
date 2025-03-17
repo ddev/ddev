@@ -274,10 +274,14 @@ services:
     profiles:
       - xhgui
     restart: "no"
+    ports:
+      {{- if .HostXHGuiPort }}
+      - "{{ $.DockerIP }}:{{ .HostXHGuiPort }}:{{ .XHGuiPort }}"
+      {{- end }}
     environment:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - HTTP_EXPOSE=8143:80
-      - HTTPS_EXPOSE=8142:80
+      - HTTP_EXPOSE={{ .XHGuiHTTPPort }}:{{ .XHGuiPort }}
+      - HTTPS_EXPOSE={{ .XHGuiHTTPSPort }}:{{ .XHGuiPort }}
       - XHGUI_SAVE_HANDLER=pdo
       - DDEV_DATABASE_FAMILY=${DDEV_DATABASE_FAMILY}
       - XHGUI_PDO_USER=db

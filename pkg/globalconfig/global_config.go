@@ -65,6 +65,8 @@ type GlobalConfig struct {
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
 	RouterMailpitHTTPPort            string                      `yaml:"mailpit_http_port,omitempty"`
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
+	RouterXHGuiHTTPPort              string                      `yaml:"xhgui_http_port,omitempty"`
+	RouterXHGuiHTTPSPort             string                      `yaml:"xhgui_https_port,omitempty"`
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
@@ -448,6 +450,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # traefik_monitor_port: 10999
 # Change this only if you're having conflicts with some
 # service that needs port 10999
+
+# xhgui_http_port: 8143
+# Router port used for xhgui HTTP, can be changed in case of conflicts
+
+# xhgui_https_port: 8142
+# Router port used for xhgui HTTPS, can be changed in case of conflicts
 
 # wsl2_no_windows_hosts_mgt: false
 # On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)

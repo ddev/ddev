@@ -72,14 +72,13 @@ func (app *DdevApp) GetXHGuiURL() string {
 	return baseURL + ":" + app.GetXHGuiPort()
 }
 
-// GetXHGuiPort returns the port where we're serving xhgui
-// TODO: Make port configurable globally, etc.
+// GetXHGuiPort returns the router port where we're serving xhgui
 func (app *DdevApp) GetXHGuiPort() string {
 	// Normal case is https, port 8142
 	if !app.CanUseHTTPOnly() {
-		return "8142"
+		return nodeps.DdevDefaultXHGuiHTTPSPort
 	}
-	return "8143"
+	return nodeps.DdevDefaultXHGuiHTTPPort
 }
 
 // XHProfEnable enables xhprof extension and starts gathering info
@@ -120,4 +119,62 @@ func (app *DdevApp) GetXHProfMode() types.XHProfMode {
 	default:
 		return app.XHProfMode
 	}
+}
+
+// GetXHGuiHTTPPort returns app's xhgui router http port
+// If HTTP_EXPOSE has a mapping to port 8143 in the container, use that
+// If not, use the global or project XHGuiHTTPPort
+func (app *DdevApp) GetXHGuiHTTPPort() string {
+
+	if httpExpose := app.GetXHGuiEnvVar("HTTP_EXPOSE"); httpExpose != "" {
+		httpPort := app.TargetPortFromExposeVariable(httpExpose, nodeps.DdevDefaultXHGuiHTTPPort)
+		if httpPort != "" {
+			return httpPort
+		}
+	}
+
+	port := globalconfig.DdevGlobalConfig.RouterXHGuiHTTPPort
+	if port == "" {
+		port = nodeps.DdevDefaultXHGuiHTTPPort
+	}
+	if app.XHGuiHTTPPort != "" {
+		port = app.XHGuiHTTPPort
+	}
+	return port
+}
+
+// GetXHGuiHTTPSPort returns app's xhgui router https port
+// If HTTPS_EXPOSE has a mapping to port 8142 in the container, use that
+// If not, use the global or project XHGuiHTTPSPort
+func (app *DdevApp) GetXHGuiHTTPSPort() string {
+
+	if httpsExpose := app.GetXHGuiEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
+		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, nodeps.DdevDefaultXHGuiHTTPSPort)
+		if httpsPort != "" {
+			return httpsPort
+		}
+	}
+
+	port := globalconfig.DdevGlobalConfig.RouterXHGuiHTTPSPort
+	if port == "" {
+		port = nodeps.DdevDefaultXHGuiHTTPSPort
+	}
+
+	if app.XHGuiHTTPSPort != "" {
+		port = app.XHGuiHTTPSPort
+	}
+	return port
+}
+
+// GetXHGuiEnvVar() gets an environment variable from
+// app.ComposeYaml["services"]["xhgui"]["environment"]
+// It returns empty string if there is no var or the ComposeYaml
+// is just not set.
+func (app *DdevApp) GetXHGuiEnvVar(name string) string {
+	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
+		if v, ok := s["xhgui"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
+			return v.(string)
+		}
+	}
+	return ""
 }
