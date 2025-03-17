@@ -146,11 +146,9 @@ func StartDdevRouter() error {
 	if err != nil {
 		return err
 	}
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		err = PushGlobalTraefikConfig()
-		if err != nil {
-			return fmt.Errorf("failed to push global Traefik config: %v", err)
-		}
+	err = PushGlobalTraefikConfig()
+	if err != nil {
+		return fmt.Errorf("failed to push global Traefik config: %v", err)
 	}
 
 	err = CheckRouterPorts()
