@@ -7,7 +7,7 @@ killall -USR2 php-fpm 2>/dev/null || true
 echo "Enabled xhprof with xhprof_mode=${DDEV_XHPROF_MODE}"
 case "${DDEV_XHPROF_MODE}" in
   xhgui)
-    echo "Use 'ddev xhgui' to lanch browser for xhprof results."
+    echo "Use 'ddev xhgui' to launch browser for xhprof results."
     ;;
   *)
     echo "After each web request or CLI process you can see all runs, most recent first, at

@@ -49,9 +49,11 @@ ddev xhgui status
 				}
 				util.Success("Enabled XHProf for XHGui.")
 			}
-			out, err := exec.RunHostCommand("ddev", "launch", app.GetXHGuiURL())
-			if err != nil {
-				util.Warning("failed to launch xhgui: output='%s', err=%v", out, err)
+			if !output.JSONOutput {
+				out, err := exec.RunHostCommand("ddev", "launch", app.GetXHGuiURL())
+				if err != nil {
+					util.Warning("failed to launch xhgui: output='%s', err=%v", out, err)
+				}
 			}
 
 		case "on", "enable", "start", "true":
