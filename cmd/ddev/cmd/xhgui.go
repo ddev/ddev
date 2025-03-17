@@ -5,11 +5,12 @@ import (
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-// DDEVXHGuiCmd represents the xhgui command.
+// DdevXHGuiCmd represents the xhgui command.
 var DdevXHGuiCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("active", 1),
 	Use:               "xhgui [on|off|launch|status]",
