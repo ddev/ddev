@@ -1000,7 +1000,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
-    ddev start -y
+    ddev start
     ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
@@ -1012,7 +1012,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
-    ddev start -y
+    ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --version="7.1.*" --webapp
     # 'symfony new' can't install in the current directory right away,
