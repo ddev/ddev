@@ -18,7 +18,7 @@ teardown() {
   # Download the latest version of Joomla
   run curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
   assert_success
-  # unzip ./joomla.zip && rm -f joomla.zip
+  # unzip joomla.zip && rm -f joomla.zip
   run unzip joomla.zip && rm -f joomla.zip
   assert_success
   # ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
