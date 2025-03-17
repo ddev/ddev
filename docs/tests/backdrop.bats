@@ -13,13 +13,19 @@ teardown() {
 
 @test "backdrop new-project quickstart with $(ddev --version)" {
   # mkdir my-backdrop-site && cd my-backdrop-site
-  run mkdir -p my-backdrop-site && cd my-backdrop-site
+  run mkdir -p ${PROJNAME}
   assert_success
   # curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
   run curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
   assert_success
-  # unzip ./backdrop.zip && rm -f backdrop.zip && mv -f ./backdrop/{.,}* . ; rm -rf backdrop
-  run unzip -o ./backdrop.zip && rm -f backdrop.zip && mv -f ./backdrop/{.,}* . ; rm -rf backdrop
+  # unzip -o backdrop.zip && rm -f backdrop.zip
+  run unzip -o backdrop.zip && rm -f backdrop.zip
+  assert_success
+  # mv backdrop/* my-backdrop-site/ && rm -rf backdrop
+  run mv backdrop/* my-backdrop-site/ && rm -rf backdrop
+  assert_success
+  # cd ${PROJNAME}
+  cd ${PROJNAME}
   assert_success
   # ddev config --project-type=backdrop
   run ddev config --project-type=backdrop
