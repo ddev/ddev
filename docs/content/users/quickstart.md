@@ -11,9 +11,11 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 === "New projects"
 
     ```bash
-    mkdir my-backdrop-site && cd my-backdrop-site
+    mkdir my-backdrop-site
     curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
-    unzip ./backdrop.zip && rm -f backdrop.zip && mv -f ./backdrop/{.,}* . ; rm -rf backdrop
+    unzip backdrop.zip && rm -f backdrop.zip
+    mv backdrop/* my-backdrop-site/ && rm -rf backdrop
+    cd my-backdrop-site
     ddev config --project-type=backdrop
     ddev start
     ddev launch
