@@ -25,27 +25,16 @@ setup() {
   assert_success
 
   # ddev composer create craftcms/craft
-  #run ddev composer create craftcms/craft
+  run ddev composer create -y --no-scripts craftcms/craft
+  assert_success
 
-  run bash -c 'expect -d -c "
-    log_file -noappend /Users/rkoller/Desktop/craft.log
-    spawn ddev composer create craftcms/craft
-    expect \"Username: \[admin\] \"
-    send \"\r\"
-    expect \"Email:\"
-    send \"admin@mail.com\r\"
-    sleep 1
-    expect \"Password:\"
-    send \"admin123\r\"
-    expect \"Confirm:\"
-    send \"admin123\r\"
-    expect \"Site name:\"
-    send \"CraftCMS Site\r\"
-    expect \"Site URL: \[https:\/\/my-craft-site.ddev.site\] \"
-    send \"\r\"
-    expect \"Site language: \[en-US\]\"
-    send \"\r\"
-  "'
+  run ddev craft install/craft \
+    --username=admin \
+    --password=password123 \
+    --email=admin@example.com \
+    --site-name=${PROJNAME} \
+    --language=en \
+    --site-url='$DDEV_PRIMARY_URL'
   assert_success
 
   # validate ddev launch
@@ -70,7 +59,7 @@ setup() {
   assert_output --partial "<h2>Popular Resources</h2>"
   run curl -sf https://${PROJNAME}.ddev.site/admin/login
   assert_success
-  assert_output --partial "<title>Sign In - CraftCMS Site</title>"
+  assert_output --partial "<title>Sign In - ${PROJNAME}</title>"
 
 }
 
