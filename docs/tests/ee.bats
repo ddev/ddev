@@ -16,18 +16,12 @@ teardown() {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # Download the latest version of the ExpressionEngine zip file from GitHub
-  LATEST_RELEASE=$(curl -fsSL -H 'Accept: application/json' https://github.com/ExpressionEngine/ExpressionEngine/releases/latest || (printf "${RED}Failed to get find latest release${RESET}\n" >/dev/stderr && exit 107))
-  LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
-  VERSION=$LATEST_VERSION
-  if [ $# -ge 1 ]; then
-    VERSION=$1
-  fi
-  run curl -LJO https://github.com/ExpressionEngine/ExpressionEngine/releases/download/$VERSION/ExpressionEngine$VERSION.zip
+  # Download the latest version of Expression Engine
+  run curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
   assert_success
 
-  # Unzip and move the extracted assets to the parent root
-  run unzip -o ./ExpressionEngine$VERSION.zip && rm -f ExpressionEngine$VERSION.zip && shopt -s dotglob 2>/dev/null || setopt dotglob && mv -f ./ExpressionEngine$VERSION/* . && shopt -u dotglob 2>/dev/null || unsetopt dotglob && rm -rf ExpressionEngine$VERSION
+  # unzip ee.zip && rm -f ee.zip
+  run unzip ee.zip && rm -f ee.zip
   assert_success
 
   # ddev config --database=mysql:8.0
