@@ -41,8 +41,8 @@ func IsValidXHProfMode(XHProfMode string, configType ConfigType) bool {
 		return true
 	}
 
-	for _, o := range ValidXHProfModeOptions(configType) {
-		if XHProfMode == o {
+	for _, option := range ValidXHProfModeOptions(configType) {
+		if XHProfMode == option {
 			return true
 		}
 	}
@@ -53,7 +53,6 @@ func IsValidXHProfMode(XHProfMode string, configType ConfigType) bool {
 // CheckValidXHProfMode checks to see if the given xhprof mode option
 // is valid and returns an error in case the value is not valid.
 func CheckValidXHProfMode(xhprofMode string, configType ConfigType) error {
-	// TODO
 	if !IsValidXHProfMode(xhprofMode, configType) {
 		return fmt.Errorf(
 			"\"%s\" is not a valid xhprof_mode option. Valid options include \"%s\"",

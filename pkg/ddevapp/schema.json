@@ -501,6 +501,7 @@
       "description": "Defines the xhprof usage mode used by the project.",
       "type": "string",
       "enum": [
+        "global",
         "prepend",
         "xhgui"
       ]

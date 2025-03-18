@@ -489,8 +489,8 @@ dockerhub:
     secret_name: "DOCKERHUB_TOKEN"
     description: xhgui facility for DDEV integration
     full_description:
-      from_url:
-        url: https://github.com/ddev/ddev-xhgui/raw/main/README.md
+      from_file:
+        path: ./containers/ddev-xhgui/README.md
 
   #mysql == mysql-arm64-images
   - images:

@@ -15,7 +15,6 @@ var DdevXHGuiCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("active", 1),
 	Use:               "xhgui [on|off|launch|status]",
 	Short:             "Starts or checks status of XHGui performance monitoring and UI",
-	//Long:              `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
 	Example: `ddev xhgui
 ddev xhgui launch
 ddev xhgui on

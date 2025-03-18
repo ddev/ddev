@@ -54,7 +54,7 @@ const ConfigInstructions = `
 # "ddev xhprof" to enable Xhprof and "ddev xhprof off" to disable it work better,
 # as leaving Xhprof enabled all the time is a big performance hit.
 
-# xhprof_mode: [prepend|xhgui]
+# xhprof_mode: [prepend|xhgui|global]
 # Set to "xhgui" to enable XHGui features
 # "xhgui" will become default in a future major release
 

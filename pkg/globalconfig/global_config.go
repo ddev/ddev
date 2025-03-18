@@ -77,7 +77,7 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
-	XHProfMode               configTypes.XHProfMode  `yaml:"xhprof_mode"`
+	XHProfMode               configTypes.XHProfMode  `yaml:"xhprof_mode,omitempty"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info,omitempty"`
 }
 
