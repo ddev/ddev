@@ -25,7 +25,6 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
 	}
 
-	assert := assert2.New(t)
 	origDir, _ := os.Getwd()
 
 	testcommon.ClearDockerEnv()
@@ -39,6 +38,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 	}
 
 	app.Type = nodeps.AppTypePHP
+	app.Name = t.Name()
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -64,10 +64,8 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
 		_ = os.RemoveAll(projDir)
 	})
 
@@ -94,20 +92,20 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 				Cmd:     "php --ri xhprof",
 			})
 			require.Error(t, err)
-			assert.Contains(stdout, "Extension 'xhprof' not present")
+			require.Contains(t, stdout, "Extension 'xhprof' not present")
 
 			// Run with Xhprof enabled
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Cmd: "enable_xhprof",
 			})
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Cmd:     "php --ri xhprof",
 			})
 			require.NoError(t, err)
-			assert.Contains(stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
+			require.Contains(t, stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
 
 			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
 			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
@@ -116,7 +114,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 2)
 			require.NoError(t, err)
 			// Output should contain at least one run
-			assert.Contains(out, ".ddev.xhprof</a><small>")
+			require.Contains(t, out, ".ddev.xhprof</a><small>")
 
 			// Disable all to avoid confusion
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
