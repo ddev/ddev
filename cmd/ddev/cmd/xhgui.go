@@ -31,6 +31,11 @@ ddev xhgui status
 
 		app.DockerEnv()
 
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
+			util.Failed("Project is not yet running. Use 'ddev start' first.")
+		}
+
 		if app.GetXHProfMode() != types.XHProfModeXHGui {
 			util.Failed("XHProf Mode is set to '%s', can't use 'ddev xhgui'. Use 'ddev config global --xhprof-mode=xhgui' to enable.", app.GetXHProfMode())
 		}
