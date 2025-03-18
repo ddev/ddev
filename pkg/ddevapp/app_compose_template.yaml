@@ -274,10 +274,10 @@ services:
     profiles:
       - xhgui
     restart: "no"
+    {{ if .HostXHGuiPort }}
     ports:
-      {{- if .HostXHGuiPort }}
       - "{{ $.DockerIP }}:{{ .HostXHGuiPort }}:{{ .XHGuiPort }}"
-      {{- end }}
+    {{- end }}
     environment:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - HTTP_EXPOSE={{ .XHGuiHTTPPort }}:{{ .XHGuiPort }}
