@@ -26,8 +26,8 @@ func TestCmdXHGui(t *testing.T) {
 
 	t.Cleanup(func() {
 		_, _ = exec.RunHostCommand(DdevBin, "xhprof", "off")
-		_, _ = exec.RunHostCommand(DdevBin, "stop")
 		_, err = exec.RunHostCommand(DdevBin, "config", "global", "xhprof-mode-reset")
+		_, _ = exec.RunHostCommand(DdevBin, "restart")
 		require.NoError(t, err)
 
 		_ = os.Chdir(origDir)
