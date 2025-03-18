@@ -89,8 +89,6 @@ require (
 	gotest.tools/v3 v3.4.0 // indirect
 )
 
-go 1.22.0
-
-toolchain go1.23.3
+go 1.23
 
 replace github.com/imdario/mergo => dario.cat/mergo v1.0.0

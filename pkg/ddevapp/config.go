@@ -1049,6 +1049,14 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
+	extraWebContent = extraWebContent + `
+
+### DDEV-injected terminus rsync plugin installation
+USER $username
+RUN terminus self:plugin:install pantheon-systems/terminus-rsync-plugin
+USER root
+
+`
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + fmt.Sprintf(`
 ENV N_PREFIX=/home/$username/.n
