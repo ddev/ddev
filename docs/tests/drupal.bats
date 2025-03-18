@@ -127,33 +127,3 @@ teardown() {
   assert_output --partial "HTTP/2 302"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
 }
-
-@test "Drupal CMS zip file quickstart with $(ddev --version)" {
-  skip "Skipping until script doesn't erroneously create a -1 on project name"
-  # curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
-  run curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
-  assert_success
-  # unzip my-drupal-cms-zip.zip && rm -f my-drupal-cms-zip.zip
-  run unzip my-drupal-site.zip && rm -f my-drupal-site.zip
-  assert_success
-  # mv drupal-cms my-drupal-site
-  # (Not contained in quickstart but necessary to use PROJNAME in this test )
-  run mv drupal-cms my-drupal-site
-  assert_success
-  # Change directory
-  cd ${tmpdir}/${PROJNAME}
-  assert_success
-  # execute launch script
-  run bash -c "DDEV_DEBUG=true ./launch-drupal-cms.sh"
-  assert_success
-  # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
-  assert_success
-  # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
-  assert_output --partial "location: /core/install.php"
-  assert_output --partial "HTTP/2 302"
-  assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
-}

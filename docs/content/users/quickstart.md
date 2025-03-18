@@ -241,15 +241,6 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev launch
     ```
 
-    or use the ZIP file download technique:
-
-    ```bash
-    curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
-    unzip my-drupal-site.zip && rm -f my-drupal-site.zip
-    cd drupal-cms
-    ./launch-drupal-cms.sh
-    ```
-
     Read more about: [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms)
 
 === "Drupal 10"
