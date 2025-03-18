@@ -93,6 +93,6 @@ files_push_command:
     FILES_DIR_ARRAY=("${DDEV_FILES_DIRS}")
     for FILES_DIR in $FILES_DIR_ARRAY
     do
-      terminus rsync ${FILES_DIR} ${project}:files -- --progress --update --human-readable
+      terminus rsync ${FILES_DIR} ${PROJECT}:files -- --progress --update --human-readable
     done
     IFS="$CURRENT_IFS"
