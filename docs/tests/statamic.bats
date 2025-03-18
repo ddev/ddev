@@ -25,18 +25,10 @@ teardown() {
   assert_success
 
   # fill out the interactive form
-  run expect <<EOD
-spawn ddev php please make:user
-expect "Email"
-send "admin@mail.com\r"
-expect "Name"
-send "Admin\r"
-expect "Password"
-send "admin1234\r"
-expect "Super user?"
-send "y\r"
-EOD
-  assert_success
+  run ddev php please make:user admin@example.com --password=admin1234 --super --no-interaction
+  ddev mutagen sync
+  assert_file_exist users/admin@example.com.yaml
+
 
   # validate ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
