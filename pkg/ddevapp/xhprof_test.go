@@ -232,7 +232,8 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 			require.Contains(t, out, "module_xhprof")
 
 			// NOW try using xhgui
-			xhguiURL := app.GetPrimaryURL() + ":8142"
+
+			xhguiURL := app.GetXHGuiURL()
 			out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, 2)
 			require.NoError(t, err)
 			// Output should contain at least one run
