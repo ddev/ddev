@@ -1000,6 +1000,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
+    ddev start
     ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
