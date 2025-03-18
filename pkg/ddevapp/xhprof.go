@@ -183,8 +183,10 @@ func (app *DdevApp) GetXHGuiHTTPSPort() string {
 // is just not set.
 func (app *DdevApp) GetXHGuiEnvVar(name string) string {
 	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if v, ok := s["xhgui"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
-			return v.(string)
+		if e, ok := s["xhgui"].(map[string]interface{}); ok {
+			if v, ok := e["environment"].(map[string]interface{})[name]; ok {
+				return v.(string)
+			}
 		}
 	}
 	return ""

@@ -586,8 +586,10 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 // is just not set.
 func (app *DdevApp) GetWebEnvVar(name string) string {
 	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if v, ok := s["web"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
-			return v.(string)
+		if e, ok := s["web"].(map[string]interface{}); ok {
+			if v, ok := e["environment"].(map[string]interface{})[name]; ok {
+				return v.(string)
+			}
 		}
 	}
 	return ""
