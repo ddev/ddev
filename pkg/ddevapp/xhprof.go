@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"fmt"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -66,19 +67,29 @@ func IsXHGuiContainerRunning(app *DdevApp) bool {
 	return false
 }
 
-// GetXHGuiURL returns teh URL for xhgui
+// GetXHGuiURL returns the URL for xhgui
 func (app *DdevApp) GetXHGuiURL() string {
-	baseURL := app.GetPrimaryURL()
-	return baseURL + ":" + app.GetXHGuiPort()
+	var xhguiURL string
+
+	// If router enabled, use primary URL with regular port
+	if !IsRouterDisabled(app) {
+		baseURL := app.GetPrimaryURL()
+		xhguiURL = baseURL + ":" + app.GetXHGuiPort()
+	} else if app.HostXHGuiPort != "" {
+		// Otherwise, if host_xhgui_port is set, use that to build URL
+		ip, _ := dockerutil.GetDockerIP()
+		xhguiURL = fmt.Sprintf("http://%s:%s", ip, app.HostXHGuiPort)
+	}
+	return xhguiURL
 }
 
 // GetXHGuiPort returns the router port where we're serving xhgui
 func (app *DdevApp) GetXHGuiPort() string {
 	// Normal case is https, port 8142
 	if !app.CanUseHTTPOnly() {
-		return nodeps.DdevDefaultXHGuiHTTPSPort
+		return app.GetXHGuiHTTPSPort()
 	}
-	return nodeps.DdevDefaultXHGuiHTTPPort
+	return app.GetXHGuiHTTPPort()
 }
 
 // XHProfEnable enables xhprof extension and starts gathering info
