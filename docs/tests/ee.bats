@@ -73,6 +73,7 @@ teardown() {
 
   # echo "EE_INSTALL_MODE=TRUE" >.env.php
   echo "EE_INSTALL_MODE=TRUE" >.env.php
+  ddev mutagen sync
   assert_file_exist .env.php
 
   # validate ddev launch
