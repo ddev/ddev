@@ -1004,7 +1004,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		XHGuiPort:               GetInternalPort(app, "xhgui"),
 		HostXHGuiPort:           app.HostXHGuiPort,
 		XhguiImage:              versionconstants.XhguiImage,
-		XHProfMode:              app.XHProfMode,
+		XHProfMode:              app.GetXHProfMode(),
 
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
