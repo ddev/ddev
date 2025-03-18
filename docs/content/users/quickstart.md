@@ -173,6 +173,13 @@ Environment variables will be automatically added to your `.env` file to simplif
     # Boot the project and install the starter project:
     ddev start
     ddev composer create craftcms/craft
+    ddev craft install/craft \
+        --username=admin \
+        --password=password123 \
+        --email=admin@mail.com \
+        --site-name='$DDEV_PROJECT' \
+        --language=en \
+        --site-url='$DDEV_PRIMARY_URL'
     ddev launch
     ```
 
