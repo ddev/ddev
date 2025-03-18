@@ -3,6 +3,10 @@ services:
     environment:
     - DUMMY_BASE=override
     - DUMMY_COMPOSE_OVERRIDE=override
+    networks:
+      ddev_default:
+        aliases:
+          - web-extra-alias
 
   dummy1:
     image: busybox:stable
