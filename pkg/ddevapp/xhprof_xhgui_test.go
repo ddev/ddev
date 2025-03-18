@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -64,10 +66,17 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--xhprof-mode-reset")
+		require.NoError(t, err)
+
 		_ = app.Stop(true, false)
 		_ = os.Chdir(origDir)
 		_ = os.RemoveAll(projDir)
 	})
+
+	globalconfig.DdevGlobalConfig.XHProfMode = "prepend"
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
 
 	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
@@ -82,7 +91,6 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 			t.Logf("Beginning XHProf checks with XHProf webserver_type=%s php%s\n", webserverKey, v)
 			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
 			app.PHPVersion = v
-			app.XHProfMode = types.XHProfModePrepend
 
 			err = app.Restart()
 			require.NoError(t, err)
