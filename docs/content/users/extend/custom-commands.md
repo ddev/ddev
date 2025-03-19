@@ -296,7 +296,7 @@ Example: `## ExecRaw: true`
 
 Use `MutagenSync: true` to ensure [Mutagen](../install/performance.md#mutagen) sync runs before and after the command.
 
-We recommend using this annotation if your command modifies, adds, or removes files in the project directory.
+We recommend using this annotation if your command can modify, add, or remove files in the project directory.
 
 ## Known Windows Issues
 

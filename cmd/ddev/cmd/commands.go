@@ -203,7 +203,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		// Run the command with mutagen sync or not
 		mutagenSync := false
-		if val, ok := directives["NutagenSync"]; ok {
+		if val, ok := directives["MutagenSync"]; ok {
 			if val == "true" {
 				mutagenSync = true
 			}
