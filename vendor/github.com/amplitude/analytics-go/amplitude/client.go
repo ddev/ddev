@@ -154,6 +154,7 @@ func (c *client) Revenue(revenue Revenue, eventOptions EventOptions) {
 				constants.RevenueType:       revenue.RevenueType,
 				constants.RevenueReceipt:    revenue.Receipt,
 				constants.RevenueReceiptSig: revenue.ReceiptSig,
+				constants.Currency:          revenue.Currency,
 				constants.DefaultRevenue:    revenue.Revenue,
 			},
 		}

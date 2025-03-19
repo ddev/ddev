@@ -26,6 +26,7 @@ ignorePatterns:
   - pattern: "^https://aur.archlinux.org"
   - pattern: "^https://team-ddev.1password.com"
   - pattern: "^https://.*.archive.org"
+  - pattern: "^https://specifications.freedesktop.org"
 aliveStatusCodes:
   - 200
   - 206

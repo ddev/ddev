@@ -28,7 +28,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-isatty"
@@ -193,7 +192,7 @@ func (app *DdevApp) Init(basePath string) error {
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Container, error) {
+func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.Summary, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
@@ -1588,18 +1587,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 
 		// If TLS supported and using Traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-			err = configureTraefikForApp(app)
-			if err != nil {
-				return err
-			}
+		err = configureTraefikForApp(app)
+		if err != nil {
+			return err
 		}
 
 		// Push custom certs
-		targetSubdir := "custom_certs"
-		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-			targetSubdir = path.Join("traefik", "certs")
-		}
+		targetSubdir := path.Join("traefik", "certs")
+
 		certPath := app.GetConfigPath("custom_certs")
 		uid, _, _ := util.GetContainerUIDGid()
 		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
@@ -2301,7 +2296,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
 	ctx, client := dockerutil.GetDockerClient()
 
-	var container *dockerTypes.Container
+	var container *dockerContainer.Summary
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
@@ -2348,7 +2343,7 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	ctx, client := dockerutil.GetDockerClient()
 
-	var container *dockerTypes.Container
+	var container *dockerContainer.Summary
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
@@ -2851,7 +2846,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() && status == SiteRunning {
+	if status == SiteRunning {
 		_, _, err = app.Exec(&ExecOpts{
 			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
 		})
@@ -2859,6 +2854,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("Unable to clean up Traefik configuration: %v", err)
 		}
 	}
+
 	// Clean up ddev-global-cache
 	if removeData {
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)
@@ -3360,7 +3356,7 @@ func GetContainerName(app *DdevApp, service string) string {
 }
 
 // GetContainer returns the container struct of the app service name provided.
-func GetContainer(app *DdevApp, service string) (*dockerTypes.Container, error) {
+func GetContainer(app *DdevApp, service string) (*dockerContainer.Summary, error) {
 	name := GetContainerName(app, service)
 	container, err := dockerutil.FindContainerByName(name)
 	if err != nil || container == nil {

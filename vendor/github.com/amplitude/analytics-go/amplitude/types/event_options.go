@@ -34,6 +34,7 @@ type EventOptions struct {
 	Price              float64            `json:"price,omitempty"`
 	Quantity           int                `json:"quantity,omitempty"`
 	Revenue            float64            `json:"revenue,omitempty"`
+	Currency           string             `json:"currency,omitempty"`
 	ProductID          string             `json:"productId,omitempty"`
 	RevenueType        string             `json:"revenueType,omitempty"`
 	EventID            int                `json:"event_id,omitempty"`

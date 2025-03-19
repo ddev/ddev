@@ -5,6 +5,7 @@ type Revenue struct {
 	Quantity    int
 	ProductID   string
 	RevenueType string
+	Currency    string
 	Receipt     string
 	ReceiptSig  string
 	Properties  map[string]interface{}

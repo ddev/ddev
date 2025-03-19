@@ -513,9 +513,6 @@ func (app *DdevApp) GetRelativeWorkingDirectory() string {
 func (app *DdevApp) HasCustomCert() bool {
 	customCertsPath := app.GetConfigPath("custom_certs")
 	certFileName := fmt.Sprintf("%s.crt", app.Name)
-	if !globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		certFileName = fmt.Sprintf("%s.crt", app.GetHostname())
-	}
 	return fileutil.FileExists(filepath.Join(customCertsPath, certFileName))
 }
 

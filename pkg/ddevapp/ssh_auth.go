@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path"
 	"path/filepath"
@@ -12,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerTypes "github.com/docker/docker/api/types"
 )
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
@@ -152,7 +152,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 // findDdevSSHAuth uses FindContainerByLabels to get our sshAuth container and
 // return it (or nil if it doesn't exist yet)
-func findDdevSSHAuth() (*dockerTypes.Container, error) {
+func findDdevSSHAuth() (*dockerContainer.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
 	}

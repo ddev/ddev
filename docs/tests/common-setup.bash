@@ -9,6 +9,7 @@ _common_setup() {
     mkdir -p ~/tmp
     tmpdir=$(mktemp -d ~/tmp/${PROJNAME}.XXXXXX)
     export DDEV_NO_INSTRUMENTATION=true
+    export DDEV_NONINTERACTIVE=true
     mkdir -p ${tmpdir} && cd ${tmpdir} || exit 1
     ddev delete -Oy ${PROJNAME:-notset}
 }

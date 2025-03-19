@@ -11,9 +11,11 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 === "New projects"
 
     ```bash
-    mkdir my-backdrop-site && cd my-backdrop-site
+    mkdir my-backdrop-site
     curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
-    unzip ./backdrop.zip && rm -f backdrop.zip && mv -f ./backdrop/{.,}* . ; rm -rf backdrop
+    unzip backdrop.zip && rm -f backdrop.zip
+    mv backdrop/* my-backdrop-site/ && rm -rf backdrop
+    cd my-backdrop-site
     ddev config --project-type=backdrop
     ddev start
     ddev launch
@@ -60,6 +62,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ```bash
     mkdir my-cakephp-site && cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
+    ddev start
     ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
     ddev launch
     ```
@@ -170,6 +173,13 @@ Environment variables will be automatically added to your `.env` file to simplif
     # Boot the project and install the starter project:
     ddev start
     ddev composer create craftcms/craft
+    ddev craft install/craft \
+        --username=admin \
+        --password=password123 \
+        --email=admin@mail.com \
+        --site-name='$DDEV_PROJECT' \
+        --language=en \
+        --site-url='$DDEV_PRIMARY_URL'
     ddev launch
     ```
 
@@ -238,15 +248,6 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev launch
     ```
 
-    or use the ZIP file download technique:
-
-    ```bash
-    curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
-    unzip my-drupal-site.zip && rm -f my-drupal-site.zip
-    cd drupal-cms
-    ./launch-drupal-cms.sh
-    ```
-
     Read more about: [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms)
 
 === "Drupal 10"
@@ -300,7 +301,8 @@ Read more about customizing the environment and persisting configuration in [Pro
 
     ```bash
     mkdir my-ee-site && cd my-ee-site
-    # Download the zip archive for ExpressionEngine at https://github.com/ExpressionEngine/ExpressionEngine/releases/latest unarchive and move its content into the root of the my-ee-site directory
+    curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    unzip ee.zip && rm -f ee.zip
     ddev config --database=mysql:8.0
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
@@ -315,14 +317,13 @@ Read more about customizing the environment and persisting configuration in [Pro
     Follow these steps based on the [ExpressionEngine Git Repository README.md](https://github.com/ExpressionEngine/ExpressionEngine#how-to-install):
 
     ```bash
-    git clone https://github.com/ExpressionEngine/ExpressionEngine my-ee-site # for example
-    cd my-ee-site
-    ddev config # Accept the defaults
+    mkdir my-ee-site && cd my-ee-site
+    git clone https://github.com/ExpressionEngine/ExpressionEngine .
+    ddev config --database=mysql:8.0
     ddev start
     ddev composer install
     touch system/user/config/config.php
     echo "EE_INSTALL_MODE=TRUE" >.env.php
-    ddev start
     ddev launch /admin.php  # Open installation wizard in browser
     ```
 
@@ -434,8 +435,10 @@ Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/insta
 
 ```bash
 mkdir my-joomla-site && cd my-joomla-site
-tag=$(curl -L "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/joomla/joomla-cms/releases/download/$tag/Joomla_$tag-Stable-Full_Package.zip" -o joomla.zip
-unzip ./joomla.zip && rm -f joomla.zip
+# Download the latest version of Joomla! and unzip it.
+# This can be manually downloaded from https://downloads.joomla.org/ or done using curl as here.
+curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
+unzip joomla.zip && rm -f joomla.zip
 ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 ddev start
 ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
@@ -625,7 +628,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
     ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
     ddev add-on get ddev/ddev-elasticsearch
-    ddev start
+    ddev start -y
     ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
     rm -f app/etc/env.php
 
@@ -917,7 +920,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     mkdir my-statamic-site && cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist statamic/statamic
-    ddev php please make:user
+    ddev php please make:user admin@example.com --password=admin1234 --super --no-interaction
     ddev launch /cp
     ```
 === "Git Clone"
@@ -995,6 +998,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
+    ddev start
     ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"

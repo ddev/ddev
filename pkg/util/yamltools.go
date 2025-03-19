@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"gopkg.in/yaml.v3"
 )
 
-// YamlFileToMap() reads the named file into a map[string]interface{}
+// YamlFileToMap reads the named file into a map[string]interface{}
 func YamlFileToMap(fname string) (map[string]interface{}, error) {
 	file, err2 := os.ReadFile(fname)
 	contents, err := file, err2
