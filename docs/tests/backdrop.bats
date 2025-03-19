@@ -19,8 +19,7 @@ teardown() {
   assert_success
 
   # Add the official Bee CLI add-on
-  # TODO: run ddev add-on get backdrop-ops/ddev-backdrop-bee
-  run ddev add-on get https://github.com/stasadev/ddev-backdrop-bee/tarball/20250319_stasadev_host_command
+  run ddev add-on get backdrop-ops/ddev-backdrop-bee
   assert_success
 
   run ddev start -y
