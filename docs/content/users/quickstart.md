@@ -920,7 +920,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     mkdir my-statamic-site && cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist statamic/statamic
-    ddev php please make:user
+    ddev php please make:user admin@example.com --password=admin1234 --super --no-interaction
     ddev launch /cp
     ```
 === "Git Clone"
