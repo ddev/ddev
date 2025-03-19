@@ -15,7 +15,11 @@ import (
 var DdevXHGuiCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("active", 1),
 	Use:               "xhgui [on|off|launch|status]",
-	Short:             "Starts or checks status of XHGui performance monitoring and UI",
+	Short:             "Starts or checks status of XHGui/XHProf performance monitoring and UI",
+	Long: heredoc.DocI2S(`
+			Starts or checks status of XHGui/XHProf performance monitoring and UI.
+			You can use 'ddev xhgui on' to enable, 'ddev xhgui' or 'ddev xhgui launch' to view the UI.
+			'ddev xhgui status' shows the status.`),
 	Example: heredoc.DocI2S(`
 		ddev xhgui
 		ddev xhgui launch
