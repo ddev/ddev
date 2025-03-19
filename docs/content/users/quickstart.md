@@ -18,8 +18,11 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
     ddev start
     # Download Backdrop core
     ddev bee download-core
-    # Sync files between host and container (only if Mutagen is enabled)
-    ddev mutagen sync
+    ```
+
+    After all the files are downloaded, create a new user and launch the site:
+
+    ```bash
     # Create admin user
     ddev bee si --username=admin --password=Password123 --db-name=db --db-user=db --db-pass=db --db-host=db --auto
     # Login using `admin` user and `Password123` password
