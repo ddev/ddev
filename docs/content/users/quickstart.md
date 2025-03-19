@@ -6,20 +6,23 @@ Before proceeding, make sure your installation of DDEV is up to date. In a new a
 
 ## Backdrop
 
-To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
+You can start a new [Backdrop](https://backdropcms.org) project or configure an existing one.
 
 === "New projects"
 
     ```bash
-    mkdir my-backdrop-site
-    curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
-    unzip backdrop.zip && rm -f backdrop.zip
-    mv backdrop/* my-backdrop-site/ && rm -rf backdrop
-    cd my-backdrop-site
+    mkdir my-backdrop-site && cd my-backdrop-site
     ddev config --project-type=backdrop
-    # Add the Bee CLI add-on.
+    # Add the official Bee CLI add-on
     ddev add-on get backdrop-ops/ddev-backdrop-bee
     ddev start
+    # Download Backdrop core
+    ddev bee download-core
+    # Sync files between host and container (only if Mutagen is enabled)
+    ddev mutagen sync
+    # Create admin user
+    ddev bee si --username=admin --password=Password123 --db-name=db --db-user=db --db-pass=db --db-host=db --auto
+    # Login using `admin` user and `Password123` password
     ddev launch
     ```
 
@@ -29,16 +32,15 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 
 
     ```bash
-    # Clone an existing repository (or navigate to a local project directory):
-    # Set PROJECT_GIT_URL to your project's git URL.
-    PROJECT_GIT_URL=https://github.com/ddev/test-backdrop.git
-    git clone ${PROJECT_GIT_URL} my-backdrop-site
-    cd my-backdrop-site
+    mkdir my-backdrop-site && cd my-backdrop-site
+
+    # Use your own repository URL, this is an example
+    git clone https://github.com/ddev/test-backdrop.git .
 
     # Set up the DDEV environment:
     ddev config --project-type=backdrop
 
-    # Add the Bee CLI add-on.
+    # Add the official Bee CLI add-on
     ddev add-on get backdrop-ops/ddev-backdrop-bee
 
     # Start the project
