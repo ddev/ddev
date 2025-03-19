@@ -36,7 +36,7 @@ ddev xhgui status
 		}
 
 		if app.GetXHProfMode() != types.XHProfModeXHGui {
-			util.Failed("XHProf Mode is set to '%s', can't use 'ddev xhgui'. Use 'ddev config global --xhprof-mode=xhgui' to enable.", app.GetXHProfMode())
+			util.Failed("XHProf Mode is set to '%s', can't use 'ddev xhgui'.\nUse the command below to enable it:\nddev config global --xhprof-mode=xhgui && ddev restart", app.GetXHProfMode())
 		}
 
 		action := "launch"
