@@ -492,7 +492,9 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 		}
 		app.DockerEnv()
 
-		runMutagenSync(app, mutagenSync)
+		if service == "web" {
+			runMutagenSync(app, mutagenSync)
+		}
 
 		osArgs := []string{}
 		if len(os.Args) > 2 {
@@ -519,7 +521,9 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)
 		}
 
-		runMutagenSync(app, mutagenSync)
+		if service == "web" {
+			runMutagenSync(app, mutagenSync)
+		}
 	}
 }
 
@@ -561,11 +565,11 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 }
 
 func runMutagenSync(app *ddevapp.DdevApp, mutagenSync bool) {
-	if mutagenSync {
+	if mutagenSync && app.IsMutagenEnabled() {
 		if status, _ := app.SiteStatus(); status == ddevapp.SiteRunning {
 			err := app.MutagenSyncFlush()
 			if err != nil {
-				util.Warning("failed to app.MutagenSyncFlush: %v", err)
+				util.Warning("Could not flush Mutagen: %v", err)
 			}
 		}
 	}
