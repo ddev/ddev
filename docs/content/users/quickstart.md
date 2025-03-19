@@ -18,11 +18,6 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
     ddev start
     # Download Backdrop core
     ddev bee download-core
-    ```
-
-    After all the files are downloaded, create a new user and launch the site:
-
-    ```bash
     # Create admin user
     ddev bee si --username=admin --password=Password123 --db-name=db --db-user=db --db-pass=db --db-host=db --auto
     # Login using `admin` user and `Password123` password

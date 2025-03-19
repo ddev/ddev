@@ -19,7 +19,8 @@ teardown() {
   assert_success
 
   # Add the official Bee CLI add-on
-  run ddev add-on get backdrop-ops/ddev-backdrop-bee
+  # TODO: run ddev add-on get backdrop-ops/ddev-backdrop-bee
+  run ddev add-on get https://github.com/stasadev/ddev-backdrop-bee/tarball/20250319_stasadev_host_command
   assert_success
 
   run ddev start -y
@@ -27,10 +28,6 @@ teardown() {
 
   # Download Backdrop core
   run ddev bee download-core
-  assert_success
-
-  # Sync files between host and container (only if Mutagen is enabled)
-  run ddev mutagen sync
   assert_success
 
   # Create admin user
