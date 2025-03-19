@@ -565,7 +565,7 @@ func runMutagenSync(app *ddevapp.DdevApp, mutagenSync bool) {
 		if status, _ := app.SiteStatus(); status == ddevapp.SiteRunning {
 			err := app.MutagenSyncFlush()
 			if err != nil {
-				util.Failed("failed to app.MutagenSyncFlush: %v", err)
+				util.Warning("failed to app.MutagenSyncFlush: %v", err)
 			}
 		}
 	}
