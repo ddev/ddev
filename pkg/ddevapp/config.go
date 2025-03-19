@@ -14,8 +14,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/ddev/ddev/pkg/versionconstants"
-
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -1003,7 +1001,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		XHGuiHTTPSPort:          app.GetXHGuiHTTPSPort(),
 		XHGuiPort:               GetInternalPort(app, "xhgui"),
 		HostXHGuiPort:           app.HostXHGuiPort,
-		XhguiImage:              versionconstants.XhguiImage,
+		XhguiImage:              docker.GetXhguiImage(),
 		XHProfMode:              app.GetXHProfMode(),
 
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
