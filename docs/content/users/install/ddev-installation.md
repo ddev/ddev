@@ -18,6 +18,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+
     ### Install Script
 
     The [install script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` executable:
@@ -26,6 +28,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Download and run the install script
     curl -fsSL https://ddev.com/install.sh | bash
     ```
+
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
     ??? "Do you still have an old version after installing or upgrading?"
         If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
@@ -65,7 +69,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
-    (Some versions of Firefox (Developer Edition, Flatpak) may need some [extra work](https://github.com/FiloSottile/mkcert/issues/370#issuecomment-1280377305) with `mkcert`, see also [this issue](https://github.com/ddev/ddev/issues/5415).)
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
     ??? "Do you still have an old version after installing or upgrading?"
         If `ddev --version` still shows an older version than you installed or upgraded to, use `which -a ddev` to find out where another version of the `ddev` executable must be installed. See the ["Why Do I Have An Old DDEV" FAQ](../usage/faq.md#why-do-i-have-an-old-ddev).
@@ -98,6 +102,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+
     Signed yum repository support will be added in the future.
 
     ### Arch Linux
@@ -112,6 +118,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+
     ### Homebrew (AMD64 only)
 
     ```bash
@@ -122,6 +130,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
     <h3 id="install-script-linux">Install Script<a class="headerlink" href="#install-script-linux" title="Permanent link">¶</a></h3>
 
@@ -131,6 +141,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Download and run the install script
     curl -fsSL https://ddev.com/install.sh | bash
     ```
+
+    For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
     ??? "Need a specific version?"
         Use the `-s` argument to specify a specific stable or prerelease version:
@@ -246,6 +258,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
 
+    10. For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
 
     ### WSL2/Docker Desktop Manual Installation
@@ -279,6 +293,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     13. In WSL2, run `mkcert -install`.
 
+    14. For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+
     You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV, remember to run all `ddev` commands inside the WSL2 distro.
 
     !!!note "Path to certificates"
@@ -295,21 +311,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     !!!note "Windows Firefox Trusted CA"
 
-        The `mkcert -install` step on Windows isn’t enough for Firefox.
-        You need to add the created root certificate authority to the security configuration yourself:
-
-        * Run `mkcert -install` (you can use the shortcut from the Start Menu for that)
-        * Run `mkcert -CAROOT` to see the local folder used for the newly-created root certificate authority
-        * Open Firefox Preferences (`about:preferences#privacy`)
-        * Enter “certificates” into the search box on the top
-        * Click *View Certificates...*
-        * Select *Authorities* tab
-        * Click to *Import...*
-        * Navigate to the folder where your root certificate authority was stored
-        * Select the `rootCA.pem` file
-        * Click to *Open*
-
-        You should now see your CA under `mkcert development CA`.
+        The `mkcert -install` step on Windows isn’t enough for Firefox. You need to [configure your browser](configuring-browsers.md).
 
 === "Codespaces"
 
@@ -480,3 +482,5 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     * As a one-time initialization, run `mkcert -install`, which may require your `sudo` password.
 
         If you don’t have `mkcert` installed, download the [latest release](https://github.com/FiloSottile/mkcert/releases) for your architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
+
+    * For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
