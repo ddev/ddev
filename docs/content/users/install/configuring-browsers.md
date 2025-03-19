@@ -1,23 +1,29 @@
 # Configuring Browsers for DDEV projects
 
-DDEV generates SSL certificates to make local projects work natively with HTTPS protocol. It uses a custom root Certificate Authority to generate SSL certificates for `*.ddev.site` domains.
+DDEV generates SSL certificates to enable local projects to use the HTTPS protocol. It uses a custom root Certificate Authority (CA) to generate SSL certificates for `*.ddev.site` domains.
 
-But, because this is a custom Certificate Authority, web browsers produce a "net::ERR_CERT_AUTHORITY_INVALID" warning when you try to open a local DDEV website with HTTPS protocol.
+However, since this is a custom CA, web browsers display an ERR_CERT_AUTHORITY_INVALID warning when trying to access a local DDEV site over HTTPS.
 
-To get rid of this warning, you can install the custom root Certificate Authority into the browser.
+To eliminate this warning, you can install the custom root CA into your browser.
 
-For default browsers in Linux systems, it works out of the box using the [mkcert](https://github.com/FiloSottile/mkcert) utility.
+For default browsers, this works automatically using the [mkcert](https://github.com/FiloSottile/mkcert) utility.
 
-For other operating systems and custom browsers manual steps are required to fix this.
+For custom browsers (such as Firefox Developer Edition, Vivaldi, etc.), manual steps may be required.
 
-## Adding the DDEV root Certificate Authority into browsers
+!!!tip "Want to learn more about HTTPS in DDEV?"
+    See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
-The concrete steps to install depend on the browser, but generally they are like this:
+## Adding the DDEV Root Certificate Authority to Browsers
 
-1. Find a directory with the generated root certificate by [mkcert](https://github.com/FiloSottile/mkcert) utility using a command `mkcert -CAROOT` and find there a `rootCA.pem` file. DDEV should generate it during installation. If not - you can generate it manually using `mkcert -install` command.
-2. Open a web browser window and open the browser preferences.
-3. Find the Certificate Manager somewhere in the preferences and open it. Usually it is located in the "Security" section.
-4. Click on the "View Certificates" button.
-5. Select the tab "Authorities".
-6. Click to the "Import" button to import a custom authority certificate.
-7. Import the root certificate authority file.
+The steps to install the root CA depend on the browser, but they generally follow this process:
+
+1. Use `mkcert -CAROOT` to locate the directory with the generated root certificate. Inside, you should find a `rootCA.pem` file. If it's missing, run `mkcert -install` command.
+2. Open your browser and navigate to the preferences or settings.
+3. Find the Certificate Manager, typically located in the "Security" section of the preferences.
+4. Click the "View Certificates" button.
+5. Go to the "Authorities" tab.
+6. Click the "Import" button to add a custom authority certificate.
+7. Import the `rootCA.pem` file to install the root certificate authority.
+
+!!!note "Still having issues?"
+    Check out [this specific mkcert thread](https://github.com/FiloSottile/mkcert/issues/370) for additional troubleshooting.
