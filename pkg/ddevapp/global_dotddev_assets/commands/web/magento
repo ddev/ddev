@@ -6,6 +6,7 @@
 ## Example: "ddev magento list" or "ddev magento maintenance:enable" or "ddev magento sampledata:reset"
 ## ProjectTypes: magento2
 ## ExecRaw: true
+## MutagenSync: true
 
 if [ ! -f bin/magento ]; then
   echo 'bin/magento does not exist in your project root directory.'

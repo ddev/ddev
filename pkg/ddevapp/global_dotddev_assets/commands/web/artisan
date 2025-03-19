@@ -7,5 +7,6 @@
 ## Aliases: art
 ## ProjectTypes: laravel
 ## ExecRaw: true
+## MutagenSync: true
 
 php ./artisan "$@"
