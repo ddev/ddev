@@ -201,6 +201,14 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
+		// Run the command with mutagen sync or not
+		mutagenSync := false
+		if val, ok := directives["NutagenSync"]; ok {
+			if val == "true" {
+				mutagenSync = true
+			}
+		}
+
 		// If ProjectTypes is specified and we aren't of that type, skip
 		if projectTypes != "" && (app == nil || !strings.Contains(projectTypes, app.Type)) {
 			if app != nil && isCustomCommandInArgs(commandName) {
@@ -304,7 +312,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		autocompletePathOnHost := filepath.Join(serviceDirOnHost, "autocomplete", commandName)
 		if service == "host" {
-			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
+			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName, mutagenSync)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
 				_ = util.Chmod(autocompletePathOnHost, 0755)
@@ -323,7 +331,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 				containerBasePath = path.Join("/mnt/ddev-global-cache/global-commands/", service)
 			}
 			inContainerFullPath := path.Join(containerBasePath, commandName)
-			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
+			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative, mutagenSync)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
 				_ = util.Chmod(autocompletePathOnHost, 0755)
@@ -425,7 +433,7 @@ func makeContainerCompletionFunc(autocompletePathInContainer string, service str
 }
 
 // makeHostCmd creates a command which will run on the host
-func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
+func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
 		windowsBashPath = util.FindBashPath()
@@ -449,6 +457,9 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 		if app != nil {
 			app.DockerEnv()
 		}
+
+		runMutagenSync(app, mutagenSync)
+
 		if runtime.GOOS == "windows" {
 			// Sadly, not sure how to have a Bash interpreter without this.
 			args := []string{fullPath}
@@ -460,11 +471,13 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 		if err != nil {
 			util.Failed("Failed to run %s %v; error=%v", name, strings.Join(osArgs, " "), err)
 		}
+
+		runMutagenSync(app, mutagenSync)
 	}
 }
 
 // makeContainerCmd creates the command which will app.Exec to a container command
-func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, execRaw bool, relative bool) func(*cobra.Command, []string) {
+func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, execRaw bool, relative bool, mutagenSync bool) func(*cobra.Command, []string) {
 	s := service
 	if s[0:1] == "." {
 		s = s[1:]
@@ -478,6 +491,8 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			}
 		}
 		app.DockerEnv()
+
+		runMutagenSync(app, mutagenSync)
 
 		osArgs := []string{}
 		if len(os.Args) > 2 {
@@ -503,6 +518,8 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 		if err != nil {
 			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)
 		}
+
+		runMutagenSync(app, mutagenSync)
 	}
 }
 
@@ -541,4 +558,15 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 	}
 
 	return directives
+}
+
+func runMutagenSync(app *ddevapp.DdevApp, mutagenSync bool) {
+	if mutagenSync {
+		if status, _ := app.SiteStatus(); status == ddevapp.SiteRunning {
+			err := app.MutagenSyncFlush()
+			if err != nil {
+				util.Failed("failed to app.MutagenSyncFlush: %v", err)
+			}
+		}
+	}
 }
