@@ -483,4 +483,4 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         If you don’t have `mkcert` installed, download the [latest release](https://github.com/FiloSottile/mkcert/releases) for your architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
 
-    * Optionally, [configure your browser](configuring-browsers.md).
+    * For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
