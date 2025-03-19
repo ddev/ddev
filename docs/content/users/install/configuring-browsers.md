@@ -1,4 +1,5 @@
 # Configuring Browsers for DDEV projects
+
 **Most DDEV users can ignore this page. The standard instructions in DDEV Installation do everything that is needed. These instructions are for unusual browsers or OS environments.**
 DDEV generates SSL certificates to enable local projects to use the HTTPS protocol. It uses a custom root Certificate Authority (CA) to generate SSL certificates for `*.ddev.site` domains.
 
