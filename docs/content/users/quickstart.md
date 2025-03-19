@@ -757,10 +757,12 @@ ddev magento setup:upgrade
     ```bash
     mkdir my-openmage-site && cd my-openmage-site
     git clone https://github.com/OpenMage/magento-lts .
-    ddev config --project-type=magento --php-version=8.1
+    ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
     ddev start
-    # Install openmage and optionally install sample data
-    ddev openmage-install -s -q
+    ddev composer install
+    # Silent OpenMage install with sample data
+    # See `ddev openmage-install -h` for more options
+    ddev openmage-install -q
     # Login using `admin` user and `veryl0ngpassw0rd` password
     ddev launch /admin
     ```

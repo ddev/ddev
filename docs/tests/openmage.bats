@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
-  PROJNAME=magento-lts
+  PROJNAME=my-openmage-site
   load 'common-setup'
   _common_setup
 }
@@ -12,33 +12,25 @@ teardown() {
 }
 
 @test "OpenMage git based quickstart with $(ddev --version)" {
-  # PROJECT_GIT_URL=https://github.com/OpenMage/magento-lts
-  PROJECT_GIT_URL=https://github.com/OpenMage/magento-lts
-
-  # git clone ${PROJECT_GIT_URL} ${PROJNAME}
-  run git clone --depth=1 ${PROJECT_GIT_URL} ${PROJNAME}
+  run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # cd magento-lts
-  cd ${PROJNAME} || exit 2
+  run git clone --depth=1 https://github.com/OpenMage/magento-lts .
   assert_success
 
-  # ddev config --project-type=magento --php-version=8.1 --webserver-type=nginx-fpm
-  run ddev config --project-type=magento --php-version=8.1 --webserver-type=nginx-fpm
+  run ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
   assert_success
 
-  # ddev start -y
   run ddev start -y
   assert_success
 
-  # ddev composer install
   run ddev composer install
   assert_success
 
-  # Install openmage and optionally install sample data
-  ddev openmage-install -s -q
+  # Silent OpenMage install with sample data
+  ddev openmage-install -q
+  assert_success
 
-  # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
