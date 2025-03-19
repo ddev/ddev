@@ -28,7 +28,7 @@ teardown() {
   assert_success
 
   # Silent OpenMage install with sample data
-  ddev openmage-install -q
+  run ddev openmage-install -q
   assert_success
 
   run bash -c "DDEV_DEBUG=true ddev launch"
