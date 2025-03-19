@@ -737,6 +737,17 @@ func (app *DdevApp) CheckCustomConfig() {
 		}
 	}
 
+	configPath := filepath.Join(ddevDir, "")
+	if _, err := os.Stat(configPath); err == nil {
+		configFiles, err := filepath.Glob(filepath.Join(configPath, "config.*.y*ml"))
+		util.CheckErr(err)
+		if len(configFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(configFiles)
+			util.Warning("Using custom config.*.yaml configuration: %v", printableFiles)
+			customConfig = true
+		}
+	}
+
 	if customConfig {
 		util.Warning("Custom configuration is updated on restart.\nIf you don't see your custom configuration taking effect, run 'ddev restart'.")
 	}
