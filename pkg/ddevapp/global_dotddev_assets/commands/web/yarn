@@ -6,5 +6,6 @@
 ## Example: "ddev yarn install" or "ddev yarn add learna" or "ddev yarn --cwd web/core add learna"
 ## ExecRaw: true
 ## HostWorkingDir: true
+## MutagenSync: true
 
 yarn "$@"

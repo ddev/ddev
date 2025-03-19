@@ -6,6 +6,7 @@
 ## Example: "ddev craft db/backup" or "ddev craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)
 ## ProjectTypes: craftcms,php
 ## ExecRaw: true
+## MutagenSync: true
 
 if [ "${DDEV_PROJECT_TYPE}" != "craftcms" ]; then
     echo "The craft command is only available in the craftcms project type. You can update this in your project's config file, followed by restarting the DDEV project."
