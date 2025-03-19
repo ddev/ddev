@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
@@ -59,6 +60,9 @@ func TestCmdXHGui(t *testing.T) {
 	// Hit the site
 	_, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
 	require.NoError(t, err, "failed to get http response from %s", app.GetPrimaryURL())
+	// Give xhprof a moment to write the results; it may be asynchronous sometimes
+	time.Sleep(2 * time.Second)
+
 	// Now hit xhgui UI
 	xhguiURL := app.GetXHGuiURL()
 	out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, 2)
