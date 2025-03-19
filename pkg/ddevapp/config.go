@@ -741,11 +741,11 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	configPath := filepath.Join(ddevDir, "")
 	if _, err := os.Stat(configPath); err == nil {
-		entrypointFiles, err := filepath.Glob(filepath.Join(configPath, "config.*.y*ml"))
+		configFiles, err := filepath.Glob(filepath.Join(configPath, "config.*.y*ml"))
 		util.CheckErr(err)
-		if len(entrypointFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(entrypointFiles)
-			util.Warning("Using custom config.*.y*ml configuration: %v", printableFiles)
+		if len(configFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(configFiles)
+			util.Warning("Using custom config.*.yaml configuration: %v", printableFiles)
 			customConfig = true
 		}
 	}
