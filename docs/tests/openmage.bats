@@ -45,7 +45,8 @@ teardown() {
   # Check if the frontend is working
   run curl -sf https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "2020 OpenMage Demo Store. All Rights Reserved."
+  assert_output --partial "<title>Madison Island</title>"
+  assert_output --partial "<meta name=\"keywords\" content=\"Magento, Varien, E-commerce\" />"
 
   # Check if the admin is working
   run curl -sf https://${PROJNAME}.ddev.site/index.php/admin/
