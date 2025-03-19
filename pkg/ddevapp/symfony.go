@@ -46,7 +46,6 @@ func symfonyEnvDatabase(app *DdevApp, envMap map[string]string) {
 	dbPort := ""
 	dbDriver := ""
 	dbVersion := ""
-	// todo: idealy the charset takes the mysql config into account
 	dbCharset := ""
 
 	switch app.Database.Type {
