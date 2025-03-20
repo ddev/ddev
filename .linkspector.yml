@@ -7,7 +7,7 @@ ignorePatterns:
   - pattern: "https://www.drupal.org/forum/"
   - pattern: "https://www.drupal.org/join-slack"
   - pattern: "https://www.php.net/manual/"
-  - pattern: "https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok"
+  - pattern: "https://www.drupaleasy.com"
   - pattern: "https://blackfire.io"
   - pattern: "https://www.blackfire.io"
   - pattern: "https://nightly.link/ddev/ddev/workflows/main-build/main"
@@ -26,6 +26,7 @@ ignorePatterns:
   - pattern: "https://team-ddev.1password.com"
   - pattern: "https://web.archive.org"
   - pattern: "https://specifications.freedesktop.org"
+  - pattern: "https://mutagen.io"
 aliveStatusCodes:
   - 200
   - 206
