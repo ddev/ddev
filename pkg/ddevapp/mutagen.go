@@ -528,13 +528,19 @@ func DownloadMutagen() error {
 	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", versionconstants.RequiredMutagenVersion, flavor, versionconstants.RequiredMutagenVersion)
 	util.Debug("Downloading %s to %s...", mutagenURL, destFile)
 
-	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
+	// Remove the existing mutagen files. This may help on macOS to prevent the Gatekeeper's
 	// caching bug from confusing with a previously downloaded file?
 	// Discussion in https://github.com/mutagen-io/mutagen/issues/290#issuecomment-906612749
-	_ = os.Remove(globalconfig.GetMutagenPath())
+	err := fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
+	if err != nil {
+		return fmt.Errorf("Unable to remove mutagen files: %v", err)
+	}
 
-	_ = os.MkdirAll(globalMutagenDir, 0777)
-	err := util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	err = os.MkdirAll(globalMutagenDir, 0777)
+	if err != nil {
+		return errors.Errorf("Unable to create directory %s: %v", globalMutagenDir, err)
+	}
+	err = util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
 	if err != nil {
 		return err
 	}
