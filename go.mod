@@ -9,7 +9,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cheggaaa/pb v1.0.29
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/docker/docker v28.0.1+incompatible
+	github.com/docker/docker v28.0.2+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v52 v52.0.0
@@ -83,5 +83,3 @@ require (
 )
 
 go 1.23.0
-
-toolchain go1.23.7
