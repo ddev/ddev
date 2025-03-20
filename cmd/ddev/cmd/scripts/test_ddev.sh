@@ -9,10 +9,13 @@
 # If you have NFS enabled globally, please temporarily disable it with
 # `ddev config global --performance-mode-reset`
 
+# Disable instrumentation inside `ddev debug test`
+export DDEV_NO_INSTRUMENTATION=true
+
 PROJECT_NAME=tryddevproject-${RANDOM}
 
 function header {
-  printf "\n\n======== $1 ========\n"
+  printf "\n\n======== %s ========\n" "$1"
 }
 
 function docker_desktop_version {
@@ -32,7 +35,7 @@ function docker_desktop_version {
 
 
 if [[ ${PWD} != ${HOME}* ]]; then
-  printf "\n\nWARNING: Project should usually be in a subdirectory of the user's home directory.\nInstead it's in ${PWD}\n\n"
+  printf "\n\nWARNING: Project should usually be in a subdirectory of the user's home directory.\nInstead it's in %s\n\n" "${PWD}"
 fi
 
 header "Output file will be in $1"
@@ -62,8 +65,9 @@ ddev add-on list --installed
 header "mutagen situation"
 
 echo "looking for #ddev-generated in mutagen.yml in project ${PWD}"
+echo
 if [ -f .ddev/mutagen/mutagen.yml ]; then
-  if grep '#ddev-generated' .ddev/mutagen/mutagen.yml; then
+  if grep -q '#ddev-generated' .ddev/mutagen/mutagen.yml; then
     echo "unmodified #ddev-generated found in .ddev/mutagen/mutagen.yml"
   else
     echo "MODIFIED .ddev/mutagen/mutagen.yml found"
@@ -80,9 +84,9 @@ mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJE
 cd "${PROJECT_DIR}" || exit 3
 
 function cleanup {
-  printf "\n\nCleanup: deleting test project ${PROJECT_NAME}\n"
+  printf "\n\nCleanup: deleting test project %s\n" "${PROJECT_NAME}"
   ddev delete -Oy ${PROJECT_NAME}
-  printf "\nPlease remove the files from this test with 'rm -r ${PROJECT_DIR}'\n"
+  printf "\nPlease remove the files from this test with 'rm -r %s'\n" "${PROJECT_DIR}"
 }
 
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
@@ -110,32 +114,35 @@ echo "
  HTTPS_PROXY='${HTTPS_PROXY:-}'
  http_proxy='${http_proxy:-}'
  NO_PROXY='${NO_PROXY:-}'
- "
+"
 
 header "DDEV global info"
 ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
 docker_client="$(which docker)"
-printf "docker client location: $(ls -l "${docker_client}")\n\n"
+printf "docker client location: %s\n\n" "$(ls -l "${docker_client}")"
 
 echo "docker client alternate locations:"
 which -a docker
 echo
 
-printf "Docker provider: ${docker_platform}\n"
+printf "Docker provider: %s\n" "${docker_platform}"
 if [ "${WSL_DISTRO_NAME}" = "" ] && [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
 fi
 
-if [ ${OSTYPE%-*} != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
+if [ "${OSTYPE%-*}" != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
-echo "docker version: " && docker version
-echo
-echo "docker context: " && docker context ls
-echo
-printf "\nDOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}\n"
+
+header "docker version"
+docker version
+
+header "docker context ls"
+DOCKER_HOST="" docker context ls
+
+printf "\nDOCKER_HOST=%s\nDOCKER_DEFAULT_PLATFORM=%s\n" "${DOCKER_HOST:-notset}" "${DOCKER_DEFAULT_PLATFORM:-notset}"
 
 case $docker_platform in
 colima)
@@ -153,12 +160,29 @@ rancher-desktop)
 esac
 
 if ddev debug dockercheck -h | grep dockercheck >/dev/null; then
+  header "ddev debug dockercheck"
   ddev debug dockercheck 2>/dev/null
 fi
 
-printf "Docker disk space:" && docker run --rm busybox:stable df -h //
+printf "\nDocker disk space:\n" && docker run --rm busybox:stable df -h //
+
 header "Existing docker containers"
 docker ps -a
+
+header "docker system df"
+docker system df
+
+echo "
+  Tips:
+  1. Periodically check your Docker filesystem usage with 'docker system df'
+  2. Use 'docker builder prune' to remove unused Docker build cache (it doesn't remove your data)
+  3. To remove all containers and images (it doesn't remove your data):
+    \`\`\`
+    ddev poweroff
+    docker rm -f \$(docker ps -aq)
+    docker rmi -f \$(docker images -q)
+    \`\`\`
+    (DDEV images will be downloaded again on 'ddev start')"
 
 if command -v mkcert >/dev/null; then
   header "mkcert information"
@@ -199,7 +223,7 @@ DDEV_DEBUG=true ddev start -y || ( \
   set +x && \
   ddev list && \
   ddev describe && \
-  printf "============= ddev-${PROJECT_NAME}-web healthcheck run =========\n" && \
+  printf "============= ddev-%s-web healthcheck run =========\n" "${PROJECT_NAME}" && \
   docker exec ddev-${PROJECT_NAME}-web bash -xc 'rm -f /tmp/healthy && /healthcheck.sh' && \
   printf "========= web container healthcheck ======\n" && \
   docker inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web && \
@@ -223,19 +247,19 @@ ddev exec curl --fail -I http://127.0.0.1
 
 if command -v curl >/dev/null; then
   header "curl -I of ${host_http_url} (web container http docker bind port) from outside"
-  curl --fail -I "${host_http_url}"
+  curl --connect-timeout 10 --max-time 20 --fail -I "${host_http_url}"
 
   header "curl -I of ${http_url} (router http URL) from outside"
-  curl --fail -I "${http_url}"
+  curl --connect-timeout 10 --max-time 20 --fail -I "${http_url}"
 
   header "Full curl of ${http_url} (router http URL) from outside"
-  curl "${http_url}"
+  curl --connect-timeout 10 --max-time 20 "${http_url}"
 
   header "Full curl of ${https_url} (router https URL) from outside"
-  curl "${https_url}"
+  curl --connect-timeout 10 --max-time 20 "${https_url}"
 
   header "Curl google.com to check internet access and VPN"
-  curl -I https://www.google.com
+  curl --connect-timeout 10 --max-time 20 -I https://www.google.com
 else
   header "curl is not available on the host"
 fi
