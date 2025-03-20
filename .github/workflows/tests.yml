@@ -124,7 +124,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '<1.24.0'
+          go-version: '1.23.7'
 
       - name: Override environment variables for apache-fpm
         if: ${{ matrix.apache-fpm }}
