@@ -179,7 +179,7 @@ echo "
   3. To remove all containers and images (it doesn't remove your data):
     \`\`\`
     ddev poweroff
-    docker rm -f \$(docker ps -aq)
+    docker rm -f \$(docker ps -aq) || true
     docker rmi -f \$(docker images -q)
     \`\`\`
     (DDEV images will be downloaded again on 'ddev start')"
