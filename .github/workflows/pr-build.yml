@@ -52,8 +52,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '~1.23'
-      - run: go version
+          go-version: '1.23'
 
       # Find out info about how github is getting the hash
       - run: "git describe --tags --always --dirty"
