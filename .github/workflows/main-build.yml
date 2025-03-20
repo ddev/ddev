@@ -61,7 +61,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '<1.24'
-          cache: false
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
@@ -162,7 +161,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '<1.24'
-          cache: false
 
       - name: restore build-most results from cache
         uses: actions/cache@v4
