@@ -5,6 +5,7 @@
 ## Example: "ddev wp core version" or "ddev wp plugin install user-switching --activate"
 ## ProjectTypes: wordpress
 ## ExecRaw: true
+## MutagenSync: true
 
 # Ignore anything we find in the mounted global commands
 PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
