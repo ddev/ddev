@@ -340,6 +340,9 @@ func getConfigApp(_ string) *ddevapp.DdevApp {
 	if err != nil {
 		util.Failed("Could not create a new config: %v", err)
 	}
+	if err = app.RespectConfigNameOverride(); err != nil {
+		util.Failed("Could not check for name override: %v", err)
+	}
 	return app
 }
 
