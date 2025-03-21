@@ -194,6 +194,11 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
+	appcopyName := appcopy.Name
+
+	if appcopy.OmitName {
+		appcopy.Name = ""
+	}
 
 	// Only set the images on write if non-default values have been specified.
 	if appcopy.WebImage == docker.GetWebImage() {
@@ -262,7 +267,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// The .ddev directory may still need to be populated, especially in tests
-	err = PopulateExamplesCommandsHomeadditions(appcopy.Name)
+	err = PopulateExamplesCommandsHomeadditions(appcopyName)
 	if err != nil {
 		return err
 	}

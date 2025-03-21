@@ -343,12 +343,9 @@ func getConfigApp(_ string) *ddevapp.DdevApp {
 	if err != nil {
 		util.Failed("Could not create a new config: %v", err)
 	}
-	// If the project name is changed to something else in the config overrides, update it here.
-	appWithOverrides, err := ddevapp.NewApp(appRoot, true)
-	if err != nil {
-		util.Failed("Could not create a new config: %v", err)
+	if err = app.RespectConfigNameOverride(); err != nil {
+		util.Failed("Could not check for name override: %v", err)
 	}
-	app.Name = appWithOverrides.Name
 	return app
 }
 
