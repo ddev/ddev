@@ -1630,6 +1630,32 @@ ddev xdebug off
 ddev xdebug toggle
 ```
 
+## `xhgui`
+
+Enable or disable [XHGui](../debugging-profiling/xhprof-profiling.md)
+
+`ddev xhgui` only is useful if [xhprof_mode](../configuration/config.md#xhprof_mode) is set to `xhgui`.
+
+* The `on` argument is equivalent to `enable` and `true`.
+* The `off` argument is equivalent to `disable` and `false`.
+
+```shell
+# Display whether XHGui is enabled and running
+ddev xhgui status
+
+# Turn XHGui on
+ddev xhgui
+
+# Launch the XHGui UI
+ddev xhgui launch
+
+# Turn XHGui on
+ddev xhgui on
+
+# Turn XHGui off
+ddev xhgui off
+```
+
 ## `xhprof`
 
 Enable or disable [Xhprof](../debugging-profiling/xhprof-profiling.md) (global shell web container command).

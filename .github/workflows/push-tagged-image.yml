@@ -17,6 +17,7 @@ on:
           - ddev-webserver
           - ddev-ssh-agent
           - ddev-traefik-router
+          - ddev-xhgui
           - test-ssh-server
       tag:
         description: Tag for pushed image (v1.24.5 for example)

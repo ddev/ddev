@@ -197,7 +197,7 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 // RemoveAddon removes an addon, taking care to respect #ddev-generated
 // addonName can be the "Name", or the full "Repository" like ddev/ddev-redis, or
 // the final par of the repository name like ddev-redis
-func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool) error {
+func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool, skipRemovalActions bool) error {
 	if addonName == "" {
 		return fmt.Errorf("No add-on name specified for removal")
 	}
@@ -215,11 +215,13 @@ func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, ba
 	}
 
 	// Execute any removal actions
-	for i, action := range manifestData.RemovalActions {
-		err = ProcessAddonAction(action, dict, bash, verbose)
-		desc := GetAddonDdevDescription(action)
-		if err != nil {
-			util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
+	if !skipRemovalActions {
+		for i, action := range manifestData.RemovalActions {
+			err = ProcessAddonAction(action, dict, bash, verbose)
+			desc := GetAddonDdevDescription(action)
+			if err != nil {
+				util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
+			}
 		}
 	}
 

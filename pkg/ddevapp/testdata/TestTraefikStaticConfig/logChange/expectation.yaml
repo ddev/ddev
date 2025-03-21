@@ -18,6 +18,10 @@ entryPoints:
     address: :8025
   http-8026:
     address: :8026
+  http-8142:
+    address: :8142
+  http-8143:
+    address: :8143
   traefik:
     address: :10999
 global:
