@@ -278,6 +278,11 @@ services:
     ports:
       - "{{ $.DockerIP }}:{{ .HostXHGuiPort }}:{{ .XHGuiPort }}"
     {{- end }}
+    {{- if eq .XHProfMode "xhgui" }}
+    volumes:
+      - run_nginx:/run/nginx
+    {{- end }}
+
     environment:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - HTTP_EXPOSE={{ .XHGuiHTTPPort }}:{{ .XHGuiPort }}
@@ -348,3 +353,7 @@ volumes:
     external: true
 
   {{ end }}{{/* end if and .MutagenEnabled (not .NoProjectMount) */}}
+  {{- if eq .XHProfMode "xhgui" }}
+  run_nginx:
+    name: "{{ .Name }}_xhgui_run_nginx"
+  {{ end }}
