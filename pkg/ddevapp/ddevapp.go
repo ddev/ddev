@@ -1855,6 +1855,10 @@ func (app *DdevApp) PullContainerImages() error {
 	if err != nil {
 		return err
 	}
+	// Don't pull xhgui if not in xhgui mode
+	if app.GetXHProfMode() != types.XHProfModeXHGui {
+		images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
+	}
 	images = append(images, FindNotOmittedImages(app)...)
 
 	for _, i := range images {
