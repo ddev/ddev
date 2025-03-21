@@ -5,7 +5,7 @@
 
 http:
   routers:
-    {{ $appname := .App.Name}}{{ range $s := .RoutingTable }}
+    {{ $appname := .App.Name}}{{ $apptld := .App.ProjectTLD }}{{ range $s := .RoutingTable }}
     {{- if not $s.HTTPS -}}
     {{ $appname }}-{{ $s.Service.InternalServiceName }}-{{ $s.Service.InternalServicePort }}-http:
       entrypoints:
@@ -56,7 +56,7 @@ http:
     {{$appname}}-{{ $s.Service.ServiceName }}:
       loadbalancer:
         servers:
-          - url: http://ddev-{{$appname}}-{{$s.Service.InternalServiceName}}:{{$s.Service.InternalServicePort}}
+          - url: http://ddev-{{$appname}}-{{$s.Service.InternalServiceName}}.{{$apptld}}:{{$s.Service.InternalServicePort}}
         {{ end }}
     {{ end }}
 
