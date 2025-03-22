@@ -772,6 +772,7 @@ ddev magento setup:upgrade
     ```bash
     mkdir my-openmage-site && cd my-openmage-site
     ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev start
     ddev composer init --name "openmage/openmage-composer-test" --description "OpenMage starter project" --type "project" -l "OSL-3.0" -s "dev" -q
     ddev composer config extra.magento-root-dir "public_test"
     ddev composer config extra.enable-patching true
