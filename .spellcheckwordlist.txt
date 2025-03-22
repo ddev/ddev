@@ -493,6 +493,7 @@ on
 ons
 one
 oneshot
+openmage
 or
 oriented
 output
