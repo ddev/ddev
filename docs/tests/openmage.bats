@@ -103,6 +103,9 @@ teardown() {
   ddev . wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
   assert_success
 
+  run ddev mutagen sync
+  assert_success
+  
   # Silent OpenMage install with sample data
   run ddev openmage-install -q
   assert_success
