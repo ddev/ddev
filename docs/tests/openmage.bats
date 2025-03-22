@@ -58,14 +58,14 @@ teardown() {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  run ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+  run ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
   assert_success
 
   run ddev start -y
   assert_success
 
   # init project
-  run ddev composer init --name "openmage/composer-test" --description "OpenMage composer test" --type "project" -l "OSL-3.0" -s "dev" -q
+  run ddev composer init --name "openmage/composer-test" --description "OpenMage starter project" --type "project" -l "OSL-3.0" -s "dev" -q
   assert_success
 
   # set extra config
