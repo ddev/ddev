@@ -266,7 +266,7 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"magentophpversion":  {nodeps.AppTypeMagento, nodeps.PHPDefault},
+		"openmagehpversion":  {nodeps.AppTypeOpenMage, nodeps.PHP81},
 		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHP82},
 		"Drupal11phpversion": {nodeps.AppTypeDrupal11, nodeps.PHPDefault},
 	}
