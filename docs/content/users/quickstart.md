@@ -782,7 +782,6 @@ ddev magento setup:upgrade
     ddev composer config allow-plugins.openmage/composer-plugin true
     ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.13"
     ddev . wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
-    ddev start
     ddev composer install
     # Silent OpenMage install with sample data
     # See `ddev openmage-install -h` for more options
