@@ -18,7 +18,7 @@ teardown() {
   run git clone --depth=1 https://github.com/OpenMage/magento-lts .
   assert_success
 
-  run ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+  run ddev config --project-type=openmage --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
   assert_success
 
   run ddev start -y
