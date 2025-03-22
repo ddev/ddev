@@ -767,6 +767,30 @@ ddev magento setup:upgrade
     ddev launch /admin
     ```
 
+=== "Composer"
+
+    ```bash
+    mkdir my-openmage-site && cd my-openmage-site
+    ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev composer init --name "openmage/openmage-composer-test" --description "OpenMage starter project" --type "project" -l "OSL-3.0" -s "dev" -q
+    ddev composer config extra.magento-root-dir "public_test"
+    ddev composer config extra.enable-patching true
+    ddev composer config extra.magento-core-package-type "magento-source"
+    ddev composer config allow-plugins.cweagans/composer-patches true
+    ddev composer config allow-plugins.magento-hackathon/magento-composer-installer true
+    ddev composer config allow-plugins.aydin-hassan/magento-core-composer-installer true
+    ddev composer config allow-plugins.openmage/composer-plugin true
+    ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.13"
+    ddev . wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
+    ddev start
+    ddev composer install
+    # Silent OpenMage install with sample data
+    # See `ddev openmage-install -h` for more options
+    ddev openmage-install -q
+    # Login using `admin` user and `veryl0ngpassw0rd` password
+    ddev launch /admin
+    ```
+
 Note that OpenMage itself provides several custom DDEV commands, including
 `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
 and `php-cs-fixer`.
