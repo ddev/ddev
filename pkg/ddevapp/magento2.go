@@ -12,15 +12,6 @@ import (
 	copy2 "github.com/otiai10/copy"
 )
 
-// isMagentoApp returns true if the app is of type magento
-func isMagentoApp(app *DdevApp) bool {
-	ism1, err := fileutil.FgrepStringInFile(filepath.Join(app.GetAbsDocroot(false), "README.md"), `Magento - Long Term Support`)
-	if err == nil && ism1 {
-		return true
-	}
-	return false
-}
-
 // isMagento2App returns true if the app is of type magento2
 func isMagento2App(app *DdevApp) bool {
 	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.GetAbsDocroot(false), "..", "SECURITY.md"), `https://hackerone.com/`)
@@ -30,8 +21,13 @@ func isMagento2App(app *DdevApp) bool {
 	return false
 }
 
-// createMagentoSettingsFile manages creation and modification of local.xml.
-func createMagentoSettingsFile(app *DdevApp) (string, error) {
+// getMagento2UploadDirs will return the default paths.
+func getMagento2UploadDirs(_ *DdevApp) []string {
+	return []string{"media"}
+}
+
+// createMagento2SettingsFile manages creation and modification of app/etc/env.php.
+func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if the file is managed by ddev.
@@ -48,10 +44,11 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := bundledAssets.ReadFile("magento/local.xml")
+		content, err := bundledAssets.ReadFile("magento2/env.php")
 		if err != nil {
 			return "", err
 		}
+
 		templateVars := map[string]interface{}{"DBHostname": "db"}
 		err = fileutil.TemplateStringToFile(string(content), templateVars, app.SiteSettingsPath)
 		if err != nil {
@@ -62,13 +59,13 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	return app.SiteDdevSettingsFile, nil
 }
 
-// setMagentoSiteSettingsPaths sets the paths to local.xml for templating.
-func setMagentoSiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "app", "etc", "local.xml")
+// setMagento2SiteSettingsPaths sets the paths to env.php for templating.
+func setMagento2SiteSettingsPaths(app *DdevApp) {
+	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "..", "app", "etc", "env.php")
 }
 
-// magentoImportFilesAction defines the magento workflow for importing project files.
-func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+// magento2ImportFilesAction defines the magento workflow for importing project files.
+func magento2ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
@@ -109,54 +106,6 @@ func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	return nil
-}
-
-// getMagentoUploadDirs will return the default paths.
-func getMagentoUploadDirs(_ *DdevApp) []string {
-	return []string{"media"}
-}
-
-// getMagento2UploadDirs will return the default paths.
-func getMagento2UploadDirs(_ *DdevApp) []string {
-	return []string{"media"}
-}
-
-// createMagento2SettingsFile manages creation and modification of app/etc/env.php.
-func createMagento2SettingsFile(app *DdevApp) (string, error) {
-
-	if fileutil.FileExists(app.SiteSettingsPath) {
-		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)
-		if err != nil {
-			return "", err
-		}
-
-		// If the signature wasn't found, warn the user and return.
-		if !signatureFound {
-			util.Warning("%s already exists and is managed by the user.", app.SiteSettingsPath)
-			return "", nil
-		}
-	} else {
-		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
-
-		content, err := bundledAssets.ReadFile("magento/env.php")
-		if err != nil {
-			return "", err
-		}
-
-		templateVars := map[string]interface{}{"DBHostname": "db"}
-		err = fileutil.TemplateStringToFile(string(content), templateVars, app.SiteSettingsPath)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return app.SiteDdevSettingsFile, nil
-}
-
-// setMagento2SiteSettingsPaths sets the paths to env.php for templating.
-func setMagento2SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "..", "app", "etc", "env.php")
 }
 
 // magentoConfigOverrideAction is not currently required
