@@ -776,7 +776,10 @@ ddev magento setup:upgrade
     ddev launch /admin
     ```
 
-=== "Git Clone"
+    !!!info
+        DDEV config `--docroot` has to match composer config `extra.magento-root-dir`. 
+
+=== "Git Clone (for contributors)"
 
     ```bash
     mkdir my-openmage-site && cd my-openmage-site
