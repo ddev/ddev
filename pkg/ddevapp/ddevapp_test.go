@@ -129,16 +129,16 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/testpage", Expect: "This is test text for TestDdevFullSiteSetup"},
 			FilesImageURI:                 "/fileadmin/introduction/images/map.png",
 		},
-		// 6: magento1
+		// 6: OpenMage
 		{
-			Name:                          "testpkgmagento",
+			Name:                          "testpkgopenmage",
 			SourceURL:                     "https://github.com/OpenMage/magento-lts/archive/refs/tags/v20.13.0.tar.gz",
 			ArchiveInternalExtractionPath: "magento-lts-20.13.0/",
-			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db_secure_url.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/TestPkgOpenMage_db_secure_url.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/openmage_upload_files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          nodeps.AppTypeMagento,
+			Type:                          nodeps.AppTypeOpenMage,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/LICENSE.txt", Expect: `Open Software License ("OSL")`},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a demo store"},
 			FilesImageURI:                 "/media/wrapping/Chrysanthemum.jpg",
@@ -2722,8 +2722,8 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
-		nodeps.AppTypeMagento:      {"media"},
 		nodeps.AppTypeMagento2:     {"media"},
+		nodeps.AppTypeOpenMage:     {"media"},
 		nodeps.AppTypeSilverstripe: {"assets"},
 	}
 
