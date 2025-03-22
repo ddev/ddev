@@ -194,21 +194,21 @@ func init() {
 			uploadDirs:           getSilverstripeUploadDirs,
 		},
 
-		nodeps.AppTypeMagento: {
-			settingsCreator:      createMagentoSettingsFile,
-			uploadDirs:           getMagentoUploadDirs,
-			appTypeSettingsPaths: setMagentoSiteSettingsPaths,
-			appTypeDetect:        isMagentoApp,
-			importFilesAction:    magentoImportFilesAction,
-		},
-
 		nodeps.AppTypeMagento2: {
 			settingsCreator:      createMagento2SettingsFile,
 			uploadDirs:           getMagento2UploadDirs,
 			appTypeSettingsPaths: setMagento2SiteSettingsPaths,
 			appTypeDetect:        isMagento2App,
 			configOverrideAction: magento2ConfigOverrideAction,
-			importFilesAction:    magentoImportFilesAction,
+			importFilesAction:    magento2ImportFilesAction,
+		},
+
+		nodeps.AppTypeOpenMage: {
+			settingsCreator:      createOpenMageSettingsFile,
+			uploadDirs:           getOpenMageUploadDirs,
+			appTypeSettingsPaths: setOpenMageSiteSettingsPaths,
+			appTypeDetect:        isOpenMageApp,
+			importFilesAction:    openmageImportFilesAction,
 		},
 
 		nodeps.AppTypePHP: {

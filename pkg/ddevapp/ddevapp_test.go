@@ -132,8 +132,8 @@ var (
 		// 6: magento1
 		{
 			Name:                          "testpkgmagento",
-			SourceURL:                     "https://github.com/OpenMage/magento-lts/archive/refs/tags/v20.0.13.tar.gz",
-			ArchiveInternalExtractionPath: "magento-lts-20.0.13/",
+			SourceURL:                     "https://github.com/OpenMage/magento-lts/archive/refs/tags/v20.13.0.tar.gz",
+			ArchiveInternalExtractionPath: "magento-lts-20.13.0/",
 			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db_secure_url.tar.gz",
 			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
 			FullSiteTarballURL:            "",
