@@ -35,8 +35,6 @@ services:
       - http_proxy=
       - HTTPS_PROXY=
       - https_proxy=
-      - NO_PROXY=
-      - no_proxy=
     restart: "no"
     healthcheck:
       test: "/healthcheck.sh"
