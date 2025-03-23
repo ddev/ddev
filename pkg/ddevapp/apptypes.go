@@ -194,6 +194,14 @@ func init() {
 			uploadDirs:           getSilverstripeUploadDirs,
 		},
 
+		nodeps.AppTypeMagento: {
+			settingsCreator:      createMagentoSettingsFile,
+			uploadDirs:           getMagentoUploadDirs,
+			appTypeSettingsPaths: setMagentoSiteSettingsPaths,
+			appTypeDetect:        isMagentoApp,
+			importFilesAction:    magentoImportFilesAction,
+		},
+
 		nodeps.AppTypeMagento2: {
 			settingsCreator:      createMagento2SettingsFile,
 			uploadDirs:           getMagento2UploadDirs,
