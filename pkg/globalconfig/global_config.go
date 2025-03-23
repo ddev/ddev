@@ -520,6 +520,14 @@ func ReadProjectList() error {
 		return err
 	}
 
+	// Sanitize the project list
+	for name, project := range DdevProjectList {
+		if project == nil || project.AppRoot == "" {
+			logrus.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
+			delete(DdevProjectList, name)
+		}
+	}
+
 	// Clean up the deprecated DdevGlobalConfig.ProjectList if it not nil,
 	// but only if the new one DdevProjectList is not nil (for safe migration).
 	if DdevGlobalConfig.ProjectList != nil && DdevProjectList != nil {
