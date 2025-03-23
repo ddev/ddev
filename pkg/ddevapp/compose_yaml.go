@@ -152,7 +152,6 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		if _, exists := networks["ddev_default"]; !exists {
 			networks["ddev_default"] = nil
 		}
-		networks["ddev_default"] = addAliasesToNetwork(networks["ddev_default"], app, name)
 		if _, exists := networks["default"]; !exists {
 			networks["default"] = nil
 		}
@@ -205,43 +204,4 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	}
 
 	return tempMap, nil
-}
-
-// addAliasesToNetwork adds the serviceAlias to the network if it doesn't already exist.
-// This ensures the Traefik load balancer works correctly,
-// particularly under corporate proxy configurations where alias-based routing is required.
-// See https://github.com/ddev/ddev/pull/7118 and https://github.com/docker/compose/issues/11433
-func addAliasesToNetwork(network interface{}, app *DdevApp, service string) interface{} {
-	// Use the full container name with TLD to ensure NO_PROXY works correctly with the TLD wildcard.
-	// This alias is also used in traefik_config_template.yaml for the load balancer URL.
-	serviceAlias := GetContainerName(app, service) + "." + app.ProjectTLD
-
-	var networkMap map[string]interface{}
-	if network == nil {
-		networkMap = make(map[string]interface{})
-	} else {
-		networkMap = network.(map[string]interface{})
-	}
-
-	if aliases, ok := networkMap["aliases"]; ok {
-		aliasList, ok := aliases.([]interface{})
-		if !ok {
-			aliasList = []interface{}{}
-		}
-		found := false
-		// Add serviceAlias if it's not already in the list
-		for _, alias := range aliasList {
-			if alias == serviceAlias {
-				found = true
-				break
-			}
-		}
-		if !found {
-			networkMap["aliases"] = append(aliasList, serviceAlias)
-		}
-	} else {
-		// If "aliases" does not exist, create it with the serviceAlias
-		networkMap["aliases"] = []string{serviceAlias}
-	}
-	return networkMap
 }

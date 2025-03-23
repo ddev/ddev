@@ -3546,7 +3546,6 @@ func TestMultipleComposeFiles(t *testing.T) {
 	assert.NoError(err)
 	_, err = app.ReadConfig(true)
 	require.NoError(t, err)
-	app.DockerEnv()
 	err = app.WriteDockerComposeYAML()
 	require.NoError(t, err)
 
@@ -3585,24 +3584,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 			}
 			// Verify that users can add and override network properties
 			if networks, ok := w["networks"].(map[string]interface{}); ok {
-				if network, ok := networks["ddev_default"].(map[string]interface{}); ok {
-					if aliases, ok := network["aliases"].([]interface{}); ok {
-						aliasList := make([]string, len(aliases))
-						for i, alias := range aliases {
-							aliasList[i], ok = alias.(string)
-							if !ok {
-								t.Errorf("Failed to parse alias in web ddev_default at index %d: it is not a string: %v", i, alias)
-							}
-						}
-						// The aliases should contain the expected values
-						// From DDEV codebase (needed for Traefik load balancer to work under proxies)
-						assert.Contains(aliasList, ddevapp.GetContainerName(app, "web")+"."+app.ProjectTLD)
-						// From docker-compose.override.yaml
-						assert.Contains(aliasList, "web-extra-alias")
-					} else {
-						t.Errorf("Failed to parse 'aliases' in web ddev_default network: %v", network)
-					}
-				}
+				assert.Nil(networks["ddev_default"])
 				if network, ok := networks["default"].(map[string]interface{}); ok {
 					assert.Equal(1, network["priority"])
 				} else {
