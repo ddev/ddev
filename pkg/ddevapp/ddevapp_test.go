@@ -2831,6 +2831,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
+		nodeps.AppTypeMagento:      {"media"},
 		nodeps.AppTypeMagento2:     {"media"},
 		nodeps.AppTypeOpenMage:     {"media"},
 		nodeps.AppTypeSilverstripe: {"assets"},
