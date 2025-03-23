@@ -31,6 +31,14 @@ services:
       - USE_LETSENCRYPT={{ .letsencrypt }}
         {{ end }}{{/* end if .letsencrypt */}}
       - TZ={{ .Timezone }}
+      # Unset proxy environment variables for Traefik to prevent blocking internal container connections
+      # Docker automatically sets both uppercase and lowercase variables
+      - HTTP_PROXY=
+      - http_proxy=
+      - HTTPS_PROXY=
+      - https_proxy=
+      - NO_PROXY=
+      - no_proxy=
     restart: "no"
     healthcheck:
       test: "/healthcheck.sh"
