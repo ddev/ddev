@@ -63,7 +63,7 @@ func RenderHomeRootedDir(path string) string {
 	userDir, err := os.UserHomeDir()
 	util.CheckErr(err)
 	result := strings.Replace(path, userDir, "~", 1)
-	result = strings.Replace(result, "\\", "/", -1)
+	result = strings.ReplaceAll(result, "\\", "/")
 	return result
 }
 
@@ -324,8 +324,8 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, string, error
 		return "no error detected", "", nil
 	}
 	errString := errorReceived.Error()
-	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
-	errString = strings.Replace(errString, "\n", "", -1)
+	errString = strings.ReplaceAll(errString, "Received unexpected error:", "")
+	errString = strings.ReplaceAll(errString, "\n", "")
 	errString = strings.Trim(errString, " \t\n\r")
 	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
 		splitError := strings.Split(errString, " ")
@@ -461,14 +461,14 @@ func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []stri
 		// Get all of the projects we're interested in for this completion function.
 		var apps []*DdevApp
 		var err error
-		if status == "inactive" {
+		switch status {
+		case "inactive":
 			apps, err = GetInactiveProjects()
-		} else if status == "active" {
+		case "active":
 			apps, err = GetProjects(true)
-		} else if status == "all" {
+		case "all":
 			apps, err = GetProjects(false)
-		} else {
-			// This is an error state - but we just return nothing
+		default:
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 		// Return nothing if we have nothing, or return all of the project names.

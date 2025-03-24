@@ -136,7 +136,7 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 	}
 	if err != nil {
 		util.Warning("%c %s", '\U0001F44E', desc)
-		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
+		return fmt.Errorf("unable to run action %v: %v, output=%s", action, err, out)
 	}
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc)
@@ -182,14 +182,14 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 		}
 
 		// Set the next page number for the next request
-		opts.ListOptions.Page = resp.NextPage
+		opts.Page = resp.NextPage
 	}
 	out := ""
 	for _, r := range allRepos {
 		out = out + fmt.Sprintf("%s: %s\n", r.GetFullName(), r.GetDescription())
 	}
 	if len(allRepos) == 0 {
-		return nil, fmt.Errorf("No add-ons found")
+		return nil, fmt.Errorf("no add-ons found")
 	}
 	return allRepos, nil
 }
@@ -199,7 +199,7 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 // the final par of the repository name like ddev-redis
 func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool, skipRemovalActions bool) error {
 	if addonName == "" {
-		return fmt.Errorf("No add-on name specified for removal")
+		return fmt.Errorf("no add-on name specified for removal")
 	}
 
 	manifests, err := GatherAllManifests(app)
@@ -257,7 +257,7 @@ func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, ba
 
 	err = os.RemoveAll(app.GetConfigPath(filepath.Join(AddonMetadataDir, manifestData.Name)))
 	if err != nil {
-		return fmt.Errorf("Error removing addon metadata directory %s: %v", manifestData.Name, err)
+		return fmt.Errorf("error removing addon metadata directory %s: %v", manifestData.Name, err)
 	}
 	util.Success("Removed add-on %s", addonName)
 	return nil
@@ -290,7 +290,7 @@ func GatherAllManifests(app *DdevApp) (map[string]AddonManifest, error) {
 		var manifestData = &AddonManifest{}
 		err = yaml.Unmarshal([]byte(manifestString), manifestData)
 		if err != nil {
-			return nil, fmt.Errorf("Error unmarshalling manifest data: %v", err)
+			return nil, fmt.Errorf("error unmarshalling manifest data: %v", err)
 		}
 		allManifests[manifestData.Name] = *manifestData
 		allManifests[manifestData.Repository] = *manifestData

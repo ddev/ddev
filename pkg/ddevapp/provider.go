@@ -132,7 +132,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		} else {
 			output.UserOut.Println("Importing files...")
 			f := ""
-			if files != nil && len(files) > 0 {
+			if len(files) > 0 {
 				f = files[0]
 			}
 			err = provider.doFilesImport(f, "")
@@ -440,7 +440,7 @@ func (p *Provider) injectedEnvironment() string {
 	if len(p.EnvironmentVariables) > 0 {
 		s = "export"
 		for k, v := range p.EnvironmentVariables {
-			v = strings.Replace(v, " ", `\ `, -1)
+			v = strings.ReplaceAll(v, " ", `\ `)
 			s = s + fmt.Sprintf(" %s=%s ", k, v)
 		}
 	}

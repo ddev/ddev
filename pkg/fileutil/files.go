@@ -245,7 +245,7 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 		return err
 	}
 
-	output := bytes.Replace(input, []byte(searchString), []byte(replaceString), -1)
+	output := bytes.ReplaceAll(input, []byte(searchString), []byte(replaceString))
 
 	// nolint: revive
 	if err = os.WriteFile(destPath, output, 0666); err != nil {
@@ -384,7 +384,6 @@ func ReplaceSimulatedLinks(path string) {
 		replacedLinks = append(replacedLinks, l.LinkLocation)
 	}
 	util.Success("Replaced these simulated symlinks with real symlinks: %v", replacedLinks)
-	return
 }
 
 // RemoveContents removes contents of passed directory

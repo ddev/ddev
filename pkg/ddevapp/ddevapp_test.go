@@ -3537,21 +3537,22 @@ func TestMultipleComposeFiles(t *testing.T) {
 			if !ok {
 				t.Errorf("failed to parse network %s", name)
 			} else {
-				if name == "ddev_default" {
+				switch name {
+				case "ddev_default":
 					assert.Equal("ddev_default", networkMap["name"])
 					if _, ok := networkMap["external"].(bool); !ok {
 						t.Errorf("failed to parse external network %s", name)
 					} else {
 						assert.True(networkMap["external"].(bool))
 					}
-				} else if name == "default" {
+				case "default":
 					assert.Equal(app.GetDefaultNetworkName(), networkMap["name"])
 					if _, ok := networkMap["external"].(bool); ok {
 						t.Errorf("default network cannot be external")
 					}
-				} else if name == "dummy" {
+				case "dummy":
 					assert.Equal("dummy_name", networkMap["name"])
-				} else {
+				default:
 					t.Errorf("Unexpected network name %s", name)
 				}
 				if external, ok := networkMap["external"].(bool); !ok || !external {

@@ -81,7 +81,6 @@ func TestShareCmd(t *testing.T) {
 					continue
 				default:
 					t.Errorf("failed unmarshaling %v: %v", logLine, err)
-					break
 				}
 			}
 			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {

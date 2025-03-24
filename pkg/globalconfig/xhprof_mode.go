@@ -7,8 +7,8 @@ import (
 // GetXHProfMode returns the xhprof mode config respecting
 // defaults.
 func (c *GlobalConfig) GetXHProfMode() types.XHProfMode {
-	switch {
-	case c.XHProfMode == types.XHProfModeEmpty:
+	switch c.XHProfMode {
+	case types.XHProfModeEmpty:
 		return types.FlagXHProfModeDefault
 	default:
 		return c.XHProfMode

@@ -1429,11 +1429,11 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 	// This may cause problems with previously set permissions when installing/upgrading packages.
 	// Place this at the very end of the Dockerfile.
 	if strings.Contains(fullpath, "webimageBuild") {
-		contents = contents + fmt.Sprintf(`
+		contents = contents + `
 ### DDEV-injected folders permission fix
 RUN chmod 777 /run/php /var/log
 RUN mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
-`)
+`
 	}
 
 	return WriteImageDockerfile(fullpath, []byte(contents))

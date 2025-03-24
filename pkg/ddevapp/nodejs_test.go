@@ -64,9 +64,10 @@ func TestNodeJSVersions(t *testing.T) {
 	// Testing some random versions, complete, incomplete, and labels
 	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20"} {
 		app.NodeJSVersion = v
-		if app.NodeJSVersion == "auto" {
+		switch app.NodeJSVersion {
+		case "auto":
 			v = nvmrcVersion
-		} else if app.NodeJSVersion == "engine" {
+		case "engine":
 			v = packageJSONVersion
 		}
 		err = app.Restart()

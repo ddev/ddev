@@ -117,7 +117,6 @@ var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 // SetLetterBytes exists solely so that tests can override the default characters used by
 // RandString. It should probably be avoided for 'normal' operations.
 // this is actually used in utils_test.go (test only) so we set nolint on it.
-// nolint: deadcode
 func SetLetterBytes(lb string) {
 	letterBytes = lb
 }

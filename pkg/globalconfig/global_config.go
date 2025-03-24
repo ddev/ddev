@@ -505,7 +505,7 @@ func ReadProjectList() error {
 		}
 		if os.IsNotExist(err) {
 			// If someone upgrades from an earlier version, the global config may hold the project list.
-			if DdevGlobalConfig.ProjectList != nil && len(DdevGlobalConfig.ProjectList) > 0 {
+			if len(DdevGlobalConfig.ProjectList) > 0 {
 				DdevProjectList = DdevGlobalConfig.ProjectList
 				err := WriteProjectList(DdevProjectList)
 				if err != nil {
@@ -861,7 +861,7 @@ func IsInternetActive() bool {
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
 	if DdevDebug {
-		if active == false {
+		if !active {
 			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/usage/offline/ for info.")
 		}
 		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)

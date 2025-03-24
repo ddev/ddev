@@ -1,3 +1,32 @@
+version: "2"
 run:
   modules-download-mode: vendor
-
+output:
+  formats:
+    text:
+      path: stdout
+      colors: true
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - revive
+    - staticcheck
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - staticcheck
+        text: 'S1008:' # Simplify returning boolean expression
+      - linters:
+          - staticcheck
+        text: 'QF1001:' # Apply De Morgan’s law
+formatters:
+  enable:
+    - gofmt

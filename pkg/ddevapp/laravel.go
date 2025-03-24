@@ -45,7 +45,8 @@ func laravelPostStartAction(app *DdevApp) error {
 	}
 	port := "3306"
 	dbConnection := "mariadb"
-	if app.Database.Type == nodeps.MariaDB {
+	switch app.Database.Type {
+	case nodeps.MariaDB:
 		hasMariaDbDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config/database.php"), "mariadb")
 		if !hasMariaDbDriver {
 			// Older versions of Laravel (before 11) use "mysql" driver for MariaDB
@@ -53,9 +54,9 @@ func laravelPostStartAction(app *DdevApp) error {
 			// InvalidArgumentException Database connection [mariadb] not configured
 			dbConnection = "mysql"
 		}
-	} else if app.Database.Type == nodeps.MySQL {
+	case nodeps.MySQL:
 		dbConnection = "mysql"
-	} else if app.Database.Type == nodeps.Postgres {
+	case nodeps.Postgres:
 		dbConnection = "pgsql"
 		port = "5432"
 	}

@@ -386,6 +386,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
 				vhostVal := virtualHost
+				// nolint: staticcheck
 				vhostValStr := fmt.Sprintf("%s", vhostVal)
 				vhostsList := strings.Split(vhostValStr, ",")
 
@@ -1021,7 +1022,7 @@ func (app *DdevApp) SiteStatus() (string, string) {
 
 	_, err := CheckForConf(app.GetAppRoot())
 	if err != nil {
-		return SiteConfigMissing, fmt.Sprintf("%s", SiteConfigMissing)
+		return SiteConfigMissing, SiteConfigMissing
 	}
 
 	statuses := map[string]string{"web": ""}
@@ -3321,7 +3322,7 @@ func (app *DdevApp) GetPostgresVolumeName() string {
 
 // GetComposeProjectName returns the name of the docker-compose project
 func (app *DdevApp) GetComposeProjectName() string {
-	return strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1))
+	return strings.ToLower("ddev-" + strings.ReplaceAll(app.Name, `.`, ""))
 }
 
 // GetDefaultNetworkName returns the default project network name

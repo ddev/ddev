@@ -151,7 +151,7 @@ func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, n
 	networkMatchFound := false
 	for _, network := range networks {
 		if network.Name == netName || network.ID == netName {
-			if networkMatchFound == true {
+			if networkMatchFound {
 				err := client.NetworkRemove(ctx, network.ID)
 				// If it's a "no such network" there's no reason to report error
 				if err != nil && !IsErrNotFound(err) {
@@ -988,7 +988,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
 	if runtime.GOOS == "windows" {
 		for i := range binds {
-			binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
+			binds[i] = strings.ReplaceAll(binds[i], `\`, `/`)
 			if strings.Index(binds[i], ":") == 1 {
 				binds[i] = strings.Replace(binds[i], ":", "", 1)
 				binds[i] = "/" + binds[i]
@@ -1173,7 +1173,7 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 // MassageWindowsNFSMount changes C:\Path\to\something to /c/Path/to/something
 func MassageWindowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
-		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
+		pathPortion := strings.ReplaceAll(mountPoint[2:], `\`, "/")
 		drive := string(mountPoint[0])
 		// Because we use $HOME to get home in exports, and $HOME has /c/Users/xxx
 		// change the drive to lower case.
@@ -1275,20 +1275,16 @@ func GetHostDockerInternalIP() (string, error) {
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
 		util.Debug("host.docker.internal='%s' because on Gitpod", hostDockerInternal)
-		break
 	case nodeps.IsCodespaces():
 		util.Debug("host.docker.internal='%s' because on Codespaces", hostDockerInternal)
-		break
 
 	case nodeps.IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
 		util.Debug("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", hostDockerInternal)
-		break
 
 	case nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
 		// If IDE is inside WSL2 then the normal Linux processing should work
 		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
-		break
 
 	case nodeps.IsWSL2() && !IsDockerDesktop():
 		// Microsoft instructions for finding Windows IP address at
@@ -1303,11 +1299,9 @@ func GetHostDockerInternalIP() (string, error) {
 	case runtime.GOOS == "linux":
 		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
 		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
-		break
 
 	default:
 		util.Debug("host.docker.internal='%s' because no other case was discovered", hostDockerInternal)
-		break
 	}
 
 	return hostDockerInternal, nil
@@ -1591,7 +1585,7 @@ func DownloadDockerCompose() error {
 	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
-	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	err = util.DownloadFile(destFile, composeURL, os.Getenv("DDEV_NONINTERACTIVE") != "true")
 	if err != nil {
 		return err
 	}
