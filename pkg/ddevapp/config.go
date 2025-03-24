@@ -90,6 +90,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.NodeJSVersion = nodeps.NodeJSDefault
 	app.WebserverType = nodeps.WebserverDefault
 	app.SetPerformanceMode(nodeps.PerformanceModeDefault)
+	app.XHProfMode = nodeps.XHProfModeDefault
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
@@ -762,7 +763,7 @@ func (app *DdevApp) CheckDeprecations() {
 // FixObsolete removes files that may be obsolete, etc.
 func (app *DdevApp) FixObsolete() {
 	// Remove old in-project commands (which have been moved to global)
-	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
+	for _, command := range []string{"db/mysql", "host/launch", "host/xhgui", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
@@ -783,11 +784,13 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn"} {
+	for _, command := range []string{"host/yarn", "host/xhgui"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
-		if _, err := os.Stat(cmdPath); err == nil {
-			err1 := os.Remove(cmdPath)
-			if err1 != nil {
+		// TODO: Consider checking for #ddev-generated
+		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(cmdPath)
+			if err != nil {
 				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", cmdPath, err)
 			}
 		}
@@ -827,6 +830,15 @@ func (app *DdevApp) FixObsolete() {
 		err := os.RemoveAll(legacyCommandDir)
 		if err != nil {
 			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacyCommandDir, err)
+		}
+	}
+
+	addOns := GetInstalledAddonNames(app)
+	if slices.Contains(addOns, "xhgui") {
+		util.Warning("The xhgui add-on is no longer necessary with this version of DDEV, removing it.")
+		err := RemoveAddon(app, "xhgui", nil, util.FindBashPath(), false, true)
+		if err != nil {
+			util.Warning("Error removing xhgui add-on: %v", err)
 		}
 	}
 }
@@ -895,6 +907,12 @@ type composeYAMLVars struct {
 	WebExtraExposedPorts            string
 	BitnamiVolumeDir                string
 	UseHardenedImages               bool
+	XHGuiHTTPPort                   string
+	XHGuiHTTPSPort                  string
+	XHGuiPort                       string
+	HostXHGuiPort                   string
+	XhguiImage                      string
+	XHProfMode                      types.XHProfMode
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -990,6 +1008,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		StartScriptTimeout:      app.GetStartScriptTimeout(),
+		XHGuiHTTPPort:           app.GetXHGuiHTTPPort(),
+		XHGuiHTTPSPort:          app.GetXHGuiHTTPSPort(),
+		XHGuiPort:               GetInternalPort(app, "xhgui"),
+		HostXHGuiPort:           app.HostXHGuiPort,
+		XhguiImage:              docker.GetXhguiImage(),
+		XHProfMode:              app.GetXHProfMode(),
+
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
 		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
@@ -1081,6 +1106,15 @@ ENV N_PREFIX=/home/$username/.n
 ENV N_INSTALL_VERSION="%s"
 `, app.NodeJSVersion)
 	}
+	// TODO: I would rather put this in the ddev-webserver image but...
+	// - We don't know the username yet there, so would have to put in /usr/local/composer
+	// - /usr/local/composer would then have to be set as COMPOSER_HOME
+	// - We could set the permissions here so people could use it
+	// - BUT... we don't know the PHP version until runtime.
+	// - Oh, but we don't know the PHP version here yet because it's not runtime yet.
+	// - Maybe this can be done or checked by `ddev xhgui` ?
+	// Add php-profiler for xhgui
+	extraWebContent = extraWebContent + "\nUSER ${username}\nRUN composer global require perftools/php-profiler --dev\nUSER root\n"
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}

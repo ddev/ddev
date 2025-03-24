@@ -4,8 +4,6 @@ services:
 
     # Prevent zombie container
     init: true
-    command:
-      - --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml
     user: {{ .UID }}:{{ .GID }}
 
     networks:
@@ -31,6 +29,9 @@ services:
       - USE_LETSENCRYPT={{ .letsencrypt }}
         {{ end }}{{/* end if .letsencrypt */}}
       - TZ={{ .Timezone }}
+      # Bypass proxies to allow internal container connections
+      - NO_PROXY=*
+      - no_proxy=*
     restart: "no"
     healthcheck:
       test: "/healthcheck.sh"

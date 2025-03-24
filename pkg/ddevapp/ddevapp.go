@@ -137,6 +137,10 @@ type DdevApp struct {
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
+	XHGuiHTTPSPort            string                 `yaml:"xhgui_https_port,omitempty"`
+	XHGuiHTTPPort             string                 `yaml:"xhgui_http_port,omitempty"`
+	HostXHGuiPort             string                 `yaml:"host_xhgui_port,omitempty"`
+	XHProfMode                types.XHProfMode       `yaml:"xhprof_mode,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -276,6 +280,15 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			appDesc["dbinfo"] = dbinfo
 		}
+
+		appDesc["xhprof_mode"] = app.GetXHProfMode()
+		xhguiStatus := XHGuiStatus(app)
+		if xhguiStatus {
+			appDesc["xhgui_status"] = "enabled"
+		} else {
+			appDesc["xhgui_status"] = "disabled"
+		}
+
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -573,8 +586,10 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 // is just not set.
 func (app *DdevApp) GetWebEnvVar(name string) string {
 	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if v, ok := s["web"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
-			return v.(string)
+		if e, ok := s["web"].(map[string]interface{}); ok {
+			if v, ok := e["environment"].(map[string]interface{})[name]; ok {
+				return v.(string)
+			}
 		}
 	}
 	return ""
@@ -1812,14 +1827,14 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
+		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
 		}
 	}
 
-	util.Success("Started optional compose profiles '%s'", profiles)
+	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
 
 	return nil
 }
@@ -1839,6 +1854,10 @@ func (app *DdevApp) PullContainerImages() error {
 	images, err := app.FindAllImages()
 	if err != nil {
 		return err
+	}
+	// Don't pull xhgui if not in xhgui mode
+	if app.GetXHProfMode() != types.XHProfModeXHGui {
+		images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
 	}
 	images = append(images, FindNotOmittedImages(app)...)
 
@@ -2418,6 +2437,9 @@ func (app *DdevApp) DockerEnv() {
 		if app.HostMailpitPort == "" {
 			app.HostMailpitPort = "8027"
 		}
+		if app.HostXHGuiPort == "" {
+			app.HostXHGuiPort = nodeps.DdevDefaultXHGuiHTTPPort
+		}
 		app.BindAllInterfaces = true
 	}
 
@@ -2503,6 +2525,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
 		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
 		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
+		"DDEV_XHGUI_HTTP_PORT":     app.GetXHGuiHTTPPort(),
+		"DDEV_XHGUI_HTTPS_PORT":    app.GetXHGuiHTTPSPort(),
 		"DDEV_DOCROOT":             app.GetDocroot(),
 		"DDEV_HOSTNAME":            app.HostName(),
 		"DDEV_UID":                 uidStr,
@@ -2514,6 +2538,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_XHPROF_MODE":         app.GetXHProfMode(),
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_VERSION":             versionconstants.DdevVersion,
 		"DOCKER_SCAN_SUGGEST":      "false",

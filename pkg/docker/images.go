@@ -47,3 +47,8 @@ func GetSSHAuthImage() string {
 func GetRouterImage() string {
 	return fmt.Sprintf("%s:%s", versionconstants.TraefikRouterImage, versionconstants.TraefikRouterTag)
 }
+
+// GetXhguiImage returns the xhgui image:tag reference
+func GetXhguiImage() string {
+	return fmt.Sprintf("%s:%s", versionconstants.XhguiImage, versionconstants.XhguiTag)
+}

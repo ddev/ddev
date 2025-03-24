@@ -87,7 +87,7 @@ Using plain HTTP between the containers is the simplest technique. For example, 
 
 A second technique is to tell the third-party service to ignore HTTPS/TLS errors. For example, if the third-party service uses cURL, it could use `curl --insecure https://web` or `curl --insecure https://<project>.ddev.site`.
 
-A third and more complex approach is to make the third-party container actually trust the self-signed certificate that the `ddev-webserver` container is using. This can be done in many cases using a custom Dockerfile and some extra configuration in the `ddev-config.*.yaml`. An example would be:
+A third and more complex approach is to make the third-party container actually trust the self-signed certificate that the `ddev-webserver` container is using. This can be done in many cases using a custom `.ddev/example/Dockerfile` and some extra configuration in the `.ddev/docker-compose.example.yaml`. An example would be:
 
 ```yaml
 services:

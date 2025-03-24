@@ -248,6 +248,16 @@ Not commonly used. Can be a specific port number for a fixed HTTP URL. If unset,
 
 Example: `59000` will have the project always use `http://127.0.0.1:59000` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
+## `host_xhgui_port`
+
+Specific, persistent XHGui port for direct binding to localhost interface.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | automatic | &zwnj;
+
+Very rarely used. Can be a specific port number for a fixed XHGui URL.
+
 ## `instrumentation_opt_in`
 
 Whether to allow [instrumentation reporting](../usage/diagnostics.md).
@@ -735,3 +745,27 @@ Examples:
 * `xdebug_ide_location: 172.16.0.2` when you need to provide an explicit IP address where the IDE is listening. This is very unusual.
 * `xdebug_ide_location: container` when the IDE is actually listening inside the `ddev-webserver` container. This is only done very occasionally with obscure Visual Studio Code setups like VS Code Language Server.
 * `xdebug_ide_location: wsl2` when an IDE is running (or listening) in WSL2. This is the situation when running an IDE directly inside WSL2 instead of running it on Windows.
+
+## `xhgui_http_port`
+
+Port for project’s XHGui HTTP URL (for router). Only changed when there are port conflicts on the default port 8143.
+
+| Type | Default | Usage
+| -- |---------| --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8143`  | Can be changed to avoid a port conflict.
+
+## `xhgui_https_port`
+
+Port for project’s XHGui HTTPS URL (for router). Only changed when there are port conflicts on the default port 8142.
+
+| Type | Default | Usage
+| -- |---------| --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8142`  | Can be changed to avoid a port conflict.
+
+## `xhprof_mode`
+
+Whether XHProf should use `prepend` or `xhgui` mode.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | `prepend` or `xhgui`.

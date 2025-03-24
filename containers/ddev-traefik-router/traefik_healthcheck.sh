@@ -16,7 +16,7 @@ fi
 
 # If we can now access the traefik ping endpoint, then we're healthy
 # Technique from https://doc.traefik.io/traefik/operations/ping/#entrypoint
-check=$(traefik healthcheck --ping.entryPoint=ping --entryPoints.ping.address=127.0.0.1:${TRAEFIK_MONITOR_PORT} --ping 2>&1)
+check=$(traefik healthcheck --ping 2>&1)
 exit_code=$?
 
 if [ $exit_code -eq 0 ]; then

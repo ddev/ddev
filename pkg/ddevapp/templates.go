@@ -36,10 +36,27 @@ const ConfigInstructions = `
 # "ddev xdebug" to enable Xdebug and "ddev xdebug off" to disable it work better,
 # as leaving Xdebug enabled all the time is a big performance hit.
 
+# xhgui_https_port: 8142
+# Can be used to change the router https port for xhgui application
+# Very rarely used
+
+# xhgui_http_port: 8143
+# Can be used to change the router http port for xhgui application
+# Very rarely used
+
+# host_xhgui_port: 8142
+# Can be used to change the host binding port of the xhgui
+# application. Rarely used; only when port conflict and 
+# bind_all_ports is used (normally with router disabled)
+
 # xhprof_enabled: false  # Set to true to enable Xhprof and "ddev start" or "ddev restart"
 # Note that for most people the commands
 # "ddev xhprof" to enable Xhprof and "ddev xhprof off" to disable it work better,
 # as leaving Xhprof enabled all the time is a big performance hit.
+
+# xhprof_mode: [prepend|xhgui|global]
+# Set to "xhgui" to enable XHGui features
+# "xhgui" will become default in a future major release
 
 # webserver_type: nginx-fpm, apache-fpm, generic
 
