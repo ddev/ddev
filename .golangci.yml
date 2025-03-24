@@ -27,6 +27,8 @@ linters:
       - linters:
           - staticcheck
         text: 'QF1001:' # Apply De Morgan’s law
+    paths:
+      - third_party/ampli/ampli.go
 formatters:
   enable:
     - gofmt
