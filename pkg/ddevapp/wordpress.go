@@ -185,7 +185,6 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 	}
 	defer util.CheckClose(file)
 
-	//nolint: revive
 	if err = t.Execute(file, wordpressConfig); err != nil {
 		return err
 	}

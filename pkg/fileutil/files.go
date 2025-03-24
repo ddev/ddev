@@ -247,7 +247,6 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 
 	output := bytes.ReplaceAll(input, []byte(searchString), []byte(replaceString))
 
-	// nolint: revive
 	if err = os.WriteFile(destPath, output, 0666); err != nil {
 		return err
 	}

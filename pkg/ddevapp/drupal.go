@@ -486,7 +486,6 @@ func drupalPostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	//nolint: revive
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
