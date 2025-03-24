@@ -376,7 +376,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	app.WarnIfConfigReplace()
 
 	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
-	// nolint:revive
+	// nolint: revive
 	if app.Name != "" && projectNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
 		// Sorry this is empty but it makes the logic clearer.
 	} else if projectNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name

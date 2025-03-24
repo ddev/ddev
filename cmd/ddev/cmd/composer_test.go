@@ -57,7 +57,6 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 		assert.NoError(err)
 
 		t.Cleanup(func() {
-			//nolint: errcheck
 			err = app.Stop(true, false)
 			assert.NoError(err)
 
@@ -130,7 +129,6 @@ func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
 		assert.NoError(err)
 
 		t.Cleanup(func() {
-			//nolint: errcheck
 			err = app.Stop(true, false)
 			assert.NoError(err)
 

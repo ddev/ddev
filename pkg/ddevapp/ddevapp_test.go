@@ -510,7 +510,7 @@ func TestDdevStart(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -598,7 +598,7 @@ func TestDdevStart(t *testing.T) {
 	badapp := &ddevapp.DdevApp{}
 
 	err = badapp.Init(copyDir)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer badapp.Stop(true, false)
 	if err == nil {
 		logs, logErr := app.CaptureLogs("web", false, "")
@@ -623,7 +623,7 @@ func TestDdevStart(t *testing.T) {
 
 	err = symlinkApp.Init(symlink)
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer symlinkApp.Stop(true, false)
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
@@ -875,7 +875,7 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -1120,7 +1120,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err = app.StartAndWait(0)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
@@ -1390,7 +1390,6 @@ func TestDdevImportDB(t *testing.T) {
 			inputFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "stdintable.sql")
 			f, err := os.Open(inputFile)
 			require.NoError(t, err)
-			// nolint: errcheck
 			defer f.Close()
 			savedStdin := os.Stdin
 			os.Stdin = f
@@ -3430,7 +3429,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -3442,7 +3441,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	app, err = ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 
 	desc, err := app.Describe(false)
@@ -3880,7 +3879,7 @@ func TestNFSMount(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -3930,7 +3929,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	err := app.Stop(true, false)
 	assert.NoError(err)
 	err = app.Start()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
@@ -3950,7 +3949,6 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev", "nfslinked_.ddev")
 	assert.NoError(err)
-	// nolint: errcheck
 	defer os.Remove("nfslinked_.ddev")
 
 	time.Sleep(2 * time.Second)
@@ -3964,7 +3962,6 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	// Create a host-side file symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev/config.yaml", "nfslinked_config.yaml")
 	assert.NoError(err)
-	// nolint: errcheck
 	defer os.Remove("nfslinked_config.yaml")
 
 	time.Sleep(2 * time.Second)
@@ -3985,7 +3982,6 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	})
 	assert.NoError(err)
 
-	// nolint: errcheck
 	defer os.Remove("nfscontainerlinked_ddev")
 
 	time.Sleep(2 * time.Second)
@@ -4001,7 +3997,6 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	})
 	assert.NoError(err)
 
-	// nolint: errcheck
 	defer os.Remove("nfscontainerlinked_config.yaml")
 
 	time.Sleep(2 * time.Second)
@@ -4158,7 +4153,6 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = specAPP.Start()
 	assert.NoError(err)
-	//nolint: errcheck
 	err = specAPP.Stop(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly

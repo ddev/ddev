@@ -48,7 +48,6 @@ func TestShareCmd(t *testing.T) {
 
 	// Make absolutely sure the ngrok process gets killed off, because otherwise
 	// the testbot (windows) can remain occupied forever.
-	// nolint: errcheck
 	t.Cleanup(func() {
 		err = pKill(cmd)
 		assert.NoError(err)
@@ -112,7 +111,6 @@ func TestShareCmd(t *testing.T) {
 			assert.NoError(err)
 			return
 		}
-		//nolint: errcheck
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		assert.NoError(err)

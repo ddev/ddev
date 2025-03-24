@@ -352,7 +352,6 @@ func CanCreateSymlinks() bool {
 	linkPath := filepath.Join(tmpdir, RandomFilenameBase())
 	// This doesn't attempt to create the real file; we don't need it.
 	err := os.Symlink(filepath.Join(tmpdir, "realfile.txt"), linkPath)
-	//nolint: errcheck
 	defer os.Remove(linkPath)
 	if err != nil {
 		return false

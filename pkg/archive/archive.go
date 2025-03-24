@@ -377,7 +377,6 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 	if err != nil {
 		return fmt.Errorf("could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
-	// nolint: errcheck
 	defer tarball.Close()
 
 	mw := io.MultiWriter(tarball)

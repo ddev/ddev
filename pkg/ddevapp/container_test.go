@@ -19,7 +19,7 @@ func TestUserProvisioningInContainer(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	//nolint: errcheck
+	// nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -33,7 +33,7 @@ func TestUserProvisioningInContainer(t *testing.T) {
 
 	err = app.Start()
 	assert.NoError(err)
-	//nolint: errcheck
+	// nolint: errcheck
 	defer app.Stop(true, false)
 
 	// make sure files get created in the user?

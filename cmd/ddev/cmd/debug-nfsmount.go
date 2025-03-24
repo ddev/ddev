@@ -41,7 +41,7 @@ var DebugNFSMountCmd = &cobra.Command{
 				util.Failed("Failed to remove existing test container %s: %v", containerName, err)
 			}
 		}
-		//nolint: errcheck
+		// nolint: errcheck
 		dockerutil.RemoveVolume(testVolume)
 
 		nfsServerAddr, err := dockerutil.GetNFSServerAddr()
@@ -54,7 +54,7 @@ var DebugNFSMountCmd = &cobra.Command{
 			shareDir = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
 		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
-		//nolint: errcheck
+		// nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
 		if err != nil {
 			util.Failed("Failed to create volume %s: %v", testVolume, err)

@@ -1120,7 +1120,6 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error
 		return err
 	}
 
-	//nolint: revive
 	if err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}

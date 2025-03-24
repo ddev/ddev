@@ -1754,7 +1754,6 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	if err != nil {
 		return err
 	}
-	// nolint: errcheck
 	defer os.Remove(tarball.Name())
 
 	// Tar up the source directory into the tarball
@@ -1767,7 +1766,6 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 
-	// nolint: errcheck
 	defer t.Close()
 
 	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, dockerContainer.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
@@ -1800,11 +1798,8 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	if err != nil {
 		return err
 	}
-	//nolint: errcheck
 	defer f.Close()
-	//nolint: errcheck
 	defer os.Remove(f.Name())
-	// nolint: errcheck
 
 	reader, _, err := client.CopyFromContainer(ctx, cid.ID, containerPath)
 	if err != nil {

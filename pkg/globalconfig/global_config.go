@@ -701,7 +701,6 @@ func GetFreePort(localIPAddr string) (string, error) {
 			return "", err
 		}
 		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
-		// nolint: errcheck
 		l.Close()
 
 		// In the case of Docker Toolbox, the actual listening IP may be something else

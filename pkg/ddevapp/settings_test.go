@@ -122,7 +122,7 @@ func TestWriteDrushConfig(t *testing.T) {
 		assert.NoError(err)
 
 		startErr := app.Start()
-		//nolint: errcheck
+		// nolint: errcheck
 		defer app.Stop(true, false)
 		if startErr != nil {
 			logs, health, _ := ddevapp.GetErrLogsFromApp(app, startErr)
