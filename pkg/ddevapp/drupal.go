@@ -117,7 +117,6 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error 
 
 // writeDrupalSettingsPHP creates the project's settings.php if it doesn't exist
 func writeDrupalSettingsPHP(app *DdevApp) error {
-
 	var appType string
 	if app.Type == nodeps.AppTypeBackdrop {
 		appType = app.Type

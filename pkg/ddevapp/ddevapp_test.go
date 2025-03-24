@@ -865,7 +865,6 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	// Now with DisableSettingsManagement=false, start should have created both
 	assert.FileExists(app.SiteSettingsPath)
 	assert.FileExists(app.SiteDdevSettingsFile)
-
 }
 
 // TestDdevNoProjectMount tests running without the app file mount.
@@ -1164,7 +1163,6 @@ func TestDdevMysqlWorks(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
-
 }
 
 // TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
@@ -1287,7 +1285,6 @@ func TestDdevImportDB(t *testing.T) {
 			err = dockerutil.RemoveVolume(app.Name + "-" + dbType)
 			require.NoError(t, err)
 		}
-
 	})
 
 	c := make(map[string]string)
@@ -1546,7 +1543,6 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
 		assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 	}
-
 }
 
 func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
@@ -2197,7 +2193,6 @@ func TestWebserverPostgresDBClient(t *testing.T) {
 			// Output might be "pg_restore (PostgreSQL) 16.3 (Debian 16.3-1.pgdg120+1)"
 			// Or for postgres 9: "pg_dump (PostgreSQL) 9.6.24"
 			require.True(t, strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
-
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
@@ -2751,7 +2746,6 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		runTime()
 		switchDir()
 	}
-
 }
 
 // TestDdevImportFilesCustomUploadDir ensures that files are imported to a custom upload directory when requested
@@ -3199,7 +3193,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	for _, volume := range volumes.Volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
-
 }
 
 // TestGetAppsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
@@ -3523,7 +3516,6 @@ func TestMultipleComposeFiles(t *testing.T) {
 		} else {
 			t.Errorf("failed to parse web services: %v", services)
 		}
-
 	} else {
 		t.Error("Unable to access ComposeYaml[services]")
 	}
@@ -3677,7 +3669,6 @@ func TestPHPWebserverType(t *testing.T) {
 
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverNginxFPM} {
-
 			err = app.WriteConfig()
 			assert.NoError(err)
 
@@ -4420,7 +4411,6 @@ func TestEnvironmentVariables(t *testing.T) {
 		lines := strings.Split(envVal, "\n")
 		assert.Equal(v, lines[0], "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
 	}
-
 }
 
 // TestEnvFile tests checks behavior of .ddev/.env files

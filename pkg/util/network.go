@@ -39,7 +39,6 @@ func DownloadFile(destPath string, url string, progressBar bool) (err error) {
 	}
 	reader := resp.Body
 	if progressBar {
-
 		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
 		bar.Start()
 
@@ -84,7 +83,6 @@ func NewHTTPOptions(URL string) *HTTPOptions {
 
 // EnsureHTTPStatus will verify a URL responds with a given response code within the Timeout period (in seconds)
 func EnsureHTTPStatus(o *HTTPOptions) error {
-
 	client := &http.Client{
 		Timeout: o.Timeout * time.Second,
 	}
@@ -124,7 +122,6 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 			"expected": o.ExpectedStatus,
 			"got":      resp.StatusCode,
 		}).Infof("HTTP Status could not be matched, expected %d, received %d", o.ExpectedStatus, resp.StatusCode)
-
 	}
 	return fmt.Errorf("failed to match status code: %d: %v", o.ExpectedStatus, err)
 }

@@ -81,5 +81,4 @@ func TestCmdAuthSSH(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Contains(out, "/root")
-
 }

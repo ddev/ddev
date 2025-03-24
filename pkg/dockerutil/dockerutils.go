@@ -431,7 +431,6 @@ func FindNetworksWithLabel(label string) ([]dockerNetwork.Inspect, error) {
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWait(waittime int, labels map[string]string) (string, error) {
-
 	durationWait := time.Duration(waittime) * time.Second
 	timeoutChan := time.NewTimer(durationWait)
 	tickChan := time.NewTicker(500 * time.Millisecond)
@@ -484,7 +483,6 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 // waittime is in seconds.
 // Returns logoutput, error, returns error if not "healthy"
 func ContainersWait(waittime int, labels map[string]string) error {
-
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -546,7 +544,6 @@ func ContainersWait(waittime int, labels map[string]string) error {
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string) (string, error) {
-
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -999,7 +996,6 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 					binds[i] = strings.TrimPrefix(binds[i], driveLetter)
 					binds[i] = strings.ToLower(driveLetter) + binds[i]
 				}
-
 			}
 		}
 	}

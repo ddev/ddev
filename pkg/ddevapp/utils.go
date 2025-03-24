@@ -92,7 +92,6 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	t.AppendRow(table.Row{
 		row["name"], status, row["shortroot"], urls, row["type"],
 	})
-
 }
 
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml

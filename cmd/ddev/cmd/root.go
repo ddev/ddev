@@ -123,7 +123,6 @@ func Execute() {
 }
 
 func init() {
-
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
 
@@ -166,7 +165,6 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	}
 
 	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
-
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
 			output.UserOut.Print("You seem to have a new DDEV version.")

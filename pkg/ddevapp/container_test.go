@@ -41,7 +41,6 @@ func TestUserProvisioningInContainer(t *testing.T) {
 	uid, gid, username := util.GetContainerUIDGid()
 
 	for _, service := range []string{"web", "db"} {
-
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd:     "id -un",
@@ -63,5 +62,4 @@ func TestUserProvisioningInContainer(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(gid, strings.Trim(out, "\r\n"))
 	}
-
 }

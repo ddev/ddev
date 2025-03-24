@@ -19,7 +19,6 @@ import (
 
 // TestFileHash is a unit test for FileHash()
 func TestFileHash(t *testing.T) {
-
 	testCases := []struct {
 		content       string
 		optionalExtra string

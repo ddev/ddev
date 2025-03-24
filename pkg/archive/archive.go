@@ -275,7 +275,6 @@ func Untar(source string, dest string, extractionDir string) error {
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
 			}
-
 		}
 	}
 

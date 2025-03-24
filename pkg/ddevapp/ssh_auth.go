@@ -91,7 +91,6 @@ func RemoveSSHAgentContainer() error {
 
 // CreateSSHAuthComposeFile creates the docker-compose file for the ddev-ssh-agent
 func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
-
 	var doc bytes.Buffer
 	f, ferr := os.Create(SSHAuthComposeYAMLPath())
 	if ferr != nil {
@@ -195,5 +194,4 @@ func GetSSHAuthStatus() string {
 	}
 	health, _ := dockerutil.GetContainerHealth(container)
 	return health
-
 }

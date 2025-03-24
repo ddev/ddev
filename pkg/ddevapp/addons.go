@@ -167,7 +167,6 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
 	var allRepos []*github.Repository
 	for {
-
 		repos, resp, err := client.Search.Repositories(context.Background(), q, opts)
 		if err != nil {
 			msg := fmt.Sprintf("Unable to get list of available services: %v", err)

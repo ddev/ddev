@@ -98,7 +98,6 @@ func CopyDir(src string, dst string) error {
 	}
 
 	for _, de := range dirEntrySlice {
-
 		srcPath := filepath.Join(src, de.Name())
 		dstPath := filepath.Join(dst, de.Name())
 
@@ -407,7 +406,6 @@ func RemoveContents(dir string) error {
 
 // TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
 func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
-
 	templ := template.New("templateStringToFile:" + targetFilePath)
 	templ, err := templ.Parse(content)
 	if err != nil {

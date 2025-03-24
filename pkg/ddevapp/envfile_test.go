@@ -73,6 +73,5 @@ func TestWriteProjectEnvFile(t *testing.T) {
 				assert.Equal(l, newLines[i], "comment '%s' in original .env expected in revised .env but doesn't match (envfile=%s)", l, envFileName)
 			}
 		}
-
 	}
 }

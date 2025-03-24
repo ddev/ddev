@@ -49,7 +49,6 @@ func TestDescribeBadArgs(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Too many arguments provided")
-
 }
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.

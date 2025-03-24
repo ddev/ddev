@@ -83,7 +83,6 @@ type GlobalConfig struct {
 
 // New returns a default GlobalConfig
 func New() GlobalConfig {
-
 	cfg := GlobalConfig{
 		RequiredDockerComposeVersion: versionconstants.RequiredDockerComposeVersionDefault,
 		InternetDetectionTimeout:     nodeps.InternetDetectionTimeoutDefault,
@@ -716,7 +715,6 @@ func GetFreePort(localIPAddr string) (string, error) {
 		return port, nil
 	}
 	return "-1", fmt.Errorf("getFreePort() failed to find a free port")
-
 }
 
 // ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports

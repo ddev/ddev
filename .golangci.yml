@@ -16,6 +16,7 @@ linters:
     - ineffassign
     - revive
     - staticcheck
+    - whitespace
   settings:
     staticcheck:
       checks:

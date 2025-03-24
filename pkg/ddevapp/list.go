@@ -123,7 +123,6 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name: "Name",

@@ -71,13 +71,11 @@ func deleteDdevImages(deleteAll bool) error {
 		// be done to improve finding database images.
 		for _, image := range images {
 			for _, tag := range image.RepoTags {
-
 				if strings.HasPrefix(tag, "drud/ddev-") || strings.HasPrefix(tag, "ddev/ddev-") {
 					if err := dockerutil.RemoveImage(tag); err != nil {
 						return err
 					}
 				}
-
 			}
 		}
 		return nil
