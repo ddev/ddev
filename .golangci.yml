@@ -1,3 +1,4 @@
+# See https://golangci-lint.run/
 version: "2"
 run:
   modules-download-mode: vendor
