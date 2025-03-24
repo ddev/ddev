@@ -71,7 +71,9 @@ services:
       - POSTGRES_PASSWORD=db
       - POSTGRES_USER=db
       - POSTGRES_DB=db
-      - PAGER=${DDEV_PAGER-less -SFX}
+      {{- if ne (env "DDEV_PAGER") "" }}
+      - PAGER=${DDEV_PAGER}
+      {{- end }}
       - TZ={{ .Timezone }}
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}
@@ -225,7 +227,9 @@ services:
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
     - npm_config_cache=/mnt/ddev-global-cache/npm
-    - PAGER=${DDEV_PAGER-less -SFX}
+    {{- if ne (env "DDEV_PAGER") "" }}
+    - PAGER=${DDEV_PAGER}
+    {{- end }}
     - PGDATABASE=db
     - PGHOST=db
     - PGPASSWORD=db
