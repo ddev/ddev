@@ -1,6 +1,7 @@
 version: "2"
 run:
   modules-download-mode: vendor
+  timeout: 30m
 output:
   formats:
     text:
@@ -14,19 +15,19 @@ linters:
     - ineffassign
     - revive
     - staticcheck
+  settings:
+    staticcheck:
+      checks:
+        - all
+        # Disabled checks
+        - -QF1001 # Apply De Morgan's law
+        - -S1008 # Simplify returning boolean expression
   exclusions:
     presets:
       - comments
       - common-false-positives
       - legacy
       - std-error-handling
-    rules:
-      - linters:
-          - staticcheck
-        text: 'S1008:' # Simplify returning boolean expression
-      - linters:
-          - staticcheck
-        text: 'QF1001:' # Apply De Morgan’s law
     paths:
       - third_party/ampli/ampli.go
 formatters:

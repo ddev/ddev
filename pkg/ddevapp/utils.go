@@ -536,7 +536,7 @@ func (app *DdevApp) CanUseHTTPOnly() bool {
 	return false
 }
 
-// Turn a slice of *DdevApp into a map keyed by name
+// AppSliceToMap Turn a slice of *DdevApp into a map keyed by name
 func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
 	nameMap := make(map[string]*DdevApp)
 	for _, app := range appList {

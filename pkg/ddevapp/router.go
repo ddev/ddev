@@ -273,7 +273,7 @@ func FindDdevRouter() (*dockerContainer.Summary, error) {
 	return container, nil
 }
 
-// GetRouterBoundPorts() returns the currently bound ports on ddev-router
+// GetRouterBoundPorts returns the currently bound ports on ddev-router
 // or an empty array if router not running
 func GetRouterBoundPorts() ([]uint16, error) {
 	boundPorts := []uint16{}
@@ -514,7 +514,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
 
-// GetEphemeralPortsIfNeeded() replaces the provided ports with an ephemeral version if they need it.
+// GetEphemeralPortsIfNeeded replaces the provided ports with an ephemeral version if they need it.
 func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
 		proposedPort, replacementPort, portChangeRequired := GetAvailableRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)

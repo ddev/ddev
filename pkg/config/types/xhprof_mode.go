@@ -64,10 +64,10 @@ func CheckValidXHProfMode(xhprofMode string, configType ConfigType) error {
 	return nil
 }
 
-// Flag definitions
+// FlagXHProfModeName Flag definitions
 const FlagXHProfModeName = "xhprof-mode"
 
-// TODO: Default should change to XHProfModeXHGUI in DDEV v1.25.0
+// FlagXHProfModeDefault TODO: Default should change to XHProfModeXHGUI in DDEV v1.25.0
 const FlagXHProfModeDefault = XHProfModePrepend
 
 func FlagXHProfModeDescription(configType ConfigType) string {

@@ -144,7 +144,7 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
-// Global variable that's set from --skip-hooks global flag.
+// SkipHooks Global variable that's set from --skip-hooks global flag.
 // If true, all hooks would be skiped.
 var SkipHooks = false
 
@@ -581,7 +581,7 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	return proposedPrimaryRouterHTTPPort
 }
 
-// GetWebEnvVar() gets an environment variable from
+// GetWebEnvVar gets an environment variable from
 // app.ComposeYaml["services"]["web"]["environment"]
 // It returns empty string if there is no var or the ComposeYaml
 // is just not set.
@@ -596,7 +596,7 @@ func (app *DdevApp) GetWebEnvVar(name string) string {
 	return ""
 }
 
-// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// TargetPortFromExposeVariable uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
 // comma-delimted list of colon-delimited port-pairs
 // Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related port to be exposed on the router.
@@ -620,7 +620,7 @@ func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort
 	return ""
 }
 
-// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// RouterPortFromExposeVariable uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
 // comma-delimted list of colon-delimited port-pairs
 // Given a router port (often "80" or "443") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related container target port.
@@ -3110,7 +3110,7 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
-// GetWebContainerPublicPort returns the first direct-access public tcp port for http
+// GetWebContainerDirectHTTPPort returns the first direct-access public tcp port for http
 // It excludes 8025 (mailpit) and 443 (nginx and apache)
 func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 	// There may not always be a public direct port

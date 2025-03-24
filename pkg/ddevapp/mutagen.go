@@ -431,7 +431,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	return "failing", shortResult, session, nil
 }
 
-// GetMutagenSyncID() returns the project sync ID
+// GetMutagenSyncID returns the project sync ID
 func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
 	syncName := MutagenSyncName(app.Name)
 

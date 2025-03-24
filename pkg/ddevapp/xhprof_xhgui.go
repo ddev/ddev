@@ -177,7 +177,7 @@ func (app *DdevApp) GetXHGuiHTTPSPort() string {
 	return port
 }
 
-// GetXHGuiEnvVar() gets an environment variable from
+// GetXHGuiEnvVar gets an environment variable from
 // app.ComposeYaml["services"]["xhgui"]["environment"]
 // It returns empty string if there is no var or the ComposeYaml
 // is just not set.

@@ -1488,7 +1488,7 @@ func TestDdevImportDB(t *testing.T) {
 	path := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
 	err = app.ImportDB(path, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
-	checkImportDbImports(t, app)
+	checkImportDBImports(t, app)
 
 	// Now test the same when importing from stdin, same file
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE wp_posts;'"})
@@ -1504,7 +1504,7 @@ func TestDdevImportDB(t *testing.T) {
 	err = app.ImportDB("", "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 	os.Stdin = oldStdin
-	checkImportDbImports(t, app)
+	checkImportDBImports(t, app)
 
 	// Verify that the count of tables is exactly what it should be, that nothing was lost in the
 	// import due to embedded DDL statements.
@@ -1550,7 +1550,7 @@ func TestDdevImportDB(t *testing.T) {
 
 }
 
-func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
+func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 	assert := asrt.New(t)
 
 	// There should be exactly the one wp_posts table for this file

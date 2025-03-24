@@ -68,7 +68,7 @@ func Success(format string, a ...interface{}) {
 	}
 }
 
-// Output controlled by DDEV_DEBUG environment variable
+// Debug Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
 	if globalconfig.DdevDebug {
 		n := time.Now()
@@ -77,7 +77,7 @@ func Debug(format string, a ...interface{}) {
 	}
 }
 
-// Output controlled by DDEV_VERBOSE environment variable
+// Verbose Output controlled by DDEV_VERBOSE environment variable
 func Verbose(format string, a ...interface{}) {
 	if globalconfig.DdevVerbose {
 		n := time.Now()

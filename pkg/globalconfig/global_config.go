@@ -103,7 +103,7 @@ func New() GlobalConfig {
 	return cfg
 }
 
-// Make sure the global configuration has been initialized
+// EnsureGlobalConfig Make sure the global configuration has been initialized
 func EnsureGlobalConfig() {
 	DdevGlobalConfig = New()
 	DdevProjectList = make(map[string]*ProjectInfo)

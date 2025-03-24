@@ -10,7 +10,7 @@ var DefaultTableStyle = "StyleLight"
 // For descriptions of the various styles, see
 // https://github.com/jedib0t/go-pretty/blob/main/table/style.go
 
-// Get a style by name, returning the default if not found
+// GetTableStyle Get a style by name, returning the default if not found
 func GetTableStyle(name string) (style table.Style) {
 	if _, ok := globalconfig.StyleMap[name]; ok {
 		style = globalconfig.StyleMap[name]
@@ -19,7 +19,7 @@ func GetTableStyle(name string) (style table.Style) {
 	return globalconfig.StyleMap[DefaultTableStyle]
 }
 
-// SimpleFormattingRequired() returns true if we should not be colorizing/styling text
+// SimpleFormattingRequired returns true if we should not be colorizing/styling text
 func SimpleFormattingRequired() bool {
 	if globalconfig.DdevGlobalConfig.SimpleFormatting {
 		return true

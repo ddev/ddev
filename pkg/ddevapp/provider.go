@@ -61,7 +61,7 @@ func (p *Provider) Init(pType string, app *DdevApp) error {
 }
 
 // Pull performs an import of db and files
-func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, skipImportArg bool) error {
+func (app *DdevApp) Pull(provider *Provider, skipDBArg bool, skipFilesArg bool, skipImportArg bool) error {
 	var err error
 	err = app.ProcessHooks("pre-pull")
 	if err != nil {
@@ -85,7 +85,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		}
 	}
 
-	if skipDbArg {
+	if skipDBArg {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
 		output.UserOut.Println("Obtaining databases...")
@@ -150,7 +150,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 }
 
 // Push pushes db and files up to upstream hosting provider
-func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) error {
+func (app *DdevApp) Push(provider *Provider, skipDBArg bool, skipFilesArg bool) error {
 	var err error
 	err = app.ProcessHooks("pre-push")
 	if err != nil {
@@ -174,7 +174,7 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 		}
 	}
 
-	if skipDbArg {
+	if skipDBArg {
 		output.UserOut.Println("Skipping database push.")
 	} else {
 		output.UserOut.Println("Uploading database...")

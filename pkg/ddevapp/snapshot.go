@@ -77,7 +77,7 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 	return snapshots[0], nil
 }
 
-// ListSnapshots returns a list of the names of all project snapshots
+// ListSnapshotNames returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshotNames() ([]string, error) {
 	var names []string
 	snapshots, err := app.ListSnapshots()

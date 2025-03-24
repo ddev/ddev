@@ -530,7 +530,7 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	return resp, err
 }
 
-// CheckgoroutineOutput makes sure that goroutines
+// CheckGoroutineOutput makes sure that goroutines
 // aren't beyond specified level
 func CheckGoroutineOutput(t *testing.T, out string) {
 	goroutineLimit := nodeps.GoroutineLimit

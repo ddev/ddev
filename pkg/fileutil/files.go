@@ -514,7 +514,7 @@ func FindFilenameInDirectory(basePath string, fileNames []string) (dirName strin
 	return dirName, err
 }
 
-// FindFilesInDirectory takes a list of files/directories and expands it into a
+// ExpandFilesAndDirectories takes a list of files/directories and expands it into a
 // a list of files only
 // environment variables in list are expanded
 func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {

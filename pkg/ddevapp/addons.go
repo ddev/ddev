@@ -21,7 +21,7 @@ import (
 
 const AddonMetadataDir = "addon-metadata"
 
-// Format of install.yaml
+// InstallDesc Format of install.yaml
 type InstallDesc struct {
 	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
 	Name                  string            `yaml:"name"`
@@ -35,7 +35,7 @@ type InstallDesc struct {
 	YamlReadFiles         map[string]string `yaml:"yaml_read_files"`
 }
 
-// format of the add-on manifest file
+// AddonManifest format of the add-on manifest file
 type AddonManifest struct {
 	Name           string   `yaml:"name"`
 	Repository     string   `yaml:"repository"`
