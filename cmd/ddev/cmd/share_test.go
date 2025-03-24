@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
@@ -75,12 +76,12 @@ func TestShareCmd(t *testing.T) {
 
 			err := json.Unmarshal([]byte(logLine), &logData)
 			if err != nil {
-				switch err.(type) {
-				case *json.SyntaxError:
+				var syntaxError *json.SyntaxError
+				if errors.As(err, &syntaxError) {
 					continue
-				default:
-					t.Errorf("failed unmarshaling %v: %v", logLine, err)
 				}
+				t.Errorf("failed unmarshaling %v: %v", logLine, err)
+				break
 			}
 			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {
 				if strings.Contains(logErr, "Your account is limited to 1 simultaneous") {

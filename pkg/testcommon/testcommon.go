@@ -3,6 +3,7 @@ package testcommon
 import (
 	"crypto/sha256"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,7 +28,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/pkg/homedir"
 	copy2 "github.com/otiai10/copy"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -138,7 +138,7 @@ func (site *TestSite) Prepare() error {
 	app.WebserverType = site.WebserverType
 	detectedType := app.DetectAppType()
 	if app.Type != detectedType && app.Type != nodeps.AppTypeGeneric {
-		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)
+		return fmt.Errorf("detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)
 	}
 
 	app.WebEnvironment = site.WebEnvironment
@@ -149,7 +149,7 @@ func (site *TestSite) Prepare() error {
 		}
 		err = os.WriteFile(app.GetConfigPath("web-entrypoint.d/pretest.sh"), []byte(site.PretestCmd), 0755)
 		if err != nil {
-			return errors.Errorf("Failed to write pretest.sh, err=%v", err)
+			return fmt.Errorf("failed to write pretest.sh, err=%v", err)
 		}
 	}
 	err = app.ConfigFileOverrideAction(false)
@@ -166,7 +166,7 @@ func (site *TestSite) Prepare() error {
 
 	err = app.WriteConfig()
 	if err != nil {
-		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)
+		return fmt.Errorf("failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)
 	}
 
 	return nil

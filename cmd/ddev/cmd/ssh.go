@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 
@@ -46,7 +47,8 @@ ddev ssh -d /var/www/html`,
 			Dir:     sshDirArg,
 		})
 		if err != nil {
-			if exiterr, ok := err.(*exec.ExitError); ok {
+			var exiterr *exec.ExitError
+			if errors.As(err, &exiterr) {
 				os.Exit(exiterr.ExitCode())
 			}
 			util.Failed("ddev ssh failed: %v", err)

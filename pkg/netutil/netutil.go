@@ -1,6 +1,7 @@
 package netutil
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -29,9 +30,11 @@ func IsPortActive(port string) bool {
 		return true
 	}
 	// If we get ECONNREFUSED the port is not active.
-	oe, ok := err.(*net.OpError)
+	var oe *net.OpError
+	ok := errors.As(err, &oe)
 	if ok {
-		syscallErr, ok := oe.Err.(*os.SyscallError)
+		var syscallErr *os.SyscallError
+		ok := errors.As(oe.Err, &syscallErr)
 
 		// On Windows, WSAECONNREFUSED (10061) results instead of ECONNREFUSED. And golang doesn't seem to have it.
 		var WSAECONNREFUSED syscall.Errno = 10061

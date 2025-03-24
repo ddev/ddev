@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	osexec "os/exec"
@@ -25,7 +26,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/pkg/errors"
 )
 
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
@@ -312,7 +312,8 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	syncName := MutagenSyncName(app.Name)
 	res, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
 	if err != nil {
-		if exitError, ok := err.(*osexec.ExitError); ok {
+		var exitError *osexec.ExitError
+		if errors.As(err, &exitError) {
 			// If we got an error, but it's that there were no sessions, return false, no err
 			if strings.Contains(string(exitError.Stderr), "did not match any sessions") {
 				return false, nil
@@ -349,7 +350,8 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
 		stderr := ""
-		if exitError, ok := err.(*osexec.ExitError); ok {
+		var exitError *osexec.ExitError
+		if errors.As(err, &exitError) {
 			stderr = string(exitError.Stderr)
 		}
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenDataDirectory()), fullJSONResult, nil, fmt.Errorf("failed to Mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
@@ -464,7 +466,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	}
 	syncName := MutagenSyncName(app.Name)
 	if !MutagenSyncExists(app) {
-		return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
+		return fmt.Errorf("mutagen sync session '%s' does not exist", syncName)
 	}
 	if status, shortResult, session, err := app.MutagenStatus(); err == nil {
 		util.Verbose("Mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
@@ -607,7 +609,7 @@ func MutagenReset(app *DdevApp) error {
 		err := app.Stop(false, false)
 		if err != nil {
 			util.Warning("Failed to stop project '%s': %v", app.Name, err)
-			return errors.Errorf("Failed to stop project %s: %v", app.Name, err)
+			return fmt.Errorf("failed to stop project %s: %v", app.Name, err)
 		}
 		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 		if err != nil {

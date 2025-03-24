@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -3204,8 +3205,23 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
 	if err = app.Init(activeAppRoot); err != nil {
-		switch err.(type) {
-		case webContainerExists, invalidConfigFile, invalidConstraint, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
+		var webContainerExists webContainerExists
+		var invalidConfigFile invalidConfigFile
+		var invalidConstraint invalidConstraint
+		var invalidHostname invalidHostname
+		var invalidAppType invalidAppType
+		var invalidPHPVersion invalidPHPVersion
+		var invalidWebserverType invalidWebserverType
+		var invalidProvider invalidProvider
+		switch {
+		case errors.As(err, &webContainerExists),
+			errors.As(err, &invalidConfigFile),
+			errors.As(err, &invalidConstraint),
+			errors.As(err, &invalidHostname),
+			errors.As(err, &invalidAppType),
+			errors.As(err, &invalidPHPVersion),
+			errors.As(err, &invalidWebserverType),
+			errors.As(err, &invalidProvider):
 			return app, err
 		}
 	}
