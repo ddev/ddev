@@ -245,6 +245,9 @@ func init() {
 	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
 	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, true, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
 
+	ConfigCommand.Flags().String(types.FlagXHProfModeName, types.FlagXHProfModeDefault, types.FlagXHProfModeDescription(types.ConfigTypeProject))
+	ConfigCommand.Flags().Bool(types.FlagXHProfModeResetName, true, types.FlagXHProfModeResetDescription(types.ConfigTypeProject))
+
 	ConfigCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting of project in container")
 	_ = ConfigCommand.Flags().MarkDeprecated("nfs-mount-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
@@ -500,6 +503,24 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 		if performanceModeReset {
 			app.SetPerformanceMode(types.PerformanceModeEmpty)
+		}
+	}
+
+	if cmd.Flag(types.FlagXHProfModeName).Changed {
+		xhprofMode, _ := cmd.Flags().GetString(types.FlagXHProfModeName)
+
+		if err := types.CheckValidXHProfMode(xhprofMode, types.ConfigTypeProject); err != nil {
+			util.Error("%s. Not changing value of `xhprof_mode` option.", err)
+		} else {
+			app.XHProfMode = xhprofMode
+		}
+	}
+
+	if cmd.Flag(types.FlagXHProfModeResetName).Changed {
+		xhprofModeReset, _ := cmd.Flags().GetBool(types.FlagXHProfModeResetName)
+
+		if xhprofModeReset {
+			app.XHProfMode = types.FlagXHProfModeDefault
 		}
 	}
 

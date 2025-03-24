@@ -59,6 +59,9 @@ var WebserverDefault = WebserverNginxFPM
 // PerformanceModeDefault is default value for app.PerformanceMode
 var PerformanceModeDefault = types.PerformanceModeEmpty
 
+// XHProfModeDefault is default value for app.XHProfMode
+var XHProfModeDefault = types.XHProfModeEmpty
+
 const NodeJSDefault = "22"
 
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
@@ -125,6 +128,8 @@ const (
 	// DdevDefaultMailpitHTTPPort is the default router port for Mailpit
 	DdevDefaultMailpitHTTPPort  = "8025"
 	DdevDefaultMailpitHTTPSPort = "8026"
+	DdevDefaultXHGuiHTTPPort    = "8143"
+	DdevDefaultXHGuiHTTPSPort   = "8142"
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	DefaultDefaultContainerTimeout  = "120"

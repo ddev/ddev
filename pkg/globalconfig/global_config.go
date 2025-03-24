@@ -65,6 +65,8 @@ type GlobalConfig struct {
 	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
 	RouterMailpitHTTPPort            string                      `yaml:"mailpit_http_port,omitempty"`
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
+	RouterXHGuiHTTPPort              string                      `yaml:"xhgui_http_port,omitempty"`
+	RouterXHGuiHTTPSPort             string                      `yaml:"xhgui_https_port,omitempty"`
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
@@ -75,6 +77,7 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
+	XHProfMode               configTypes.XHProfMode  `yaml:"xhprof_mode,omitempty"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info,omitempty"`
 }
 
@@ -324,6 +327,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 		cfgCopy.PerformanceMode = cfgCopy.GetPerformanceMode()
 	}
 
+	if cfgCopy.XHProfMode == configTypes.XHProfModeEmpty {
+		cfgCopy.XHProfMode = nodeps.XHProfModeDefault
+	}
+
 	// We only have one router, so this field is old, and when writing we can omitempty
 	cfgCopy.Router = ""
 
@@ -391,6 +398,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # router_http_port: <port>  # Port to be used for http (defaults to 80)
 # router_https_port: <port> # Port for https (defaults to 443)
 
+# xhprof_mode: [prepend|xhgui]
+# Set to "xhgui" to enable XHGui features
+# "xhgui" will become default in a future major release
+
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
@@ -439,6 +450,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # traefik_monitor_port: 10999
 # Change this only if you're having conflicts with some
 # service that needs port 10999
+
+# xhgui_http_port: 8143
+# Router port used for xhgui HTTP, can be changed in case of conflicts
+
+# xhgui_https_port: 8142
+# Router port used for xhgui HTTPS, can be changed in case of conflicts
 
 # wsl2_no_windows_hosts_mgt: false
 # On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)

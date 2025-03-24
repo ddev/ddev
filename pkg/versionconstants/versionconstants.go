@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250307_rfay_add_hardened_ssh" // Note that this can be overridden by make
+var WebTag = "20250307_rfay_xhgui" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -33,6 +33,12 @@ var SSHAuthTag = "v1.24.3"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
+
+// XhguiImage is image for xhgui
+var XhguiImage = "ddev/ddev-xhgui"
+
+// XhguiTag is xhgui tag
+var XhguiTag = "20250307_rfay_xhgui"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities"

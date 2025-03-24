@@ -4,6 +4,7 @@
 # bats tests/ddev-webserver/php_webserver.bats
 
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    docker exec -t ${CONTAINER_NAME} composer global require perftools/php-profiler
     curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
     if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
         # TODO: Why doesn't this work on Windows?
