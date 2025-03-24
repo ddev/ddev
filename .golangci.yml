@@ -17,6 +17,9 @@ linters:
     - revive
     - staticcheck
     - whitespace
+    # TODO: add these linters for tests
+    #- testifylint
+    #- usetesting
   settings:
     staticcheck:
       checks:
