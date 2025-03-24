@@ -295,7 +295,8 @@ ddev config
 # on every question in `ddev config`
 ddev config --auto
 
-## Detect docroot, project type, and expected defaults for an existing project
+# Detect docroot, project type (except for `generic` type),
+# and expected defaults for an existing project
 ddev config --update
 
 # Configure a Drupal project with a `web` document root
