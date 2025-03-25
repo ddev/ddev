@@ -39,7 +39,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := bundledAssets.ReadFile("openmage/local.xml")
+		content, err := bundledAssets.ReadFile("magento/local.xml")
 		if err != nil {
 			return "", err
 		}
