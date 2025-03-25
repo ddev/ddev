@@ -752,6 +752,8 @@ ddev magento setup:upgrade
 
 ## OpenMage
 
+Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
+
 === "Composer"
 
     ```bash
@@ -767,7 +769,7 @@ ddev magento setup:upgrade
     ddev composer config allow-plugins.aydin-hassan/magento-core-composer-installer true
     ddev composer config allow-plugins.openmage/composer-plugin true
     ddev composer require --no-update "aydin-hassan/magento-core-composer-installer":"^2.1.0" "openmage/magento-lts":"^20.13"
-    ddev . wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
+    ddev exec wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
     ddev composer install
     # Silent OpenMage install with sample data
     # See `ddev openmage-install -h` for more options
@@ -776,8 +778,8 @@ ddev magento setup:upgrade
     ddev launch /admin
     ```
 
-    !!!info
-        DDEV config `--docroot` has to match composer config `extra.magento-root-dir`. 
+    !!!note "Make sure that `docroot` is set correctly"
+        DDEV config `--docroot` has to match Composer config `extra.magento-root-dir`. 
 
 === "Git Clone (for contributors)"
 
@@ -794,11 +796,7 @@ ddev magento setup:upgrade
     ddev launch /admin
     ```
 
-Note that OpenMage itself provides several custom DDEV commands, including
-`openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
-and `php-cs-fixer`.
-
-Read more about [OpenMage](https://docs.openmage.org).
+    Note that OpenMage itself provides several custom DDEV commands, including `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`, and `php-cs-fixer`.
 
 ## Pimcore
 

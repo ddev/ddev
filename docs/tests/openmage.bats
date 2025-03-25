@@ -100,7 +100,7 @@ teardown() {
   assert_success
 
   # download OpenMage install command
-  run ddev . wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
+  run ddev exec wget -O .ddev/commands/web/openmage-install https://raw.githubusercontent.com/OpenMage/magento-lts/refs/heads/main/.ddev/commands/web/openmage-install
   assert_success
 
   run ddev mutagen sync
