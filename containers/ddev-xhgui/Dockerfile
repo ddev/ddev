@@ -1,6 +1,6 @@
 FROM xhgui/xhgui:0.21 AS xhgui-docker
 
-FROM alpine:3.15 AS ddev-xhgui
+FROM scratch AS ddev-xhgui
 
 ### --------------------------------xhgui-docker----------------------------------
 ### XHGui Docker image creates a volume for /run/nginx, which we want to remove.
