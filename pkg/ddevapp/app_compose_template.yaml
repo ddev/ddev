@@ -142,7 +142,9 @@ services:
       - ddev-config:/mnt/ddev_config
       {{- else }}
       - .:/mnt/ddev_config:ro
+      {{- if eq .XHProfMode "prepend" }}
       - ./xhprof:/usr/local/bin/xhprof:rw
+      {{ end }}
         {{- if .MutagenEnabled }}
           {{- range $uploadDirMap := .UploadDirsMap}}
       - {{ $uploadDirMap }}:rw
@@ -199,6 +201,7 @@ services:
     - DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
     - DDEV_WEBSERVER_TYPE
     - DDEV_XDEBUG_ENABLED
+    - DDEV_XHPROF_MODE
     - DDEV_VERSION
     - DEPLOY_NAME=local
     {{ if not .DisableSettingsManagement }}
@@ -261,7 +264,39 @@ services:
       start_interval: "1s"
       {{- end }}
       timeout: "70s"
+  {{ if (not .OmitDB) }}
+  xhgui:
+    image: {{ .XhguiImage }}
+    container_name: ddev-${DDEV_SITENAME}-xhgui
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    profiles:
+      - xhgui
+    restart: "no"
+    {{ if .HostXHGuiPort }}
+    ports:
+      - "{{ $.DockerIP }}:{{ .HostXHGuiPort }}:{{ .XHGuiPort }}"
+    {{- end }}
+    {{- if eq .XHProfMode "xhgui" }}
+    volumes:
+      - run_nginx:/run/nginx
+    {{- end }}
 
+    environment:
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE={{ .XHGuiHTTPPort }}:{{ .XHGuiPort }}
+      - HTTPS_EXPOSE={{ .XHGuiHTTPSPort }}:{{ .XHGuiPort }}
+      - XHGUI_SAVE_HANDLER=pdo
+      - DDEV_DATABASE_FAMILY=${DDEV_DATABASE_FAMILY}
+      - XHGUI_PDO_USER=db
+      - XHGUI_PDO_PASS=db
+      - TZ={{ .Timezone }}
+    links:
+      - db
+    depends_on:
+      - db
+  {{- end }}
 networks:
   ddev_default:
     name: ddev_default
@@ -318,3 +353,7 @@ volumes:
     external: true
 
   {{ end }}{{/* end if and .MutagenEnabled (not .NoProjectMount) */}}
+  {{- if eq .XHProfMode "xhgui" }}
+  run_nginx:
+    name: "{{ .Name }}_xhgui_run_nginx"
+  {{ end }}

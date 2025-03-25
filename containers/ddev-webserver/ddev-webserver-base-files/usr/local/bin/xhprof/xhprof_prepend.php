@@ -1,44 +1,20 @@
 <?php
-
-// This file is built into the container and will normally be
-// mounted on top of by ddev. So you shouldn't be seeing these words.
-
-$uri = "none";
-if (!empty($_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)) {
-  $uri = $_SERVER['REQUEST_URI'];
+// This xhprof_prepend.php is the default if nothing is mounted on top of it
+// It invokes the xhgui collector by default.
+// However, if xhprof_mode=prepend in DDEV the .ddev/xhprof/xhprof_prepend.php will
+// be mounted on top of it.
+$homeDir = getenv('HOME');
+$globalAutoload = $homeDir . '/.composer/vendor/autoload.php';
+if (file_exists($globalAutoload)) {
+    require_once $globalAutoload;
+    // echo "Global autoloader loaded successfully from: $globalAutoload\n";
+} else {
+    error_log("Global autoloader not found at: $globalAutoload");
 }
 
-// Enable xhprof profiling if we're not on an xhprof page
-if (extension_loaded('xhprof') && strpos($uri, '/xhprof') === false) {
-  // If this is too much information, just use xhprof_enable(), which shows CPU only
-  xhprof_enable(XHPROF_FLAGS_MEMORY);
-  register_shutdown_function('xhprof_completion');
-}
-
-// Write to the xhprof_html output and latest on completion
-function xhprof_completion()
-{
-  $xhprof_link_dir = "/var/xhprof/xhprof_html/latest/";
-
-  $xhprof_data = xhprof_disable();
-  $appNamespace = "ddev";
-  include_once '/var/xhprof/xhprof_lib/utils/xhprof_lib.php';
-  include_once '/var/xhprof/xhprof_lib/utils/xhprof_runs.php';
-
-  $xhprof_runs = new XHProfRuns_Default();
-  $run_id = $xhprof_runs->save_run($xhprof_data, $appNamespace);
-
-  // Uncomment to append profile link to the page (and remove the ddev generated first line)
-  // append_profile_link($run_id, $appNamespace);
-}
-
-// If invoked, this will append a profile link to the output HTML
-// This works on some CMSs, like Drupal 7. It does not work on Drupal8/9
-// and can have unwanted side-effects on TYPO3
-function append_profile_link($run_id, $appNamespace)
-{
-  $base_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/xhprof/";
-
-  $profiler_url = sprintf('%sindex.php?run=%s&amp;source=%s', $base_link, $run_id, $appNamespace);
-  echo '<div id="xhprof"><a href="' . $profiler_url . '" target="_blank">xhprof profiler output</a></div>';
+$collector_php = "/usr/local/xhgui.collector/xhgui.collector.php";
+if (file_exists($collector_php)) {
+    require_once $collector_php;
+} else {
+    error_log("File '$collector_php' not found");
 }

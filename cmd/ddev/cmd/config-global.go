@@ -122,6 +122,26 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		}
 	}
 
+	if cmd.Flag(configTypes.FlagXHProfModeName).Changed {
+		xhprofMode, _ := cmd.Flags().GetString(configTypes.FlagXHProfModeName)
+
+		if err := configTypes.CheckValidXHProfMode(xhprofMode, configTypes.ConfigTypeGlobal); err != nil {
+			util.Error("%s. Not changing value of xhprof_mode option.", err)
+		} else {
+			globalconfig.DdevGlobalConfig.XHProfMode = xhprofMode
+			dirty = true
+		}
+	}
+
+	if cmd.Flag(configTypes.FlagXHProfModeResetName).Changed {
+		xhprofModeReset, _ := cmd.Flags().GetBool(configTypes.FlagXHProfModeResetName)
+
+		if xhprofModeReset {
+			globalconfig.DdevGlobalConfig.XHProfMode = configTypes.XHProfModeEmpty
+			dirty = true
+		}
+	}
+
 	if cmd.Flag("xdebug-ide-location").Changed {
 		globalconfig.DdevGlobalConfig.XdebugIDELocation, _ = cmd.Flags().GetString("xdebug-ide-location")
 		dirty = true
@@ -289,6 +309,10 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", configTypes.FlagPerformanceModeName))
 	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceModeDescription(configTypes.ConfigTypeGlobal))
 	configGlobalCommand.Flags().Bool(configTypes.FlagPerformanceModeResetName, true, configTypes.FlagPerformanceModeResetDescription(configTypes.ConfigTypeGlobal))
+
+	configGlobalCommand.Flags().String(configTypes.FlagXHProfModeName, configTypes.FlagXHProfModeDefault, configTypes.FlagXHProfModeDescription(configTypes.ConfigTypeGlobal))
+	configGlobalCommand.Flags().Bool(configTypes.FlagXHProfModeResetName, true, configTypes.FlagXHProfModeResetDescription(configTypes.ConfigTypeGlobal))
+
 	configGlobalCommand.Flags().String("table-style", "", fmt.Sprintf("Table style for list and describe, see %s for values", fileutil.ShortHomeJoin(globalconfig.GetGlobalConfigPath())))
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version (used only in development testing)")
 	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")

@@ -64,4 +64,4 @@ if ! containercheck; then
 fi
 
 # Make sure internal access to monitor port is working
-docker exec -t $CONTAINER_NAME bash -c 'traefik healthcheck --ping.entryPoint=ping --entryPoints.ping.address=127.0.0.1:${TRAEFIK_MONITOR_PORT} --ping 2>&1' || (echo "Failed to run http healthcheck inside container" && exit 104)
+docker exec -t $CONTAINER_NAME bash -c 'traefik healthcheck --ping 2>&1' || (echo "Failed to run http healthcheck inside container" && exit 104)
