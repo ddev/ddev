@@ -840,6 +840,13 @@ func (app *DdevApp) FixObsolete() {
 		if err != nil {
 			util.Warning("Error removing xhgui add-on: %v", err)
 		}
+		// Reload the hooks because we don't want to run the deleted hooks
+		appCopy, err := NewApp(app.AppRoot, true)
+		if err != nil {
+			util.Warning("Error reloading app hooks after removing xhgui add-on: %v", err)
+		} else {
+			app.Hooks = appCopy.Hooks
+		}
 	}
 }
 
