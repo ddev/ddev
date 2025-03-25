@@ -308,7 +308,7 @@ func init() {
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
 	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
-	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides`)
+	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides (except for 'generic' type)`)
 
 	RootCmd.AddCommand(ConfigCommand)
 

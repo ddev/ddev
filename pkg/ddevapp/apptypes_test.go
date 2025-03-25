@@ -49,6 +49,11 @@ func TestDetectAppType(t *testing.T) {
 
 		foundType := app.DetectAppType()
 		require.EqualValues(t, appType, foundType)
+
+		// `generic` type should not be overridden
+		app.Type = nodeps.AppTypeGeneric
+		foundType = app.DetectAppType()
+		require.EqualValues(t, nodeps.AppTypeGeneric, foundType)
 	}
 }
 
