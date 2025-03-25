@@ -88,6 +88,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	}
 
 	for _, name := range app.GetHostnames() {
+
 		// If we're able to resolve the hostname via DNS or otherwise we
 		// don't have to worry about this. This will allow resolution
 		// of <whatever>.ddev.site for example

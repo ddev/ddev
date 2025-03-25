@@ -116,6 +116,7 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 }
 
 func createAppSnapshot(app *ddevapp.DdevApp) {
+
 	// If the database is omitted, do not snapshot
 	omittedContainers := app.GetOmittedContainers()
 	if nodeps.ArrayContainsString(omittedContainers, "db") {

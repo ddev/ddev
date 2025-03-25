@@ -134,6 +134,7 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(testRun)
+
 }
 
 func TestGetActiveAppRoot(t *testing.T) {

@@ -151,7 +151,7 @@ func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, n
 	networkMatchFound := false
 	for _, network := range networks {
 		if network.Name == netName || network.ID == netName {
-			if networkMatchFound {
+			if networkMatchFound == true {
 				err := client.NetworkRemove(ctx, network.ID)
 				// If it's a "no such network" there's no reason to report error
 				if err != nil && !IsErrNotFound(err) {
@@ -431,6 +431,7 @@ func FindNetworksWithLabel(label string) ([]dockerNetwork.Inspect, error) {
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWait(waittime int, labels map[string]string) (string, error) {
+
 	durationWait := time.Duration(waittime) * time.Second
 	timeoutChan := time.NewTimer(durationWait)
 	tickChan := time.NewTicker(500 * time.Millisecond)
@@ -475,7 +476,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	}
 
 	// We should never get here.
-	// nolint: govet
+	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
@@ -483,6 +484,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 // waittime is in seconds.
 // Returns logoutput, error, returns error if not "healthy"
 func ContainersWait(waittime int, labels map[string]string) error {
+
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -534,7 +536,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 	}
 
 	// We should never get here.
-	// nolint: govet
+	//nolint: govet
 	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
@@ -544,6 +546,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string) (string, error) {
+
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -585,7 +588,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	}
 
 	// We should never get here.
-	// nolint: govet
+	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
 }
 
@@ -985,7 +988,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
 	if runtime.GOOS == "windows" {
 		for i := range binds {
-			binds[i] = strings.ReplaceAll(binds[i], `\`, `/`)
+			binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
 			if strings.Index(binds[i], ":") == 1 {
 				binds[i] = strings.Replace(binds[i], ":", "", 1)
 				binds[i] = "/" + binds[i]
@@ -996,6 +999,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 					binds[i] = strings.TrimPrefix(binds[i], driveLetter)
 					binds[i] = strings.ToLower(driveLetter) + binds[i]
 				}
+
 			}
 		}
 	}
@@ -1169,7 +1173,7 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 // MassageWindowsNFSMount changes C:\Path\to\something to /c/Path/to/something
 func MassageWindowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
-		pathPortion := strings.ReplaceAll(mountPoint[2:], `\`, "/")
+		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
 		drive := string(mountPoint[0])
 		// Because we use $HOME to get home in exports, and $HOME has /c/Users/xxx
 		// change the drive to lower case.
@@ -1271,16 +1275,20 @@ func GetHostDockerInternalIP() (string, error) {
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
 		util.Debug("host.docker.internal='%s' because on Gitpod", hostDockerInternal)
+		break
 	case nodeps.IsCodespaces():
 		util.Debug("host.docker.internal='%s' because on Codespaces", hostDockerInternal)
+		break
 
 	case nodeps.IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
 		util.Debug("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", hostDockerInternal)
+		break
 
 	case nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
 		// If IDE is inside WSL2 then the normal Linux processing should work
 		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
+		break
 
 	case nodeps.IsWSL2() && !IsDockerDesktop():
 		// Microsoft instructions for finding Windows IP address at
@@ -1295,9 +1303,11 @@ func GetHostDockerInternalIP() (string, error) {
 	case runtime.GOOS == "linux":
 		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
 		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
+		break
 
 	default:
 		util.Debug("host.docker.internal='%s' because no other case was discovered", hostDockerInternal)
+		break
 	}
 
 	return hostDockerInternal, nil
@@ -1581,7 +1591,7 @@ func DownloadDockerCompose() error {
 	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
-	err = util.DownloadFile(destFile, composeURL, os.Getenv("DDEV_NONINTERACTIVE") != "true")
+	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
 	if err != nil {
 		return err
 	}
@@ -1750,6 +1760,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	if err != nil {
 		return err
 	}
+	// nolint: errcheck
 	defer os.Remove(tarball.Name())
 
 	// Tar up the source directory into the tarball
@@ -1762,6 +1773,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 
+	// nolint: errcheck
 	defer t.Close()
 
 	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, dockerContainer.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
@@ -1794,8 +1806,11 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	if err != nil {
 		return err
 	}
+	//nolint: errcheck
 	defer f.Close()
+	//nolint: errcheck
 	defer os.Remove(f.Name())
+	// nolint: errcheck
 
 	reader, _, err := client.CopyFromContainer(ctx, cid.ID, containerPath)
 	if err != nil {

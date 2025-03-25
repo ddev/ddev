@@ -64,10 +64,9 @@ func TestNodeJSVersions(t *testing.T) {
 	// Testing some random versions, complete, incomplete, and labels
 	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20"} {
 		app.NodeJSVersion = v
-		switch app.NodeJSVersion {
-		case "auto":
+		if app.NodeJSVersion == "auto" {
 			v = nvmrcVersion
-		case "engine":
+		} else if app.NodeJSVersion == "engine" {
 			v = packageJSONVersion
 		}
 		err = app.Restart()
@@ -97,6 +96,7 @@ func TestNodeJSVersions(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(out, "v8.17")
+
 }
 
 // TestCorepackEnable tests behavior of corepack_enable

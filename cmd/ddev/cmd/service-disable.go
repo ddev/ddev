@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -41,9 +40,8 @@ var ServiceDisable = &cobra.Command{
 			util.Failed("No file named %s was found in %s", fName, app.GetConfigPath(""))
 		}
 		err = os.Remove(app.GetConfigPath(disabledServicesDir + "/" + fName))
-		if err != nil {
-			var pathError *fs.PathError
-			if !errors.As(err, &pathError) {
+		if err != nil /*&& err != os.PathError*/ {
+			if _, ok := err.(*fs.PathError); !ok {
 				util.Failed("Unable to remove %s: %v", app.GetConfigPath(disabledServicesDir+"/"+fName), err)
 			}
 		}

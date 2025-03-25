@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,7 @@ func TestDebugMatchConstraintCmd(t *testing.T) {
 	require.NoError(t, err, "Match constraint should not have errored for %s, out='%s'", constraint, out)
 
 	if !regexp.MustCompile(`^v[0-9]+\.`).MatchString(versionconstants.DdevVersion) {
-		t.Skipf("Skipping check for semver because DDEV version doesn't start with any valid version tag, it's '%v'", versionconstants.DdevVersion)
+		t.Skip(fmt.Sprintf("Skipping check for semver because DDEV version doesn't start with any valid version tag, it's '%v'", versionconstants.DdevVersion))
 	}
 
 	constraint = ">= 1.0"

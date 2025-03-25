@@ -62,9 +62,9 @@ func TestLocalfilePull(t *testing.T) {
 	// Build our localfile.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/localfile.yaml.example"))
 	require.NoError(t, err)
-	x := strings.ReplaceAll(string(s), "~/Dropbox", path.Join(util.WindowsPathToCygwinPath(origDir), "testdata", t.Name()))
+	x := strings.Replace(string(s), "~/Dropbox", path.Join(util.WindowsPathToCygwinPath(origDir), "testdata", t.Name()), -1)
 	appRoot := util.WindowsPathToCygwinPath(app.AppRoot)
-	x = strings.ReplaceAll(x, "/full/path/to/project/root", appRoot)
+	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = os.WriteFile(app.GetConfigPath("providers/localfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()

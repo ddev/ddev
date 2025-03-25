@@ -58,6 +58,7 @@ func TestCmdImportDB(t *testing.T) {
 	inputFile := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
 	f, err := os.Open(inputFile)
 	require.NoError(t, err)
+	// nolint: errcheck
 	defer f.Close()
 
 	if app.IsMutagenEnabled() {

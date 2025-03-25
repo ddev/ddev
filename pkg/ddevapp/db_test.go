@@ -44,4 +44,5 @@ func TestDBTypeVersionFromString(t *testing.T) {
 	for input, expectation := range expectations {
 		assert.Equal(expectation, dbTypeVersionFromString(input))
 	}
+
 }

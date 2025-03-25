@@ -185,6 +185,7 @@ func TestMutagenSimple(t *testing.T) {
 		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
 		assert.Error(err)
 	}
+
 }
 
 // TestMutagenConfigChange tests Mutagen new session creation on mutagen.yml change

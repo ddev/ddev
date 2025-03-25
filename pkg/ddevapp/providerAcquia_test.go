@@ -280,6 +280,7 @@ func isPullSiteValid(siteURL string, siteExpectation string) bool {
 	if err != nil {
 		return false
 	}
+	//nolint: errcheck
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return false

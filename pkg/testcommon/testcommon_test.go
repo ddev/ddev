@@ -183,6 +183,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 			_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
 		}
 	}
+
 }
 
 // TestGetCachedArchive tests download and extraction of archives for test sites

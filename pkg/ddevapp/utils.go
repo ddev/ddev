@@ -63,7 +63,7 @@ func RenderHomeRootedDir(path string) string {
 	userDir, err := os.UserHomeDir()
 	util.CheckErr(err)
 	result := strings.Replace(path, userDir, "~", 1)
-	result = strings.ReplaceAll(result, "\\", "/")
+	result = strings.Replace(result, "\\", "/", -1)
 	return result
 }
 
@@ -92,6 +92,7 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	t.AppendRow(table.Row{
 		row["name"], status, row["shortroot"], urls, row["type"],
 	})
+
 }
 
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml
@@ -323,8 +324,8 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, string, error
 		return "no error detected", "", nil
 	}
 	errString := errorReceived.Error()
-	errString = strings.ReplaceAll(errString, "Received unexpected error:", "")
-	errString = strings.ReplaceAll(errString, "\n", "")
+	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
+	errString = strings.Replace(errString, "\n", "", -1)
 	errString = strings.Trim(errString, " \t\n\r")
 	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
 		splitError := strings.Split(errString, " ")
@@ -460,14 +461,14 @@ func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []stri
 		// Get all of the projects we're interested in for this completion function.
 		var apps []*DdevApp
 		var err error
-		switch status {
-		case "inactive":
+		if status == "inactive" {
 			apps, err = GetInactiveProjects()
-		case "active":
+		} else if status == "active" {
 			apps, err = GetProjects(true)
-		case "all":
+		} else if status == "all" {
 			apps, err = GetProjects(false)
-		default:
+		} else {
+			// This is an error state - but we just return nothing
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 		// Return nothing if we have nothing, or return all of the project names.
@@ -535,7 +536,7 @@ func (app *DdevApp) CanUseHTTPOnly() bool {
 	return false
 }
 
-// AppSliceToMap Turn a slice of *DdevApp into a map keyed by name
+// Turn a slice of *DdevApp into a map keyed by name
 func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
 	nameMap := make(map[string]*DdevApp)
 	for _, app := range appList {

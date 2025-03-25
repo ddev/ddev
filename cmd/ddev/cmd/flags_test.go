@@ -105,6 +105,7 @@ func getCommand() cobra.Command {
 			UnknownFlags: true,
 		},
 	}
+
 }
 
 // TestUnitCmdFlagsAssignToCommand checks AssignToCommand works correctly and

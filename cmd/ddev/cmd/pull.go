@@ -33,18 +33,19 @@ ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=
 	},
 }
 
-// appPull does the work of pull
-func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
+// appPull() does the work of pull
+func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDbArg bool, skipFilesArg bool, env string) {
+
 	// If we're not performing the import step, we won't be deleting the existing db or files.
 	if !skipConfirmation && !skipImportArg && os.Getenv("DDEV_NONINTERACTIVE") == "" {
 		// Only warn the user about relevant risks.
 		var message string
-		if skipDBArg && skipFilesArg {
+		if skipDbArg && skipFilesArg {
 			util.Warning("Both database and files import steps skipped.")
 			return
-		} else if !skipDBArg && skipFilesArg {
+		} else if !skipDbArg && skipFilesArg {
 			message = "database"
-		} else if !skipFilesArg && skipDBArg {
+		} else if !skipFilesArg && skipDbArg {
 			message = "files"
 		} else {
 			message = "database and files"
@@ -73,7 +74,7 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		}
 	}
 
-	if err := app.Pull(provider, skipDBArg, skipFilesArg, skipImportArg); err != nil {
+	if err := app.Pull(provider, skipDbArg, skipFilesArg, skipImportArg); err != nil {
 		util.Failed("Pull failed: %v", err)
 	}
 

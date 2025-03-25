@@ -83,6 +83,7 @@ type GlobalConfig struct {
 
 // New returns a default GlobalConfig
 func New() GlobalConfig {
+
 	cfg := GlobalConfig{
 		RequiredDockerComposeVersion: versionconstants.RequiredDockerComposeVersionDefault,
 		InternetDetectionTimeout:     nodeps.InternetDetectionTimeoutDefault,
@@ -102,7 +103,7 @@ func New() GlobalConfig {
 	return cfg
 }
 
-// EnsureGlobalConfig Make sure the global configuration has been initialized
+// Make sure the global configuration has been initialized
 func EnsureGlobalConfig() {
 	DdevGlobalConfig = New()
 	DdevProjectList = make(map[string]*ProjectInfo)
@@ -504,7 +505,7 @@ func ReadProjectList() error {
 		}
 		if os.IsNotExist(err) {
 			// If someone upgrades from an earlier version, the global config may hold the project list.
-			if len(DdevGlobalConfig.ProjectList) > 0 {
+			if DdevGlobalConfig.ProjectList != nil && len(DdevGlobalConfig.ProjectList) > 0 {
 				DdevProjectList = DdevGlobalConfig.ProjectList
 				err := WriteProjectList(DdevProjectList)
 				if err != nil {
@@ -700,6 +701,7 @@ func GetFreePort(localIPAddr string) (string, error) {
 			return "", err
 		}
 		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+		// nolint: errcheck
 		l.Close()
 
 		// In the case of Docker Toolbox, the actual listening IP may be something else
@@ -715,6 +717,7 @@ func GetFreePort(localIPAddr string) (string, error) {
 		return port, nil
 	}
 	return "-1", fmt.Errorf("getFreePort() failed to find a free port")
+
 }
 
 // ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports
@@ -858,7 +861,7 @@ func IsInternetActive() bool {
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
 	if DdevDebug {
-		if !active {
+		if active == false {
 			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/usage/offline/ for info.")
 		}
 		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)

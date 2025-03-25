@@ -270,4 +270,5 @@ func TestUseEphemeralPort(t *testing.T) {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
 		}
 	}
+
 }

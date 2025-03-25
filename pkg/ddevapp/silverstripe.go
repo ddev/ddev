@@ -23,7 +23,7 @@ func silverstripePostStartAction(app *DdevApp) error {
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("unable to read .env file: %v", err)
+		return fmt.Errorf("Unable to read .env file: %v", err)
 	}
 	if os.IsNotExist(err) {
 		err = fileutil.CopyFile(filepath.Join(app.AppRoot, app.ComposerRoot, ".env.example"), envFilePath)

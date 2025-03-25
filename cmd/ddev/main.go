@@ -25,4 +25,5 @@ func main() {
 	}
 
 	cmd.Execute()
+
 }

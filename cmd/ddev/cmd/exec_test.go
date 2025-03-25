@@ -169,7 +169,7 @@ func TestCmdExec(t *testing.T) {
 	f, err := os.CreateTemp("", "")
 	err = f.Close()
 	assert.NoError(err)
-	defer os.Remove(f.Name())
+	defer os.Remove(f.Name()) // nolint: errcheck
 
 	bashTempName := util.WindowsPathToCygwinPath(f.Name())
 	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", ddevBinForBash, bashTempName))

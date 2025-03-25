@@ -451,6 +451,7 @@ func TestConfigCreateDocroot(t *testing.T) {
 			require.DirExists(t, filepath.Join(tmpDir, tc.expected))
 		})
 	}
+
 }
 
 // TestConfigInvalidProjectname tests to make sure that invalid projectnames
@@ -503,6 +504,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NotContains(out, "You may now run 'ddev start'")
 		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
+
 }
 
 // TestCmdConfigHasAllowedLocation tests to ensure that 'ddev config'
@@ -745,6 +747,7 @@ func checkValues(t *testing.T, name string, expectation ddevapp.DdevApp, app *dd
 	reflectedApp := reflect.ValueOf(*app)
 
 	for _, member := range []string{"Type", "PHPVersion", "Docroot", "CorepackEnable", "Database"} {
+
 		fieldExpectation := reflectedExpectation.FieldByName(member)
 		if fieldExpectation.IsValid() {
 			fieldValueExpectation := fieldExpectation.Interface()

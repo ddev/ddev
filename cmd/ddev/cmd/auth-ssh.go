@@ -166,6 +166,7 @@ func fileIsPrivateKey(filePath string) bool {
 	if err != nil {
 		return false
 	}
+	// nolint: errcheck
 	defer file.Close()
 	prefix := []byte("-----BEGIN")
 	buffer := make([]byte, len(prefix))

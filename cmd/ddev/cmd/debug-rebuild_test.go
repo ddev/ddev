@@ -62,7 +62,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	})
 	require.NoError(t, err)
 
-	origRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+	origRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "cat /random-db.txt",
 		Service: "db",
 	})
@@ -77,12 +77,12 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	require.NoError(t, err)
 	assert.Equal(origRandomWeb, newRandomWeb)
 
-	newRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+	newRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "cat /random-db.txt",
 		Service: "db",
 	})
 	require.NoError(t, err)
-	assert.Equal(origRandomDB, newRandomDB)
+	assert.Equal(origRandomDb, newRandomDb)
 
 	// Now run ddev debug rebuild to blow away the Docker cache
 	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild")
@@ -98,12 +98,12 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	assert.NotEqual(origRandomWeb, freshRandomWeb)
 
 	// And it should remain the same for db
-	freshRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+	freshRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "cat /random-db.txt",
 		Service: "db",
 	})
 	require.NoError(t, err)
-	assert.Equal(origRandomDB, freshRandomDB)
+	assert.Equal(origRandomDb, freshRandomDb)
 
 	// Now run ddev debug rebuild to blow away the Docker cache for db
 	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--service", "db")
@@ -121,12 +121,12 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	// And we should see a new value for db
 	err = app.Restart()
 	require.NoError(t, err)
-	freshRandomDBNew, _, err := app.Exec(&ddevapp.ExecOpts{
+	freshRandomDbNew, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "cat /random-db.txt",
 		Service: "db",
 	})
 	require.NoError(t, err)
-	assert.NotEqual(freshRandomDB, freshRandomDBNew)
+	assert.NotEqual(freshRandomDb, freshRandomDbNew)
 
 	// Repeat the same with all services, but use cache
 	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--all", "--cache")
@@ -144,10 +144,10 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	// And it should remain the same for db
 	err = app.Restart()
 	require.NoError(t, err)
-	cachedRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+	cachedRandomDb, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "cat /random-db.txt",
 		Service: "db",
 	})
 	require.NoError(t, err)
-	assert.Equal(cachedRandomDB, freshRandomDBNew)
+	assert.Equal(cachedRandomDb, freshRandomDbNew)
 }

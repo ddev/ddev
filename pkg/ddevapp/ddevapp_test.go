@@ -510,7 +510,7 @@ func TestDdevStart(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -598,7 +598,7 @@ func TestDdevStart(t *testing.T) {
 	badapp := &ddevapp.DdevApp{}
 
 	err = badapp.Init(copyDir)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer badapp.Stop(true, false)
 	if err == nil {
 		logs, logErr := app.CaptureLogs("web", false, "")
@@ -623,7 +623,7 @@ func TestDdevStart(t *testing.T) {
 
 	err = symlinkApp.Init(symlink)
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer symlinkApp.Stop(true, false)
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
@@ -865,6 +865,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	// Now with DisableSettingsManagement=false, start should have created both
 	assert.FileExists(app.SiteSettingsPath)
 	assert.FileExists(app.SiteDdevSettingsFile)
+
 }
 
 // TestDdevNoProjectMount tests running without the app file mount.
@@ -874,7 +875,7 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -1119,7 +1120,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err = app.StartAndWait(0)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
@@ -1163,6 +1164,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
+
 }
 
 // TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
@@ -1285,6 +1287,7 @@ func TestDdevImportDB(t *testing.T) {
 			err = dockerutil.RemoveVolume(app.Name + "-" + dbType)
 			require.NoError(t, err)
 		}
+
 	})
 
 	c := make(map[string]string)
@@ -1387,6 +1390,7 @@ func TestDdevImportDB(t *testing.T) {
 			inputFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "stdintable.sql")
 			f, err := os.Open(inputFile)
 			require.NoError(t, err)
+			// nolint: errcheck
 			defer f.Close()
 			savedStdin := os.Stdin
 			os.Stdin = f
@@ -1484,7 +1488,7 @@ func TestDdevImportDB(t *testing.T) {
 	path := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
 	err = app.ImportDB(path, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
-	checkImportDBImports(t, app)
+	checkImportDbImports(t, app)
 
 	// Now test the same when importing from stdin, same file
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE wp_posts;'"})
@@ -1500,7 +1504,7 @@ func TestDdevImportDB(t *testing.T) {
 	err = app.ImportDB("", "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 	os.Stdin = oldStdin
-	checkImportDBImports(t, app)
+	checkImportDbImports(t, app)
 
 	// Verify that the count of tables is exactly what it should be, that nothing was lost in the
 	// import due to embedded DDL statements.
@@ -1543,9 +1547,10 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
 		assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 	}
+
 }
 
-func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
+func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 	assert := asrt.New(t)
 
 	// There should be exactly the one wp_posts table for this file
@@ -2193,6 +2198,7 @@ func TestWebserverPostgresDBClient(t *testing.T) {
 			// Output might be "pg_restore (PostgreSQL) 16.3 (Debian 16.3-1.pgdg120+1)"
 			// Or for postgres 9: "pg_dump (PostgreSQL) 9.6.24"
 			require.True(t, strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
+
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
@@ -2746,6 +2752,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		runTime()
 		switchDir()
 	}
+
 }
 
 // TestDdevImportFilesCustomUploadDir ensures that files are imported to a custom upload directory when requested
@@ -3193,6 +3200,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	for _, volume := range volumes.Volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
+
 }
 
 // TestGetAppsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
@@ -3422,7 +3430,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -3434,7 +3442,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	app, err = ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 
 	desc, err := app.Describe(false)
@@ -3516,6 +3524,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 		} else {
 			t.Errorf("failed to parse web services: %v", services)
 		}
+
 	} else {
 		t.Error("Unable to access ComposeYaml[services]")
 	}
@@ -3528,22 +3537,21 @@ func TestMultipleComposeFiles(t *testing.T) {
 			if !ok {
 				t.Errorf("failed to parse network %s", name)
 			} else {
-				switch name {
-				case "ddev_default":
+				if name == "ddev_default" {
 					assert.Equal("ddev_default", networkMap["name"])
 					if _, ok := networkMap["external"].(bool); !ok {
 						t.Errorf("failed to parse external network %s", name)
 					} else {
 						assert.True(networkMap["external"].(bool))
 					}
-				case "default":
+				} else if name == "default" {
 					assert.Equal(app.GetDefaultNetworkName(), networkMap["name"])
 					if _, ok := networkMap["external"].(bool); ok {
 						t.Errorf("default network cannot be external")
 					}
-				case "dummy":
+				} else if name == "dummy" {
 					assert.Equal("dummy_name", networkMap["name"])
-				default:
+				} else {
 					t.Errorf("Unexpected network name %s", name)
 				}
 				if external, ok := networkMap["external"].(bool); !ok || !external {
@@ -3669,6 +3677,7 @@ func TestPHPWebserverType(t *testing.T) {
 
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverNginxFPM} {
+
 			err = app.WriteConfig()
 			assert.NoError(err)
 
@@ -3870,7 +3879,7 @@ func TestNFSMount(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	testDir, _ := os.Getwd()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer os.Chdir(testDir)
 
 	site := TestSites[0]
@@ -3920,7 +3929,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	err := app.Stop(true, false)
 	assert.NoError(err)
 	err = app.Start()
-	// nolint: errcheck
+	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
 
@@ -3940,6 +3949,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev", "nfslinked_.ddev")
 	assert.NoError(err)
+	// nolint: errcheck
 	defer os.Remove("nfslinked_.ddev")
 
 	time.Sleep(2 * time.Second)
@@ -3953,6 +3963,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	// Create a host-side file symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev/config.yaml", "nfslinked_config.yaml")
 	assert.NoError(err)
+	// nolint: errcheck
 	defer os.Remove("nfslinked_config.yaml")
 
 	time.Sleep(2 * time.Second)
@@ -3973,6 +3984,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	})
 	assert.NoError(err)
 
+	// nolint: errcheck
 	defer os.Remove("nfscontainerlinked_ddev")
 
 	time.Sleep(2 * time.Second)
@@ -3988,6 +4000,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	})
 	assert.NoError(err)
 
+	// nolint: errcheck
 	defer os.Remove("nfscontainerlinked_config.yaml")
 
 	time.Sleep(2 * time.Second)
@@ -4144,6 +4157,7 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = specAPP.Start()
 	assert.NoError(err)
+	//nolint: errcheck
 	err = specAPP.Stop(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
@@ -4411,6 +4425,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		lines := strings.Split(envVal, "\n")
 		assert.Equal(v, lines[0], "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
 	}
+
 }
 
 // TestEnvFile tests checks behavior of .ddev/.env files

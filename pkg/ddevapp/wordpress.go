@@ -37,8 +37,8 @@ type WordpressConfig struct {
 	SiteSettings     string
 	SiteSettingsDdev string
 	AbsPath          string
-	DBCharset        string
-	DBCollate        string
+	DbCharset        string
+	DbCollate        string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
@@ -64,8 +64,8 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		SiteSettings:     "wp-config.php",
 		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
-		DBCharset:        "utf8",
-		DBCollate:        "",
+		DbCharset:        "utf8",
+		DbCollate:        "",
 	}
 }
 
@@ -185,6 +185,7 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 	}
 	defer util.CheckClose(file)
 
+	//nolint: revive
 	if err = t.Execute(file, wordpressConfig); err != nil {
 		return err
 	}

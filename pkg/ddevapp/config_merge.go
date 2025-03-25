@@ -45,7 +45,7 @@ func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 	return nil
 }
 
-// EnvToUniqueEnv makes sure that only the last occurrence of an env (NAME=val)
+// EnvToUniqueEnv() makes sure that only the last occurrence of an env (NAME=val)
 // slice is actually retained.
 func EnvToUniqueEnv(inSlice *[]string) []string {
 	mapStore := map[string]string{}

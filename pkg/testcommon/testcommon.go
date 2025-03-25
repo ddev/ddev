@@ -3,7 +3,6 @@ package testcommon
 import (
 	"crypto/sha256"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,6 +27,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/pkg/homedir"
 	copy2 "github.com/otiai10/copy"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -138,7 +138,7 @@ func (site *TestSite) Prepare() error {
 	app.WebserverType = site.WebserverType
 	detectedType := app.DetectAppType()
 	if app.Type != detectedType && app.Type != nodeps.AppTypeGeneric {
-		return fmt.Errorf("detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)
+		return errors.Errorf("Detected apptype (%s) does not match provided site.Type (%s)", detectedType, site.Type)
 	}
 
 	app.WebEnvironment = site.WebEnvironment
@@ -149,7 +149,7 @@ func (site *TestSite) Prepare() error {
 		}
 		err = os.WriteFile(app.GetConfigPath("web-entrypoint.d/pretest.sh"), []byte(site.PretestCmd), 0755)
 		if err != nil {
-			return fmt.Errorf("failed to write pretest.sh, err=%v", err)
+			return errors.Errorf("Failed to write pretest.sh, err=%v", err)
 		}
 	}
 	err = app.ConfigFileOverrideAction(false)
@@ -166,7 +166,7 @@ func (site *TestSite) Prepare() error {
 
 	err = app.WriteConfig()
 	if err != nil {
-		return fmt.Errorf("failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)
+		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)
 	}
 
 	return nil
@@ -247,7 +247,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	originalGlobalConfig := globalconfig.DdevGlobalConfig
 	// Stop the Mutagen daemon running in the ~/.ddev
 	ddevapp.StopMutagenDaemon("")
-	t.Logf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
+	t.Log(fmt.Sprintf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
@@ -274,7 +274,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
-		t.Logf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
+		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
@@ -286,7 +286,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
 	ddevapp.StopMutagenDaemon("")
-	t.Logf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
+	t.Log(fmt.Sprintf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
 	t.Setenv("XDG_CONFIG_HOME", "")
@@ -304,7 +304,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
-		t.Logf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
+		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
@@ -495,6 +495,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 		return "", resp, err
 	}
 
+	//nolint: errcheck
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -529,7 +530,7 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	return resp, err
 }
 
-// CheckGoroutineOutput makes sure that goroutines
+// CheckgoroutineOutput makes sure that goroutines
 // aren't beyond specified level
 func CheckGoroutineOutput(t *testing.T, out string) {
 	goroutineLimit := nodeps.GoroutineLimit

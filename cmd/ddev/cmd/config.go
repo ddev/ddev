@@ -376,7 +376,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	app.WarnIfConfigReplace()
 
 	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
-	// nolint: revive
+	// nolint:revive
 	if app.Name != "" && projectNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
 		// Sorry this is empty but it makes the logic clearer.
 	} else if projectNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name
@@ -755,7 +755,7 @@ func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []s
 	arg := cmd.Flag(flagName).Value.String()
 
 	// Remove all spaces from the flag value.
-	arg = strings.ReplaceAll(arg, " ", "")
+	arg = strings.Replace(arg, " ", "", -1)
 
 	// If the flag value is an empty string, return an empty slice.
 	if arg == "" || arg == `""` || arg == `''` {

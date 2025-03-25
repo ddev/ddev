@@ -45,18 +45,17 @@ func laravelPostStartAction(app *DdevApp) error {
 	}
 	port := "3306"
 	dbConnection := "mariadb"
-	switch app.Database.Type {
-	case nodeps.MariaDB:
-		hasMariaDBDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config/database.php"), "mariadb")
-		if !hasMariaDBDriver {
+	if app.Database.Type == nodeps.MariaDB {
+		hasMariaDbDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config/database.php"), "mariadb")
+		if !hasMariaDbDriver {
 			// Older versions of Laravel (before 11) use "mysql" driver for MariaDB
 			// This change is required to prevent this error on "php artisan migrate":
 			// InvalidArgumentException Database connection [mariadb] not configured
 			dbConnection = "mysql"
 		}
-	case nodeps.MySQL:
+	} else if app.Database.Type == nodeps.MySQL {
 		dbConnection = "mysql"
-	case nodeps.Postgres:
+	} else if app.Database.Type == nodeps.Postgres {
 		dbConnection = "pgsql"
 		port = "5432"
 	}

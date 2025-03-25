@@ -62,6 +62,7 @@ func TestCopyDir(t *testing.T) {
 	assert.NoError(err)
 	err = os.RemoveAll(targetDir)
 	assert.NoError(err)
+
 }
 
 // TestCopyFile tests copying a file.
@@ -174,12 +175,13 @@ func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 	}
 	sourceDir := filepath.Join(testDir, "testdata", "symlinks")
 	targetDir := testcommon.CreateTmpDir("TestReplaceSimulated")
+	//nolint: errcheck
 	defer os.RemoveAll(targetDir)
 	err := os.Chdir(targetDir)
 	assert.NoError(err)
 
-	// Make sure we leave the testDir as we found it.
-	// nolint: errcheck
+	// Make sure we leave the testDir as we found it..
+	//nolint: errcheck
 	defer os.Chdir(testDir)
 	// CopyDir skips real symlinks, but we only care about simulated ones, so it's OK
 	err = fileutil.CopyDir(sourceDir, filepath.Join(targetDir, "symlinks"))
@@ -210,6 +212,7 @@ func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 			_ = targetFile
 		}
 	}
+
 }
 
 // TestIsSameFile tests the IsSameFile utility function.
@@ -225,6 +228,7 @@ func TestIsSameFile(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Symlink(testdataAbsolute, dirSymlink)
 	assert.NoError(err)
+	//nolint: errcheck
 	defer os.Remove(dirSymlink)
 
 	// At this point, dirSymLink and "testdata" should be equivalent

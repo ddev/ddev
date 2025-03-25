@@ -17,6 +17,8 @@ CGO_ENABLED = 0
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
 
+GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
+
 TESTTMP=/tmp/testresults
 
 # This repo's root import path (under GOPATH).
@@ -276,7 +278,7 @@ $(GOTMP)/bin/windows_arm64/sudo_license.txt:
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
 	@echo "golangci-lint: "
-	@CMD="golangci-lint run $(SRC_AND_UNDER)"; \
+	@CMD="golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"; \
 	set -eu -o pipefail; \
 	if command -v golangci-lint >/dev/null 2>&1; then \
 		$$CMD; \

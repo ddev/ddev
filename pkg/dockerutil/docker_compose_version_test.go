@@ -63,4 +63,5 @@ func TestDockerComposeDownload(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), activeVersion)
 	}
+
 }

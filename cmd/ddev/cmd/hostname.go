@@ -92,6 +92,7 @@ func removeInactiveHostnames() {
 			util.Warning("Unable to remove hosts entries for project '%s': %v", app.Name, err)
 		}
 	}
+	return
 }
 
 func init() {

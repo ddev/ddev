@@ -11,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/maruel/natural"
+	"github.com/pkg/errors"
 )
 
 // appTypeFuncs prototypes
@@ -416,6 +417,7 @@ func (app *DdevApp) DetectAppType() string {
 // PostImportDBAction calls each apptype's detector until it finds a match,
 // or returns 'php' as a last resort.
 func (app *DdevApp) PostImportDBAction() error {
+
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.postImportDBAction != nil {
 		return appFuncs.postImportDBAction(app)
 	}
@@ -477,7 +479,7 @@ func (app *DdevApp) PostStartAction() error {
 // dispatchImportFilesAction executes the relevant import files workflow for each app type.
 func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extractPath string) error {
 	if strings.TrimSpace(uploadDir) == "" {
-		return fmt.Errorf("upload_dirs is not set for this project (%s)", app.Type)
+		return errors.Errorf("upload_dirs is not set for this project (%s)", app.Type)
 	}
 
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok {

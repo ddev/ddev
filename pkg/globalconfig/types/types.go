@@ -4,7 +4,7 @@ import "github.com/ddev/ddev/pkg/nodeps"
 
 type RouterType = string
 
-// RouterTypeTraefik Router Types
+// Router Types
 const (
 	RouterTypeTraefik RouterType = "traefik"
 )

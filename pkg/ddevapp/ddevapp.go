@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"bytes"
 	"embed"
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -145,7 +144,7 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
-// SkipHooks Global variable that's set from --skip-hooks global flag.
+// Global variable that's set from --skip-hooks global flag.
 // If true, all hooks would be skiped.
 var SkipHooks = false
 
@@ -209,6 +208,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
+
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -288,6 +288,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		} else {
 			appDesc["xhgui_status"] = "disabled"
 		}
+
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -385,7 +386,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
 				vhostVal := virtualHost
-				// nolint: staticcheck
 				vhostValStr := fmt.Sprintf("%s", vhostVal)
 				vhostsList := strings.Split(vhostValStr, ",")
 
@@ -580,7 +580,7 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	return proposedPrimaryRouterHTTPPort
 }
 
-// GetWebEnvVar gets an environment variable from
+// GetWebEnvVar() gets an environment variable from
 // app.ComposeYaml["services"]["web"]["environment"]
 // It returns empty string if there is no var or the ComposeYaml
 // is just not set.
@@ -595,7 +595,7 @@ func (app *DdevApp) GetWebEnvVar(name string) string {
 	return ""
 }
 
-// TargetPortFromExposeVariable uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
 // comma-delimted list of colon-delimited port-pairs
 // Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related port to be exposed on the router.
@@ -619,8 +619,8 @@ func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort
 	return ""
 }
 
-// RouterPortFromExposeVariable uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
-// comma-delimited list of colon-delimited port-pairs
+// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// comma-delimted list of colon-delimited port-pairs
 // Given a router port (often "80" or "443") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related container target port.
 // It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
@@ -649,6 +649,7 @@ func (app *DdevApp) RouterPortFromExposeVariable(exposeEnvVar string, routerPort
 // 2. The project router_http_port
 // 3. The global router_http_port
 func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
+
 	proposedPrimaryRouterHTTPSPort := "443"
 	if globalconfig.DdevGlobalConfig.RouterHTTPSPort != "" {
 		proposedPrimaryRouterHTTPSPort = globalconfig.DdevGlobalConfig.RouterHTTPSPort
@@ -677,6 +678,7 @@ func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 // If HTTP_EXPOSE has a mapping to port 8025 in the container, use that
 // If not, use the global or project MailpitHTTPPort
 func (app *DdevApp) GetMailpitHTTPPort() string {
+
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
 		httpPort := app.TargetPortFromExposeVariable(httpExpose, "8025")
 		if httpPort != "" {
@@ -698,6 +700,7 @@ func (app *DdevApp) GetMailpitHTTPPort() string {
 // If HTTPS_EXPOSE has a mapping to port 8025 in the container, use that
 // If not, use the global or project MailpitHTTPSPort
 func (app *DdevApp) GetMailpitHTTPSPort() string {
+
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
 		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, "8025")
 		if httpsPort != "" {
@@ -1018,7 +1021,7 @@ func (app *DdevApp) SiteStatus() (string, string) {
 
 	_, err := CheckForConf(app.GetAppRoot())
 	if err != nil {
-		return SiteConfigMissing, SiteConfigMissing
+		return SiteConfigMissing, fmt.Sprintf("%s", SiteConfigMissing)
 	}
 
 	statuses := map[string]string{"web": ""}
@@ -1116,6 +1119,7 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error
 		return err
 	}
 
+	//nolint: revive
 	if err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
@@ -2402,6 +2406,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
+
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on Windows.
@@ -2476,6 +2481,7 @@ func (app *DdevApp) DockerEnv() {
 		hostHTTPSPortStr = strconv.Itoa(hostHTTPSPort)
 	} else {
 		hostHTTPSPortStr = app.HostHTTPSPort
+
 	}
 
 	// DDEV_DATABASE_FAMILY can be use for connection URLs
@@ -2788,6 +2794,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 // getBackupCommand returns the command to dump the entire db system for the various databases
 func getBackupCommand(app *DdevApp, targetFile string) string {
+
 	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0"}
@@ -3102,7 +3109,7 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
-// GetWebContainerDirectHTTPPort returns the first direct-access public tcp port for http
+// GetWebContainerPublicPort returns the first direct-access public tcp port for http
 // It excludes 8025 (mailpit) and 443 (nginx and apache)
 func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 	// There may not always be a public direct port
@@ -3127,6 +3134,7 @@ func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 
 // GetWebContainerHTTPSPublicPort returns the direct-access public tcp port for https
 func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
+
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
 		return -1, fmt.Errorf("unable to find https web container for app: %s, err %v", app.Name, err)
@@ -3205,23 +3213,8 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
 	if err = app.Init(activeAppRoot); err != nil {
-		var webContainerExists webContainerExists
-		var invalidConfigFile invalidConfigFile
-		var invalidConstraint invalidConstraint
-		var invalidHostname invalidHostname
-		var invalidAppType invalidAppType
-		var invalidPHPVersion invalidPHPVersion
-		var invalidWebserverType invalidWebserverType
-		var invalidProvider invalidProvider
-		switch {
-		case errors.As(err, &webContainerExists),
-			errors.As(err, &invalidConfigFile),
-			errors.As(err, &invalidConstraint),
-			errors.As(err, &invalidHostname),
-			errors.As(err, &invalidAppType),
-			errors.As(err, &invalidPHPVersion),
-			errors.As(err, &invalidWebserverType),
-			errors.As(err, &invalidProvider):
+		switch err.(type) {
+		case webContainerExists, invalidConfigFile, invalidConstraint, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
 			return app, err
 		}
 	}
@@ -3253,6 +3246,7 @@ func restoreApp(app *DdevApp, siteName string) error {
 
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider(providerName string) (*Provider, error) {
+
 	var p Provider
 	var err error
 
@@ -3327,7 +3321,7 @@ func (app *DdevApp) GetPostgresVolumeName() string {
 
 // GetComposeProjectName returns the name of the docker-compose project
 func (app *DdevApp) GetComposeProjectName() string {
-	return strings.ToLower("ddev-" + strings.ReplaceAll(app.Name, `.`, ""))
+	return strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1))
 }
 
 // GetDefaultNetworkName returns the default project network name

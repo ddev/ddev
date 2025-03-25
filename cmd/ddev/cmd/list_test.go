@@ -85,6 +85,7 @@ func TestCmdList(t *testing.T) {
 			}
 		}
 		assert.True(found, "Failed to find project %s in ddev list -j", v.Name)
+
 	}
 
 	// Now filter the list by the type of the first running test app

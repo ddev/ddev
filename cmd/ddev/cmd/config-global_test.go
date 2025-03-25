@@ -34,6 +34,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	}
 	// We need to make sure that the (corrupted, bogus) global config file is removed
 	// and then read (empty)
+	// nolint: errcheck
 	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
 		args := []string{"config", "global", "--omit-containers", "", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--traefik-monitor-port=10999`}

@@ -81,7 +81,7 @@ func timeTrack(name *string) func() {
 	}
 }
 
-// CheckGoroutines updates the number of goroutines
+// CheckGoroutines() updates the number of goroutines
 // and optionally outputs the list of them on verbose.
 // Use with `defer util.CheckGoroutines()`
 func CheckGoroutines() {

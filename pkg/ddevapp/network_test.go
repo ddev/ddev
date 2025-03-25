@@ -80,4 +80,5 @@ func TestNetworkAmbiguity(t *testing.T) {
 			assert.Len(ips, expectation)
 		}
 	}
+
 }

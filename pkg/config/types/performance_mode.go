@@ -53,7 +53,7 @@ func IsValidPerformanceMode(performanceMode string, configType ConfigType) bool 
 	return false
 }
 
-// CheckValidPerformanceMode checks to see if the given performance mode option
+// CheckValidPerformance checks to see if the given performance mode option
 // is valid and returns an error in case the value is not valid.
 func CheckValidPerformanceMode(performanceMode string, configType ConfigType) error {
 	if !IsValidPerformanceMode(performanceMode, configType) {

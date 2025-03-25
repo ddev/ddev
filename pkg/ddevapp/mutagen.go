@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	osexec "os/exec"
@@ -26,6 +25,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/pkg/errors"
 )
 
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
@@ -229,6 +229,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		err = app.MutagenSyncFlush()
 		util.Verbose("gofunc flushed Mutagen sync session '%s' err=%v", syncName, err)
 		flushErr <- err
+		return
 	}()
 
 	// In tests or other non-interactive environments we don't need to show the
@@ -312,8 +313,7 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	syncName := MutagenSyncName(app.Name)
 	res, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
 	if err != nil {
-		var exitError *osexec.ExitError
-		if errors.As(err, &exitError) {
+		if exitError, ok := err.(*osexec.ExitError); ok {
 			// If we got an error, but it's that there were no sessions, return false, no err
 			if strings.Contains(string(exitError.Stderr), "did not match any sessions") {
 				return false, nil
@@ -350,8 +350,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
 		stderr := ""
-		var exitError *osexec.ExitError
-		if errors.As(err, &exitError) {
+		if exitError, ok := err.(*osexec.ExitError); ok {
 			stderr = string(exitError.Stderr)
 		}
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenDataDirectory()), fullJSONResult, nil, fmt.Errorf("failed to Mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
@@ -362,7 +361,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshal Mutagen sync list results '%v'", globalconfig.GetMutagenDataDirectory(), fullJSONResult), fullJSONResult, nil, err
 	}
 
-	if paused, ok := session["paused"].(bool); ok && paused {
+	if paused, ok := session["paused"].(bool); ok && paused == true {
 		return "paused", "paused", session, nil
 	}
 	var ok bool
@@ -433,7 +432,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	return "failing", shortResult, session, nil
 }
 
-// GetMutagenSyncID returns the project sync ID
+// GetMutagenSyncID() returns the project sync ID
 func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
 	syncName := MutagenSyncName(app.Name)
 
@@ -466,7 +465,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	}
 	syncName := MutagenSyncName(app.Name)
 	if !MutagenSyncExists(app) {
-		return fmt.Errorf("mutagen sync session '%s' does not exist", syncName)
+		return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
 	}
 	if status, shortResult, session, err := app.MutagenStatus(); err == nil {
 		util.Verbose("Mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
@@ -535,7 +534,7 @@ func DownloadMutagen() error {
 	_ = os.Remove(globalconfig.GetMutagenPath())
 
 	_ = os.MkdirAll(globalMutagenDir, 0777)
-	err := util.DownloadFile(destFile, mutagenURL, os.Getenv("DDEV_NONINTERACTIVE") != "true")
+	err := util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
 	if err != nil {
 		return err
 	}
@@ -609,7 +608,7 @@ func MutagenReset(app *DdevApp) error {
 		err := app.Stop(false, false)
 		if err != nil {
 			util.Warning("Failed to stop project '%s': %v", app.Name, err)
-			return fmt.Errorf("failed to stop project %s: %v", app.Name, err)
+			return errors.Errorf("Failed to stop project %s: %v", app.Name, err)
 		}
 		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 		if err != nil {
@@ -793,7 +792,7 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 	status, _, mapResult, err := app.MutagenStatus()
 	if status == "not enabled" {
-		return "", fmt.Errorf("mutagen sync session for app '%s' does not exist or is not enabled; status=%v; err=%v", app.Name, status, err)
+		return "", fmt.Errorf("Mutagen sync session for app '%s' does not exist or is not enabled; status=%v; err=%v", app.Name, status, err)
 	}
 	if strings.HasPrefix(status, "nosession") || err != nil {
 		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)

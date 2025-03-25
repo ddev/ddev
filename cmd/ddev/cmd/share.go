@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"os"
 	"os/exec"
 	"strings"
@@ -73,8 +72,7 @@ ddev share myproject`,
 				break
 			}
 
-			var exitErr *exec.ExitError
-			ok := errors.As(ngrokErr, &exitErr)
+			exitErr, ok := ngrokErr.(*exec.ExitError)
 			if !ok {
 				// Normally we'd have an ExitError, but if not, notify
 				util.Error("ngrok exited: %v", ngrokErr)

@@ -59,8 +59,9 @@ ddev add-on list --installed --project my-project
 	},
 }
 
-// ListInstalledAddons show the add-ons that have a manifest file
+// ListInstalledAddons() show the add-ons that have a manifest file
 func ListInstalledAddons(app *ddevapp.DdevApp) {
+
 	manifests := ddevapp.GetInstalledAddons(app)
 
 	var out bytes.Buffer

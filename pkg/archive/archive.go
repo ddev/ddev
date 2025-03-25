@@ -275,6 +275,7 @@ func Untar(source string, dest string, extractionDir string) error {
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
 			}
+
 		}
 	}
 
@@ -376,6 +377,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 	if err != nil {
 		return fmt.Errorf("could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
+	// nolint: errcheck
 	defer tarball.Close()
 
 	mw := io.MultiWriter(tarball)
@@ -442,9 +444,9 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 		}
 
 		// update the name to correctly reflect the desired destination when untarring
-		header.Name = strings.TrimPrefix(strings.ReplaceAll(file, src, ""), string(filepath.Separator))
+		header.Name = strings.TrimPrefix(strings.Replace(file, src, "", -1), string(filepath.Separator))
 		if runtime.GOOS == "windows" {
-			header.Name = strings.ReplaceAll(header.Name, `\`, `/`)
+			header.Name = strings.Replace(header.Name, `\`, `/`, -1)
 		}
 
 		// write the header

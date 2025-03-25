@@ -48,7 +48,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 	if cmd.Flag("omit-containers").Changed {
-		omitContainers = strings.ReplaceAll(omitContainers, " ", "")
+		omitContainers = strings.Replace(omitContainers, " ", "", -1)
 		if omitContainers == "" || omitContainers == `""` || omitContainers == `''` {
 			globalconfig.DdevGlobalConfig.OmitContainersGlobal = []string{}
 		} else {
@@ -276,7 +276,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		//name := typeOfVal.Field(i).Name
 		fieldValue := v.Field(i).Interface()
 		if tag != "build info" && tag != "web_environment" && tag != "project_info" && tag != "remote_config" && tag != "messages" && tag != "router" {
-			tagWithDashes := strings.ReplaceAll(tag, "_", "-")
+			tagWithDashes := strings.Replace(tag, "_", "-", -1)
 			valMap[tagWithDashes] = fmt.Sprintf("%v", fieldValue)
 			keys = append(keys, tagWithDashes)
 		}

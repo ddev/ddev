@@ -98,6 +98,7 @@ func CopyDir(src string, dst string) error {
 	}
 
 	for _, de := range dirEntrySlice {
+
 		srcPath := filepath.Join(src, de.Name())
 		dstPath := filepath.Join(dst, de.Name())
 
@@ -244,8 +245,9 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 		return err
 	}
 
-	output := bytes.ReplaceAll(input, []byte(searchString), []byte(replaceString))
+	output := bytes.Replace(input, []byte(searchString), []byte(replaceString), -1)
 
+	// nolint: revive
 	if err = os.WriteFile(destPath, output, 0666); err != nil {
 		return err
 	}
@@ -350,6 +352,7 @@ func CanCreateSymlinks() bool {
 	linkPath := filepath.Join(tmpdir, RandomFilenameBase())
 	// This doesn't attempt to create the real file; we don't need it.
 	err := os.Symlink(filepath.Join(tmpdir, "realfile.txt"), linkPath)
+	//nolint: errcheck
 	defer os.Remove(linkPath)
 	if err != nil {
 		return false
@@ -381,6 +384,7 @@ func ReplaceSimulatedLinks(path string) {
 		replacedLinks = append(replacedLinks, l.LinkLocation)
 	}
 	util.Success("Replaced these simulated symlinks with real symlinks: %v", replacedLinks)
+	return
 }
 
 // RemoveContents removes contents of passed directory
@@ -406,6 +410,7 @@ func RemoveContents(dir string) error {
 
 // TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
 func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
+
 	templ := template.New("templateStringToFile:" + targetFilePath)
 	templ, err := templ.Parse(content)
 	if err != nil {
@@ -510,7 +515,7 @@ func FindFilenameInDirectory(basePath string, fileNames []string) (dirName strin
 	return dirName, err
 }
 
-// ExpandFilesAndDirectories takes a list of files/directories and expands it into a
+// FindFilesInDirectory takes a list of files/directories and expands it into a
 // a list of files only
 // environment variables in list are expanded
 func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {

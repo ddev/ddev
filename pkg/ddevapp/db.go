@@ -33,6 +33,7 @@ func (app *DdevApp) GetExistingDBType() (string, error) {
 // 2. It has N+.N, meaning it's a pre-v1.19 MariaDB or MySQL version
 // 3. It has N+, meaning it's PostgreSQL
 func dbTypeVersionFromString(in string) string {
+
 	idType := ""
 
 	postgresStyle := regexp.MustCompile(`^[0-9]+$`)

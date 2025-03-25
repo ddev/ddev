@@ -36,7 +36,7 @@ func TestDebugNFSMount(t *testing.T) {
 	assert.NoError(err)
 
 	// Running config creates a line in global config
-	// nolint: errcheck
+	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO"})
 
 	// Test basic `ddev debug nfsmount`

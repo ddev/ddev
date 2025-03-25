@@ -196,6 +196,7 @@ func (app *DdevApp) CreateUploadDirsIfNecessary() {
 // - slice of string (possibly empty)
 // - boolean false
 func (app *DdevApp) validateUploadDirs() error {
+
 	// Check that upload dirs aren't outside the project root.
 	for _, uploadDir := range app.UploadDirs {
 		if !strings.HasPrefix(app.calculateHostUploadDirFullPath(uploadDir), app.AppRoot) {

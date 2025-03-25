@@ -32,6 +32,7 @@ func isMagento2App(app *DdevApp) bool {
 
 // createMagentoSettingsFile manages creation and modification of local.xml.
 func createMagentoSettingsFile(app *DdevApp) (string, error) {
+
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)
@@ -122,6 +123,7 @@ func getMagento2UploadDirs(_ *DdevApp) []string {
 
 // createMagento2SettingsFile manages creation and modification of app/etc/env.php.
 func createMagento2SettingsFile(app *DdevApp) (string, error) {
+
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)

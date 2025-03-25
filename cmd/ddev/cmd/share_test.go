@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
@@ -49,6 +48,7 @@ func TestShareCmd(t *testing.T) {
 
 	// Make absolutely sure the ngrok process gets killed off, because otherwise
 	// the testbot (windows) can remain occupied forever.
+	// nolint: errcheck
 	t.Cleanup(func() {
 		err = pKill(cmd)
 		assert.NoError(err)
@@ -76,12 +76,13 @@ func TestShareCmd(t *testing.T) {
 
 			err := json.Unmarshal([]byte(logLine), &logData)
 			if err != nil {
-				var syntaxError *json.SyntaxError
-				if errors.As(err, &syntaxError) {
+				switch err.(type) {
+				case *json.SyntaxError:
 					continue
+				default:
+					t.Errorf("failed unmarshaling %v: %v", logLine, err)
+					break
 				}
-				t.Errorf("failed unmarshaling %v: %v", logLine, err)
-				break
 			}
 			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {
 				if strings.Contains(logErr, "Your account is limited to 1 simultaneous") {
@@ -112,6 +113,7 @@ func TestShareCmd(t *testing.T) {
 			assert.NoError(err)
 			return
 		}
+		//nolint: errcheck
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		assert.NoError(err)

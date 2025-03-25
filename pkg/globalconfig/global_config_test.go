@@ -96,6 +96,7 @@ func TestSetProjectAppRoot(t *testing.T) {
 
 	// Try to set approot to existing but conflicting approot
 	tmpDir2 := testcommon.CreateTmpDir(t.Name())
+	// nolint: errcheck
 	defer os.RemoveAll(tmpDir2)
 	err = globalconfig.SetProjectAppRoot(t.Name(), tmpDir2)
 	assert.Error(err)
