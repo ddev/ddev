@@ -349,7 +349,3 @@ volumes:
     external: true
 
   {{ end }}{{/* end if and .MutagenEnabled (not .NoProjectMount) */}}
-  {{- if eq .XHProfMode "xhgui" }}
-  run_nginx:
-    name: "{{ .Name }}_xhgui_run_nginx"
-  {{ end }}
