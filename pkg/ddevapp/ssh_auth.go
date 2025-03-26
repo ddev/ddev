@@ -64,7 +64,10 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	}
 
 	// ensure we have a happy sshAuth
-	label := map[string]string{"com.docker.compose.project": SSHAuthName}
+	label := map[string]string{
+		"com.docker.compose.project": SSHAuthName,
+		"com.docker.compose.oneoff":  "False",
+	}
 	sshWaitTimeout := 60
 	util.Debug(`Waiting for ddev-ssh-agent to become ready, timeout=%v`, sshWaitTimeout)
 	logOutput, err := dockerutil.ContainerWait(sshWaitTimeout, label)
@@ -183,7 +186,10 @@ func RenderSSHAuthStatus() string {
 // GetSSHAuthStatus outputs sshAuth status and warning if not
 // running or healthy, as applicable.
 func GetSSHAuthStatus() string {
-	label := map[string]string{"com.docker.compose.project": SSHAuthName}
+	label := map[string]string{
+		"com.docker.compose.project": SSHAuthName,
+		"com.docker.compose.oneoff":  "False",
+	}
 	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {

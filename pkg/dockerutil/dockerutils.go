@@ -336,8 +336,6 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 		}
 		filterList.Add("label", label)
 	}
-	// Don't include one-off containers, e.g. containers created by PhpStorm
-	filterList.Add("label", "com.docker.compose.oneoff=False")
 
 	ctx, client := GetDockerClient()
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
@@ -355,12 +353,8 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 func FindContainersWithLabel(label string) ([]dockerContainer.Summary, error) {
 	ctx, client := GetDockerClient()
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
-		All: true,
-		Filters: dockerFilters.NewArgs(
-			dockerFilters.KeyValuePair{Key: "label", Value: label},
-			// Don't include one-off containers, e.g. containers created by PhpStorm
-			dockerFilters.KeyValuePair{Key: "label", Value: "com.docker.compose.oneoff=False"},
-		),
+		All:     true,
+		Filters: dockerFilters.NewArgs(dockerFilters.KeyValuePair{Key: "label", Value: label}),
 	})
 	if err != nil {
 		return nil, err
@@ -795,7 +789,10 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 // GetAppContainers retrieves docker containers for a given sitename.
 func GetAppContainers(sitename string) ([]dockerContainer.Summary, error) {
-	label := map[string]string{"com.ddev.site-name": sitename}
+	label := map[string]string{
+		"com.ddev.site-name":        sitename,
+		"com.docker.compose.oneoff": "False",
+	}
 	containers, err := FindContainersByLabels(label)
 	if err != nil {
 		return containers, err

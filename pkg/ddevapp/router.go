@@ -166,7 +166,10 @@ func StartDdevRouter() error {
 	}
 
 	// Ensure we have a happy router
-	label := map[string]string{"com.docker.compose.service": nodeps.RouterContainer}
+	label := map[string]string{
+		"com.docker.compose.service": nodeps.RouterContainer,
+		"com.docker.compose.oneoff":  "False",
+	}
 	// Normally the router comes right up, but when
 	// it has to do let's encrypt updates, it can take
 	// some time.
@@ -262,6 +265,7 @@ func generateRouterCompose() (string, error) {
 func FindDdevRouter() (*dockerContainer.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": nodeps.RouterContainer,
+		"com.docker.compose.oneoff":  "False",
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
