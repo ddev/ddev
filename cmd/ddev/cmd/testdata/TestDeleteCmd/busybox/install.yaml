@@ -1,0 +1,6 @@
+#ddev-generated
+name: busybox
+
+project_files:
+  - docker-compose.busybox.yaml
+  - busybox/Dockerfile
