@@ -117,7 +117,11 @@ func startTestContainer() (string, error) {
 		"HOTDOG=superior-to-corndog",
 		"POTATO=future-fry",
 		"DDEV_WEBSERVER_TYPE=nginx-fpm",
-	}, nil, "33", false, true, map[string]string{"com.docker.compose.service": "web", "com.ddev.site-name": testContainerName}, portBinding, nil)
+	}, nil, "33", false, true, map[string]string{
+		"com.docker.compose.service": "web",
+		"com.ddev.site-name":         testContainerName,
+		"com.docker.compose.oneoff":  "False",
+	}, portBinding, nil)
 	if err != nil {
 		return "", err
 	}
