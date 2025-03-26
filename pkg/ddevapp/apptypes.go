@@ -397,6 +397,10 @@ func (app *DdevApp) SetApptypeSettingsPaths() {
 // DetectAppType calls each apptype's detector until it finds a match,
 // or returns 'php' as a last resort.
 func (app *DdevApp) DetectAppType() string {
+	// `generic` type should not be overridden
+	if app.Type == nodeps.AppTypeGeneric {
+		return app.Type
+	}
 	var keys []string
 	for k := range appTypeMatrix {
 		keys = append(keys, k)
