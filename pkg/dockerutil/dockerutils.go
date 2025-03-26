@@ -345,7 +345,7 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 	if err != nil {
 		return nil, err
 	}
-	return filterFantomContainers(containers), nil
+	return filterPhantomContainers(containers), nil
 }
 
 // FindContainersWithLabel returns all containers with the given label
@@ -360,14 +360,14 @@ func FindContainersWithLabel(label string) ([]dockerContainer.Summary, error) {
 		return nil, err
 	}
 
-	return filterFantomContainers(containers), nil
+	return filterPhantomContainers(containers), nil
 }
 
-// filterFantomContainers removes fantom containers (not created by DDEV) from the provided slice.
+// filterPhantomContainers removes phantom containers (not created by DDEV) from the provided slice.
 // PhpStorm can create containers based on `.ddev/.ddev-docker-compose-full.yaml` to run tasks,
 // leaving them in an exited state, which breaks `ddev describe`.
 // These containers are automatically removed by `ddev stop`, so filtering them is sufficient.
-func filterFantomContainers(containers []dockerContainer.Summary) []dockerContainer.Summary {
+func filterPhantomContainers(containers []dockerContainer.Summary) []dockerContainer.Summary {
 	// Map to track containers by com.docker.compose.service label
 	containerMap := make(map[string]dockerContainer.Summary)
 	for _, container := range containers {
