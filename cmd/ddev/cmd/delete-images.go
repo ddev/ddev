@@ -66,15 +66,21 @@ func deleteDdevImages(deleteAll bool) error {
 
 	// If delete all images, find them by tag and return.
 	if deleteAll {
-		// Attempt to find DDEV images by tag, searching for "drud" or "ddev" prefixes.
-		// Some DDEV images will not be found by this tag, future work will
-		// be done to improve finding database images.
 		for _, image := range images {
+			// Find DDEV images by tag, searching for "drud" or "ddev" prefixes.
 			for _, tag := range image.RepoTags {
 				if strings.HasPrefix(tag, "drud/ddev-") || strings.HasPrefix(tag, "ddev/ddev-") {
 					if err := dockerutil.RemoveImage(tag); err != nil {
 						return err
 					}
+				}
+				continue
+			}
+			// If docker-compose project label starts with 'ddev-', it's a DDEV image.
+			projectName, ok := image.Labels["com.docker.compose.project"]
+			if ok && strings.HasPrefix(projectName, "ddev-") {
+				if err := dockerutil.RemoveImage(image.ID); err != nil {
+					return err
 				}
 			}
 		}
