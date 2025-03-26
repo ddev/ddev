@@ -158,6 +158,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 func findDdevSSHAuth() (*dockerContainer.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
+		"com.docker.compose.oneoff":  "False",
 	}
 
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
