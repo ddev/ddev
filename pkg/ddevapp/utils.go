@@ -32,6 +32,7 @@ func GetActiveProjects() []*DdevApp {
 	labels := map[string]string{
 		"com.ddev.platform":          "ddev",
 		"com.docker.compose.service": "web",
+		"com.docker.compose.oneoff":  "False",
 	}
 	containers, err := dockerutil.FindContainersByLabels(labels)
 
