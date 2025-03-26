@@ -39,13 +39,13 @@ func TestDeleteCmd(t *testing.T) {
 	})
 
 	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
-	require.NoError(t, err, "out=%s", out)
+	require.NoError(t, err, "failed to add-on get, out=%s, err=%v", out, err)
 
 	out, err = exec.RunHostCommand(DdevBin, "start", "-y")
-	require.NoError(t, err, "out=%s", out)
+	require.NoError(t, err, "failed to start, out=%s, err=%v", out, err)
 
 	out, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", app.Name)
-	require.NoError(t, err, "unable to ddev restart: %v, output='%s'", err, out)
+	require.NoError(t, err, "failed to delete, out=%s, err=%v", out, err)
 
 	// Check that volumes are deleted
 	vols := []string{
