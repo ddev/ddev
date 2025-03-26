@@ -336,6 +336,8 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 		}
 		filterList.Add("label", label)
 	}
+	// Don't include one-off containers, e.g. containers created by PhpStorm
+	filterList.Add("label", "com.docker.compose.oneoff=False")
 
 	ctx, client := GetDockerClient()
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
@@ -345,7 +347,7 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 	if err != nil {
 		return nil, err
 	}
-	return filterPhantomContainers(containers), nil
+	return containers, nil
 }
 
 // FindContainersWithLabel returns all containers with the given label
@@ -353,41 +355,18 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 func FindContainersWithLabel(label string) ([]dockerContainer.Summary, error) {
 	ctx, client := GetDockerClient()
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
-		All:     true,
-		Filters: dockerFilters.NewArgs(dockerFilters.KeyValuePair{Key: "label", Value: label}),
+		All: true,
+		Filters: dockerFilters.NewArgs(
+			dockerFilters.KeyValuePair{Key: "label", Value: label},
+			// Don't include one-off containers, e.g. containers created by PhpStorm
+			dockerFilters.KeyValuePair{Key: "label", Value: "com.docker.compose.oneoff=False"},
+		),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return filterPhantomContainers(containers), nil
-}
-
-// filterPhantomContainers removes phantom containers (not created by DDEV) from the provided slice.
-// PhpStorm can create containers based on `.ddev/.ddev-docker-compose-full.yaml` to run tasks,
-// leaving them in an exited state, which breaks `ddev describe`.
-// These containers are automatically removed by `ddev stop`, so filtering them is sufficient.
-func filterPhantomContainers(containers []dockerContainer.Summary) []dockerContainer.Summary {
-	// Map to track containers by com.docker.compose.service label
-	containerMap := make(map[string]dockerContainer.Summary)
-	for _, container := range containers {
-		serviceLabel := container.Labels["com.docker.compose.service"]
-		// Assign a unique key if the service label is empty
-		if serviceLabel == "" {
-			serviceLabel = fmt.Sprintf("no-service-label-%s", container.ID)
-		}
-		_, exists := containerMap[serviceLabel]
-		// If there's no existing container or the container name ends with the service label, prioritize this one
-		if !exists || (len(container.Names) > 0 && strings.HasSuffix(container.Names[0], serviceLabel)) {
-			containerMap[serviceLabel] = container
-		}
-	}
-	// Convert map values back into a slice
-	filteredContainers := make([]dockerContainer.Summary, 0, len(containerMap))
-	for _, container := range containerMap {
-		filteredContainers = append(filteredContainers, container)
-	}
-	return filteredContainers
+	return containers, nil
 }
 
 // FindImagesByLabels takes a map of label names and values and returns any Docker images which match all labels.
