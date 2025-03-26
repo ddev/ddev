@@ -16,7 +16,7 @@ Usage examples:
 * If you use Git inside the container, you may want to symlink your `~/.gitconfig` into `~/.ddev/homeadditions` or the project’s `.ddev/homeadditions` so that in-container `git` commands use whatever username and email you’ve configured on your host machine. For example, `ln -s ~/.gitconfig ~/.ddev/homeadditions/.gitconfig`.
 * If you use SSH inside the container and want to use your `.ssh/config`, consider `mkdir -p ~/.ddev/homeadditions/.ssh && ln -s ~/.ssh/config ~/.ddev/homeadditions/.ssh/config`. Some people will be able to symlink their entire `.ssh` directory, `ln -s ~/.ssh ~/.ddev/homeadditions/.ssh`. If you provide your own `.ssh/config` though, please make sure it includes these lines:
 
-    ```
+    ```text
     UserKnownHostsFile=/home/.ssh-agent/known_hosts
     StrictHostKeyChecking=accept-new
     ```
@@ -27,6 +27,14 @@ Usage examples:
 * If you have a favorite `.bashrc`, copy it into either the global or project `homeadditions`.
 * If you like the traditional `ll` Bash alias for `ls -l`, add a `.ddev/homeadditions/.bash_aliases` with these contents:
 
-    ```
+    ```bash
     alias ll="ls -lhA"
     ```
+
+## Using `PAGER` Inside Containers
+
+To set the `PAGER` variable in the `web` and `db` containers across all projects, define the `DDEV_PAGER` environment variable in your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`), outside of DDEV, for example:
+
+```bash
+export DDEV_PAGER="less -SFXR"
+```
