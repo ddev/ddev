@@ -558,9 +558,12 @@ func (app *DdevApp) GetWebserverType() string {
 	return v
 }
 
-// GetPrimaryRouterHTTPPort returns app's router primary http port
-// This can be port 80 (default) or the item in HTTP_EXPOSE
-// matching the default router port. If there is no port, returns ""
+// GetPrimaryRouterHTTPPort returns app's primary router http port
+// It has to choose from (highest to lowest priority):
+// 1. Empty string if webserver type is generic and no web_extra_exposed_ports are defined
+// 2. The actual port configured into running container via DDEV_ROUTER_HTTP_PORT
+// 3. The project router_http_port
+// 4. The global router_http_port
 func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	proposedPrimaryRouterHTTPPort := "80"
 	if globalconfig.DdevGlobalConfig.RouterHTTPPort != "" {
@@ -569,18 +572,16 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	if app.RouterHTTPPort != "" {
 		proposedPrimaryRouterHTTPPort = app.RouterHTTPPort
 	}
-	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
-		//util.Debug("GetPrimaryRouterHTTPPort(): HTTP_EXPOSE='%s'", httpExpose)
-		httpPort := app.RouterPortFromExposeVariable(httpExpose, proposedPrimaryRouterHTTPPort)
-		if httpPort == "" {
-			//util.Debug("GetPrimaryRouterHTTPPort(): no primary router port found in %s", httpExpose)
-			proposedPrimaryRouterHTTPPort = ""
-		}
+	if httpPort := app.GetWebEnvVar("DDEV_ROUTER_HTTP_PORT"); httpPort != "" {
+		proposedPrimaryRouterHTTPPort = httpPort
+	}
+	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) == 0 {
+		proposedPrimaryRouterHTTPPort = ""
 	}
 	return proposedPrimaryRouterHTTPPort
 }
 
-// GetWebEnvVar() gets an environment variable from
+// GetWebEnvVar gets an environment variable from
 // app.ComposeYaml["services"]["web"]["environment"]
 // It returns empty string if there is no var or the ComposeYaml
 // is just not set.
@@ -595,8 +596,8 @@ func (app *DdevApp) GetWebEnvVar(name string) string {
 	return ""
 }
 
-// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
-// comma-delimted list of colon-delimited port-pairs
+// TargetPortFromExposeVariable uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
+// comma-delimited list of colon-delimited port-pairs
 // Given a target port (often "80" or "8025") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
 // the related port to be exposed on the router.
 // It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
@@ -619,35 +620,12 @@ func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort
 	return ""
 }
 
-// TargetPortFromExposeVariable() uses a string like HTTP_EXPOSE or HTTPS_EXPOSE, which is a
-// comma-delimted list of colon-delimited port-pairs
-// Given a router port (often "80" or "443") its job is to get from HTTPS_EXPOSE or HTTP_EXPOSE
-// the related container target port.
-// It returns an empty string if the HTTP_EXPOSE/HTTPS_EXPOSE is not
-// found or no valid port mapping is found.
-func (app *DdevApp) RouterPortFromExposeVariable(exposeEnvVar string, routerPort string) string {
-	// Get the var
-	// split it via comma
-	// split it via colon into a map: rhs is the key, lhs is the value
-	portMap := make(map[string]string)
-	items := strings.Split(exposeEnvVar, ",")
-	for _, item := range items {
-		portPair := strings.Split(item, ":")
-		if len(portPair) == 2 {
-			portMap[portPair[0]] = portPair[1]
-		}
-	}
-	if _, ok := portMap[routerPort]; ok {
-		return routerPort
-	}
-	return ""
-}
-
-// GetPrimaryRouterHTTPSPort returns app's router https port
+// GetPrimaryRouterHTTPSPort returns app's primary router https port
 // It has to choose from (highest to lowest priority):
-// 1. The actual port configured into running container via HTTPS_EXPOSE
-// 2. The project router_http_port
-// 3. The global router_http_port
+// 1. Empty string if webserver type is generic and no web_extra_exposed_ports are defined
+// 2. The actual port configured into running container via DDEV_ROUTER_HTTPS_PORT
+// 3. The project router_https_port
+// 4. The global router_https_port
 func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 
 	proposedPrimaryRouterHTTPSPort := "443"
@@ -657,19 +635,11 @@ func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 	if app.RouterHTTPSPort != "" {
 		proposedPrimaryRouterHTTPSPort = app.RouterHTTPSPort
 	}
-	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
-		//util.Debug("GetPrimaryRouterHTTPSPort(): HTTPS_EXPOSE='%s'", httpsExpose)
-		// TODO: The problem here is we're looking for the HTTPS_EXPOSE stanza
-		// that is 80 in container, and we actually want to look for the
-		// stanza that matches 443 on router. So "8026:8025,443:3000"
-		// would tell us that because target=443 (or other router port) we
-		// should use that one. But... we're only interested in the 443 anyway.
-		// So why don't we just return the 443 instead of looking at HTTPS_EXPOSE?
-		httpsPort := app.RouterPortFromExposeVariable(httpsExpose, proposedPrimaryRouterHTTPSPort)
-		if httpsPort == "" {
-			//util.Debug("GetPrimaryRouterHTTPSPort(): no primary router port found in %s", httpsExpose)
-			proposedPrimaryRouterHTTPSPort = ""
-		}
+	if httpsPort := app.GetWebEnvVar("DDEV_ROUTER_HTTPS_PORT"); httpsPort != "" {
+		proposedPrimaryRouterHTTPSPort = httpsPort
+	}
+	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) == 0 {
+		proposedPrimaryRouterHTTPSPort = ""
 	}
 	return proposedPrimaryRouterHTTPSPort
 }
@@ -1270,8 +1240,13 @@ func (app *DdevApp) Start() error {
 	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
 	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
 	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+
+	AssignRouterPortsToGenericWebserverPorts(app)
+
 	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
 	GetEphemeralPortsIfNeeded(portsToCheck, true)
+
+	SyncGenericWebserverPortsWithRouterPorts(app)
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
