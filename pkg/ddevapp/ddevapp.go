@@ -1059,6 +1059,7 @@ func (app *DdevApp) SiteStatus() (string, string) {
 			siteStatusDesc += serviceName + ": " + status + "\n"
 		}
 	}
+	siteStatusDesc = strings.TrimSpace(siteStatusDesc)
 
 	// Base the siteStatus on web container. Then override it if others are not the same.
 	if siteStatusDesc == "" {
@@ -3400,7 +3401,7 @@ func FormatSiteStatus(status string) string {
 	switch {
 	case strings.Contains(status, SitePaused):
 		formattedStatus = util.ColorizeText(formattedStatus, "yellow")
-	case strings.Contains(status, SiteStopped) || strings.Contains(status, SiteDirMissing) || strings.Contains(status, SiteConfigMissing):
+	case slices.Contains([]string{SiteStopped, SiteDirMissing, SiteConfigMissing, SiteUnhealthy, "exited"}, status):
 		formattedStatus = util.ColorizeText(formattedStatus, "red")
 	default:
 		formattedStatus = util.ColorizeText(formattedStatus, "green")
