@@ -1,4 +1,4 @@
-FROM xhgui/xhgui:0.23.x AS ddev-xhgui
+FROM xhgui/xhgui:0.23.0 AS ddev-xhgui
 
 RUN apk add bash curl
 ADD /var /var
