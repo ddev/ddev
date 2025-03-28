@@ -282,7 +282,6 @@ func TestUseEphemeralPort(t *testing.T) {
 // TestAssignRouterPortsToGenericWebserverPorts ensures that RouterHTTPPort and RouterHTTPSPort
 // are assigned correctly based on WebExtraExposedPorts for Generic webservers.
 func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
-	assert := asrt.New(t)
 	type testCase struct {
 		name                 string
 		webserverType        string
@@ -337,8 +336,8 @@ func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
 			}
 
 			ddevapp.AssignRouterPortsToGenericWebserverPorts(app)
-			assert.Equal(tc.expectedHTTPPort, app.RouterHTTPPort)
-			assert.Equal(tc.expectedHTTPSPort, app.RouterHTTPSPort)
+			require.Equal(t, tc.expectedHTTPPort, app.RouterHTTPPort)
+			require.Equal(t, tc.expectedHTTPSPort, app.RouterHTTPSPort)
 		})
 	}
 }
