@@ -200,6 +200,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
+		"com.docker.compose.oneoff":  "False",
 	}
 
 	return dockerutil.FindContainerByLabels(labels)
@@ -1765,7 +1766,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	waitLabels := map[string]string{"com.ddev.site-name": app.GetName()}
+	waitLabels := map[string]string{
+		"com.ddev.site-name":        app.GetName(),
+		"com.docker.compose.oneoff": "False",
+	}
 	containersAwaited, err := dockerutil.FindContainersByLabels(waitLabels)
 	if err != nil {
 		return err
@@ -2319,7 +2323,10 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
-		container, err = dockerutil.FindContainerByLabels(map[string]string{"com.docker.compose.service": service})
+		container, err = dockerutil.FindContainerByLabels(map[string]string{
+			"com.docker.compose.service": service,
+			"com.docker.compose.oneoff":  "False",
+		})
 	} else {
 		container, err = app.FindContainerByType(service)
 	}
@@ -2366,7 +2373,10 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
-		container, err = dockerutil.FindContainerByLabels(map[string]string{"com.docker.compose.service": service})
+		container, err = dockerutil.FindContainerByLabels(map[string]string{
+			"com.docker.compose.service": service,
+			"com.docker.compose.oneoff":  "False",
+		})
 	} else {
 		container, err = app.FindContainerByType(service)
 	}
@@ -2622,7 +2632,8 @@ func (app *DdevApp) WaitForServices() error {
 	output.UserOut.Printf("Waiting for these services to become ready: %v", requiredContainers)
 
 	labels := map[string]string{
-		"com.ddev.site-name": app.GetName(),
+		"com.ddev.site-name":        app.GetName(),
+		"com.docker.compose.oneoff": "False",
 	}
 	waitTime := app.GetMaxContainerWaitTime()
 	_, err := dockerutil.ContainerWait(waitTime, labels)
@@ -2638,6 +2649,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		labels := map[string]string{
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
+			"com.docker.compose.oneoff":  "False",
 		}
 		waitTime := app.GetMaxContainerWaitTime()
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
@@ -3177,6 +3189,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		labels := map[string]string{
 			"com.ddev.site-name":         siteName,
 			"com.docker.compose.service": "web",
+			"com.docker.compose.oneoff":  "False",
 		}
 
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
