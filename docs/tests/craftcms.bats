@@ -29,9 +29,9 @@ teardown() {
 
   run ddev craft install/craft \
     --username=admin \
-    --password=password123 \
+    --password=Password123 \
     --email=admin@example.com \
-    --site-name=${PROJNAME} \
+    --site-name='$DDEV_PROJECT' \
     --language=en \
     --site-url='$DDEV_PRIMARY_URL'
   assert_success
