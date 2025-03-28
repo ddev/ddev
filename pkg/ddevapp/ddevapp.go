@@ -3439,6 +3439,18 @@ func (app *DdevApp) GetMinimalContainerTimeout() string {
 	return minimalTimeout
 }
 
+// RespectConfigNameOverride checks if the app name should be different and updates app.Name
+func (app *DdevApp) RespectConfigNameOverride() error {
+	appWithOverrides, err := NewApp(app.GetAppRoot(), true)
+	if err != nil {
+		return err
+	}
+	if appWithOverrides.Name != app.Name {
+		app.Name = appWithOverrides.Name
+	}
+	return nil
+}
+
 // genericImportFilesAction defines the workflow for importing project files.
 func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)
