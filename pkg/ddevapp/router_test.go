@@ -205,7 +205,7 @@ func TestUseEphemeralPort(t *testing.T) {
 
 	apps := []*ddevapp.DdevApp{}
 	for _, s := range []string{"site1", "site2"} {
-		site := filepath.Join(testcommon.CreateTmpDir(t.Name()), t.Name()+s)
+		site := filepath.Join(testcommon.CreateTmpDir(t.Name() + s))
 		_ = os.MkdirAll(site, 0755)
 		err := fileutil.TemplateStringToFile(testString, nil, filepath.Join(site, "index.html"))
 		require.NoError(t, err)
@@ -245,6 +245,10 @@ func TestUseEphemeralPort(t *testing.T) {
 		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*4 + 1
 
 		err := app.Start()
+		require.NoError(t, err)
+
+		// Get a new copy of the app to make sure we have up-to-date port information
+		app, err = ddevapp.NewApp(app.GetAppRoot(), true)
 		require.NoError(t, err)
 
 		// app1 will not use the configured target ports, uses the assigned ephemeral ports.
