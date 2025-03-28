@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -21,7 +22,7 @@ func IsPortActive(port string) bool {
 		return false
 	}
 
-	conn, err := net.Dial("tcp", dockerIP+":"+port)
+	conn, err := net.DialTimeout("tcp", dockerIP+":"+port, 1*time.Second)
 
 	// If we were able to connect, something is listening on the port.
 	if err == nil {
