@@ -17,6 +17,7 @@ return [
         'pass' => getenv('XHGUI_PDO_PASS') ?: 'db',
         'table' => getenv('XHGUI_PDO_TABLE') ?: 'results',
         'tableWatch' => getenv('XHGUI_PDO_TABLE_WATCHES') ?: 'watches',
+        'initSchema' => getenv('XHGUI_PDO_INIT_SCHEMA') ?: 'true',
     ],
 
     'run.view.filter.names' => [
