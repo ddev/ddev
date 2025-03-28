@@ -208,7 +208,15 @@ func init() {
 			appTypeSettingsPaths: setMagento2SiteSettingsPaths,
 			appTypeDetect:        isMagento2App,
 			configOverrideAction: magento2ConfigOverrideAction,
-			importFilesAction:    magentoImportFilesAction,
+			importFilesAction:    magento2ImportFilesAction,
+		},
+
+		nodeps.AppTypeOpenMage: {
+			settingsCreator:      createOpenMageSettingsFile,
+			uploadDirs:           getOpenMageUploadDirs,
+			appTypeSettingsPaths: setOpenMageSiteSettingsPaths,
+			appTypeDetect:        isOpenMageApp,
+			importFilesAction:    openmageImportFilesAction,
 		},
 
 		nodeps.AppTypePHP: {

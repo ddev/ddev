@@ -112,6 +112,7 @@ const (
 	AppTypeSymfony      = "symfony"
 	AppTypeMagento      = "magento"
 	AppTypeMagento2     = "magento2"
+	AppTypeOpenMage     = "openmage"
 	AppTypePHP          = "php"
 	AppTypeShopware6    = "shopware6"
 	AppTypeTYPO3        = "typo3"

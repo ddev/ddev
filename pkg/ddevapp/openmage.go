@@ -12,8 +12,8 @@ import (
 	copy2 "github.com/otiai10/copy"
 )
 
-// isMagentoApp returns true if the app is of type magento
-func isMagentoApp(app *DdevApp) bool {
+// isOpenMageApp returns true if the app is of type magento
+func isOpenMageApp(app *DdevApp) bool {
 	ism1, err := fileutil.FgrepStringInFile(filepath.Join(app.GetAbsDocroot(false), "README.md"), `Magento - Long Term Support`)
 	if err == nil && ism1 {
 		return true
@@ -21,8 +21,8 @@ func isMagentoApp(app *DdevApp) bool {
 	return false
 }
 
-// createMagentoSettingsFile manages creation and modification of local.xml.
-func createMagentoSettingsFile(app *DdevApp) (string, error) {
+// createOpenMageSettingsFile manages creation and modification of local.xml.
+func createOpenMageSettingsFile(app *DdevApp) (string, error) {
 
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if the file is managed by ddev.
@@ -39,7 +39,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := bundledAssets.ReadFile("magento/local.xml")
+		content, err := bundledAssets.ReadFile("openmage/local.xml")
 		if err != nil {
 			return "", err
 		}
@@ -53,13 +53,13 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	return app.SiteDdevSettingsFile, nil
 }
 
-// setMagentoSiteSettingsPaths sets the paths to local.xml for templating.
-func setMagentoSiteSettingsPaths(app *DdevApp) {
+// setOpenMageSiteSettingsPaths sets the paths to local.xml for templating.
+func setOpenMageSiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "app", "etc", "local.xml")
 }
 
-// magentoImportFilesAction defines the magento workflow for importing project files.
-func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+// openmageImportFilesAction defines the magento workflow for importing project files.
+func openmageImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
@@ -102,7 +102,7 @@ func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	return nil
 }
 
-// getMagentoUploadDirs will return the default paths.
-func getMagentoUploadDirs(_ *DdevApp) []string {
+// getOpenMageUploadDirs will return the default paths.
+func getOpenMageUploadDirs(_ *DdevApp) []string {
 	return []string{"media"}
 }
