@@ -11,20 +11,16 @@ teardown() {
   _common_teardown
 }
 @test "Craft CMS New Projects quickstart with $(ddev --version)" {
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # ddev config --project-type=craftcms --docroot=web
   run ddev config --project-type=craftcms --docroot=web
   assert_success
 
-  # ddev start -y
   run ddev start -y
   assert_success
 
-  # ddev composer create craftcms/craft
-  run ddev composer create -y --no-scripts craftcms/craft
+  run ddev composer create --no-scripts craftcms/craft
   assert_success
 
   run ddev craft install/craft \
