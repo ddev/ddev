@@ -60,6 +60,13 @@ This will launch a web server on port 8000 and automatically refresh pages as th
     sudo --preserve-env pipx install mkdocs --pip-args "-r docs/mkdocs-pip-requirements"
     ```
 
+!!!warning "`mkdocs-material` v9.5.1 required!"
+    On lower versions of `mkdocs-material`, you may see an error like this:
+
+    ```bash
+    Config value 'plugins': The "privacy" plugin is not installed
+    ```
+
 ## Check Markdown for Errors
 
 Run `make markdownlint` before you publish changes to quickly check your files for errors or inconsistencies.
