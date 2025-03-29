@@ -6,6 +6,7 @@
 ## Example: "ddev console about" or "ddev console doctrine:schema:update --dump-sql"
 ## ProjectTypes: symfony
 ## ExecRaw: true
+## MutagenSync: true
 
 if [ ! -f bin/console ]; then
   echo 'bin/console does not exist in your project root directory.'

@@ -8,6 +8,7 @@
 ## Example: "ddev typo3 site:list" or "ddev typo3 list" or "ddev typo3 extension:list"
 ## ProjectTypes: typo3
 ## ExecRaw: true
+## MutagenSync: true
 
 # Ignore anything we find in the mounted global commands
 PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}

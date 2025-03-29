@@ -288,9 +288,15 @@ Use `ExecRaw: true` to pass command arguments directly to the container as-is.
 
 For example, when `ExecRaw` is true, `ddev yarn --help` returns the help for `yarn`, not DDEV's help for the `ddev yarn` command.
 
-We recommend  using this annotation for all container commands. The default behavior is retained to avoid breaking existing commands.
+We recommend using this annotation for all container commands. The default behavior is retained to avoid breaking existing commands.
 
 Example: `## ExecRaw: true`
+
+### `MutagenSync` Annotation
+
+Use `MutagenSync: true` to ensure [Mutagen](../install/performance.md#mutagen) sync runs before and after the command (where Mutagen is enabled and the project is running).
+
+We recommend using this annotation if your `host` or `web` command can modify, add, or remove files in the project directory.
 
 ## Known Windows Issues
 
