@@ -4,7 +4,9 @@ DDEV has built-in support for [xhprof](https://www.php.net/manual/en/book.xhprof
 
 ## Simplest XHProf Usage With XHGui
 
-The easiest way to work with XHProf is to turn on XHGui, `ddev config global --xhprof-mode=xhgui`. Then
+The easiest way to work with XHProf is to turn on XHGui, `ddev config global --xhprof-mode=xhgui`.
+
+You can launch the web interface with:
 
 ```bash
 ddev xhgui
@@ -13,6 +15,8 @@ ddev xhgui
 Visit the pages you want to study, and then revisit the XHGui UI using `ddev xhgui`.
 
 ## Traditional XHProf Usage with `prepend`
+
+If you are having issues with XHGui, you can go back to the regular xhprof web interface.
 
 * Use the `prepend` mode, `ddev config global --xhprof-mode=prepend`.
 * Enable xhprof with [`ddev xhprof on`](../usage/commands.md#xhprof) (or `ddev xhprof` or `ddev xhprof enable`) and check its status with `ddev xhprof status`.
