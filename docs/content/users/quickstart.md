@@ -172,14 +172,16 @@ Environment variables will be automatically added to your `.env` file to simplif
 
     # Boot the project and install the starter project:
     ddev start
-    ddev composer create craftcms/craft
+    ddev composer create --no-scripts craftcms/craft
     ddev craft install/craft \
         --username=admin \
-        --password=password123 \
-        --email=admin@mail.com \
+        --password=Password123 \
+        --email=admin@example.com \
         --site-name='$DDEV_PROJECT' \
         --language=en \
         --site-url='$DDEV_PRIMARY_URL'
+
+    # Login using `admin` user and `Password123` password
     ddev launch
     ```
 
@@ -626,7 +628,7 @@ export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
 ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
 ddev add-on get ddev/ddev-elasticsearch
-ddev start -y
+ddev start
 ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
 rm -f app/etc/env.php
 
@@ -864,7 +866,7 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
     ```bash
     mkdir my-shopware-site && cd my-shopware-site
     ddev config --project-type=shopware6 --docroot=public
-    ddev start -y
+    ddev start
     ddev composer create shopware/production:^v6.5
     # If it asks `Do you want to include Docker configuration from recipes?`
     # answer `x`, as we're using DDEV for this rather than its recipes.
