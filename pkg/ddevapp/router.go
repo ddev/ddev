@@ -526,25 +526,3 @@ func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 		}
 	}
 }
-
-// AssignRouterPortsToGenericWebserverPorts assigns the router ports to the generic webserver.
-// If it's a generic webserver, use the first pair of exposed ports as router ports.
-func AssignRouterPortsToGenericWebserverPorts(app *DdevApp) {
-	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
-		app.RouterHTTPPort = strconv.Itoa(app.WebExtraExposedPorts[0].HTTPPort)
-		app.RouterHTTPSPort = strconv.Itoa(app.WebExtraExposedPorts[0].HTTPSPort)
-	}
-}
-
-// SyncGenericWebserverPortsWithRouterPorts syncs the generic webserver ports with the router ports.
-// If the used ephemeral router ports are different, the first pair webserver ports should be updated.
-func SyncGenericWebserverPortsWithRouterPorts(app *DdevApp) {
-	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
-		if httpPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPPort()); err == nil {
-			app.WebExtraExposedPorts[0].HTTPPort = httpPort
-		}
-		if httpsPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPSPort()); err == nil {
-			app.WebExtraExposedPorts[0].HTTPSPort = httpsPort
-		}
-	}
-}
