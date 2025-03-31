@@ -3,13 +3,12 @@
 // It invokes the xhgui collector by default.
 // However, if xhprof_mode=prepend in DDEV the .ddev/xhprof/xhprof_prepend.php will
 // be mounted on top of it.
-$homeDir = getenv('HOME');
-$globalAutoload = $homeDir . '/.composer/vendor/autoload.php';
-if (file_exists($globalAutoload)) {
-    require_once $globalAutoload;
-    // echo "Global autoloader loaded successfully from: $globalAutoload\n";
+$phpProfilerAutoload = '/usr/local/xhgui.collector/php-profiler/autoload.php';
+if (file_exists($phpProfilerAutoload)) {
+    require_once $phpProfilerAutoload;
+    // echo "php-profiler autoloader loaded successfully from: $phpProfilerAutoload\n";
 } else {
-    error_log("Global autoloader not found at: $globalAutoload");
+    error_log("php-profiler autoloader not found at: $phpProfilerAutoload");
 }
 
 $collector_php = "/usr/local/xhgui.collector/xhgui.collector.php";
