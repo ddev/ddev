@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path"
 	"path/filepath"
@@ -145,11 +146,9 @@ func StartDdevRouter() error {
 	if err != nil {
 		return err
 	}
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-		err = PushGlobalTraefikConfig()
-		if err != nil {
-			return fmt.Errorf("failed to push global Traefik config: %v", err)
-		}
+	err = PushGlobalTraefikConfig()
+	if err != nil {
+		return fmt.Errorf("failed to push global Traefik config: %v", err)
 	}
 
 	err = CheckRouterPorts()
@@ -260,7 +259,7 @@ func generateRouterCompose() (string, error) {
 
 // FindDdevRouter uses FindContainerByLabels to get our router container and
 // return it.
-func FindDdevRouter() (*dockerTypes.Container, error) {
+func FindDdevRouter() (*dockerContainer.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": nodeps.RouterContainer,
 	}
@@ -345,6 +344,11 @@ func determineRouterPorts() []string {
 	if err != nil {
 		util.Failed("Failed to retrieve containers for determining port mappings: %v", err)
 	}
+
+	// Add potential ports that might not be in use by current containers
+	// 8142/8143 are for xhgui, which might not be enabled, but we don't want to
+	// have to rebuild traefik when it does get enabled.
+	routerPorts = []string{nodeps.DdevDefaultXHGuiHTTPSPort, nodeps.DdevDefaultXHGuiHTTPPort}
 
 	// Loop through all containers with site-name label
 	for _, container := range containers {

@@ -37,6 +37,7 @@ CRM
 DBeaver
 DDEV's
 DDEV
+DevDb
 DHCP
 DKIM
 DNS

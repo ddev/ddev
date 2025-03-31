@@ -245,6 +245,9 @@ func init() {
 	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
 	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, true, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
 
+	ConfigCommand.Flags().String(types.FlagXHProfModeName, types.FlagXHProfModeDefault, types.FlagXHProfModeDescription(types.ConfigTypeProject))
+	ConfigCommand.Flags().Bool(types.FlagXHProfModeResetName, true, types.FlagXHProfModeResetDescription(types.ConfigTypeProject))
+
 	ConfigCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting of project in container")
 	_ = ConfigCommand.Flags().MarkDeprecated("nfs-mount-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
@@ -305,7 +308,7 @@ func init() {
 	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
 	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
 	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
-	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides`)
+	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides (except for 'generic' type)`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -500,6 +503,24 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 		if performanceModeReset {
 			app.SetPerformanceMode(types.PerformanceModeEmpty)
+		}
+	}
+
+	if cmd.Flag(types.FlagXHProfModeName).Changed {
+		xhprofMode, _ := cmd.Flags().GetString(types.FlagXHProfModeName)
+
+		if err := types.CheckValidXHProfMode(xhprofMode, types.ConfigTypeProject); err != nil {
+			util.Error("%s. Not changing value of `xhprof_mode` option.", err)
+		} else {
+			app.XHProfMode = xhprofMode
+		}
+	}
+
+	if cmd.Flag(types.FlagXHProfModeResetName).Changed {
+		xhprofModeReset, _ := cmd.Flags().GetBool(types.FlagXHProfModeResetName)
+
+		if xhprofModeReset {
+			app.XHProfMode = types.FlagXHProfModeDefault
 		}
 	}
 

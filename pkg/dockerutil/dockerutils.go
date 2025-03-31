@@ -30,7 +30,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
@@ -248,16 +247,16 @@ func GetDockerHostID() string {
 }
 
 // InspectContainer returns the full result of inspection
-func InspectContainer(name string) (dockerTypes.ContainerJSON, error) {
+func InspectContainer(name string) (dockerContainer.InspectResponse, error) {
 	ctx := context.Background()
 	client, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 
 	if err != nil {
-		return dockerTypes.ContainerJSON{}, err
+		return dockerContainer.InspectResponse{}, err
 	}
 	container, err := FindContainerByName(name)
 	if err != nil || container == nil {
-		return dockerTypes.ContainerJSON{}, err
+		return dockerContainer.InspectResponse{}, err
 	}
 	x, err := client.ContainerInspect(ctx, container.ID)
 	return x, err
@@ -265,7 +264,7 @@ func InspectContainer(name string) (dockerTypes.ContainerJSON, error) {
 
 // FindContainerByName takes a container name and returns the container
 // If container is not found, returns nil with no error
-func FindContainerByName(name string) (*dockerTypes.Container, error) {
+func FindContainerByName(name string) (*dockerContainer.Summary, error) {
 	ctx, client := GetDockerClient()
 
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
@@ -302,7 +301,7 @@ func GetContainerStateByName(name string) (string, error) {
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any Docker containers which match all labels.
-func FindContainerByLabels(labels map[string]string) (*dockerTypes.Container, error) {
+func FindContainerByLabels(labels map[string]string) (*dockerContainer.Summary, error) {
 	containers, err := FindContainersByLabels(labels)
 	if err != nil {
 		return nil, err
@@ -314,7 +313,7 @@ func FindContainerByLabels(labels map[string]string) (*dockerTypes.Container, er
 }
 
 // GetDockerContainers returns a slice of all Docker containers on the host system.
-func GetDockerContainers(allContainers bool) ([]dockerTypes.Container, error) {
+func GetDockerContainers(allContainers bool) ([]dockerContainer.Summary, error) {
 	ctx, client := GetDockerClient()
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{All: allContainers})
 	return containers, err
@@ -324,9 +323,9 @@ func GetDockerContainers(allContainers bool) ([]dockerTypes.Container, error) {
 // Explanation of the query:
 // * docs: https://docs.docker.com/engine/api/v1.23/
 // * Stack Overflow: https://stackoverflow.com/questions/28054203/docker-remote-api-filter-exited
-func FindContainersByLabels(labels map[string]string) ([]dockerTypes.Container, error) {
+func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary, error) {
 	if len(labels) < 1 {
-		return []dockerTypes.Container{{}}, fmt.Errorf("the provided list of labels was empty")
+		return []dockerContainer.Summary{{}}, fmt.Errorf("the provided list of labels was empty")
 	}
 	filterList := dockerFilters.NewArgs()
 	for k, v := range labels {
@@ -351,7 +350,7 @@ func FindContainersByLabels(labels map[string]string) ([]dockerTypes.Container, 
 
 // FindContainersWithLabel returns all containers with the given label
 // It ignores the value of the label, is only interested that the label exists.
-func FindContainersWithLabel(label string) ([]dockerTypes.Container, error) {
+func FindContainersWithLabel(label string) ([]dockerContainer.Summary, error) {
 	ctx, client := GetDockerClient()
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
 		All:     true,
@@ -594,7 +593,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 }
 
 // getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
-func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (string, string) {
+func getSuggestedCommandForContainerLog(container *dockerContainer.Summary) (string, string) {
 	suggestedCommands := []string{}
 	service := container.Labels["com.docker.compose.service"]
 	if service != "" && service != "ddev-router" && service != "ddev-ssh-agent" {
@@ -616,13 +615,13 @@ func getSuggestedCommandForContainerLog(container *dockerTypes.Container) (strin
 }
 
 // ContainerName returns the container's human-readable name.
-func ContainerName(container dockerTypes.Container) string {
+func ContainerName(container dockerContainer.Summary) string {
 	return container.Names[0][1:]
 }
 
 // GetContainerHealth retrieves the health status of a given container.
 // returns status, most-recent-log
-func GetContainerHealth(container *dockerTypes.Container) (string, string) {
+func GetContainerHealth(container *dockerContainer.Summary) (string, string) {
 	if container == nil {
 		return "no container", ""
 	}
@@ -749,7 +748,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
 	// Container Stopped or Created
 	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^ *(Network|Container|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil)(ing|t)$|.* Built$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
+	ignoreRegex := "(^ *(Network|Container|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t)$|.* Built$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
@@ -789,7 +788,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
-func GetAppContainers(sitename string) ([]dockerTypes.Container, error) {
+func GetAppContainers(sitename string) ([]dockerContainer.Summary, error) {
 	label := map[string]string{"com.ddev.site-name": sitename}
 	containers, err := FindContainersByLabels(label)
 	if err != nil {
@@ -799,7 +798,7 @@ func GetAppContainers(sitename string) ([]dockerTypes.Container, error) {
 }
 
 // GetContainerEnv returns the value of a given environment variable from a given container.
-func GetContainerEnv(key string, container dockerTypes.Container) string {
+func GetContainerEnv(key string, container dockerContainer.Summary) string {
 	ctx, client := GetDockerClient()
 	inspect, err := client.ContainerInspect(ctx, container.ID)
 
@@ -890,7 +889,7 @@ func CheckDockerCompose() error {
 }
 
 // GetPublishedPort returns the published port for a given private port.
-func GetPublishedPort(privatePort uint16, container dockerTypes.Container) int {
+func GetPublishedPort(privatePort uint16, container dockerContainer.Summary) int {
 	for _, port := range container.Ports {
 		if port.PrivatePort == privatePort {
 			return int(port.PublicPort)
@@ -901,7 +900,7 @@ func GetPublishedPort(privatePort uint16, container dockerTypes.Container) int {
 
 // CheckForHTTPS determines if a container has the HTTPS_EXPOSE var
 // set to route 443 traffic to 80
-func CheckForHTTPS(container dockerTypes.Container) bool {
+func CheckForHTTPS(container dockerContainer.Summary) bool {
 	env := GetContainerEnv("HTTPS_EXPOSE", container)
 	if env != "" && strings.Contains(env, "443:80") {
 		return true
@@ -1114,7 +1113,7 @@ func ImageExistsLocally(imageName string) (bool, error) {
 	ctx, client := GetDockerClient()
 
 	// If inspect succeeds, we have an image.
-	_, _, err := client.ImageInspectWithRaw(ctx, imageName)
+	_, err := client.ImageInspect(ctx, imageName)
 	if err == nil {
 		return true, nil
 	}
@@ -1424,7 +1423,7 @@ func wsl2GetWindowsHostIP() string {
 // RemoveImage removes an image with force
 func RemoveImage(tag string) error {
 	ctx, client := GetDockerClient()
-	_, _, err := client.ImageInspectWithRaw(ctx, tag)
+	_, err := client.ImageInspect(ctx, tag)
 	if err == nil {
 		_, err = client.ImageRemove(ctx, tag, dockerImage.RemoveOptions{Force: true})
 
@@ -1934,7 +1933,7 @@ func GetLiveDockerComposeVersion() (string, error) {
 // GetContainerNames takes an array of Container
 // and returns an array of strings with container names.
 // Use removePrefix to get short container names.
-func GetContainerNames(containers []dockerTypes.Container, excludeContainerNames []string, removePrefix string) []string {
+func GetContainerNames(containers []dockerContainer.Summary, excludeContainerNames []string, removePrefix string) []string {
 	var names []string
 	for _, container := range containers {
 		if len(container.Names) == 0 {

@@ -23,11 +23,20 @@ var DebugTestCmdCmd = &cobra.Command{
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
 		}
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil {
+			util.Failed(err.Error())
+		}
+		err = os.Chdir(app.AppRoot)
+		if err != nil {
+			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
+		}
+
 		tmpDir := os.TempDir()
 		outputFilename := filepath.Join(tmpDir, "ddev-debug-test.txt")
 		outputFilename = filepath.ToSlash(outputFilename)
 		bashPath := util.FindBashPath()
-		err := fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir, nil)
+		err = fileutil.CopyEmbedAssets(bundledAssets, "scripts", tmpDir, nil)
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}

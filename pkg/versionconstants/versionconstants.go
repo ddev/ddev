@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250307_rfay_add_hardened_ssh" // Note that this can be overridden by make
+var WebTag = "20250307_rfay_xhgui" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -23,7 +23,7 @@ var BaseDBTag = "v1.24.3"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20250304_stasadev_traefik_healthcheck"
+var TraefikRouterTag = "20250318_stasadev_proxy_load_balancer_alias"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
@@ -33,6 +33,12 @@ var SSHAuthTag = "v1.24.3"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
+
+// XhguiImage is image for xhgui
+var XhguiImage = "ddev/ddev-xhgui"
+
+// XhguiTag is xhgui tag
+var XhguiTag = "20250325_stasadev_xhgui_volume"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities"

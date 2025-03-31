@@ -156,6 +156,14 @@
     "xdebug_ide_location": {
       "description": "Adjust Xdebug listen location for WSL2 or in-container.",
       "type": "string"
+    },
+    "xhprof_mode": {
+      "description": "Defines the xhprof usage mode used by the project.",
+      "type": "string",
+      "enum": [
+        "prepend",
+        "xhgui"
+      ]
     }
   }
 }

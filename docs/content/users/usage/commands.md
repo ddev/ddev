@@ -295,7 +295,8 @@ ddev config
 # on every question in `ddev config`
 ddev config --auto
 
-## Detect docroot, project type, and expected defaults for an existing project
+# Detect docroot, project type (except for `generic` type),
+# and expected defaults for an existing project
 ddev config --update
 
 # Configure a Drupal project with a `web` document root
@@ -1628,6 +1629,32 @@ ddev xdebug off
 
 # Toggle Xdebug on and off
 ddev xdebug toggle
+```
+
+## `xhgui`
+
+Enable or disable [XHGui](../debugging-profiling/xhprof-profiling.md)
+
+`ddev xhgui` only is useful if [xhprof_mode](../configuration/config.md#xhprof_mode) is set to `xhgui`.
+
+* The `on` argument is equivalent to `enable` and `true`.
+* The `off` argument is equivalent to `disable` and `false`.
+
+```shell
+# Display whether XHGui is enabled and running
+ddev xhgui status
+
+# Turn XHGui on
+ddev xhgui
+
+# Launch the XHGui UI
+ddev xhgui launch
+
+# Turn XHGui on
+ddev xhgui on
+
+# Turn XHGui off
+ddev xhgui off
 ```
 
 ## `xhprof`

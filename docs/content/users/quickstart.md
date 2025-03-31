@@ -11,9 +11,11 @@ To get started with [Backdrop](https://backdropcms.org), clone the project repos
 === "New projects"
 
     ```bash
-    mkdir my-backdrop-site && cd my-backdrop-site
+    mkdir my-backdrop-site
     curl -LJO https://github.com/backdrop/backdrop/releases/latest/download/backdrop.zip
-    unzip ./backdrop.zip && rm -f backdrop.zip && mv -f ./backdrop/{.,}* . ; rm -rf backdrop
+    unzip backdrop.zip && rm -f backdrop.zip
+    mv backdrop/* my-backdrop-site/ && rm -rf backdrop
+    cd my-backdrop-site
     ddev config --project-type=backdrop
     ddev start
     ddev launch
@@ -60,6 +62,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     ```bash
     mkdir my-cakephp-site && cd my-cakephp-site
     ddev config --project-type=cakephp --docroot=webroot
+    ddev start
     ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
     ddev launch
     ```
@@ -170,6 +173,13 @@ Environment variables will be automatically added to your `.env` file to simplif
     # Boot the project and install the starter project:
     ddev start
     ddev composer create craftcms/craft
+    ddev craft install/craft \
+        --username=admin \
+        --password=password123 \
+        --email=admin@mail.com \
+        --site-name='$DDEV_PROJECT' \
+        --language=en \
+        --site-url='$DDEV_PRIMARY_URL'
     ddev launch
     ```
 
@@ -238,15 +248,6 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev launch
     ```
 
-    or use the ZIP file download technique:
-
-    ```bash
-    curl -o my-drupal-site.zip -fL https://www.drupal.org/download-latest/cms
-    unzip my-drupal-site.zip && rm -f my-drupal-site.zip
-    cd drupal-cms
-    ./launch-drupal-cms.sh
-    ```
-
     Read more about: [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms)
 
 === "Drupal 10"
@@ -300,7 +301,8 @@ Read more about customizing the environment and persisting configuration in [Pro
 
     ```bash
     mkdir my-ee-site && cd my-ee-site
-    # Download the zip archive for ExpressionEngine at https://github.com/ExpressionEngine/ExpressionEngine/releases/latest unarchive and move its content into the root of the my-ee-site directory
+    curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    unzip ee.zip && rm -f ee.zip
     ddev config --database=mysql:8.0
     ddev start
     ddev launch /admin.php # Open installation wizard in browser
@@ -315,14 +317,13 @@ Read more about customizing the environment and persisting configuration in [Pro
     Follow these steps based on the [ExpressionEngine Git Repository README.md](https://github.com/ExpressionEngine/ExpressionEngine#how-to-install):
 
     ```bash
-    git clone https://github.com/ExpressionEngine/ExpressionEngine my-ee-site # for example
-    cd my-ee-site
-    ddev config # Accept the defaults
+    mkdir my-ee-site && cd my-ee-site
+    git clone https://github.com/ExpressionEngine/ExpressionEngine .
+    ddev config --database=mysql:8.0
     ddev start
     ddev composer install
     touch system/user/config/config.php
     echo "EE_INSTALL_MODE=TRUE" >.env.php
-    ddev start
     ddev launch /admin.php  # Open installation wizard in browser
     ```
 
@@ -434,8 +435,10 @@ Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/insta
 
 ```bash
 mkdir my-joomla-site && cd my-joomla-site
-tag=$(curl -L "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/joomla/joomla-cms/releases/download/$tag/Joomla_$tag-Stable-Full_Package.zip" -o joomla.zip
-unzip ./joomla.zip && rm -f joomla.zip
+# Download the latest version of Joomla! and unzip it.
+# This can be manually downloaded from https://downloads.joomla.org/ or done using curl as here.
+curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
+unzip joomla.zip && rm -f joomla.zip
 ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 ddev start
 ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
@@ -587,90 +590,71 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 !!!tip "Add Vite support?"
     Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
 
-## Magento
+## Magento 2
 
-=== "Magento 2"
+Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
 
-    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public key as "username" and private key as "password".
+!!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
+    If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
 
-    !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
-        If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
+    ```
+    mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json
+    ```
 
+    Alternately, you can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
+
+    ??? "Script to store Adobe/Magento Composer credentials (click me)"
+        ```bash
+        # Enter your username/password and agree to store your credentials
+        ddev_dir="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+        mkdir -p $ddev_dir/homeadditions/.composer
+        docker_command=("docker" "run" "-it" "--rm" "-v" "$ddev_dir/homeadditions/.composer:/composer" "--workdir=/tmp" "-e" "COMPOSER_HOME=/composer" "--user" "$(id -u):$(id -g)")
+        auth_json_path="$ddev_dir/homeadditions/.composer/auth.json"
+        if [ -L "$auth_json_path" ]; then
+            # If auth.json is a symlink, add the optional mount
+            auth_json_dir=$(dirname "$(readlink -f "$auth_json_path")")
+            docker_command+=("-v" "$auth_json_dir:$auth_json_dir")
+        fi
+        image="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null)"
+        docker_command+=("$image" "bash" "-c" "composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install")
+        # Execute the command to store credentials
+        "${docker_command[@]}"
         ```
-        mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json
-        ```
 
-        Alternately, you can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
+```bash
+export MAGENTO_HOSTNAME=my-magento2-site
+mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
+ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
+ddev add-on get ddev/ddev-elasticsearch
+ddev start -y
+ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
+rm -f app/etc/env.php
 
-        ??? "Script to store Adobe/Magento Composer credentials (click me)"
-            ```bash
-            # Enter your username/password and agree to store your credentials
-            ddev_dir="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
-            mkdir -p $ddev_dir/homeadditions/.composer
-            docker_command=("docker" "run" "-it" "--rm" "-v" "$ddev_dir/homeadditions/.composer:/composer" "--workdir=/tmp" "-e" "COMPOSER_HOME=/composer" "--user" "$(id -u):$(id -g)")
-            auth_json_path="$ddev_dir/homeadditions/.composer/auth.json"
-            if [ -L "$auth_json_path" ]; then
-                # If auth.json is a symlink, add the optional mount
-                auth_json_dir=$(dirname "$(readlink -f "$auth_json_path")")
-                docker_command+=("-v" "$auth_json_dir:$auth_json_dir")
-            fi
-            image="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.web | select (.!=null)" 2>/dev/null)"
-            docker_command+=("$image" "bash" "-c" "composer create --repository https://repo.magento.com/ magento/project-community-edition --no-install")
-            # Execute the command to store credentials
-            "${docker_command[@]}"
-            ```
+ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
+    --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
+    --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
+    --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
+    --admin-user=admin --admin-password=Password123 --language=en_US
 
-    ```bash
-    export MAGENTO_HOSTNAME=my-magento2-site
-    mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
-    ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
-    ddev add-on get ddev/ddev-elasticsearch
-    ddev start
-    ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
-    rm -f app/etc/env.php
+ddev magento deploy:mode:set developer
+ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
+ddev config --disable-settings-management=false
+# Change the backend frontname URL to /admin_ddev
+ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
+# Login using `admin` user and `Password123` password
+ddev launch /admin_ddev
+```
 
-    ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
-        --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-        --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
-        --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
-        --admin-user=admin --admin-password=Password123 --language=en_US
+Change the admin name and related information as needed.
 
-    ddev magento deploy:mode:set developer
-    ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
-    ddev config --disable-settings-management=false
-    # Change the backend frontname URL to /admin_ddev
-    ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
-    # Login using `admin` user and `Password123` password
-    ddev launch /admin_ddev
-    ```
+The admin login URL is specified by `frontName` in `app/etc/env.php`.
 
-    Change the admin name and related information as needed.
+You may want to add the [Magento 2 Sample Data](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/next-steps/sample-data/composer-packages.html) with:
 
-    The admin login URL is specified by `frontName` in `app/etc/env.php`.
-
-    You may want to add the [Magento 2 Sample Data](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/next-steps/sample-data/composer-packages.html) with:
-
-    ```
-    ddev magento sampledata:deploy
-    ddev magento setup:upgrade
-    ```
-
-=== "OpenMage/Magento 1"
-
-    ```bash
-    mkdir my-magento1-site && cd my-magento1-site
-    tag=$(curl -L "https://api.github.com/repos/OpenMage/magento-lts/releases/latest" | docker run -i --rm ddev/ddev-utilities jq -r .tag_name) && curl -L "https://github.com/OpenMage/magento-lts/releases/download/$tag/openmage-$tag.zip" -o openmage.zip
-    unzip ./openmage.zip && rm -f openmage.zip
-    ddev config --project-type=magento --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
-    ddev start
-    # Install openmage and optionally install sample data
-    ddev openmage-install
-    ddev launch /admin
-
-    # Note that openmage itself provides several custom DDEV commands, including
-    # `openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
-    # and `php-cs-fixer`.
-    ```
+```
+ddev magento sampledata:deploy
+ddev magento setup:upgrade
+```
 
 ## Moodle
 
@@ -765,6 +749,29 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```
 
     The [`server.js`](https://github.com/ddev/test-nodejs/blob/main/server.js) used here is a trivial Express-based Node.js webserver. Yours will be more extensive.
+
+## OpenMage
+
+=== "Git Clone"
+
+    ```bash
+    mkdir my-openmage-site && cd my-openmage-site
+    git clone https://github.com/OpenMage/magento-lts .
+    ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
+    ddev start
+    ddev composer install
+    # Silent OpenMage install with sample data
+    # See `ddev openmage-install -h` for more options
+    ddev openmage-install -q
+    # Login using `admin` user and `veryl0ngpassw0rd` password
+    ddev launch /admin
+    ```
+
+Note that OpenMage itself provides several custom DDEV commands, including
+`openmage-install`, `openmage-admin`, `phpmd`, `rector`, `phpcbf`, `phpstan`, `vendor-patches`,
+and `php-cs-fixer`.
+
+Read more about [OpenMage](https://docs.openmage.org).
 
 ## Pimcore
 
@@ -917,7 +924,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     mkdir my-statamic-site && cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
     ddev composer create --prefer-dist statamic/statamic
-    ddev php please make:user
+    ddev php please make:user admin@example.com --password=admin1234 --super --no-interaction
     ddev launch /cp
     ```
 === "Git Clone"
@@ -995,6 +1002,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
+    ddev start
     ddev composer create symfony/skeleton
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"

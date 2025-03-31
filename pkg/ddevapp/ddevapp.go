@@ -28,7 +28,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-isatty"
@@ -138,6 +137,10 @@ type DdevApp struct {
 	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
 	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
+	XHGuiHTTPSPort            string                 `yaml:"xhgui_https_port,omitempty"`
+	XHGuiHTTPPort             string                 `yaml:"xhgui_http_port,omitempty"`
+	HostXHGuiPort             string                 `yaml:"host_xhgui_port,omitempty"`
+	XHProfMode                types.XHProfMode       `yaml:"xhprof_mode,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -193,7 +196,7 @@ func (app *DdevApp) Init(basePath string) error {
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (app *DdevApp) FindContainerByType(containerType string) (*dockerTypes.Container, error) {
+func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.Summary, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
@@ -277,6 +280,15 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			appDesc["dbinfo"] = dbinfo
 		}
+
+		appDesc["xhprof_mode"] = app.GetXHProfMode()
+		xhguiStatus := XHGuiStatus(app)
+		if xhguiStatus {
+			appDesc["xhgui_status"] = "enabled"
+		} else {
+			appDesc["xhgui_status"] = "disabled"
+		}
+
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -574,8 +586,10 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 // is just not set.
 func (app *DdevApp) GetWebEnvVar(name string) string {
 	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if v, ok := s["web"].(map[string]interface{})["environment"].(map[string]interface{})[name]; ok {
-			return v.(string)
+		if e, ok := s["web"].(map[string]interface{}); ok {
+			if v, ok := e["environment"].(map[string]interface{})[name]; ok {
+				return v.(string)
+			}
 		}
 	}
 	return ""
@@ -1588,18 +1602,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 
 		// If TLS supported and using Traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-			err = configureTraefikForApp(app)
-			if err != nil {
-				return err
-			}
+		err = configureTraefikForApp(app)
+		if err != nil {
+			return err
 		}
 
 		// Push custom certs
-		targetSubdir := "custom_certs"
-		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
-			targetSubdir = path.Join("traefik", "certs")
-		}
+		targetSubdir := path.Join("traefik", "certs")
+
 		certPath := app.GetConfigPath("custom_certs")
 		uid, _, _ := util.GetContainerUIDGid()
 		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
@@ -1817,14 +1827,14 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
+		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
 		}
 	}
 
-	util.Success("Started optional compose profiles '%s'", profiles)
+	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
 
 	return nil
 }
@@ -1844,6 +1854,10 @@ func (app *DdevApp) PullContainerImages() error {
 	images, err := app.FindAllImages()
 	if err != nil {
 		return err
+	}
+	// Don't pull xhgui if not in xhgui mode
+	if app.GetXHProfMode() != types.XHProfModeXHGui {
+		images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
 	}
 	images = append(images, FindNotOmittedImages(app)...)
 
@@ -2301,7 +2315,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
 	ctx, client := dockerutil.GetDockerClient()
 
-	var container *dockerTypes.Container
+	var container *dockerContainer.Summary
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
@@ -2348,7 +2362,7 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	ctx, client := dockerutil.GetDockerClient()
 
-	var container *dockerTypes.Container
+	var container *dockerContainer.Summary
 	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
@@ -2422,6 +2436,9 @@ func (app *DdevApp) DockerEnv() {
 		}
 		if app.HostMailpitPort == "" {
 			app.HostMailpitPort = "8027"
+		}
+		if app.HostXHGuiPort == "" {
+			app.HostXHGuiPort = nodeps.DdevDefaultXHGuiHTTPPort
 		}
 		app.BindAllInterfaces = true
 	}
@@ -2508,6 +2525,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
 		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
 		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
+		"DDEV_XHGUI_HTTP_PORT":     app.GetXHGuiHTTPPort(),
+		"DDEV_XHGUI_HTTPS_PORT":    app.GetXHGuiHTTPSPort(),
 		"DDEV_DOCROOT":             app.GetDocroot(),
 		"DDEV_HOSTNAME":            app.HostName(),
 		"DDEV_UID":                 uidStr,
@@ -2519,6 +2538,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_XHPROF_MODE":         app.GetXHProfMode(),
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_VERSION":             versionconstants.DdevVersion,
 		"DOCKER_SCAN_SUGGEST":      "false",
@@ -2851,7 +2871,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	if globalconfig.DdevGlobalConfig.IsTraefikRouter() && status == SiteRunning {
+	if status == SiteRunning {
 		_, _, err = app.Exec(&ExecOpts{
 			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
 		})
@@ -2859,6 +2879,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("Unable to clean up Traefik configuration: %v", err)
 		}
 	}
+
 	// Clean up ddev-global-cache
 	if removeData {
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)
@@ -3360,7 +3381,7 @@ func GetContainerName(app *DdevApp, service string) string {
 }
 
 // GetContainer returns the container struct of the app service name provided.
-func GetContainer(app *DdevApp, service string) (*dockerTypes.Container, error) {
+func GetContainer(app *DdevApp, service string) (*dockerContainer.Summary, error) {
 	name := GetContainerName(app, service)
 	container, err := dockerutil.FindContainerByName(name)
 	if err != nil || container == nil {

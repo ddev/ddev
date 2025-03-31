@@ -95,9 +95,10 @@ func deleteDdevImages(deleteAll bool) error {
 		return images[i].RepoTags[0] > images[j].RepoTags[0]
 	})
 
-	webimg := ddevImages.GetWebImage()
-	routerimage := ddevImages.GetRouterImage()
-	sshimage := ddevImages.GetSSHAuthImage()
+	webImage := ddevImages.GetWebImage()
+	routerImage := ddevImages.GetRouterImage()
+	sshImage := ddevImages.GetSSHAuthImage()
+	xhguiImage := ddevImages.GetXhguiImage()
 
 	nameAry := strings.Split(ddevImages.GetDBImage(nodeps.MariaDB, ""), ":")
 	keepDBImageTag := "notagfound"
@@ -116,7 +117,7 @@ func deleteDdevImages(deleteAll bool) error {
 				}
 			}
 			// If a webimage, but doesn't match our webimage, delete it
-			if strings.HasPrefix(tag, versionconstants.WebImg) && !strings.HasPrefix(tag, webimg) && !strings.HasPrefix(tag, webimg+"-built") {
+			if strings.HasPrefix(tag, versionconstants.WebImg) && !strings.HasPrefix(tag, webImage) && !strings.HasPrefix(tag, webImage+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
@@ -126,14 +127,20 @@ func deleteDdevImages(deleteAll bool) error {
 					return err
 				}
 			}
-			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, versionconstants.TraefikRouterImage) && !strings.HasPrefix(tag, routerimage) {
+			// If a routerImage, but doesn't match our routerImage, delete it
+			if strings.HasPrefix(tag, versionconstants.TraefikRouterImage) && !strings.HasPrefix(tag, routerImage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
 			}
-			// If a sshAgentImage, but doesn't match our sshAgentImage, delete it
-			if strings.HasPrefix(tag, versionconstants.SSHAuthImage) && !strings.HasPrefix(tag, sshimage) && !strings.HasPrefix(tag, sshimage+"-built") {
+			// If a sshImage, but doesn't match our sshImage, delete it
+			if strings.HasPrefix(tag, versionconstants.SSHAuthImage) && !strings.HasPrefix(tag, sshImage) && !strings.HasPrefix(tag, sshImage+"-built") {
+				if err = dockerutil.RemoveImage(tag); err != nil {
+					return err
+				}
+			}
+			// If a xhguiImage, but doesn't match our xhguiImage, delete it
+			if strings.HasPrefix(tag, versionconstants.XhguiImage) && !strings.HasPrefix(tag, xhguiImage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

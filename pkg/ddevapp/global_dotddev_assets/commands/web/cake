@@ -6,6 +6,7 @@
 ## Example: "ddev cake bake" or "ddev cake cache clear_all"
 ## ProjectTypes: cakephp
 ## ExecRaw: true
+## MutagenSync: true
 
 php ./bin/cake.php "$@"
 

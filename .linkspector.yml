@@ -1,31 +1,32 @@
 dirs:
   - docs/content
 ignorePatterns:
-  # Ignore internal mkdocs links
-  - pattern: '^(?!https?://)'
-  - pattern: '^https?://127.0.0.1'
-  - pattern: '^https://www.drupal.org/(u|project|about|forum|slack|join-slack)'
-  - pattern: "^https://deb.sury.org"
-  - pattern: "^https://nssm.cc/"
-  - pattern: "^https://www.php.net/manual/"
-  - pattern: "^https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok"
-  - pattern: "^https://.*blackfire.io"
-  - pattern: "^https://twitter.com/search"
-  - pattern: "^https://www.cyberciti.biz/"
-  - pattern: "^https://nightly.link/ddev/ddev/workflows/main-build/main"
-  - pattern: "^https://github.com/ddev/maintainer-info"
-  - pattern: "^https://buildkite.com/organizations/ddev"
-  - pattern: "^https://github.com/orgs/ddev"
-  - pattern: "^https://github.com/watching"
-  - pattern: "^https://newmonitor.thefays.us/icingaweb2"
-  - pattern: "^https://analytics.amplitude.com"
-  - pattern: "^https://(meta.stackoverflow|stackoverflow|superuser).com/"
-  - pattern: "^https://packages.debian.org/stable/"
-  - pattern: "^https://symfony.com"
-  - pattern: "^https://community.chocolatey.org"
-  - pattern: "^https://aur.archlinux.org"
-  - pattern: "^https://team-ddev.1password.com"
-  - pattern: "^https://.*.archive.org"
+  # Ignore internal anchors that are already handled by mkdocs
+  - pattern: ".md#"
+  - pattern: "https://www.drupal.org/project/"
+  - pattern: "https://www.drupal.org/forum/"
+  - pattern: "https://www.drupal.org/join-slack"
+  - pattern: "https://www.php.net/manual/"
+  - pattern: "https://www.drupaleasy.com"
+  - pattern: "https://blackfire.io"
+  - pattern: "https://www.blackfire.io"
+  - pattern: "https://nightly.link/ddev/ddev/workflows/main-build/main"
+  - pattern: "https://github.com/ddev/maintainer-info"
+  - pattern: "https://buildkite.com/organizations/ddev"
+  - pattern: "https://github.com/orgs/ddev"
+  - pattern: "https://github.com/watching"
+  - pattern: "https://newmonitor.thefays.us/icingaweb2"
+  - pattern: "https://analytics.amplitude.com"
+  - pattern: "https://stackoverflow.com"
+  - pattern: "https://meta.stackoverflow.com"
+  - pattern: "https://superuser.com"
+  - pattern: "https://symfony.com"
+  - pattern: "https://community.chocolatey.org"
+  - pattern: "https://aur.archlinux.org"
+  - pattern: "https://team-ddev.1password.com"
+  - pattern: "https://web.archive.org"
+  - pattern: "https://specifications.freedesktop.org"
+  - pattern: "https://mutagen.io"
 aliveStatusCodes:
   - 200
   - 206

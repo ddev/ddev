@@ -2,13 +2,9 @@ services:
   ddev-router:
     image: {{ .router_image }}
 
-    {{ if eq .Router "traefik" }}
     # Prevent zombie container
     init: true
-    command:
-      - --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml
     user: {{ .UID }}:{{ .GID }}
-    {{ end }}
 
     networks:
       - ddev_default
@@ -16,17 +12,12 @@ services:
     ports: {{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
       - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
       - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
-      {{ if eq .Router "traefik" }}
       # Traefik router; configured in static config as entrypoint
       - "{{ if not .router_bind_all_interfaces }}{{ $dockerIP }}:{{ end }}{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
-      {{ end }}
     labels:
       # For cleanup on ddev poweroff
       com.ddev.site-name: ""
     volumes:
-      {{ if ne .Router "traefik" }}
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      {{ end }}
       - ddev-global-cache:/mnt/ddev-global-cache:rw
       {{ if .letsencrypt }}
       - ddev-router-letsencrypt:/etc/letsencrypt:rw
@@ -38,11 +29,12 @@ services:
       - USE_LETSENCRYPT={{ .letsencrypt }}
         {{ end }}{{/* end if .letsencrypt */}}
       - TZ={{ .Timezone }}
+      # Bypass proxies to allow internal container connections
+      - NO_PROXY=*
+      - no_proxy=*
     restart: "no"
     healthcheck:
-      {{ if eq .Router "traefik" }}
       test: "/healthcheck.sh"
-      {{ end }}
       interval: 1s
       retries: 120
       start_period: 120s

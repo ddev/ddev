@@ -1,3 +1,53 @@
+# See https://golangci-lint.run/
+version: "2"
 run:
   modules-download-mode: vendor
-
+  timeout: 30m
+output:
+  formats:
+    text:
+      path: stdout
+      colors: true
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - revive
+    - staticcheck
+    # TODO: enable these checks
+    #- whitespace
+    #- testifylint
+    #- usetesting
+  settings:
+    staticcheck:
+      checks:
+        - all
+        # TODO: enable these disabled checks
+        - -QF1001 # Apply De Morgan's law
+        - -QF1002 # Convert untagged switch to tagged switch
+        - -QF1003 # Convert if/else-if chain to tagged switch
+        - -QF1004 # Use strings.ReplaceAll instead of strings.Replace with n == -1
+        - -QF1008 # Omit embedded fields from selector expression
+        - -S1002 # Omit comparison with boolean constant
+        - -S1008 # Simplify returning boolean expression
+        - -S1009 # Omit redundant nil check on slices, maps, and channels
+        - -S1023 # Omit redundant control flow
+        - -S1025 # Don’t use fmt.Sprintf("%s", x) unnecessarily
+        - -S1038 # Unnecessarily complex way of printing formatted string
+        - -S1039 # Unnecessary use of fmt.Sprint
+        - -ST1003 # Poorly chosen identifier
+        - -ST1005 # Incorrectly formatted error string
+        - -ST1017 # Don’t use Yoda conditions
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party/ampli/ampli.go
+formatters:
+  enable:
+    - gofmt

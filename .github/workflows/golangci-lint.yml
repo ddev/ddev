@@ -47,12 +47,12 @@ jobs:
         run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
 
       - name: Lint Go Files
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: latest
           # Check code only for the changed lines for PRs
           only-new-issues: ${{ github.event_name == 'pull_request' && true || false }}
-          args: --timeout=30m --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
+          args: --config=.golangci.yml
 
   check_modules:
     name: Check Go Modules

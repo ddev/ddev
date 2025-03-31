@@ -1,9 +1,9 @@
 package ddevapp
 
 import (
+	"dario.cat/mergo"
 	"fmt"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/imdario/mergo"
 	"strings"
 )
 
