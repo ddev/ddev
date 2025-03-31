@@ -2899,20 +2899,18 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			vols = append(vols, app.Name+"-ddev-config")
 		}
 		for _, volName := range vols {
-			err = dockerutil.RemoveVolume(volName)
-			if err != nil {
-				util.Warning("Could not remove volume %s: %v", volName, err)
-			} else {
-				util.Success("Volume %s for project %s was deleted", volName, app.Name)
+			if dockerutil.VolumeExists(volName) {
+				err = dockerutil.RemoveVolume(volName)
+				if err != nil {
+					util.Warning("Could not remove volume %s: %v", volName, err)
+				} else {
+					util.Success("Volume %s for project %s was deleted", volName, app.Name)
+				}
 			}
 		}
 		deleteServiceVolumes(app)
+		deleteImages(app)
 
-		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
-		_ = dockerutil.RemoveImage(dbBuilt)
-
-		webBuilt := ddevImages.GetWebImage() + "-" + app.Name + "-built"
-		_ = dockerutil.RemoveImage(webBuilt)
 		util.Success("Project %s was deleted. Your code and configuration are unchanged.", app.Name)
 	}
 
@@ -2952,6 +2950,30 @@ func deleteServiceVolumes(app *DdevApp) {
 			}
 		}
 	}
+}
+
+// deleteImages finds all the app images created by docker-compose and removes them.
+func deleteImages(app *DdevApp) {
+	labels := map[string]string{
+		"com.docker.compose.project": app.GetComposeProjectName(),
+	}
+	images, err := dockerutil.FindImagesByLabels(labels, false)
+	if err != nil {
+		util.Warning("Could not find images for project %s: %v", app.Name, err)
+	}
+	for _, img := range images {
+		_ = dockerutil.RemoveImage(img.ID)
+		if err != nil {
+			util.Warning("Could not remove image %s: %v", strings.Join(img.RepoTags, ", "), err)
+		} else {
+			util.Success("Image %s for project %s was deleted", strings.Join(img.RepoTags, ", "), app.Name)
+		}
+	}
+	// These images should already be deleted, but just in case, delete these two by name
+	dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
+	_ = dockerutil.RemoveImage(dbBuilt)
+	webBuilt := ddevImages.GetWebImage() + "-" + app.Name + "-built"
+	_ = dockerutil.RemoveImage(webBuilt)
 }
 
 // RemoveGlobalProjectInfo deletes the project from DdevProjectList
