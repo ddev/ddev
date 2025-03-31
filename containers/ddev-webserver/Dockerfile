@@ -182,7 +182,8 @@ RUN mkdir -p /var/xhprof && curl --fail  -o /tmp/xhprof.tgz -sSL https://pecl.ph
 # Install https://github.com/perftools/php-profiler for XHGui
 RUN COMPOSER_HOME=/tmp/composer composer global require perftools/php-profiler --dev && \
     mv /tmp/composer/vendor/perftools/php-profiler /usr/local/xhgui.collector/php-profiler && \
-    rm -rf /tmp/composer
+    rm -rf /tmp/composer && \
+    chmod -R ugo+rw /usr/local/xhgui.collector
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
     chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
