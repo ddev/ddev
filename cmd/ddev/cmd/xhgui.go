@@ -5,6 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -35,6 +36,10 @@ var DdevXHGuiCmd = &cobra.Command{
 		}
 
 		app.DockerEnv()
+
+		if globalconfig.DdevGlobalConfig.UseHardenedImages {
+			util.Failed("XHGui is not available with use-hardened-images.")
+		}
 
 		status, _ := app.SiteStatus()
 		if status != ddevapp.SiteRunning {
