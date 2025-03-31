@@ -1113,15 +1113,6 @@ ENV N_PREFIX=/home/$username/.n
 ENV N_INSTALL_VERSION="%s"
 `, app.NodeJSVersion)
 	}
-	// TODO: I would rather put this in the ddev-webserver image but...
-	// - We don't know the username yet there, so would have to put in /usr/local/composer
-	// - /usr/local/composer would then have to be set as COMPOSER_HOME
-	// - We could set the permissions here so people could use it
-	// - BUT... we don't know the PHP version until runtime.
-	// - Oh, but we don't know the PHP version here yet because it's not runtime yet.
-	// - Maybe this can be done or checked by `ddev xhgui` ?
-	// Add php-profiler for xhgui
-	extraWebContent = extraWebContent + "\nUSER ${username}\nRUN composer global require perftools/php-profiler --dev\nUSER root\n"
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
 	}
