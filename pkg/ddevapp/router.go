@@ -514,7 +514,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
 
-// GetEphemeralPortsIfNeeded() replaces the provided ports with an ephemeral version if they need it.
+// GetEphemeralPortsIfNeeded replaces the provided ports with an ephemeral version if they need it.
 func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
 		proposedPort, replacementPort, portChangeRequired := GetAvailableRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
