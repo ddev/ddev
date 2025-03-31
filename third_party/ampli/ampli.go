@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 12
+// Tracking Plan Version: 13
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -313,7 +313,9 @@ var Project = struct {
 			PerformanceMode(performanceMode string) interface {
 				PhpVersion(phpVersion string) interface {
 					ProjectType(projectType string) interface {
-						WebserverType(webserverType string) ProjectBuilder
+						WebserverType(webserverType string) interface {
+							XhProfMode(xhProfMode string) ProjectBuilder
+						}
 					}
 				}
 			}
@@ -325,7 +327,9 @@ var Project = struct {
 			PerformanceMode(performanceMode string) interface {
 				PhpVersion(phpVersion string) interface {
 					ProjectType(projectType string) interface {
-						WebserverType(webserverType string) ProjectBuilder
+						WebserverType(webserverType string) interface {
+							XhProfMode(xhProfMode string) ProjectBuilder
+						}
 					}
 				}
 			}
@@ -382,7 +386,9 @@ func (b *projectBuilder) Id(id string) interface {
 	PerformanceMode(performanceMode string) interface {
 		PhpVersion(phpVersion string) interface {
 			ProjectType(projectType string) interface {
-				WebserverType(webserverType string) ProjectBuilder
+				WebserverType(webserverType string) interface {
+					XhProfMode(xhProfMode string) ProjectBuilder
+				}
 			}
 		}
 	}
@@ -395,7 +401,9 @@ func (b *projectBuilder) Id(id string) interface {
 func (b *projectBuilder) PerformanceMode(performanceMode string) interface {
 	PhpVersion(phpVersion string) interface {
 		ProjectType(projectType string) interface {
-			WebserverType(webserverType string) ProjectBuilder
+			WebserverType(webserverType string) interface {
+				XhProfMode(xhProfMode string) ProjectBuilder
+			}
 		}
 	}
 } {
@@ -406,7 +414,9 @@ func (b *projectBuilder) PerformanceMode(performanceMode string) interface {
 
 func (b *projectBuilder) PhpVersion(phpVersion string) interface {
 	ProjectType(projectType string) interface {
-		WebserverType(webserverType string) ProjectBuilder
+		WebserverType(webserverType string) interface {
+			XhProfMode(xhProfMode string) ProjectBuilder
+		}
 	}
 } {
 	b.properties[`PHP Version`] = phpVersion
@@ -415,15 +425,25 @@ func (b *projectBuilder) PhpVersion(phpVersion string) interface {
 }
 
 func (b *projectBuilder) ProjectType(projectType string) interface {
-	WebserverType(webserverType string) ProjectBuilder
+	WebserverType(webserverType string) interface {
+		XhProfMode(xhProfMode string) ProjectBuilder
+	}
 } {
 	b.properties[`Project Type`] = projectType
 
 	return b
 }
 
-func (b *projectBuilder) WebserverType(webserverType string) ProjectBuilder {
+func (b *projectBuilder) WebserverType(webserverType string) interface {
+	XhProfMode(xhProfMode string) ProjectBuilder
+} {
 	b.properties[`Webserver Type`] = webserverType
+
+	return b
+}
+
+func (b *projectBuilder) XhProfMode(xhProfMode string) ProjectBuilder {
+	b.properties[`XHProf Mode`] = xhProfMode
 
 	return b
 }
@@ -597,8 +617,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `12`,
-			VersionID: `fccb5108-a049-4205-a5af-a27817e8c5d0`,
+			Version:   `13`,
+			VersionID: `a25069bf-252e-427e-b876-690362d20b18`,
 		}
 	}
 

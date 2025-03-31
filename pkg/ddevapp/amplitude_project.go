@@ -56,6 +56,7 @@ func (app *DdevApp) TrackProject() {
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		WebserverType(app.GetWebserverType()).
+		XhProfMode(app.GetXHProfMode()).
 		AddOns(GetInstalledAddonNames(app)).
 		Containers(services).
 		ContainersOmitted(containersOmitted).
