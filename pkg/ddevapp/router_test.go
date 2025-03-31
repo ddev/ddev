@@ -278,3 +278,66 @@ func TestUseEphemeralPort(t *testing.T) {
 	}
 
 }
+
+// TestAssignRouterPortsToGenericWebserverPorts ensures that RouterHTTPPort and RouterHTTPSPort
+// are assigned correctly based on WebExtraExposedPorts for Generic webservers.
+func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
+	type testCase struct {
+		name                 string
+		webserverType        string
+		webExtraExposedPorts []ddevapp.WebExposedPort
+		expectedHTTPPort     string
+		expectedHTTPSPort    string
+	}
+
+	tests := []testCase{
+		{
+			name:          "Generic webserver with valid ports",
+			webserverType: nodeps.WebserverGeneric,
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{HTTPPort: 8080, HTTPSPort: 8443},
+			},
+			expectedHTTPPort:  "8080",
+			expectedHTTPSPort: "8443",
+		},
+		{
+			name:                 "Generic webserver with no extra ports",
+			webserverType:        nodeps.WebserverGeneric,
+			webExtraExposedPorts: []ddevapp.WebExposedPort{},
+			expectedHTTPPort:     "",
+			expectedHTTPSPort:    "",
+		},
+		{
+			name:          "Non-Generic webserver should not assign ports",
+			webserverType: nodeps.WebserverNginxFPM,
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{HTTPPort: 8080, HTTPSPort: 8443},
+			},
+			expectedHTTPPort:  "",
+			expectedHTTPSPort: "",
+		},
+		{
+			name:          "Generic webserver with multiple ports uses first",
+			webserverType: nodeps.WebserverGeneric,
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{HTTPPort: 8000, HTTPSPort: 8443},
+				{HTTPPort: 8081, HTTPSPort: 8444},
+			},
+			expectedHTTPPort:  "8000",
+			expectedHTTPSPort: "8443",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			app := &ddevapp.DdevApp{
+				WebserverType:        tc.webserverType,
+				WebExtraExposedPorts: tc.webExtraExposedPorts,
+			}
+
+			ddevapp.AssignRouterPortsToGenericWebserverPorts(app)
+			require.Equal(t, tc.expectedHTTPPort, app.RouterHTTPPort)
+			require.Equal(t, tc.expectedHTTPSPort, app.RouterHTTPSPort)
+		})
+	}
+}
