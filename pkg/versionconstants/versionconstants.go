@@ -38,7 +38,7 @@ var BusyboxImage = "busybox:stable"
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "20250325_stasadev_xhgui_volume"
+var XhguiTag = "20250328_stasadev_xhgui_0.23.x"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities"
