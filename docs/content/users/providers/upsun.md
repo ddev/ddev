@@ -22,6 +22,14 @@ You need to obtain and configure an API token first. This only needs to be done 
     ddev config global --web-environment-add="UPSUN_CLI_TOKEN=abcdeyourtoken"
     ```
 
+    !!!tip "What if I have more than one API token?"
+        If you have multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+    
+        ```yaml
+        web_environment:
+            - UPSUN_CLI_TOKEN=abcdeyourtoken
+        ```
+
 ## Upsun Per-Project Configuration
 
 1. Check out the Upsun site and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
