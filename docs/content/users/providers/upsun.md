@@ -23,8 +23,8 @@ You need to obtain and configure an API token first. This only needs to be done 
     ```
 
     !!!tip "What if I have more than one API token?"
-        If you have multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
-    
+        To use multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+
         ```yaml
         web_environment:
             - UPSUN_CLI_TOKEN=abcdeyourtoken

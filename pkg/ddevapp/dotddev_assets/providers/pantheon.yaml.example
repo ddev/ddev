@@ -14,7 +14,7 @@
 #    ```
 #    You can also do this with `ddev config global --web-environment-add="TERMINUS_MACHINE_TOKEN=abcdeyourtoken"`.
 #
-#    If you have multiple API tokens for different projects, add them to your per-project configuration
+#    To use multiple API tokens for different projects, add them to your per-project configuration
 #    using the .ddev/config.local.yaml file instead. This file is gitignored by default.
 #    ```yaml
 #    web_environment:

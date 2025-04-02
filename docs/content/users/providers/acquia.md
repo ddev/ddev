@@ -24,7 +24,7 @@ DDEV’s Acquia integration pulls database and files from an existing project in
     ```
 
     !!!tip "What if I have more than one API key?"
-        If you have multiple API keys for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+        To use multiple API keys for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
 
         ```yaml
         web_environment:

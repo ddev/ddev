@@ -18,8 +18,8 @@ If you have DDEV installed, and have an active Pantheon account with an active s
         ```
 
     !!!tip "What if I have more than one API token?"
-        If you have multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
-    
+        To use multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+
         ```yaml
         web_environment:
             - TERMINUS_MACHINE_TOKEN=your_token

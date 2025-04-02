@@ -14,7 +14,7 @@
 #    ```
 #    You can also do this with `ddev config global --web-environment-add="ACQUIA_API_KEY=xxxxxxxx,ACQUIA_API_SECRET=xxxxx"`.
 #
-#    If you have multiple API keys for different projects, add them to your per-project configuration
+#    To use multiple API keys for different projects, add them to your per-project configuration
 #    using the .ddev/config.local.yaml file instead. This file is gitignored by default.
 #    ```yaml
 #    web_environment:
