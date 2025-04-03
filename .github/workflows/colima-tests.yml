@@ -84,6 +84,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.23'
+          check-latest: true
 
       - name: Set up Homebrew
         id: set-up-homebrew
