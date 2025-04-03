@@ -23,6 +23,15 @@ DDEV’s Acquia integration pulls database and files from an existing project in
     ddev config global --web-environment-add="ACQUIA_API_KEY=xxxxxxxx,ACQUIA_API_SECRET=xxxxx"
     ```
 
+    !!!tip "What if I have more than one API key?"
+        To use multiple API keys for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+
+        ```yaml
+        web_environment:
+            - ACQUIA_API_KEY=xxxxxxxx
+            - ACQUIA_API_SECRET=xxxxx
+        ```
+
 5. In the project `.ddev/config.yaml` add the `ACQUIA_ENVIRONMENT_ID` environment variable:
 
     ```yaml

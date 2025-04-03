@@ -18,6 +18,13 @@
 #    ```
 #    You can also do this with `ddev config global --web-environment-add="PLATFORMSH_CLI_TOKEN=abcdeyourtoken"`.
 #
+#    To use multiple API tokens for different projects, add them to your per-project configuration
+#    using the .ddev/config.local.yaml file instead. This file is gitignored by default.
+#    ```yaml
+#    web_environment:
+#        - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
+#    ```
+#
 # 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT and optional PLATFORM_APP (only if your environment contains more than one app) variables to your project `.ddev/config.yaml` or a `.ddev/config.platform.yaml`
 #    ```yaml
 #    web_environment:

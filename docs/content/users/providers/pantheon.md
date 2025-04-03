@@ -17,6 +17,14 @@ If you have DDEV installed, and have an active Pantheon account with an active s
             - TERMINUS_MACHINE_TOKEN=your_token
         ```
 
+    !!!tip "What if I have more than one API token?"
+        To use multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+
+        ```yaml
+        web_environment:
+            - TERMINUS_MACHINE_TOKEN=your_token
+        ```
+
 2. Choose a Pantheon site and environment you want to use with DDEV. You can usually use the site name, but in some environments you may need the site ID, which is the long third component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
 
 3. On the Pantheon dashboard for the site, make sure that at least one backup has been created. (When you need to refresh what you pull, create a new backup.)

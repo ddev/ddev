@@ -25,6 +25,14 @@ You need to obtain and configure an API token first. This is only needed once.
     ddev config global --web-environment-add="PLATFORMSH_CLI_TOKEN=abcdeyourtoken"`
     ```
 
+    !!!tip "What if I have more than one API token?"
+        To use multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+
+        ```yaml
+        web_environment:
+            - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
+        ```
+
 ## Platform.sh Per-Project Configuration
 
 1. Check out the site from Platform.sh and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
