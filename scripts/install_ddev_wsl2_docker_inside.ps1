@@ -77,7 +77,7 @@ try {
     Write-Error "Could not download the installer from $downloadUrl. Details: $_"
     exit 1
 }
-Start-Process $DdevInstallerPath -Wait
+Start-Process $DdevInstallerPath -ArgumentList "/S", "/C" -Wait
 Remove-Item $DdevInstallerPath
 Write-Host "DDEV installation complete."
 
