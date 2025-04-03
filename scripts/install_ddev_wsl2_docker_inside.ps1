@@ -2,12 +2,9 @@
 # an Ubuntu WSL2 instance for use with DDEV and docker-ce installed inside WSL2.
 # It requires that an Ubuntu wsl2 distro be installed already, preferably with `wsl --install`, but it can also be
 # done manually.
-# Run this in an administrative PowerShell window.
 # You can download, inspect, and run this, or run it directly with
 # Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
 # iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1'))
-
-#Requires -RunAsAdministrator
 
 # Make sure wsl is installed and working
 if (-not(wsl -l -v)) {
