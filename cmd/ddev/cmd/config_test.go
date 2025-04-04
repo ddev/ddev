@@ -889,8 +889,9 @@ func TestDrupalAppTypeUsage(t *testing.T) {
 	require.Equal(t, nodeps.AppTypeDrupalLatestStable, app.Type)
 }
 
-// TestRespectConfigNameOverride tests that `ddev config` respects name override from `.ddev/config.*.yaml` files
-func TestRespectConfigNameOverride(t *testing.T) {
+// TestHasConfigNameOverride tests that `ddev config` has name override from `.ddev/config.*.yaml` files
+// and new name is not written to .ddev/config.yaml
+func TestHasConfigNameOverride(t *testing.T) {
 	assert := asrt.New(t)
 
 	projectName := strings.ToLower(t.Name())
@@ -918,12 +919,13 @@ func TestRespectConfigNameOverride(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0777)
 	require.NoError(t, err)
 	configFile := filepath.Join(tmpDir, ".ddev/config.yaml")
+	configFileLocal := filepath.Join(tmpDir, ".ddev/config.local.yaml")
 	_, err = os.Create(configFile)
 	require.NoError(t, err)
 
 	// Create an override for the project name
 	projectNameOverride := projectName + "-override"
-	err = os.WriteFile(filepath.Join(tmpDir, ".ddev/config.local.yaml"), []byte(`name: `+projectNameOverride), 0644)
+	err = os.WriteFile(configFileLocal, []byte(`name: `+projectNameOverride), 0644)
 	require.NoError(t, err)
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
@@ -931,10 +933,19 @@ func TestRespectConfigNameOverride(t *testing.T) {
 
 	configContents, err := os.ReadFile(configFile)
 	require.NoError(t, err, "Unable to read '%s'", configFile)
+	configLocalContents, err := os.ReadFile(configFileLocal)
+	require.NoError(t, err, "Unable to read '%s'", configFileLocal)
 
 	app := &ddevapp.DdevApp{}
 	err = yaml.Unmarshal(configContents, app)
 	require.NoError(t, err, "Could not unmarshal '%s'", configFile)
 
+	// app.Name inside .ddev/config.yaml should be empty
+	require.Equal(t, "", app.Name)
+
+	err = yaml.Unmarshal(configLocalContents, app)
+	require.NoError(t, err, "Could not unmarshal '%s'", configFileLocal)
+
+	// app.Name inside .ddev/config.local.yaml should have the expected value
 	require.Equal(t, projectNameOverride, app.Name)
 }
