@@ -715,7 +715,10 @@ func (app *DdevApp) CheckCustomConfig() {
 			util.CheckErr(err)
 			preDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "pre.Dockerfile*"))
 			util.CheckErr(err)
+			stageDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "stage.Dockerfile*"))
+			util.CheckErr(err)
 			dockerFiles = append(dockerFiles, preDockerFiles...)
+			dockerFiles = append(dockerFiles, stageDockerFiles...)
 			dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
 				return strings.HasSuffix(s, ".example")
 			})
@@ -1247,7 +1250,29 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 	// Normal starting content is the arg and base image
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
+`
+	// If there are user stage.Dockerfile.* files, insert their contents
+	if userDockerfilePath != "" {
+		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "stage.Dockerfile*"))
+		if err != nil {
+			return err
+		}
 
+		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
+			userContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
+		}
+	}
+
+	contents = contents + `
 ### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
@@ -1745,7 +1770,7 @@ func validateHookYAML(source []byte) error {
 
 // isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file
 // We consider files in the .ddev/web-build and .ddev/db-build directory to be context files
-// excluding /Dockerfile*, /pre.Dockerfile*, and /README.txt
+// excluding /Dockerfile*, /pre.Dockerfile*, /stage.Dockerfile.* and /README.txt
 func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, error) {
 	// Directories are always context.
 	if fileutil.IsDirectory(file) {
@@ -1762,7 +1787,7 @@ func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, e
 	}
 	filename := filepath.Base(file)
 	// Return true for not context Dockerfiles
-	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") {
+	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") || strings.HasPrefix(filename, "stage.Dockerfile") {
 		return true, nil
 	}
 	// Return true for not context README.txt if it is managed by DDEV
