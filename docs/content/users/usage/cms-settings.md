@@ -152,6 +152,16 @@ If you use something other than the root directory (`''`) for your docroot, wp-c
 
 For example, if your docroot is `public`, your `wp-cli.yml` file should contain:
 
-```
+```yaml
 path: public
+```
+
+#### WordPress Environment Type
+
+By default, [`wp_get_environment_type()`](https://developer.wordpress.org/reference/functions/wp_get_environment_type/) returns `production`. but you can override it in a local environment by defining the `WP_ENVIRONMENT_TYPE` constant.
+
+To do this, modify your `wp-config-ddev.php` file by [removing](./faq.md#what-if-i-dont-like-the-settings-files-or-gitignores-ddev-creates) the `#ddev-generated` line and adding this code snippet:
+
+```php
+defined( 'WP_ENVIRONMENT_TYPE' ) || define( 'WP_ENVIRONMENT_TYPE', 'local' );
 ```
