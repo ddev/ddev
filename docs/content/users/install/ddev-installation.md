@@ -216,7 +216,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * Verify that your Ubuntu default distro is WSL v2 using `wsl -l -v`.
 
-    2. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
+    2. Open a non-administrative PowerShell terminal. However, if it doesn't work (e.g. "the system cannot find all the information required"), try with an Administrator one (possibly after a reboot) as it may be necessary on some systems.  Run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
@@ -251,7 +251,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     6. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop`. Otherwise [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     7. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
     8. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
-    9. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    9. Open a non-administrative PowerShell terminal. However, if it doesn't work (e.g. "the system cannot find all the information required"), try with an Administrator one (possibly after a reboot) as it may be necessary on some systems.  Run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
