@@ -91,7 +91,7 @@ function cleanup {
 
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 
-printf "RUN timeout 30 apt-get update || true\nRUN curl -I https://www.google.com\n" > .ddev/web-build/Dockerfile.test
+printf "RUN timeout 30 apt-get update || true\nRUN curl --connect-timeout 10 --max-time 20 --fail -I https://www.google.com || true\n" > .ddev/web-build/Dockerfile.test
 
 set +eu
 
@@ -242,8 +242,8 @@ host_http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r 
 http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.httpURLs[0]' 2>/dev/null)
 https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.httpsURLs[0]' 2>/dev/null)
 
-header "Curl of site from inside container"
-ddev exec curl --fail -I http://127.0.0.1
+header "curl -I of http://127.0.0.1 from inside container"
+ddev exec curl --connect-timeout 10 --max-time 20 --fail -I http://127.0.0.1
 
 if command -v curl >/dev/null; then
   header "curl -I of ${host_http_url} (web container http docker bind port) from outside"
@@ -258,7 +258,7 @@ if command -v curl >/dev/null; then
   header "Full curl of ${https_url} (router https URL) from outside"
   curl --connect-timeout 10 --max-time 20 "${https_url}"
 
-  header "Curl google.com to check internet access and VPN"
+  header "curl -I of https://www.google.com to check internet access and VPN"
   curl --connect-timeout 10 --max-time 20 -I https://www.google.com
 else
   header "curl is not available on the host"
