@@ -2,6 +2,7 @@ package netutil
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"net"
 	"net/url"
 	"os"
@@ -16,19 +17,39 @@ import (
 
 // IsPortActive checks to see if the given port on Docker IP is answering.
 func IsPortActive(port string) bool {
+
+	dialTimeout := 0 * time.Millisecond
+	if nodeps.IsWSL2() {
+		dialTimeout = 200 * time.Millisecond
+	}
+
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		util.Warning("Failed to get Docker IP address: %v", err)
 		return false
 	}
 
-	conn, err := net.DialTimeout("tcp", dockerIP+":"+port, 1*time.Second)
+	util.Debug("Checking if port %s is active", port)
+	conn, err := net.DialTimeout("tcp", dockerIP+":"+port, dialTimeout)
 
 	// If we were able to connect, something is listening on the port.
 	if err == nil {
 		_ = conn.Close()
 		return true
 	}
+
+	// In WSL2 mirrored mode, when we test an unused port, we just get a timeout
+	// Assume that the port is available (not active) in that situation.
+	// This seems to be caused by https://github.com/microsoft/WSL/issues/10855
+	// We don't have a way to know whether WSL2 in mirrored mode, but
+	// we use the longer timeout in WSL2 and assume that timeout is unoccupied.
+	if nodeps.IsWSL2() {
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			util.Debug("In WSL2 and port %s is probably not active; timeout", port)
+			return false
+		}
+	}
+
 	// If we get ECONNREFUSED the port is not active.
 	oe, ok := err.(*net.OpError)
 	if ok {
@@ -38,6 +59,7 @@ func IsPortActive(port string) bool {
 		var WSAECONNREFUSED syscall.Errno = 10061
 
 		if ok && (syscallErr.Err == syscall.ECONNREFUSED || syscallErr.Err == WSAECONNREFUSED) {
+			util.Debug("port %s shows connection refused so not active", port)
 			return false
 		}
 	}
