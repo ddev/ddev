@@ -47,7 +47,8 @@ func testMain(m *testing.M) int {
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	labels := map[string]string{
-		"com.ddev.site-name": testContainerName,
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
 	}
 
 	// Prep Docker container for Docker util tests
@@ -90,7 +91,10 @@ func testMain(m *testing.M) int {
 	}()
 
 	log.Printf("ContainerWait at %v", time.Now())
-	out, err := dockerutil.ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
+	out, err := dockerutil.ContainerWait(60, map[string]string{
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
+	})
 	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
 
 	if err != nil {
@@ -117,7 +121,11 @@ func startTestContainer() (string, error) {
 		"HOTDOG=superior-to-corndog",
 		"POTATO=future-fry",
 		"DDEV_WEBSERVER_TYPE=nginx-fpm",
-	}, nil, "33", false, true, map[string]string{"com.docker.compose.service": "web", "com.ddev.site-name": testContainerName}, portBinding, nil)
+	}, nil, "33", false, true, map[string]string{
+		"com.docker.compose.service": "web",
+		"com.ddev.site-name":         testContainerName,
+		"com.docker.compose.oneoff":  "False",
+	}, portBinding, nil)
 	if err != nil {
 		return "", err
 	}
@@ -131,7 +139,8 @@ func TestGetContainerHealth(t *testing.T) {
 	ctx, client := dockerutil.GetDockerClient()
 
 	labels := map[string]string{
-		"com.ddev.site-name": testContainerName,
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
 	}
 
 	t.Cleanup(func() {
@@ -179,7 +188,8 @@ func TestContainerWait(t *testing.T) {
 	assert := asrt.New(t)
 
 	labels := map[string]string{
-		"com.ddev.site-name": testContainerName,
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
 	}
 
 	// We should have `testContainerName' already running, it was started by
@@ -340,7 +350,10 @@ func TestComposeWithStreams(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = dockerutil.ContainerWait(60, map[string]string{"com.ddev.site-name": t.Name()})
+	_, err = dockerutil.ContainerWait(60, map[string]string{
+		"com.ddev.site-name":        t.Name(),
+		"com.docker.compose.oneoff": "False",
+	})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
@@ -435,7 +448,10 @@ func TestFindContainerByName(t *testing.T) {
 func TestGetContainerEnv(t *testing.T) {
 	assert := asrt.New(t)
 
-	container, err := dockerutil.FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
+	container, err := dockerutil.FindContainerByLabels(map[string]string{
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
+	})
 	assert.NoError(err)
 	require.NotEmpty(t, container)
 
@@ -498,7 +514,10 @@ func TestRunSimpleContainer(t *testing.T) {
 func TestGetBoundHostPorts(t *testing.T) {
 	assert := asrt.New(t)
 
-	testContainer, err := dockerutil.FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
+	testContainer, err := dockerutil.FindContainerByLabels(map[string]string{
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
+	})
 	require.NoError(t, err)
 	require.NotNil(t, testContainer)
 	ports, err := dockerutil.GetBoundHostPorts(testContainer.ID)

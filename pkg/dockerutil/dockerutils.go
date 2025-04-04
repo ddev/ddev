@@ -789,7 +789,10 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 // GetAppContainers retrieves docker containers for a given sitename.
 func GetAppContainers(sitename string) ([]dockerContainer.Summary, error) {
-	label := map[string]string{"com.ddev.site-name": sitename}
+	label := map[string]string{
+		"com.ddev.site-name":        sitename,
+		"com.docker.compose.oneoff": "False",
+	}
 	containers, err := FindContainersByLabels(label)
 	if err != nil {
 		return containers, err
