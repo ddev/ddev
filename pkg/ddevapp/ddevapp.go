@@ -1241,8 +1241,13 @@ func (app *DdevApp) Start() error {
 	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
 	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
 	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+
+	AssignRouterPortsToGenericWebserverPorts(app)
+
 	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
 	GetEphemeralPortsIfNeeded(portsToCheck, true)
+
+	SyncGenericWebserverPortsWithRouterPorts(app)
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
