@@ -4,12 +4,9 @@
 # done manually.
 # It requires that Docker Desktop is installed and running, and that it has integration enabled with the Ubuntu
 # distro, which is the default behavior.
-# Run this in an administrative PowerShell window.
 # You can download, inspect, and run this, or run it directly with
 # Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
 # iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1'))
-
-#Requires -RunAsAdministrator
 
 # Make sure wsl is installed and working
 if (-not(wsl -l -v)) {
@@ -26,13 +23,6 @@ if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
 if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
-# Install Chocolatey if needed
-if (-not (Get-Command "choco" -errorAction SilentlyContinue))
-{
-    "Chocolatey does not appear to be installed yet, installing"
-    $ErrorActionPreference = "Stop"
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-}
 if (-not(Get-Command docker 2>&1 ) -Or -Not(docker ps ) ) {
     throw "\n\ndocker does not seem to be installed yet, or Docker Desktop is not running. Please install it or start it. For example, choco install -y docker-desktop"
 }
@@ -41,8 +31,57 @@ if (-not(wsl -e docker ps) ) {
     throw "Docker Desktop integration with the default distro does not seem to be enabled yet."
 }
 $ErrorActionPreference = "Stop"
-# Install needed choco items
-choco upgrade -y ddev gsudo mkcert
+
+# Determine the architecture we're running on to fetch the correct installer.
+$realArchitecture = $env:PROCESSOR_ARCHITEW6432
+if (-not $realArchitecture) {
+    $realArchitecture = $env:PROCESSOR_ARCHITECTURE
+}
+switch ($realArchitecture) {
+    "AMD64" {
+        $architectureForInstaller = "amd64"
+    }
+    "ARM64" {
+        $architectureForInstaller = "arm64"
+    }
+    "x86" {
+        Write-Error "Error: x86 Windows detected, which is not supported."
+        exit 1
+    }
+    Default {
+        $architectureForInstaller = "amd64"
+    }
+}
+Write-Host "Detected OS architecture: $realArchitecture; using DDEV installer: $architectureForInstaller"
+
+# Install DDEV on Windows to manipulate the host OS's hosts file.
+$GitHubOwner = "ddev"
+$RepoName    = "ddev"
+# Get the latest release JSON from the GitHub API endpoint.
+$apiUrl = "https://api.github.com/repos/$GitHubOwner/$RepoName/releases/latest"
+try {
+    $response = Invoke-WebRequest -Headers @{ Accept = 'application/json' } -Uri $apiUrl
+} catch {
+    Write-Error "Could not fetch latest release info from $apiUrl. Details: $_"
+    exit 1
+}
+$json = $response.Content | ConvertFrom-Json
+$tagName = $json.tag_name
+Write-Host "The latest $GitHubOwner/$RepoName version is $tagName."
+# Because the published artifact includes the version in its name, we have to insert $tagName into the filename.
+$downloadUrl = "https://github.com/$GitHubOwner/$RepoName/releases/download/$tagName/ddev_windows_${architectureForInstaller}_installer.${tagName}.exe"
+Write-Host "Downloading from $downloadUrl..."
+$TempDir = $env:TEMP
+$DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
+try {
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $DdevInstallerPath
+} catch {
+    Write-Error "Could not download the installer from $downloadUrl. Details: $_"
+    exit 1
+}
+Start-Process $DdevInstallerPath -ArgumentList "/S", "/C" -Wait
+Remove-Item $DdevInstallerPath
+Write-Host "DDEV installation complete."
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
