@@ -195,6 +195,11 @@ func (app *DdevApp) WriteConfig() error {
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
 
+	// If the app name has been changed, then remove it from the main config.yaml file.
+	if hasConfigNameOverride, _ := app.HasConfigNameOverride(); hasConfigNameOverride {
+		appcopy.Name = ""
+	}
+
 	// Only set the images on write if non-default values have been specified.
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
@@ -262,7 +267,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// The .ddev directory may still need to be populated, especially in tests
-	err = PopulateExamplesCommandsHomeadditions(appcopy.Name)
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	if err != nil {
 		return err
 	}
