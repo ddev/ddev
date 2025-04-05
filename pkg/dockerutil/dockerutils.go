@@ -30,6 +30,8 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
@@ -203,25 +205,16 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 
 // GetDockerContext returns the currently set Docker context, host, and error
 func GetDockerContext() (string, string, error) {
-	dockerContext := ""
-	dockerHost := ""
-
-	// This is a cheap way of using Docker contexts by running `docker context inspect`
-	// I would wish for something far better, but trying to transplant the code from
-	// docker/cli did not succeed. rfay 2021-12-16
-	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
-	contextInfo, err := ddevexec.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
+	dockerCli, err := command.NewDockerCli()
 	if err != nil {
-		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure Docker client is in path and up-to-date: %v", err)
+		return "", "", fmt.Errorf("unable to get Docker CLI client: %v", err)
 	}
-	contextInfo = strings.Trim(contextInfo, " \r\n")
-	util.Debug("GetDockerContext: contextInfo='%s'", contextInfo)
-	parts := strings.SplitN(contextInfo, " ", 2)
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("unable to run split Docker context info %s: %v", contextInfo, err)
+	opts := flags.NewClientOptions()
+	if err := dockerCli.Initialize(opts); err != nil {
+		return "", "", fmt.Errorf("unable to initialize Docker CLI client: %v", err)
 	}
-	dockerContext = parts[0]
-	dockerHost = parts[1]
+	dockerContext := dockerCli.CurrentContext()
+	dockerHost := dockerCli.DockerEndpoint().Host
 	util.Debug("Using Docker context %s (%v)", dockerContext, dockerHost)
 	return dockerContext, dockerHost, nil
 }
