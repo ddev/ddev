@@ -10,35 +10,98 @@ In these situations there are often at least three configurations that need to b
 
 ## Corporate Packet-inspection VPNs (including Zscaler and Global Protect)
 
-Although DDEV (and Docker) work fine with most VPN systems, there are a number of VPNs (and similar products like Zscaler or Global Protect) which perform SSL/TLS interception and filtering. In other words, instead of connecting directly to HTTPS servers on the internet, they send traffic to the corporate networking infrastructure which can intercept HTTPS traffic and do SSL/TLS inspection. In a normal network, a client application can use HTTPS to connect directly to a server on the internet and can determine whether the server is what it says it is by examining its certificate and where the certificate was issued (the "CA" or "Certificate Authority"). Zscaler and similar products actually present their own certificates (which are trusted only because of corporate configuration) and are able to inspect traffic that would normally be encrypted, and then pass the traffic on to the end system if it is approved. This gives corporate networks extensive control over HTTPS traffic and its contents.
+Packet-inspecting VPNs like **Zscaler**, **GlobalProtect**, and similar products intercept HTTPS traffic using a corporate-controlled TLS Certificate Authority (CA). These systems act as a "man-in-the-middle" proxy, decrypting and re-encrypting HTTPS traffic. As a result, systems and applications that are not explicitly configured to trust the corporate CA will experience SSL/TLS verification errors.
 
-It gives Docker and DDEV quite a lot of trouble, though, because Docker containers do not inherit host machine trust settings and configuration, so they don't recognize or trust corporate CA, leading to SSL validation errors.
+This creates two distinct problems in Docker-based workflows:
 
-To fix this so that applications inside the web container (or other containers) can access the internet, the web image must be adjusted to trust the alternate CA that the VPN provides, so the intermediate system is not rejected as invalid.
+| Layer                  | Problem                                                                 | Solution |
+|------------------------|-------------------------------------------------------------------------|----------|
+| Docker Engine          | `docker pull` fails with certificate errors when connecting to Docker registries like `hub.docker.com` | Configure Docker Engine to trust the corporate CA |
+| Inside Containers      | Tools like `curl` or `composer` inside containers fail to connect to the internet | Install the corporate CA in the container image |
 
-Several specific ways to sort this out are listed in the related [Stack Overflow](https://stackoverflow.com/questions/71595327/corporate-network-vpn-ddev-composer-create-results-in-ssl-certificate-proble) question, but the basic answer is:
+### 🧩 Docker Engine SSL Trust (for `docker pull`)
 
-1. Obtain the CA `.crt` files from your IT department, vendor, or other source.
-2. Place the `.crt` files in your `.ddev/web-build` directory.
-3. Use a `.ddev/web-build/Dockerfile.vpn` to install the `.crt` files, as shown in this example `.ddev/web-build/Dockerfile.vpn`:
+The Docker Provider itself must trust the corporate CA to pull images from remote registries. The method of adding this trust varies by platform and Docker engine:
+
+#### macOS
+
+- **Docker Desktop** and **Orbstack**: Automatically use the macOS system keychain, so you likely don’t need to configure anything.
+- **Colima**, **Lima**, **Rancher Desktop**: You must configure the CA manually inside the Linux VM used by the Docker engine.
+
+  For those providers:
+
+  1. Copy the CA certificate to the VM’s `/etc/docker/certs.d/hub.docker.com/ca.crt` path.
+  2. Restart the Docker service inside the VM.
+
+#### Windows
+
+- **Docker Desktop**: Uses the Windows system certificate store. If the CA is trusted by the system, Docker will trust it too.
+- **WSL2 with Docker Desktop**: Behaves like Docker Desktop (Windows trust store).
+- **WSL2 with `docker-ce`**: Requires manual installation of the CA cert just like native Linux.
+
+#### Linux
+
+For native Linux or WSL2 with `docker-ce`:
+
+```bash
+sudo mkdir -p /etc/docker/certs.d/hub.docker.com/
+sudo cp mycorp-ca.crt /etc/docker/certs.d/hub.docker.com/ca.crt
+sudo systemctl restart docker
+```
+
+To test:
+
+```bash
+docker pull alpine
+```
+
+If it works without SSL errors, the CA is trusted properly.
+
+---
+
+### 📦 Container-Level SSL Trust (for `curl`, `composer`, etc.)
+
+Applications running inside containers do **not** inherit trust from the host system. If the container makes outbound HTTPS connections, you must install the corporate CA inside the container image.
+
+The standard approach:
+
+1. Export the corporate CA certificate (`.crt`) as described in the section below.
+2. Place the `.crt` file in your `.ddev/web-build` directory.
+3. Add a `Dockerfile.vpn` like this:
 
     ```Dockerfile
-    COPY <yourcert>*.crt /usr/local/share/ca-certificates/
-    RUN update-ca-certificates --fresh
+    COPY mycorp-ca.crt /usr/local/share/ca-certificates/
+    RUN update-ca-certificates
     ```
 
-4. To test for success,
+4. Run:
 
-  ```bash
-  ddev restart
-  ddev exec curl -I https://www.google.com # Or any URL you need
-  ```
+    ```bash
+    ddev restart
+    ddev exec curl -I https://www.google.com
+    ```
 
-  and you expect a "200 OK" response.
+    You should see a `200 OK` response if the CA is trusted correctly.
 
-### Additional Resources
+This method works across all OS platforms and all Docker providers, because you're explicitly modifying the container's certificate store.
 
-* For more approaches to resolving this, see [this Stack Overflow discussion](https://stackoverflow.com/questions/71595327/corporate-network-vpn-ddev-composer-create-results-in-ssl-certificate-proble).
+---
+
+### 🔍 Where to Get the Corporate CA Certificate
+
+#### Option 1: Ask IT
+
+Request the "TLS root certificate" or "SSL inspection CA" used by your company’s VPN or proxy.
+
+#### Option 2: Extract from Your Own System
+
+- **macOS**: Use Keychain Access to export the cert from the “System” keychain.
+- **Windows**: Use `certmgr.msc` and export the cert from “Trusted Root Certification Authorities”.
+- **Linux**: Locate and copy certs from `/etc/ssl/certs/` or use Firefox + `certutil`.
+
+You can also visit a site like `https://example.com` in Chrome or Firefox, inspect the certificate chain, and export the root CA manually.
+
+For detailed instructions, see the [Stack Overflow reference](https://stackoverflow.com/a/71642712/215713).
 
 ## Corporate or Internet Provider Proxy
 
@@ -48,17 +111,17 @@ In most environments, the proxy will be configured at a system level. For exampl
 
 In each of these situations the configuration required is essentially this:
 
-* HTTP Proxy or "Web Proxy (HTTP)"
-* HTTPS Proxy or "Secure web proxy (HTTPS)"
-* "Ignore Hosts" or "Bypass proxy settings for these hosts"
+- HTTP Proxy or "Web Proxy (HTTP)"
+- HTTPS Proxy or "Secure web proxy (HTTPS)"
+- "Ignore Hosts" or "Bypass proxy settings for these hosts"
 
 Given a proxy with the hostname `yourproxy.intranet` with the IP address `192.168.1.254` and a port of `8888`, you would usually configure the HTTP and HTTPS Proxies as `yourproxy.intranet` with port `8888`. But it's usually important to tell your system *not* to proxy some hostnames and IP addresses, including `localhost`, `*.ddev.site`, `127.0.0.1`, and `::1`. These exclusions ensure that local development domains (such as `*.ddev.site`) and local network addresses (`127.0.0.1`, `::1`) are not mistakenly routed through the proxy, which could disrupt DDEV’s functionality.
 
 System configuration in many systems results in environment variables like these examples:
 
-* `HTTP_PROXY=http://yourproxy.intranet:8888`
-* `HTTPS_PROXY=http://yourproxy.intranet:8888`
-* `NO_PROXY=localhost,127.0.0.1,::1,*.ddev.site`
+- `HTTP_PROXY=http://yourproxy.intranet:8888`
+- `HTTPS_PROXY=http://yourproxy.intranet:8888`
+- `NO_PROXY=localhost,127.0.0.1,::1,*.ddev.site`
 
 If they are not set automatically, they can be set manually in your `.bash_profile` or similar configuration file.
 
