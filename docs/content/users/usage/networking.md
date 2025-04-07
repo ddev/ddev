@@ -2,7 +2,13 @@
 
 There are a few networking situations which occasionally cause trouble for some users. We can't explain every permutation of these, and since most happen in a corporate environment, you may need to confer with your IT department to sort them out.
 
-## Some Corporate VPNs (including Zscaler)
+In these situations there are often at least three configurations that need to be changed:
+
+1. Docker Engine configuration (allowing pull of Docker images from `hub.docker.com`)
+2. Docker client configuration (Allowing the `docker` client to interact with VPN or proxy)
+3. DDEV web image configuration (Allowing processes inside the `web` container to access internet locations)
+
+## Corporate Packet-inspection VPNs (including Zscaler and Global Protect)
 
 Although DDEV (and Docker) work fine with most VPN systems, there are a number of VPNs (and similar products like Zscaler or Global Protect) which perform SSL/TLS interception and filtering. In other words, instead of connecting directly to HTTPS servers on the internet, they send traffic to the corporate networking infrastructure which can intercept HTTPS traffic and do SSL/TLS inspection. In a normal network, a client application can use HTTPS to connect directly to a server on the internet and can determine whether the server is what it says it is by examining its certificate and where the certificate was issued (the "CA" or "Certificate Authority"). Zscaler and similar products actually present their own certificates (which are trusted only because of corporate configuration) and are able to inspect traffic that would normally be encrypted, and then pass the traffic on to the end system if it is approved. This gives corporate networks extensive control over HTTPS traffic and its contents.
 
