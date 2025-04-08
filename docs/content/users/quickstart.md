@@ -633,6 +633,7 @@ export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
 ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
 ddev add-on get ddev/ddev-elasticsearch
+cp .ddev/elasticsearch/docker-compose.elasticsearch8.yaml .ddev/
 ddev start
 ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
 rm -f app/etc/env.php
