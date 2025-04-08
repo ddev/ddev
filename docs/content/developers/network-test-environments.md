@@ -18,7 +18,7 @@ A straightforward way to simulate a packet-inspecting VPN is by using **Squid** 
 1. **Install Squid**
 
     ```bash
-    sudo apt install squid ssl-cert
+    sudo apt install squid-openssl ssl-cert
     ```
 
 2. **Generate a Root CA for Signing**
@@ -60,6 +60,12 @@ Edit `/etc/squid/squid.conf`, replacing or appending the following:
 
 6. **Export HTTPS Proxy for Testing**
 
+> **Note:** The `sslcrtd_program` in the Squid config depends on `squid-openssl`. If you get an error that the helper binary is missing, make sure you've installed `squid-openssl`, not just `squid`. The path to `security_file_certgen` may be `/usr/lib/squid/` or `/usr/libexec/squid/`, depending on your distro. You can verify its location using:
+>
+> ```bash
+> dpkg -L squid-openssl | grep security_file_certgen
+> ```
+
     ```bash
     export HTTPS_PROXY=http://localhost:3128
     ```
@@ -94,28 +100,51 @@ sudo systemctl restart docker
 openssl s_client -connect www.google.com:443 -proxy localhost:3128 -CAfile /etc/squid/mitm.crt
 ```
 
-#### Test Inside Container
+#### Test from Another Host (Linux or macOS)
 
-If you're using DDEV or a custom container image:
+You can verify Squid’s behavior from a different host using `curl`. These examples test HTTPS interception and validate that your CA is trusted.
 
-```bash
-ddev exec curl -I https://www.google.com
-```
-
-If it fails, copy `mitm.crt` into `.ddev/web-build/`, then in your Dockerfile:
-
-```Dockerfile
-COPY mitm.crt /usr/local/share/ca-certificates/
-RUN update-ca-certificates
-```
-
-Restart DDEV:
+##### Option 1: Explicit Proxy with `curl`
 
 ```bash
-ddev restart
+curl -I https://www.google.com --proxy http://<squid-server-ip>:3128
 ```
 
-Re-run the curl command and expect a `200 OK` response.
+- Replace `<squid-server-ip>` with the IP address of your Squid proxy host.
+- You should receive a `200 OK` response if the CA is trusted. Otherwise, you'll get a certificate error.
+
+##### Option 2: Using `HTTPS_PROXY` Environment Variable
+
+```bash
+export HTTPS_PROXY=http://<squid-server-ip>:3128
+curl -I https://www.google.com
+```
+
+This has the same effect as `--proxy` but applies to all tools that honor `HTTPS_PROXY`.
+
+---
+
+### Trusting the CA Certificate
+
+If you receive certificate errors, install the Squid CA (`mitm.crt`) on the client system:
+
+#### On Linux
+
+```bash
+sudo cp mitm.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates
+```
+
+#### On macOS
+
+1. Copy `mitm.crt` to your local system.
+2. Open **Keychain Access**.
+3. Select **System** in the sidebar.
+4. Drag `mitm.crt` into the window.
+5. Double-click the cert → expand **Trust** → set **"When using this certificate"** to **Always Trust**.
+6. Close and enter your password when prompted.
+
+After installing the cert, re-run the `curl` test — you should no longer see SSL errors.
 
 ---
 
