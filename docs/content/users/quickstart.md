@@ -639,7 +639,7 @@ rm -f app/etc/env.php
 
 ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
     --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-    --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
+    --elasticsearch-host=elasticsearch --search-engine=elasticsearch8 --elasticsearch-port=9200 \
     --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
     --admin-user=admin --admin-password=Password123 --language=en_US
 
@@ -786,7 +786,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
     ```
 
     !!!note "Make sure that `docroot` is set correctly"
-        DDEV config `--docroot` has to match Composer config `extra.magento-root-dir`. 
+        DDEV config `--docroot` has to match Composer config `extra.magento-root-dir`.
 
 === "Git Clone (for contributors)"
 

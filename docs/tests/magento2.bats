@@ -16,7 +16,7 @@ teardown() {
   if [ "${MAGENTO2_PUBLIC_ACCESS_KEY}" = "" ]; then
     skip "MAGENTO_PUBLIC_ACCESS_KEY not provided (forked PR)"
   fi
-  
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -58,7 +58,7 @@ EOF
   # magento setup:install
   run ddev magento setup:install --base-url="https://${PROJNAME}.ddev.site/" \
       --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-      --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
+      --elasticsearch-host=elasticsearch --search-engine=elasticsearch8 --elasticsearch-port=9200 \
       --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
       --admin-user=admin --admin-password=Password123 --language=en_US
   assert_success
