@@ -70,9 +70,18 @@ $tagName = $json.tag_name
 Write-Host "The latest $GitHubOwner/$RepoName version is $tagName."
 # Because the published artifact includes the version in its name, we have to insert $tagName into the filename.
 $downloadUrl = "https://github.com/$GitHubOwner/$RepoName/releases/download/$tagName/ddev_windows_${architectureForInstaller}_installer.${tagName}.exe"
-Write-Host "Downloading from $downloadUrl..."
 $TempDir = $env:TEMP
 $DdevInstallerPath = Join-Path $TempDir "ddev-installer.exe"
+if (Test-Path $DdevInstallerPath) {
+    Write-Host "Deleting old installer at $DdevInstallerPath..."
+    try {
+        Remove-Item $DdevInstallerPath -Force
+    } catch {
+        Write-Error "Could not delete the old installer $DdevInstallerPath.  Please delete it manually, and then try again."
+        exit 1
+    }
+}
+Write-Host "Downloading from $downloadUrl..."
 try {
     Invoke-WebRequest -Uri $downloadUrl -OutFile $DdevInstallerPath
 } catch {
