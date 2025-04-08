@@ -25,19 +25,18 @@ The Docker Provider itself must trust the corporate CA to pull images from remot
 
 #### macOS
 
-- **Docker Desktop** and **Orbstack**: Automatically use the macOS system keychain, so you likely don’t need to configure anything.
-- **Colima**, **Lima**, **Rancher Desktop**: You must configure the CA manually inside the Linux VM used by the Docker engine.
+- **Docker Desktop**, **Orbstack**, **Rancher Desktop**: Automatically use the macOS system keychain, so you likely don’t need to configure SSL trust.
+- **Colima**, **Lima**: You must configure the CA manually inside the Linux VM used by the Docker engine.
 
-  For those providers:
+  **Colima**: Create the directory `~/.docker/certs.d` if it doesn't exist, and put the CA certificate in that directory.
 
-  1. Copy the CA certificate to the VM’s `/etc/docker/certs.d/hub.docker.com/ca.crt` path.
-  2. Restart the Docker service inside the VM.
+  **Lima**: Copy the CA certificate into `/etc/docker/certs.d/hub.docker.com/` using `limactl shell default`.
 
 #### Windows
 
 - **Docker Desktop**: Uses the Windows system certificate store. If the CA is trusted by the system, Docker will trust it too.
 - **WSL2 with Docker Desktop**: Behaves like Docker Desktop (Windows trust store).
-- **WSL2 with `docker-ce`**: Requires manual installation of the CA cert just like native Linux.
+- **WSL2 with `docker-ce`**: Requires manual installation of the CA cert as with native Linux.
 
 #### Linux
 
@@ -168,3 +167,8 @@ There are a few DNS servers, mostly local Fritzbox routers, which do not allow a
 Instead, if DDEV is asking you to do this and add hostnames, it's best to solve the underlying problem by adding configuration to the DNS server (often Fritzbox router) or by using a less-restrictive DNS server like the Cloudflare `1.1.1.1` public DNS server.
 
 These options are explained in the [Troubleshooting - DNS Rebinding](troubleshooting.md#dns-rebinding-prohibited-mostly-on-fritzbox-routers) section of the documentation.
+
+## Resources
+
+- [Configuring Rancher Desktop Proxy](https://github.com/rancher-sandbox/rancher-desktop/issues/2259#issuecomment-1136833849)
+- [Colima proxy setup](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
