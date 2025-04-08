@@ -55,10 +55,6 @@ EOF
   run cp .ddev/elasticsearch/docker-compose.elasticsearch8.yaml .ddev/
   assert_success
 
-  # make sure host and container are in sync after copy
-  run ddev mutagen sync
-  assert_success
-
   # rm -f app/etc/env.php
   run rm -f app/etc/env.php
   assert_success
