@@ -96,8 +96,8 @@ $env:PATH += ";C:\Program Files\DDEV"
 
 Write-Host "DDEV installation complete."
 
-mkcert.exe -install
-$env:CAROOT="$(mkcert -CAROOT)"
+& "C:\Program Files\DDEV\mkcert.exe" -install
+$env:CAROOT = & "C:\Program Files\DDEV\mkcert.exe" -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 wsl -u root -e bash -c "apt-get update && apt-get install -y curl"
