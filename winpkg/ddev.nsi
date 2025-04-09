@@ -136,7 +136,9 @@ InstType "Minimal"
 /**
  * Local macros
  */
-
+!macro _Chocolatey _a _b _t _f
+  !insertmacro _== $ChocolateyMode `1` `${_t}` `${_f}`
+!macroend
 !define Chocolatey `"" Chocolatey ""`
 
 /**
@@ -524,9 +526,8 @@ SectionGroup /e "mkcert"
    * mkcert setup
    */
   Section "Setup mkcert" SecMkcertSetup
-    ; Install in non silent and choco mode only
-    ${IfNot} ${Silent}
-    ${AndIfNot} ${Chocolatey}
+    ; Install in non choco mode only
+    ${IfNot} ${Chocolatey}
       MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
 
       ; Run setup
