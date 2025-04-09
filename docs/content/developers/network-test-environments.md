@@ -1,3 +1,7 @@
+---
+search:
+  boost: .1
+---
 # Network Test Environments
 
 ## Packet-Inspection VPN Simulation
@@ -15,6 +19,8 @@ A straightforward way to simulate a packet-inspecting VPN is by using **Squid** 
 
 #### Step-by-Step Instructions
 
+These instructions are for Debian/Ubuntu but can be adapted for container-based setup or for another environment.
+
 1. **Install Squid**
 
     ```bash
@@ -22,6 +28,7 @@ A straightforward way to simulate a packet-inspecting VPN is by using **Squid** 
     ```
 
 2. **Generate a Root CA for Signing**
+  This `mitm.crt` becomes the certificate which is used everywhere that we need the custom CA.
 
     ```bash
     openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
@@ -60,14 +67,8 @@ Edit `/etc/squid/squid.conf`, replacing or appending the following:
 
 6. **Export HTTPS Proxy for Testing**
 
-> **Note:** The `sslcrtd_program` in the Squid config depends on `squid-openssl`. If you get an error that the helper binary is missing, make sure you've installed `squid-openssl`, not just `squid`. The path to `security_file_certgen` may be `/usr/lib/squid/` or `/usr/libexec/squid/`, depending on your distro. You can verify its location using:
->
-> ```bash
-> dpkg -L squid-openssl | grep security_file_certgen
-> ```
-
     ```bash
-    export HTTPS_PROXY=http://localhost:3128
+    export HTTPS_PROXY=http://squid.host-only:3128
     ```
 
 ---
@@ -79,25 +80,25 @@ Once the proxy is running and your environment is configured, test both Docker r
 #### Test Docker Pull
 
 ```bash
-export HTTPS_PROXY=http://localhost:3128
+export HTTPS_PROXY=http://squid.host-only:3128
 docker pull alpine
 ```
 
-- If Docker trusts the Squid CA: Pull will succeed.
-- If not: You’ll see x509 or certificate verification errors.
+- If Docker trusts the Squid CA, the pull will succeed.
+- If not, you’ll see x509 or certificate verification errors.
 
 To trust the CA for Docker:
 
 ```bash
-sudo mkdir -p /etc/docker/certs.d/hub.docker.com/
-sudo cp /etc/squid/mitm.crt /etc/docker/certs.d/hub.docker.com/ca.crt
+sudo mkdir -p /etc/docker/certs.d/
+sudo cp /etc/squid/mitm.crt /etc/docker/certs.d/
 sudo systemctl restart docker
 ```
 
 #### Test with OpenSSL (Raw Certificate Check)
 
 ```bash
-openssl s_client -connect www.google.com:443 -proxy localhost:3128 -CAfile /etc/squid/mitm.crt
+openssl s_client -connect www.google.com:443 -proxy squit.host-only:3128 -CAfile /etc/squid/mitm.crt
 ```
 
 #### Test from Another Host (Linux or macOS)
@@ -107,16 +108,16 @@ You can verify Squid’s behavior from a different host using `curl`. These exam
 ##### Option 1: Explicit Proxy with `curl`
 
 ```bash
-curl -I https://www.google.com --proxy http://<squid-server-ip>:3128
+curl -I https://www.google.com --proxy http://squid.host-only:3128
 ```
 
-- Replace `<squid-server-ip>` with the IP address of your Squid proxy host.
+- Replace `squid.host-only` with the IP address or hostname of your Squid proxy host.
 - You should receive a `200 OK` response if the CA is trusted. Otherwise, you'll get a certificate error.
 
 ##### Option 2: Using `HTTPS_PROXY` Environment Variable
 
 ```bash
-export HTTPS_PROXY=http://<squid-server-ip>:3128
+export HTTPS_PROXY=http://squid.host-only:3128
 curl -I https://www.google.com
 ```
 
