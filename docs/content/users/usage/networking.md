@@ -33,7 +33,7 @@ Often, though, the easiest way to solve this particular problem is for your IT d
 
 - **Docker Desktop**, **Orbstack**, and **Rancher Desktop** automatically use the macOS system keychain, so you likely don’t need to configure SSL trust.
 - **Colima**: Colima copies `~/.docker/certs.d` into the VM at startup. To trust a CA, place it in `~/.docker/certs.d/` **before** starting Colima.
-  **Lima**: Copy the CA certificate into `/etc/docker/certs.d/` using `limactl shell default`.
+- **Lima**: Copy the CA certificate into `/etc/docker/certs.d/` using `limactl shell default`.
 
 #### Windows
 
@@ -58,15 +58,19 @@ sudo systemctl restart docker
 sudo systemctl daemon-reload
 ```
 
+> ✅ **Test Docker Engine Trust**
+
 To test:
 
 ```bash
 docker pull alpine
-# ✅ Should succeed silently if CA is trusted
+# ✅ Should succeed if CA is trusted
 # ❌ If not trusted: x509: certificate signed by unknown authority
 ```
 
 If it works without SSL errors, the CA is trusted properly.
+
+See [Docker Engine certificate configuration](https://docs.docker.com/engine/security/certificates/) for more background.
 
 ---
 
@@ -112,11 +116,9 @@ Request the "TLS root certificate" or "SSL inspection CA" used by your company�
 - **Windows**: Use `certmgr.msc` and export the cert from “Trusted Root Certification Authorities”.
 - **Linux**: Locate and copy certs from `/etc/ssl/certs/` or use Firefox + `certutil`.
 
-You can also visit a site like `https://example.com` in Chrome or Firefox, inspect the certificate chain, and export the root CA manually.
+You can also visit a site like `https://www.google.com` in Chrome or Firefox, inspect the certificate chain, and export the root CA manually ([example method](https://stackoverflow.com/a/71642712/215713)).
 
-For detailed instructions, see the [Stack Overflow reference](https://stackoverflow.com/a/71642712/215713).
-
-### Using Exported PEM or CER Files
+### Converting Exported PEM or CER Files to CRT
 
 When you export a CA certificate from your system (e.g., Keychain Access on macOS or certmgr on Windows), the file may be saved with a `.pem` or `.cer` extension. These are usually the same format as `.crt`: a base64-encoded X.509 certificate.
 
