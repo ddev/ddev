@@ -116,6 +116,26 @@ You can also visit a site like `https://example.com` in Chrome or Firefox, inspe
 
 For detailed instructions, see the [Stack Overflow reference](https://stackoverflow.com/a/71642712/215713).
 
+### Using Exported PEM or CER Files
+
+When you export a CA certificate from your system (e.g., Keychain Access on macOS or certmgr on Windows), the file may be saved with a `.pem` or `.cer` extension. These are usually the same format as `.crt`: a base64-encoded X.509 certificate.
+
+For Docker or Linux tools that expect a `.crt` file, you can simply rename the exported file:
+
+```bash
+mv your-cert.pem your-cert.crt
+# or
+mv your-cert.cer your-cert.crt
+```
+
+To confirm it is the correct format, the file should begin with:
+
+```
+-----BEGIN CERTIFICATE-----
+```
+
+If your file contains this header, renaming it to `.crt` is sufficient for use with Docker and container trust configurations.
+
 ### Corporate Packet-inspection VPN Resources
 
 - [Adding Self-signed Registry Certs to Docker & Docker for Mac](https://blog.container-solutions.com/adding-self-signed-registry-certs-docker-mac)
