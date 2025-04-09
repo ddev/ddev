@@ -39,7 +39,7 @@ Often, though, the easiest way to solve this particular problem is for your IT d
 
 Install the trusted certificate in the system:
 
-1. Search `Settings` for "Manage Computer Certificates", which runs `certlm`.
+1. Search "Settings" for "Manage Computer Certificates", which runs `certlm`.
 2. Navigate to "Certificates - Local Computer" -> "Trusted Root Certification" -> "Certificates".
 3. Right-click -> "All tasks" -> "Import" to import the `crt` file.
 
@@ -112,6 +112,12 @@ You can also visit a site like `https://example.com` in Chrome or Firefox, inspe
 
 For detailed instructions, see the [Stack Overflow reference](https://stackoverflow.com/a/71642712/215713).
 
+### Corporate Packet-inspection VPN Resources
+
+- [Adding Self-signed Registry Certs to Docker & Docker for Mac](https://blog.container-solutions.com/adding-self-signed-registry-certs-docker-mac)
+- [Docker Docs: How Do I Add TLS Certificates](https://docs.docker.com/desktop/troubleshoot-and-support/faqs/macfaqs/#how-do-i-add-tls-certificates)
+- [Darren Oh: Using Colima with an SSL Inspector](https://darren.oh.name/node/81)
+
 ## Corporate or Internet Provider Proxy
 
 Some network environments, including some corporate networks, require a "proxy" system be used to access the outside network. In these environments, most systems do not have direct access to the public internet, but instead must use a configured proxy host to access the public internet. A proxy is a system that receives HTTP and HTTPS traffic and then sends and receives traffic on behalf of the client that requests it.
@@ -159,6 +165,13 @@ sudo systemctl daemon-reload
 
 When this is working, you should be able to successfully `docker pull alpine`.
 
+### Proxy Resources
+
+- [Configuring Rancher Desktop Proxy](https://github.com/rancher-sandbox/rancher-desktop/issues/2259#issuecomment-1136833849)
+- [Colima proxy setup](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
+- [Linux Docker Daemon Proxy Configuration](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration)
+- [Colima Proxy Configuration](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
+
 ## Restrictive DNS servers, especially Fritzbox routers
 
 The normal use of DDEV involves project URLs (and hostnames) like `*.ddev.site`. So a project with the name `mytypo3` will have the default hostname `mytypo3.ddev.site` and the default URL `https://mytypo3.ddev.site`. The way this works is that `*.ddev.site` is a Domain Name System (DNS) entry which always resolves to `127.0.0.1`, or `localhost`.
@@ -168,8 +181,3 @@ There are a few DNS servers, mostly local Fritzbox routers, which do not allow a
 Instead, if DDEV is asking you to do this and add hostnames, it's best to solve the underlying problem by adding configuration to the DNS server (often Fritzbox router) or by using a less-restrictive DNS server like the Cloudflare `1.1.1.1` public DNS server.
 
 These options are explained in the [Troubleshooting - DNS Rebinding](troubleshooting.md#dns-rebinding-prohibited-mostly-on-fritzbox-routers) section of the documentation.
-
-## Resources
-
-- [Configuring Rancher Desktop Proxy](https://github.com/rancher-sandbox/rancher-desktop/issues/2259#issuecomment-1136833849)
-- [Colima proxy setup](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
