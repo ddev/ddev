@@ -116,7 +116,7 @@ EOF
   run curl -sf https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_success
   assert_output --partial "Copyright &copy; 2025 Magento Commerce Inc. All rights reserved."
-  run curl -sf https://${PROJNAME}..ddev.site:5602/app/home#/
+  run curl -sf https://${PROJNAME}.ddev.site:5602/app/home#/
   assert_success
   assert_output --partial "<title>OpenSearch Dashboards</title>"
 }
