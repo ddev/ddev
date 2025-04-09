@@ -86,7 +86,6 @@ try {
     exit 1
 }
 Start-Process $DdevInstallerPath -ArgumentList "/S", -Wait
-Remove-Item $DdevInstallerPath
 Write-Host "DDEV installation complete."
 
 mkcert -install
