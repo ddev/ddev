@@ -119,7 +119,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ### Docker Desktop for Windows
 
-    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
+    Docker Desktop for Windows can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). DDEV has extensive automated testing using Docker Desktop, and Docker Desktop with DDEV works both on traditional Windows and in WSL2.
 
     See [WSL2 DDEV Installation](ddev-installation.md#wsl2-docker-desktop-install-script) for help installing DDEV with Docker Desktop on WSL2.
 
