@@ -7,12 +7,13 @@ In these situations there are often at least three configurations that need to b
 1. Docker Engine configuration (allowing pull of Docker images from `hub.docker.com`)
 2. Docker client configuration (Allowing the `docker` client to interact with VPN or proxy)
 3. DDEV web image configuration (Allowing processes inside the `web` container to access internet locations)
+4. (Debian/Ubuntu) Configuration for the `apt` subsystem to allow `apt update`, etc.
 
 ## Corporate Packet-inspection VPNs (including Zscaler and Global Protect)
 
 Packet-inspecting VPNs like **Zscaler**, **GlobalProtect**, and similar products intercept HTTPS traffic using a corporate-controlled TLS Certificate Authority (CA). These systems act as a "man-in-the-middle" proxy, decrypting and re-encrypting HTTPS traffic. As a result, systems and applications that are not explicitly configured to trust the corporate CA will experience SSL/TLS verification errors.
 
-This creates two distinct problems in Docker-based workflows:
+This creates two separate problems in Docker-based workflows:
 
 | Layer                  | Problem                                                                 | Solution |
 |------------------------|-------------------------------------------------------------------------|----------|
@@ -21,14 +22,16 @@ This creates two distinct problems in Docker-based workflows:
 
 ### 🧩 Docker Engine SSL Trust (for `docker pull`)
 
-The Docker Provider itself must trust the corporate CA to pull images from remote registries. The method of adding this trust varies by platform and Docker engine:
+The Docker Provider itself must trust the corporate CA to pull images from remote registries. The method of adding this trust varies by platform and Docker engine.
+
+Often, though, the easiest way to solve this particular problem is for your IT department or VPN vendor to whitelist your registry (usually `registry-1.docker.io`) so you don't have to deal with this problem in the first place. If you can't do that, a variety of solutions are provided below.
 
 #### macOS
 
-- **Docker Desktop**, **Orbstack**, **Rancher Desktop**: Automatically use the macOS system keychain, so you likely don’t need to configure SSL trust.
+- **Docker Desktop**, **Orbstack**, and **Rancher Desktop** automatically use the macOS system keychain, so you likely don’t need to configure SSL trust.
 - **Colima**, **Lima**: You must configure the CA manually inside the Linux VM used by the Docker engine.
 
-  **Colima**: Create the directory `~/.docker/certs.d` if it doesn't exist, and put the CA certificate in that directory.
+  **Colima**: Create the directory `~/.docker/certs.d` if it doesn't exist, and put the CA certificate in that directory. Colima then automatically copies that into `/etc/docker/certs.d` inside the Colima VM.
 
   **Lima**: Copy the CA certificate into `/etc/docker/certs.d/hub.docker.com/` using `limactl shell default`.
 
@@ -43,9 +46,10 @@ The Docker Provider itself must trust the corporate CA to pull images from remot
 For native Linux or WSL2 with `docker-ce`:
 
 ```bash
-sudo mkdir -p /etc/docker/certs.d/hub.docker.com/
-sudo cp mycorp-ca.crt /etc/docker/certs.d/hub.docker.com/ca.crt
+sudo mkdir -p /etc/docker/certs.d/
+sudo cp mycorp-ca.crt /etc/docker/certs.d/
 sudo systemctl restart docker
+sudo systemctl daemon-reload
 ```
 
 To test:
@@ -124,39 +128,19 @@ System configuration in many systems results in environment variables like these
 
 If they are not set automatically, they can be set manually in your `.bash_profile` or similar configuration file.
 
+### Configuring Docker Daemon for Proxy
+
+See [Docker documentation](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration) to configure the Docker daemon so that you can do things that involve the Docker registry (actions like `docker pull`).
+
 ### Configuring Proxy Information using Docker's Configuration
 
-The user's `~/.docker/config.json` is one way to tell the Docker CLI (and DDEV) how to use a required proxy. See [Docker docs](https://docs.docker.com/engine/cli/proxy/). It might have a stanza like this:
-
-```json
-{
-    "proxies": {
-        "default": {
-            "httpProxy": "http://username:pass@yourproxy.intranet:8888",
-            "httpsProxy": "http://username:pass@yourproxy.intranet:8888",
-            "noProxy": "localhost,127.0.0.1/8,::1,*.ddev.site"
-        }
-    }
-}
-```
+The user's `~/.docker/config.json` is one way to tell the Docker CLI (and DDEV) how to use a required proxy. See [Docker docs](https://docs.docker.com/engine/cli/proxy/).
 
 Docker Desktop and other providers also have proxy configuration of the same form.
 
 After updating proxy settings, restart your Docker provider to make the configuration take effect.
 
-### Configuring Proxy Information with DDEV's `ddev-proxy-support` Add-on
-
-If your system is already configured and working with a proxy, you don't have to configure Docker explicitly and can instead use DDEV's [ddev-proxy-support](https://github.com/ddev/ddev-proxy-support) add-on to help DDEV and its web container to use the proxy correctly. This technique will only help DDEV and the project that the add-on is installed in, and won't solve problems with other Docker containers.
-
-If your system is already working correctly with your proxy, you can often use
-
-```bash
-ddev add-on get ddev/ddev-proxy-support && ddev restart
-```
-
-to make the DDEV project work correctly with the proxy.
-
-If you are working with multiple DDEV projects, you will need to install [ddev-proxy-support](https://github.com/ddev/ddev-proxy-support) into each project where a proxy is required.
+You should be able to test the configuration with `docker pull busybox` and see a successful pull.
 
 ## Restrictive DNS servers, especially Fritzbox routers
 
