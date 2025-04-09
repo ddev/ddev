@@ -58,6 +58,16 @@ Write-Host "Detected OS architecture: $realArchitecture; using DDEV installer: $
 $GitHubOwner = "ddev"
 $RepoName    = "ddev"
 # Get the latest release JSON from the GitHub API endpoint.
+
+# Delete existing old installers
+Get-ChildItem -Path $env:TEMP -Filter "ddev_windows_*_installer.*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+    try {
+        Remove-Item $_.FullName -Force -ErrorAction Stop
+    } catch {
+        Write-Warning "Could not delete old installer file $($_.FullName): $_"
+    }
+}
+
 $apiUrl = "https://api.github.com/repos/$GitHubOwner/$RepoName/releases/latest"
 try {
     $response = Invoke-WebRequest -Headers @{ Accept = 'application/json' } -Uri $apiUrl
