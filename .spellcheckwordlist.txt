@@ -12,6 +12,7 @@ Bash
 Bluesky
 CakePHP
 Callgraph
+CER
 CGroups
 CIFS
 CiviCRM
@@ -72,6 +73,7 @@ GUIs
 Get
 GitPod
 Gitter
+GlobalProtect
 Gotenberg
 Grav
 Gzipped
@@ -117,6 +119,7 @@ OSs
 OpenMage
 OrbStack
 PECL
+PEM
 PHAR
 PHIVE
 PHP
@@ -238,6 +241,7 @@ busybox
 by
 cd
 ce
+certmgr
 cfg
 checkexports
 checksums
@@ -290,6 +294,7 @@ ddev's
 debian
 debug
 debugging
+decrypting
 default
 delete
 describe
@@ -402,6 +407,7 @@ js
 json
 kcachegrind
 kbox
+keychain
 keyfob
 kool
 lando
