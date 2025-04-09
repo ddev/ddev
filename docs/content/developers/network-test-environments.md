@@ -1,3 +1,7 @@
+---
+search:
+  boost: .1
+---
 # Network Test Environments
 
 ## Packet-Inspection VPN Simulation
