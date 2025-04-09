@@ -1,7 +1,3 @@
----
-search:
-  boost: .1
----
 # Network Test Environments
 
 ## Packet-Inspection VPN Simulation
@@ -87,13 +83,17 @@ docker pull alpine
 - If Docker trusts the Squid CA, the pull will succeed.
 - If not, you’ll see x509 or certificate verification errors.
 
-To trust the CA for Docker:
+### Trusting the CA for Docker Pulls
+
+Docker does not use the system trust store. To allow `docker pull` to work when HTTPS is intercepted by Squid, you must explicitly trust the Squid CA by placing it in Docker’s certificate directory:
 
 ```bash
 sudo mkdir -p /etc/docker/certs.d/
 sudo cp /etc/squid/mitm.crt /etc/docker/certs.d/
 sudo systemctl restart docker
 ```
+
+This setup is sufficient for testing purposes. Docker will then trust any server certificates signed by the Squid CA.
 
 #### Test with OpenSSL (Raw Certificate Check)
 
