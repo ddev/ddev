@@ -1,13 +1,16 @@
 # Special Network Configurations
 
-There are a few networking situations which occasionally cause trouble for some users. We can't explain every permutation of these, and since most happen in a corporate environment, you may need to confer with your IT department to sort them out.
+There are a few networking situations which occasionally cause trouble for some users, especially in corporate environments. These typically fall into two categories:
 
-In these situations there are often at least three configurations that need to be changed:
+1. **TLS interception** (e.g., Zscaler, GlobalProtect) causes SSL verification errors in `docker pull` or inside containers.
+2. **Proxy-only internet access**, which blocks Docker or container tools unless proxy settings are configured.
 
-1. Docker Engine configuration (allowing pull of Docker images from `hub.docker.com`)
-2. Docker client configuration (Allowing the `docker` client to interact with VPN or proxy)
-3. DDEV web image configuration (Allowing processes inside the `web` container to access internet locations)
-4. (Debian/Ubuntu) Configuration for the `apt` subsystem to allow `apt update`, etc.
+In these situations, multiple layers may require configuration:
+
+- **Docker Engine**: Trust external registries
+- **Docker CLI**: Use system or explicit proxy settings
+- **Containers (e.g., DDEV web)**: Trust HTTPS inside the container
+- **Package Managers (e.g., apt)**: If used inside containers, may also need proxy/CA configuration
 
 ## Corporate Packet-inspection VPNs (including Zscaler and Global Protect)
 
@@ -29,11 +32,8 @@ Often, though, the easiest way to solve this particular problem is for your IT d
 #### macOS
 
 - **Docker Desktop**, **Orbstack**, and **Rancher Desktop** automatically use the macOS system keychain, so you likely don’t need to configure SSL trust.
-- **Colima**, **Lima**: You must configure the CA manually inside the Linux VM used by the Docker engine.
-
-  **Colima**: Create the directory `~/.docker/certs.d` if it doesn't exist, and put the CA certificate in that directory. Colima then automatically copies that into `/etc/docker/certs.d` inside the Colima VM.
-
-  **Lima**: Copy the CA certificate into `/etc/docker/certs.d/hub.docker.com/` using `limactl shell default`.
+- **Colima**: Colima copies `~/.docker/certs.d` into the VM at startup. To trust a CA, place it in `~/.docker/certs.d/` **before** starting Colima.
+  **Lima**: Copy the CA certificate into `/etc/docker/certs.d/` using `limactl shell default`.
 
 #### Windows
 
@@ -62,6 +62,8 @@ To test:
 
 ```bash
 docker pull alpine
+# ✅ Should succeed silently if CA is trusted
+# ❌ If not trusted: x509: certificate signed by unknown authority
 ```
 
 If it works without SSL errors, the CA is trusted properly.
@@ -88,6 +90,8 @@ The standard approach:
     ```bash
     ddev restart
     ddev exec curl -I https://www.google.com
+    # ✅ Expect: HTTP/2 200
+    # ❌ If not trusted: curl: (60) SSL certificate problem
     ```
 
     You should see a `200 OK` response if the CA is trusted correctly.
@@ -117,6 +121,16 @@ For detailed instructions, see the [Stack Overflow reference](https://stackoverf
 - [Adding Self-signed Registry Certs to Docker & Docker for Mac](https://blog.container-solutions.com/adding-self-signed-registry-certs-docker-mac)
 - [Docker Docs: How Do I Add TLS Certificates](https://docs.docker.com/desktop/troubleshoot-and-support/faqs/macfaqs/#how-do-i-add-tls-certificates)
 - [Darren Oh: Using Colima with an SSL Inspector](https://darren.oh.name/node/81)
+
+### VPN Trust Summary by Provider
+
+| Provider           | Engine Trust Needed? | Auto-Inherits Host Trust? | Notes                                 |
+|-------------------|----------------------|----------------------------|---------------------------------------|
+| Docker Desktop     | No                   | ✅                          | Uses macOS/Windows system keychain    |
+| Orbstack           | No                   | ✅                          | Fully integrated with macOS keychain  |
+| Colima             | Yes                  | 🚫                          | Requires pre-start copy of certs      |
+| Rancher Desktop    | Yes (dockerd)        | Partial                    | Depends on Lima config and backend    |
+| WSL2 + docker-ce   | Yes                  | 🚫                          | Must configure trust inside WSL       |
 
 ## Corporate or Internet Provider Proxy
 
