@@ -107,6 +107,8 @@ EOF
   run curl -sf https://${PROJNAME}.ddev.site
   assert_success
   assert_output --partial "Copyright © 2013-present Magento, Inc. All rights reserved."
+  assert_output --partial "Here is what\`s trending on Luma right now"
+  assert_output --partial "title=\"Argus All-Weather Tank\""
   run curl -sfI https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_success
   assert_output --partial "server: nginx"
