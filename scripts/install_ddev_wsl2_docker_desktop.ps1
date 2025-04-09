@@ -92,6 +92,8 @@ try {
     exit 1
 }
 Start-Process $DdevInstallerPath -ArgumentList "/S", -Wait
+$env:PATH += ";C:\Program Files\DDEV"
+
 Write-Host "DDEV installation complete."
 
 mkcert -install
