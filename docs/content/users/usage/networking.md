@@ -156,7 +156,9 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 | Rancher Desktop    | Yes (dockerd)        | Partial                    | Depends on Lima config and backend    |
 | WSL2 + docker-ce   | Yes                  | 🚫                          | Must configure trust inside WSL       |
 
+<!-- textlint-disable -->
 ## Corporate or Internet Provider Proxy
+<!-- textlint-enable -->
 
 Some network environments, including some corporate networks, require a "proxy" system be used to access the outside network. In these environments, most systems do not have direct access to the public internet, but instead must use a configured proxy host to access the public internet. A proxy is a system that receives HTTP and HTTPS traffic and then sends and receives traffic on behalf of the client that requests it.
 
