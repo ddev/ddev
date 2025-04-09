@@ -136,6 +136,7 @@ InstType "Minimal"
 /**
  * Local macros
  */
+Var ChocolateyMode
 !macro _Chocolatey _a _b _t _f
   !insertmacro _== $ChocolateyMode `1` `${_t}` `${_f}`
 !macroend
