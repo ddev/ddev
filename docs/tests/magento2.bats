@@ -43,9 +43,6 @@ EOF
   run ddev exec "mkdir -p var/composer_home && cp ~/.composer/auth.json var/composer_home/auth.json"
   assert_success
 
-  # run ddev mutagen sync
-  run ddev mutagen sync
-  assert_success
 
   # ddev add-on get ddev/ddev-opensearch
   run ddev add-on get ddev/ddev-opensearch
