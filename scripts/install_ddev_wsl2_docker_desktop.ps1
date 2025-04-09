@@ -94,11 +94,20 @@ try {
 Start-Process $DdevInstallerPath -ArgumentList "/S", -Wait
 $env:PATH += ";C:\Program Files\DDEV"
 
-Write-Host "DDEV installation complete."
+$mkcertPath = "C:\Program Files\DDEV\mkcert.exe"
+$maxWait = 10
+$waited = 0
+while (-not (Test-Path $mkcertPath) -and $waited -lt $maxWait) {
+    Start-Sleep -Seconds 1
+    $waited++
+}
+if (-not (Test-Path $mkcertPath)) {
+    Write-Error "mkcert.exe did not appear at $mkcertPath after waiting $maxWait seconds"
+    exit 1
+}
 
-& "C:\Program Files\DDEV\mkcert.exe" -install
-$env:CAROOT = & "C:\Program Files\DDEV\mkcert.exe" -CAROOT
-setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
+& $mkcertPath -install
+$env:CAROOT = & $mkcertPath -CAROOT
 
 wsl -u root -e bash -c "apt-get update && apt-get install -y curl"
 wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"

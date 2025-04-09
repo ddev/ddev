@@ -90,8 +90,20 @@ $env:PATH += ";C:\Program Files\DDEV"
 
 Write-Host "DDEV installation complete."
 
-& "C:\Program Files\DDEV\mkcert.exe" -install
-$env:CAROOT = & "C:\Program Files\DDEV\mkcert.exe" -CAROOT
+$mkcertPath = "C:\Program Files\DDEV\mkcert.exe"
+$maxWait = 10
+$waited = 0
+while (-not (Test-Path $mkcertPath) -and $waited -lt $maxWait) {
+    Start-Sleep -Seconds 1
+    $waited++
+}
+if (-not (Test-Path $mkcertPath)) {
+    Write-Error "mkcert.exe did not appear at $mkcertPath after waiting $maxWait seconds"
+    exit 1
+}
+
+& $mkcertPath -install
+$env:CAROOT = & $mkcertPath -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
