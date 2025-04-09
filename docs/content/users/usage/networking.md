@@ -37,6 +37,12 @@ Often, though, the easiest way to solve this particular problem is for your IT d
 
 #### Windows
 
+Install the trusted certificate in the system:
+
+1. Search `Settings` for "Manage Computer Certificates", which runs `certlm`.
+2. Navigate to "Certificates - Local Computer" -> "Trusted Root Certification" -> "Certificates".
+3. Right-click -> "All tasks" -> "Import" to import the `crt` file.
+
 - **Docker Desktop**: Uses the Windows system certificate store. If the CA is trusted by the system, Docker will trust it too.
 - **WSL2 with Docker Desktop**: Behaves like Docker Desktop (Windows trust store).
 - **WSL2 with `docker-ce`**: Requires manual installation of the CA cert as with native Linux.
@@ -132,15 +138,26 @@ If they are not set automatically, they can be set manually in your `.bash_profi
 
 See [Docker documentation](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration) to configure the Docker daemon so that you can do things that involve the Docker registry (actions like `docker pull`).
 
-### Configuring Proxy Information using Docker's Configuration
+For example. `/etc/docker/daemon.json` might be:
 
-The user's `~/.docker/config.json` is one way to tell the Docker CLI (and DDEV) how to use a required proxy. See [Docker docs](https://docs.docker.com/engine/cli/proxy/).
+```json
+{
+  "proxies": {
+    "http-proxy": "http://squid.host-only:3128",
+    "https-proxy": "http://squid.host-only:3128",
+    "no-proxy": "localhost,127.0.0.0/8"
+  }
+}
+```
 
-Docker Desktop and other providers also have proxy configuration of the same form.
+After configuration,
 
-After updating proxy settings, restart your Docker provider to make the configuration take effect.
+```bash
+sudo systemctl restart docker
+sudo systemctl daemon-reload
+```
 
-You should be able to test the configuration with `docker pull busybox` and see a successful pull.
+When this is working, you should be able to successfully `docker pull alpine`.
 
 ## Restrictive DNS servers, especially Fritzbox routers
 
