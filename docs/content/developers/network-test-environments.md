@@ -31,7 +31,7 @@ These instructions are for Debian/Ubuntu but can be adapted for container-based 
   This `mitm.crt` is the CA certificate used by Squid to re-sign intercepted traffic, and it must be trusted by any client interacting through the proxy (e.g., Docker, curl, system-wide tools).
 
     ```bash
-    openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
+    sudo openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
       -keyout /etc/squid/mitm.key \
       -out /etc/squid/mitm.crt \
       -subj "/CN=SquidMITMTest"
@@ -94,6 +94,7 @@ Docker does not use the system trust store. To allow `docker pull` to work when 
 ```bash
 sudo mkdir -p /etc/docker/certs.d/
 sudo cp /etc/squid/mitm.crt /etc/docker/certs.d/
+sudo systemctl restart docker
 ```
 
 You can confirm Docker is using the proxy by watching the Squid logs while pulling:
@@ -188,7 +189,7 @@ If so, it can be used with `update-ca-certificates`, Docker, or as a trusted CA 
 To test the Squid CA without installing it, you can use:
 
 ```bash
-curl -I https://www.google.com --proxy http://squid.host-only:3128 --cacert mitm.crt
+curl -I https://www.google.com --proxy http://squid.host-only:3128 --cacert /etc/squid/mitm.crt
 ```
 
 This helps confirm that the proxy and CA work before trusting the cert system-wide.

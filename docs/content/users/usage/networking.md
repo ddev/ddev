@@ -58,10 +58,9 @@ For native Linux or WSL2 with `docker-ce`:
 sudo mkdir -p /etc/docker/certs.d/
 sudo cp mycorp-ca.crt /etc/docker/certs.d/
 sudo systemctl restart docker
-sudo systemctl daemon-reload
 ```
 
-> ✅ **Test Docker Engine Trust**
+#### ✅ **Test Docker Engine Trust**
 
 To test:
 
@@ -109,7 +108,7 @@ This method works across all OS platforms and all Docker providers, because you'
 
 ### 🔍 Where to Get the Corporate CA Certificate
 
-#### Option 1: Ask IT
+#### Option 1: Ask IT Department
 
 Request the "TLS root certificate" or "SSL inspection CA" used by your company’s VPN or proxy.
 
@@ -199,7 +198,6 @@ After configuration,
 
 ```bash
 sudo systemctl restart docker
-sudo systemctl daemon-reload
 ```
 
 When this is working, you should be able to successfully `docker pull alpine`.
