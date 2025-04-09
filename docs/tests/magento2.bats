@@ -16,19 +16,19 @@ teardown() {
   if [ "${MAGENTO2_PUBLIC_ACCESS_KEY}" = "" ]; then
     skip "MAGENTO_PUBLIC_ACCESS_KEY not provided (forked PR)"
   fi
-  
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
-  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
+  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
+  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
   assert_success
 
   # mkdir -p .ddev/homeadditions/.composer
   mkdir -p ./.ddev/homeadditions/.composer
 
   # add the env variable credentials to auth.json
-  cat <<EOF > .ddev/homeadditions/.composer/auth.json
+  cat <<EOF >.ddev/homeadditions/.composer/auth.json
 {
     "http-basic": {
         "repo.magento.com": {
@@ -39,8 +39,8 @@ teardown() {
 }
 EOF
 
-  # ddev add-on get ddev/ddev-elasticsearch
-  run ddev add-on get ddev/ddev-elasticsearch
+  # ddev add-on get ddev/ddev-opensearch
+  run ddev add-on get ddev/ddev-opensearch
   assert_success
 
   # ddev start -y
@@ -57,10 +57,10 @@ EOF
 
   # magento setup:install
   run ddev magento setup:install --base-url="https://${PROJNAME}.ddev.site/" \
-      --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-      --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 \
-      --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
-      --admin-user=admin --admin-password=Password123 --language=en_US
+    --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
+    --search-engine=opensearch --opensearch-host=opensearch --opensearch-port=9200 \
+    --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
+    --admin-user=admin --admin-password=Password123 --language=en_US
   assert_success
 
   # ddev magento deploy:mode:set developer
