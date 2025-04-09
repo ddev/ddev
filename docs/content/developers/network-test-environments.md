@@ -39,7 +39,7 @@ These instructions are for Debian/Ubuntu but can be adapted for container-based 
 
 3. **Configure Squid for SSL Bumping**
 
-Edit `/etc/squid/squid.conf`, replacing or appending the following:
+    Edit `/etc/squid/squid.conf`, replacing or appending the following:
 
     ```conf
     http_port 3128 ssl-bump cert=/etc/squid/mitm.crt key=/etc/squid/mitm.key generate-host-certificates=on dynamic_cert_mem_cache_size=4MB
