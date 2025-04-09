@@ -631,7 +631,7 @@ Normal details of a Composer build for Magento 2 are on the [Magento 2 site](htt
 ```bash
 export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
-ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
+ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
 ddev add-on get ddev/ddev-opensearch
 ddev start
 ddev composer create --repository https://repo.magento.com/ magento/project-community-edition

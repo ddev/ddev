@@ -20,8 +20,8 @@ teardown() {
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
-  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
+  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
+  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
   assert_success
 
   # mkdir -p .ddev/homeadditions/.composer
