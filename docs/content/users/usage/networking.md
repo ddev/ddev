@@ -17,6 +17,10 @@ In these situations, multiple layers may require configuration:
 
 ## Corporate Packet-inspection VPNs (including Zscaler and Global Protect)
 
+!!!note "Your IT Department or Vendor May Have Easier Ways to Solve These Problems"
+
+    In many cases, your IT department or VPN vendor may be able to whitelist certain internet resources, and you may not have to do extensive configuration. Check with them (if possible) before you start making configuration changes.
+
 Packet-inspecting VPNs like **Zscaler**, **GlobalProtect**, and similar products intercept HTTPS traffic using a corporate-controlled TLS Certificate Authority (CA). These systems act as a "man-in-the-middle" proxy, decrypting and re-encrypting HTTPS traffic. As a result, systems and applications that are not explicitly configured to trust the corporate CA will experience SSL/TLS verification errors.
 
 This creates two separate problems in Docker-based workflows:
