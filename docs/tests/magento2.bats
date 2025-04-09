@@ -39,6 +39,14 @@ teardown() {
 }
 EOF
 
+  # Copy the auth.json into var/composer_home for the deploying the sample data sep
+  run ddev exec "mkdir -p var/composer_home && cp ~/.composer/auth.json var/composer_home/auth.json"
+  assert_success
+
+  # run ddev mutagen sync
+  run ddev mutagen sync
+  assert_success
+
   # ddev add-on get ddev/ddev-opensearch
   run ddev add-on get ddev/ddev-opensearch
   assert_success
@@ -79,6 +87,14 @@ EOF
   run ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
   assert_success
 
+  # Add sample data for Magento
+  run ddev magento sampledata:deploy
+  assert_success
+
+  # Re-run the setup script to include the sample data
+  run ddev magento setup:upgrade
+  assert_success
+
   # validate ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /admin_ddev"
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin_ddev"
@@ -98,4 +114,7 @@ EOF
   run curl -sf https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_success
   assert_output --partial "Copyright &copy; 2025 Magento Commerce Inc. All rights reserved."
+  run curl -sf https://${PROJNAME}..ddev.site:5602/app/home#/
+  assert_success
+  assert_output --partial "<title>OpenSearch Dashboards</title>"
 }
