@@ -28,7 +28,7 @@ These instructions are for Debian/Ubuntu but can be adapted for container-based 
     ```
 
 2. **Generate a Root CA for Signing**
-  This `mitm.crt` becomes the certificate which is used everywhere that we need the custom CA.
+  This `mitm.crt` is the CA certificate used by Squid to re-sign intercepted traffic, and it must be trusted by any client interacting through the proxy (e.g., Docker, curl, system-wide tools).
 
     ```bash
     openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
@@ -94,7 +94,16 @@ Docker does not use the system trust store. To allow `docker pull` to work when 
 ```bash
 sudo mkdir -p /etc/docker/certs.d/
 sudo cp /etc/squid/mitm.crt /etc/docker/certs.d/
-sudo systemctl restart docker
+```
+
+You can confirm Docker is using the proxy by watching the Squid logs while pulling:
+
+```bash
+docker pull alpine
+```
+
+```bash
+sudo tail -f /var/log/squid/access.log | grep docker
 ```
 
 This setup is sufficient for testing purposes. Docker will then trust any server certificates signed by the Squid CA.
@@ -151,11 +160,11 @@ sudo update-ca-certificates
 
 #### On WSL2
 
-WSL2 behaves like Linux. Use the same instructions as for Linux to trust the CA inside your WSL2 distro.
+WSL2 behaves like native Linux. Use the same instructions as for Linux to trust the CA inside your WSL2 distro.
 
 After installing the cert, re-run the `curl` test — you should no longer see SSL errors.
 
-### Using Exported PEM or CER Files
+### Converting Exported PEM or CER Files to CRT
 
 When exporting a CA certificate from your browser or OS, it might have a `.pem` or `.cer` extension. These formats are usually identical to `.crt`. You can rename them safely:
 
@@ -173,7 +182,6 @@ Just ensure the file begins with:
 If so, it can be used with `update-ca-certificates`, Docker, or as a trusted CA in testing.
 
 ---
-
 ### Optional: Verify CA Without Installing It
 
 To test the Squid CA without installing it, you can use:
@@ -183,6 +191,18 @@ curl -I https://www.google.com --proxy http://squid.host-only:3128 --cacert mitm
 ```
 
 This helps confirm that the proxy and CA work before trusting the cert system-wide.
+
+---
+
+### Quick Recap
+
+| Environment      | Where to install CA                 | Trust command or method                     |
+|------------------|-------------------------------------|---------------------------------------------|
+| Linux (host)     | `/usr/local/share/ca-certificates`  | `update-ca-certificates`                    |
+| macOS            | System Keychain                     | Keychain Access → "Always Trust"            |
+| Docker Engine    | `/etc/docker/certs.d/ca.crt`        | `systemctl restart docker`                  |
+| Inside container | `/usr/local/share/ca-certificates`  | `update-ca-certificates` inside container   |
+| WSL2             | Same as Linux                       | `update-ca-certificates`                    |
 
 ---
 
