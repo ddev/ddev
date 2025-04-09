@@ -193,7 +193,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\gsudo_license.txt"
 
 ; Components page
 Var MkcertSetup
@@ -893,7 +893,7 @@ Section Uninstall
   Delete "$INSTDIR\mkcert_license.txt"
   Delete "$INSTDIR\mkcert.exe"
 
-  Delete "$INSTDIR\sudo_license.txt"
+  Delete "$INSTDIR\gsudo_license.txt"
   Delete "$INSTDIR\${GSUDO_SETUP}"
 
   Delete "$INSTDIR\license.txt"
