@@ -182,6 +182,7 @@ Just ensure the file begins with:
 If so, it can be used with `update-ca-certificates`, Docker, or as a trusted CA in testing.
 
 ---
+
 ### Optional: Verify CA Without Installing It
 
 To test the Squid CA without installing it, you can use:
@@ -219,6 +220,7 @@ or for example
 ```bash
 sudo tail -f /var/log/squid/access.log | grep docker
 ```
+
 ---
 
 This `HTTPS_PROXY`-based setup is simpler and provides a very effective way to simulate real-world TLS inspection without needing DNS or firewall redirection.
