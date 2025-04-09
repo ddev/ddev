@@ -96,7 +96,7 @@ $env:PATH += ";C:\Program Files\DDEV"
 
 Write-Host "DDEV installation complete."
 
-mkcert -install
+mkcert.exe -install
 $env:CAROOT="$(mkcert -CAROOT)"
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
