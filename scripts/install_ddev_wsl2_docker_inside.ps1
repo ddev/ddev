@@ -49,6 +49,15 @@ switch ($realArchitecture) {
 }
 Write-Host "Detected OS architecture: $realArchitecture; using DDEV installer: $architectureForInstaller"
 
+# Cleanup old installers
+Get-ChildItem -Path $env:TEMP -Filter "ddev_windows_*_installer.*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+    try {
+        Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
+    } catch {
+        # Intentionally silent
+    }
+}
+
 # Install DDEV on Windows to manipulate the host OS's hosts file.
 $GitHubOwner = "ddev"
 $RepoName    = "ddev"
