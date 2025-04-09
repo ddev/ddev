@@ -24,7 +24,7 @@ if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
 if (-not(Get-Command docker 2>&1 ) -Or -Not(docker ps ) ) {
-    throw "\n\ndocker does not seem to be installed yet, or Docker Desktop is not running. Please install it or start it. For example, choco install -y docker-desktop"
+    throw "\n\ndocker does not seem to be installed yet, or Docker Desktop is not running. Please install it or start it."
 }
 
 if (-not(wsl -e docker ps) ) {
