@@ -1,5 +1,8 @@
 # Special Network Configurations
 
+!!!tip "The networking configurations described here are not typical"
+    Don't spend time with this page unless you know you have a global TLS trust or proxy configuration issue.
+
 There are a few networking situations which occasionally cause trouble for some users, especially in corporate environments. These typically fall into two categories:
 
 1. **TLS interception** (e.g., Zscaler, GlobalProtect) causes SSL verification errors in `docker pull` or inside containers.
