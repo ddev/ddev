@@ -631,16 +631,15 @@ Normal details of a Composer build for Magento 2 are on the [Magento 2 site](htt
 ```bash
 export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
-ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
-ddev add-on get ddev/ddev-elasticsearch
-cp .ddev/elasticsearch/docker-compose.elasticsearch8.yaml .ddev/
+ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
+ddev add-on get ddev/ddev-opensearch
 ddev start
 ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
 rm -f app/etc/env.php
 
 ddev magento setup:install --base-url="https://${MAGENTO_HOSTNAME}.ddev.site/" \
     --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-    --elasticsearch-host=elasticsearch --search-engine=elasticsearch8 --elasticsearch-port=9200 \
+    --opensearch-host=opensearch --search-engine=opensearch --opensearch-port=9200 \
     --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
     --admin-user=admin --admin-password=Password123 --language=en_US
 

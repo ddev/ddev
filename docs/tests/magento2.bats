@@ -20,8 +20,8 @@ teardown() {
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
-  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
+  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
+  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --php-version=8.4
   assert_success
 
   # mkdir -p .ddev/homeadditions/.composer
@@ -39,8 +39,8 @@ teardown() {
 }
 EOF
 
-  # ddev add-on get ddev/ddev-elasticsearch
-  run ddev add-on get ddev/ddev-elasticsearch
+  # ddev add-on get ddev/ddev-opensearch
+  run ddev add-on get ddev/ddev-opensearch
   assert_success
 
   # ddev start -y
@@ -51,10 +51,6 @@ EOF
   run ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
   assert_success
 
-  # Copy docker compose yaml for Elastic Search 8
-  run cp .ddev/elasticsearch/docker-compose.elasticsearch8.yaml .ddev/
-  assert_success
-
   # rm -f app/etc/env.php
   run rm -f app/etc/env.php
   assert_success
@@ -62,7 +58,7 @@ EOF
   # magento setup:install
   run ddev magento setup:install --base-url="https://${PROJNAME}.ddev.site/" \
       --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
-      --elasticsearch-host=elasticsearch --search-engine=elasticsearch8 --elasticsearch-port=9200 \
+      --opensearch-host=opensearch --search-engine=opensearch --opensearch-port=9200 \
       --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
       --admin-user=admin --admin-password=Password123 --language=en_US
   assert_success
