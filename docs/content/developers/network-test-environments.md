@@ -98,7 +98,7 @@ This setup is sufficient for testing purposes. Docker will then trust any server
 #### Test with OpenSSL (Raw Certificate Check)
 
 ```bash
-openssl s_client -connect www.google.com:443 -proxy squit.host-only:3128 -CAfile /etc/squid/mitm.crt
+openssl s_client -connect www.google.com:443 -proxy squid.host-only:3128 -CAfile /etc/squid/mitm.crt
 ```
 
 #### Test from Another Host (Linux or macOS)
@@ -145,8 +145,56 @@ sudo update-ca-certificates
 5. Double-click the cert → expand **Trust** → set **"When using this certificate"** to **Always Trust**.
 6. Close and enter your password when prompted.
 
+#### On WSL2
+
+WSL2 behaves like Linux. Use the same instructions as for Linux to trust the CA inside your WSL2 distro.
+
 After installing the cert, re-run the `curl` test — you should no longer see SSL errors.
 
+### Using Exported PEM or CER Files
+
+When exporting a CA certificate from your browser or OS, it might have a `.pem` or `.cer` extension. These formats are usually identical to `.crt`. You can rename them safely:
+
+```bash
+mv my-cert.pem my-cert.crt
+mv my-cert.cer my-cert.crt
+```
+
+Just ensure the file begins with:
+
+```
+-----BEGIN CERTIFICATE-----
+```
+
+If so, it can be used with `update-ca-certificates`, Docker, or as a trusted CA in testing.
+
+---
+
+### Optional: Verify CA Without Installing It
+
+To test the Squid CA without installing it, you can use:
+
+```bash
+curl -I https://www.google.com --proxy http://squid.host-only:3128 --cacert mitm.crt
+```
+
+This helps confirm that the proxy and CA work before trusting the cert system-wide.
+
+---
+
+### Note
+
+> 💡 You can monitor the Squid log in another terminal to confirm proxy use:
+
+```bash
+sudo tail -f /var/log/squid/access.log
+```
+
+or for example
+
+```bash
+sudo tail -f /var/log/squid/access.log | grep docker
+```
 ---
 
 This `HTTPS_PROXY`-based setup is simpler and provides a very effective way to simulate real-world TLS inspection without needing DNS or firewall redirection.
