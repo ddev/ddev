@@ -2,22 +2,20 @@
 search:
   boost: .1
 ---
-# Network Test Environments
+# Network Test Environments: Packet-Inspection VPN Simulation
 
-## Packet-Inspection VPN Simulation
-
-### Simulating SSL Interception with Squid (Simplified via `HTTPS_PROXY`)
+## Simulating SSL Interception with Squid (Simplified via `HTTPS_PROXY`)
 
 A straightforward way to simulate a packet-inspecting VPN is by using **Squid** with SSL bumping and configuring your environment to use it via `HTTPS_PROXY`. While it's less transparent than a full MITM router setup, it closely replicates the behavior of Zscaler and similar tools from the perspective of apps like Docker and `curl`.
 
-#### Setup Overview
+## Setup Overview
 
 - Squid listens on port 3128.
 - HTTPS traffic routed via the proxy is intercepted and re-signed with a custom CA.
 - Clients that trust this CA will succeed; others will fail SSL validation.
 - You simulate VPN-like interception by exporting `HTTPS_PROXY=http://localhost:3128`.
 
-#### Step-by-Step Instructions
+## Step-by-Step Instructions
 
 These instructions are for Debian/Ubuntu but can be adapted for container-based setup or for another environment.
 
@@ -73,11 +71,11 @@ These instructions are for Debian/Ubuntu but can be adapted for container-based 
 
 ---
 
-### Testing Proxy Behavior
+## Testing Proxy Behavior
 
 Once the proxy is running and your environment is configured, test both Docker registry access and in-container HTTPS access.
 
-#### Test Docker Pull
+### Test Docker Pull
 
 ```bash
 export HTTPS_PROXY=http://squid.host-only:3128
@@ -87,7 +85,7 @@ docker pull alpine
 - If Docker trusts the Squid CA, the pull will succeed.
 - If not, you’ll see x509 or certificate verification errors.
 
-### Trusting the CA for Docker Pulls
+## Trusting the CA for Docker Pulls
 
 Docker does not use the system trust store. To allow `docker pull` to work when HTTPS is intercepted by Squid, you must explicitly trust the Squid CA by placing it in Docker’s certificate directory:
 
@@ -109,17 +107,17 @@ sudo tail -f /var/log/squid/access.log | grep docker
 
 This setup is sufficient for testing purposes. Docker will then trust any server certificates signed by the Squid CA.
 
-#### Test with OpenSSL (Raw Certificate Check)
+### Test with OpenSSL (Raw Certificate Check)
 
 ```bash
 openssl s_client -connect www.google.com:443 -proxy squid.host-only:3128 -CAfile /etc/squid/mitm.crt
 ```
 
-#### Test from Another Host (Linux or macOS)
+### Test from Another Host (Linux or macOS)
 
 You can verify Squid’s behavior from a different host using `curl`. These examples test HTTPS interception and validate that your CA is trusted.
 
-##### Option 1: Explicit Proxy with `curl`
+#### Option 1: Explicit Proxy with `curl`
 
 ```bash
 curl -I https://www.google.com --proxy http://squid.host-only:3128
@@ -128,7 +126,7 @@ curl -I https://www.google.com --proxy http://squid.host-only:3128
 - Replace `squid.host-only` with the IP address or hostname of your Squid proxy host.
 - You should receive a `200 OK` response if the CA is trusted. Otherwise, you'll get a certificate error.
 
-##### Option 2: Using `HTTPS_PROXY` Environment Variable
+#### Option 2: Using `HTTPS_PROXY` Environment Variable
 
 ```bash
 export HTTPS_PROXY=http://squid.host-only:3128
@@ -139,18 +137,18 @@ This has the same effect as `--proxy` but applies to all tools that honor `HTTPS
 
 ---
 
-### Trusting the CA Certificate
+## Trusting the CA Certificate
 
 If you receive certificate errors, install the Squid CA (`mitm.crt`) on the client system:
 
-#### On Linux
+### On Linux
 
 ```bash
 sudo cp mitm.crt /usr/local/share/ca-certificates/
 sudo update-ca-certificates
 ```
 
-#### On macOS
+### On macOS
 
 1. Copy `mitm.crt` to your local system.
 2. Open **Keychain Access**.
@@ -159,7 +157,7 @@ sudo update-ca-certificates
 5. Double-click the cert → expand **Trust** → set **"When using this certificate"** to **Always Trust**.
 6. Close and enter your password when prompted.
 
-#### On WSL2
+### On WSL2
 
 WSL2 behaves like native Linux. Use the same instructions as for Linux to trust the CA inside your WSL2 distro.
 
@@ -184,7 +182,7 @@ If so, it can be used with `update-ca-certificates`, Docker, or as a trusted CA 
 
 ---
 
-### Optional: Verify CA Without Installing It
+## Optional: Verify CA Without Installing It
 
 To test the Squid CA without installing it, you can use:
 
@@ -208,9 +206,9 @@ This helps confirm that the proxy and CA work before trusting the cert system-wi
 
 ---
 
-### Note
+## Monitoring Squid Logs to Verify Traffic Path
 
-> 💡 You can monitor the Squid log in another terminal to confirm proxy use:
+You can monitor the Squid log in another terminal to confirm proxy use:
 
 ```bash
 sudo tail -f /var/log/squid/access.log
