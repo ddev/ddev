@@ -178,6 +178,7 @@ nav:
       - users/usage/commands.md
       - users/usage/developer-tools.md
       - users/usage/diagnostics.md
+      - users/usage/networking.md
       - 'Uninstalling': users/usage/uninstall.md
     - 'Getting Help':
       - users/usage/faq.md
@@ -228,4 +229,5 @@ nav:
       - developers/writing-style-guide.md
       - developers/remote-config.md
       - developers/maintainers.md
+      - developers/network-test-environments.md
       - developers/secret-management.md
