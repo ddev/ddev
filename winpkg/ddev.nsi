@@ -194,7 +194,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\gsudo_license.txt"
 
 ; Components page
 Var MkcertSetup
@@ -498,41 +498,37 @@ SectionGroup /e "mkcert"
    * mkcert application install
    */
   Section "mkcert" SecMkcert
-    ; Install in non choco mode only
-    ${IfNot} ${Chocolatey}
-      SectionIn 1 2
-      SetOutPath "$INSTDIR"
-      SetOverwrite try
+    SectionIn 1 2
+    SetOutPath "$INSTDIR"
+    SetOverwrite try
 
-      ; Copy files
-      File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
-      File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
+    ; Copy files
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
-      ; Install icons
-      SetOutPath "$INSTDIR\Icons"
-      SetOverwrite try
-      File /oname=ca-install.ico "graphics\ca-install.ico"
-      File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
+    ; Install icons
+    SetOutPath "$INSTDIR\Icons"
+    SetOverwrite try
+    File /oname=ca-install.ico "graphics\ca-install.ico"
+    File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
 
-      ; Shortcuts
-      CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
-      CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
+    ; Shortcuts
+    CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
+    CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
 
-      !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-      CreateDirectory "$SMPROGRAMS\$ICONS_GROUP\mkcert"
-      CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert install.lnk"
-      CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert uninstall.lnk"
-      !insertmacro MUI_STARTMENU_WRITE_END
-    ${EndIf}
+    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+    CreateDirectory "$SMPROGRAMS\$ICONS_GROUP\mkcert"
+    CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert install.lnk"
+    CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert uninstall.lnk"
+    !insertmacro MUI_STARTMENU_WRITE_END
   SectionEnd
 
   /**
    * mkcert setup
    */
   Section "Setup mkcert" SecMkcertSetup
-    ; Install in non silent and choco mode only
-    ${IfNot} ${Silent}
-    ${AndIfNot} ${Chocolatey}
+    ; Install in non choco mode only
+    ${IfNot} ${Chocolatey}
       MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
 
       ; Run setup
@@ -712,16 +708,6 @@ Function .onInit
 
   ; Initialize global variables
   StrCpy $mkcertSetup ""
-
-  ; Check parameters
-  ${GetParameters} $R0
-  ClearErrors
-  ${GetOptions} $R0 "/C" $0
-  ${IfNot} ${Errors}
-    StrCpy $ChocolateyMode "1"
-  ${Else}
-    StrCpy $ChocolateyMode "0"
-  ${EndIf}
 
 FunctionEnd
 
@@ -908,7 +894,7 @@ Section Uninstall
   Delete "$INSTDIR\mkcert_license.txt"
   Delete "$INSTDIR\mkcert.exe"
 
-  Delete "$INSTDIR\sudo_license.txt"
+  Delete "$INSTDIR\gsudo_license.txt"
   Delete "$INSTDIR\${GSUDO_SETUP}"
 
   Delete "$INSTDIR\license.txt"
