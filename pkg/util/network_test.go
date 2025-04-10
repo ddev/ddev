@@ -21,7 +21,7 @@ func TestDownloadFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/" + fileName:
-			io.WriteString(w, testData)
+			_, _ = io.WriteString(w, testData)
 		case "/sha256sums.txt":
 			fmt.Fprintf(w, "%s *%s\n", sum, fileName)
 		case "/badsha256sums.txt":
