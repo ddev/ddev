@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"golang.org/x/term"
@@ -20,6 +22,23 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
 		progressBar = false
 	}
+
+	// If shaSumURL is provided, download and read the expected SHASUM
+	var expectedSHA string
+	if shaSumURL != "" {
+		resp, err := http.Get(shaSumURL)
+		if err != nil {
+			return fmt.Errorf("failed to download shaSum URL %s: %v", shaSumURL, err)
+		}
+		defer CheckClose(resp.Body)
+
+		shaBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read shaSum file: %v", err)
+		}
+		expectedSHA = string(bytes.TrimSpace(shaBytes))
+	}
+
 	// Create the file
 	out, err := os.Create(destPath)
 	if err != nil {
@@ -37,23 +56,26 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download link %s returned wrong status code: got %v want %v", url, resp.StatusCode, http.StatusOK)
 	}
+
 	reader := resp.Body
 	if progressBar {
-
 		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
 		bar.Start()
-
-		// create proxy reader
 		reader = bar.NewProxyReader(resp.Body)
-		// Writer the body to file
-		_, err = io.Copy(out, reader)
-		bar.Finish()
-	} else {
-		_, err = io.Copy(out, reader)
+		defer bar.Finish()
 	}
 
-	if err != nil {
+	hasher := sha256.New()
+	writer := io.MultiWriter(out, hasher)
+	if _, err = io.Copy(writer, reader); err != nil {
 		return err
+	}
+
+	if expectedSHA != "" {
+		actualSHA := fmt.Sprintf("%x", hasher.Sum(nil))
+		if actualSHA != expectedSHA {
+			return fmt.Errorf("SHA256 mismatch: expected %s, got %s", expectedSHA, actualSHA)
+		}
 	}
 
 	return nil
