@@ -40,11 +40,11 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	}
 
 	// Create the file
-	out, err := os.Create(destPath)
+	outFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
-	defer CheckClose(out)
+	defer CheckClose(outFile)
 
 	// Get the data
 	resp, err := http.Get(url)
@@ -66,7 +66,7 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	}
 
 	hasher := sha256.New()
-	writer := io.MultiWriter(out, hasher)
+	writer := io.MultiWriter(outFile, hasher)
 	if _, err = io.Copy(writer, reader); err != nil {
 		return err
 	}
@@ -89,14 +89,20 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 		}
 
 		if matchedSHA == "" {
+			_ = outFile.Close()
 			_ = os.Remove(destPath)
 			return fmt.Errorf("no matching SHA256 found for %s in shaSum file", baseName)
 		}
 
 		actualSHA := fmt.Sprintf("%x", hasher.Sum(nil))
 		if actualSHA != matchedSHA {
-			_ = os.Remove(destPath)
-			return fmt.Errorf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
+			_ = outFile.Close()
+			fileRemoveErr := os.Remove(destPath)
+			msg := fmt.Sprintf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
+			if fileRemoveErr != nil {
+				msg += fmt.Sprintf("\nAlso failed to remove file %s: %v", destPath, fileRemoveErr)
+			}
+			return fmt.Errorf(msg)
 		}
 	}
 
