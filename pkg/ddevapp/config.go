@@ -1258,7 +1258,7 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 `
-	// If there are user prepend.Dockerfile.* files, insert their contents
+	// If there are user prepend.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "prepend.Dockerfile*"))
 		if err != nil {
@@ -1777,7 +1777,7 @@ func validateHookYAML(source []byte) error {
 
 // isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file
 // We consider files in the .ddev/web-build and .ddev/db-build directory to be context files
-// excluding /Dockerfile*, /pre.Dockerfile*, /prepend.Dockerfile.* and /README.txt
+// excluding /Dockerfile*, /pre.Dockerfile*, /prepend.Dockerfile* and /README.txt
 func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, error) {
 	// Directories are always context.
 	if fileutil.IsDirectory(file) {
