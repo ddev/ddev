@@ -526,6 +526,7 @@ func DownloadMutagen() error {
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
 	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", versionconstants.RequiredMutagenVersion, flavor, versionconstants.RequiredMutagenVersion)
+	shasumFileURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/SHA256SUMS", versionconstants.RequiredMutagenVersion)
 	util.Debug("Downloading %s to %s...", mutagenURL, destFile)
 
 	// Remove the existing mutagen files. This may help on macOS to prevent the Gatekeeper's
@@ -540,8 +541,10 @@ func DownloadMutagen() error {
 	if err != nil {
 		return errors.Errorf("Unable to create directory %s: %v", globalMutagenDir, err)
 	}
-	err = util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), "")
+	err = util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), shasumFileURL)
 	if err != nil {
+		_ = fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
+		_ = os.Remove(destFile)
 		return err
 	}
 	output.UserOut.Printf("Download complete.")
