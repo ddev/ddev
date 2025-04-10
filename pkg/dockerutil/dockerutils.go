@@ -1628,7 +1628,7 @@ func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error
 	if runtime.GOOS == "windows" {
 		composerURL = composerURL + ".exe"
 	}
-	shasumURL = fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/checksums.txt", globalconfig.GetRequiredDockerComposeVersion(), flavor)
+	shasumURL = fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/checksums.txt", globalconfig.GetRequiredDockerComposeVersion())
 
 	return composerURL, shasumURL, nil
 }
