@@ -47,12 +47,12 @@ EOF
   run ddev start -y
   assert_success
 
-    # Copy the auth.json into var/composer_home for the deploying the sample data sep
-  run ddev exec "mkdir -p var/composer_home && cp ~/.composer/auth.json var/composer_home/auth.json"
-  assert_success
-
   # ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
   run ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
+  assert_success
+
+    # Copy the auth.json into var/composer_home for the deploying the sample data sep
+  run ddev exec "mkdir -p var/composer_home && cp ~/.composer/auth.json var/composer_home/auth.json"
   assert_success
 
   # rm -f app/etc/env.php
