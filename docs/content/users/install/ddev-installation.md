@@ -233,7 +233,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     In all cases:
 
-    4. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
+    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
         ```powershell
         wsl --install
         ```
@@ -245,19 +245,19 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-24.04`.
 
-    5. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
+    2. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
-    6. Install Docker Desktop. Download [Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
-    7. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
-    8. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
-    9. Open a non-administrative PowerShell terminal. However, if the commands below don't work (e.g. "the system cannot find all the information required"), you may need to reboot or open a new Powershell terminal before trying again.  Run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    3. Install Docker Desktop. Download [Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
+    4. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
+    5. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
+    6. Open a non-administrative PowerShell terminal. However, if the commands below don't work (e.g. "the system cannot find all the information required"), you may need to reboot or open a new Powershell terminal before trying again.  Run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
 
-    10. For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
+    7. For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
 
