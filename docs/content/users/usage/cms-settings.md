@@ -158,10 +158,18 @@ path: public
 
 #### WordPress Environment Type
 
-By default, [`wp_get_environment_type()`](https://developer.wordpress.org/reference/functions/wp_get_environment_type/) returns `production`. but you can override it in a local environment by defining the `WP_ENVIRONMENT_TYPE` constant.
+By default, [`wp_get_environment_type()`](https://developer.wordpress.org/reference/functions/wp_get_environment_type/) returns `production`. However, you can override it in one of two ways:
 
-To do this, modify your `wp-config-ddev.php` file by [removing](./faq.md#what-if-i-dont-like-the-settings-files-or-gitignores-ddev-creates) the `#ddev-generated` line and adding this code snippet:
+1. Setting an environment variable, such as with the following [ddev command](https://ddev.readthedocs.io/en/stable/users/usage/commands/#config): 
 
-```php
-defined( 'WP_ENVIRONMENT_TYPE' ) || define( 'WP_ENVIRONMENT_TYPE', 'local' );
-```
+    ```bash
+    ddev config --web-environment-add="WP_ENVIRONMENT_TYPE=local"
+    ```
+
+2. Defining the `WP_ENVIRONMENT_TYPE` constant
+
+    To do this, modify your `wp-config-ddev.php` file by [removing](./faq.md#what-if-i-dont-like-the-settings-files-or-gitignores-ddev-creates) the `#ddev-generated` line and adding this code snippet:
+    
+    ```php
+    defined( 'WP_ENVIRONMENT_TYPE' ) || define( 'WP_ENVIRONMENT_TYPE', 'local' );
+    ```
