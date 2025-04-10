@@ -406,7 +406,7 @@ ddev launch $(ddev drush uli)
     ```
 
 !!!tip "How to update?"
-    Upgrade Grave core:
+    Upgrade Grav core:
 
     ```bash
     ddev exec gpm selfupgrade -f
