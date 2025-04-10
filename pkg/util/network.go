@@ -102,7 +102,7 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 			if fileRemoveErr != nil {
 				msg += fmt.Sprintf("\nAlso failed to remove file %s: %v", destPath, fileRemoveErr)
 			}
-			return fmt.Errorf(msg)
+			return errors.New(msg)
 		}
 	}
 
