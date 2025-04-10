@@ -72,9 +72,29 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	}
 
 	if expectedSHA != "" {
+		baseName := filepath.Base(url)
+		var matchedSHA string
+
+		lines := bytes.Split([]byte(expectedSHA), []byte{'\n'})
+		for _, line := range lines {
+			fields := bytes.Fields(line)
+			if len(fields) != 2 {
+				continue
+			}
+			filename := bytes.TrimPrefix(fields[1], []byte("*"))
+			if bytes.Equal(filename, []byte(baseName)) {
+				matchedSHA = string(fields[0])
+				break
+			}
+		}
+
+		if matchedSHA == "" {
+			return fmt.Errorf("no matching SHA256 found for %s in shaSum file", baseName)
+		}
+
 		actualSHA := fmt.Sprintf("%x", hasher.Sum(nil))
-		if actualSHA != expectedSHA {
-			return fmt.Errorf("SHA256 mismatch: expected %s, got %s", expectedSHA, actualSHA)
+		if actualSHA != matchedSHA {
+			return fmt.Errorf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
 		}
 	}
 
