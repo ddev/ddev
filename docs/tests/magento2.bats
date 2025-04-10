@@ -14,7 +14,7 @@ teardown() {
 @test "Magento 2 quickstart with $(ddev --version)" {
 
   if [ "${MAGENTO2_PUBLIC_ACCESS_KEY}" = "" ]; then
-    skip "MAGENTO_PUBLIC_ACCESS_KEY not provided (forked PR)"
+    skip "MAGENTO2_PUBLIC_ACCESS_KEY not provided (forked PR)"
   fi
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
