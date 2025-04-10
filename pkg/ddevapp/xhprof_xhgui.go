@@ -71,15 +71,21 @@ func IsXHGuiContainerRunning(app *DdevApp) bool {
 func (app *DdevApp) GetXHGuiURL() string {
 	var xhguiURL string
 
-	// If router enabled, use primary URL with regular port
 	if !IsRouterDisabled(app) {
-		baseURL := app.GetPrimaryURL()
-		xhguiURL = baseURL + ":" + app.GetXHGuiPort()
-	} else if app.HostXHGuiPort != "" {
-		// Otherwise, if host_xhgui_port is set, use that to build URL
+		var desc, _ = app.Describe(true)
+
+		if _, ok := desc["xhgui_url"]; ok {
+			xhguiURL = desc["xhgui_url"].(string)
+		}
+		if _, ok := desc["xhgui_https_url"]; ok && !app.CanUseHTTPOnly() {
+			xhguiURL = desc["xhgui_https_url"].(string)
+		}
+	} else {
+		// If router is not enabled, use docker IP with regular port
 		ip, _ := dockerutil.GetDockerIP()
 		xhguiURL = fmt.Sprintf("http://%s:%s", ip, app.HostXHGuiPort)
 	}
+
 	return xhguiURL
 }
 

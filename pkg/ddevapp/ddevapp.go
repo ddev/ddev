@@ -232,6 +232,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	appDesc["mailpit_https_url"] = "https://" + app.GetHostname() + ":" + app.GetMailpitHTTPSPort()
 	appDesc["mailpit_url"] = "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort()
+	appDesc["xhgui_https_url"] = "https://" + app.GetHostname() + ":" + app.GetXHGuiHTTPSPort()
+	appDesc["xhgui_url"] = "http://" + app.GetHostname() + ":" + app.GetXHGuiHTTPPort()
 	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()

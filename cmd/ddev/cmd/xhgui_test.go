@@ -64,7 +64,12 @@ func TestCmdXHGui(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// Now hit xhgui UI
-	xhguiURL := app.GetXHGuiURL()
+	desc, err := app.Describe(true)
+	require.NoError(t, err)
+	require.NotNil(t, desc["xhgui_url"])
+	require.NotNil(t, desc["xhgui_https_url"])
+	xhguiURL := desc["xhgui_https_url"].(string)
+
 	out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, 2)
 	require.NoError(t, err)
 	// Output should contain at least one run
