@@ -9,11 +9,12 @@ Additionally, you can use `pre.` variants that are inserted before what DDEV add
 * .ddev/db-build/pre.Dockerfile
 * .ddev/db-build/pre.Dockerfile.*
 
-Finally, you can also use `stage.` variants that are inserted on top of the Dockerfile allowing for Multi-stage builds:
-See https://docs.docker.com/build/building/multi-stage/
+Finally, you can also use `prepend.` variants that are inserted on top of the Dockerfile allowing for Multi-stage builds and other more complex use cases:
 
-* .ddev/db-build/stage.Dockerfile
-* .ddev/db-build/stage.Dockerfile.*
+* .ddev/db-build/prepend.Dockerfile
+* .ddev/db-build/prepend.Dockerfile.*
+
+See https://docs.docker.com/build/building/multi-stage/
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.dbimageBuild/Dockerfile`. You can force a rebuild with `ddev debug rebuild -s db`.
 

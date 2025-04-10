@@ -1350,15 +1350,15 @@ RUN touch /var/tmp/`+"added-by-"+item+"-test4.txt"))
 RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		assert.NoError(err)
 
-		// Testing stage.Dockerfile* with a simple multi-stage build
-		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/stage.Dockerfile"), []byte(`
+		// Testing prepend.Dockerfile* with a simple multi-stage build
+		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/prepend.Dockerfile"), []byte(`
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE AS stage
 `+
 			`RUN touch /var/tmp/`+"added-by-"+item+"-stage.txt"+`
 			 RUN touch /var/tmp/`+"added-by-"+item+"-stage-other.txt"))
 		assert.NoError(err)
-		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/stage.Dockerfile.test5"), []byte(`
+		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/prepend.Dockerfile.test5"), []byte(`
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE AS test5
 `+
@@ -1452,8 +1452,8 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 		assert.Error(err)
 
 		// Dockerfiles should not be copied
-		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/stage.Dockerfile"))
-		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/stage.Dockerfile.test5"))
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/prepend.Dockerfile"))
+		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/prepend.Dockerfile.test5"))
 		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.test5"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,

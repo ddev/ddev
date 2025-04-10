@@ -106,12 +106,12 @@ For certain use cases, you might need to add directives very early on the Docker
 * `.ddev/db-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile`
 
-Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/), you can use `stage.` variants that are inserted *before* everything else, *on top* of the generated Dockerfile.
+Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/) and other more complex use cases, you can use `prepend.` variants that are inserted *before* everything else, *on top* of the generated Dockerfile.
 
-* `.ddev/web-build/stage.Dockerfile.*`
-* `.ddev/web-build/stage.Dockerfile`
-* `.ddev/db-build/stage.Dockerfile.*`
-* `.ddev/db-build/stage.Dockerfile`
+* `.ddev/web-build/prepend.Dockerfile.*`
+* `.ddev/web-build/prepend.Dockerfile`
+* `.ddev/db-build/prepend.Dockerfile.*`
+* `.ddev/db-build/prepend.Dockerfile`
 
 Multi-stage builds are useful to anyone who has struggled to optimize Dockerfiles while keeping them easy to read and maintain.
 
@@ -151,14 +151,14 @@ RUN chmod -R ugo+rw $COMPOSER_HOME
 ENV COMPOSER_HOME=""
 ```
 
-An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) web image could have a  `.ddev/web-build/stage.Dockerfile`:
+An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) web image could have a  `.ddev/web-build/prepend.Dockerfile`:
 
 ```dockerfile
-# We must declare the build enviroment variables we want to use on stage.Dockerfile
+# We must declare the build enviroment variables we want to use on prepend.Dockerfile
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE AS build-stage-go
 
-# We must declare the build enviroment variables we want to use on stage.Dockerfile
+# We must declare the build enviroment variables we want to use on prepend.Dockerfile
 ARG uid
 ARG gid
 
@@ -193,8 +193,8 @@ The following environment variables are available for the web Dockerfile to use 
 * `$TARGETOS`: The build target operating system (always `linux`)
 * `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
 
-!!!warning "These variables won't be automatically available on `stage.Dockerfile*` variants"
-    If you need to use any of these variables you will need to manually add them to your `stage.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
+!!!warning "These variables won't be automatically available on `prepend.Dockerfile*` variants"
+    If you need to use any of these variables you will need to manually add them to your `prepend.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
 
 For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
 

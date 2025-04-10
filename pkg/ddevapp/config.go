@@ -716,14 +716,16 @@ func (app *DdevApp) CheckCustomConfig() {
 	for _, buildType := range []string{"web-build", "db-build"} {
 		customDockerPath := filepath.Join(ddevDir, buildType)
 		if _, err := os.Stat(customDockerPath); err == nil {
-			dockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "Dockerfile*"))
+			mainDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "Dockerfile*"))
 			util.CheckErr(err)
 			preDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "pre.Dockerfile*"))
 			util.CheckErr(err)
-			stageDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "stage.Dockerfile*"))
+			prependDockerFiles, err := filepath.Glob(filepath.Join(customDockerPath, "prepend.Dockerfile*"))
 			util.CheckErr(err)
+			var dockerFiles []string
+			dockerFiles = append(dockerFiles, prependDockerFiles...)
 			dockerFiles = append(dockerFiles, preDockerFiles...)
-			dockerFiles = append(dockerFiles, stageDockerFiles...)
+			dockerFiles = append(dockerFiles, mainDockerFiles...)
 			dockerFiles = slices.DeleteFunc(dockerFiles, func(s string) bool {
 				return strings.HasSuffix(s, ".example")
 			})
@@ -1256,9 +1258,9 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 `
-	// If there are user stage.Dockerfile.* files, insert their contents
+	// If there are user prepend.Dockerfile.* files, insert their contents
 	if userDockerfilePath != "" {
-		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "stage.Dockerfile*"))
+		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "prepend.Dockerfile*"))
 		if err != nil {
 			return err
 		}
@@ -1775,7 +1777,7 @@ func validateHookYAML(source []byte) error {
 
 // isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file
 // We consider files in the .ddev/web-build and .ddev/db-build directory to be context files
-// excluding /Dockerfile*, /pre.Dockerfile*, /stage.Dockerfile.* and /README.txt
+// excluding /Dockerfile*, /pre.Dockerfile*, /prepend.Dockerfile.* and /README.txt
 func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, error) {
 	// Directories are always context.
 	if fileutil.IsDirectory(file) {
@@ -1792,7 +1794,7 @@ func isNotDockerfileContextFile(userDockerfilePath string, file string) (bool, e
 	}
 	filename := filepath.Base(file)
 	// Return true for not context Dockerfiles
-	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") || strings.HasPrefix(filename, "stage.Dockerfile") {
+	if strings.HasPrefix(filename, "Dockerfile") || strings.HasPrefix(filename, "pre.Dockerfile") || strings.HasPrefix(filename, "prepend.Dockerfile") {
 		return true, nil
 	}
 	// Return true for not context README.txt if it is managed by DDEV
