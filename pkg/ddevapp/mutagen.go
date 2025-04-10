@@ -540,7 +540,7 @@ func DownloadMutagen() error {
 	if err != nil {
 		return errors.Errorf("Unable to create directory %s: %v", globalMutagenDir, err)
 	}
-	err = util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	err = util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), "")
 	if err != nil {
 		return err
 	}

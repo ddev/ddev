@@ -16,7 +16,7 @@ import (
 )
 
 // DownloadFile retrieves a file.
-func DownloadFile(destPath string, url string, progressBar bool) (err error) {
+func DownloadFile(destPath string, url string, progressBar bool, shaSumURL string) (err error) {
 	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
 		progressBar = false
 	}

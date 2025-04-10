@@ -1594,7 +1594,7 @@ func DownloadDockerCompose() error {
 	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
-	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), "")
 	if err != nil {
 		return err
 	}

@@ -408,7 +408,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 	if aErr != nil {
 		output.UserOut.Printf("Downloading %s", sourceURL)
 
-		err := util.DownloadFile(archiveFullPath, sourceURL, false)
+		err := util.DownloadFile(archiveFullPath, sourceURL, false, "")
 		if err != nil {
 			_ = os.RemoveAll(archiveFullPath)
 			return extractPath, archiveFullPath, fmt.Errorf("failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
