@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -39,6 +40,13 @@ func TestDownloadFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+		content, err := os.ReadFile(dest)
+		if err != nil {
+			t.Fatalf("failed to read downloaded file: %v", err)
+		}
+		if string(content) != testData {
+			t.Fatalf("file content mismatch: got %q, want %q", content, testData)
+		}
 	})
 
 	t.Run("correct shasum", func(t *testing.T) {
@@ -47,6 +55,13 @@ func TestDownloadFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
+		content, err := os.ReadFile(dest)
+		if err != nil {
+			t.Fatalf("failed to read downloaded file: %v", err)
+		}
+		if string(content) != testData {
+			t.Fatalf("file content mismatch: got %q, want %q", content, testData)
+		}
 	})
 
 	t.Run("incorrect shasum", func(t *testing.T) {
@@ -54,6 +69,9 @@ func TestDownloadFile(t *testing.T) {
 		err := DownloadFile(dest, ts.URL+"/"+fileName, false, ts.URL+"/badsha256sums.txt")
 		if err == nil || err.Error() == "" {
 			t.Fatal("expected SHA256 mismatch error, got nil")
+		}
+		if _, statErr := os.Stat(dest); !os.IsNotExist(statErr) {
+			t.Fatalf("expected file %s to be deleted after sha mismatch, but it exists", dest)
 		}
 	})
 }

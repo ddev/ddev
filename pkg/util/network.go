@@ -89,11 +89,13 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 		}
 
 		if matchedSHA == "" {
+			_ = os.Remove(destPath)
 			return fmt.Errorf("no matching SHA256 found for %s in shaSum file", baseName)
 		}
 
 		actualSHA := fmt.Sprintf("%x", hasher.Sum(nil))
 		if actualSHA != matchedSHA {
+			_ = os.Remove(destPath)
 			return fmt.Errorf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
 		}
 	}
