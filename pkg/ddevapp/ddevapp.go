@@ -81,7 +81,7 @@ type WebExtraDaemon struct {
 // DdevApp is the struct that represents a DDEV app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	Name                      string                 `yaml:"name"`
+	Name                      string                 `yaml:"name,omitempty"`
 	Type                      string                 `yaml:"type"`
 	AppRoot                   string                 `yaml:"-"`
 	Docroot                   string                 `yaml:"docroot"`
@@ -3445,6 +3445,24 @@ func (app *DdevApp) GetMinimalContainerTimeout() string {
 		minimalTimeout = nodeps.DefaultDefaultContainerTimeout
 	}
 	return minimalTimeout
+}
+
+// HasConfigNameOverride checks if the app name should be different,
+// returns true if the app name has been changed along with the new app name.
+func (app *DdevApp) HasConfigNameOverride() (bool, string) {
+	newApp := DdevApp{ConfigPath: app.ConfigPath}
+	if _, err := newApp.ReadConfig(false); err != nil {
+		return false, app.Name
+	}
+	name := newApp.Name
+	if _, err := newApp.ReadConfig(true); err != nil {
+		return false, app.Name
+	}
+	nameWithOverrides := newApp.Name
+	if name != nameWithOverrides {
+		return true, nameWithOverrides
+	}
+	return false, app.Name
 }
 
 // genericImportFilesAction defines the workflow for importing project files.
