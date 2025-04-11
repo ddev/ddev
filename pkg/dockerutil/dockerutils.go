@@ -1585,7 +1585,7 @@ func DownloadDockerCompose() error {
 	globalBinDir := globalconfig.GetDDEVBinDir()
 	destFile, _ := globalconfig.GetDockerComposePath()
 
-	composeURL, err := dockerComposeDownloadLink()
+	composeURL, shasumURL, err := dockerComposeDownloadLink()
 	if err != nil {
 		return err
 	}
@@ -1594,8 +1594,9 @@ func DownloadDockerCompose() error {
 	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
-	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), shasumURL)
 	if err != nil {
+		_ = os.Remove(destFile)
 		return err
 	}
 	output.UserOut.Printf("Download complete.")
@@ -1611,26 +1612,8 @@ func DownloadDockerCompose() error {
 	return nil
 }
 
-func dockerComposeDownloadLink() (string, error) {
-	v := globalconfig.GetRequiredDockerComposeVersion()
-	if len(v) < 3 {
-		return "", fmt.Errorf("required docker-compose version is invalid: %v", v)
-	}
-	baseVersion := v[1:2]
-
-	switch baseVersion {
-	case "2":
-		return dockerComposeDownloadLinkV2()
-	}
-	return "", fmt.Errorf("invalid docker-compose base version %s", v)
-}
-
-// dockerComposeDownloadLinkV2 downlods compose v1 downloads like
-//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-darwin-aarch64
-//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-darwin-x86_64
-//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-windows-x86_64.exe
-
-func dockerComposeDownloadLinkV2() (string, error) {
+// dockerComposeDownloadLink returns the URL and SHASUM-file link for docker-compose
+func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error) {
 	arch := runtime.GOARCH
 
 	switch arch {
@@ -1639,14 +1622,16 @@ func dockerComposeDownloadLinkV2() (string, error) {
 	case "amd64":
 		arch = "x86_64"
 	default:
-		return "", fmt.Errorf("only ARM64 and AMD64 architectures are supported for docker-compose v2, not %s", arch)
+		return "", "", fmt.Errorf("only ARM64 and AMD64 architectures are supported for docker-compose, not %s", arch)
 	}
 	flavor := runtime.GOOS + "-" + arch
-	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
+	composerURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
 	if runtime.GOOS == "windows" {
-		ComposeURL = ComposeURL + ".exe"
+		composerURL = composerURL + ".exe"
 	}
-	return ComposeURL, nil
+	shasumURL = fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/checksums.txt", globalconfig.GetRequiredDockerComposeVersion())
+
+	return composerURL, shasumURL, nil
 }
 
 // IsDockerDesktop detects if running on Docker Desktop

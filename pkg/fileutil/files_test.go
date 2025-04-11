@@ -245,3 +245,44 @@ func TestIsSameFile(t *testing.T) {
 	assert.NoError(err)
 	assert.False(isSame)
 }
+
+// TestRemoveFilesMatchingGlob tests that RemoveFilesMatchingGlob works
+func TestRemoveFilesMatchingGlob(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a few test files
+	files := []string{"match1.log", "match2.log", "keep.txt"}
+	for _, name := range files {
+		err := os.WriteFile(filepath.Join(tmpDir, name), []byte("test content"), 0644)
+		if err != nil {
+			t.Fatalf("failed to create test file %s: %v", name, err)
+		}
+	}
+
+	// Call RemoveFilesMatchingGlob to remove *.log files
+	err := fileutil.RemoveFilesMatchingGlob(filepath.Join(tmpDir, "*.log"))
+	if err != nil {
+		t.Fatalf("RemoveFilesMatchingGlob returned error: %v", err)
+	}
+
+	// Assert that .log files are gone and .txt remains
+	for _, name := range files {
+		path := filepath.Join(tmpDir, name)
+		_, err := os.Stat(path)
+		if filepath.Ext(name) == ".log" {
+			if !os.IsNotExist(err) {
+				t.Errorf("expected file %s to be removed, but it exists", path)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("expected file %s to exist, but got error: %v", path, err)
+			}
+		}
+	}
+
+	// It should not error when nothing matches
+	err = fileutil.RemoveFilesMatchingGlob(filepath.Join(tmpDir, "*.nomatch"))
+	if err != nil {
+		t.Errorf("expected no error when no files match, got: %v", err)
+	}
+}

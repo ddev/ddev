@@ -13,7 +13,7 @@ import (
 
 var DdevBin = "ddev"
 
-// TestDockerComposeDownload
+// TestDockerComposeDownload verifies that we can download a particular docker-compose version
 func TestDockerComposeDownload(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
@@ -50,7 +50,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	assert.False(downloaded)
 
-	for _, v := range []string{"v2.18.0"} {
+	for _, v := range []string{"v2.32.4"} {
 		globalconfig.DockerComposeVersion = ""
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = v
 		downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()

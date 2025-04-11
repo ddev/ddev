@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"golang.org/x/term"
@@ -16,16 +18,33 @@ import (
 )
 
 // DownloadFile retrieves a file.
-func DownloadFile(destPath string, url string, progressBar bool) (err error) {
+func DownloadFile(destPath string, url string, progressBar bool, shaSumURL string) (err error) {
 	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
 		progressBar = false
 	}
+
+	// If shaSumURL is provided, download and read the expected SHASUM
+	var expectedSHA string
+	if shaSumURL != "" {
+		resp, err := http.Get(shaSumURL)
+		if err != nil {
+			return fmt.Errorf("failed to download shaSum URL %s: %v", shaSumURL, err)
+		}
+		defer CheckClose(resp.Body)
+
+		shaBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read shaSum file: %v", err)
+		}
+		expectedSHA = string(bytes.TrimSpace(shaBytes))
+	}
+
 	// Create the file
-	out, err := os.Create(destPath)
+	outFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
-	defer CheckClose(out)
+	defer CheckClose(outFile)
 
 	// Get the data
 	resp, err := http.Get(url)
@@ -37,23 +56,54 @@ func DownloadFile(destPath string, url string, progressBar bool) (err error) {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download link %s returned wrong status code: got %v want %v", url, resp.StatusCode, http.StatusOK)
 	}
+
 	reader := resp.Body
 	if progressBar {
-
 		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
 		bar.Start()
-
-		// create proxy reader
 		reader = bar.NewProxyReader(resp.Body)
-		// Writer the body to file
-		_, err = io.Copy(out, reader)
-		bar.Finish()
-	} else {
-		_, err = io.Copy(out, reader)
+		defer bar.Finish()
 	}
 
-	if err != nil {
+	hasher := sha256.New()
+	writer := io.MultiWriter(outFile, hasher)
+	if _, err = io.Copy(writer, reader); err != nil {
 		return err
+	}
+
+	if expectedSHA != "" {
+		baseName := filepath.Base(url)
+		var matchedSHA string
+
+		lines := bytes.Split([]byte(expectedSHA), []byte{'\n'})
+		for _, line := range lines {
+			fields := bytes.Fields(line)
+			if len(fields) != 2 {
+				continue
+			}
+			filename := bytes.TrimPrefix(fields[1], []byte("*"))
+			if bytes.Equal(filename, []byte(baseName)) {
+				matchedSHA = string(fields[0])
+				break
+			}
+		}
+
+		if matchedSHA == "" {
+			_ = outFile.Close()
+			_ = os.Remove(destPath)
+			return fmt.Errorf("no matching SHA256 found for %s in shaSum file", baseName)
+		}
+
+		actualSHA := fmt.Sprintf("%x", hasher.Sum(nil))
+		if actualSHA != matchedSHA {
+			_ = outFile.Close()
+			fileRemoveErr := os.Remove(destPath)
+			msg := fmt.Sprintf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
+			if fileRemoveErr != nil {
+				msg += fmt.Sprintf("\nAlso failed to remove file %s: %v", destPath, fileRemoveErr)
+			}
+			return errors.New(msg)
+		}
 	}
 
 	return nil
