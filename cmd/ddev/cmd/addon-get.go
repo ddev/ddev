@@ -130,10 +130,10 @@ ddev add-on get /path/to/tarball.tar.gz
 				argType = "tarball"
 			}
 			extractedDir, cleanup, err = archive.DownloadAndExtractTarball(tarballURL, true)
+			defer cleanup()
 			if err != nil {
 				util.Failed("Unable to download %v: %v", sourceRepoArg, err)
 			}
-			defer cleanup()
 		}
 
 		// 20220811: Don't auto-start because it auto-creates the wrong database in some situations, leading to a

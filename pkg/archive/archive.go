@@ -502,12 +502,13 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, func(), error) {
 	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("ddev_%s_*", filepath.Base(tarball)))
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to create temp dir: %v", err)
+		return "", func() {}, fmt.Errorf("unable to create temp dir: %v", err)
 	}
+	cleanupFunc := func() { _ = os.RemoveAll(tmpDir) }
 
 	err = Untar(tarball, tmpDir, "")
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to untar %v: %v", tmpDir, err)
+		return "", cleanupFunc, fmt.Errorf("unable to untar %v: %v", tmpDir, err)
 	}
 
 	// If removeTopLevel then the guts of the tarball are the first level directory
@@ -517,13 +518,12 @@ func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, fun
 	if removeTopLevel {
 		list, err := fileutil.ListFilesInDir(tmpDir)
 		if err != nil {
-			return "", nil, fmt.Errorf("unable to list files in %v: %v", tmpDir, err)
+			return "", cleanupFunc, fmt.Errorf("unable to list files in %v: %v", tmpDir, err)
 		}
 		if len(list) == 0 {
-			return "", nil, fmt.Errorf("no files found in %v", tmpDir)
+			return "", cleanupFunc, fmt.Errorf("no files found in %v", tmpDir)
 		}
 		extractedDir = path.Join(tmpDir, list[0])
 	}
-	cleanupFunc := func() { _ = os.RemoveAll(tmpDir) }
 	return extractedDir, cleanupFunc, nil
 }
