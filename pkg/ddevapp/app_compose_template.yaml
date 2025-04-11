@@ -182,7 +182,7 @@ services:
     - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
     - COREPACK_HOME=/mnt/ddev-global-cache/corepack
     - DOCROOT=${DDEV_DOCROOT}
-    - DDEV_APPROOT="/var/www/html"
+    - DDEV_APPROOT=/var/www/html
     - DDEV_COMPOSER_ROOT
     - DDEV_DATABASE
     - DDEV_DOCROOT
