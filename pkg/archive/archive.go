@@ -492,9 +492,6 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 		return "", nil, fmt.Errorf("unable to download %v: %v", url, err)
 	}
 	extractedDir, cleanup, err := ExtractTarballWithCleanup(tarball, removeTopLevel)
-	if err != nil {
-		_ = os.RemoveAll(extractedDir)
-	}
 	return extractedDir, cleanup, err
 }
 
