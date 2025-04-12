@@ -116,6 +116,12 @@ teardown() {
   # ddev composer create drupal/cms
   run ddev composer create drupal/cms
   assert_success
+  # Run Drush site install to set up the site
+  run ddev drush si --account-name=admin --account-pass=admin -y
+  assert_success
+  # Apply one of the additional recipes Drupal CMS ships with
+  run ddev drush recipe ../recipes/drupal_cms_blog
+  assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
@@ -123,7 +129,11 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "location: /core/install.php"
-  assert_output --partial "HTTP/2 302"
+  assert_output --partial "HTTP/2 200"
+  assert_output --partial "expires: Sun, 19 Nov 1978 05:00:00 GMT"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
+  run curl -sf https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "<title>Home | Drush Site-Install</title>"
+  assert_output --partial "<span>A celebration of Drupal and open-source contributions</span>"
 }
