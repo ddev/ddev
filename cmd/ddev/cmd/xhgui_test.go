@@ -85,7 +85,7 @@ func TestCmdXHGui(t *testing.T) {
 	require.Contains(t, out, "XHProf is disabled")
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "on")
 	assert.NoError(t, err)
-	assert.Contains(string(out), "Enabled xhgui")
+	assert.Contains(t, out, "Enabled xhgui")
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "off")
 	assert.NoError(t, err)
 	assert.Contains(string(out), "Disabled xhgui")
