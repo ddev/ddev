@@ -11,7 +11,6 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ddev/ddev/pkg/exec"
@@ -84,9 +83,9 @@ func TestCmdXHGui(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, out, "XHProf is disabled")
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "on")
-	assert.NoError(t, err)
-	assert.Contains(t, out, "Enabled xhgui")
+	require.NoError(t, err)
+	require.Contains(t, out, "Enabled xhgui")
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "off")
-	assert.NoError(t, err)
-	assert.Contains(t, out, "Disabled xhgui")
+	require.NoError(t, err)
+	require.Contains(t, out, "Disabled xhgui")
 }
