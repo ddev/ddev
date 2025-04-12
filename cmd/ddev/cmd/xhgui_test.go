@@ -88,5 +88,5 @@ func TestCmdXHGui(t *testing.T) {
 	assert.Contains(t, out, "Enabled xhgui")
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "off")
 	assert.NoError(t, err)
-	assert.Contains(string(out), "Disabled xhgui")
+	assert.Contains(t, out, "Disabled xhgui")
 }
