@@ -12,7 +12,7 @@ if (file_exists($phpProfilerAutoload)) {
 }
 
 $collector_php = "/usr/local/xhgui.collector/xhgui.collector.php";
-if (!(bool) ('XHGUI_ENABLED')) {
+if (getenv('XHGUI_ENABLED') === '0') {
     # some output?
     return;
 }
