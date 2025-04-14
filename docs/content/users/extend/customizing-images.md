@@ -154,11 +154,12 @@ ENV COMPOSER_HOME=""
 An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) web image could have a  `.ddev/web-build/prepend.Dockerfile`:
 
 ```dockerfile
-# We must declare the build enviroment variables we want to use on prepend.Dockerfile
+# If we want to use any of the build time environment variables injected by ddev
+# on the prepend.Dockerfile* variants we need to manually declare them to make
+# them available using the ARG instruction.
 ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE AS build-stage-go
 
-# We must declare the build enviroment variables we want to use on prepend.Dockerfile
 ARG uid
 ARG gid
 
