@@ -17,7 +17,7 @@ var WebTag = "v1.24.4" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.4"
+var BaseDBTag = "20250207_rfay_use_regular_xtrabackup"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

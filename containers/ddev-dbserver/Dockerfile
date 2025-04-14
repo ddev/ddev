@@ -11,9 +11,7 @@ ARG BASE_IMAGE
 ARG DB_TYPE
 ARG DB_MAJOR_VERSION
 
-#TODO: 2024-12-07: Currently the "testing" repository, change to the real one when they release
-# See https://perconadev.atlassian.net/browse/PXB-3361
-ARG PERCONA_SETUP_URL=https://repo.percona.com/prel/apt/pool/testing/p/percona-release/percona-release_1.0-30.generic_all.deb
+ARG PERCONA_SETUP_URL=https://repo.percona.com/apt/percona-release_latest.generic_all.deb
 
 ARG LANG=C.UTF-8
 ARG MYSQL_DATABASE=db
