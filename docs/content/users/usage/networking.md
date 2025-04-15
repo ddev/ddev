@@ -87,21 +87,31 @@ Applications running inside containers do **not** inherit trust from the host sy
 The standard approach:
 
 1. Export the corporate CA certificate (`.crt`) as described in the section below.
-2. Place the `.crt` file in your `.ddev/web-build` directory.
-3. Add a `.ddev/web-build/pre.Dockerfile.vpn` like this:
+2. Place the `.crt` file in both your `.ddev/web-build` and `.ddev/db-build` directories.
+3. Add a `.ddev/web-build/pre.Dockerfile.vpn` and `.ddev/db-build/pre.Dockerfile.vpn` like this:
 
     ```Dockerfile
+    ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/node_ca_certs.pem
     COPY mycorp-ca.crt /usr/local/share/ca-certificates/
     RUN update-ca-certificates
     ```
 
-4. Run:
+4. If you're using Node.js/npm make it trust both the DDEV `mkcert` CA and your corporate CA by combining the two into a single file and then making the environment variable `NODE_EXTRA_CA_CERTS` point to that file. Add a post-start hook to concatenate the required files into the needed `/usr/local/share/ca-certificates/node_ca_certs.pem`. For example, in a `.ddev/config.vpn.yaml` add `post-start` hook:
+
+    ```yaml
+   hooks:
+     post-start:
+       - exec: "cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
+    ```
+
+5. Run:
 
     ```bash
     ddev restart
     ddev exec curl -I https://www.google.com
     # ✅ Expect: HTTP/2 200
     # ❌ If not trusted: curl: (60) SSL certificate problem
+   ddev npm install
     ```
 
     You should see a `200 OK` response if the CA is trusted correctly.
@@ -112,7 +122,7 @@ This method works across all OS platforms and all Docker providers, because you'
 
 ### 🔍 Where to Get the Corporate CA Certificate
 
-#### Option 1: Ask IT Department
+#### Option 1: Ask Your IT Department
 
 Request the "TLS root certificate" or "SSL inspection CA" used by your company’s VPN or proxy.
 
