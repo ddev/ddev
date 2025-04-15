@@ -88,7 +88,7 @@ The standard approach:
 
 1. Export the corporate CA certificate (`.crt`) as described in the section below.
 2. Place the `.crt` file in your `.ddev/web-build` directory.
-3. Add a `Dockerfile.vpn` like this:
+3. Add a `.ddev/web-build/pre.Dockerfile.vpn` like this:
 
     ```Dockerfile
     COPY mycorp-ca.crt /usr/local/share/ca-certificates/
