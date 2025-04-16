@@ -11,7 +11,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 * Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
-* Toggle Xdebug on and off easily with `ddev xdebug toggle`.
+* Toggle Xdebug on and off easily with `ddev xdebug toggle` (or `disable_xdebug`/`enable_xdebug` inside the container).
 * `ddev xdebug status` will show Xdebug’s current status.
 * You may need to open port 9003 in your firewall to allow Xdebug access. (See [Troubleshooting Xdebug](#troubleshooting-xdebug) below.)
 * The IDE’s debug server port must be set to Xdebug’s default 9003, which is already the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
