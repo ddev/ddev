@@ -99,9 +99,9 @@ The standard approach:
 4. If you're using Node.js/npm make it trust both the DDEV `mkcert` CA and your corporate CA by combining the two into a single file and then making the environment variable `NODE_EXTRA_CA_CERTS` point to that file. Add a post-start hook to concatenate the required files into the needed `/usr/local/share/ca-certificates/node_ca_certs.pem`. For example, in a `.ddev/config.vpn.yaml` add `post-start` hook:
 
     ```yaml
-   hooks:
-     post-start:
-       - exec: "cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
+    hooks:
+      post-start:
+        - exec: "cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
     ```
 
 5. Run:
@@ -111,7 +111,7 @@ The standard approach:
     ddev exec curl -I https://www.google.com
     # ✅ Expect: HTTP/2 200
     # ❌ If not trusted: curl: (60) SSL certificate problem
-   ddev npm install
+    ddev npm install
     ```
 
     You should see a `200 OK` response if the CA is trusted correctly.
