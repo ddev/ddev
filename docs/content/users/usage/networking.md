@@ -118,6 +118,9 @@ The standard approach:
 
 This method works across all OS platforms and all Docker providers, because you're explicitly modifying the container's certificate store.
 
+!!!note "Clear or recreate buildx contexts"
+    In testing, we found that an old `docker buildx` context can make all of the `ddev start` builds fail in this situation. We had to remove buildx contexts (`docker buildx ls` and `docker buildx rm <context>` may help, or removing the `~/.docker/buildx` directory.)
+
 ---
 
 ### 🔍 Where to Get the Corporate CA Certificate
