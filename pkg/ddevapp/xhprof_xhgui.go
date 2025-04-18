@@ -118,6 +118,7 @@ func XHProfDisable(app *DdevApp) error {
 func XHProfStatus(app *DdevApp) (status bool, err error) {
 	out, _, err := app.Exec(&ExecOpts{
 		Cmd: `php -r 'echo extension_loaded("xhprof");'`,
+		Env: []string{"XDEBUG_MODE=off"},
 	})
 	if err != nil {
 		return false, err
