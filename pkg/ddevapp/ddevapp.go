@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -2479,6 +2480,8 @@ func (app *DdevApp) DockerEnv() {
 	// see https://stackoverflow.com/questions/78865612/ddev-mkcert-install-fails-or-hangs-when-java-home-misconfigured
 	_ = os.Unsetenv("JAVA_HOME")
 
+	primaryURL := app.GetPrimaryURL()
+
 	envVars := map[string]string{
 		// The compose project name can no longer contain dots; must be lower-case
 		"COMPOSE_PROJECT_NAME":           app.GetComposeProjectName(),
@@ -2497,40 +2500,43 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_FILES_DIR":                 app.GetContainerUploadDir(),
 		"DDEV_FILES_DIRS":                strings.Join(app.GetContainerUploadDirs(), ","),
 
-		"DDEV_HOST_DB_PORT":        dbPortStr,
-		"DDEV_HOST_MAILHOG_PORT":   app.HostMailpitPort,
-		"DDEV_HOST_MAILPIT_PORT":   app.HostMailpitPort,
-		"DDEV_HOST_HTTP_PORT":      hostHTTPPortStr,
-		"DDEV_HOST_HTTPS_PORT":     hostHTTPSPortStr,
-		"DDEV_HOST_WEBSERVER_PORT": hostHTTPPortStr,
-		"DDEV_MAILHOG_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
-		"DDEV_MAILHOG_PORT":        app.GetMailpitHTTPPort(),
-		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
-		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
-		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
-		"DDEV_XHGUI_HTTP_PORT":     app.GetXHGuiHTTPPort(),
-		"DDEV_XHGUI_HTTPS_PORT":    app.GetXHGuiHTTPSPort(),
-		"DDEV_DOCROOT":             app.GetDocroot(),
-		"DDEV_HOSTNAME":            app.HostName(),
-		"DDEV_UID":                 uidStr,
-		"DDEV_GID":                 gidStr,
-		"DDEV_MUTAGEN_ENABLED":     strconv.FormatBool(app.IsMutagenEnabled()),
-		"DDEV_PHP_VERSION":         app.PHPVersion,
-		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
-		"DDEV_PROJECT_TYPE":        app.Type,
-		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
-		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
-		"DDEV_XHPROF_MODE":         app.GetXHProfMode(),
-		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
-		"DDEV_VERSION":             versionconstants.DdevVersion,
-		"DOCKER_SCAN_SUGGEST":      "false",
-		"DDEV_GOOS":                runtime.GOOS,
-		"DDEV_GOARCH":              runtime.GOARCH,
-		"IS_DDEV_PROJECT":          "true",
-		"IS_GITPOD":                strconv.FormatBool(nodeps.IsGitpod()),
-		"IS_CODESPACES":            strconv.FormatBool(nodeps.IsCodespaces()),
-		"IS_WSL2":                  isWSL2,
+		"DDEV_HOST_DB_PORT":             dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT":        app.HostMailpitPort,
+		"DDEV_HOST_MAILPIT_PORT":        app.HostMailpitPort,
+		"DDEV_HOST_HTTP_PORT":           hostHTTPPortStr,
+		"DDEV_HOST_HTTPS_PORT":          hostHTTPSPortStr,
+		"DDEV_HOST_WEBSERVER_PORT":      hostHTTPPortStr,
+		"DDEV_MAILHOG_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
+		"DDEV_MAILHOG_PORT":             app.GetMailpitHTTPPort(),
+		"DDEV_MAILPIT_HTTP_PORT":        app.GetMailpitHTTPPort(),
+		"DDEV_MAILPIT_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
+		"DDEV_MAILPIT_PORT":             app.GetMailpitHTTPPort(),
+		"DDEV_XHGUI_HTTP_PORT":          app.GetXHGuiHTTPPort(),
+		"DDEV_XHGUI_HTTPS_PORT":         app.GetXHGuiHTTPSPort(),
+		"DDEV_DOCROOT":                  app.GetDocroot(),
+		"DDEV_HOSTNAME":                 app.HostName(),
+		"DDEV_UID":                      uidStr,
+		"DDEV_GID":                      gidStr,
+		"DDEV_MUTAGEN_ENABLED":          strconv.FormatBool(app.IsMutagenEnabled()),
+		"DDEV_PHP_VERSION":              app.PHPVersion,
+		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
+		"DDEV_PROJECT_TYPE":             app.Type,
+		"DDEV_ROUTER_HTTP_PORT":         app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":        app.GetPrimaryRouterHTTPSPort(),
+		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_XHPROF_MODE":              app.GetXHProfMode(),
+		"DDEV_PRIMARY_URL":              primaryURL,
+		"DDEV_PRIMARY_URL_PORT":         app.GetPrimaryURLPort(primaryURL),
+		"DDEV_PRIMARY_URL_WITHOUT_PORT": netutil.BaseURLFromFullURL(primaryURL),
+		"DDEV_SCHEME":                   app.GetPrimaryURLScheme(primaryURL),
+		"DDEV_VERSION":                  versionconstants.DdevVersion,
+		"DOCKER_SCAN_SUGGEST":           "false",
+		"DDEV_GOOS":                     runtime.GOOS,
+		"DDEV_GOARCH":                   runtime.GOARCH,
+		"IS_DDEV_PROJECT":               "true",
+		"IS_GITPOD":                     strconv.FormatBool(nodeps.IsGitpod()),
+		"IS_CODESPACES":                 strconv.FormatBool(nodeps.IsCodespaces()),
+		"IS_WSL2":                       isWSL2,
 	}
 
 	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.
@@ -3086,6 +3092,46 @@ func (app *DdevApp) GetPrimaryURL() string {
 	}
 	// Failure mode, returns an empty string
 	return ""
+}
+
+// GetPrimaryURLScheme extracts the scheme (http or https) from a URL
+func (app *DdevApp) GetPrimaryURLScheme(primaryURL string) string {
+	if primaryURL == "" {
+		return ""
+	}
+	parsedURL, err := url.Parse(primaryURL)
+	if err != nil {
+		return ""
+	}
+	return parsedURL.Scheme
+}
+
+// GetPrimaryURLPort extracts the port from a URL
+// If the URL doesn't have an explicit port, returns the default port for the scheme (80 for http, 443 for https)
+func (app *DdevApp) GetPrimaryURLPort(primaryURL string) string {
+	if primaryURL == "" {
+		return ""
+	}
+	parsedURL, err := url.Parse(primaryURL)
+	if err != nil {
+		return ""
+	}
+
+	// Check if the URL has a valid scheme
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return ""
+	}
+
+	// If the URL has an explicit port, return it
+	if parsedURL.Port() != "" {
+		return parsedURL.Port()
+	}
+
+	// Otherwise return the default port for the scheme
+	if parsedURL.Scheme == "https" {
+		return "443"
+	}
+	return "80"
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
