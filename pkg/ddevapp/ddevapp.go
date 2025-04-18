@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	oexec "os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -1855,12 +1856,28 @@ func PullBaseContainerImages() error {
 	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage, versionconstants.UtilitiesImage}
 	images = append(images, FindNotOmittedImages(nil)...)
 
-	for _, i := range images {
-		err := dockerutil.Pull(i)
-		if err != nil {
-			return err
-		}
-		util.Debug("Pulled image for %s", i)
+	composeBinaryPath, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return fmt.Errorf("failed to get docker-compose path: %v", err)
+	}
+
+	// Build compose YAML in-memory
+	var buf bytes.Buffer
+	buf.WriteString("services:\n")
+	r := strings.NewReplacer(":", "-", "/", "-")
+	for _, img := range images {
+		serviceName := r.Replace(img)
+		buf.WriteString(fmt.Sprintf("  %s:\n    image: %s\n", serviceName, img))
+		util.Debug("Adding service %s to pull image %s", serviceName, img)
+	}
+
+	cmd := oexec.Command(composeBinaryPath, "-f", "-", "pull")
+	cmd.Stdin = &buf
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("failed to pull Docker images: %v", err)
 	}
 
 	return nil
