@@ -108,11 +108,14 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary project URL
+* `DDEV_PRIMARY_URL_PORT`: Port of the primary project URL, defaults to 80 for HTTP and 443 for HTTPS
+* `DDEV_PRIMARY_URL_WITHOUT_PORT`: Primary project URL without port
 * `DDEV_PROJECT`: Project name, like `d8composer`
 * `DDEV_PROJECT_STATUS`: Project status determined from the `web` and `db` services health, like `starting`, `running`, `stopped`, `paused`, or another status returned from Docker, including `healthy`, `unhealthy`, `exited`, `restarting`
 * `DDEV_PROJECT_TYPE`: `backdrop`, `drupal`, `typo3`,`wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
+* `DDEV_SCHEME`: Schema of primary project URL
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_UID`: The UID the web container runs as
@@ -128,10 +131,13 @@ Useful variables for container scripts are:
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary URL for the project
+* `DDEV_PRIMARY_URL_PORT`: Port of the primary project URL, defaults to 80 for HTTP and 443 for HTTPS
+* `DDEV_PRIMARY_URL_WITHOUT_PORT`: Primary project URL without port
 * `DDEV_PROJECT`: Project name, like `d8composer`
 * `DDEV_PROJECT_TYPE`: `backdrop`, `drupal`, `typo3`,`wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
+* `DDEV_SCHEME`: Schema of primary project URL
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, `generic`
