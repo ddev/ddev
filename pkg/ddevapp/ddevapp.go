@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -2481,6 +2480,7 @@ func (app *DdevApp) DockerEnv() {
 	_ = os.Unsetenv("JAVA_HOME")
 
 	primaryURL := app.GetPrimaryURL()
+	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
 
 	envVars := map[string]string{
 		// The compose project name can no longer contain dots; must be lower-case
@@ -2526,9 +2526,9 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_XHPROF_MODE":              app.GetXHProfMode(),
 		"DDEV_PRIMARY_URL":              primaryURL,
-		"DDEV_PRIMARY_URL_PORT":         app.GetPrimaryURLPort(primaryURL),
-		"DDEV_PRIMARY_URL_WITHOUT_PORT": netutil.BaseURLFromFullURL(primaryURL),
-		"DDEV_SCHEME":                   app.GetPrimaryURLScheme(primaryURL),
+		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
+		"DDEV_PRIMARY_URL_WITHOUT_PORT": primaryURLWithoutPort,
+		"DDEV_SCHEME":                   scheme,
 		"DDEV_VERSION":                  versionconstants.DdevVersion,
 		"DOCKER_SCAN_SUGGEST":           "false",
 		"DDEV_GOOS":                     runtime.GOOS,
@@ -3092,46 +3092,6 @@ func (app *DdevApp) GetPrimaryURL() string {
 	}
 	// Failure mode, returns an empty string
 	return ""
-}
-
-// GetPrimaryURLScheme extracts the scheme (http or https) from a URL
-func (app *DdevApp) GetPrimaryURLScheme(primaryURL string) string {
-	if primaryURL == "" {
-		return ""
-	}
-	parsedURL, err := url.Parse(primaryURL)
-	if err != nil {
-		return ""
-	}
-	return parsedURL.Scheme
-}
-
-// GetPrimaryURLPort extracts the port from a URL
-// If the URL doesn't have an explicit port, returns the default port for the scheme (80 for http, 443 for https)
-func (app *DdevApp) GetPrimaryURLPort(primaryURL string) string {
-	if primaryURL == "" {
-		return ""
-	}
-	parsedURL, err := url.Parse(primaryURL)
-	if err != nil {
-		return ""
-	}
-
-	// Check if the URL has a valid scheme
-	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-		return ""
-	}
-
-	// If the URL has an explicit port, return it
-	if parsedURL.Port() != "" {
-		return parsedURL.Port()
-	}
-
-	// Otherwise return the default port for the scheme
-	if parsedURL.Scheme == "https" {
-		return "443"
-	}
-	return "80"
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.

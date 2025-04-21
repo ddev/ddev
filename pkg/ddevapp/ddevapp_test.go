@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/ddev/ddev/pkg/netutil"
 	"net"
 	"net/url"
 	"os"
@@ -4351,19 +4350,22 @@ func TestEnvironmentVariables(t *testing.T) {
 	err = app.Restart()
 	require.NoError(t, err)
 
+	primaryURL := app.GetPrimaryURL()
+	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
+
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
 		"DDEV_DOCROOT":                  app.GetDocroot(),
 		"DDEV_HOSTNAME":                 app.GetHostname(),
 		"DDEV_PHP_VERSION":              app.PHPVersion,
-		"DDEV_PRIMARY_URL":              app.GetPrimaryURL(),
-		"DDEV_PRIMARY_URL_PORT":         app.GetPrimaryURLPort(app.GetPrimaryURL()),
-		"DDEV_PRIMARY_URL_WITHOUT_PORT": netutil.BaseURLFromFullURL(app.GetPrimaryURL()),
+		"DDEV_PRIMARY_URL":              primaryURL,
+		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
+		"DDEV_PRIMARY_URL_WITHOUT_PORT": primaryURLWithoutPort,
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":        app.GetPrimaryRouterHTTPSPort(),
-		"DDEV_SCHEME":                   app.GetPrimaryURLScheme(app.GetPrimaryURL()),
+		"DDEV_SCHEME":                   scheme,
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
 		"DDEV_VERSION":                  versionconstants.DdevVersion,
@@ -4412,14 +4414,14 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_MAILPIT_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
 		"DDEV_MAILPIT_PORT":             app.GetMailpitHTTPPort(),
 		"DDEV_PHP_VERSION":              app.PHPVersion,
-		"DDEV_PRIMARY_URL":              app.GetPrimaryURL(),
-		"DDEV_PRIMARY_URL_PORT":         app.GetPrimaryURLPort(app.GetPrimaryURL()),
-		"DDEV_PRIMARY_URL_WITHOUT_PORT": netutil.BaseURLFromFullURL(app.GetPrimaryURL()),
+		"DDEV_PRIMARY_URL":              primaryURL,
+		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
+		"DDEV_PRIMARY_URL_WITHOUT_PORT": primaryURLWithoutPort,
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":        app.GetPrimaryRouterHTTPSPort(),
-		"DDEV_SCHEME":                   app.GetPrimaryURLScheme(app.GetPrimaryURL()),
+		"DDEV_SCHEME":                   scheme,
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
@@ -4473,50 +4475,6 @@ func TestEnvFile(t *testing.T) {
 		assert.NoError(err)
 		envVal = strings.Trim(envVal, "\r\n")
 		assert.Equal(v, envVal)
-	}
-}
-
-func TestGetPrimaryURLScheme(t *testing.T) {
-	assert := asrt.New(t)
-
-	tests := map[string]string{
-		"http://example.com":       "http",
-		"https://example.com":      "https",
-		"http://example.com:8080":  "http",
-		"https://example.com:8443": "https",
-		"":                         "",
-		"not-a-url":                "",
-	}
-
-	projDir := testcommon.CreateTmpDir(t.Name())
-	app, err := ddevapp.NewApp(projDir, false)
-	require.NoError(t, err)
-
-	for testURL, expected := range tests {
-		actual := app.GetPrimaryURLScheme(testURL)
-		assert.Equal(expected, actual, "URL: %s", testURL)
-	}
-}
-
-func TestGetPrimaryURLPort(t *testing.T) {
-	assert := asrt.New(t)
-
-	tests := map[string]string{
-		"http://example.com":       "80",
-		"https://example.com":      "443",
-		"http://example.com:8080":  "8080",
-		"https://example.com:8443": "8443",
-		"":                         "",
-		"not-a-url":                "",
-	}
-
-	projDir := testcommon.CreateTmpDir(t.Name())
-	app, err := ddevapp.NewApp(projDir, false)
-	require.NoError(t, err)
-
-	for testURL, expected := range tests {
-		actual := app.GetPrimaryURLPort(testURL)
-		assert.Equal(expected, actual, "URL: %s", testURL)
 	}
 }
 
