@@ -80,18 +80,17 @@ See [Docker Engine certificate configuration](https://docs.docker.com/engine/sec
 
 ---
 
-### 📦 Container-Level SSL Trust (for `curl`, `composer`, etc.)
+### 📦 Container-Level SSL Trust (for `curl`, `composer`, `Node.js`, etc.)
 
 Applications running inside containers do **not** inherit trust from the host system. If the container makes outbound HTTPS connections, you must install the corporate CA inside the container image.
 
 The standard approach:
 
-1. Export the corporate CA certificate (`.crt`) as described in the section below.
+1. Export the corporate CA certificate (`.crt`) as described in the section below. Use the name of your `crt` file, not `mycorp-ca.crt`.
 2. Place the `.crt` file in both your `.ddev/web-build` and `.ddev/db-build` directories.
 3. Add a `.ddev/web-build/pre.Dockerfile.vpn` and `.ddev/db-build/pre.Dockerfile.vpn` like this:
 
     ```Dockerfile
-    ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/node_ca_certs.pem
     COPY mycorp-ca.crt /usr/local/share/ca-certificates/
     RUN update-ca-certificates
     ```
@@ -99,6 +98,8 @@ The standard approach:
 4. If you're using Node.js/npm make it trust both the DDEV `mkcert` CA and your corporate CA by combining the two into a single file and then making the environment variable `NODE_EXTRA_CA_CERTS` point to that file. Add a post-start hook to concatenate the required files into the needed `/usr/local/share/ca-certificates/node_ca_certs.pem`. For example, in a `.ddev/config.vpn.yaml` add `post-start` hook:
 
     ```yaml
+    web_environment:
+      - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/node_ca_certs.pem
     hooks:
       post-start:
         - exec: "cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
@@ -111,15 +112,19 @@ The standard approach:
     ddev exec curl -I https://www.google.com
     # ✅ Expect: HTTP/2 200
     # ❌ If not trusted: curl: (60) SSL certificate problem
-    ddev npm install
-    ```
+    ddev npm install --verbose
+    # ✅ Expect: Successful install
+    # ❌ If not trusted: attempt 2 failed with SELF_SIGNED_CERT_IN_CHAIN
+    ddev yarn install
+    # ✅ Expect: Successful install
+    # ❌ If not trusted: code: 'SELF_SIGNED_CERT_IN_CHAIN'
 
-    You should see a `200 OK` response if the CA is trusted correctly.
+    ```
 
 This method works across all OS platforms and all Docker providers, because you're explicitly modifying the container's certificate store.
 
 !!!note "Clear or recreate buildx contexts"
-    In testing, we found that an old `docker buildx` context can make all of the `ddev start` builds fail in this situation. We had to remove buildx contexts (`docker buildx ls` and `docker buildx rm <context>` may help, or removing the `~/.docker/buildx` directory.)
+    During the testing process, we found that an old `docker buildx` context can make all of the `ddev start` builds fail in this situation. We had to remove buildx contexts (`docker buildx ls` and `docker buildx rm <context>` may help, or removing the `~/.docker/buildx` directory.)
 
 ---
 
