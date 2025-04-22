@@ -212,10 +212,10 @@ func TestArrayToReadableOutput(t *testing.T) {
 		"file1.conf",
 		"file2.conf",
 	}
-	expectation := `[
-	file1.conf
-	file2.conf
-]`
+	expectation := `
+  - file1.conf
+  - file2.conf
+`
 	res, _ := util.ArrayToReadableOutput(testSource)
 	assert.Equal(expectation, res)
 
