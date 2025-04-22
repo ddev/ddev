@@ -99,12 +99,21 @@ For more complex requirements, you can add:
 
 These files’ content will be inserted into the constructed Dockerfile for each image. They are inserted *after* most of the rest of the things that are done to build the image, and are done in alphabetical order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alphabetical order.
 
-For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* everything else:
+For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* what DDEV adds to build the image:
 
 * `.ddev/web-build/pre.Dockerfile.*`
 * `.ddev/web-build/pre.Dockerfile`
 * `.ddev/db-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile`
+
+Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/) and other more complex use cases, you can use `prepend.` variants that are inserted *before* everything else, *on top* of the generated Dockerfile.
+
+* `.ddev/web-build/prepend.Dockerfile.*`
+* `.ddev/web-build/prepend.Dockerfile`
+* `.ddev/db-build/prepend.Dockerfile.*`
+* `.ddev/db-build/prepend.Dockerfile`
+
+Multi-stage builds are useful to anyone who has struggled to optimize Dockerfiles while keeping them easy to read and maintain.
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug rebuild`](../usage/commands.md#debug-rebuild). `ddev debug rebuild` is also great because it shows you the entire process of the build for debugging.
 
@@ -142,6 +151,34 @@ RUN chmod -R ugo+rw $COMPOSER_HOME
 ENV COMPOSER_HOME=""
 ```
 
+An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) web image could have a  `.ddev/web-build/prepend.Dockerfile`:
+
+```dockerfile
+# If we want to use any of the build time environment variables injected by ddev
+# on the prepend.Dockerfile* variants we need to manually declare them to make
+# them available using the ARG instruction.
+ARG BASE_IMAGE="scratch"
+FROM $BASE_IMAGE AS build-stage-go
+
+ARG uid
+ARG gid
+
+# install go
+RUN set -eux; \
+    GO_VERSION=$(curl -fsSL "https://go.dev/dl/?mode=json" | jq -r ".[0].version"); \
+    AARCH=$(dpkg --print-architecture); \
+    wget -q https://go.dev/dl/${GO_VERSION}.linux-${AARCH}.tar.gz -O go.tar.gz; \
+    tar -C /usr/local -xzf go.tar.gz; \
+    rm go.tar.gz;
+```
+
+And then a `Dockerfile`:
+
+```dockerfile
+# Copy entire go directory from the build stage defined above.
+COPY --from=build-stage-go /usr/local/go /usr/local
+```
+
 **Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
 
 ### Build Time Environment Variables
@@ -156,6 +193,9 @@ The following environment variables are available for the web Dockerfile to use 
 * `$TARGETARCH`: The build target architecture, like `arm64` or `amd64`
 * `$TARGETOS`: The build target operating system (always `linux`)
 * `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
+
+!!!warning "These variables won't be automatically available on `prepend.Dockerfile*` variants"
+    If you need to use any of these variables you will need to manually add them to your `prepend.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
 
 For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
 
