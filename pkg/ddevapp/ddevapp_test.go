@@ -4350,22 +4350,28 @@ func TestEnvironmentVariables(t *testing.T) {
 	err = app.Restart()
 	require.NoError(t, err)
 
+	primaryURL := app.GetPrimaryURL()
+	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
+
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
-		"DDEV_DOCROOT":           app.GetDocroot(),
-		"DDEV_HOSTNAME":          app.GetHostname(),
-		"DDEV_PHP_VERSION":       app.PHPVersion,
-		"DDEV_PRIMARY_URL":       app.GetPrimaryURL(),
-		"DDEV_PROJECT":           app.Name,
-		"DDEV_PROJECT_TYPE":      app.Type,
-		"DDEV_ROUTER_HTTP_PORT":  app.GetPrimaryRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT": app.GetPrimaryRouterHTTPSPort(),
-		"DDEV_SITENAME":          app.Name,
-		"DDEV_TLD":               app.ProjectTLD,
-		"DDEV_VERSION":           versionconstants.DdevVersion,
-		"DDEV_WEBSERVER_TYPE":    app.WebserverType,
-		"DDEV_DATABASE_FAMILY":   dbFamily,
-		"DDEV_DATABASE":          app.Database.Type + ":" + app.Database.Version,
+		"DDEV_DOCROOT":                  app.GetDocroot(),
+		"DDEV_HOSTNAME":                 app.GetHostname(),
+		"DDEV_PHP_VERSION":              app.PHPVersion,
+		"DDEV_PRIMARY_URL":              primaryURL,
+		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
+		"DDEV_PRIMARY_URL_WITHOUT_PORT": primaryURLWithoutPort,
+		"DDEV_PROJECT":                  app.Name,
+		"DDEV_PROJECT_TYPE":             app.Type,
+		"DDEV_ROUTER_HTTP_PORT":         app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":        app.GetPrimaryRouterHTTPSPort(),
+		"DDEV_SCHEME":                   scheme,
+		"DDEV_SITENAME":                 app.Name,
+		"DDEV_TLD":                      app.ProjectTLD,
+		"DDEV_VERSION":                  versionconstants.DdevVersion,
+		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
+		"DDEV_DATABASE_FAMILY":          dbFamily,
+		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
 	}
 
 	app.DockerEnv()
@@ -4394,28 +4400,31 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	// This set of hostExpectations should be maintained in parallel with documentation
 	hostExpectations := map[string]string{
-		"DDEV_APPROOT":             app.AppRoot,
-		"DDEV_DOCROOT":             app.GetDocroot(),
-		"DDEV_HOST_DB_PORT":        dbPortStr,
-		"DDEV_HOST_HTTP_PORT":      strconv.Itoa(httpPort),
-		"DDEV_HOST_HTTPS_PORT":     strconv.Itoa(httpsPort),
-		"DDEV_HOST_WEBSERVER_PORT": strconv.Itoa(httpPort),
-		"DDEV_HOST_MAILPIT_PORT":   app.HostMailpitPort,
-		"DDEV_HOSTNAME":            app.GetHostname(),
-		"DDEV_MAILHOG_PORT":        app.GetMailpitHTTPPort(),
-		"DDEV_MAILHOG_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
-		"DDEV_MAILPIT_HTTP_PORT":   app.GetMailpitHTTPPort(),
-		"DDEV_MAILPIT_HTTPS_PORT":  app.GetMailpitHTTPSPort(),
-		"DDEV_MAILPIT_PORT":        app.GetMailpitHTTPPort(),
-		"DDEV_PHP_VERSION":         app.PHPVersion,
-		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
-		"DDEV_PROJECT":             app.Name,
-		"DDEV_PROJECT_TYPE":        app.Type,
-		"DDEV_ROUTER_HTTP_PORT":    app.GetPrimaryRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":   app.GetPrimaryRouterHTTPSPort(),
-		"DDEV_SITENAME":            app.Name,
-		"DDEV_TLD":                 app.ProjectTLD,
-		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
+		"DDEV_APPROOT":                  app.AppRoot,
+		"DDEV_DOCROOT":                  app.GetDocroot(),
+		"DDEV_HOST_DB_PORT":             dbPortStr,
+		"DDEV_HOST_HTTP_PORT":           strconv.Itoa(httpPort),
+		"DDEV_HOST_HTTPS_PORT":          strconv.Itoa(httpsPort),
+		"DDEV_HOST_WEBSERVER_PORT":      strconv.Itoa(httpPort),
+		"DDEV_HOST_MAILPIT_PORT":        app.HostMailpitPort,
+		"DDEV_HOSTNAME":                 app.GetHostname(),
+		"DDEV_MAILHOG_PORT":             app.GetMailpitHTTPPort(),
+		"DDEV_MAILHOG_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
+		"DDEV_MAILPIT_HTTP_PORT":        app.GetMailpitHTTPPort(),
+		"DDEV_MAILPIT_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
+		"DDEV_MAILPIT_PORT":             app.GetMailpitHTTPPort(),
+		"DDEV_PHP_VERSION":              app.PHPVersion,
+		"DDEV_PRIMARY_URL":              primaryURL,
+		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
+		"DDEV_PRIMARY_URL_WITHOUT_PORT": primaryURLWithoutPort,
+		"DDEV_PROJECT":                  app.Name,
+		"DDEV_PROJECT_TYPE":             app.Type,
+		"DDEV_ROUTER_HTTP_PORT":         app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":        app.GetPrimaryRouterHTTPSPort(),
+		"DDEV_SCHEME":                   scheme,
+		"DDEV_SITENAME":                 app.Name,
+		"DDEV_TLD":                      app.ProjectTLD,
+		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
 	}
 
 	for k, v := range hostExpectations {

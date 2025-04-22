@@ -1,8 +1,10 @@
 package nodeps
 
 import (
+	"fmt"
 	"math/rand"
 	"net"
+	"net/url"
 	"os"
 	"regexp"
 	"runtime"
@@ -151,4 +153,37 @@ func PathWithSlashesToArray(path string) []string {
 		partial += "/"
 	}
 	return paths
+}
+
+// ParseURL parses a URL and returns the scheme, URL without port, and port
+// If the URL doesn't have an explicit port, returns the default port for the scheme
+func ParseURL(rawURL string) (scheme string, urlWithoutPort string, port string) {
+	if rawURL == "" {
+		return "", "", ""
+	}
+
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return "", "", ""
+	}
+
+	// Check if the URL has a valid scheme
+	scheme = parsedURL.Scheme
+	if scheme != "http" && scheme != "https" {
+		return "", "", ""
+	}
+
+	// Get URL without port
+	urlWithoutPort = fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Hostname())
+
+	// Get port
+	if parsedURL.Port() != "" {
+		port = parsedURL.Port()
+	} else if parsedURL.Scheme == "https" {
+		port = "443"
+	} else {
+		port = "80"
+	}
+
+	return scheme, urlWithoutPort, port
 }
