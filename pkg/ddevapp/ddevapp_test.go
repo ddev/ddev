@@ -2888,6 +2888,88 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 	}
 }
 
+// TestUploadDirs tests the functionality of multiple upload directories
+// Requires a project where the docroot is in a subdirectory, as Drupal's 'web' directory.
+// It checks the DDEV_FILES_DIRS and DDEV_FILES_DIR environment variables
+func TestUploadDirs(t *testing.T) {
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(testDir)
+
+	app, err := ddevapp.NewApp(testDir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+
+	err = os.MkdirAll(filepath.Join(app.AppRoot, "web"), 0755)
+	require.NoError(t, err)
+
+	app.Docroot = "web"
+	app.Name = t.Name()
+	// Set up multiple upload directories for testing
+	app.UploadDirs = []string{"uploads", "media", "assets", "some/other/dir", "../private"}
+	app.PerformanceMode = types.PerformanceModeMutagen
+	_ = app.Stop(true, false)
+	err = app.WriteConfig()
+	require.NoError(t, err, "Failed to write config")
+
+	// Start the app to apply the configuration
+	err = app.Start()
+	require.NoError(t, err, "Failed to start app")
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     fmt.Sprintf("echo ${DDEV_FILES_DIRS}"),
+	})
+	require.NoError(t, err)
+	envDirs := strings.Split(out, ",")
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     fmt.Sprintf("echo ${DDEV_FILES_DIR}"),
+	})
+	require.NoError(t, err)
+	firstDir := strings.Trim(out, " \n\t")
+
+	// Verify that each upload_dir is properly bind-mounted
+	// when using mutagen.
+	hostDocroot := app.GetAbsDocroot(false)
+	containerDocroot := app.GetAbsDocroot(true)
+	for i, dir := range app.UploadDirs {
+		hostPath := filepath.Join(hostDocroot, dir)
+		containerPath := path.Join(containerDocroot, dir)
+
+		// Check DDEV_FILES_DIR
+		if i == 0 {
+			require.EqualValues(t, containerPath, firstDir)
+		}
+
+		// Check against the values in DDEV_FILES_DIRS
+		require.EqualValues(t, containerPath, strings.Trim(envDirs[i], " \n\t"))
+
+		// Check that the directory exists on the host
+		require.True(t, fileutil.FileExists(hostPath), "Host directory %s does not exist", hostPath)
+
+		// Check that the directory is bind-mounted in the container
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     fmt.Sprintf("df -T %s | grep -v Mounted", containerPath),
+		})
+		require.NoError(t, err, "Error checking bind-mount for %s", containerPath)
+		re := regexp.MustCompile(`\s+`)
+		parts := re.Split(out, -1)
+		require.Len(t, parts, 8)
+		mountedOn := parts[6]
+		require.EqualValues(t, containerPath, mountedOn)
+	}
+}
+
 // TestDdevExec tests the execution of commands inside a Docker container of a site.
 func TestDdevExec(t *testing.T) {
 	assert := asrt.New(t)
