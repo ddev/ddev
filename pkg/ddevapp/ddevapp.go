@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	oexec "os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -1269,11 +1268,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	err = PullBaseContainerImages()
-	if err != nil {
-		util.Warning("Unable to pull Docker images: %v", err)
-	}
-
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		// OK to start if dbType is empty (nonexistent) or if it matches
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
@@ -1453,7 +1447,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// This needs to be done after WriteDockerComposeYAML() to get the right images
-	err = app.PullContainerImages()
+	_, err = app.PullContainerImages()
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1827,60 +1821,72 @@ func (app *DdevApp) Restart() error {
 	return err
 }
 
-// PullContainerImages configured Docker images with full output, since docker-compose up doesn't have nice output
-func (app *DdevApp) PullContainerImages() error {
-	images, err := app.FindAllImages()
-	if err != nil {
-		return err
+// PullContainerImages pulls Docker images using docker-compose pull
+// Returns error and a boolean indicating whether images were actually pulled (true) or not (false)
+func (app *DdevApp) PullContainerImages() (bool, error) {
+	// Check if internet is active before attempting to pull images
+	if !globalconfig.IsInternetActive() {
+		util.Warning("Internet connection not detected, skipping Docker image pull. Some images may be missing.")
+		return false, nil
 	}
-	// Don't pull xhgui if not in xhgui mode
-	if app.GetXHProfMode() != types.XHProfModeXHGui {
-		images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
-	}
-	images = append(images, FindNotOmittedImages(app)...)
 
-	for _, i := range images {
-		err := dockerutil.Pull(i)
+	var images []string
+
+	// Check if we have a valid project context
+	isValidProject := app != nil && app.ComposeYaml != nil
+
+	// If we have a valid project context, get the images from the app's compose file
+	if isValidProject {
+		var err error
+		images, err = app.FindAllImages()
 		if err != nil {
-			return err
+			return false, err
 		}
-		util.Debug("Pulled image for %s", i)
+		// Don't pull xhgui if not in xhgui mode
+		if app.GetXHProfMode() != types.XHProfModeXHGui {
+			images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
+		}
+		images = append(images, FindNotOmittedImages(app)...)
+	} else {
+		// If no valid project context, pull the base images needed for DDEV to function
+		images = []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage, versionconstants.UtilitiesImage}
+		images = append(images, FindNotOmittedImages(nil)...)
 	}
 
-	return nil
-}
-
-// PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
-// We always need web image, busybox, and ddev-utilities for housekeeping.
-func PullBaseContainerImages() error {
-	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage, versionconstants.UtilitiesImage}
-	images = append(images, FindNotOmittedImages(nil)...)
-
-	composeBinaryPath, err := globalconfig.GetDockerComposePath()
+	// Create a temporary directory for the docker-compose file
+	tmpDir, err := os.MkdirTemp("", "ddev-pull-images-")
 	if err != nil {
-		return fmt.Errorf("failed to get docker-compose path: %v", err)
+		return false, fmt.Errorf("failed to create temporary directory: %v", err)
 	}
+	defer os.RemoveAll(tmpDir)
 
-	// Build compose YAML in-memory
-	var buf bytes.Buffer
-	buf.WriteString("services:\n")
+	// Create docker-compose.yaml file
+	composeYaml := "services:\n"
 	r := strings.NewReplacer(":", "-", "/", "-")
 	for _, img := range images {
 		serviceName := r.Replace(img)
-		buf.WriteString(fmt.Sprintf("  %s:\n    image: %s\n", serviceName, img))
+		composeYaml += fmt.Sprintf("  %s:\n    image: %s\n", serviceName, img)
 		util.Debug("Adding service %s to pull image %s", serviceName, img)
 	}
 
-	cmd := oexec.Command(composeBinaryPath, "-f", "-", "pull")
-	cmd.Stdin = &buf
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err = cmd.Run(); err != nil {
-		return fmt.Errorf("failed to pull Docker images: %v", err)
+	// Write the compose file
+	composeFilePath := filepath.Join(tmpDir, "docker-compose.yaml")
+	err = os.WriteFile(composeFilePath, []byte(composeYaml), 0644)
+	if err != nil {
+		return false, fmt.Errorf("failed to write docker-compose.yaml: %v", err)
 	}
 
-	return nil
+	// Use ComposeCmd to pull the images
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{composeFilePath},
+		Action:       []string{"pull"},
+	})
+
+	if err != nil {
+		return false, fmt.Errorf("failed to pull Docker images: %v", err)
+	}
+
+	return true, nil
 }
 
 // FindAllImages returns an array of image tags for all containers in the compose file

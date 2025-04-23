@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -30,20 +28,14 @@ var DebugDownloadImagesCmd = &cobra.Command{
 			}
 		}
 
-		err = ddevapp.PullBaseContainerImages()
+		imagesPulled, err := (&ddevapp.DdevApp{}).PullContainerImages()
 		if err != nil {
-			util.Failed("Failed to PullBaseContainerImages(): %v", err)
+			util.Failed("Failed to PullContainerImages(): %v", err)
 		}
 
-		// Provide at least the default database image
-		dbImage := docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion)
-		err = dockerutil.Pull(dbImage)
-		if err != nil {
-			util.Failed("Failed to pull dbImage: %v", err)
+		if imagesPulled {
+			util.Success("Successfully downloaded DDEV images")
 		}
-		util.Debug("Pulled %s", dbImage)
-
-		util.Success("Successfully downloaded DDEV images")
 	},
 }
 
