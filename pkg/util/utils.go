@@ -360,12 +360,17 @@ func SliceToUniqueSlice(inSlice *[]string) []string {
 	return newSlice
 }
 
-// ArrayToReadableOutput generates a printable list of files in a readable way
-func ArrayToReadableOutput(slice []string) (response string, err error) {
+// ArrayToReadableOutput generates a printable list of items in a readable way
+func ArrayToReadableOutput(slice []string) (string, error) {
 	if len(slice) == 0 {
 		return "", fmt.Errorf("empty slice")
 	}
-	return "[\n\t" + strings.Join(slice, "\n\t") + "\n]", nil
+	var b strings.Builder
+	b.WriteString("\n")
+	for _, item := range slice {
+		b.WriteString("  - " + item + "\n")
+	}
+	return b.String(), nil
 }
 
 // WindowsPathToCygwinPath changes C:/path/to/something to //c/path/to/something
