@@ -28,9 +28,28 @@ var DebugDownloadImagesCmd = &cobra.Command{
 			}
 		}
 
-		imagesPulled, err := (&ddevapp.DdevApp{}).PullContainerImages()
-		if err != nil {
-			util.Failed("Failed to PullContainerImages(): %v", err)
+		app, err := ddevapp.GetActiveApp("")
+		var imagesPulled bool
+
+		// If we're in a project directory, use the app context
+		if err == nil {
+			util.Success("Downloading images for project '%s'", app.Name)
+
+			app.DockerEnv()
+			if err = app.WriteDockerComposeYAML(); err != nil {
+				util.Failed("Failed to get compose-config: %v", err)
+			}
+
+			imagesPulled, err = app.PullContainerImages()
+			if err != nil {
+				util.Failed("Failed to pull container images: %v", err)
+			}
+		} else {
+			util.Warning("Downloading common images")
+			imagesPulled, err = (&ddevapp.DdevApp{}).PullContainerImages()
+			if err != nil {
+				util.Failed("Failed to pull images: %v", err)
+			}
 		}
 
 		if imagesPulled {
