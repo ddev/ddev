@@ -58,6 +58,16 @@ func Warning(format string, a ...interface{}) {
 	}
 }
 
+// WarningWithColor allows specifying a color for the warning to make it more visible
+func WarningWithColor(color string, format string, a ...interface{}) {
+	format = ColorizeText(format, color)
+	if a != nil {
+		output.UserErr.Warnf(format, a...)
+	} else {
+		output.UserErr.Warn(format)
+	}
+}
+
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
 	format = ColorizeText(format, "green")
@@ -302,6 +312,8 @@ func ColorizeText(s string, c string) (out string) {
 	switch c {
 	case "green":
 		out = text.FgGreen.Sprint(s)
+	case "magenta":
+		out = text.FgMagenta.Sprint(s)
 	case "red":
 		out = text.FgRed.Sprint(s)
 	case "yellow":

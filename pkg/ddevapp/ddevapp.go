@@ -1791,7 +1791,7 @@ func warnMissingDocroot(app *DdevApp) {
 	}
 	docroot := app.GetAbsDocroot(false)
 	if !fileutil.FileExists(docroot) {
-		util.Warning("The project docroot '%s' does not yet exist\n(or `docroot` is misconfigured),\nuntil it exists, you may get a 403 'permission denied' visiting the project in a web browser.\n", docroot)
+		util.WarningWithColor("magenta", "The project docroot '%s' does not yet exist\n(or `docroot` is misconfigured),\nuntil it exists, you may get a 403 'permission denied' visiting the project in a web browser.\n", docroot)
 		return
 	}
 
@@ -1802,7 +1802,7 @@ func warnMissingDocroot(app *DdevApp) {
 		return
 	}
 	if len(matches) == 0 {
-		util.Warning("The index.php or index.html (or index.*) does not yet exist in\n%s\nso you may get 403 errors 'permission denied' from the browser until it does.\n", pattern)
+		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist in\n%s\nso you may get 403 errors 'permission denied' from the browser until it does.\nDon't worry about this if a later action \n(like `ddev composer install`) will create the file.\n", pattern)
 	}
 }
 
