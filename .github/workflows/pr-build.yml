@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/**"
+      - ".ci-scripts/**"
       - "!.github/workflows/docs**"
       - "cmd/**"
       - "pkg/**"
