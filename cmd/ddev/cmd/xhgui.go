@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -76,11 +77,13 @@ var DdevXHGuiCmd = &cobra.Command{
 			if err = ddevapp.XHGuiSetup(app); err != nil {
 				return err
 			}
+			util.Success("Enabled xhgui")
 
 		case "false", "off", "disable", "stop":
 			if err = ddevapp.XHProfDisable(app); err != nil {
 				return err
 			}
+			util.Success("Disabled xhgui")
 
 		case "status":
 			var status bool

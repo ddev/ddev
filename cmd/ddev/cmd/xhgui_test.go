@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/testcommon"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
@@ -81,4 +82,10 @@ func TestCmdXHGui(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "status")
 	require.NoError(t, err)
 	require.Contains(t, out, "XHProf is disabled")
+	out, err = exec.RunHostCommand(DdevBin, "xhgui", "on")
+	require.NoError(t, err)
+	require.Contains(t, out, "Enabled xhgui")
+	out, err = exec.RunHostCommand(DdevBin, "xhgui", "off")
+	require.NoError(t, err)
+	require.Contains(t, out, "Disabled xhgui")
 }
