@@ -1785,8 +1785,8 @@ If this seems to be a config issue, update it accordingly.`, app.Name)
 
 // Warn if docroot or docroot/index.* is missing
 func warnMissingDocroot(app *DdevApp) {
-	// No need to warn on generic project type or webserver type; that's the implementor's job
-	if app.Type == nodeps.AppTypeGeneric || app.WebserverType == nodeps.WebserverGeneric {
+	// No need to warn on generic webserver type; that's the implementor's job
+	if app.WebserverType == nodeps.WebserverGeneric {
 		return
 	}
 	docroot := app.GetAbsDocroot(false)
