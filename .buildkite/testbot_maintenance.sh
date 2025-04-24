@@ -46,7 +46,7 @@ docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null
 docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&1 || true
 
 # Clean the docker build cache
-docker buildx prune -f -a || true
+docker buildx prune -f -a >/dev/null || true
 # Remove any images with name '-built'
 docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null 2>&1 || true
