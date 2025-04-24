@@ -1268,6 +1268,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
+	warnMissingDocroot(app)
+
 	err = PullBaseContainerImages()
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
@@ -1779,6 +1781,29 @@ If this seems to be a config issue, update it accordingly.`, app.Name)
 	}
 
 	return nil
+}
+
+// Warn if docroot or docroot/index.* is missing
+func warnMissingDocroot(app *DdevApp) {
+	// No need to warn on generic project type or webserver type; that's the implementor's job
+	if app.Type == nodeps.AppTypeGeneric || app.WebserverType == nodeps.WebserverGeneric {
+		return
+	}
+	docroot := app.GetAbsDocroot(false)
+	if !fileutil.FileExists(docroot) {
+		util.Warning("The project docroot '%s' does not yet exist\n(or `docroot` is misconfigured),\nuntil it exists, you may get a 403 'permission denied' visiting the project in a web browser.\n", docroot)
+		return
+	}
+
+	pattern := filepath.Join(docroot, "index.*")
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		util.Warning("unable to filepath.Glob(%s)", pattern)
+		return
+	}
+	if len(matches) == 0 {
+		util.Warning("The index.php or index.html (or index.*) does not yet exist in\n%s\nso you may get 403 errors 'permission denied' from the browser until it does.\n", pattern)
+	}
 }
 
 // StartOptionalProfiles starts services in the named compose profile(s)
