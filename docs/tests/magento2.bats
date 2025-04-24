@@ -47,8 +47,8 @@ EOF
   run ddev start -y
   assert_success
 
-  # ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
-  run ddev composer create --repository https://repo.magento.com/ magento/project-community-edition
+  # ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
+  run ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
   assert_success
 
     # Copy the auth.json into var/composer_home for the deploying the sample data sep

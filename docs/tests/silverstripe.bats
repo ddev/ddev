@@ -25,7 +25,7 @@ teardown() {
   assert_success
 
   # ddev sake dev/build flush=all
-  run ddev composer create --prefer-dist silverstripe/installer
+  run ddev composer create-project --prefer-dist silverstripe/installer
   assert_success
 
   # ddev sake dev/build flush=all

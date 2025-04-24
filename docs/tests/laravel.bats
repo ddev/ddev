@@ -21,7 +21,7 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create "laravel/laravel:^12"
+  run ddev composer create-project "laravel/laravel:^12"
   assert_success
 
   DDEV_DEBUG=true run ddev launch
@@ -53,7 +53,7 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create "laravel/laravel:^12"
+  run ddev composer create-project "laravel/laravel:^12"
   assert_success
 
   DDEV_DEBUG=true run ddev launch

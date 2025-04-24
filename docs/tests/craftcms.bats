@@ -20,7 +20,7 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create --no-scripts craftcms/craft
+  run ddev composer create-project --no-scripts craftcms/craft
   assert_success
 
   run ddev craft install/craft \

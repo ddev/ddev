@@ -25,8 +25,8 @@ teardown() {
   run ddev start -y
   assert_success
 
-  # ddev composer create getkirby/starterkit
-  run ddev composer create getkirby/starterkit
+  # ddev composer create-project getkirby/starterkit
+  run ddev composer create-project getkirby/starterkit
   assert_success
 
   # validate ddev launch

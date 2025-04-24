@@ -20,8 +20,8 @@ teardown() {
   run ddev config --project-type=laravel --docroot=public
   assert_success
 
-  # ddev composer create --prefer-dist statamic/statamic
-  run ddev composer create --prefer-dist statamic/statamic
+  # ddev composer create-project --prefer-dist statamic/statamic
+  run ddev composer create-project --prefer-dist statamic/statamic
   assert_success
 
   # fill out the interactive form
