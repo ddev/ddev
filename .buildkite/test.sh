@@ -178,28 +178,16 @@ fi
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
-bash "$(dirname $0)/testbot_maintenance.sh" || true
 
-echo "--- cleaning up docker and Test directories"
-echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
-ddev poweroff || true
-if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
-fi
-docker system prune --volumes --force || true
-docker volume prune -a -f || true
+# Output of `command -v` is the name of the command.
+# Prefer gtimeout (macOS). Do 60s timeout.
+# Continue anyway if trouble.
+"$(command -v gtimeout || command -v timeout)" 60s \
+  bash "$(dirname "$0")/testbot_maintenance.sh" || true
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
 ./.buildkite/sanetestbot.sh
-
-# Update all images that could have changed
-( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
-
-# homebrew sometimes removes /usr/local/etc/my.cnf.d
-if command -v brew >/dev/null; then
-  mkdir -p "$(brew --prefix)/etc/my.cnf.d"
-fi
 
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
