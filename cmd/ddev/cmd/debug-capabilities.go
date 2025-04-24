@@ -9,8 +9,10 @@ import (
 
 // DebugCapabilitiesCmd implements the ddev debug capabilities command
 var DebugCapabilitiesCmd = &cobra.Command{
-	Use:   "capabilities",
-	Short: "Show capabilities of this version of DDEV",
+	Use:        "capabilities",
+	Short:      "Show capabilities of this version of DDEV",
+	Deprecated: "ddev debug capabilities is no longer maintained and may be removed in a future release. Use ddev_version_constraint to specify versions of DDEV instead. https://ddev.readthedocs.io/en/stable/users/configuration/config/#ddev_version_constraint\n",
+	Hidden:     true,
 	Run: func(_ *cobra.Command, _ []string) {
 		capabilities := []string{
 			"multiple-dockerfiles",

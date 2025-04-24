@@ -17,6 +17,7 @@ func TestDebugCapabilitiesCmd(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "debug", "capabilities")
 	assert.NoError(err)
 	assert.Contains(out, "multiple-dockerfiles")
+	assert.Contains(out, "is deprecated")
 
 	out, err = exec.RunHostCommandSeparateStreams(DdevBin, "debug", "-j", "capabilities")
 	assert.NoError(err)
