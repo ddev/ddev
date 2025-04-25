@@ -430,20 +430,6 @@ ddev dbeaver
 
 A collection of debugging commands, often useful for [troubleshooting](troubleshooting.md).
 
-### `debug capabilities`
-
-Show capabilities of this version of DDEV.
-
-Example:
-
-```shell
-# List capabilities of the current project
-ddev debug capabilities
-
-# List capabilities of `my-project`
-ddev debug capabilities my-project
-```
-
 ### `debug cd`
 
 Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
