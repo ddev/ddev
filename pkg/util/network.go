@@ -14,23 +14,35 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/ddev/ddev/pkg/output"
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 )
 
 // DownloadFile retrieves a file.
-func DownloadFile(destPath string, url string, progressBar bool, shaSumURL string) (err error) {
+func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL string) (err error) {
 	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
 		progressBar = false
 	}
 
+	// retryablehttp configuration
+	client := retryablehttp.NewClient()
+	client.RetryMax = 4
+	client.RetryWaitMin = 500 * time.Millisecond
+	client.RetryWaitMax = 5 * time.Second
+	client.Logger = nil
+
 	// If shaSumURL is provided, download and read the expected SHASUM
 	var expectedSHA string
 	if shaSumURL != "" {
-		resp, err := http.Get(shaSumURL)
+		Debug("Attempting to download SHASUM URL=%s", shaSumURL)
+		resp, err := client.Get(shaSumURL)
 		if err != nil {
 			return fmt.Errorf("failed to download shaSum URL %s: %v", shaSumURL, err)
 		}
 		defer CheckClose(resp.Body)
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
+		}
 
 		shaBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -47,14 +59,15 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	defer CheckClose(outFile)
 
 	// Get the data
-	resp, err := http.Get(url)
+	Debug("Downloading %s to %s", fileURL, destPath)
+	resp, err := client.Get(fileURL)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to download URL %s: %v", shaSumURL, err)
 	}
 	defer CheckClose(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("download link %s returned wrong status code: got %v want %v", url, resp.StatusCode, http.StatusOK)
+		return fmt.Errorf("download link %s returned wrong status code: got %v want %v", fileURL, resp.StatusCode, http.StatusOK)
 	}
 
 	reader := resp.Body
@@ -72,7 +85,7 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 	}
 
 	if expectedSHA != "" {
-		baseName := filepath.Base(url)
+		baseName := filepath.Base(fileURL)
 		var matchedSHA string
 
 		lines := bytes.Split([]byte(expectedSHA), []byte{'\n'})
