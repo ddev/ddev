@@ -7,7 +7,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -18,7 +20,29 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
+
+type annotations = struct {
+	// @TODO maybe some should not be omit empty
+	// @TODO maybe allow or even enforce capital letter starts
+	// @TODO check for any missing annotations and make sure we parse and use them
+	Aliases           []string `yaml:"aliases,omitempty"`
+	AutocompleteTerms []string `yaml:"autocompleteTerms,omitempty"`
+	CanRunGlobally    bool     `yaml:"canRunGlobally,omitempty"`
+	DbTypes           []string `yaml:"dbTypes,omitempty"`
+	Description       string   `yaml:"description,omitempty"`
+	DisableFlags      bool     `yaml:"-"`
+	Example           string   `yaml:"example,omitempty"`
+	ExecRaw           bool     `yaml:"execRaw,omitempty"`
+	Flags             Flags    `yaml:"flags,omitempty"`
+	HostBinaryExists  string   `yaml:"hostBinaryExists,omitempty"`
+	HostWorkingDir    bool     `yaml:"hostWorkingDir,omitempty"`
+	MutagenSync       bool     `yaml:"mutagenSynx,omitempty"`
+	OsTypes           []string `yaml:"osTypes,omitempty"`
+	ProjectTypes      []string `yaml:"projectTypes,omitempty"`
+	Usage             string   `yaml:"usage,omitempty"`
+}
 
 const (
 	CustomCommand        = "customCommand"
@@ -107,7 +131,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 // addCustomCommandsFromDir adds the custom commands from inside a given directory
 func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serviceDirOnHost string, commandFiles []string, isGlobalSet bool, commandsAdded map[string]int) error {
 	service := filepath.Base(serviceDirOnHost)
-	var err error
 
 	for _, commandName := range commandFiles {
 		onHostFullPath := filepath.Join(serviceDirOnHost, commandName)
@@ -130,12 +153,43 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			continue
 		}
 
-		directives := findDirectivesInScriptCommand(onHostFullPath)
-		var description, usage, example, projectTypes, osTypes, hostBinaryExists, dbTypes string
+		// Prepare an annotations struct with sensible default values
+		var annotations = annotations{
+			AutocompleteTerms: []string{},
+			CanRunGlobally:    false,
+			Description:       commandName,
+			DisableFlags:      true,
+			ExecRaw:           false,
+			HostWorkingDir:    false,
+			MutagenSync:       false,
+			Usage:             commandName + " [flags] [args]",
+		}
+
+		scriptContent, err := fileutil.ReadFileIntoString(onHostFullPath)
+		if err != nil {
+			util.Warning("Could not read script file %s for command %s: %v", onHostFullPath, commandName, err)
+			continue
+		}
+
+		// Check for and try to parse YAML annotations if a valid block is present
+		re := regexp.MustCompile(`(?s)<<'###YAML_ANNOTATIONS'\n(.*)\n###YAML_ANNOTATIONS`)
+		match := re.FindStringSubmatch(scriptContent)
+		// A valid block will have two items in the match - the full match, and then just the YAML portion.
+		if len(match) == 2 {
+			err = yaml.Unmarshal([]byte(match[1]), &annotations)
+			if err != nil {
+				util.Warning("Couldn't read YAML annotations in script file %s for command %s: %v", onHostFullPath, commandName, err)
+				continue
+			}
+		} else {
+			// If we didn't find a valid YAML_ANNOTATIONS block, try parsing legacy annotations
+			directives := findDirectivesInScriptCommand(onHostFullPath)
+			parseLegacyDirectives(onHostFullPath, commandName, directives, &annotations)
+		}
 
 		// Skip host commands that need a project if we aren't in a project directory.
 		if service == "host" && app == nil {
-			if val, ok := directives["CanRunGlobally"]; !ok || val != "true" {
+			if annotations.CanRunGlobally {
 				if isCustomCommandInArgs(commandName) {
 					util.Warning("Command '%s' cannot be used outside the project directory.", commandName)
 				}
@@ -143,76 +197,24 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
-		description = commandName
-		if val, ok := directives["Description"]; ok {
-			description = val
-		}
-
-		usage = commandName + " [flags] [args]"
-		if val, ok := directives["Usage"]; ok {
-			usage = val
-		}
-
-		if val, ok := directives["Example"]; ok {
-			example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
-		}
-
-		var aliases []string
-		if val, ok := directives["Aliases"]; ok {
-			for _, alias := range strings.Split(val, ",") {
-				alias = strings.TrimSpace(alias)
-				if foundCmd, _, err := rootCmd.Find([]string{alias}); err != nil {
-					aliases = append(aliases, alias)
-				} else {
-					util.Warning("Command '%s' cannot have alias '%s' that is already in use by command '%s', skipping it", commandName, alias, foundCmd.Name())
-				}
-			}
-		}
-
-		autocompleteTerms := []string{}
-		if val, ok := directives["AutocompleteTerms"]; ok {
-			if err = json.Unmarshal([]byte(val), &autocompleteTerms); err != nil {
-				util.Warning("Error '%s', command '%s' contains an invalid autocomplete args definition '%s', skipping adding terms", err, commandName, val)
-			}
-		}
-
-		// Init and import flags
-		var flags Flags
-		flags.Init(commandName, onHostFullPath)
-
-		disableFlags := true
-		if val, ok := directives["Flags"]; ok {
-			disableFlags = false
-			if err = flags.LoadFromJSON(val); err != nil {
-				util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
-			}
-		}
-
-		// Import and handle ProjectTypes
-		if val, ok := directives["ProjectTypes"]; ok {
-			projectTypes = val
-		}
-
-		// Default is to exec with Bash interpretation (not raw)
-		execRaw := false
-		if val, ok := directives["ExecRaw"]; ok {
-			if val == "true" {
-				execRaw = true
-			}
-		}
-
-		// Run the command with mutagen sync or not
-		mutagenSync := false
-		if val, ok := directives["MutagenSync"]; ok {
-			if val == "true" {
-				mutagenSync = true
-			}
-		}
+		// @TODO keep the warning logic here instead of in the two parse methods
+		// @TODO will mean we need to remove those aliases from the annotation
+		// var aliases []string
+		// if val, ok := directives["Aliases"]; ok {
+		// 	for _, alias := range strings.Split(val, ",") {
+		// 		alias = strings.TrimSpace(alias)
+		// 		if foundCmd, _, err := rootCmd.Find([]string{alias}); err != nil {
+		// 			aliases = append(aliases, alias)
+		// 		} else {
+		// 			util.Warning("Command '%s' cannot have alias '%s' that is already in use by command '%s', skipping it", commandName, alias, foundCmd.Name())
+		// 		}
+		// 	}
+		// }
 
 		// If ProjectTypes is specified and we aren't of that type, skip
-		if projectTypes != "" && (app == nil || !strings.Contains(projectTypes, app.Type)) {
+		if len(annotations.ProjectTypes) > 0 && (app == nil || !slices.Contains(annotations.ProjectTypes, app.Type)) {
 			if app != nil && isCustomCommandInArgs(commandName) {
-				suggestedCommands := strings.Split(projectTypes, ",")
+				suggestedCommands := annotations.ProjectTypes
 				for i, projectType := range suggestedCommands {
 					suggestedCommands[i] = fmt.Sprintf("ddev config --project-type=%s", projectType)
 				}
@@ -222,14 +224,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			continue
 		}
 
-		// Import and handle OSTypes
-		if val, ok := directives["OSTypes"]; ok {
-			osTypes = val
-		}
-
 		// If OSTypes is specified and we aren't on one of the specified OSes, skip
-		if osTypes != "" {
-			if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
+		if len(annotations.OsTypes) > 0 {
+			if !slices.Contains(annotations.OsTypes, runtime.GOOS) && !(slices.Contains(annotations.OsTypes, "wsl2") && nodeps.IsWSL2()) {
 				if isCustomCommandInArgs(commandName) {
 					util.Warning("Command '%s' cannot be used with your OS.", commandName)
 				}
@@ -237,15 +234,10 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
-		// Import and handle HostBinaryExists
-		if val, ok := directives["HostBinaryExists"]; ok {
-			hostBinaryExists = val
-		}
-
 		// If hostBinaryExists is specified it doesn't exist here, skip
-		if hostBinaryExists != "" {
+		if annotations.HostBinaryExists != "" {
 			binExists := false
-			bins := strings.Split(hostBinaryExists, ",")
+			bins := strings.Split(annotations.HostBinaryExists, ",")
 			for _, bin := range bins {
 				if fileutil.FileExists(bin) {
 					binExists = true
@@ -261,14 +253,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
-		// Import and handle DBTypes
-		if val, ok := directives["DBTypes"]; ok {
-			dbTypes = val
-		}
-
 		// If DBTypes is specified and we aren't using that DBTypes
-		if dbTypes != "" && app != nil {
-			if !strings.Contains(dbTypes, app.Database.Type) {
+		if len(annotations.DbTypes) > 0 && app != nil {
+			if !slices.Contains(annotations.DbTypes, app.Database.Type) {
 				if isCustomCommandInArgs(commandName) {
 					util.Warning("Command '%s' is not available for the '%s' database type.", commandName, app.Database.Type)
 				}
@@ -284,35 +271,26 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		// Initialize the new command
 		commandToAdd := &cobra.Command{
-			Use:                usage,
-			Short:              description + descSuffix,
-			Example:            example,
-			Aliases:            aliases,
-			DisableFlagParsing: disableFlags,
+			Use:                annotations.Usage,
+			Short:              annotations.Description + descSuffix,
+			Example:            annotations.Example,
+			Aliases:            annotations.Aliases,
+			DisableFlagParsing: annotations.DisableFlags,
 			FParseErrWhitelist: cobra.FParseErrWhitelist{
 				UnknownFlags: true,
 			},
-			ValidArgs: autocompleteTerms,
+			ValidArgs: annotations.AutocompleteTerms,
 		}
 
 		// Add flags to command
-		if err = flags.AssignToCommand(commandToAdd); err != nil {
+		if err = annotations.Flags.AssignToCommand(commandToAdd); err != nil {
 			util.Warning("Error '%s' in the flags definition for command '%s', skipping %s", err, commandName, onHostFullPath)
 			continue
 		}
 
-		// Execute the command matching the host working directory relative
-		// to the app root.
-		relative := false
-		if val, ok := directives["HostWorkingDir"]; ok {
-			if val == "true" {
-				relative = true
-			}
-		}
-
 		autocompletePathOnHost := filepath.Join(serviceDirOnHost, "autocomplete", commandName)
 		if service == "host" {
-			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName, mutagenSync)
+			commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName, annotations.MutagenSync)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
 				_ = util.Chmod(autocompletePathOnHost, 0755)
@@ -331,7 +309,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 				containerBasePath = path.Join("/mnt/ddev-global-cache/global-commands/", service)
 			}
 			inContainerFullPath := path.Join(containerBasePath, commandName)
-			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative, mutagenSync)
+			commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, annotations.ExecRaw, annotations.HostWorkingDir, annotations.MutagenSync)
 			if fileutil.FileExists(autocompletePathOnHost) {
 				// Make sure autocomplete script can be executed
 				_ = util.Chmod(autocompletePathOnHost, 0755)
@@ -345,7 +323,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
-		if disableFlags {
+		if annotations.DisableFlags {
 			// Hide -h because we are disabling flags
 			// Also hide --json-output for the same reason
 			// @see https://github.com/spf13/cobra/issues/1328
@@ -375,6 +353,86 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		commandsAdded[commandName] = 1
 	}
 	return nil
+}
+
+// parseLegacyDirectives parses the legacy `## SomeAnnotation: someValue` style directives for custom commands.
+func parseLegacyDirectives(scriptPath string, commandName string, directives map[string]string, annotations *annotations) {
+	if val, ok := directives["Aliases"]; ok {
+		for _, alias := range strings.Split(val, ",") {
+			annotations.Aliases = append(annotations.Aliases, strings.TrimSpace(alias))
+		}
+	}
+
+	if val, ok := directives["AutocompleteTerms"]; ok {
+		if err := json.Unmarshal([]byte(val), &annotations.AutocompleteTerms); err != nil {
+			util.Warning("Error '%s', command '%s' contains an invalid autocomplete args definition '%s', skipping adding terms", err, commandName, val)
+		}
+	}
+
+	if val, ok := directives["CanRunGlobally"]; !ok || val != "true" {
+		annotations.CanRunGlobally = true
+	}
+
+	if val, ok := directives["DBTypes"]; ok {
+		for _, dbType := range strings.Split(val, ",") {
+			annotations.DbTypes = append(annotations.DbTypes, strings.TrimSpace(dbType))
+		}
+	}
+
+	if val, ok := directives["Description"]; ok {
+		annotations.Description = val
+	}
+
+	if val, ok := directives["Example"]; ok {
+		annotations.Example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
+	}
+
+	if val, ok := directives["ExecRaw"]; ok {
+		if val == "true" {
+			annotations.ExecRaw = true
+		}
+	}
+
+	// Init and import flags
+	annotations.Flags.Init(commandName, scriptPath) // @TODO do I need this in the YAML one?
+	if val, ok := directives["Flags"]; ok {
+		annotations.DisableFlags = false
+		if err := annotations.Flags.LoadFromJSON(val); err != nil { // @TODO do I need to do something like this for the YAML one?
+			util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, scriptPath)
+		}
+	}
+
+	if val, ok := directives["HostBinaryExists"]; ok {
+		annotations.HostBinaryExists = val
+	}
+
+	if val, ok := directives["HostWorkingDir"]; ok {
+		if val == "true" {
+			annotations.HostWorkingDir = true
+		}
+	}
+
+	if val, ok := directives["MutagenSync"]; ok {
+		if val == "true" {
+			annotations.MutagenSync = true
+		}
+	}
+
+	if val, ok := directives["OSTypes"]; ok {
+		for _, osType := range strings.Split(val, ",") {
+			annotations.OsTypes = append(annotations.OsTypes, strings.TrimSpace(osType))
+		}
+	}
+
+	if val, ok := directives["ProjectTypes"]; ok {
+		for _, projectType := range strings.Split(val, ",") {
+			annotations.ProjectTypes = append(annotations.ProjectTypes, strings.TrimSpace(projectType))
+		}
+	}
+
+	if val, ok := directives["Usage"]; ok {
+		annotations.Usage = val
+	}
 }
 
 // isCustomCommandInArgs checks if the command is the first arg passed to the "ddev" command.

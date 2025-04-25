@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 
 #ddev-generated: Remove this line to take over this script
-## Description: Enable or disable blackfire.io profiling
-## Usage: blackfire start|stop|on|off|enable|disable|true|false|status
-## Example: "ddev blackfire" (default is "on"), "ddev blackfire off", "ddev blackfire on", "ddev blackfire status"
-## ExecRaw: false
-## Flags: []
-## AutocompleteTerms: ["start","stop","on","off","enable","disable","status"]
+<<'###YAML_ANNOTATIONS'
+description: "Enable or disable blackfire.io profiling"
+usage: "blackfire start|stop|on|off|enable|disable|true|false|status"
+example: '"ddev blackfire" (default is "on"), "ddev blackfire off", "ddev blackfire on", "ddev blackfire status"'
+execRaw: false
+autocompleteTerms:
+  - "start"
+  - "stop"
+  - "on"
+  - "off"
+  - "enable"
+  - "disable"
+  - "status"
+###YAML_ANNOTATIONS
 
 function enable {
   if [ -z ${BLACKFIRE_SERVER_ID} ] || [ -z ${BLACKFIRE_SERVER_TOKEN} ]; then

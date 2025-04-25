@@ -1,12 +1,15 @@
 #!/bin/bash
 
 #ddev-generated
-## Description: Run symfony console inside the web container
-## Usage: console [flags] [args]
-## Example: "ddev console about" or "ddev console doctrine:schema:update --dump-sql"
-## ProjectTypes: symfony
-## ExecRaw: true
-## MutagenSync: true
+<<'###YAML_ANNOTATIONS'
+description: "Run symfony console inside the web container"
+usage: "console [flags] [args]"
+example: '"ddev console about" or "ddev console doctrine:schema:update --dump-sql"'
+projectTypes:
+  - "symfony"
+execRaw: true
+mutagenSync: true
+###YAML_ANNOTATIONS
 
 if [ ! -f bin/console ]; then
   echo 'bin/console does not exist in your project root directory.'

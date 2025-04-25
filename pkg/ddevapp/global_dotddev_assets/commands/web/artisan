@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 #ddev-generated
-## Description: Run artisan CLI inside the web container
-## Usage: artisan [flags] [args]
-## Example: "ddev artisan list" or "ddev artisan cache:clear"
-## Aliases: art
-## ProjectTypes: laravel
-## ExecRaw: true
-## MutagenSync: true
+<<'###YAML_ANNOTATIONS'
+description: "Run artisan CLI inside the web container"
+usage: "artisan [flags] [args]"
+example: '"ddev artisan list" or "ddev artisan cache:clear"'
+aliases:
+  - "art"
+projectTypes:
+  - "laravel"
+execRaw: true
+mutagenSync: true
+###YAML_ANNOTATIONS
 
 php ./artisan "$@"
