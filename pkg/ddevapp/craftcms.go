@@ -78,7 +78,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	}
 
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
-	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
+	envFilePath := app.GetConfigPath(".env.web")
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
 		for _, envFileName := range exampleEnvFilePaths {
@@ -101,7 +101,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	// Read in the .env file
 	envMap, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("unable to read .env file: %v", err)
+		return fmt.Errorf("unable to read %s: %v", envFilePath, err)
 	}
 
 	port := "3306"
