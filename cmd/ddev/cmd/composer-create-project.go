@@ -506,8 +506,7 @@ var ComposerCreateCmd = &cobra.Command{
 	Short:              `Use "ddev composer create-project" instead`,
 	DisableFlagParsing: true,
 	Hidden:             true,
-	// TODO: make it deprecated when we switch to "create-project" in our quickstarts
-	//Deprecated:         `use "create-project" instead`,
+	Deprecated:         `please start using the identical "ddev composer create-project" instead`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ComposerCreateProjectCmd.Run(cmd, args)
 	},

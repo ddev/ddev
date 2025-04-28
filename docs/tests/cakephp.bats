@@ -24,8 +24,8 @@ teardown() {
   run ddev start -y
   assert_success
 
-  # ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
-  run ddev composer create --prefer-dist --no-interaction cakephp/app:~5.0
+  # ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
+  run ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
   assert_success
 
   # validate ddev launch

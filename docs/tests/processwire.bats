@@ -48,8 +48,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create "processwire/processwire:^3"
-  run ddev composer create "processwire/processwire:^3"
+  # ddev composer create-project "processwire/processwire:^3"
+  run ddev composer create-project "processwire/processwire:^3"
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
   assert_output "FULLURL https://${PROJNAME}.ddev.site"

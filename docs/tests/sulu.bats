@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create sulu/skeleton
-  run ddev composer create sulu/skeleton
+  # ddev composer create-project sulu/skeleton
+  run ddev composer create-project sulu/skeleton
   assert_success
   # export SULU_PROJECT_NAME="My Sulu Site"
   export SULU_PROJECT_NAME="My Sulu Site"

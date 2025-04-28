@@ -24,8 +24,8 @@ teardown() {
   run ddev start -y
   assert_success
 
-  # ddev composer create symfony/skeleton
-  run ddev composer create symfony/skeleton
+  # ddev composer create-project symfony/skeleton
+  run ddev composer create-project symfony/skeleton
   assert_success
 
   # bash -c 'printf "x\n" | ddev composer require webapp'

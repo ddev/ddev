@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev . echo x | ddev composer create shopware/production:^v6.5
-  run ddev . echo x | ddev composer create shopware/production:^v6.5
+  # ddev . echo x | ddev composer create-project shopware/production:^v6.5
+  run ddev . echo x | ddev composer create-project shopware/production:^v6.5
   # ddev exec console system:install --basic-setup
   run ddev exec console system:install --basic-setup
   assert_success

@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create getgrav/grav
-  run ddev composer create getgrav/grav
+  # ddev composer create-project getgrav/grav
+  run ddev composer create-project getgrav/grav
   assert_success
   # ddev exec gpm install admin -y
   run ddev exec gpm install admin -y
