@@ -115,7 +115,7 @@ teardown() {
 # bats test_tags=typo3-setup,t3v13
 @test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJECT_NAME=my-typo3-site
-  run mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  run mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
   assert_success
 
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
@@ -130,7 +130,6 @@ teardown() {
   run ddev exec touch public/FIRST_INSTALL
   assert_success
 
-  # Profile site
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
@@ -156,7 +155,7 @@ teardown() {
 # bats test_tags=typo3-setup,t3v14
 @test "TYPO3 v14 DEV 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJECT_NAME=my-typo3-site
-  run mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  run mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
   assert_success
 
   run git clone https://github.com/TYPO3/TYPO3.CMS.BaseDistribution.git .
@@ -174,7 +173,6 @@ teardown() {
   run ddev exec touch public/FIRST_INSTALL
   assert_success
 
-  # Profile site
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
