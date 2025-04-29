@@ -112,7 +112,8 @@ teardown() {
   assert_success
 }
 
-@test "TYPO3 v13 `ddev typo3 setup` composer test with $(ddev --version)" {
+# bats test_tags=typo3-setup
+@test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJECT_NAME=my-typo3-site
   run mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
   assert_success
@@ -152,7 +153,8 @@ teardown() {
   assert_success
 }
 
-@test "TYPO3 v14 DEV `ddev typo3 setup` composer test with $(ddev --version)" {
+# bats test_tags=typo3-setup,t3v14
+@test "TYPO3 v14 DEV 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJECT_NAME=my-typo3-site
   run mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
   assert_success
