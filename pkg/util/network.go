@@ -1,7 +1,6 @@
 package util
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -10,54 +9,93 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/cheggaaa/pb"
 	"github.com/ddev/ddev/pkg/output"
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 )
 
-// DownloadFile retrieves a file.
-func DownloadFile(destPath string, url string, progressBar bool, shaSumURL string) (err error) {
+// DownloadFile retrieves a file with retry logic, optional progress bar, and SHA256 verification.
+func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL string) (err error) {
 	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
 		progressBar = false
 	}
 
-	// If shaSumURL is provided, download and read the expected SHASUM
+	// Configure retryablehttp client with backoff, retry policy, and global timeout.
+	client := retryablehttp.NewClient()
+	client.RetryMax = 4
+	client.RetryWaitMin = 500 * time.Millisecond
+	client.RetryWaitMax = 5 * time.Second
+	client.CheckRetry = retryablehttp.DefaultRetryPolicy
+	client.Backoff = retryablehttp.DefaultBackoff
+	client.Logger = nil
+	client.HTTPClient.Timeout = 60 * time.Second
+	client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
+		if attempt > 0 {
+			// attempt==1 is the first retry, 2 the second, etc
+			Debug("Retrying download of %s try #%d", req.URL.String(), attempt)
+		}
+	}
+
+	// Ensure partial files are removed on any error.
+	defer func() {
+		if err != nil {
+			_ = os.Remove(destPath)
+		}
+	}()
+
+	// Download expected SHA sum if provided.
 	var expectedSHA string
 	if shaSumURL != "" {
-		resp, err := http.Get(shaSumURL)
-		if err != nil {
-			return fmt.Errorf("failed to download shaSum URL %s: %v", shaSumURL, err)
+		Debug("Attempting to download SHASUM URL=%s", shaSumURL)
+		resp, getErr := client.Get(shaSumURL)
+		if getErr != nil {
+			err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
+			return
 		}
 		defer CheckClose(resp.Body)
-
-		shaBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read shaSum file: %v", err)
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
+			return
 		}
-		expectedSHA = string(bytes.TrimSpace(shaBytes))
+		body, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			err = fmt.Errorf("reading shaSum: %w", readErr)
+			return
+		}
+		expectedSHA = strings.TrimSpace(string(body))
 	}
 
-	// Create the file
-	outFile, err := os.Create(destPath)
-	if err != nil {
-		return err
+	// Create the destination file.
+	outFile, createErr := os.Create(destPath)
+	if createErr != nil {
+		err = createErr
+		return
 	}
-	defer CheckClose(outFile)
+	defer func() {
+		if closeErr := outFile.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
+	// Download the main fileURL.
+	Debug("Downloading %s to %s", fileURL, destPath)
+	resp, getErr := client.Get(fileURL)
+	if getErr != nil {
+		err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
+		return
 	}
 	defer CheckClose(resp.Body)
-
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("download link %s returned wrong status code: got %v want %v", url, resp.StatusCode, http.StatusOK)
+		err = fmt.Errorf("download link %s returned wrong status code: got %d want %d", fileURL, resp.StatusCode, http.StatusOK)
+		return
 	}
 
-	reader := resp.Body
+	// Wrap reader in progress bar if requested.
+	reader := io.Reader(resp.Body)
 	if progressBar {
 		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
 		bar.Start()
@@ -65,44 +103,37 @@ func DownloadFile(destPath string, url string, progressBar bool, shaSumURL strin
 		defer bar.Finish()
 	}
 
+	// Write file and compute SHA concurrently.
 	hasher := sha256.New()
 	writer := io.MultiWriter(outFile, hasher)
-	if _, err = io.Copy(writer, reader); err != nil {
-		return err
+	if _, copyErr := io.Copy(writer, reader); copyErr != nil {
+		err = copyErr
+		return
 	}
 
+	// Verify SHA if provided.
 	if expectedSHA != "" {
-		baseName := filepath.Base(url)
+		baseName := filepath.Base(fileURL)
 		var matchedSHA string
-
-		lines := bytes.Split([]byte(expectedSHA), []byte{'\n'})
-		for _, line := range lines {
-			fields := bytes.Fields(line)
+		for _, line := range strings.Split(expectedSHA, "\n") {
+			fields := strings.Fields(line)
 			if len(fields) != 2 {
 				continue
 			}
-			filename := bytes.TrimPrefix(fields[1], []byte("*"))
-			if bytes.Equal(filename, []byte(baseName)) {
-				matchedSHA = string(fields[0])
+			filename := strings.TrimPrefix(fields[1], "*")
+			if filename == baseName {
+				matchedSHA = fields[0]
 				break
 			}
 		}
-
 		if matchedSHA == "" {
-			_ = outFile.Close()
-			_ = os.Remove(destPath)
-			return fmt.Errorf("no matching SHA256 found for %s in shaSum file", baseName)
+			err = fmt.Errorf("no matching SHA256 found for %s in shaSum file", baseName)
+			return
 		}
-
 		actualSHA := fmt.Sprintf("%x", hasher.Sum(nil))
 		if actualSHA != matchedSHA {
-			_ = outFile.Close()
-			fileRemoveErr := os.Remove(destPath)
-			msg := fmt.Sprintf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
-			if fileRemoveErr != nil {
-				msg += fmt.Sprintf("\nAlso failed to remove file %s: %v", destPath, fileRemoveErr)
-			}
-			return errors.New(msg)
+			err = fmt.Errorf("SHA256 mismatch: expected %s, got %s", matchedSHA, actualSHA)
+			return
 		}
 	}
 
