@@ -27,7 +27,7 @@ darwin)
     brew pin buildkite-agent
     brew upgrade
     brew uninstall -f mysql-client || true
-    for item in ddev/ddev/ddev golang golangci-lint libpq mkcert mkdocs mysql-client@8.0; do
+    for item in ddev/ddev/ddev golang golangci-lint gtimeout libpq mkcert mkdocs mysql-client@8.0; do
         brew install $item || true
     done
     brew link --force libpq
@@ -46,7 +46,24 @@ docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null
 docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&1 || true
 
 # Clean the docker build cache
-docker buildx prune -f -a || true
+docker buildx prune -f -a >/dev/null || true
 # Remove any images with name '-built'
 docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null 2>&1 || true
+
+echo "--- cleaning up docker and Test directories"
+echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
+ddev poweroff || true
+if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
+	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
+fi
+docker system prune --volumes --force || true
+docker volume prune -a -f || true
+
+# Update all images that could have changed
+( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
+
+# homebrew sometimes removes /usr/local/etc/my.cnf.d
+if command -v brew >/dev/null; then
+  mkdir -p "$(brew --prefix)/etc/my.cnf.d"
+fi
