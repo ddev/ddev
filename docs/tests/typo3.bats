@@ -111,3 +111,86 @@ teardown() {
   run ddev exec "curl -s xhgui:80 | grep -q '<a href=\"/?server_name=${PROJNAME}.ddev.site\">'"
   assert_success
 }
+
+@test "TYPO3 v13 `ddev typo3 setup` composer test with $(ddev --version)" {
+  PROJECT_NAME=my-typo3-site
+  run mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  assert_success
+
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  assert_success
+
+  run ddev start -y
+  assert_success
+
+  run ddev composer create-project typo3/cms-base-distribution
+  assert_success
+
+  run ddev exec touch public/FIRST_INSTALL
+  assert_success
+
+  # Profile site
+  run ddev typo3 setup \
+    --admin-user-password="Demo123*" \
+    --driver=mysqli \
+    --create-site=https://${PROJECT_NAME}.ddev.site \
+    --server-type=other \
+    --dbname=db \
+    --username=db \
+    --password=db \
+    --port=3306 \
+    --host=db \
+    --admin-username=admin \
+    --admin-email=admin@example.com \
+    --project-name="demo TYPO3 site" \
+    --force
+  assert_success
+
+  run curl -sfL https://${PROJECT_NAME}.ddev.site/ | grep "Welcome to a default website made with"
+  assert_success
+  run curl s-sfL https://${PROJECT_NAME}.ddev.site/typo3/ | grep "TYPO3 CMS Login:"
+  assert_success
+}
+
+@test "TYPO3 v14 DEV `ddev typo3 setup` composer test with $(ddev --version)" {
+  PROJECT_NAME=my-typo3-site
+  run mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  assert_success
+
+  run git clone https://github.com/TYPO3/TYPO3.CMS.BaseDistribution.git .
+  assert_success
+
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  assert_success
+
+  run ddev start -y
+  assert_success
+
+  run ddev composer install
+  assert_success
+
+  run ddev exec touch public/FIRST_INSTALL
+  assert_success
+
+  # Profile site
+  run ddev typo3 setup \
+    --admin-user-password="Demo123*" \
+    --driver=mysqli \
+    --create-site=https://${PROJECT_NAME}.ddev.site \
+    --server-type=other \
+    --dbname=db \
+    --username=db \
+    --password=db \
+    --port=3306 \
+    --host=db \
+    --admin-username=admin \
+    --admin-email=admin@example.com \
+    --project-name="demo TYPO3 site" \
+    --force
+  assert_success
+
+  run curl -sfL https://${PROJECT_NAME}.ddev.site/ | grep "Welcome to a default website made with"
+  assert_success
+  run curl s-sfL https://${PROJECT_NAME}.ddev.site/typo3/ | grep "TYPO3 CMS Login:"
+  assert_success
+}
