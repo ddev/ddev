@@ -146,6 +146,8 @@ teardown() {
   assert_success
 }
 
+# This test is for the future, when we have a v14 quickstart. For now, it's
+# to ensure compatibility with upcoming v14
 # bats test_tags=typo3-setup,t3v14
 @test "TYPO3 v14 DEV 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJECT_NAME=my-typo3-site
@@ -194,6 +196,8 @@ teardown() {
 
   # Now try it with /admin as the BE entrypoint
   echo '$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";' >> config/system/additional.php
+  run ddev mutagen sync
+  assert_success
 
   run curl -If https://${PROJECT_NAME}.ddev.site/typo3/
   assert_failure

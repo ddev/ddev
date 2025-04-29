@@ -11,10 +11,10 @@ _common_setup() {
     export DDEV_NO_INSTRUMENTATION=true
     export DDEV_NONINTERACTIVE=true
     mkdir -p ${tmpdir} && cd ${tmpdir} || exit 1
-    ddev delete -Oy ${PROJNAME:-notset}
+    ddev delete -Oy ${PROJNAME:-notset} >/dev/null
 }
 
 _common_teardown() {
-  ddev delete -Oy ${PROJNAME}
+  ddev delete -Oy ${PROJNAME} >/dev/null
   rm -rf ${tmpdir}
 }
