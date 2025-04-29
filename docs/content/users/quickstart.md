@@ -1085,7 +1085,8 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 === "Composer"
 
     ```bash
-    mkdir my-typo3-site && cd my-typo3-site
+    PROJECT_NAME=my-typo3-site
+    mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
     ddev config --project-type=typo3 --docroot=public --php-version=8.3
     ddev start
     ddev composer create-project "typo3/cms-base-distribution"
@@ -1095,9 +1096,14 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
 === "Git Clone"
 
+    This example uses a clone of a test repository, `github.com/ddev/test-typo3.git`. 
+    Replace that with your git repository.
+
     ```bash
-    git clone https://github.com/ddev/test-typo3.git my-typo3-site
-    cd my-typo3-site
+    PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
+    PROJECT_NAME=my-typo3-site
+    mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
+    git clone ${PROJECT_GIT_REPOSITORY} .
     ddev config --project-type=typo3 --docroot=public --php-version=8.3
     ddev start
     ddev composer install
