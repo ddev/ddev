@@ -21,8 +21,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create-project drupal/recommended-project:^11
-  run ddev composer create-project drupal/recommended-project:^11
+  # ddev composer create-project "drupal/recommended-project:^11"
+  run ddev composer create-project "drupal/recommended-project:^11"
   assert_success
   # ddev composer require drush/drush
   run ddev composer require drush/drush
@@ -51,8 +51,8 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create-project drupal/recommended-project:^10
-  run ddev composer create-project drupal/recommended-project:^10
+  # ddev composer create-project "drupal/recommended-project:^10"
+  run ddev composer create-project "drupal/recommended-project:^10"
   assert_success
   # ddev composer require drush/drush
   run ddev composer require drush/drush

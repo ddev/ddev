@@ -235,7 +235,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
     ddev start
-    ddev composer create-project drupal/recommended-project:^11
+    ddev composer create-project "drupal/recommended-project:^11"
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
@@ -263,7 +263,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal10 --docroot=web
     ddev start
-    ddev composer create-project drupal/recommended-project:^10
+    ddev composer create-project "drupal/recommended-project:^10"
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
@@ -897,7 +897,7 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
     mkdir my-shopware-site && cd my-shopware-site
     ddev config --project-type=shopware6 --docroot=public
     ddev start
-    ddev composer create-project shopware/production:^v6.5
+    ddev composer create-project "shopware/production:^v6.5"
     # If it asks `Do you want to include Docker configuration from recipes?`
     # answer `x`, as we're using DDEV for this rather than its recipes.
     ddev exec console system:install --basic-setup
