@@ -71,10 +71,10 @@ teardown() {
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3 --xhprof-mode=xhgui
   assert_success
 
-  run ddev start -y
+  run ddev start -y >/dev/null
   assert_success
 
-  run ddev composer create-project typo3/cms-base-distribution
+  run ddev composer create-project typo3/cms-base-distribution >/dev/null
   assert_success
 
   run ddev exec touch public/FIRST_INSTALL
@@ -115,10 +115,10 @@ teardown() {
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
 
-  run ddev start -y
+  run ddev start -y >/dev/null
   assert_success
 
-  run ddev composer create-project typo3/cms-base-distribution
+  run ddev composer create-project typo3/cms-base-distribution >/dev/null
   assert_success
 
   run ddev exec touch public/FIRST_INSTALL
@@ -160,10 +160,10 @@ teardown() {
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
 
-  run ddev start -y
+  run ddev start -y >/dev/null
   assert_success
 
-  run ddev composer install
+  run ddev composer install >/dev/null
   assert_success
 
   run ddev exec touch public/FIRST_INSTALL
