@@ -12,8 +12,8 @@ teardown() {
 }
 
 @test "TYPO3 composer based quickstart with $(ddev --version)" {
-  PROJECT_NAME=my-typo3-site
-  run mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  PROJNAME=my-typo3-site
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
@@ -35,7 +35,7 @@ teardown() {
 
 @test "TYPO3 git based quickstart with $(ddev --version)" {
   PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
-  PROJECT_NAME=my-typo3-site
+  PROJNAME=my-typo3-site
   run git clone ${PROJECT_GIT_URL} ${PROJNAME}
   assert_success
   # cd my-typo3-site
@@ -108,8 +108,8 @@ teardown() {
 
 # bats test_tags=typo3-setup,t3v13
 @test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
-  PROJECT_NAME=my-typo3-site
-  run mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  PROJNAME=my-typo3-site
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=typo3 --docroot=public --php-version=8.3
@@ -127,7 +127,7 @@ teardown() {
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
-    --create-site=https://${PROJECT_NAME}.ddev.site \
+    --create-site=https://${PROJNAME}.ddev.site \
     --server-type=other \
     --dbname=db \
     --username=db \
@@ -140,9 +140,9 @@ teardown() {
     --force
   assert_success
 
-  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/ \| grep "Welcome to a default website made with"
+  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
   assert_success
-  run bats_pipe curl s-sfL https://${PROJECT_NAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl s-sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
 
@@ -150,8 +150,8 @@ teardown() {
 # to ensure compatibility with upcoming v14
 # bats test_tags=typo3-setup,t3v14
 @test "TYPO3 v14 DEV 'ddev typo3 setup' composer test with $(ddev --version)" {
-  PROJECT_NAME=my-typo3-site
-  run mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
+  PROJNAME=my-typo3-site
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run git clone https://github.com/TYPO3/TYPO3.CMS.BaseDistribution.git .
@@ -172,7 +172,7 @@ teardown() {
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
-    --create-site=https://${PROJECT_NAME}.ddev.site \
+    --create-site=https://${PROJNAME}.ddev.site \
     --server-type=other \
     --dbname=db \
     --username=db \
@@ -189,21 +189,24 @@ teardown() {
   run ddev restart -y
   assert_success
 
-  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/ \| grep "Welcome to a default website made with"
+  ddev mutagen sync
+  sleep 2
+
+  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
   assert_success
-  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 
   # Now try it with /admin as the BE entrypoint
   echo '$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";' >> config/system/additional.php
   run ddev mutagen sync
-  assert_success
-
-  run curl -If https://${PROJECT_NAME}.ddev.site/typo3/
+  sleep 2
+  
+  run curl -If https://${PROJNAME}.ddev.site/typo3/
   assert_failure
-  run curl -If https://${PROJECT_NAME}.ddev.site/admin/
+  run curl -If https://${PROJNAME}.ddev.site/admin/
   assert_success
 
-  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/admin/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/admin/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
