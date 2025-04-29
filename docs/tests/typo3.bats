@@ -191,8 +191,12 @@ teardown() {
     --force
   assert_success
 
-  run curl -sfL https://${PROJECT_NAME}.ddev.site/ | grep "Welcome to a default website made with"
+  # Restart to get the additional.php settings in there
+  run ddev restart -y
   assert_success
-  run curl s-sfL https://${PROJECT_NAME}.ddev.site/typo3/ | grep "TYPO3 CMS Login:"
+
+  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/ \| grep "Welcome to a default website made with"
+  assert_success
+  run bats_pipe curl s-sfL https://${PROJECT_NAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
