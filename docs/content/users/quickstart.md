@@ -1122,19 +1122,19 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev exec touch public/FIRST_INSTALL
     
     ddev typo3 setup \
-    --admin-user-password="Demo123*" \
-    --driver=mysqli \
-    --create-site=https://${PROJECT_NAME}.ddev.site \
-    --server-type=other \
-    --dbname=db \
-    --username=db \
-    --password=db \
-    --port=3306 \
-    --host=db \
-    --admin-username=admin \
-    --admin-email=admin@example.com \
-    --project-name="demo TYPO3 site" \
-    --force
+        --admin-user-password="Demo123*" \
+        --driver=mysqli \
+        --create-site=https://${PROJECT_NAME}.ddev.site \
+        --server-type=other \
+        --dbname=db \
+        --username=db \
+        --password=db \
+        --port=3306 \
+        --host=db \
+        --admin-username=admin \
+        --admin-email=admin@example.com \
+        --project-name="demo TYPO3 site" \
+        --force
 
     ddev launch /typo3/
     # Log in with credentials above, admin/Demo123*
