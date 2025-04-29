@@ -197,6 +197,17 @@ teardown() {
 
   run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/ \| grep "Welcome to a default website made with"
   assert_success
-  run bats_pipe curl s-sfL https://${PROJECT_NAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  assert_success
+
+  # Now try it with /admin as the BE entrypoint
+  echo '$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";' >> config/system/additional.php
+
+  run curl -If https://${PROJECT_NAME}.ddev.site/typo3/
+  assert_failure
+  run curl -If https://${PROJECT_NAME}.ddev.site/admin/
+  assert_success
+
+  run bats_pipe curl -sfL https://${PROJECT_NAME}.ddev.site/admin/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
