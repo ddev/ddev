@@ -189,8 +189,6 @@ teardown() {
   run ddev restart -y
   assert_success
 
-  sleep 2
-
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
   assert_success
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
@@ -199,6 +197,7 @@ teardown() {
   # Now try it with /admin as the BE entrypoint
   echo '$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";' >> config/system/additional.php
   assert_success
+  # Sync it into the container immediately
   run ddev mutagen sync
   assert_success
 
