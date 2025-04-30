@@ -817,7 +817,13 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
     ddev start
     ddev composer create-project pimcore/skeleton
-    ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
+    ddev exec pimcore-install \
+        --mysql-username=db \
+        --mysql-password=db \
+        --mysql-host-socket=db \
+        --mysql-database=db \
+        --admin-password=admin \
+        --admin-username=admin
     echo "web_extra_daemons:
       - name: consumer
         command: 'while true; do /var/www/html/bin/console messenger:consume pimcore_core pimcore_maintenance pimcore_scheduled_tasks pimcore_image_optimize pimcore_asset_update --memory-limit=250M --time-limit=3600; done'

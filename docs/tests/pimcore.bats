@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Pimcore Composer quickstart with $(ddev --version)" {
+  skip "Pimcore requires a license key"
+
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -24,8 +26,7 @@ teardown() {
   # ddev composer create-project pimcore/skeleton
   run ddev composer create-project pimcore/skeleton
   assert_success
-  # ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
-  run ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin --no-interaction
+  run ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin
   assert_success
   # echo "web_extra_daemons:
   #   - name: consumer
