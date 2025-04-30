@@ -148,19 +148,22 @@ archives:
 - id: completions-tarball
   ids:
   - completions-tarball
-  format: binary
+  formats:
+  - binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-amd64-installer
   ids:
   - ddev-windows-amd64-installer
-  format: binary
+  formats:
+  - binary
   name_template: "ddev_windows_amd64_installer.v{{.Version}}"
 
 - id: ddev-windows-arm64-installer
   ids:
   - ddev-windows-arm64-installer
-  format: binary
+  formats:
+  - binary
   name_template: "ddev_windows_arm64_installer.v{{.Version}}"
 
 checksum:
