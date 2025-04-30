@@ -189,7 +189,6 @@ teardown() {
   run ddev restart -y
   assert_success
 
-  #ddev mutagen sync
   sleep 2
 
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
@@ -198,12 +197,13 @@ teardown() {
   assert_success
 
   # Now try it with /admin as the BE entrypoint
-  # This is relatively complex because we want to add the line inside the container
-  # to avoid having to do mutagen sync, etc.
-  run ddev exec --raw -- bash -c 'cat <<EOF >> config/system/additional.php
-\$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";
-EOF'
+  echo '$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";' >> config/system/additional.php
   assert_success
+  run ddev mutagen sync
+  assert_success
+
+  # We not only have to do mutagen sync, but also have to convince
+  # opcache to reset, otherwise it takes 2s to catch the difference
   run ddev exec killall -USR2 php-fpm
   assert_success
 
