@@ -190,8 +190,7 @@ teardown() {
   assert_success
 
   # I don't understand why this would be necessary
-  run ddev exec killall -USR2 php-fpm
-  assert_success
+  sleep 2
 
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
   assert_success
