@@ -189,6 +189,10 @@ teardown() {
   run ddev restart -y
   assert_success
 
+  # I don't understand why this would be necessary
+  run ddev exec killall -USR2 php-fpm
+  assert_success
+
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
   assert_success
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
