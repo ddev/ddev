@@ -431,6 +431,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-dbserver image
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-dbserver/README.md
@@ -441,6 +442,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: Gitpod integration for DDEV
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-gitpod-base/README.md
@@ -452,6 +454,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-php-base image, base image for ddev-webserver
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-php-base/README.md
@@ -462,6 +465,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-ssh-agent image
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-ssh-agent/README.md
@@ -472,6 +476,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-traefik-router, a wrapper on traefik
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-traefik-router/README.md
@@ -482,6 +487,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: Utility provider for jq, base64, etc
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_url:
         url: https://github.com/ddev/ddev-utilities/raw/main/README.md
@@ -493,6 +499,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-webserver image
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-webserver/README.md
@@ -503,6 +510,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: xhgui facility for DDEV integration
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/ddev-xhgui/README.md
@@ -513,6 +521,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: ARM64 base images for ddev-dbserver-mysql-8.0 and 5.7
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_url:
         url: https://github.com/ddev/mysql-arm64-images/raw/main/README.md
@@ -523,6 +532,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: Utility builder for mysql client binaries
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_url:
         url: https://github.com/ddev/mysql-client-build/raw/main/README.md
@@ -533,6 +543,7 @@ dockerhub:
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's test-ssh-server image, used only for automated tests
+    disable: "{{ eq .Env.DOCKERHUB_TOKEN \"\" }}"
     full_description:
       from_file:
         path: ./containers/test-ssh-server/README.md
