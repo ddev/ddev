@@ -267,7 +267,7 @@ brews:
           Please run:
             brew uninstall -f ddev
             brew untap #{tap.full_name}
-            brew install ddev/ddev/ddev-edge
+            brew install ddev/ddev-edge/ddev
         EOS
       end
     end
