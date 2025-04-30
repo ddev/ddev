@@ -232,7 +232,7 @@ brews:
   test: |
     system "#{bin}/ddev --version"
 
-- name: ddev
+- name: ddev-edge
   ids:
   - ddev
   repository:
