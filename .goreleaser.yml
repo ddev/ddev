@@ -125,19 +125,20 @@ builds:
 
 ###### Archives ######
 archives:
-- id: ddev
-  builds:
-  - ddev
-  - mkcert
-  - ddev_bash_completion.sh
-  - ddev_zsh_completion.sh
-  - ddev_fish_completion.sh
-  format: tar.gz
+  ids:
+    - ddev
+    - mkcert
+    - ddev_bash_completion.sh
+    - ddev_zsh_completion.sh
+    - ddev_fish_completion.sh
+  formats:
+  - tar.gz
   name_template: >-
     {{ .ProjectName }}_{{- if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}-{{- .Arch }}.v{{- .Version }}
   format_overrides:
   - goos: windows
-    format: zip
+    formats:
+    - zip
   wrap_in_directory: false
   files:
   - LICENSE
@@ -295,7 +296,7 @@ nfpms:
   homepage: https://github.com/ddev/ddev
   description: |
     Open-source local web development tool
-  builds:
+  ids:
   - ddev
   - mkcert
   formats:
