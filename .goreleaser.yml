@@ -125,6 +125,7 @@ builds:
 
 ###### Archives ######
 archives:
+- id: ddev
   ids:
     - ddev
     - mkcert
@@ -145,19 +146,19 @@ archives:
   allow_different_binary_count: true
 
 - id: completions-tarball
-  builds:
+  ids:
   - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-amd64-installer
-  builds:
+  ids:
   - ddev-windows-amd64-installer
   format: binary
   name_template: "ddev_windows_amd64_installer.v{{.Version}}"
 
 - id: ddev-windows-arm64-installer
-  builds:
+  ids:
   - ddev-windows-arm64-installer
   format: binary
   name_template: "ddev_windows_arm64_installer.v{{.Version}}"
