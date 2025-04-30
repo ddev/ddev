@@ -208,6 +208,7 @@ brews:
             brew install ddev/ddev/ddev
         EOS
       end
+    end
 
   install: |
     if build.head?
@@ -261,9 +262,10 @@ brews:
           Please run:
             brew uninstall -f ddev
             brew untap #{tap.full_name}
-            brew install ddev/ddev/ddev
+            brew install ddev/ddev/ddev-edge
         EOS
       end
+    end
   install: |
     if build.head?
         system "sh", "-c", "git fetch --unshallow >/dev/null 2>&1" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
