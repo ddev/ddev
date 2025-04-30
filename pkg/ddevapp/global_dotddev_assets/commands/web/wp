@@ -10,4 +10,12 @@
 # Ignore anything we find in the mounted global commands
 PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
 
+# Add --path if not already set
+if [[ ! " $* " =~ (--path(=|\s)) ]]; then
+  # Build the path value based on DDEV_COMPOSER_ROOT and DDEV_DOCROOT
+  path_value="${DDEV_COMPOSER_ROOT%/}"
+  [[ -n "$DDEV_DOCROOT" ]] && path_value+="/${DDEV_DOCROOT#/}"
+  set -- "$@" --path="$path_value"
+fi
+
 wp "$@"
