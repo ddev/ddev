@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -29,10 +30,20 @@ func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL s
 	client.RetryMax = 4
 	client.RetryWaitMin = 500 * time.Millisecond
 	client.RetryWaitMax = 5 * time.Second
-	client.CheckRetry = retryablehttp.DefaultRetryPolicy
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		// Default retry policy only retries on
+		// - connection reset
+		// - connection refused
+		// - No Response
+		// - net.Error with Temporary() == true
+		if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
+			return true, nil
+		}
+		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	}
 	client.Backoff = retryablehttp.DefaultBackoff
 	client.Logger = nil
-	client.HTTPClient.Timeout = 60 * time.Second
+	client.HTTPClient.Timeout = 20 * time.Second
 	client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
 		if attempt > 0 {
 			// attempt==1 is the first retry, 2 the second, etc
