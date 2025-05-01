@@ -126,39 +126,44 @@ builds:
 ###### Archives ######
 archives:
 - id: ddev
-  builds:
-  - ddev
-  - mkcert
-  - ddev_bash_completion.sh
-  - ddev_zsh_completion.sh
-  - ddev_fish_completion.sh
-  format: tar.gz
+  ids:
+    - ddev
+    - mkcert
+    - ddev_bash_completion.sh
+    - ddev_zsh_completion.sh
+    - ddev_fish_completion.sh
+  formats:
+  - tar.gz
   name_template: >-
     {{ .ProjectName }}_{{- if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}-{{- .Arch }}.v{{- .Version }}
   format_overrides:
   - goos: windows
-    format: zip
+    formats:
+    - zip
   wrap_in_directory: false
   files:
   - LICENSE
   allow_different_binary_count: true
 
 - id: completions-tarball
-  builds:
+  ids:
   - completions-tarball
-  format: binary
+  formats:
+  - binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-amd64-installer
-  builds:
+  ids:
   - ddev-windows-amd64-installer
-  format: binary
+  formats:
+  - binary
   name_template: "ddev_windows_amd64_installer.v{{.Version}}"
 
 - id: ddev-windows-arm64-installer
-  builds:
+  ids:
   - ddev-windows-arm64-installer
-  format: binary
+  formats:
+  - binary
   name_template: "ddev_windows_arm64_installer.v{{.Version}}"
 
 checksum:
@@ -179,6 +184,7 @@ brews:
   repository:
     owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: homebrew-ddev
+
   description: DDEV
   directory: Formula
   homepage: https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev
@@ -194,6 +200,21 @@ brews:
       depends_on "go" => :build
       depends_on "make" => :build
     end
+    # fail fast if tapped under the old drud or rfay names
+    def initialize(*args, **kwargs)
+      super(*args, **kwargs)
+      if ["drud/homebrew-ddev", "rfay/homebrew-ddev"].include?(tap.full_name)
+        odie <<~EOS
+          ERROR: your homebrew tap is the ancient #{tap.full_name},
+          but that repository has moved.
+          Please run:
+            brew uninstall -f ddev
+            brew untap #{tap.full_name}
+            brew install ddev/ddev/ddev
+        EOS
+      end
+    end
+
   install: |
     if build.head?
         system "sh", "-c", "git fetch --unshallow >/dev/null 2>&1" if File.exist?("#{HOMEBREW_REPOSITORY}/.git/shallow")
@@ -216,7 +237,7 @@ brews:
   test: |
     system "#{bin}/ddev --version"
 
-- name: ddev
+- name: ddev-edge
   ids:
   - ddev
   repository:
@@ -235,6 +256,20 @@ brews:
       url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "main"
       depends_on "go" => :build
       depends_on "make" => :build
+    end
+    # fail fast if tapped under the old drud or rfay names
+    def initialize(*args, **kwargs)
+      super(*args, **kwargs)
+      if ["drud/homebrew-ddev", "drud/homebrew-ddev-edge",  "ddev-test/homebrew-ddev-edge", "rfay/homebrew-ddev-edge"].include?(tap.full_name)
+        odie <<~EOS
+          ERROR: your homebrew tap is the ancient #{tap.full_name},
+          but that repository has moved.
+          Please run:
+            brew uninstall -f ddev
+            brew untap #{tap.full_name}
+            brew install ddev/ddev-edge/ddev
+        EOS
+      end
     end
   install: |
     if build.head?
@@ -265,7 +300,7 @@ nfpms:
   homepage: https://github.com/ddev/ddev
   description: |
     Open-source local web development tool
-  builds:
+  ids:
   - ddev
   - mkcert
   formats:
@@ -413,6 +448,8 @@ dockerhub:
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.6'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.7'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.0'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.4'
+
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-dbserver image
