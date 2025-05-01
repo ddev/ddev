@@ -574,7 +574,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 			Cmd: fmt.Sprintf(`chmod -f u+w %s`, strings.Join(settingsFiles, " ")),
 		})
 		if err != nil {
-			util.Warning("Unable to set permissions inside container on settings files: '%s'", stderr)
+			util.Warning("Unable to set permissions inside container on settings files: err=%v, stderr=%s", err, stderr)
 		}
 	}
 
