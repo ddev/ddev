@@ -87,12 +87,19 @@ $(GOTMP)/bin/completions.tar.gz: build
 
 mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert
 
-# Download mkcert to it can be added to tarball installations
-$(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" MKCERT_VERSION=v1.4.4 && \
-	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
-	curl --fail -JL -s -S --retry 5 --retry-delay 5 --retry-connrefused -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
+# Set CURL to the Homebrew-installed curl, fallback to default
+CURL := $(shell command -v /opt/homebrew/opt/curl/bin/curl || command -v /usr/local/opt/curl/bin/curl || echo curl)
+
+$(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert:
+	@mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH}
+	@for i in 1 2 3; do \
+	  $(CURL) --fail -JL -s -S --http1.1 --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors \
+	    -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert \
+	    "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" \
+	    && break || echo "Retry $$i failed, retrying..."; \
+	  sleep 3; \
+	done
+	@chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -200,26 +207,26 @@ textlint:
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
 		set -o errexit -o pipefail; \
-		curl -s --retry 5 --retry-delay 5 --retry-connrefused https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
+		$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
 	fi
 darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
 		set -o errexit -o pipefail; \
 		codesign --remove-signature "$(GOTMP)/bin/darwin_arm64/ddev" || true; \
-		curl -s --retry 5 --retry-delay 5 --retry-connrefused https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
+		$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
 	fi
 
 darwin_amd64_notarized: darwin_amd64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_amd64/ddev ..." ; \
-		curl -sSL --retry 5 --retry-delay 5 --retry-connrefused -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev ..." ; \
-		curl -sSL --retry 5 --retry-delay 5 --retry-connrefused -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
 	fi
 
 windows_amd64_install: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
@@ -258,20 +265,20 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
 	fi
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
-	curl --fail -S --retry 5 --retry-delay 5 --retry-connrefused -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/amd64"
-	curl --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
+	$(CURL) --fail -S --retry 5 --retry-delay 5 --retry-connrefused -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/amd64"
+	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
 $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt:
-	curl --fail -JL -S --retry 5 --retry-delay 5 --retry-connrefused -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/arm64"
-	curl --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
+	$(CURL) --fail -JL -S --retry 5 --retry-delay 5 --retry-connrefused -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/arm64"
+	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
 $(GOTMP)/bin/windows_amd64/gsudo_license.txt:
 	set -x
-	curl --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o "$(GOTMP)/bin/windows_amd64/gsudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
+	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o "$(GOTMP)/bin/windows_amd64/gsudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 $(GOTMP)/bin/windows_arm64/gsudo_license.txt:
 	set -x
-	curl --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o "$(GOTMP)/bin/windows_arm64/gsudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
+	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused -o "$(GOTMP)/bin/windows_arm64/gsudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
