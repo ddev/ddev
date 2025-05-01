@@ -570,11 +570,11 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 			path.Join(app.GetAbsDocroot(true), `sites/default`),
 			path.Join(app.GetAbsDocroot(true), `sites/default/settings.php`),
 		}
-		_, stderr, err := app.Exec(&ExecOpts{
-			Cmd: fmt.Sprintf(`chmod -f u+w %s`, strings.Join(settingsFiles, " ")),
+		stdout, _, err := app.Exec(&ExecOpts{
+			Cmd: fmt.Sprintf(`chmod u+w %s 2>&1`, strings.Join(settingsFiles, " ")),
 		})
 		if err != nil {
-			util.Warning("Unable to set permissions inside container on settings files: err=%v, stderr=%s", err, stderr)
+			util.Warning("Unable to set permissions inside container on settings files:\n%s", stdout)
 		}
 	}
 
