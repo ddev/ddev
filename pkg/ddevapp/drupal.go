@@ -560,17 +560,14 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 			util.Warning("Unable to set permissions: %v", err)
 		}
 	}
+	// Don't run app.Exec() without a running container.
+	status, _ := app.SiteStatus()
 	// It is possible that a Drupal install has been done, setting sites/default and sites/default/settings.php
 	// to read-only, which breaks mutagen's access to them so mutagen then
 	// can't sync. See https://github.com/ddev/ddev/issues/6491
 	// So we chmod +w the two files that a Drupal install may set read-only
 	// *inside* the container, allowing mutagen access to it again
-	if app.IsMutagenEnabled() {
-		// Don't run app.Exec() without a running container.
-		status, _ := app.SiteStatus()
-		if status != SiteRunning {
-			return nil
-		}
+	if app.IsMutagenEnabled() && status == SiteRunning {
 		settingsFiles := []string{
 			path.Join(app.GetAbsDocroot(true), `sites/default`),
 			path.Join(app.GetAbsDocroot(true), `sites/default/settings.php`),
