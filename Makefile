@@ -90,16 +90,12 @@ mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTM
 # Set CURL to the Homebrew-installed curl, fallback to default
 CURL := $(shell command -v /opt/homebrew/opt/curl/bin/curl || command -v /usr/local/opt/curl/bin/curl || echo curl)
 
-$(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert:
-	@mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH}
-	@for i in 1 2 3; do \
-	  $(CURL) --fail -JL -s -S --http1.1 --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors \
-	    -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert \
-	    "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" \
-	    && break || echo "Retry $$i failed, retrying..."; \
-	  sleep 3; \
-	done
-	@chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
+# Download mkcert to it can be added to tarball installations
+$(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
+	@export TARGET=$(word 3, $(subst /, ,$@)) && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" MKCERT_VERSION=v1.4.4 && \
+	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
+	$(CURL) --fail -JL -s -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
