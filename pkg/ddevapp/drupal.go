@@ -566,6 +566,11 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	// So we chmod +w the two files that a Drupal install may set read-only
 	// *inside* the container, allowing mutagen access to it again
 	if app.IsMutagenEnabled() {
+		// Don't run app.Exec() without a running container.
+		status, _ := app.SiteStatus()
+		if status != SiteRunning {
+			return nil
+		}
 		settingsFiles := []string{
 			path.Join(app.GetAbsDocroot(true), `sites/default`),
 			path.Join(app.GetAbsDocroot(true), `sites/default/settings.php`),
