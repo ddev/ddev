@@ -1352,11 +1352,10 @@ RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 
 		// Testing prepend.Dockerfile* with a simple multi-stage build
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/prepend.Dockerfile"), []byte(`
-ARG BASE_IMAGE="scratch"
-FROM $BASE_IMAGE AS stage
+FROM busybox AS stage
 `+
-			`RUN touch /var/tmp/`+"added-by-"+item+"-stage.txt"+`
-			 RUN touch /var/tmp/`+"added-by-"+item+"-stage-other.txt"))
+			`RUN touch /tmp/`+"added-by-busybox-"+item+"-stage.txt"+`
+			 RUN touch /tmp/`+"added-by-busybox-"+item+"-stage-other.txt"))
 		assert.NoError(err)
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/prepend.Dockerfile.test5"), []byte(`
 ARG BASE_IMAGE="scratch"
@@ -1366,7 +1365,7 @@ FROM $BASE_IMAGE AS test5
 		assert.NoError(err)
 
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test5"), []byte(`
-COPY --from=stage /var/tmp/`+"added-by-"+item+"-stage.txt /var/tmp/"+"added-by-"+item+"-stage.txt"+`
+COPY --from=stage /tmp/`+"added-by-busybox-"+item+"-stage.txt /var/tmp/"+"added-by-busybox-"+item+"-stage.txt"+`
 COPY --from=test5 /var/tmp/`+"added-by-"+item+"-test5.txt /var/tmp/"+"added-by-"+item+"-test5.txt"))
 		assert.NoError(err)
 	}
@@ -1457,7 +1456,7 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 		assert.NoFileExists(app.GetConfigPath("." + item + "imageBuild/Dockerfile.test5"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + "-stage.txt >/dev/null",
+			Cmd:     "ls /var/tmp/added-by-busybox-" + item + "-stage.txt >/dev/null",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1469,7 +1468,7 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 		// but not copied on the final image
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + "-stage-other.txt 2>/dev/null",
+			Cmd:     "ls /tmp/added-by-busybox-" + item + "-stage-other.txt 2>/dev/null",
 		})
 		assert.Error(err)
 	}
