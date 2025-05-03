@@ -1257,6 +1257,7 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 	// Normal starting content is the arg and base image
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
+ARG BASE_IMAGE="scratch"
 `
 	// If there are user prepend.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
@@ -1281,7 +1282,6 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 
 	contents = contents + `
 ### DDEV-injected base Dockerfile contents
-ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `
