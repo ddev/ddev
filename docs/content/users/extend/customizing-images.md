@@ -161,6 +161,8 @@ An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) we
 # statements. 
 FROM $BASE_IMAGE AS build-stage-go
 
+# While we are not using $uid and $gid in the code below, this serves as an example
+# of how any of the other DDEV's build variables must be defined. 
 ARG uid
 ARG gid
 
