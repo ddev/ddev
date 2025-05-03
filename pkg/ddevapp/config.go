@@ -1258,6 +1258,8 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 	contents := `
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 ARG BASE_IMAGE="scratch"
+# Do not redefined DDEV_RESERVED_BASE_IMAGE in any of your custom Dockerfile variants.
+ARG DDEV_RESERVED_BASE_IMAGE=$BASE_IMAGE
 `
 	// If there are user prepend.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
@@ -1282,7 +1284,7 @@ ARG BASE_IMAGE="scratch"
 
 	contents = contents + `
 ### DDEV-injected base Dockerfile contents
-FROM $BASE_IMAGE
+FROM $DDEV_RESERVED_BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `
 	// bitnami/mysql inappropriately sets ENV HOME=/, see https://github.com/bitnami/containers/issues/75578
