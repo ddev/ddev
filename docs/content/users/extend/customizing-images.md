@@ -157,7 +157,7 @@ An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) we
 # If we want to use any of the build time environment variables injected by ddev
 # on the prepend.Dockerfile* variants we need to manually declare them to make
 # them available using the ARG instruction.
-# Only $BASE_IMAGE is already added as it must be global be used on FROM 
+# Only $BASE_IMAGE is already added as it must be global to be used on FROM 
 # statements. 
 FROM $BASE_IMAGE AS build-stage-go
 
