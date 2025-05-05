@@ -197,7 +197,7 @@ The following environment variables are available for the web Dockerfile to use 
 * `$TARGETOS`: The build target operating system (always `linux`)
 * `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
 
-!!! warning "Only `$BASE_IMAGE` is automatically available in `prepend.Dockerfile*` variants"
+!!!warning "Only `$BASE_IMAGE` is automatically available in `prepend.Dockerfile*` variants"
     If you need to use any of the other variables you will need to manually add them to your `prepend.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
 
 For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
