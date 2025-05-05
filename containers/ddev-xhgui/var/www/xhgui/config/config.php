@@ -1,5 +1,9 @@
 <?php
-/* DDEV xhgui configuration */
+/**
+ * DDEV configuration for XHGui.
+ *
+ * Upstream file https://github.com/perftools/xhgui/blob/0.23.x/src/config.default.php
+ */
 
 $DDEV_DATABASE_FAMILY = getenv('DDEV_DATABASE_FAMILY', 'mysql');
 $XHGUI_PDO_DSN = $DDEV_DATABASE_FAMILY === 'postgres'
@@ -34,7 +38,7 @@ return [
     // - prefix=null: use auto-detection from request
     // - prefix='': use '' for prefix
     // - prefix='/xhgui': use '/xhgui'
-    'path.prefix' => null,
+    'path.prefix' => getenv('XHGUI_PATH_PREFIX') ?: null,
 
     // Setup timezone for date formatting
     // Example: 'UTC', 'Europe/Tallinn'
