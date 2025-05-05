@@ -140,7 +140,7 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 			// Get the exit code
 			exitCode := exitErr.ExitCode()
 			if exitCode == 63 {
-				util.Warning("%c %s", '\U000026A1', desc)
+				util.Warning("%s %s", "\U000026A0\U0000FE0F", desc)
 				err = nil
 			} else {
 				util.Warning("%c %s", '\U0001F44E', desc)
