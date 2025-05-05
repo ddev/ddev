@@ -3,8 +3,10 @@ package ddevapp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	goexec "os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -131,17 +133,27 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 		action = "set -x; " + action
 	}
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
+
+	if err != nil {
+		var exitErr *goexec.ExitError
+		if errors.As(err, &exitErr) {
+			// Get the exit code
+			exitCode := exitErr.ExitCode()
+			if exitCode == 63 {
+				util.Warning("%c %s", '\U000026A1', desc)
+				err = nil
+			} else {
+				util.Warning("%c %s", '\U0001F44E', desc)
+				err = fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
+			}
+		}
+	} else {
+		util.Success("%c %s", '\U0001F44D', desc)
+	}
 	if len(out) > 0 {
 		util.Warning(out)
 	}
-	if err != nil {
-		util.Warning("%c %s", '\U0001F44E', desc)
-		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
-	}
-	if desc != "" {
-		util.Success("%c %s", '\U0001F44D', desc)
-	}
-	return nil
+	return err
 }
 
 // GetAddonDdevDescription returns what follows #ddev-description: in any line in action
