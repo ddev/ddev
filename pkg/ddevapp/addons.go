@@ -134,7 +134,6 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 		action = "set -x; " + action
 	}
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
-
 	if err != nil {
 		warningCode := GetAddonDdevWarningExitCode(action)
 		if warningCode > 0 {
@@ -148,7 +147,6 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 				}
 			}
 		}
-
 		if err != nil {
 			util.Warning("%c %s", '\U0001F44E', desc)
 			err = fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
