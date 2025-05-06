@@ -8,6 +8,7 @@ import (
 	"os"
 	goexec "os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -135,17 +136,22 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
 
 	if err != nil {
-		var exitErr *goexec.ExitError
-		if errors.As(err, &exitErr) {
-			// Get the exit code
-			exitCode := exitErr.ExitCode()
-			if exitCode == 63 {
-				util.Warning("%s %s", "\U000026A0\U0000FE0F", desc)
-				err = nil
-			} else {
-				util.Warning("%c %s", '\U0001F44E', desc)
-				err = fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
+		warningCode := GetAddonDdevWarningExitCode(action)
+		if warningCode > 0 {
+			var exitErr *goexec.ExitError
+			if errors.As(err, &exitErr) {
+				// Get the exit code
+				exitCode := exitErr.ExitCode()
+				if exitCode == warningCode {
+					util.Warning("%s %s", "\U000026A0\U0000FE0F", desc)
+					err = nil
+				}
 			}
+		}
+
+		if err != nil {
+			util.Warning("%c %s", '\U0001F44E', desc)
+			err = fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 		}
 	} else {
 		util.Success("%c %s", '\U0001F44D', desc)
@@ -166,6 +172,25 @@ func GetAddonDdevDescription(action string) string {
 		}
 	}
 	return ""
+}
+
+// GetAddonDdevWarningExitCode returns the integer following #ddev-warning-exit-code in the last match in action
+// If no matches are found or the value is not an integer, returns 0
+func GetAddonDdevWarningExitCode(action string) int {
+	warnLines := nodeps.GrepStringInBuffer(action, `[\r\n]*#ddev-warning-exit-code:[ ]*[1-9][0-9]*[\r\n]+`)
+	if len(warnLines) > 0 {
+		// Get the last match if there are multiple
+		lastLine := warnLines[len(warnLines)-1]
+		parts := strings.Split(lastLine, ":")
+		if len(parts) > 1 {
+			codeStr := strings.Trim(parts[1], "\r\n\t ")
+			// Try to convert to integer
+			if code, err := strconv.Atoi(codeStr); err == nil {
+				return code
+			}
+		}
+	}
+	return 0
 }
 
 // ListAvailableAddons lists the add-ons that are listed on github
