@@ -87,6 +87,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
 In any stanza of `pre_install_actions` and `post_install_actions` you can:
 
 * Use `#ddev-description:<some description of what stanza is doing>` to instruct DDEV to output a description of the action it's taking.
+* Use `#ddev-warning-exit-code:<an integer between 1-255>` to instruct DDEV to consider a certain exit code of the stanza as a warning, not an error, continuing with other actions as normal.
 
 You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/ddev/ddev-addon-template/blob/main/install.yaml).
 
