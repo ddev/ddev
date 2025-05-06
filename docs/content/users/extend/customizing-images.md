@@ -157,9 +157,12 @@ An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) we
 # If we want to use any of the build time environment variables injected by ddev
 # on the prepend.Dockerfile* variants we need to manually declare them to make
 # them available using the ARG instruction.
-ARG BASE_IMAGE="scratch"
+# Only $BASE_IMAGE is already added as it must be global to be used on FROM 
+# statements. 
 FROM $BASE_IMAGE AS build-stage-go
 
+# While we are not using $uid and $gid in the code below, this serves as an example
+# of how any of the other DDEV's build variables must be defined. 
 ARG uid
 ARG gid
 
@@ -185,7 +188,7 @@ COPY --from=build-stage-go /usr/local/go /usr/local
 
 The following environment variables are available for the web Dockerfile to use at build time:
 
-* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.24.0`
+* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.24.0` ([global scope](https://docs.docker.com/build/building/variables/#scoping))
 * `$username`: the username inferred from your host-side username
 * `$uid`: the user ID inferred from your host-side user ID
 * `$gid`: the group ID inferred from your host-side group ID
@@ -194,8 +197,8 @@ The following environment variables are available for the web Dockerfile to use 
 * `$TARGETOS`: The build target operating system (always `linux`)
 * `$TARGETPLATFORM`: `linux/amd64` or `linux/arm64` depending on the machine it's been executed on
 
-!!!warning "These variables won't be automatically available on `prepend.Dockerfile*` variants"
-    If you need to use any of these variables you will need to manually add them to your `prepend.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
+!!!warning "Only `$BASE_IMAGE` is automatically available in `prepend.Dockerfile*` variants"
+    If you need to use any of the other variables you will need to manually add them to your `prepend.Dockerfile*` files using [ARG](https://docs.docker.com/reference/dockerfile/#arg) instructions.
 
 For example, a Dockerfile might want to build an extension for the configured PHP version like this using `$DDEV_PHP_VERSION` to specify the proper version:
 
