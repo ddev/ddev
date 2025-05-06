@@ -92,6 +92,7 @@ Write-Host "DDEV installation complete."
 
 $mkcertPath = "C:\Program Files\DDEV\mkcert.exe"
 $maxWait = 60
+Write-Host "Waiting $maxWait seconds for $mkcertPath binary..."
 $waited = 0
 while (-not (Test-Path $mkcertPath) -and $waited -lt $maxWait) {
     Start-Sleep -Seconds 1
