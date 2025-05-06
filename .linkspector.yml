@@ -31,5 +31,7 @@ aliveStatusCodes:
   - 200
   - 206
   - 301
-
+  # TODO: GitHub changed its limits, now we get 429, remove this workaround when it is resolved
+  # See https://github.com/UmbrellaDocs/action-linkspector/issues/43
+  - 429
 #modifiedFilesOnly: true
