@@ -64,13 +64,13 @@ jobs:
       - name: Run textlint
         uses: tsuyoshicho/action-textlint@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
       - name: Run linkspector to check external links
         uses: umbrelladocs/action-linkspector@v1
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           fail_on_error: true
           # Check links only in the added lines for PRs, but check everything otherwise
