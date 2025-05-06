@@ -580,9 +580,9 @@ func normalizeConstraint(constraint string) string {
 	tokens := strings.Fields(constraintNoCommas)
 	for i, token := range tokens {
 		last := token[len(token)-1]
-		// If the token represents a version number (ends with a digit)
+		// If the token represents a version number (ends with a digit or is a wildcard)
 		// and doesn't contain a suffix '-0', append '-0'
-		if !strings.HasSuffix(token, "-0") && last >= '0' && last <= '9' {
+		if !strings.HasSuffix(token, "-0") && strings.Contains("0123456789xX*", string(last)) {
 			tokens[i] = token + "-0"
 		}
 	}

@@ -603,6 +603,12 @@ func TestConfigValidate(t *testing.T) {
 		{"Extended condition OR prerelease", "v1.22.3-11-g8baef014e", ">=1.22.3 <1.22.4 || 1.22.3", ""},
 		{"Extended condition OR fail", "v1.22.3", "1.22.2 || 1.22.4", "your DDEV version 'v1.22.3' doesn't meet the constraint '1.22.2 || 1.22.4'"},
 		{"Extended condition OR fail prerelease", "v1.22.3-11-g8baef014e", "1.22.2 || 1.22.4 || v1.22.3-11-g123", "your DDEV version 'v1.22.3-11-g8baef014e' doesn't meet the constraint '1.22.2 || 1.22.4 || v1.22.3-11-g123'"},
+		{"Wildcard", "v1.22.3", "1.22.x", ""},
+		{"Wildcard fail", "v1.22.3", "1.23.X", "your DDEV version 'v1.22.3' doesn't meet the constraint '1.23.X'"},
+		{"Wildcard star", "v1.22.3", "*", ""},
+		{"Wildcard prerelease", "v1.22.3-11-g8baef014e", "1.22.x", ""},
+		{"Wildcard fail prerelease", "v1.22.3-11-g8baef014e", "1.23.X", "your DDEV version 'v1.22.3-11-g8baef014e' doesn't meet the constraint '1.23.X'"},
+		{"Wildcard star prerelease", "v1.22.3-11-g8baef014e", "*", ""},
 	}
 
 	for _, tc := range testCases {
