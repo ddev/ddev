@@ -122,6 +122,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			RawCmd:  composerCmd,
 			Dir:     "/var/www/html",
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			Env:     []string{"XDEBUG_MODE=off"},
 		})
 
 		if err != nil {
@@ -193,6 +194,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+				Env:     []string{"XDEBUG_MODE=off"},
 			})
 
 			if len(stdout) > 0 {
@@ -233,6 +235,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				RawCmd:  composerCmd,
 				Dir:     getComposerRootInContainer(app),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+				Env:     []string{"XDEBUG_MODE=off"},
 			})
 
 			if err != nil {
@@ -287,6 +290,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+				Env:     []string{"XDEBUG_MODE=off"},
 			})
 
 			if len(stdout) > 0 {
@@ -400,6 +404,7 @@ func getListOfComposerOptionsThatCanHaveValues(app *ddevapp.DdevApp) []string {
 		Service: "web",
 		Dir:     app.GetComposerRoot(true, false),
 		RawCmd:  []string{"composer", "create-project", "--help"},
+		Env:     []string{"XDEBUG_MODE=off"},
 	})
 	if err != nil {
 		return []string{}
@@ -444,6 +449,7 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 		Service: "web",
 		Dir:     getComposerRootInContainer(app),
 		RawCmd:  validateCmd,
+		Env:     []string{"XDEBUG_MODE=off"},
 	})
 	out := userOutFunc()
 	if err == nil {
