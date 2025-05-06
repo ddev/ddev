@@ -27,7 +27,7 @@ darwin)
     brew pin buildkite-agent
     brew upgrade
     brew uninstall -f mysql-client || true
-    for item in ddev/ddev/ddev golang golangci-lint gtimeout libpq mkcert mkdocs mysql-client@8.0; do
+    for item in curl ddev/ddev/ddev golang golangci-lint gtimeout libpq mkcert mkdocs mysql-client@8.0; do
         brew install $item || true
     done
     brew link --force libpq
