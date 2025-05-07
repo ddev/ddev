@@ -137,7 +137,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		if service == "host" && app == nil {
 			if val, ok := directives["CanRunGlobally"]; !ok || val != "true" {
 				if isCustomCommandInArgs(commandName) {
-					util.Warning("Command '%s' cannot be used outside the project directory.", commandName)
+					util.Warning("Command '%s' cannot be used outside the project directory, skipping %s", commandName, onHostFullPath)
 				}
 				continue
 			}
@@ -152,6 +152,11 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		if val, ok := directives["Usage"]; ok {
 			usage = val
 		}
+		// Validate usage is not already in use
+		if foundCmd, _, err := rootCmd.Find(strings.Split(usage, " ")); err == nil && foundCmd != nil {
+			util.Warning("Command '%s' cannot have usage '%s' because it is already in use by command '%s', skipping %s", commandName, usage, foundCmd.Name(), onHostFullPath)
+			continue
+		}
 
 		if val, ok := directives["Example"]; ok {
 			example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
@@ -164,7 +169,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 				if foundCmd, _, err := rootCmd.Find([]string{alias}); err != nil {
 					aliases = append(aliases, alias)
 				} else {
-					util.Warning("Command '%s' cannot have alias '%s' that is already in use by command '%s', skipping it", commandName, alias, foundCmd.Name())
+					util.Warning("Command '%s' cannot have alias '%s' that is already in use by command '%s', skipping alias for %s", commandName, alias, foundCmd.Name(), onHostFullPath)
 				}
 			}
 		}
@@ -172,7 +177,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		autocompleteTerms := []string{}
 		if val, ok := directives["AutocompleteTerms"]; ok {
 			if err = json.Unmarshal([]byte(val), &autocompleteTerms); err != nil {
-				util.Warning("Error '%s', command '%s' contains an invalid autocomplete args definition '%s', skipping adding terms", err, commandName, val)
+				util.Warning("Error '%s', command '%s' contains an invalid autocomplete args definition '%s', skipping adding terms for %s", err, commandName, val, onHostFullPath)
 			}
 		}
 
@@ -184,7 +189,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		if val, ok := directives["Flags"]; ok {
 			disableFlags = false
 			if err = flags.LoadFromJSON(val); err != nil {
-				util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
+				util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping adding flags for %s", err, commandName, val, onHostFullPath)
 			}
 		}
 
@@ -217,7 +222,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 					suggestedCommands[i] = fmt.Sprintf("ddev config --project-type=%s", projectType)
 				}
 				suggestedCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
-				util.Warning("Command '%s' is not available for the '%s' project type.\nIf you intend to use '%s', change the project type to one of the supported types %s", commandName, app.Type, commandName, suggestedCommand)
+				util.Warning("Command '%s' is not available for the '%s' project type, skipping %s.\nIf you intend to use '%s', change the project type to one of the supported types: %s", commandName, app.Type, onHostFullPath, commandName, suggestedCommand)
 			}
 			continue
 		}
@@ -231,7 +236,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		if osTypes != "" {
 			if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
 				if isCustomCommandInArgs(commandName) {
-					util.Warning("Command '%s' cannot be used with your OS.", commandName)
+					util.Warning("Command '%s' cannot be used with your OS, skipping %s", commandName, onHostFullPath)
 				}
 				continue
 			}
@@ -255,7 +260,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			if !binExists {
 				if isCustomCommandInArgs(commandName) {
 					suggestedBinaries, _ := util.ArrayToReadableOutput(bins)
-					util.Warning("Command '%s' cannot be used, because the binary is not found at %s", commandName, suggestedBinaries)
+					util.Warning("Command '%s' cannot be used, skipping %s\nThe binary is not found at: %s", commandName, onHostFullPath, suggestedBinaries)
 				}
 				continue
 			}
@@ -270,7 +275,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		if dbTypes != "" && app != nil {
 			if !strings.Contains(dbTypes, app.Database.Type) {
 				if isCustomCommandInArgs(commandName) {
-					util.Warning("Command '%s' is not available for the '%s' database type.", commandName, app.Database.Type)
+					util.Warning("Command '%s' is not available for the '%s' database type, skipping %s", commandName, app.Database.Type, onHostFullPath)
 				}
 				continue
 			}
