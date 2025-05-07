@@ -13,7 +13,7 @@ PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
 # Add --path if not already set and $DDEV_DOCROOT is defined
 if [[ ! " $* " =~ (--path(=|\s)) ]] && [[ -n "$DDEV_DOCROOT" ]]; then
   # Get the configured path from wp-cli.yml or other config file
-  existing_wp_path=$(yq -r '.path // ""' "$(wp cli info --format=json 2>/dev/null | jq -r '.project_config_path // empty' 2>/dev/null)" 2>/dev/null)
+  existing_wp_path="$(yq -r '.path // ""' "$(wp cli info --format=json 2>/dev/null | jq -r '.project_config_path // empty' 2>/dev/null)" 2>/dev/null)"
   # If there is no path, set it to DDEV_DOCROOT
   [[ -z "$existing_wp_path" ]] && set -- "$@" --path="$DDEV_DOCROOT"
 fi
