@@ -73,7 +73,8 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '>=1.21'
+          go-version: '>=1.23'
+          check-latest: true
 
       - name: Build and test container ${{ matrix.containers }}
         run: |
