@@ -63,17 +63,17 @@ func craftCmsImportFilesAction(app *DdevApp, uploadDir, importPath, extPath stri
 }
 
 // Set up the .env file for ddev
-func craftCmsPostStartAction(app *DdevApp) error {
+func createCraftCMSDotEnv(app *DdevApp) (string, error) {
 	// If settings management is disabled, do nothing
 	if app.DisableSettingsManagement {
-		return nil
+		return "", nil
 	}
 
 	// Check version is v4 or higher or warn user about app type mismatch.
 	if !isCraftCms4orHigher(app) {
 		util.Warning("It looks like the installed Craft CMS is lower than version 4 where it's recommended to use project type `php` or disable settings management with `ddev config --disable-settings-management`")
 		if !util.Confirm("Would you like to stop here, not do the automatic configuration and change project type?") {
-			return nil
+			return "", nil
 		}
 	}
 
@@ -89,19 +89,19 @@ func craftCmsPostStartAction(app *DdevApp) error {
 				if err != nil {
 					util.Error(fmt.Sprintf("Error copying %s to .env", exampleEnvFilePath))
 
-					return err
+					return "", err
 				}
 			}
 		}
 	}
 	// If the .env file *still* doesn't exist, return early
 	if !fileutil.FileExists(envFilePath) {
-		return nil
+		return "", nil
 	}
 	// Read in the .env file
 	envMap, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("unable to read %s: %v", envFilePath, err)
+		return "", fmt.Errorf("unable to read %s: %v", envFilePath, err)
 	}
 
 	port := "3306"
@@ -143,10 +143,10 @@ func craftCmsPostStartAction(app *DdevApp) error {
 
 	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return "", nil
 }
 
 func craftCmsConfigOverrideAction(app *DdevApp) error {

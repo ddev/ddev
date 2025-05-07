@@ -98,10 +98,10 @@ func init() {
 		},
 
 		nodeps.AppTypeCraftCms: {
+			settingsCreator:      createCraftCMSDotEnv,
 			importFilesAction:    craftCmsImportFilesAction,
 			appTypeDetect:        isCraftCmsApp,
 			configOverrideAction: craftCmsConfigOverrideAction,
-			postStartAction:      craftCmsPostStartAction,
 		},
 
 		nodeps.AppTypeDrupal6: {
