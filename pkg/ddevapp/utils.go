@@ -546,14 +546,16 @@ func AppSliceToMap(appList []*DdevApp) map[string]*DdevApp {
 	return nameMap
 }
 
-// CheckDdevVersionConstraint returns an error if the given constraint does not match the current DDEV version
+// CheckDdevVersionConstraint validates if the given constraint matches the current DDEV version.
+// If the version constraint includes pre-releases, it will normalize the constraint before checking.
+// Returns an error if the version doesn't meet the constraint or if the constraint is invalid.
 func CheckDdevVersionConstraint(constraint string, errorPrefix string, errorSuffix string) error {
 	normalizedConstraint := constraint
-	if !strings.Contains(normalizedConstraint, "-") {
-		// Allow pre-releases to be included in the constraint validation
-		// @see https://github.com/Masterminds/semver#working-with-prerelease-versions
-		normalizedConstraint += "-0"
+	if strings.Contains(versionconstants.DdevVersion, "-") {
+		// Pre-releases need '-0' added for validation
+		normalizedConstraint = normalizeConstraint(constraint)
 	}
+	util.Debug("Comparing constraint '%s' against version '%s'", normalizedConstraint, versionconstants.DdevVersion)
 	if errorPrefix == "" {
 		errorPrefix = "error"
 	}
@@ -563,10 +565,26 @@ func CheckDdevVersionConstraint(constraint string, errorPrefix string, errorSuff
 	}
 	// Make sure we do this check with valid released versions
 	v, err := semver.NewVersion(versionconstants.DdevVersion)
-	if err == nil {
-		if !c.Check(v) {
-			return fmt.Errorf("%s: your DDEV version '%s' doesn't meet the constraint '%s'. Please update to a DDEV version that meets this constraint %s", errorPrefix, versionconstants.DdevVersion, constraint, strings.TrimSpace(errorSuffix))
-		}
+	if err == nil && !c.Check(v) {
+		return fmt.Errorf("%s: your DDEV version '%s' doesn't meet the constraint '%s'. Please update to a DDEV version that meets this constraint %s", errorPrefix, versionconstants.DdevVersion, constraint, strings.TrimSpace(errorSuffix))
 	}
 	return nil
+}
+
+// normalizeConstraint adds '-0' to version expressions that don't contain a prerelease identifier
+// See https://github.com/Masterminds/semver#working-with-prerelease-versions
+func normalizeConstraint(constraint string) string {
+	// remove all commas, so we can split by spaces
+	constraintNoCommas := strings.ReplaceAll(constraint, ",", " ")
+	// Split the constraint into tokens based on spaces
+	tokens := strings.Fields(constraintNoCommas)
+	for i, token := range tokens {
+		last := token[len(token)-1]
+		// If the token represents a version number (ends with a digit or is a wildcard)
+		// and doesn't contain a suffix '-0', append '-0'
+		if !strings.HasSuffix(token, "-0") && strings.Contains("0123456789xX*", string(last)) {
+			tokens[i] = token + "-0"
+		}
+	}
+	return strings.Join(tokens, " ")
 }
