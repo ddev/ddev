@@ -1587,6 +1587,8 @@ ddev version
 
 Run the [WP-CLI `wp` command](https://wp-cli.org/); available only in projects of type `wordpress`.
 
+!!!note "DDEV v1.24.5+ automatically adds `--path=$DDEV_DOCROOT` to the `ddev wp` command if needed."
+
 ```shell
 # Install WordPress site using `wp core install`
 ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
