@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 #ddev-generated
-## Description: Run Craft CMS command inside the web container
-## Usage: craft [flags] [args]
-## Example: "ddev craft db/backup" or "ddev craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)
-## ProjectTypes: craftcms,php
-## ExecRaw: true
-## MutagenSync: true
+<<'###YAML_ANNOTATIONS'
+description: "Run Craft CMS command inside the web container"
+usage: "craft [flags] [args]"
+example: '"ddev craft db/backup" or "ddev craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)'
+projectTypes:
+  - "craftcms"
+  - "php"
+execRaw: true
+mutagenSync: true
+###YAML_ANNOTATIONS
 
 if [ "${DDEV_PROJECT_TYPE}" != "craftcms" ]; then
     echo "The craft command is only available in the craftcms project type. You can update this in your project's config file, followed by restarting the DDEV project."

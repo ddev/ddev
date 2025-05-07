@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 
-## #ddev-generated
-## Description: Enable or disable xdebug
-## Usage: xdebug on|off|enable|disable|true|false|toggle|status
-## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status"
-## ExecRaw: false
-## Flags: []
-## AutocompleteTerms: ["on","off","enable","disable","toggle","status"]
+#ddev-generated
+<<'###YAML_ANNOTATIONS'
+description: "This is a test to see if it works."
+usage: "xdebug test on|off etc"
+example: '"ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status"'
+execRaw: false
+autocompleteTerms:
+  - "on"
+  - "off"
+  - "enable"
+  - "disable"
+  - "toggle"
+  - "status"
+###YAML_ANNOTATIONS
 
 if [ $# -eq 0 ] ; then
   enable_xdebug
