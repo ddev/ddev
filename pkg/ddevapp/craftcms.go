@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 
@@ -62,7 +61,7 @@ func craftCmsImportFilesAction(app *DdevApp, uploadDir, importPath, extPath stri
 	return nil
 }
 
-// Set up the .env file for ddev
+// Set up the .ddev/.env.web file for ddev
 func createCraftCMSDotEnv(app *DdevApp) (string, error) {
 	// If settings management is disabled, do nothing
 	if app.DisableSettingsManagement {
@@ -77,32 +76,7 @@ func createCraftCMSDotEnv(app *DdevApp) (string, error) {
 		}
 	}
 
-	// If the .env file doesn't exist, try to create it by copying .env.example to .env
-	envFilePath := app.GetConfigPath(".env.web")
-	if !fileutil.FileExists(envFilePath) {
-		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
-		for _, envFileName := range exampleEnvFilePaths {
-			exampleEnvFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
-			if fileutil.FileExists(exampleEnvFilePath) {
-				util.Success(fmt.Sprintf("Copied %s to .env", envFileName))
-				err := fileutil.CopyFile(exampleEnvFilePath, envFilePath)
-				if err != nil {
-					util.Error(fmt.Sprintf("Error copying %s to .env", exampleEnvFilePath))
-
-					return "", err
-				}
-			}
-		}
-	}
-	// If the .env file *still* doesn't exist, return early
-	if !fileutil.FileExists(envFilePath) {
-		return "", nil
-	}
-	// Read in the .env file
-	envMap, envText, err := ReadProjectEnvFile(envFilePath)
-	if err != nil && !os.IsNotExist(err) {
-		return "", fmt.Errorf("unable to read %s: %v", envFilePath, err)
-	}
+	envFilePath := app.SiteSettingsPath
 
 	port := "3306"
 	driver := "mysql"
@@ -111,37 +85,20 @@ func createCraftCMSDotEnv(app *DdevApp) (string, error) {
 		port = "5432"
 	}
 
-	// If they have older version of .env with DB_DRIVER, DB_SERVER etc, use those
-	if _, ok := envMap["DB_SERVER"]; ok {
-		// TODO: Remove, was never an official standard of Craft CMS.
-		envMap = map[string]string{
-			"DB_DRIVER":             driver,
-			"DB_SERVER":             "db",
-			"DB_PORT":               port,
-			"DB_DATABASE":           "db",
-			"DB_USER":               "db",
-			"DB_PASSWORD":           "db",
-			"MAILPIT_SMTP_HOSTNAME": "127.0.0.1",
-			"MAILPIT_SMTP_PORT":     "1025",
-			"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
-		}
-	} else {
-		// Otherwise use the current CRAFT_DB_SERVER etc.
-		envMap = map[string]string{
-			"CRAFT_DB_DRIVER":       driver,
-			"CRAFT_DB_SERVER":       "db",
-			"CRAFT_DB_PORT":         port,
-			"CRAFT_DB_DATABASE":     "db",
-			"CRAFT_DB_USER":         "db",
-			"CRAFT_DB_PASSWORD":     "db",
-			"CRAFT_WEB_ROOT":        app.GetAbsDocroot(true),
-			"MAILPIT_SMTP_HOSTNAME": "127.0.0.1",
-			"MAILPIT_SMTP_PORT":     "1025",
-			"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
-		}
+	envMap := map[string]string{
+		"CRAFT_DB_DRIVER":       driver,
+		"CRAFT_DB_SERVER":       "db",
+		"CRAFT_DB_PORT":         port,
+		"CRAFT_DB_DATABASE":     "db",
+		"CRAFT_DB_USER":         "db",
+		"CRAFT_DB_PASSWORD":     "db",
+		"CRAFT_WEB_ROOT":        app.GetAbsDocroot(true),
+		"MAILPIT_SMTP_HOSTNAME": "127.0.0.1",
+		"MAILPIT_SMTP_PORT":     "1025",
+		"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
 	}
 
-	err = WriteProjectEnvFile(envFilePath, envMap, envText)
+	err := WriteProjectEnvFile(envFilePath, envMap, "")
 	if err != nil {
 		return "", err
 	}
@@ -175,4 +132,8 @@ func isCraftCms4orHigher(app *DdevApp) bool {
 	}
 
 	return !regexp.MustCompile(`const\s+Personal\s*=\s*0`).MatchString(craftFileContent)
+}
+
+func setCraftCMSDotFileLocation(app *DdevApp) {
+	app.SiteSettingsPath = app.GetConfigPath(".env.web")
 }
