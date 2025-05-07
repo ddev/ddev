@@ -903,7 +903,7 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
     mkdir my-shopware-site && cd my-shopware-site
     ddev config --project-type=shopware6 --docroot=public
     ddev start
-    ddev composer create-project "shopware/production"
+    ddev composer create-project shopware/production
     # If it asks `Do you want to include Docker configuration from recipes?`
     # answer `x`, as we're using DDEV for this rather than its recipes.
     ddev exec console system:install --basic-setup
