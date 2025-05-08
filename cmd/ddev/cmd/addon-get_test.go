@@ -116,6 +116,7 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_output.txt"))
 
 	// The fourth action should also be success with output
+	// This action also has an invalid #ddev-warning-exit-code, so it should have been ignored.
 	text3Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present", '\U0001F44D'), "green"))
 	text3Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output_error.txt not found!\n", "yellow"))
 	text3Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text3Part1, text3Part2))
@@ -166,6 +167,7 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 	require.Error(t, err, "out=%s", out)
 
 	// The fourth action should have erred with output.
+	// This action also has an invalid #ddev-warning-exit-code, so it should have been ignored.
 	text9Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present", '\U0001F44E'), "yellow"))
 	text9Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output_error.txt found!\n", "yellow"))
 	text9Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text9Part1, text9Part2))
