@@ -1,0 +1,50 @@
+name: sample_actions
+
+post_install_actions:
+  # Action #1
+  - touch test_cmd_addon_actions_no_output.txt
+  # Action #2
+  - |
+    echo "action 2 with output and no #ddev-description"
+  # Action #3
+  - |
+    #ddev-description:Action 3 with #ddev-description and output
+    touch test_cmd_addon_actions_output.txt
+    echo "test_cmd_addon_actions_output.txt created"
+  # Action #4
+  - |
+    #ddev-description:Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present
+    if [ -f "test_cmd_addon_actions_output_error.txt" ]; then
+      echo "test_cmd_addon_actions_output_error.txt found!"
+      exit 1
+    fi
+    echo "test_cmd_addon_actions_output_error.txt not found!"
+  # Action #5
+  - |
+    #ddev-warning-exit-code:126
+    touch test_cmd_addon_actions_no_output_warning.txt
+    exit 126
+  # Action #6
+  - |
+    #ddev-warning-exit-code:127
+    echo "action 6 with output, #ddev-warning-exit-code and no #ddev-description"
+    exit 127
+  # Action #7
+  - |
+    #ddev-description:Action 7 with #ddev-description and no output
+    touch test_cmd_addon_actions_description.txt
+  # Action #8
+  - |
+    #ddev-description:Action 8 with #ddev-warning-exit-code and #ddev-description and no output
+    #ddev-warning-exit-code:127
+    exit 127
+  # Action #9
+  - |
+    #ddev-description:Action 9 with #ddev-warning-exit-code and #ddev-description and some output
+    #ddev-warning-exit-code:127
+    echo "This is a warning!!!"
+    exit 127
+    echo "This line that comes after an exit should never be output"
+  # Action #10
+  - |
+    #ddev-description:Action 10 is our final action doing nothing

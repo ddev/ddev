@@ -10,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
 
@@ -77,6 +78,102 @@ func TestCmdAddonComplex(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "has-ddev-generated.txt")))
 	assert.NotContains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
 	assert.Regexp(regexp.MustCompile(fmt.Sprintf(`NOT overwriting [^ ]*%s`, regexp.QuoteMeta(filepath.Join("extra", "no-ddev-generated.txt")))), out)
+}
+
+// TestCmdAddonComplex tests advanced usages
+func TestCmdAddonActionsOutput(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
+	require.NoError(t, err, "out=%s", out)
+
+	// The first action outputs nothing but creates a file.
+	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_no_output.txt"))
+
+	// The second action outputs something and should come right next to "Executing post-install actions:".
+	text1Part1 := regexp.QuoteMeta(util.ColorizeText("\nExecuting post-install actions:", "green"))
+	text1Part2 := regexp.QuoteMeta(util.ColorizeText("action 2 with output and no #ddev-description\n", "yellow"))
+	text1Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text1Part1, text1Part2))
+	assert.Regexp(text1Regex, out)
+
+	// The third action should be success with output and created a file.
+	text2Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 3 with #ddev-description and output", '\U0001F44D'), "green"))
+	text2Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output.txt created\n", "yellow"))
+	text2Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text2Part1, text2Part2))
+	assert.Regexp(text2Regex, out)
+	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_output.txt"))
+
+	// The fourth action should also be success with output
+	text3Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present", '\U0001F44D'), "green"))
+	text3Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output_error.txt not found!\n", "yellow"))
+	text3Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text3Part1, text3Part2))
+	assert.Regexp(text3Regex, out)
+
+	// The fifth action has an exit statement that should normally be an error, but because of '#ddev-warning-exit-code'
+	// the rest of the actions continue to run normally.
+	// It also creates a file.
+	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_no_output_warning.txt"))
+
+	// The sixth action is also a warning but with output and no description, so it's output should
+	// come right after the previous action
+	text4Part1 := regexp.QuoteMeta(util.ColorizeText("action 6 with output, #ddev-warning-exit-code and no #ddev-description\n", "yellow"))
+	text4Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s\n%s`, text3Part1, text3Part2, text4Part1))
+	assert.Regexp(text4Regex, out)
+
+	// The seventh action creates a file but has a '#ddev-description'.
+	// The no output will be tested on the next action.
+	text5Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 7 with #ddev-description and no output", '\U0001F44D'), "green"))
+	text5Regex := regexp.MustCompile(fmt.Sprintf(`%s\n`, text5Part1))
+	assert.Regexp(text5Regex, out)
+	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_description.txt"))
+
+	// The eighth action is both a warning and has a description but has no output.
+	text6Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%s Action 8 with #ddev-warning-exit-code and #ddev-description and no output", "\U000026A0\U0000FE0F"), "yellow"))
+	// This must come right next to the previous action description
+	text6Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text5Part1, text6Part1))
+	assert.Regexp(text6Regex, out)
+
+	// The ninth action is both a warning, has a description and has output.
+	text7Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%s Action 9 with #ddev-warning-exit-code and #ddev-description and some output", "\U000026A0\U0000FE0F"), "yellow"))
+	text7Part2 := regexp.QuoteMeta(util.ColorizeText("This is a warning!!!\n", "yellow"))
+	// This must come right next to the previous action description.
+	text7Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s\n%s`, text6Part1, text7Part1, text7Part2))
+	assert.Regexp(text7Regex, out)
+	// This action also has an echo after the exit code. We know that will never be output, but we
+	// can check for it anyway.
+	assert.NotContains(out, "This line that comes after an exit should never be output")
+
+	// The last action has an output to wrap things up and comes right after the previous output.
+	text8Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 10 is our final action doing nothing", '\U0001F44D'), "green"))
+	text8Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s\n%s`, text7Part1, text7Part2, text8Part1))
+	assert.Regexp(text8Regex, out)
+
+	// We now want to make sure it fails when it has to and with the proper output
+	_, err = os.Create(app.GetConfigPath("test_cmd_addon_actions_output_error.txt"))
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
+	require.Error(t, err, "out=%s", out)
+
+	// The fourth action should have erred with output.
+	text9Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present", '\U0001F44E'), "yellow"))
+	text9Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output_error.txt found!\n", "yellow"))
+	text9Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text9Part1, text9Part2))
+	assert.Regexp(text9Regex, out)
+
+	// We should never have reached further actions.
+	// We use a regex from when the 'ddev add-on get' should have succeeded.
+	assert.NotRegexp(text5Regex, out)
 }
 
 // TestCmdAddonDependencies tests the dependency behavior is correct
