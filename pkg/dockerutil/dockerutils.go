@@ -1293,19 +1293,21 @@ func GetHostDockerInternalIP() (string, error) {
 		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
 		break
 
-	case nodeps.IsWSL2() && !IsDockerDesktop():
+	case nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
 		// Microsoft instructions for finding Windows IP address at
 		// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
 		hostDockerInternal = wsl2GetWindowsHostIP()
 		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from ip -4 route show default", hostDockerInternal)
+		break
 
 	// Docker on Linux doesn't define host.docker.internal
-	// so we need to go get the bridge IP address
+	// so we need to go get the bridge IP address.
+	// This is also done the same for WSL2 in networkingMode=mirrored
 	// Docker Desktop) defines host.docker.internal itself.
 	case runtime.GOOS == "linux":
 		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
-		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' runtime.GOOS==linux (or WSL2 mirrored mode) and docker 20.10+", hostDockerInternal)
 		break
 
 	default:
