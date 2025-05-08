@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+
+## Description: Create a default TYPO3 composer-style sitepackage
+## Usage: create-sitepackage
+## Example: "ddev create-sitepackage"
+## ProjectTypes: typo3
+## ExecRaw: true
+## MutagenSync: true
+set -eu -o pipefail
+
+cd ${DDEV_COMPOSER_ROOT:-/var/www/html}
+curl -X 'POST' \
+  'https://get.typo3.org/api/v1/sitepackage/' \
+  -s \
+  --fail \
+  -H 'accept: application/zip' \
+  -H 'Content-Type: application/json' \
+  -d @"./data.json" --output /tmp/my_site_package.zip
+
+rm -rf packages/my_site_package/*
+rm -rf packages/my_site_package/.*
+unzip /tmp/my_site_package.zip -d "packages/my_site_package/"
+rm /tmp/my_site_package.zip
