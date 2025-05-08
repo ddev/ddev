@@ -150,7 +150,7 @@ See also [TYPO3 Documentation](https://docs.typo3.org/m/typo3/reference-coreapi/
 
 !!!note "DDEV v1.24.5+ automatically adds `--path=$DDEV_DOCROOT` to the `ddev wp` command if needed."
 
-If you use something other than the root directory (`''`) for your docroot, [`ddev wp`](../usage/commands.md#wp) will not work properly. To fix this, create a `wp-cli.yml` file in the root directory that contains `path: <docroot/path>`.
+If you use something other than the root directory (`''`) for your docroot, [`ddev wp`](../usage/commands.md#wp) will not work properly. To fix this, create a `wp-cli.yml` file in the project root directory that contains `path: <docroot/path>`.
 
 For example, if your docroot is `public`, your `wp-cli.yml` file should contain:
 
