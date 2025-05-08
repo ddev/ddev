@@ -19,10 +19,10 @@ Here’s how to try it for yourself:
 5. Configure your project with [`ddev config`](../usage/commands.md#config).
 6. Import your database and files using [`ddev import-db`](../usage/commands.md#import-db) and [`ddev import-files`](../usage/commands.md#import-files).
 7. Save all databases with `ddev snapshot --all` before beginning, so you can restore your database if you have to change the name of the project.
-8. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
+8. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, enable Let’s Encrypt and ensure that the auto-configuration does not modify your variables after every restart:
 
     ```
-    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
+    ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com --disable-settings-management
     ```
 
 9. Use a `.ddev/config.prod.yaml` to provide overrides for project configuration, rather than changing the `.ddev/config.yaml`, so that your checked-in local development code works as well as possible. An example `.ddev/config.prod.yaml` might be:
