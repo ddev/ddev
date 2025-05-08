@@ -164,7 +164,7 @@ Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing on
 !!!tip "Compatibility with Craft CMS 3"
     The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3 or earlier, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
 
-Environment variables will be automatically added to the `.ddev/.env.web` file to simplify project configuration. This means that the primary site URL and the database connection settings can be used without any modification. To disable this behavior, see [`disable_settings_management`](configuration/config/#disable_settings_management).
+Environment variables will be automatically added to the `.ddev/.env.web` file to simplify project configuration. This means that the primary site URL and the database connection settings can be used without any modification. To disable this behavior, see [`disable_settings_management`](./configuration/config.md#disable_settings_management).
 
 === "New projects"
 
