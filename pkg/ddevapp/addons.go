@@ -142,17 +142,23 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 				// Get the exit code
 				exitCode := exitErr.ExitCode()
 				if exitCode == warningCode {
-					util.Warning("%s %s", "\U000026A0\U0000FE0F", desc)
+					if desc != "" {
+						util.Warning("%s %s", "\U000026A0\U0000FE0F", desc)
+					}
 					err = nil
 				}
 			}
 		}
 		if err != nil {
-			util.Warning("%c %s", '\U0001F44E', desc)
+			if desc != "" {
+				util.Warning("%c %s", '\U0001F44E', desc)
+			}
 			err = fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 		}
 	} else {
-		util.Success("%c %s", '\U0001F44D', desc)
+		if desc != "" {
+			util.Success("%c %s", '\U0001F44D', desc)
+		}
 	}
 	if len(out) > 0 {
 		util.Warning(out)
