@@ -62,6 +62,13 @@ header "installed DDEV add-ons"
 
 ddev add-on list --installed
 
+header "WSL2 information"
+
+if command -v wslinfo >/dev/null ; then
+  echo "WSL version=$(wsl.exe --version | tr -d '\0')";
+  echo "WSL2 networking mode=$(wslinfo --networking-mode)"
+fi
+
 header "mutagen situation"
 
 echo "looking for #ddev-generated in mutagen.yml in project ${PWD}"
