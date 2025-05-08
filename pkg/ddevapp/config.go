@@ -1032,10 +1032,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		XhguiImage:              docker.GetXhguiImage(),
 		XHProfMode:              app.GetXHProfMode(),
 
-		// Use the extra_hosts technique for Linux and WSL2 in networkingMode=mirrored, but not for Colima
-		// (we don't support Colima on Linux, but here's code anyway)
-		// If WSL2 in default networkingMode=nat we have to figure out other things, see GetHostDockerInternalIP()
-		UseHostDockerInternalExtraHosts: ((runtime.GOOS == "linux" || nodeps.IsWSL2MirroredMode()) && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
+		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
+		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
+		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 		BitnamiVolumeDir:                "",
 		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
