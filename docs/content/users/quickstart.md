@@ -183,6 +183,7 @@ Environment variables will be automatically added to the `.ddev/.env.web` file t
         --username=admin \
         --password=Password123 \
         --email=admin@example.com \
+        --site-name='My Craft Site' \
         --language=en \
         --site-url='$PRIMARY_SITE_URL'
 
