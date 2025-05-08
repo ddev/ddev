@@ -164,7 +164,7 @@ Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing on
 !!!tip "Compatibility with Craft CMS 3"
     The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3 or earlier, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
 
-Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
+Environment variables will be automatically added to the `.ddev/.env.web` file to simplify project configuration. This means that the primary site URL and the database connection settings can be used without any modification. To disable this behavior, see [`disable_settings_management`](configuration/config/#disable_settings_management).
 
 === "New projects"
 
@@ -176,18 +176,18 @@ Environment variables will be automatically added to your `.env` file to simplif
     ddev config --project-type=craftcms --docroot=web
 
     # Boot the project and install the starter project:
-    ddev start
     ddev composer create-project --no-scripts craftcms/craft
-    ddev craft install/craft \
+
+    # Install Craft CMS:
+    ddev craft install \
         --username=admin \
         --password=Password123 \
         --email=admin@example.com \
-        --site-name='$DDEV_PROJECT' \
         --language=en \
-        --site-url='$DDEV_PRIMARY_URL'
+        --site-url='$PRIMARY_SITE_URL'
 
     # Login using `admin` user and `Password123` password
-    ddev launch
+    ddev launch admin
     ```
 
     Third-party starter projects can by used the same way—substitute the package name when running `ddev composer create-project`.
@@ -205,11 +205,10 @@ Environment variables will be automatically added to your `.env` file to simplif
     ddev config --project-type=craftcms
 
     # Boot the project and install Composer packages:
-    ddev start
     ddev composer install
 
     # Import a database backup and open the site in your browser:
-    ddev import-db --file=/path/to/db.sql.gz
+    ddev craft db/restore /path/to/db.sql.gz
     ddev launch
     ```
 
