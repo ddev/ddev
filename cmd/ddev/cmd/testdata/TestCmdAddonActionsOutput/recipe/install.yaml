@@ -13,8 +13,9 @@ post_install_actions:
     echo "test_cmd_addon_actions_output.txt created"
   # Action #4
   - |
-    #ddev-description:Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present
+    #ddev-description:Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present    
     #ddev-warning-exit-code:1,2
+    # ddev-warning-exit-code is invalid on purpose, it should be ignored.
     if [ -f "test_cmd_addon_actions_output_error.txt" ]; then
       echo "test_cmd_addon_actions_output_error.txt found!"
       exit 1
