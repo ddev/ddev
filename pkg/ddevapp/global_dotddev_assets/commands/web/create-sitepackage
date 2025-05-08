@@ -10,16 +10,37 @@
 ## MutagenSync: true
 set -eu -o pipefail
 
+
 cd ${DDEV_COMPOSER_ROOT:-/var/www/html}
+
+# Create the required data.json
+cat << 'EOF' > /tmp/data.json
+{
+  "base_package": "site_package_tutorial",
+  "typo3_version": 13.4,
+  "title": "My Site Package",
+  "description": "Site package to follow the tutorial. ",
+  "repository_url": "https://github.com/TYPO3-Documentation/TYPO3CMS-Tutorial-SitePackage",
+  "author": {
+    "name": "J. Doe",
+    "email": "j.doe@example.org",
+    "company": "My Vendor",
+    "homepage": "https://docs.typo3.org/permalink/t3sitepackage:start"
+  }
+}
+EOF
+
 curl -X 'POST' \
   'https://get.typo3.org/api/v1/sitepackage/' \
   -s \
   --fail \
   -H 'accept: application/zip' \
   -H 'Content-Type: application/json' \
-  -d @"./data.json" --output /tmp/my_site_package.zip
+  -d @"/tmp/data.json" --output /tmp/my_site_package.zip
+
+composer require my-vendor/my-site-package:@dev
 
 rm -rf packages/my_site_package/*
 rm -rf packages/my_site_package/.*
 unzip /tmp/my_site_package.zip -d "packages/my_site_package/"
-rm /tmp/my_site_package.zip
+rm -f /tmp/my_site_package.zip /tmp/data.json
