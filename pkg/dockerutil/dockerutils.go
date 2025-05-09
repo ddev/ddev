@@ -1293,19 +1293,26 @@ func GetHostDockerInternalIP() (string, error) {
 		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
 		break
 
-	case nodeps.IsWSL2() && !IsDockerDesktop():
+	case nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
 		// Microsoft instructions for finding Windows IP address at
 		// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
 		hostDockerInternal = wsl2GetWindowsHostIP()
 		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from ip -4 route show default", hostDockerInternal)
+		break
+
+	case nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
+		if ip, err := getWindowsReachableIP(); err == nil && ip != "" {
+			hostDockerInternal = ip
+			util.Debug("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; received from getWindowsReachableIP()", hostDockerInternal)
+		}
+		break
 
 	// Docker on Linux doesn't define host.docker.internal
-	// so we need to go get the bridge IP address
-	// Docker Desktop) defines host.docker.internal itself.
+	// so we need to go get the bridge IP address.
 	case runtime.GOOS == "linux":
 		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
-		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' runtime.GOOS==linux (or WSL2 mirrored mode) and docker 20.10+", hostDockerInternal)
 		break
 
 	default:
@@ -1316,7 +1323,27 @@ func GetHostDockerInternalIP() (string, error) {
 	return hostDockerInternal, nil
 }
 
-// GetNFSServerAddr gets the addrss that can be used for the NFS server.
+// getWindowsReachableIP() uses PowerShell to find a windows-side IP
+// address that can be accessed from inside a container.
+// This is needed for networkMode=mirrored in WSL2.
+func getWindowsReachableIP() (string, error) {
+	cmd := exec.Command("powershell.exe", "-Command", `
+Get-NetIPAddress -AddressFamily IPv4 |
+  Where-Object {
+    $_.IPAddress -notlike "169.254*" -and
+    $_.IPAddress -ne "127.0.0.1"
+  } |
+  Sort-Object InterfaceMetric |
+  Select-Object -First 1 -ExpandProperty IPAddress
+`)
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("powershell failed: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// GetNFSServerAddr gets the address that can be used for the NFS server.
 // It's almost the same as GetDockerHostInternalIP() but we have
 // to get the actual addr in the case of Linux; still, Linux rarely
 // is used with NFS. Returns "host.docker.internal" by default (not empty)
