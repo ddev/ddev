@@ -38,9 +38,6 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d @"/tmp/data.json" --output /tmp/my_site_package.zip
 
-composer require my-vendor/my-site-package:@dev
-
-rm -rf packages/my_site_package/*
-rm -rf packages/my_site_package/.*
 unzip /tmp/my_site_package.zip -d "packages/my_site_package/"
+composer require my-vendor/my-site-package:@dev
 rm -f /tmp/my_site_package.zip /tmp/data.json
