@@ -2,7 +2,7 @@
 
 #ddev-generated
 
-## Description: Create a default TYPO3 composer-style sitepackage
+## Description: Create a simple default TYPO3 composer-style sitepackage
 ## Usage: create-sitepackage
 ## Example: "ddev create-sitepackage"
 ## ProjectTypes: typo3
