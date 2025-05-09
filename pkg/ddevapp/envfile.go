@@ -11,6 +11,10 @@ import (
 
 // ReadProjectEnvFile reads the .env in the project root into a envText and envMap
 // The map has the envFile content, but without comments
+// returns
+// - envMap (map of items found)
+// - envText (plain text unaltered of existing env file
+// - error/nil
 func ReadProjectEnvFile(envFilePath string) (envMap map[string]string, envText string, err error) {
 	// envFilePath := filepath.Join(app.AppRoot, ".env")
 	envText, _ = fileutil.ReadFileIntoString(envFilePath)
@@ -21,10 +25,9 @@ func ReadProjectEnvFile(envFilePath string) (envMap map[string]string, envText s
 	return envMap, envText, err
 }
 
-// WriteProjectEnvFile writes the passed envText into the project-root .env file
+// WriteProjectEnvFile writes the passed envText into the envFilePath .env file
 // with all items in envMap changed in envText there
 func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText string) error {
-	// envFilePath := filepath.Join(app.AppRoot, ".env")
 	for k, v := range envMap {
 		v = EscapeEnvFileValue(v)
 		// If the item is already in envText, use regex to replace it
