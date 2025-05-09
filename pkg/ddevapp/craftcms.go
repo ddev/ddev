@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -100,7 +101,8 @@ func updateCraftCMSDotEnv(app *DdevApp) (string, error) {
 
 	// Read existing env file
 	_, existingEnvText, err := ReadProjectEnvFile(envFilePath)
-	if err != nil {
+	// If envFilePath doesn't exist, that's not really an error, continue
+	if !os.IsNotExist(err) {
 		return "", err
 	}
 
