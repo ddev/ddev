@@ -11,6 +11,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v28.0.2+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/goccy/go-yaml v1.17.1
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v52 v52.0.0
 	github.com/google/uuid v1.6.0

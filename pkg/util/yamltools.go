@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"dario.cat/mergo"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 // YamlFileToMap reads the named file into a map[string]interface{}

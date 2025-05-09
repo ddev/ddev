@@ -16,10 +16,10 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-github/v52/github"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 // AddonGetCmd is the "ddev add-on get" command

@@ -15,8 +15,8 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-github/v52/github"
-	"gopkg.in/yaml.v3"
 )
 
 const AddonMetadataDir = "addon-metadata"

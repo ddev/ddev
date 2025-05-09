@@ -6,7 +6,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/state"
 	"github.com/ddev/ddev/pkg/config/state/types"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 // New returns a new StateStorage interface based on a YAML file.
