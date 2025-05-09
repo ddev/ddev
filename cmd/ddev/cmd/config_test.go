@@ -15,10 +15,10 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/goccy/go-yaml"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
 )
 
 // TestCmdConfigHooks tests that pre-config and post-config hooks run

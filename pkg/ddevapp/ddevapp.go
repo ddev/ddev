@@ -30,10 +30,10 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v3"
 )
 
 const (

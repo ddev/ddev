@@ -1,7 +1,7 @@
 module github.com/ddev/ddev
 
 require (
-	dario.cat/mergo v1.0.1
+	dario.cat/mergo v1.0.2
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -11,6 +11,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v28.0.2+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/goccy/go-yaml v1.17.1
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v52 v52.0.0
 	github.com/google/uuid v1.6.0
@@ -35,7 +36,6 @@ require (
 	golang.org/x/sys v0.31.0
 	golang.org/x/term v0.30.0
 	golang.org/x/text v0.23.0
-	gopkg.in/yaml.v3 v3.0.1
 	muzzammil.xyz/jsonc v1.0.0
 )
 
@@ -81,6 +81,7 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )
 

@@ -7,9 +7,9 @@ import (
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/goccy/go-yaml"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
 )
 
 // TestYamlFileToMap tests YamlFileToMap()
