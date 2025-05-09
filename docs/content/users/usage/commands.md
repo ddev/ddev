@@ -1590,8 +1590,10 @@ Run the [WP-CLI `wp` command](https://wp-cli.org/); available only in projects o
 ```shell
 # Install WordPress site using `wp core install`
 ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
-
 ```
+
+!!!tip
+    See [WordPress Specifics](./cms-settings.md#wordpress-specifics) for more information.
 
 ## `xdebug`
 
