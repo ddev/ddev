@@ -188,7 +188,7 @@ Environment variables will be automatically added to the `.ddev/.env.web` file t
         --site-url='$PRIMARY_SITE_URL'
 
     # Login using `admin` user and `Password123` password
-    ddev launch admin
+    ddev launch /admin
     ```
 
     Third-party starter projects can by used the same way—substitute the package name when running `ddev composer create-project`.
