@@ -26,7 +26,7 @@ func ReadProjectEnvFile(envFilePath string) (envMap map[string]string, envText s
 }
 
 // WriteProjectEnvFile writes the passed envText into the envFilePath .env file
-// with all items in envMap changed in envText there
+// changing items in envMap changed in envText there
 func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText string) error {
 	for k, v := range envMap {
 		v = EscapeEnvFileValue(v)

@@ -62,7 +62,7 @@ func craftCmsImportFilesAction(app *DdevApp, uploadDir, importPath, extPath stri
 }
 
 // Set up the .ddev/.env.web file for ddev
-func createCraftCMSDotEnv(app *DdevApp) (string, error) {
+func updateCraftCMSDotEnv(app *DdevApp) (string, error) {
 	// If settings management is disabled, do nothing
 	if app.DisableSettingsManagement {
 		return "", nil
@@ -85,7 +85,7 @@ func createCraftCMSDotEnv(app *DdevApp) (string, error) {
 		port = "5432"
 	}
 
-	envMap := map[string]string{
+	newCraftEnvMap := map[string]string{
 		"CRAFT_DB_DRIVER":       driver,
 		"CRAFT_DB_SERVER":       "db",
 		"CRAFT_DB_PORT":         port,
@@ -98,7 +98,13 @@ func createCraftCMSDotEnv(app *DdevApp) (string, error) {
 		"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
 	}
 
-	err := WriteProjectEnvFile(envFilePath, envMap, "")
+	// Read existing env file
+	_, existingEnvText, err := ReadProjectEnvFile(envFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	err = WriteProjectEnvFile(envFilePath, newCraftEnvMap, existingEnvText)
 	if err != nil {
 		return "", err
 	}
