@@ -98,7 +98,7 @@ func init() {
 		},
 
 		nodeps.AppTypeCraftCms: {
-			settingsCreator:      createCraftCMSDotEnv,
+			settingsCreator:      updateCraftCMSDotEnv,
 			importFilesAction:    craftCmsImportFilesAction,
 			appTypeSettingsPaths: setCraftCMSDotFileLocation,
 			appTypeDetect:        isCraftCmsApp,
