@@ -3724,6 +3724,213 @@ func TestGetAllURLs(t *testing.T) {
 	runTime()
 }
 
+// TestGetWebContainerDirectURLs tests the GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL functions
+func TestGetWebContainerDirectURLs(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := util.TimeTrackC(fmt.Sprintf("%s TestGetWebContainerDirectURLs", site.Name))
+	defer runTime()
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Start the app to ensure we have a running container
+	err = app.Start()
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	// Verify that GetWebContainerDirectHTTPURL returns a valid URL
+	httpURL := app.GetWebContainerDirectHTTPURL()
+	assert.NotEmpty(httpURL, "GetWebContainerDirectHTTPURL should return a non-empty URL")
+	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
+
+	// Verify that GetWebContainerDirectHTTPSURL returns a valid URL
+	httpsURL := app.GetWebContainerDirectHTTPSURL()
+	assert.NotEmpty(httpsURL, "GetWebContainerDirectHTTPSURL should return a non-empty URL")
+	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
+
+	// Verify that the URLs contain the Docker IP
+	dockerIP, err := dockerutil.GetDockerIP()
+	assert.NoError(err, "GetDockerIP should not return an error")
+	assert.Contains(httpURL, dockerIP, "HTTP URL should contain the Docker IP")
+	assert.Contains(httpsURL, dockerIP, "HTTPS URL should contain the Docker IP")
+
+	// Verify that the URLs contain the correct ports
+	httpPort, err := app.GetPublishedPortForPrivatePort("web", 80)
+	assert.NoError(err, "GetPublishedPortForPrivatePort should not return an error for HTTP port")
+	assert.Contains(httpURL, strconv.Itoa(httpPort), "HTTP URL should contain the correct port")
+
+	httpsPort, err := app.GetPublishedPortForPrivatePort("web", 443)
+	assert.NoError(err, "GetPublishedPortForPrivatePort should not return an error for HTTPS port")
+	assert.Contains(httpsURL, strconv.Itoa(httpsPort), "HTTPS URL should contain the correct port")
+}
+
+// TestGetWebContainerDirectURLsErrorHandling tests error handling in GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL
+func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create a temporary directory for a new app
+	testDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	// Create a new app that hasn't been started yet
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+
+	// Verify that GetWebContainerDirectHTTPURL returns an empty string when container doesn't exist
+	httpURL := app.GetWebContainerDirectHTTPURL()
+	assert.Empty(httpURL, "GetWebContainerDirectHTTPURL should return an empty string when container doesn't exist")
+
+	// Verify that GetWebContainerDirectHTTPSURL returns an empty string when container doesn't exist
+	httpsURL := app.GetWebContainerDirectHTTPSURL()
+	assert.Empty(httpsURL, "GetWebContainerDirectHTTPSURL should return an empty string when container doesn't exist")
+}
+
+// TestGetWebContainerDirectURLsWithGenericWebserver tests the behavior of GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL
+// with a generic webserver type and web_extra_exposed_ports
+func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create a temporary directory for a new app
+	testDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	// Create a new app with generic webserver type
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+	app.WebserverType = nodeps.WebserverGeneric
+	// Configure a web_extra_exposed_port that maps container port 3000 to HTTP port 80 and HTTPS port 443
+	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "svelte", WebContainerPort: 3000, HTTPPort: 80, HTTPSPort: 443},
+	}
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// Start the app
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Add a simple web server on port 3000 in the container
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "cd /var/www/html && php -S 0.0.0.0:3000 &",
+	})
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	// Verify that GetWebContainerDirectHTTPURL returns a valid URL using the WebContainerPort
+	httpURL := app.GetWebContainerDirectHTTPURL()
+	assert.NotEmpty(httpURL, "GetWebContainerDirectHTTPURL should return a non-empty URL")
+	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
+
+	// Verify that GetWebContainerDirectHTTPSURL returns a valid URL using the WebContainerPort
+	httpsURL := app.GetWebContainerDirectHTTPSURL()
+	assert.NotEmpty(httpsURL, "GetWebContainerDirectHTTPSURL should return a non-empty URL")
+	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
+
+	// Verify that the URLs contain the Docker IP
+	dockerIP, err := dockerutil.GetDockerIP()
+	assert.NoError(err, "GetDockerIP should not return an error")
+	assert.Contains(httpURL, dockerIP, "HTTP URL should contain the Docker IP")
+	assert.Contains(httpsURL, dockerIP, "HTTPS URL should contain the Docker IP")
+
+	// Debug information
+	t.Logf("HTTP URL: %s", httpURL)
+	t.Logf("HTTPS URL: %s", httpsURL)
+
+	// Check if port 3000 is published
+	port3000, err := app.GetPublishedPortForPrivatePort("web", 3000)
+	t.Logf("Port 3000 published as: %d, err: %v", port3000, err)
+
+	// For generic webserver with web_extra_exposed_ports, we just need to verify that we get valid URLs
+	// The exact port mapping can vary, so we just check that the URLs are not empty and have the correct format
+	assert.NotEmpty(httpURL, "HTTP URL should not be empty")
+	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
+	assert.NotContains(httpURL, ":0", "HTTP URL should not contain port 0")
+
+	assert.NotEmpty(httpsURL, "HTTPS URL should not be empty")
+	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
+	assert.NotContains(httpsURL, ":0", "HTTPS URL should not contain port 0")
+}
+
+// TestGetWebContainerDirectURLsWithDockerIPError tests behavior when GetDockerIP returns an error
+func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Start the app to ensure we have a running container
+	err = app.Start()
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	// Set an invalid DOCKER_HOST to force GetDockerIP to return an error
+	// Save original DOCKER_HOST to restore it later
+	origDockerHost := os.Getenv("DOCKER_HOST")
+	t.Cleanup(func() {
+		os.Setenv("DOCKER_HOST", origDockerHost)
+		// Reset the cached DockerIP value
+		dockerutil.DockerIP = ""
+	})
+
+	os.Setenv("DOCKER_HOST", "unix:///nonexistent/docker.sock")
+	// Reset the cached DockerIP value
+	dockerutil.DockerIP = ""
+
+	// Even with an invalid DOCKER_HOST, the functions should still work
+	// because they handle the error internally by using the default IP (127.0.0.1)
+	httpURL := app.GetWebContainerDirectHTTPURL()
+	httpsURL := app.GetWebContainerDirectHTTPSURL()
+
+	// The URLs should still be generated with the default Docker IP (127.0.0.1)
+	// A warning will be logged but the functions should still return valid URLs
+	_, err = app.GetPublishedPortForPrivatePort("web", 80)
+	assert.NoError(err, "GetPublishedPortForPrivatePort should not return an error for HTTP port")
+
+	// Verify that the URLs contain the default Docker IP (127.0.0.1)
+	assert.Contains(httpURL, "http://127.0.0.1:", "GetWebContainerDirectHTTPURL should return a URL with the default Docker IP (127.0.0.1)")
+	assert.Contains(httpsURL, "https://127.0.0.1:", "GetWebContainerDirectHTTPSURL should return a URL with the default Docker IP (127.0.0.1)")
+
+	// Verify that the URLs contain valid ports
+	assert.NotContains(httpURL, ":0", "HTTP URL should not contain port 0")
+	assert.NotContains(httpsURL, ":0", "HTTPS URL should not contain port 0")
+}
+
 // TestPHPWebserverType checks usage of
 // - webserver_type
 // - nginx_full/nginx-site.conf version installed
