@@ -175,7 +175,10 @@ Environment variables will be automatically added to the `.ddev/.env.web` file t
     # Set up the DDEV environment:
     ddev config --project-type=craftcms --docroot=web
 
-    # Boot the project and install the starter project:
+    # Boot the project
+    ddev start
+
+    # Install the starter project:
     ddev composer create-project --no-scripts craftcms/craft
 
     # Install Craft CMS:
