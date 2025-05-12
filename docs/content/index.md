@@ -36,16 +36,19 @@ These environments can be extended, version controlled, and shared, so you can t
 
     * RAM: 8GB
     * Storage: 256GB
-    * [Docker Desktop](https://www.docker.com/products/docker-desktop/) on the Windows side or [Docker CE](https://docs.docker.com/engine/install/ubuntu/) inside WSL2
+    * [Docker CE](https://docs.docker.com/engine/install/ubuntu/) inside WSL2 or [Docker Desktop](https://www.docker.com/products/docker-desktop/) on the Windows side.
     * Ubuntu or an Ubuntu-derived distro is recommended, though others may work fine
 
     **Next steps:**
 
     *You’ll need a Docker provider on your system before you can install DDEV.*
     
-    1. Install Docker with [recommended settings](users/install/docker-installation.md#windows).
-    2. Install [DDEV for Windows](users/install/ddev-installation.md#windows).
-    3. Launch your [first project](users/project.md) and start developing. 🚀
+    1. Install [DDEV for Windows](users/install/ddev-installation.md#windows).
+    2. Launch your [first project](users/project.md) and start developing. 🚀
+
+    **WSL2 in Mirrored Mode**
+
+    If you're using Windows WSL2 with the "Mirrored" Networking Mode, set the experimental `hostAddressLoopback=true` feature.
 
 === "Traditional Windows"
 
