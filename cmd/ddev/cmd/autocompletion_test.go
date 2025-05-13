@@ -318,6 +318,16 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 		assert.Contains(out, "db")
 		// xhgui is not running, so it should not be in the output
 		assert.NotContains(out, "xhgui")
+
+		// check with project argument
+		if cmd != "exec" {
+			out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, site.Name, "-s", "")
+			assert.NoError(err)
+			assert.Contains(out, "web")
+			assert.Contains(out, "db")
+			// xhgui is not running, so it should not be in the output
+			assert.NotContains(out, "xhgui")
+		}
 	}
 
 	// ddev debug rebuild should contain all services, no matter if they are running or not
@@ -327,7 +337,7 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 	assert.Contains(out, "db")
 	assert.Contains(out, "xhgui")
 
-	err = app.Stop(true, false)
+	err = app.Stop(false, false)
 	require.NoError(t, err)
 
 	// Check completion results are as expected for each command
@@ -338,10 +348,20 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 		assert.NotContains(out, "web")
 		assert.NotContains(out, "db")
 		assert.NotContains(out, "xhgui")
+
+		// check with project argument
+		if cmd != "exec" {
+			out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, site.Name, "-s", "")
+			assert.NoError(err)
+			// not running services should not be here
+			assert.NotContains(out, "web")
+			assert.NotContains(out, "db")
+			assert.NotContains(out, "xhgui")
+		}
 	}
 
-	// ddev debug rebuild should contain all services, no matter if they are running or not
-	out, err = exec.RunHostCommand(DdevBin, "__complete", "debug", "rebuild", "-s", "")
+	// ddev debug rebuild should contain all services, no matter if they are running or not (with project argument)
+	out, err = exec.RunHostCommand(DdevBin, "__complete", "debug", "rebuild", site.Name, "-s", "")
 	assert.NoError(err)
 	assert.Contains(out, "web")
 	assert.Contains(out, "db")
