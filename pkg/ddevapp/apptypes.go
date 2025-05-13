@@ -267,7 +267,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 
 	app.SetApptypeSettingsPaths()
 
-	if app.DisableSettingsManagement && app.Type != nodeps.AppTypePHP {
+	if app.DisableSettingsManagement && app.Type != nodeps.AppTypePHP && app.Type != nodeps.AppTypeGeneric {
 		util.Warning("Not creating CMS settings files because disable_settings_management=true")
 		return "", nil
 	}
