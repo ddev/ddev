@@ -17,6 +17,11 @@
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
 		"ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
 	},
+	"postStartCommand": [
+		// change socket group so vscode (in docker group) can talk without sudo
+		"sudo chgrp docker /var/run/docker.sock",
+		"sudo chmod 660   /var/run/docker.sock"
+	],
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
 	],
@@ -32,7 +37,7 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "./.devcontainer/setup_test_project.sh",
+	"postCreateCommand": "./.devcontainer/setup_test_project.sh"
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
