@@ -259,7 +259,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     7. For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
-    Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
+    Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro.
+
+    !!!note "WSL2 with Networking Mode set to 'Mirrored'"
+        If you're using the ['Mirrored' networking mode](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) with WSL2, you need to also set the experimental `hostAddressLoopback=true` in your `~/.wslconfig` file.
 
     ### WSL2/Docker Desktop Manual Installation
 
