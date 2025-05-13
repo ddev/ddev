@@ -291,11 +291,7 @@ golangci-lint:
 # we can remove all '// indirect' lines, and they will be re-added
 bump:
 	@echo "bump dependencies: "
-	@if [ "$$(uname)" = "Darwin" ]; then \
-		sed -i '' '/\/\/ indirect$$/d' go.mod; \
-	else \
-		sed -i '/\/\/ indirect$$/d' go.mod; \
-	fi
+	awk '!/\/\/ indirect$$/' go.mod > go.mod.tmp && mv go.mod.tmp go.mod
 	go get -u ./...
 	go mod tidy
 	go mod vendor
