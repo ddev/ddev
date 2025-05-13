@@ -27,9 +27,9 @@ teardown() {
     --username=admin \
     --password=Password123 \
     --email=admin@example.com \
-    --site-name='$DDEV_PROJECT' \
+    --site-name='My Craft Site' \
     --language=en \
-    --site-url='$DDEV_PRIMARY_URL'
+    --site-url='$PRIMARY_SITE_URL'
   assert_success
 
   # validate ddev launch
@@ -52,7 +52,7 @@ teardown() {
   assert_output --partial "<h2>Popular Resources</h2>"
   run curl -sf https://${PROJNAME}.ddev.site/admin/login
   assert_success
-  assert_output --partial "<title>Sign In - ${PROJNAME}</title>"
+  assert_output --partial "<title>Sign In - My Craft Site</title>"
 }
 
 @test "Craft CMS Existing Projects quickstart with $(ddev --version)" {
