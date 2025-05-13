@@ -218,8 +218,6 @@ Environment variables will be automatically added to the `.ddev/.env.web` file t
 
     Craft CMS projects use MySQL 8.0, by default. You can override this setting (and the PHP version) during setup with [`config` command flags](./usage/commands.md#config) or after setup via the [configuration files](./configuration/config.md).
 
-    !!!tip "Upgrading or using a `php` project type?"
-        If you previously set up DDEV in a Craft project using the `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/usage/commands.md#restart) apply the changes.
 
 ### Running Craft in a Subdirectory
 
