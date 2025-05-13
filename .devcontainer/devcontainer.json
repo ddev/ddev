@@ -2,12 +2,14 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "Go",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "."
+	},
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"version": "latest",
-			"addNonRootUserToDockerGroup": true
+			"enableNonRootDocker": true
 		},
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"packages": "autojump,curl,wget,xdg-utils"
