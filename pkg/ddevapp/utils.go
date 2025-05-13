@@ -493,8 +493,13 @@ func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []stri
 // GetServiceNamesFunc returns a function for autocompleting service names for service flag.
 // If existingOnly is true, only names of existing services will be returned.
 func GetServiceNamesFunc(existingOnly bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-	return func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		app, err := GetActiveApp("")
+	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		// the project name can be passed as an argument
+		projectName := ""
+		if len(args) > 0 {
+			projectName = args[0]
+		}
+		app, err := GetActiveApp(projectName)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
