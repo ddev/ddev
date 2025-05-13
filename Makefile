@@ -289,9 +289,9 @@ golangci-lint:
 
 # golang doesn't always clean indirect dependencies in go.mod
 # we can remove all '// indirect' lines, and they will be re-added
-bump:
-	@echo "bump dependencies: "
-	awk '!/\/\/ indirect$$/' go.mod > go.mod.tmp && mv go.mod.tmp go.mod
+go-mod-update:
+	@echo "bump golang dependencies: "
+	@awk '!/\/\/ indirect$$/' go.mod > go.mod.tmp && mv go.mod.tmp go.mod
 	go get -u ./...
 	go mod tidy
 	go mod vendor
