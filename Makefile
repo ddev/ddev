@@ -287,6 +287,19 @@ golangci-lint:
 		echo "Skipping golangci-lint as not installed"; \
 	fi
 
+# golang doesn't always clean indirect dependencies in go.mod
+# we can remove all '// indirect' lines, and they will be re-added
+bump:
+	@echo "bump dependencies: "
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		sed -i '' '/\/\/ indirect$$/d' go.mod; \
+	else \
+		sed -i '/\/\/ indirect$$/d' go.mod; \
+	fi
+	go get -u ./...
+	go mod tidy
+	go mod vendor
+
 quickstart-test: build
 	@echo "quickstart-test:"
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
