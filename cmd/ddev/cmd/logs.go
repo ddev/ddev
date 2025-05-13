@@ -44,6 +44,7 @@ func init() {
 	DdevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
 	DdevLogsCmd.Flags().BoolVarP(&timestamp, "time", "t", false, "Add timestamps to logs")
 	DdevLogsCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to retrieve logs from. [e.g. web, db]")
+	_ = DdevLogsCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(true))
 	DdevLogsCmd.Flags().StringVarP(&tail, "tail", "", "", "How many lines to show")
 
 	// JSON formatted output isn't supported, so we should hide the global --json-output flag
