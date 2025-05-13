@@ -3126,10 +3126,13 @@ func (app *DdevApp) GetWebContainerDirectHTTPURL() string {
 	if err != nil {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
+
 	port, err := app.GetWebContainerDirectHTTPPort()
+
 	if err != nil {
 		return ""
 	}
+
 	return fmt.Sprintf("http://%s:%d", dockerIP, port)
 }
 
@@ -3140,49 +3143,73 @@ func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	if err != nil {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
-	port, err := app.GetWebContainerHTTPSPublicPort()
+
+	port, err := app.GetWebContainerDirectHTTPSPort()
+
 	if err != nil {
 		return ""
 	}
+
 	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
-// GetWebContainerPublicPort returns the first direct-access public tcp port for http
-// It excludes 8025 (mailpit) and 443 (nginx and apache)
+// GetWebContainerDirectHTTPPort returns the direct-access public tcp port for http
 func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
-	// There may not always be a public direct port
-	// But if there is, we need to figure out which one it is
-	// using HTTP_EXPOSE
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
 		return -1, fmt.Errorf("unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
-	for _, p := range webContainer.Ports {
-		// Exclude mailpit port (internal is wired to 8025)
-		// Also assume that 443 is https, so we won't return it from this one.
-		// It's https with nginx and apache
-		if p.PrivatePort != 8025 && p.PrivatePort != 443 {
-			return int(p.PublicPort), nil
+	// Try getting the published port for the standard HTTP port first
+	port, err := app.GetPublishedPortForPrivatePort("web", 80)
+	if err == nil && port != 0 {
+		return port, nil
+	}
+
+	// If standard method fails and it's a generic webserver with extra exposed ports
+	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
+		for _, extraPort := range app.WebExtraExposedPorts {
+			// Check only ports mapped to HTTP (port 80)
+			if extraPort.HTTPPort == 80 {
+				containerPort := uint16(extraPort.WebContainerPort)
+				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
+				if err == nil && publishedPort != 0 {
+					return publishedPort, nil
+				}
+			}
 		}
 	}
-	// Alternately, we could just bail in this situation and handle the -1
+
 	return -1, fmt.Errorf("no public port found for private port 80")
 }
 
-// GetWebContainerHTTPSPublicPort returns the direct-access public tcp port for https
-func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
-
+// GetWebContainerDirectHTTPSPort returns the direct-access public tcp port for https
+func (app *DdevApp) GetWebContainerDirectHTTPSPort() (int, error) {
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
-		return -1, fmt.Errorf("unable to find https web container for app: %s, err %v", app.Name, err)
+		return -1, fmt.Errorf("unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
-	for _, p := range webContainer.Ports {
-		if p.PrivatePort == 443 {
-			return int(p.PublicPort), nil
+	// Try getting the published port for the standard HTTP port first
+	port, err := app.GetPublishedPortForPrivatePort("web", 443)
+	if err == nil && port != 0 {
+		return port, nil
+	}
+
+	// If standard method fails and it's a generic webserver with extra exposed ports
+	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
+		for _, extraPort := range app.WebExtraExposedPorts {
+			// Check only ports mapped to HTTPS (port 443)
+			if extraPort.HTTPSPort == 443 {
+				containerPort := uint16(extraPort.WebContainerPort)
+				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
+				if err == nil && containerPort != 0 {
+					return publishedPort, nil
+				}
+			}
 		}
 	}
+
 	return -1, fmt.Errorf("no public https port found for private port 443")
 }
 
