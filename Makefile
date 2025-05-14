@@ -287,6 +287,12 @@ golangci-lint:
 		echo "Skipping golangci-lint as not installed"; \
 	fi
 
+go-mod-update:
+	@echo "bump golang dependencies: "
+	go get -u ./...
+	go mod tidy
+	go mod vendor
+
 quickstart-test: build
 	@echo "quickstart-test:"
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
