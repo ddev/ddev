@@ -583,13 +583,13 @@ ddev debug nfsmount
 
 *Alias: `debug refresh`.*
 
-Rebuilds the project’s Docker cache with verbose output.
+Rebuilds the project’s Docker cache with verbose output and restarts the project or the specified service.
 
 Flags:
 
-* `--all`, `-a`: Rebuild all services.
+* `--all`, `-a`: Rebuild all services and restart the project.
 * `--cache`: Keep Docker cache.
-* `--service`, `-s`: Rebuild specified service. (default `web`)
+* `--service`, `-s`: Rebuild the specified service and restart it. (default `web`)
 
 Example:
 

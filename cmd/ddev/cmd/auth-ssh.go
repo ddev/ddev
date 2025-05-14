@@ -112,7 +112,7 @@ var AuthSSHCommand = &cobra.Command{
 			if strings.Contains(err.Error(), "bind source path does not exist") {
 				helpMessage = "\n\nThe specified SSH private key path is not shared with your Docker provider."
 			}
-			util.Failed("Docker command 'docker %v' failed: %v %v", echoDockerCmd(dockerCmd), err, helpMessage)
+			util.Failed("Docker command 'docker %v' failed: %v %v", prettyCmd(dockerCmd), err, helpMessage)
 		}
 	},
 }
@@ -197,16 +197,6 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 	certPath = util.WindowsPathToCygwinPath(certPath)
 	certName := name + "-cert.pub"
 	return certPath, certName
-}
-
-// echoDockerCmd formats the Docker command to be more readable.
-func echoDockerCmd(dockerCmd []string) string {
-	for i, arg := range dockerCmd {
-		if strings.Contains(arg, " ") {
-			dockerCmd[i] = `"` + arg + `"`
-		}
-	}
-	return strings.Join(dockerCmd, " ")
 }
 
 func init() {
