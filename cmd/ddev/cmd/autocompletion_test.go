@@ -289,6 +289,85 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	}
 }
 
+// TestAutocompleteServiceForServiceFlag checks service autocompletion for service flag
+func TestAutocompleteServiceForServiceFlag(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp("", false)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.Chdir(origDir)
+	})
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Check completion results are as expected for each command
+	for _, cmd := range []string{"exec", "logs", "ssh"} {
+		out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, "-s", "")
+		assert.NoError(err)
+		assert.Contains(out, "web")
+		assert.Contains(out, "db")
+		// xhgui is not running, so it should not be in the output
+		assert.NotContains(out, "xhgui")
+
+		// check with project argument
+		if cmd != "exec" {
+			out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, site.Name, "-s", "")
+			assert.NoError(err)
+			assert.Contains(out, "web")
+			assert.Contains(out, "db")
+			// xhgui is not running, so it should not be in the output
+			assert.NotContains(out, "xhgui")
+		}
+	}
+
+	// ddev debug rebuild should contain all services, no matter if they are running or not
+	out, err := exec.RunHostCommand(DdevBin, "__complete", "debug", "rebuild", "-s", "")
+	assert.NoError(err)
+	assert.Contains(out, "web")
+	assert.Contains(out, "db")
+	assert.Contains(out, "xhgui")
+
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	// Check completion results are as expected for each command
+	for _, cmd := range []string{"exec", "logs", "ssh"} {
+		out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, "-s", "")
+		assert.NoError(err)
+		// not running services should not be here
+		assert.NotContains(out, "web")
+		assert.NotContains(out, "db")
+		assert.NotContains(out, "xhgui")
+
+		// check with project argument
+		if cmd != "exec" {
+			out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, site.Name, "-s", "")
+			assert.NoError(err)
+			// not running services should not be here
+			assert.NotContains(out, "web")
+			assert.NotContains(out, "db")
+			assert.NotContains(out, "xhgui")
+		}
+	}
+
+	// ddev debug rebuild should contain all services, no matter if they are running or not (with project argument)
+	out, err = exec.RunHostCommand(DdevBin, "__complete", "debug", "rebuild", site.Name, "-s", "")
+	assert.NoError(err)
+	assert.Contains(out, "web")
+	assert.Contains(out, "db")
+	assert.Contains(out, "xhgui")
+}
+
 // TestAutocompleteTermsForCustomCmds tests the AutocompleteTerms annotation for custom host and container commands
 func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 	if dockerutil.IsColima() || dockerutil.IsLima() {

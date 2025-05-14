@@ -99,6 +99,7 @@ func quoteArgs(args []string) string {
 
 func init() {
 	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	_ = DdevExecCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(true))
 	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Defines the execution directory within the container")
 	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with Bash inside container)")
 	// This requires flags for exec to be specified prior to any arguments, allowing for

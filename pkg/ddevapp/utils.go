@@ -490,6 +490,38 @@ func GetProjectNamesFunc(status string, numArgs int) func(*cobra.Command, []stri
 	}
 }
 
+// GetServiceNamesFunc returns a function for autocompleting service names for service flag.
+// If existingOnly is true, only names of existing services will be returned.
+func GetServiceNamesFunc(existingOnly bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		// the project name can be passed as an argument
+		projectName := ""
+		if len(args) > 0 {
+			projectName = args[0]
+		}
+		app, err := GetActiveApp(projectName)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		rawServices, ok := app.ComposeYaml["services"].(map[string]interface{})
+		if !ok {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		var services []string
+		for service := range rawServices {
+			if existingOnly {
+				c, err := app.FindContainerByType(service)
+				if err == nil && c != nil {
+					services = append(services, service)
+				}
+			} else {
+				services = append(services, service)
+			}
+		}
+		return services, cobra.ShellCompDirectiveNoFileComp
+	}
+}
+
 // GetRelativeDirectory returns the directory relative to project root
 // Note that the relative dir is returned as unix-style forward-slashes
 func (app *DdevApp) GetRelativeDirectory(path string) string {

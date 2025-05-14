@@ -137,4 +137,5 @@ func init() {
 	DebugRebuildCmd.Flags().BoolVarP(&buildAll, "all", "a", false, "Rebuild all services and restart the project")
 	DebugRebuildCmd.Flags().Bool("cache", false, "Keep Docker cache")
 	DebugRebuildCmd.Flags().StringVarP(&service, "service", "s", "web", "Rebuild the specified service and restart it")
+	_ = DebugRebuildCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(false))
 }
