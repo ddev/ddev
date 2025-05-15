@@ -311,7 +311,9 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 
 		// Don't create gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
-		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
+		// Don't override the existing .ddev/.gitignore as well
+		// TODO: we may want to append to .ddev/.gitignore if needed.
+		if path.Dir(app.SiteSettingsPath) != app.AppRoot && path.Dir(app.SiteSettingsPath) != app.GetConfigPath("") && app.SiteDdevSettingsFile != "" {
 			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 			}
