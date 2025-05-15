@@ -21,7 +21,7 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		}
 		_, err := dockerutil.DownloadDockerComposeIfNeeded()
 		if err != nil {
-			util.Warning("Unable to download docker-compose: %v", err)
+			util.Failed("Unable to download docker-compose: %v", err)
 		}
 		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 			err = ddevapp.DownloadMutagenIfNeeded()
