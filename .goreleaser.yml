@@ -266,7 +266,7 @@ brews:
           but that repository has moved.
           Please run:
             rm -rf "$(brew --repo #{tap.full_name})"
-            brew uninstall -f ddev
+            brew uninstall -f ddev ddev-edge
             brew install ddev/ddev-edge/ddev-edge
         EOS
       end
