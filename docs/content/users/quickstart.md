@@ -1088,40 +1088,14 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
 ## TYPO3
 
-=== "TYPO3 v13"
+=== "Composer"
 
     ```bash
     PROJECT_NAME=my-typo3-site
     mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
     ddev config --project-type=typo3 --docroot=public --php-version 8.3
     ddev start
-    ddev composer create-project "typo3/cms-base-distribution:^13"
-    ddev typo3 setup \
-        --admin-user-password="Demo123*" \
-        --driver=mysqli \
-        --create-site=https://${PROJECT_NAME}.ddev.site \
-        --server-type=other \
-        --dbname=db \
-        --username=db \
-        --password=db \
-        --port=3306 \
-        --host=db \
-        --admin-username=admin \
-        --admin-email=admin@example.com \
-        --project-name="My TYPO3 site" \
-        --force
-
-    ddev launch /typo3/
-    ```
-
-=== "TYPO3 v12"
-
-    ```bash
-    PROJECT_NAME=my-typo3-site
-    mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
-    ddev config --project-type=typo3 --docroot=public --php-version 8.1
-    ddev start
-    ddev composer create-project "typo3/cms-base-distribution:^12"
+    ddev composer create-project "typo3/cms-base-distribution"
     ddev typo3 setup \
         --admin-user-password="Demo123*" \
         --driver=mysqli \
