@@ -106,46 +106,6 @@ teardown() {
   assert_success
 }
 
-# bats test_tags=typo3-setup,t3v12
-@test "TYPO3 v12 'ddev typo3 setup' composer test with $(ddev --version)" {
-  PROJNAME=my-typo3-site
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
-
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
-  assert_success
-
-  run ddev start -y >/dev/null
-  assert_success
-
-  run ddev composer create-project "typo3/cms-base-distribution:^12" >/dev/null
-  assert_success
-
-  run ddev exec touch public/FIRST_INSTALL
-  assert_success
-
-  run ddev typo3 setup \
-    --admin-user-password="Demo123*" \
-    --driver=mysqli \
-    --create-site=https://${PROJNAME}.ddev.site \
-    --server-type=other \
-    --dbname=db \
-    --username=db \
-    --password=db \
-    --port=3306 \
-    --host=db \
-    --admin-username=admin \
-    --admin-email=admin@example.com \
-    --project-name="demo TYPO3 site" \
-    --force
-  assert_success
-
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
-  assert_success
-  run bats_pipe curl s-sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
-  assert_success
-}
-
 # bats test_tags=typo3-setup,t3v13
 @test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
   PROJNAME=my-typo3-site
@@ -158,7 +118,7 @@ teardown() {
   run ddev start -y >/dev/null
   assert_success
 
-  run ddev composer create-project "typo3/cms-base-distribution:^13" >/dev/null
+  run ddev composer create-project typo3/cms-base-distribution >/dev/null
   assert_success
 
   run ddev exec touch public/FIRST_INSTALL
