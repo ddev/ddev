@@ -309,9 +309,9 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 			util.Warning("Unable to create settings file '%s': %v", app.SiteSettingsPath, err)
 		}
 
-		// Don't create gitignore if it would be in top-level directory, where
+		// Don't create settings-directory .gitignore if it would be in top-level directory, where
 		// there is almost certainly already a gitignore (like Backdrop)
-		// Don't override the existing .ddev/.gitignore as well
+		// Don't accidentally override the existing .ddev/.gitignore as well
 		// TODO: we may want to append to .ddev/.gitignore if needed.
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot && path.Dir(app.SiteSettingsPath) != app.GetConfigPath("") && app.SiteDdevSettingsFile != "" {
 			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
