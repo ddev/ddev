@@ -43,7 +43,7 @@ func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL s
 	}
 	client.Backoff = retryablehttp.DefaultBackoff
 	client.Logger = nil
-	client.HTTPClient.Timeout = 20 * time.Second
+	client.HTTPClient.Timeout = 5 * time.Minute
 	client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
 		if attempt > 0 {
 			// attempt==1 is the first retry, 2 the second, etc

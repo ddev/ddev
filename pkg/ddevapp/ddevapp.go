@@ -1255,9 +1255,16 @@ func (app *DdevApp) Start() error {
 	dockerutil.RemoveNetworkDuplicates(ctx, client, app.GetDefaultNetworkName())
 
 	if err = dockerutil.CheckDockerCompose(); err != nil {
-		util.Failed(`Your docker-compose version does not exist or is set to an invalid version.
-Please use the built-in docker-compose.
+		if os.IsTimeout(err) || strings.Contains(err.Error(), "timeout") {
+			util.Failed(`Failed to download updated docker-compose binary.
+This might be due to network issues or a slow response.
+Please ensure your network is stable and try again:
+%v`, err)
+		} else {
+			util.Failed(`DDEV's private docker-compose binary does not exist or is set to an invalid version.
+Please use DDEV's' built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
+		}
 	}
 
 	if runtime.GOOS == "darwin" {
