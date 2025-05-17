@@ -89,6 +89,30 @@ teardown() {
   assert_success
 }
 
+@test "TYPO3 v11 'web installer' composer test with $(ddev --version)" {
+  PROJNAME=my-typo3-site
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  assert_success
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.1
+  assert_success
+  run ddev start -y >/dev/null
+  assert_success
+  run ddev composer create-project "typo3/cms-base-distribution:^11" >/dev/null
+  assert_success
+  run ddev exec touch public/FIRST_INSTALL
+  assert_success
+
+  run bash -c "DDEV_DEBUG=true ddev launch /typo3/install.php"
+  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/typo3/install.php"
+  assert_success
+
+  run bats_pipe curl -sfI https://${PROJNAME}.ddev.site/typo3/install.php \| grep "HTTP/2 200"
+  assert_success
+  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/install.php \| grep "data-init=\"TYPO3/CMS/Install/Installer\""
+  assert_success
+}
+
+
 @test "TYPO3 git based quickstart with $(ddev --version)" {
   PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
   PROJNAME=my-typo3-site
