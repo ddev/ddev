@@ -887,9 +887,9 @@ If you get a warning about "Apache mod_rewrite" during the compatibility check, 
 
 **After installation,** configure `upload_dirs` to specify where user-generated files are managed by Processwire:
 
-    ```
-    ddev config --upload-dirs=sites/assets/files && ddev restart
-    ```
+```bash
+ddev config --upload-dirs=sites/assets/files && ddev restart
+```
 
 If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).
 
