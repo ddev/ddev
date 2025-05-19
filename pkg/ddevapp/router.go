@@ -474,6 +474,10 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 // and a bool which is true if the proposedPort has been
 // replaced with an ephemeralPort
 func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, string, bool) {
+	// If the proposedPort is empty, we don't need to do anything
+	if proposedPort == "" {
+		return proposedPort, "", false
+	}
 	// If the router is alive and well, we can see if it's already handling the proposedPort
 	status, _ := GetRouterStatus()
 	if status == "healthy" {

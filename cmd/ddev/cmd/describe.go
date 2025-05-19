@@ -221,9 +221,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// All URLs stanza
 			_, _, urls := app.GetAllURLs()
-			s := strings.Join(urls, ", ")
-			urlString := text.WrapSoft(s, int(urlPortWidth))
-			t.AppendRow(table.Row{"Project URLs", "", urlString})
+			if len(urls) > 0 {
+				s := strings.Join(urls, ", ")
+				urlString := text.WrapSoft(s, int(urlPortWidth))
+				t.AppendRow(table.Row{"Project URLs", "", urlString})
+			}
 		}
 		bindInfo := []string{}
 		if app.BindAllInterfaces {
