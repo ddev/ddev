@@ -1454,6 +1454,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
+
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
