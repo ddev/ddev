@@ -1093,7 +1093,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     PROJECT_NAME=my-typo3-site
     mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
-    ddev config --project-type=typo3 --docroot=public --php-version 8.3
+    ddev config --project-type=typo3 --docroot=public --php-version=8.3
     ddev start
     ddev composer create-project "typo3/cms-base-distribution"
     ddev typo3 setup \
