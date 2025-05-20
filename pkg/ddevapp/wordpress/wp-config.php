@@ -8,10 +8,10 @@
  */
 
 /** Database charset to use in creating database tables. */
-define( 'DB_CHARSET', '{{ $config.DbCharset }}' );
+define( 'DB_CHARSET', '{{ $config.DBCharset }}' );
 
 /** The database collate type. Don't change this if in doubt. */
-define( 'DB_COLLATE', '{{ $config.DbCollate }}' );
+define( 'DB_COLLATE', '{{ $config.DBCollate }}' );
 
 /** Authentication Unique Keys and Salts. */
 define( 'AUTH_KEY', '{{ $config.AuthKey }}' );
