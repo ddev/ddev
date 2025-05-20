@@ -209,7 +209,6 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
-
 	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -291,7 +290,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		} else {
 			appDesc["xhgui_status"] = "disabled"
 		}
-
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -389,7 +387,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 			if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
 				vhostVal := virtualHost
-				vhostValStr := fmt.Sprintf("%s", vhostVal)
+				vhostValStr := fmt.Sprintf("%v", vhostVal)
 				vhostsList := strings.Split(vhostValStr, ",")
 
 				// There might be more than one VIRTUAL_HOST value, but this only handles the first listed,
@@ -630,7 +628,6 @@ func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort
 // 3. The project router_https_port
 // 4. The global router_https_port
 func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
-
 	proposedPrimaryRouterHTTPSPort := "443"
 	if globalconfig.DdevGlobalConfig.RouterHTTPSPort != "" {
 		proposedPrimaryRouterHTTPSPort = globalconfig.DdevGlobalConfig.RouterHTTPSPort
@@ -651,7 +648,6 @@ func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 // If HTTP_EXPOSE has a mapping to port 8025 in the container, use that
 // If not, use the global or project MailpitHTTPPort
 func (app *DdevApp) GetMailpitHTTPPort() string {
-
 	if httpExpose := app.GetWebEnvVar("HTTP_EXPOSE"); httpExpose != "" {
 		httpPort := app.TargetPortFromExposeVariable(httpExpose, "8025")
 		if httpPort != "" {
@@ -673,7 +669,6 @@ func (app *DdevApp) GetMailpitHTTPPort() string {
 // If HTTPS_EXPOSE has a mapping to port 8025 in the container, use that
 // If not, use the global or project MailpitHTTPSPort
 func (app *DdevApp) GetMailpitHTTPSPort() string {
-
 	if httpsExpose := app.GetWebEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
 		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, "8025")
 		if httpsPort != "" {
@@ -994,7 +989,7 @@ func (app *DdevApp) SiteStatus() (string, string) {
 
 	_, err := CheckForConf(app.GetAppRoot())
 	if err != nil {
-		return SiteConfigMissing, fmt.Sprintf("%s", SiteConfigMissing)
+		return SiteConfigMissing, SiteConfigMissing
 	}
 
 	statuses := map[string]string{"web": ""}
@@ -2430,7 +2425,6 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
-
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on Windows.
@@ -2505,7 +2499,6 @@ func (app *DdevApp) DockerEnv() {
 		hostHTTPSPortStr = strconv.Itoa(hostHTTPSPort)
 	} else {
 		hostHTTPSPortStr = app.HostHTTPSPort
-
 	}
 
 	// DDEV_DATABASE_FAMILY can be use for connection URLs
@@ -2826,7 +2819,6 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 // getBackupCommand returns the command to dump the entire db system for the various databases
 func getBackupCommand(app *DdevApp, targetFile string) string {
-
 	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0"}
@@ -3328,7 +3320,6 @@ func restoreApp(app *DdevApp, siteName string) error {
 
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider(providerName string) (*Provider, error) {
-
 	var p Provider
 	var err error
 
@@ -3403,7 +3394,7 @@ func (app *DdevApp) GetPostgresVolumeName() string {
 
 // GetComposeProjectName returns the name of the docker-compose project
 func (app *DdevApp) GetComposeProjectName() string {
-	return strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1))
+	return strings.ToLower("ddev-" + strings.ReplaceAll(app.Name, `.`, ""))
 }
 
 // GetDefaultNetworkName returns the default project network name

@@ -62,7 +62,6 @@ func TestCopyDir(t *testing.T) {
 	assert.NoError(err)
 	err = os.RemoveAll(targetDir)
 	assert.NoError(err)
-
 }
 
 // TestCopyFile tests copying a file.
@@ -212,7 +211,6 @@ func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 			_ = targetFile
 		}
 	}
-
 }
 
 // TestIsSameFile tests the IsSameFile utility function.

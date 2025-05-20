@@ -247,7 +247,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	originalGlobalConfig := globalconfig.DdevGlobalConfig
 	// Stop the Mutagen daemon running in the ~/.ddev
 	ddevapp.StopMutagenDaemon("")
-	t.Log(fmt.Sprintf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+	t.Logf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
 	// Set $XDG_CONFIG_HOME for tests
 	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// Make sure that the global config directory is set to $XDG_CONFIG_HOME/ddev
@@ -274,7 +274,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
-		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+		t.Logf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY='%s'", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}
@@ -286,7 +286,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
 	ddevapp.StopMutagenDaemon("")
-	t.Log(fmt.Sprintf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+	t.Logf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
 	// After the $XDG_CONFIG_HOME directory is removed,
 	// globalconfig.GetGlobalDdevDir() should point to ~/.ddev
 	t.Setenv("XDG_CONFIG_HOME", "")
@@ -304,7 +304,7 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 	// Start mutagen daemon if it's enabled
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		ddevapp.StartMutagenDaemon()
-		t.Log(fmt.Sprintf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory()))
+		t.Logf("started mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
 		// Make sure that $MUTAGEN_DATA_DIRECTORY is set to the correct directory
 		require.Equal(t, os.Getenv("MUTAGEN_DATA_DIRECTORY"), globalconfig.GetMutagenDataDirectory())
 	}

@@ -29,5 +29,4 @@ func init() {
 			output.UserOut.Print("`ddev auth pantheon` is no longer needed, see docs")
 		},
 	})
-
 }

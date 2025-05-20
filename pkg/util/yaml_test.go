@@ -48,7 +48,6 @@ func TestYamlFileToMap(t *testing.T) {
 	slashloc, ok := locations["/"].(map[string]interface{})
 	require.True(t, ok)
 	assert.Equal("web", slashloc["root"])
-
 }
 
 func TestYamlToDict(t *testing.T) {

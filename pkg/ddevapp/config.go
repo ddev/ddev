@@ -191,7 +191,6 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
-
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
 
@@ -321,7 +320,6 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 // It does not attempt to set default values; that's NewApp's job.
 // returns the list of config files read
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
-
 	// Load base .ddev/config.yaml - original config
 	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {
@@ -389,7 +387,6 @@ func (app *DdevApp) WarnIfConfigReplace() {
 
 // PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
 func (app *DdevApp) PromptForConfig() error {
-
 	app.WarnIfConfigReplace()
 
 	for {
@@ -590,7 +587,6 @@ func (app *DdevApp) GetHostname() string {
 
 // GetHostnames returns a slice of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
-
 	// Use a map to make sure that we have unique hostnames
 	// The value is useless, so use the int 1 for assignment.
 	nameListMap := make(map[string]int)
@@ -623,7 +619,6 @@ func (app *DdevApp) GetHostnames() []string {
 
 // CheckCustomConfig warns the user if any custom configuration files are in use.
 func (app *DdevApp) CheckCustomConfig() {
-
 	// Get the path to .ddev for the current app.
 	ddevDir := filepath.Dir(app.ConfigPath)
 
@@ -762,7 +757,6 @@ func (app *DdevApp) CheckCustomConfig() {
 	if customConfig {
 		util.Warning("Custom configuration is updated on restart.\nIf you don't see your custom configuration taking effect, run 'ddev restart'.")
 	}
-
 }
 
 // CheckDeprecations warns the user if anything in use is deprecated.
@@ -1247,7 +1241,6 @@ RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-ge
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
 func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
-
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
@@ -1354,7 +1347,6 @@ RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-ge
 
 	// webimage only things
 	if strings.Contains(fullpath, "webimageBuild") {
-
 		// For webimage, update to latest Composer.
 		// Version to run composer self-update to the version
 		var composerSelfUpdateArg string
@@ -1409,7 +1401,6 @@ if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
   apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION}" || true; \
 fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 		}
-
 	}
 
 	// If there are user dockerfiles, appends their contents
@@ -1459,11 +1450,11 @@ fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
 	// This may cause problems with previously set permissions when installing/upgrading packages.
 	// Place this at the very end of the Dockerfile.
 	if strings.Contains(fullpath, "webimageBuild") {
-		contents = contents + fmt.Sprintf(`
+		contents = contents + `
 ### DDEV-injected folders permission fix
 RUN chmod 777 /run/php /var/log
 RUN mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
-`)
+`
 	}
 
 	return WriteImageDockerfile(fullpath, []byte(contents))
@@ -1610,7 +1601,6 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
-
 	// Determine the document root.
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s\n", app.AppRoot)
 	output.UserOut.Printf("Leave docroot empty (hit <RETURN>) to use the location shown in parentheses.\nOr specify a custom path if your index.php is in a different directory.\nOr use '.' (a dot) to explicitly set it to the project root.\n")
@@ -1678,7 +1668,6 @@ func PrepDdevDirectory(app *DdevApp) error {
 	var err error
 	dir := app.GetConfigPath("")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-
 		log.WithFields(log.Fields{
 			"directory": dir,
 		}).Debug("Config Directory does not exist, attempting to create.")
@@ -1767,9 +1756,7 @@ func validateHookYAML(source []byte) error {
 			if !match {
 				return fmt.Errorf("invalid task '%s' defined for hook %s in config.yaml", foundTask, foundHook)
 			}
-
 		}
-
 	}
 
 	return nil

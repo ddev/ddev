@@ -15,7 +15,6 @@ import (
 
 // TestUnarchive tests unzip/tar/tar.gz/tgz functionality, including the starting extraction-skip directory
 func TestUnarchive(t *testing.T) {
-
 	// testUnarchiveDir is the directory we may want to use to start extracting.
 	testUnarchiveDir := "dir2/"
 

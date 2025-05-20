@@ -96,7 +96,6 @@ func TestNodeJSVersions(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Contains(out, "v8.17")
-
 }
 
 // TestCorepackEnable tests behavior of corepack_enable

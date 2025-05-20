@@ -143,7 +143,6 @@ func (app *DdevApp) GetXHProfMode() types.XHProfMode {
 // If HTTP_EXPOSE has a mapping to port 8143 in the container, use that
 // If not, use the global or project XHGuiHTTPPort
 func (app *DdevApp) GetXHGuiHTTPPort() string {
-
 	if httpExpose := app.GetXHGuiEnvVar("HTTP_EXPOSE"); httpExpose != "" {
 		httpPort := app.TargetPortFromExposeVariable(httpExpose, nodeps.DdevDefaultXHGuiHTTPPort)
 		if httpPort != "" {
@@ -165,7 +164,6 @@ func (app *DdevApp) GetXHGuiHTTPPort() string {
 // If HTTPS_EXPOSE has a mapping to port 8142 in the container, use that
 // If not, use the global or project XHGuiHTTPSPort
 func (app *DdevApp) GetXHGuiHTTPSPort() string {
-
 	if httpsExpose := app.GetXHGuiEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
 		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, nodeps.DdevDefaultXHGuiHTTPSPort)
 		if httpsPort != "" {

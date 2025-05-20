@@ -12,7 +12,6 @@ import (
 
 // TestDdevApp_StartOptionalProfiles makes sure that we can start an optional service appropriately
 func TestDdevApp_StartOptionalProfiles(t *testing.T) {
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 

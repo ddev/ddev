@@ -165,5 +165,4 @@ func TestConfigOverrideActionOnExistingConfig(t *testing.T) {
 		// We can override existing config.
 		assert.EqualValues(expectedPHPVersion, app.PHPVersion, "expected PHP version %s but got %s for apptype=%s", expectedPHPVersion, app.PHPVersion, appType)
 	}
-
 }
