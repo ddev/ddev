@@ -12,7 +12,8 @@
 			"packages": "autojump,curl,wget,xdg-utils"
 		},
 		"ghcr.io/devcontainers/features/go:1": {
-			"version": "1.24"
+			"version": "1.24",
+			"installTools": false
 		},
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
 		"ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
