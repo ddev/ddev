@@ -23,13 +23,16 @@ SHELL ["/bin/bash", "-c"]
 
 # Fix APT for Debian Stretch (EOL; upstream mirrors disabled)
 # Based on: https://serverfault.com/a/1131653
-RUN if grep "Debian GNU/Linux 9" /etc/issue >/dev/null; then \
-    rm -f /etc/apt/sources.list.d/mysql.list && \
-    echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" >/etc/apt/sources.list && \
-    echo "deb http://archive.debian.org/debian-security/ stretch/updates main contrib non-free" >>/etc/apt/sources.list && \
-    apt-get -qq update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true debian-archive-keyring; \
+RUN <<EOF
+    set -eu -o pipefail
+    if grep "Debian GNU/Linux 9" /etc/issue >/dev/null; then
+        rm -f /etc/apt/sources.list.d/mysql.list
+        echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" >/etc/apt/sources.list
+        echo "deb http://archive.debian.org/debian-security/ stretch/updates main contrib non-free" >>/etc/apt/sources.list
+        apt-get -qq update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true debian-archive-keyring
     fi
+EOF
 
 # MariaDB 11.x moved MySQL symlinks into separate packages
 RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \

@@ -1184,21 +1184,49 @@ stopasgroup=true
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = extraDBContent + fmt.Sprintf(`
-RUN set -e; source /etc/os-release; if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buster" ]; then \
-	rm -f /etc/apt/sources.list.d/pgdg.list; \
-    echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list; \
-	[ "${VERSION_CODENAME}" = "stretch" ] && echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list; \
-    (timeout %s apt-get -qq update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true); \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true debian-archive-keyring apt-transport-https ca-certificates; \
-	echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg-archive main" >/etc/apt/sources.list.d/pgdg.list; \
-    fi
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
-RUN chmod ugo+rx /postgres_healthcheck.sh
-RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
-RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf
-RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
-RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
+RUN <<EOF
+set -eu -o pipefail
+source /etc/os-release
+
+if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buster" ]; then
+    rm -f /etc/apt/sources.list.d/pgdg.list
+    echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
+    if [ "${VERSION_CODENAME:-}" = "stretch" ]; then
+        echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
+    fi
+    timeout %s apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+        -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
+        debian-archive-keyring apt-transport-https ca-certificates
+    echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg-archive main" >/etc/apt/sources.list.d/pgdg.list
+fi
+
+chmod ugo+rx /postgres_healthcheck.sh
+mkdir -p /etc/postgresql/conf.d
+chmod 777 /etc/postgresql/conf.d
+echo "*:*:db:db:db" > ~postgres/.pgpass
+chown postgres:postgres ~postgres/.pgpass
+chmod 600 ~postgres/.pgpass
+chmod 777 /var/tmp
+ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
+echo "restore_command = 'true'" >>/var/lib/postgresql/recovery.conf
+
+echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
+host  all         all 0.0.0.0/0 md5
+local all         all trust
+host  replication db  0.0.0.0/0 trust
+host  replication all 0.0.0.0/0 trust
+local replication all trust
+local replication all peer" >/etc/postgresql/pg_hba.conf
+
+timeout %s apt-get update || true
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
+    apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
+update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+EOF
 `, app.GetMinimalContainerTimeout(), app.GetMinimalContainerTimeout())
 	}
 
