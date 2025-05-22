@@ -1,44 +1,19 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
-	"name": "DDEV PR Tester",
-	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+	"name": "DDEV Devcontainer",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+    "image": "ddev/ddev-devcontainer:20250513_rfay_devcontainer_codespaces",
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"version": "latest",
-			"enableNonRootDocker": true
-		},
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"packages": "autojump,curl,wget,xdg-utils"
-		},
-		"ghcr.io/devcontainers/features/go:1": {
-			"version": "1.24",
-			"installTools": false
 		},
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
 		"ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
 	},
-	"postStartCommand": "sudo chgrp docker /var/run/docker.sock",
-	"mounts": [
-		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
-	],
-	"hostRequirements": {
-		"cpus": 2,
-		"memory": "4gb"
-	},
-	"runArgs": [
-		"--privileged"
-	],
-	"updateContentCommand": "sudo chgrp docker /var/run/docker.sock",
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
+
 	"postCreateCommand": "./.devcontainer/setup_test_project.sh"
-	
-	// Configure tool-specific properties.
-	// "customizations": {},
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
 }
