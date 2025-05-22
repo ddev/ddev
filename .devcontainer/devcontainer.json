@@ -8,12 +8,29 @@
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"packages": "autojump,curl,wget,xdg-utils"
 		},
-		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
-		// "ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
+        "ghcr.io/devcontainers/features/common-utils:2": {
+          "username": "codespace",
+          "userUid": "1000",
+          "userGid": "1000"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+          "version": "latest",
+          "ppa": "false"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+          "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/go:1": {
+          "version": "latest"
+        },
+        "ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
+        "ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
+    "remoteUser": "codespace",
+    "containerUser": "codespace",
 
 	"postCreateCommand": "./.devcontainer/setup_test_project.sh"
 }
