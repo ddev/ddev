@@ -1186,10 +1186,10 @@ stopasgroup=true
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
+
 RUN <<EOF
 set -eu -o pipefail
-source /etc/os-release
-
+source /etc/os-release || true
 if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buster" ]; then
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
@@ -1202,7 +1202,10 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
         debian-archive-keyring apt-transport-https ca-certificates
     echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg-archive main" >/etc/apt/sources.list.d/pgdg.list
 fi
+EOF
 
+RUN <<EOF
+set -eu -o pipefail
 chmod ugo+rx /postgres_healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
 chmod 777 /etc/postgresql/conf.d
