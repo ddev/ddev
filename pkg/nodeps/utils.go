@@ -87,6 +87,14 @@ func IsCodespaces() bool {
 	return runtime.GOOS == "linux" && os.Getenv("CODESPACES") == "true"
 }
 
+// IsRemoteContainers returns true if running in devcontainers (except on Codespaces)
+func IsRemoteContainers() bool {
+	if os.Getenv("DDEV_PRETEND_REMOTE_CONTAINERS") == "true" {
+		return true
+	}
+	return runtime.GOOS == "linux" && os.Getenv("REMOTE_CONTAINERS") == "true"
+}
+
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""
