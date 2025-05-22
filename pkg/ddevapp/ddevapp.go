@@ -3102,6 +3102,11 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 			httpsURLs = append(httpsURLs, netutil.NormalizeURL(url))
 		}
 	}
+	// TODO: There should be a way to make remote container trust the HTTPS port.
+	if nodeps.IsRemoteContainers() {
+		url := app.GetWebContainerDirectHTTPURL()
+		httpURLs = append(httpURLs, url)
+	}
 
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
