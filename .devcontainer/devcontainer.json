@@ -26,8 +26,8 @@
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-//    "remoteUser": "codespace",
-//    "containerUser": "codespace",
+    "remoteUser": "devcontainer",
+    "containerUser": "devcontainer",
 
 	"postCreateCommand": "./.devcontainer/setup_test_project.sh"
 }

@@ -2,6 +2,8 @@
 
 set -eu -o pipefail
 
+git config --global --add safe.directory '*'
+
 echo "You don't need to wait for the test project to be set up."
 set -x
 make
