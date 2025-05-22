@@ -6,13 +6,14 @@ import (
 )
 
 const (
-	DDEVEnvironmentDarwin       = "darwin"
-	DDEVEnvironmentWindows      = "windows"
-	DDEVEnvironmentLinux        = "linux"
-	DDEVEnvironmentWSL2         = "wsl2"
+	DDEVEnvironmentDarwin           = "darwin"
+	DDEVEnvironmentWindows          = "windows"
+	DDEVEnvironmentLinux            = "linux"
+	DDEVEnvironmentWSL2             = "wsl2"
 	DDEVEnvironmentWSL2Mirrored = "wsl2-mirrored"
-	DDEVEnvironmentGitpod       = "gitpod"
-	DDEVEnvironmentCodespaces   = "codespaces"
+	DDEVEnvironmentGitpod           = "gitpod"
+	DDEVEnvironmentCodespaces       = "codespaces"
+	DDEVEnvironmentRemoteContainers = "remotecontainers"
 )
 
 // GetDDEVEnvironment returns the type of environment DDEV is being used in
@@ -21,6 +22,8 @@ func GetDDEVEnvironment() string {
 	switch {
 	case nodeps.IsCodespaces():
 		e = DDEVEnvironmentCodespaces
+	case nodeps.IsRemoteContainers():
+		e = DDEVEnvironmentRemoteContainers
 	case nodeps.IsGitpod():
 		e = DDEVEnvironmentGitpod
 	case nodeps.IsWSL2MirroredMode():
