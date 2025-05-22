@@ -15,7 +15,8 @@
           "ppa": "false"
         },
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
-          "version": "latest"
+          "version": "latest",
+          "enableNonRootDocker": true
         },
         "ghcr.io/devcontainers/features/go:1": {
           "version": "latest"
