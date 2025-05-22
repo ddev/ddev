@@ -47,9 +47,6 @@ if [ "${n_install_result}" = "false" ]; then
   rm -f "${N_PREFIX}" && exit 6
 fi
 
-# prune orphaned Node.js versions
-log-stderr.sh n prune || true
-
 # create symlinks on success
 for node_binary in "${N_PREFIX}/bin/"*; do
   if [ -f "${node_binary}" ]; then
@@ -58,5 +55,8 @@ for node_binary in "${N_PREFIX}/bin/"*; do
 done
 
 ln -sf "${system_node_dir}/node" "${system_node_dir}/nodejs"
+
+# prune orphaned Node.js versions
+log-stderr.sh n prune || true
 
 hash -r
