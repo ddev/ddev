@@ -9,7 +9,7 @@
 			"packages": "autojump,curl,wget,xdg-utils"
 		},
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
-		"ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
+		// "ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
