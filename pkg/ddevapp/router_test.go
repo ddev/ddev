@@ -276,7 +276,6 @@ func TestUseEphemeralPort(t *testing.T) {
 			require.Contains(t, app.GetHTTPSURL(), app.GetHostname())
 		}
 	}
-
 }
 
 // TestAssignRouterPortsToGenericWebserverPorts ensures that RouterHTTPPort and RouterHTTPSPort

@@ -151,7 +151,7 @@ func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, n
 	networkMatchFound := false
 	for _, network := range networks {
 		if network.Name == netName || network.ID == netName {
-			if networkMatchFound == true {
+			if networkMatchFound {
 				err := client.NetworkRemove(ctx, network.ID)
 				// If it's a "no such network" there's no reason to report error
 				if err != nil && !IsErrNotFound(err) {
@@ -431,7 +431,6 @@ func FindNetworksWithLabel(label string) ([]dockerNetwork.Inspect, error) {
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWait(waittime int, labels map[string]string) (string, error) {
-
 	durationWait := time.Duration(waittime) * time.Second
 	timeoutChan := time.NewTimer(durationWait)
 	tickChan := time.NewTicker(500 * time.Millisecond)
@@ -484,7 +483,6 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 // waittime is in seconds.
 // Returns logoutput, error, returns error if not "healthy"
 func ContainersWait(waittime int, labels map[string]string) error {
-
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -546,7 +544,6 @@ func ContainersWait(waittime int, labels map[string]string) error {
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string) (string, error) {
-
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -991,7 +988,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
 	if runtime.GOOS == "windows" {
 		for i := range binds {
-			binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
+			binds[i] = strings.ReplaceAll(binds[i], `\`, `/`)
 			if strings.Index(binds[i], ":") == 1 {
 				binds[i] = strings.Replace(binds[i], ":", "", 1)
 				binds[i] = "/" + binds[i]
@@ -1002,7 +999,6 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 					binds[i] = strings.TrimPrefix(binds[i], driveLetter)
 					binds[i] = strings.ToLower(driveLetter) + binds[i]
 				}
-
 			}
 		}
 	}
@@ -1176,7 +1172,7 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 // MassageWindowsNFSMount changes C:\Path\to\something to /c/Path/to/something
 func MassageWindowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
-		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
+		pathPortion := strings.ReplaceAll(mountPoint[2:], `\`, "/")
 		drive := string(mountPoint[0])
 		// Because we use $HOME to get home in exports, and $HOME has /c/Users/xxx
 		// change the drive to lower case.
@@ -1621,7 +1617,7 @@ func DownloadDockerCompose() error {
 	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
-	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), shasumURL)
+	err = util.DownloadFile(destFile, composeURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumURL)
 	if err != nil {
 		_ = os.Remove(destFile)
 		return err

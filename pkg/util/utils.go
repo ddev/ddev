@@ -127,7 +127,6 @@ var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 // SetLetterBytes exists solely so that tests can override the default characters used by
 // RandString. It should probably be avoided for 'normal' operations.
 // this is actually used in utils_test.go (test only) so we set nolint on it.
-// nolint: deadcode
 func SetLetterBytes(lb string) {
 	letterBytes = lb
 }
@@ -142,7 +141,7 @@ func RandString(n int) string {
 }
 
 // HashSalt returns a hash of the projectName to be used as a salt.
-// This is appropriate onlly for development work, but means
+// This is appropriate only for development work, but means
 // that the HashSalt will be predictable for users on a team
 func HashSalt(projectName string) string {
 	hash := sha256.Sum256([]byte(projectName))

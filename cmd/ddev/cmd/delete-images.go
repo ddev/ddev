@@ -71,13 +71,11 @@ func deleteDdevImages(deleteAll bool) error {
 		// be done to improve finding database images.
 		for _, image := range images {
 			for _, tag := range image.RepoTags {
-
 				if strings.HasPrefix(tag, "drud/ddev-") || strings.HasPrefix(tag, "ddev/ddev-") {
 					if err := dockerutil.RemoveImage(tag); err != nil {
 						return err
 					}
 				}
-
 			}
 		}
 		return nil
@@ -86,10 +84,10 @@ func deleteDdevImages(deleteAll bool) error {
 	// Sort so that images that have -built on the end
 	// come up before their parent images that don't
 	sort.Slice(images, func(i, j int) bool {
-		if images[i].RepoTags == nil || len(images[i].RepoTags) == 0 {
+		if len(images[i].RepoTags) == 0 {
 			return false
 		}
-		if images[j].RepoTags == nil || len(images[j].RepoTags) == 0 {
+		if len(images[j].RepoTags) == 0 {
 			return false
 		}
 		return images[i].RepoTags[0] > images[j].RepoTags[0]

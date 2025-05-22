@@ -758,7 +758,7 @@ func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []s
 	arg := cmd.Flag(flagName).Value.String()
 
 	// Remove all spaces from the flag value.
-	arg = strings.Replace(arg, " ", "", -1)
+	arg = strings.ReplaceAll(arg, " ", "")
 
 	// If the flag value is an empty string, return an empty slice.
 	if arg == "" || arg == `""` || arg == `''` {

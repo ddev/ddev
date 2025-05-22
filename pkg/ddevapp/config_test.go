@@ -354,7 +354,6 @@ func TestConfigCommandProjectNormalization(t *testing.T) {
 
 	for _, tc := range testMatrix {
 		t.Run(tc.name, func(t *testing.T) {
-
 			baseTestDir := t.TempDir()
 			testDir := filepath.Join(baseTestDir, tc.name)
 			err := os.Mkdir(testDir, 0755)
@@ -892,7 +891,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 		require.Contains(t, stdout, "mutagen.yml")
 	}
 	require.Contains(t, stdout, "Custom configuration is updated")
-
 }
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
@@ -957,7 +955,6 @@ func TestPHPOverrides(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err, "failed to flush Mutagen sync")
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
-
 }
 
 // TestPHPConfig checks some key PHP configuration items

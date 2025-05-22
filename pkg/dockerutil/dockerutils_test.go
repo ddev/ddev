@@ -180,7 +180,6 @@ func TestGetContainerHealth(t *testing.T) {
 	status, log = dockerutil.GetContainerHealth(container)
 	assert.Equal("unhealthy", status, "container should be unhealthy; log=%v", log)
 	assert.NoError(err)
-
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
@@ -224,7 +223,6 @@ func TestContainerWait(t *testing.T) {
 	t.Cleanup(func() {
 		_ = dockerutil.RemoveContainer(c1)
 		assert.NoError(err, "failed to remove container %v (%s)", labels, c1)
-
 	})
 	require.NoError(t, err)
 	_, err = dockerutil.ContainerWait(5, labels)
@@ -546,7 +544,6 @@ func TestDockerExec(t *testing.T) {
 	_, stderr, err := dockerutil.Exec(id, "ls /nothingthere", "")
 	assert.Error(err)
 	assert.Contains(stderr, "No such file or directory")
-
 }
 
 // TestCreateVolume does a trivial test of creating a trivial Docker volume.
@@ -604,7 +601,6 @@ func TestRemoveVolume(t *testing.T) {
 	_ = dockerutil.RemoveVolume(spareVolume)
 	err = dockerutil.RemoveVolume(spareVolume)
 	assert.NoError(err)
-
 }
 
 // TestCopyIntoVolume makes sure CopyToVolume copies a local directory into a volume

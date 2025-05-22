@@ -99,7 +99,6 @@ func CopyDir(src string, dst string) error {
 	}
 
 	for _, de := range dirEntrySlice {
-
 		srcPath := filepath.Join(src, de.Name())
 		dstPath := filepath.Join(dst, de.Name())
 
@@ -246,7 +245,7 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 		return err
 	}
 
-	output := bytes.Replace(input, []byte(searchString), []byte(replaceString), -1)
+	output := bytes.ReplaceAll(input, []byte(searchString), []byte(replaceString))
 
 	// nolint: revive
 	if err = os.WriteFile(destPath, output, 0666); err != nil {
@@ -385,7 +384,6 @@ func ReplaceSimulatedLinks(path string) {
 		replacedLinks = append(replacedLinks, l.LinkLocation)
 	}
 	util.Success("Replaced these simulated symlinks with real symlinks: %v", replacedLinks)
-	return
 }
 
 // RemoveContents removes contents of passed directory
@@ -433,7 +431,6 @@ func RemoveFilesMatchingGlob(pattern string) error {
 
 // TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
 func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
-
 	templ := template.New("templateStringToFile:" + targetFilePath)
 	templ, err := templ.Parse(content)
 	if err != nil {

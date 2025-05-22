@@ -64,7 +64,7 @@ func RenderHomeRootedDir(path string) string {
 	userDir, err := os.UserHomeDir()
 	util.CheckErr(err)
 	result := strings.Replace(path, userDir, "~", 1)
-	result = strings.Replace(result, "\\", "/", -1)
+	result = strings.ReplaceAll(result, "\\", "/")
 	return result
 }
 
@@ -93,7 +93,6 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	t.AppendRow(table.Row{
 		row["name"], status, row["shortroot"], urls, row["type"],
 	})
-
 }
 
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml
@@ -325,8 +324,8 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, string, error
 		return "no error detected", "", nil
 	}
 	errString := errorReceived.Error()
-	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
-	errString = strings.Replace(errString, "\n", "", -1)
+	errString = strings.ReplaceAll(errString, "Received unexpected error:", "")
+	errString = strings.ReplaceAll(errString, "\n", "")
 	errString = strings.Trim(errString, " \t\n\r")
 	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
 		splitError := strings.Split(errString, " ")

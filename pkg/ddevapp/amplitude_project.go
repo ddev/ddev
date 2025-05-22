@@ -92,7 +92,6 @@ func (app *DdevApp) TrackProject() {
 func webExtraExposedPortsNames(app *DdevApp) []string {
 	var exposedPortsNames []string
 	for _, exposedPortDetail := range app.WebExtraExposedPorts {
-
 		exposedPortsNames = append(exposedPortsNames, exposedPortDetail.Name)
 	}
 	return exposedPortsNames
@@ -102,7 +101,6 @@ func webExtraExposedPortsNames(app *DdevApp) []string {
 func webExtraDaemonsNames(app *DdevApp) []string {
 	var extraDaemonNames []string
 	for _, daemon := range app.WebExtraDaemons {
-
 		extraDaemonNames = append(extraDaemonNames, daemon.Name)
 	}
 	return extraDaemonNames

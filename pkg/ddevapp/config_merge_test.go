@@ -84,7 +84,6 @@ func TestConfigMergeEnvItems(t *testing.T) {
 	for _, v := range []string{`LARRY=lz`, `MOE=mz`, `CURLEY=c`, `SHEMP=s`} {
 		assert.Contains(withOverridesApp.WebEnvironment, v, "the app without overrides should have had %v but it didn't, webEnvironment=%v", v, noOverridesApp.WebEnvironment)
 	}
-
 }
 
 // TestConfigHooksMerge makes sure that hooks get merged with additional config.*.yaml
@@ -126,7 +125,6 @@ func TestConfigHooksMerge(t *testing.T) {
 			if taskDesc == desc {
 				found = true
 			}
-
 		}
 		return found
 	}
@@ -155,12 +153,10 @@ func TestConfigHooksMerge(t *testing.T) {
 	assertTask(true, "post-start", "exec-host", "simple host command")
 	assertTask(true, "post-start", "exec", "simple web command")
 	assertTask(true, "post-import-db", "exec", "drush uli")
-
 }
 
 // SetupTestTempDir creates the test directory and related objects.
 func SetupTestTempDir(t *testing.T, subDir string) *ddevapp.DdevApp {
-
 	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
 	require.NoError(t, err)
 

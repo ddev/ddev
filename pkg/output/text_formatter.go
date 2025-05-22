@@ -20,13 +20,12 @@ import (
 
 const defaultTimestampFormat = time.RFC3339
 
-// nolint: deadcode
 const (
 	nocolor = 0
 	red     = 31
-	green   = 32 // nolint: varcheck
+	green   = 32
 	yellow  = 33
-	blue    = 36 // nolint: varcheck
+	blue    = 36
 	gray    = 37
 )
 

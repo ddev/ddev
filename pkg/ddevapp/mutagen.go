@@ -361,7 +361,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshal Mutagen sync list results '%v'", globalconfig.GetMutagenDataDirectory(), fullJSONResult), fullJSONResult, nil, err
 	}
 
-	if paused, ok := session["paused"].(bool); ok && paused == true {
+	if paused, ok := session["paused"].(bool); ok && paused {
 		return "paused", "paused", session, nil
 	}
 	var ok bool
@@ -534,14 +534,14 @@ func DownloadMutagen() error {
 	// Discussion in https://github.com/mutagen-io/mutagen/issues/290#issuecomment-906612749
 	err := fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
 	if err != nil {
-		return fmt.Errorf("Unable to remove mutagen files: %v", err)
+		return fmt.Errorf("unable to remove mutagen files: %v", err)
 	}
 
 	err = os.MkdirAll(globalMutagenDir, 0777)
 	if err != nil {
 		return errors.Errorf("Unable to create directory %s: %v", globalMutagenDir, err)
 	}
-	err = util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"), shasumFileURL)
+	err = util.DownloadFile(destFile, mutagenURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumFileURL)
 	if err != nil {
 		_ = fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
 		_ = os.Remove(destFile)
@@ -801,7 +801,7 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 	status, _, mapResult, err := app.MutagenStatus()
 	if status == "not enabled" {
-		return "", fmt.Errorf("Mutagen sync session for app '%s' does not exist or is not enabled; status=%v; err=%v", app.Name, status, err)
+		return "", fmt.Errorf("a Mutagen sync session for app '%s' does not exist or is not enabled; status=%v; err=%v", app.Name, status, err)
 	}
 	if strings.HasPrefix(status, "nosession") || err != nil {
 		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)
