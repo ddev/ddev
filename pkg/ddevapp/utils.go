@@ -543,7 +543,7 @@ func (app *DdevApp) HasCustomCert() bool {
 func (app *DdevApp) CanUseHTTPOnly() bool {
 	switch {
 	// Gitpod and Codespaces have their own router with TLS termination
-	case nodeps.IsGitpod() || nodeps.IsCodespaces() || nodeps.IsRemoteContainers():
+	case nodeps.IsGitpod() || nodeps.IsCodespaces():
 		return false
 	// If we have no router, then no https otherwise
 	case IsRouterDisabled(app):
