@@ -77,12 +77,9 @@ jobs:
           filter_mode: ${{ github.event_name == 'pull_request' && 'added' || 'nofilter' }}
           config_file: '.linkspector.yml'
       - name: Run markdownlint
-        uses: docker://avtodev/markdown-lint:v1
-        with:
-          config: '.markdownlint.jsonc'
-          args: '*.md docs/content'
-      #    - name: Debugging with tmate
-      #      uses: mxschmitt/action-tmate@v3.1
+        run: |
+          npm install -g markdownlint-cli
+          make markdownlint
       - name: Test mkdocs
         run: |
           sudo pip3 install setuptools

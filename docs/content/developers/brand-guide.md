@@ -10,7 +10,7 @@ search:
 |----------------------------------------|----------------------------------------------------|
 | ![Figurative Mark](logos/SVG/Logo.svg) | ![Word/Figurative Mark](logos/SVG/Logo_w_text.svg) |
 
-You can find a set of DDEV logos [here](https://github.com/ddev/ddev/tree/main/docs/content/developers/logos).
+You can find a set of DDEV logos on [GitHub](https://github.com/ddev/ddev/tree/main/docs/content/developers/logos).
 
 If possible, use the [SVG version](https://github.com/ddev/ddev/tree/main/docs/content/developers/logos/SVG) of the logo, as a vector graphic is independent of the resolution and gives the best results regardless of the pixel density of the display.
 

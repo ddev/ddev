@@ -311,7 +311,7 @@ If your pull request is merged, great! If not, no sweat; it may not be what the 
 
 ### Preparing a pull request
 
-* **[Fork](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) the repository** and clone it locally. Connect your local to the original ‘upstream’ repository by adding it as a remote, and pull upstream changes often so you stay up to date and reduce the likelihood of conflicts when you submit your pull request. See more detailed instructions [here](https://help.github.com/articles/syncing-a-fork).
+* **[Fork](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) the repository** and clone it locally. Connect your local to the original ‘upstream’ repository by adding it as a remote, and pull upstream changes often so you stay up to date and reduce the likelihood of conflicts when you submit your pull request. See more detailed instructions on [GitHub](https://help.github.com/articles/syncing-a-fork).
 * **Create a [branch](https://docs.github.com/en/get-started/quickstart/github-flow)** for your edits. See below for DDEV's conventions for branch names.
 * **Be clear** about the problem and how someone can recreate it, or why your feature will help. Be equally clear about the steps you took to make your changes.
 * **It’s best to test**. Run your changes against any existing tests and create new tests when needed. Whether tests exist or not, make sure your changes don’t break the existing project.
