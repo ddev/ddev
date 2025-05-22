@@ -1171,32 +1171,60 @@ stopasgroup=true
 		return "", err
 	}
 
-	// Add .pgpass to homedir on PostgreSQL
+	// Include PostgreSQL support for EOL Debian releases
+	// debian-security updates added for "stretch" only because this archive is not available for "buster" yet
+	// Based on: https://serverfault.com/a/1131653
+	// And add .pgpass to homedir on PostgreSQL
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		// PostgreSQL 9/10/11 upstream images are stretch-based, out of support from Debian.
-		// PostgreSQL 9/10 are out of support by PostgreSQL and no new images being pushed, see
-		// https://github.com/docker-library/postgres/issues/1012
-		// However, they do have a postgres:11-bullseye, but we won't start using it yet
-		// because of awkward changes to $DBIMAGE. PostgreSQL 11 will be EOL Nov 2023
-		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
-			extraDBContent = extraDBContent + fmt.Sprintf(`
-RUN rm -f /etc/apt/sources.list.d/pgdg.list
-RUN echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" > /etc/apt/sources.list
-RUN timeout %s apt-get update || true
-RUN apt-get -y install apt-transport-https
-RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-`, app.GetMinimalContainerTimeout())
-		}
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
-RUN chmod ugo+rx /postgres_healthcheck.sh
-RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
-RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf
-RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
-RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
-`, app.GetMinimalContainerTimeout())
+
+RUN <<EOF
+set -eu -o pipefail
+source /etc/os-release || true
+if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buster" ]; then
+    rm -f /etc/apt/sources.list.d/pgdg.list
+    echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
+    if [ "${VERSION_CODENAME:-}" = "stretch" ]; then
+        echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
+    fi
+    timeout %s apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+        -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
+        debian-archive-keyring apt-transport-https ca-certificates
+    echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg-archive main" >/etc/apt/sources.list.d/pgdg.list
+fi
+EOF
+
+RUN <<EOF
+set -eu -o pipefail
+chmod ugo+rx /postgres_healthcheck.sh
+mkdir -p /etc/postgresql/conf.d
+chmod 777 /etc/postgresql/conf.d
+echo "*:*:db:db:db" > ~postgres/.pgpass
+chown postgres:postgres ~postgres/.pgpass
+chmod 600 ~postgres/.pgpass
+chmod 777 /var/tmp
+ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
+echo "restore_command = 'true'" >>/var/lib/postgresql/recovery.conf
+
+echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
+host  all         all 0.0.0.0/0 md5
+local all         all trust
+host  replication db  0.0.0.0/0 trust
+host  replication all 0.0.0.0/0 trust
+local replication all trust
+local replication all peer" >/etc/postgresql/pg_hba.conf
+
+timeout %s apt-get update || true
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
+    apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
+update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+EOF
+`, app.GetMinimalContainerTimeout(), app.GetMinimalContainerTimeout())
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
