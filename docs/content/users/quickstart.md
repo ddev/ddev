@@ -161,10 +161,10 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
-!!!tip "Compatibility with Craft CMS 3"
-    The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3 or earlier, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
+DDEV injects a number of special environment variables into the container (via `.ddev/.env.web`) that [automatically configure](https://craftcms.com/docs/5.x/configure.html#environment-overrides) Craft’s database connection and the project’s primary site URL. You may opt out of this behavior with the [`disable_settings_management`](./configuration/config.md#disable_settings_management) setting.
 
-Environment variables will be automatically added to the `.ddev/.env.web` file to simplify project configuration. This means that the primary site URL and the database connection settings can be used without any modification. To disable this behavior, see [`disable_settings_management`](./configuration/config.md#disable_settings_management).
+!!!tip "Compatibility with Craft CMS 3"
+    The `craftcms` project works best with configuration features that became available in Craft CMS 4.x. If you are using Craft CMS 3.x or earlier, you may want to use the `php` project type and explicitly define [database connection details](./usage/database-management.md#database-backends-and-defaults) via [Craft’s `db.php`](https://craftcms.com/docs/3.x/config/db-settings.html).
 
 === "New projects"
 
@@ -175,38 +175,25 @@ Environment variables will be automatically added to the `.ddev/.env.web` file t
     # Set up the DDEV environment:
     ddev config --project-type=craftcms --docroot=web
 
-    # Boot the project
-    ddev start
-
-    # Install the starter project:
-    ddev composer create-project --no-scripts craftcms/craft
-
-    # Install Craft CMS:
-    ddev craft install \
-        --username=admin \
-        --password=Password123 \
-        --email=admin@example.com \
-        --site-name='My Craft Site' \
-        --language=en \
-        --site-url='$PRIMARY_SITE_URL'
-
-    # Login using `admin` user and `Password123` password
-    ddev launch /admin
+    # Scaffold a new project with Composer:
+    ddev composer create-project -y craftcms/craft
     ```
 
-    Third-party starter projects can by used the same way—substitute the package name when running `ddev composer create-project`.
+    Craft’s setup wizard will start automatically!
+
+    [Third-party starter projects](https://craftcms.com/knowledge-base/using-the-starter-project#community-starter-projects) can be substituted for `craftcms/craft` when running `ddev composer create-project`.
 
 === "Existing projects"
 
-    You can start using DDEV with an existing project, too—but make sure you have a database backup handy!
+    You can start using DDEV with an existing Craft project, too. All you need is the codebase and a database backup!
 
     ```bash
     # Clone an existing repository (or navigate to a local project directory):
     git clone https://github.com/example/example-site my-craft-site
     cd my-craft-site
 
-    # Set up the DDEV environment:
-    ddev config --project-type=craftcms
+    # Set up the DDEV environment, substituting your existing web root:
+    ddev config --project-type=craftcms --docroot=web
 
     # Boot the project and install Composer packages:
     ddev composer install
