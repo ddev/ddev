@@ -9,9 +9,6 @@
 			"packages": "autojump,curl,wget,xdg-utils"
 		},
         "ghcr.io/devcontainers/features/common-utils:2": {
-          "username": "codespace",
-          "userUid": "1000",
-          "userGid": "1000"
         },
         "ghcr.io/devcontainers/features/git:1": {
           "version": "latest",
@@ -29,8 +26,8 @@
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-    "remoteUser": "codespace",
-    "containerUser": "codespace",
+//    "remoteUser": "codespace",
+//    "containerUser": "codespace",
 
 	"postCreateCommand": "./.devcontainer/setup_test_project.sh"
 }
