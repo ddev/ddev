@@ -2,7 +2,9 @@
 
 set -eu -o pipefail
 
+# These things should probably be done earlier in startup, not in this script
 git config --global --add safe.directory '*'
+echo '[ -f /usr/share/autojump/autojump.sh ] && . /usr/share/autojump/autojump.sh ]' >> ~/.bash_profile
 
 echo "You don't need to wait for the test project to be set up."
 set -x
