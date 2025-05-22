@@ -4,8 +4,8 @@ function basic_setup {
     export CONTAINER_NAME="testserver"
     export HOSTPORT=31000
     export MYTMPDIR="${HOME}/tmp/testserver-sh_${RANDOM}_$$"
-    export outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
-    export VOLUME="dbserver_test-${RANDOM}_$$"
+    export outdir="${HOME}/tmp/sshagent-test/output_${RANDOM}_$$"
+    export VOLUME="sshagent-test-${RANDOM}_$$"
 
     export MOUNTUID=33
     export MOUNTGID=33
@@ -43,6 +43,6 @@ function containercheck {
       ;;
     esac
   done
-  echo "# --- ddev-dbserver FAIL -----"
+  echo "# --- ddev-ssh-agent FAIL -----"
   return 1
 }
