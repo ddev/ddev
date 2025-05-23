@@ -56,4 +56,7 @@ done
 
 ln -sf "${system_node_dir}/node" "${system_node_dir}/nodejs"
 
+# prune orphaned Node.js versions
+log-stderr.sh n prune || true
+
 hash -r
