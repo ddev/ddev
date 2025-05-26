@@ -10,7 +10,7 @@ Make sure to get at least one project going with `ddev start` before trying to s
 
 Regardless of your setup, make PhpStorm use DDEV’s private `docker-compose` executable.
 
-In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the `docker-compose` executable to the absolute path of DDEV's private `docker-compose` binary, which is `$HOME/.ddev/bin/docker-compose`.
+In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker*, and set the `docker-compose` executable to the absolute path of DDEV's private `docker-compose` binary, which is `$HOME/.ddev/bin/docker-compose`.
 
 If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use `docker-compose` from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of `docker-compose` either from Docker Desktop or installed another way.
 
@@ -19,6 +19,11 @@ If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’
 It’s easiest to use the DDEV Integration Plugin, which you can install from [its landing page](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or by searching the in-app marketplace (*Preferences* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms.
 
 Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn’t yet handle that for you.
+
+!!!note "PHP and Node interpreter automatic setup"
+    The plugin automatically adds PHP and Node interpreters to your project.
+
+    If you installed the plugin *after* a project was already open in PhpStorm, you'll need to manually switch to the newly added PHP and Node interpreters in *Preferences*. Alternatively, close your IDE and delete the `.idea` directory in the project root to let the plugin set them up automatically.
 
 ## Manual Setup
 
