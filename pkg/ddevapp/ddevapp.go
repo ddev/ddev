@@ -1813,7 +1813,7 @@ func warnMissingDocroot(app *DdevApp) {
 		return
 	}
 	if len(matches) == 0 {
-		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist in\n%s\nso you may get 403 errors 'permission denied' from the browser until it does.\nDon't worry about this if a later action \n(like `ddev composer install`) will create the file.\n", pattern)
+		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist in this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\nIgnore if a later action will create it (like `ddev composer create-project`).\n", pattern)
 	}
 }
 
