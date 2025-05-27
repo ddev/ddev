@@ -176,7 +176,7 @@ DDEV injects a number of special environment variables into the container (via `
     ddev config --project-type=craftcms --docroot=web
 
     # Scaffold a new project with Composer:
-    ddev composer create-project -y craftcms/craft
+    ddev composer create-project craftcms/craft
     ```
 
     Craft’s setup wizard will start automatically!
