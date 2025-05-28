@@ -547,6 +547,10 @@ func wrapTTYCommandWithStdin(data []byte, cmd []string) []string {
 		_, _ = stdinWriter.Write(data)
 	}()
 	os.Stdin = stdinReader
+	// 'script' forces execution in a pseudo-terminal (PTY)
+	// '-q' suppresses script's start and end messages (quiet mode)
+	// '-c' specifies the command to run in the PTY
+	// '/dev/null' discards the session log
 	return []string{"script", "-q", "-c", strings.Join(cmd, " "), "/dev/null"}
 }
 
