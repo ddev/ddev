@@ -20,9 +20,11 @@ teardown() {
   run ddev start -y
   assert_success
 
+  # Suppress Composer post-create-project-cmd hooks...
   run ddev composer create-project --no-scripts craftcms/craft
   assert_success
 
+  # ...so we can perform installation non-interactively:
   run ddev craft install/craft \
     --username=admin \
     --password=Password123 \
