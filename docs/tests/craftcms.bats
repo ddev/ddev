@@ -30,8 +30,7 @@ teardown() {
     --password=Password123 \
     --email=admin@example.com \
     --site-name='My Craft Site' \
-    --language=en \
-    --site-url='$PRIMARY_SITE_URL'
+    --language=en
   assert_success
 
   # validate ddev launch
