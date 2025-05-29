@@ -113,14 +113,14 @@ Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell
 ### PhpStorm Inside WSL2 in Linux
 
 1. On Windows 10 or 11 get "Windows Subsystem for Linux" from the Microsoft Store, which now includes graphical support.
-2. Edit `/etc/wsl.conf` to systemd support, which allows for installing PhpStorm with snap, see [details about WSL2 and systemd](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/):
+2. Edit `/etc/wsl.conf` to enable systemd support, which allows for installing PhpStorm with snap, see [details about WSL2 and systemd](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/):
 
     ```
     [boot]
     systemd=true
     ```
 
-3. `wsl --shutdown` on the Windows side and wait 10 seconds, then restart your distro.
+3. Run `wsl --shutdown` on the Windows side and wait 10 seconds, then restart your distro.
 4. In WSL2, `sudo snap install --classic phpstorm`.
 5. DDEV should already be installed as described in [DDEV installation](../install/ddev-installation.md#windows).
 6. `ddev config global --xdebug-ide-location=wsl2` to tell DDEV that the IDE is listening in WSL2 as opposed to listening on the Windows side.
