@@ -172,7 +172,7 @@ DDEV injects a number of special environment variables into the container (via `
     # Create a project directory and move into it:
     mkdir my-craft-site && cd my-craft-site
 
-    # Set up the DDEV environment:
+    # Set up the DDEV environment and boot the project:
     ddev config --project-type=craftcms --docroot=web
     ddev start
 
@@ -197,6 +197,7 @@ DDEV injects a number of special environment variables into the container (via `
     ddev config --project-type=craftcms --docroot=web
 
     # Boot the project and install Composer packages:
+    ddev start
     ddev composer install
 
     # Import a database backup and open the site in your browser:
