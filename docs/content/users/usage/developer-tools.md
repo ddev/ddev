@@ -93,6 +93,16 @@ For Drupal 9+ `settings.ddev.php` overrides the Symfony Mailer sendmail configur
 
 For Drupal 8/9 `settings.ddev.php` overrides the [Swift Mailer](https://www.drupal.org/project/swiftmailer) transport configuration to use Mailpit.
 
+Alternatively, the [PHPMailer SMTP](https://www.drupal.org/project/phpmailer_smtp) module can be used and configured in the `ddev.settings.php` file as follows:
+
+```
+// // Override drupal/phpmailer_smtp default config to use Mailpit.
+$config['phpmailer_smtp.settings']['smtp_host'] = 'localhost:1025';
+$config['phpmailer_smtp.settings']['smtp_protocol'] = 'standard';
+$config['phpmailer_smtp.settings']['smtp_username'] = '';
+$config['phpmailer_smtp.settings']['smtp_password'] = '';
+```
+
 For Laravel projects, Mailpit will capture Swift messages via SMTP. Update your `.env` to use Mailpit with the following settings:
 
 ```env
