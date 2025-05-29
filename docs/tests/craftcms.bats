@@ -20,23 +20,21 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create-project --no-scripts craftcms/craft
-  assert_success
-
-  run ddev craft install/craft \
-    --username=admin \
-    --password=Password123 \
-    --email=admin@example.com \
-    --site-name='My Craft Site' \
-    --language=en \
-    --site-url='$PRIMARY_SITE_URL'
+  # Username: [admin] admin
+  # Email: admin@example.com
+  # Password: Password123
+  # Confirm: Password123
+  # Site name: CraftCMS
+  # Site URL: [https://my-craft-site.ddev.site]
+  # Site language: [en]
+  run bats_pipe printf "admin\nadmin@example.com\nPassword123\nPassword123\nCraftCMS\n\n\n" \| ddev composer create-project craftcms/craft
   assert_success
 
   # validate ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
-  run bash -c "DDEV_DEBUG=true ddev launch /admin/login"
+  DDEV_DEBUG=true run ddev launch /admin/login
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin/login"
   assert_success
 
@@ -52,7 +50,7 @@ teardown() {
   assert_output --partial "<h2>Popular Resources</h2>"
   run curl -sf https://${PROJNAME}.ddev.site/admin/login
   assert_success
-  assert_output --partial "<title>Sign In - My Craft Site</title>"
+  assert_output --partial "<title>Sign In - CraftCMS</title>"
 }
 
 @test "Craft CMS Existing Projects quickstart with $(ddev --version)" {
