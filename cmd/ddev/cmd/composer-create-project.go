@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -38,6 +39,8 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
 	Run: func(cmd *cobra.Command, args []string) {
+		inputData := readPipedInput()
+
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
@@ -186,16 +189,21 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			}
 
 			composerCmd = append(composerCmd, validRunScriptArgs...)
+			composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
 
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
-			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
+			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 				Env:     []string{"XDEBUG_MODE=off"},
 			})
+
+			if err != nil {
+				util.Failed("Failed to run post-root-package-install: %v\nstderr=%v", err, stderr)
+			}
 
 			if len(stdout) > 0 {
 				output.UserOut.Println(stdout)
@@ -227,6 +235,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				}
 			}
 
+			composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
 			// Run install command.
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
@@ -282,16 +291,21 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			}
 
 			composerCmd = append(composerCmd, validRunScriptArgs...)
+			composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
 
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
 
-			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
+			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 				Env:     []string{"XDEBUG_MODE=off"},
 			})
+
+			if err != nil {
+				util.Failed("Failed to run post-create-project-cmd: %v\nstderr=%v", err, stderr)
+			}
 
 			if len(stdout) > 0 {
 				output.UserOut.Println(stdout)
@@ -500,6 +514,44 @@ func prepareAppForComposer(app *ddevapp.DdevApp) {
 	if err := app.PostStartAction(); err != nil {
 		util.Warning("Could not run PostStartAction: %v", err)
 	}
+}
+
+// readPipedInput reads from os.Stdin if it's not a terminal.
+// Returns nil if stdin is a terminal or unreadable.
+// Required because os.Stdin is consumed by the first app.Exec() call
+// and not forwarded to subsequent executions.
+func readPipedInput() []byte {
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		return nil
+	}
+	data, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return nil
+	}
+	return data
+}
+
+// wrapTTYCommandWithStdin wraps the given command in `script` to simulate a TTY,
+// allowing interactive prompts to work with piped stdin (e.g., inside containers).
+// If stdin is already a terminal or input is empty, returns the original command.
+func wrapTTYCommandWithStdin(data []byte, cmd []string) []string {
+	if isatty.IsTerminal(os.Stdin.Fd()) || len(data) == 0 {
+		return cmd
+	}
+	stdinReader, stdinWriter, err := os.Pipe()
+	if err != nil {
+		return cmd
+	}
+	go func() {
+		defer stdinWriter.Close()
+		_, _ = stdinWriter.Write(data)
+	}()
+	os.Stdin = stdinReader
+	// 'script' forces execution in a pseudo-terminal (PTY)
+	// '-q' suppresses script's start and end messages (quiet mode)
+	// '-c' specifies the command to run in the PTY
+	// '/dev/null' discards the session log
+	return []string{"script", "-q", "-c", strings.Join(cmd, " "), "/dev/null"}
 }
 
 // ComposerCreateCmd does the same thing as "ddev composer create-project".

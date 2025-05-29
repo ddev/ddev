@@ -14,17 +14,28 @@ teardown() {
 @test "Shopware Composer based quickstart with $(ddev --version)" {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
+
   run ddev config --project-type=shopware6 --docroot=public
   assert_success
+
   run ddev start -y
   assert_success
+
+  # Do you want to include Docker configuration from recipes?
+  # [x] No permanently, never ask again for this project
   run bats_pipe echo x \| ddev composer create-project shopware/production
   assert_success
+  assert_output --partial "Do you want to include Docker configuration from recipes?"
+  assert_file_not_exist compose.yaml
+  assert_file_not_exist compose.override.yaml
+
   run ddev exec console system:install --basic-setup
   assert_success
-  run bash -c "DDEV_DEBUG=true ddev launch /admin"
+
+  DDEV_DEBUG=true run ddev launch /admin
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
+
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site/admin
   assert_success
