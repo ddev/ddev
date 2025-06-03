@@ -23,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -1802,7 +1803,10 @@ func warnMissingDocroot(app *DdevApp) {
 	}
 	docroot := app.GetAbsDocroot(false)
 	if !fileutil.FileExists(docroot) {
-		util.WarningWithColor("magenta", "The project docroot does not yet exist or is misconfigured at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\n", docroot)
+		util.WarningWithColor("magenta", heredoc.Doc(fmt.Sprintf(
+			`The project docroot does not yet exist or is misconfigured at this path:
+			%s
+			You may get 403 errors 'permission denied' from the browser until it does.`, docroot)))
 		return
 	}
 
@@ -1813,7 +1817,16 @@ func warnMissingDocroot(app *DdevApp) {
 		return
 	}
 	if len(matches) == 0 {
-		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\nIgnore if a later action (like `ddev composer create-project`) will create it.\n", pattern)
+		// Skip warning if .htaccess exists, as it may rewrite to another location
+		if app.WebserverType == nodeps.WebserverApacheFPM && fileutil.FileExists(filepath.Join(docroot, ".htaccess")) {
+			return
+		}
+		util.WarningWithColor("magenta", heredoc.Doc(fmt.Sprintf(`
+			The index.php or index.html does not yet exist at this path:
+			%s
+			You may get 403 errors 'permission denied' from the browser until it does.
+			If the webserver rewrites to a different docroot, this warning may not apply.
+			Ignore if a later action (like 'ddev composer create-project') will create it.`, pattern)))
 	}
 }
 
