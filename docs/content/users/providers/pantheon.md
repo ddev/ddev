@@ -54,6 +54,6 @@ If you run into error messages when using terminus or `ddev pull pantheon` and c
 
 Create `.ddev/web-build/Dockerfile.terminus` and add:
 
-```
+```dockerfile
 RUN curl -L --fail -o /usr/local/bin/terminus https://github.com/pantheon-systems/terminus/releases/download/3.6.2/terminus.phar && chmod +x /usr/local/bin/terminus
 ```
