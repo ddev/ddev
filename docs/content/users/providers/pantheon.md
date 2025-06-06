@@ -46,3 +46,16 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 11. Run `ddev pull pantheon`. DDEV will download the Pantheon database and files and bring them into the local DDEV environment. You should now be able to access the project locally.
 
 12. Optionally use `ddev push pantheon` to push local files and database to Pantheon. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
+
+## Terminus and PHP Compatibility
+
+DDEV includes the latest available version of Terminus as of the DDEV release date.
+
+If you encounter errors with `terminus` or `ddev pull pantheon`, switch to the recommended version.
+
+For example, to downgrade Terminus to 3.6.2, create a `.ddev/web-build/Dockerfile.terminus` file and restart your project:
+
+```dockerfile
+ARG TERMINUS_VERSION="3.6.2"
+RUN curl -L --fail -o /usr/local/bin/terminus https://github.com/pantheon-systems/terminus/releases/download/${TERMINUS_VERSION}/terminus.phar && chmod +x /usr/local/bin/terminus
+```
