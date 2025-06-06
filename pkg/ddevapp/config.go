@@ -631,6 +631,14 @@ func (app *DdevApp) CheckCustomConfig() {
 		customConfig = true
 	}
 
+	routerComposeFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.*.yaml"))
+	util.CheckErr(err)
+	if len(routerComposeFiles) > 0 {
+		printableFiles, _ := util.ArrayToReadableOutput(routerComposeFiles)
+		util.Warning("Using custom global router-compose configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
+		customConfig = true
+	}
+
 	traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	if _, err := os.Stat(traefikGlobalConfigPath); err == nil {
 		traefikGlobalFiles, err := filepath.Glob(filepath.Join(traefikGlobalConfigPath, "static_config.*.yaml"))
