@@ -54,6 +54,7 @@ auth_command:
   command: |
     set -eu -o pipefail
     if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
+    if ! terminus >/dev/null; then printf "For DDEV, see https://ddev.readthedocs.io/en/stable/users/providers/pantheon/#terminus-and-php-compatibility\n\n" && exit 1; fi
     if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" || ( echo "terminus auth login failed, check your TERMINUS_MACHINE_TOKEN" && exit 1 )
     terminus aliases 2>/dev/null

@@ -144,4 +144,4 @@ To use Terminus, you’ll first need to:
 Terminus also allows you to issue [Drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), and [Composer](https://getcomposer.org/) commands to your Pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine’s SSH key, you can use the `ddev auth ssh` command [described here](cli.md#ssh-into-containers).
 
 !!!tip "How to change Terminus version?"
-    If you need to downgrade Terminus please see [Pantheon Using older PHP versions](../providers/pantheon.md#using-older-php-versions).
+    To downgrade or upgrade Terminus, see [Terminus and PHP Compatibility](../providers/pantheon.md#terminus-and-php-compatibility).

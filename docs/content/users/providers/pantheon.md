@@ -47,13 +47,15 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 12. Optionally use `ddev push pantheon` to push local files and database to Pantheon. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
-## Using older PHP versions
+## Terminus and PHP Compatibility
 
-The latest versions of `ddev-webserver` include `terminus` version 4. This version is not compatible with PHP  versions older than 8.2.
-If you run into error messages when using terminus or `ddev pull pantheon` and can't update to PHP 8.2+ then consider loading an older version of terminus.
+DDEV includes the latest available version of Terminus as of the DDEV release date.
 
-Create `.ddev/web-build/Dockerfile.terminus` and add:
+If you encounter errors with `terminus` or `ddev pull pantheon`, switch to the recommended version.
+
+For example, to downgrade Terminus to 3.6.2, create a `.ddev/web-build/Dockerfile.terminus` file and restart your project:
 
 ```dockerfile
-RUN curl -L --fail -o /usr/local/bin/terminus https://github.com/pantheon-systems/terminus/releases/download/3.6.2/terminus.phar && chmod +x /usr/local/bin/terminus
+ARG TERMINUS_VERSION="3.6.2"
+RUN curl -L --fail -o /usr/local/bin/terminus https://github.com/pantheon-systems/terminus/releases/download/${TERMINUS_VERSION}/terminus.phar && chmod +x /usr/local/bin/terminus
 ```
