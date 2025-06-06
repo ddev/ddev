@@ -256,7 +256,7 @@ func TestAutocompletionForConfigCmd(t *testing.T) {
 	}
 
 	for flag, expected := range testCases {
-		t.Run(flag, func(t *testing.T) {
+		t.Run(flag, func(_ *testing.T) {
 			var out string
 			var err error
 			if reflect.DeepEqual(expected, []string{"true", "false"}) {
@@ -286,7 +286,7 @@ func TestAutocompletionForConfigCmd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run("--omit-containers="+tc.input, func(t *testing.T) {
+		t.Run("--omit-containers="+tc.input, func(_ *testing.T) {
 			out, err := exec.RunHostCommand(DdevBin, "__complete", "config", "--omit-containers", tc.input)
 			assert.NoError(err)
 			if tc.expected != nil {
@@ -329,7 +329,7 @@ func TestAutocompletionConfigGlobalCmd(t *testing.T) {
 	}
 
 	for flag, expected := range testCases {
-		t.Run(flag, func(t *testing.T) {
+		t.Run(flag, func(_ *testing.T) {
 			var out string
 			var err error
 			if reflect.DeepEqual(expected, []string{"true", "false"}) {
@@ -361,7 +361,7 @@ func TestAutocompletionConfigGlobalCmd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run("--omit-containers="+tc.input, func(t *testing.T) {
+		t.Run("--omit-containers="+tc.input, func(_ *testing.T) {
 			out, err := exec.RunHostCommand(DdevBin, "__complete", "config", "global", "--omit-containers", tc.input)
 			assert.NoError(err)
 			if tc.expected != nil {
