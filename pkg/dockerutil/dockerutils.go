@@ -828,7 +828,7 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 		return fmt.Errorf("no docker")
 	}
 
-	// See if they're using broken Docker Desktop on Linux
+	// See if they're using Docker Desktop for Linux
 	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
 		ctx, client := GetDockerClient()
 		info, err := client.Info(ctx)
@@ -836,7 +836,7 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 			return fmt.Errorf("unable to get Docker info: %v", err)
 		}
 		if info.Name == "docker-desktop" {
-			return fmt.Errorf("docker desktop on Linux is not yet compatible with DDEV")
+			util.Warning("Docker Desktop for Linux is not explicitly supported and may cause problems.")
 		}
 	}
 
