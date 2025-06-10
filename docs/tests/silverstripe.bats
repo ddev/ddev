@@ -12,28 +12,22 @@ teardown() {
 }
 
 @test "Silverstripe CMS Composer quickstart with $(ddev --version)" {
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # ddev config --project-type=silverstripe --docroot=public
   run ddev config --project-type=silverstripe --docroot=public
   assert_success
 
-  # ddev config --project-type=silverstripe --docroot=public
   run ddev start -y
   assert_success
 
-  # ddev sake dev/build flush=all
   run ddev composer create-project --prefer-dist silverstripe/installer
   assert_success
 
-  # ddev sake dev/build flush=all
   run ddev sake dev/build flush=all
   assert_success
 
-  # validate ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin"
+  DDEV_DEBUG=true run ddev launch /admin
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
 
@@ -44,7 +38,7 @@ teardown() {
   assert_output --partial "HTTP/2 200"
   run curl -sf https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "Powered by <a href=\"http://silverstripe.org\">SilverStripe</a>"
+  assert_output --partial "Welcome to Silverstripe"
   run curl -sf https://${PROJNAME}.ddev.site/Security/login
   assert_success
   assert_output --partial "<title>Your Site Name: Log in</title>"
