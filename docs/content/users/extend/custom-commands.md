@@ -119,6 +119,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_UID`: The UID the web container runs as
+* `DDEV_USERNAME`: The username the web container runs as
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, `generic`
 
 Useful variables for container scripts are:

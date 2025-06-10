@@ -2425,7 +2425,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
-	uidStr, gidStr, _ := util.GetContainerUIDGid()
+	uidStr, gidStr, username := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on Windows.
 	if uidStr == "0" || gidStr == "0" {
@@ -2551,6 +2551,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
 		"DDEV_GID":                      gidStr,
+		"DDEV_USERNAME":                 username,
 		"DDEV_MUTAGEN_ENABLED":          strconv.FormatBool(app.IsMutagenEnabled()),
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
