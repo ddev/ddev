@@ -1170,7 +1170,8 @@ stopasgroup=true
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mysql-client-install.sh || true\n", app.GetStartScriptTimeout())
 	}
 	// Some MariaDB versions may have their own client in the ddev-webserver
-	if app.Database.Type == nodeps.MariaDB {
+	// Search for CHANGE_MARIADB_CLIENT to update related code
+	if app.Database.Type == nodeps.MariaDB && slices.Contains([]string{nodeps.MariaDB114, nodeps.MariaDB118}, app.Database.Version) {
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mariadb-client-install.sh || true\n", app.GetStartScriptTimeout())
 	}
 

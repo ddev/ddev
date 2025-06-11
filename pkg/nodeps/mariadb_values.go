@@ -19,6 +19,7 @@ var ValidMariaDBVersions = map[string]bool{
 	MariaDB108:  true,
 	MariaDB1011: true,
 	MariaDB114:  true,
+	MariaDB118:  true,
 }
 
 // MariaDB Versions
@@ -35,4 +36,5 @@ const (
 	MariaDB108  = "10.8"
 	MariaDB1011 = "10.11"
 	MariaDB114  = "11.4"
+	MariaDB118  = "11.8"
 )

@@ -1993,7 +1993,7 @@ func TestDdevExportDB(t *testing.T) {
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4"}
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -2070,8 +2070,11 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 				// For MariaDB, we have installed the 10.11 client by default.
 				expectedClientVersion = "10.11"
 				// Add MariaDB versions that can have their own client here:
-				if dbVersion == nodeps.MariaDB114 {
+				switch dbVersion {
+				case nodeps.MariaDB114:
 					expectedClientVersion = "11.4"
+				case nodeps.MariaDB118:
+					expectedClientVersion = "11.8"
 				}
 			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
