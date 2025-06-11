@@ -828,7 +828,18 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 		return fmt.Errorf("no docker")
 	}
 
-	// See if they're using broken Docker Desktop on Linux
+	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API
+	if !dockerVersions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
+		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
+	}
+	return nil
+}
+
+// CheckDockerProvider looks to see if docker provider is supported
+func CheckDockerProvider() error {
+	defer util.TimeTrack()()
+
+	// See if they're using Docker Desktop for Linux
 	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
 		ctx, client := GetDockerClient()
 		info, err := client.Info(ctx)
@@ -836,14 +847,10 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 			return fmt.Errorf("unable to get Docker info: %v", err)
 		}
 		if info.Name == "docker-desktop" {
-			return fmt.Errorf("docker desktop on Linux is not yet compatible with DDEV")
+			return fmt.Errorf("provider Docker Desktop for Linux is not explicitly supported by DDEV and may cause problems")
 		}
 	}
 
-	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API
-	if !dockerVersions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
-		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
-	}
 	return nil
 }
 

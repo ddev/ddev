@@ -84,8 +84,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ## Linux
 
-    !!!warning "Avoid Docker Desktop for Linux"
-        Current releases of Docker Desktop for Linux are not usable with DDEV for a number of reasons, and also exhibit some of the problems Docker Desktop has on other platforms. Please use the normal `docker-ce` installation described here.
+    !!!warning "Docker Desktop for Linux may work but does not have automated test coverage"
+        Casual manual testing of Docker Desktop for Linux seems to work, but DDEV does not have explicit support for it and does not have automated testing.
 
     The best way to install Docker on Linux is to use your native package management tool (`apt`, `dnf`, etc.) with the official Docker repository. While many Linux distributions provide Docker packages in their own repositories, these are often outdated and may not include the latest features required for stability in a development environment like DDEV. To ensure you're using a supported version, install Docker directly from the official Docker repository. 
 

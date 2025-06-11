@@ -136,7 +136,7 @@ echo
 
 printf "Docker provider: %s\n" "${docker_platform}"
 if [ "${WSL_DISTRO_NAME}" = "" ] && [ "${OSTYPE%-*}" = "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
-  printf "ERROR: Using Docker Desktop on Linux is not supported.\n"
+  printf "Warning: Docker Desktop for Linux is not explicitly supported and does not have automated test coverage.\n"
 fi
 
 if [ "${OSTYPE%-*}" != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then

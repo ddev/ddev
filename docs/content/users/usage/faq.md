@@ -42,9 +42,9 @@ We have automated testing and support for a staggering range of Docker providers
 
 #### Unsupported
 
-The following environments are *not* supported and have known issues with DDEV:
+The following environments do not have automated test coverage and may result in problems.
 
-* Docker Desktop for Linux (because it mounts all files into the container owned as root)
+* Docker Desktop for Linux. We recommend the documented [docker-ce](../install/docker-installation.md) installation instead.
 * Rancher Desktop for Windows.
 
 ### How can I migrate from one Docker provider to another?
