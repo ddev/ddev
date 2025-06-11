@@ -4631,11 +4631,19 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	primaryURL := app.GetPrimaryURL()
 	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
+	uidStr, gidStr, username := util.GetContainerUIDGid()
 
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
+		"DDEV_APPROOT":                  "/var/www/html",
+		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
+		"DDEV_DATABASE_FAMILY":          dbFamily,
 		"DDEV_DOCROOT":                  app.GetDocroot(),
+		"DDEV_FILES_DIR":                app.GetContainerUploadDir(),
+		"DDEV_FILES_DIRS":               strings.Join(app.GetContainerUploadDirs(), ","),
+		"DDEV_GID":                      gidStr,
 		"DDEV_HOSTNAME":                 app.GetHostname(),
+		"DDEV_MUTAGEN_ENABLED":          strconv.FormatBool(app.IsMutagenEnabled()),
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PRIMARY_URL":              primaryURL,
 		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
@@ -4647,10 +4655,11 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_SCHEME":                   scheme,
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
+		"DDEV_UID":                      uidStr,
+		"DDEV_USER":                     username,
 		"DDEV_VERSION":                  versionconstants.DdevVersion,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
-		"DDEV_DATABASE_FAMILY":          dbFamily,
-		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
+		"IS_DDEV_PROJECT":               "true",
 	}
 
 	app.DockerEnv()
@@ -4680,18 +4689,21 @@ func TestEnvironmentVariables(t *testing.T) {
 	// This set of hostExpectations should be maintained in parallel with documentation
 	hostExpectations := map[string]string{
 		"DDEV_APPROOT":                  app.AppRoot,
+		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
+		"DDEV_DATABASE_FAMILY":          dbFamily,
 		"DDEV_DOCROOT":                  app.GetDocroot(),
+		"DDEV_GID":                      gidStr,
+		"DDEV_GOARCH":                   runtime.GOARCH,
+		"DDEV_GOOS":                     runtime.GOOS,
+		"DDEV_HOSTNAME":                 app.GetHostname(),
 		"DDEV_HOST_DB_PORT":             dbPortStr,
 		"DDEV_HOST_HTTP_PORT":           strconv.Itoa(httpPort),
 		"DDEV_HOST_HTTPS_PORT":          strconv.Itoa(httpsPort),
-		"DDEV_HOST_WEBSERVER_PORT":      strconv.Itoa(httpPort),
 		"DDEV_HOST_MAILPIT_PORT":        app.HostMailpitPort,
-		"DDEV_HOSTNAME":                 app.GetHostname(),
-		"DDEV_MAILHOG_PORT":             app.GetMailpitHTTPPort(),
-		"DDEV_MAILHOG_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
+		"DDEV_HOST_WEBSERVER_PORT":      strconv.Itoa(httpPort),
 		"DDEV_MAILPIT_HTTP_PORT":        app.GetMailpitHTTPPort(),
 		"DDEV_MAILPIT_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
-		"DDEV_MAILPIT_PORT":             app.GetMailpitHTTPPort(),
+		"DDEV_MUTAGEN_ENABLED":          strconv.FormatBool(app.IsMutagenEnabled()),
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PRIMARY_URL":              primaryURL,
 		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
@@ -4703,6 +4715,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_SCHEME":                   scheme,
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
+		"DDEV_UID":                      uidStr,
+		"DDEV_USER":                     username,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
 	}
 

@@ -48,6 +48,7 @@ services:
       - BITNAMI_VOLUME_DIR={{ .BitnamiVolumeDir }}
       - DDEV_DATABASE
       - DDEV_DATABASE_FAMILY
+      - DDEV_GID
       - DDEV_GOARCH
       - DDEV_GOOS
       - DDEV_HOSTNAME
@@ -62,6 +63,9 @@ services:
       - DDEV_SCHEME
       - DDEV_SITENAME
       - DDEV_TLD
+      - DDEV_UID
+      - DDEV_USER
+      - DDEV_VERSION
       - DOCKER_IP={{ .DockerIP }}
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
@@ -190,6 +194,7 @@ services:
     - DDEV_DATABASE
     - DDEV_DOCROOT
     - DDEV_DATABASE_FAMILY
+    - DDEV_GID
     - DDEV_GOARCH
     - DDEV_GOOS
     - DDEV_HOSTNAME
@@ -205,6 +210,8 @@ services:
     - DDEV_SCHEME
     - DDEV_SITENAME
     - DDEV_TLD
+    - DDEV_UID
+    - DDEV_USER
     - DDEV_FILES_DIR
     - DDEV_FILES_DIRS
     - DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d

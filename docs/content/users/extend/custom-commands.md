@@ -92,14 +92,15 @@ The web container's [`nvm` autocomplete script](https://github.com/ddev/ddev/blo
 A number of environment variables are provided to these command scripts. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
 * `DDEV_APPROOT`: File system location of the project on the host
-* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:10.5`)
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.4`)
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
-* `DDEV_GID`: The GID the web container runs as
+* `DDEV_GID`: Group ID the `web` container runs as
 * `DDEV_GOARCH`: Architecture (`arm64`, `amd64`)
 * `DDEV_GOOS`: Operating system (`windows`, `darwin`, `linux`)
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
+* `DDEV_HOST_HTTP_PORT`: Localhost port for HTTP on web server
 * `DDEV_HOST_HTTPS_PORT`: Localhost port for HTTPS on web server
 * `DDEV_HOST_MAILPIT_PORT`: Localhost port for Mailpit
 * `DDEV_HOST_WEBSERVER_PORT`: Localhost port of the web server
@@ -115,18 +116,22 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_PROJECT_TYPE`: `backdrop`, `drupal`, `typo3`,`wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
-* `DDEV_SCHEME`: Schema of primary project URL
+* `DDEV_SCHEME`: Scheme of primary project URL
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
-* `DDEV_UID`: The UID the web container runs as
+* `DDEV_UID`: User ID the `web` container runs as
+* `DDEV_USER`: Username the `web` container runs as
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, `generic`
 
 Useful variables for container scripts are:
 
 * `DDEV_APPROOT`: Absolute path to the project files within the web container
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.4`)
+* `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_FILES_DIR`: *Deprecated*, first directory of user-uploaded files
 * `DDEV_FILES_DIRS`: Comma-separated list of directories of user-uploaded files
+* `DDEV_GID`: Group ID the `web` container runs as
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
@@ -137,9 +142,12 @@ Useful variables for container scripts are:
 * `DDEV_PROJECT_TYPE`: `backdrop`, `drupal`, `typo3`,`wordpress`, etc.
 * `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
-* `DDEV_SCHEME`: Schema of primary project URL
+* `DDEV_SCHEME`: Scheme of primary project URL
 * `DDEV_SITENAME`: Project name, like `d8composer`
 * `DDEV_TLD`: Top-level project domain, like `ddev.site`
+* `DDEV_UID`: User ID the `web` container runs as
+* `DDEV_USER`: Username the `web` container runs as
+* `DDEV_VERSION`: Version of the currently running `ddev` binary
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, `generic`
 * `IS_DDEV_PROJECT`: If `true`, PHP is running under DDEV
 
