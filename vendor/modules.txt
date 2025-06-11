@@ -20,8 +20,6 @@ github.com/Microsoft/go-winio/internal/fs
 github.com/Microsoft/go-winio/internal/socket
 github.com/Microsoft/go-winio/internal/stringbuffer
 github.com/Microsoft/go-winio/pkg/guid
-# github.com/ProtonMail/go-crypto v1.1.6
-## explicit; go 1.17
 # github.com/amplitude/analytics-go v1.2.0
 ## explicit; go 1.17
 github.com/amplitude/analytics-go/amplitude
@@ -42,8 +40,6 @@ github.com/cheggaaa/pb
 # github.com/chzyer/readline v1.5.1
 ## explicit; go 1.15
 github.com/chzyer/readline
-# github.com/cloudflare/circl v1.6.0
-## explicit; go 1.22.0
 # github.com/containerd/log v0.1.0
 ## explicit; go 1.20
 # github.com/davecgh/go-spew v1.1.1
@@ -112,8 +108,6 @@ github.com/gogo/protobuf/proto
 github.com/goodhosts/hostsfile
 github.com/goodhosts/hostsfile/mage/install
 github.com/goodhosts/hostsfile/mage/test
-# github.com/google/go-github/v52 v52.0.0
-## explicit; go 1.17
 # github.com/google/go-github/v72 v72.0.0
 ## explicit; go 1.23.0
 github.com/google/go-github/v72/github
