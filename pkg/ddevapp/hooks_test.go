@@ -82,7 +82,7 @@ func TestProcessHooks(t *testing.T) {
 		require.NoError(t, err)
 
 		captureOutputFunc, err := util.CaptureOutputToFile()
-		require.NoError(t, err, `failed to capture output to file for taxk='%v' err=%v`, task, err)
+		require.NoError(t, err, `failed to capture output to file for task='%v' err=%v`, task, err)
 		userOutFunc := util.CaptureUserOut()
 
 		err = app.Start()
