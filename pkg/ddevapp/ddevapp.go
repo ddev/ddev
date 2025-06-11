@@ -2551,7 +2551,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
 		"DDEV_GID":                      gidStr,
-		"DDEV_USERNAME":                 username,
+		"DDEV_USER":                     username,
 		"DDEV_MUTAGEN_ENABLED":          strconv.FormatBool(app.IsMutagenEnabled()),
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
