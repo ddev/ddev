@@ -21,7 +21,11 @@ rm -f /etc/apt/sources.list.d/mariadb.list.old_*
 # so we can run "apt-get update" manually only for mariadb and debian repos to make it faster
 timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
 timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
-# Install the mariadb-client and MySQL symlinks
-# MariaDB 11.x moved MySQL symlinks into a separate package
+# Install the mariadb-client
 export DEBIAN_FRONTEND=noninteractive
-log-stderr.sh apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client mariadb-client-compat || exit $?
+if apt-cache search mariadb-client-compat 2>/dev/null | grep -q mariadb-client-compat; then
+  # MariaDB 11.x moved MySQL symlinks into a separate package
+  log-stderr.sh apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client mariadb-client-compat || exit $?
+else
+  log-stderr.sh apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client || exit $?
+fi
