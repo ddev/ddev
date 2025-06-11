@@ -19,6 +19,7 @@ var ValidMariaDBVersions = map[string]bool{
 	MariaDB108:  true,
 	MariaDB1011: true,
 	MariaDB114:  true,
+	MariaDB118:  true,
 }
 
 // MariaDB Versions
