@@ -68,7 +68,7 @@ var DebugDockercheckCmd = &cobra.Command{
 		}
 		err = dockerutil.CheckDockerProvider()
 		if err != nil {
-			util.Warning("Problem with your Docker provider: %v.", err)
+			util.Warning("Possible problem with your Docker provider: %v.", err)
 		}
 		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
 		if err != nil {
