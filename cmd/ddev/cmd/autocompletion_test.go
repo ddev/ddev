@@ -3,15 +3,19 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -219,6 +223,159 @@ func TestAutocompletionForDescribeCmd(t *testing.T) {
 	assert.NoError(err)
 	filteredOut = getTestingSitesFromOutput(out)
 	assert.Empty(filteredOut)
+}
+
+// TestAutocompletionForConfigCmd checks autocompletion for ddev config
+func TestAutocompletionForConfigCmd(t *testing.T) {
+	assert := asrt.New(t)
+
+	testCases := map[string][]string{
+		"--project-type":                ddevapp.GetValidAppTypes(),
+		"--php-version":                 nodeps.GetValidPHPVersions(),
+		"--router-http-port":            {nodeps.DdevDefaultRouterHTTPPort},
+		"--router-https-port":           {nodeps.DdevDefaultRouterHTTPSPort},
+		"--xdebug-enabled":              {"true", "false"},
+		"--no-project-mount":            {"true", "false"},
+		"--omit-containers":             nodeps.GetValidOmitContainers(),
+		"--webserver-type":              nodeps.GetValidWebserverTypes(),
+		"--performance-mode":            types.ValidPerformanceModeOptions(types.ConfigTypeProject),
+		"--xhprof-mode":                 types.ValidXHProfModeOptions(types.ConfigTypeProject),
+		"--fail-on-hook-fail=":          {"true", "false"},
+		"--mailpit-http-port":           {nodeps.DdevDefaultMailpitHTTPPort},
+		"--mailpit-https-port":          {nodeps.DdevDefaultMailpitHTTPSPort},
+		"--project-tld":                 {nodeps.DdevDefaultTLD},
+		"--use-dns-when-possible":       {"true", "false"},
+		"--disable-settings-management": {"true", "false"},
+		"--composer-version":            {"2", "2.2", "1", "stable", "preview", "snapshot"},
+		"--bind-all-interfaces":         {"true", "false"},
+		"--database":                    nodeps.GetValidDatabaseVersions(),
+		"--nodejs-version":              {nodeps.NodeJSDefault, "auto", "engine"},
+		"--default-container-timeout":   {nodeps.DefaultDefaultContainerTimeout},
+		"--disable-upload-dirs-warning": {"true", "false"},
+		"--corepack-enable":             {"true", "false"},
+	}
+
+	for flag, expected := range testCases {
+		t.Run(flag, func(_ *testing.T) {
+			var out string
+			var err error
+			if reflect.DeepEqual(expected, []string{"true", "false"}) {
+				// Cobra autocompletion for boolean works only with equal sign
+				out, err = exec.RunHostCommand(DdevBin, "__complete", "config", flag+`=""`)
+			} else {
+				out, err = exec.RunHostCommand(DdevBin, "__complete", "config", flag, "")
+			}
+			assert.NoError(err)
+			for _, val := range expected {
+				assert.Contains(out, val)
+			}
+		})
+	}
+
+	// --omit-containers is special because it can take multiple values separated by commas
+	tests := []struct {
+		input       string
+		expected    []string
+		notExpected []string
+	}{
+		{"", []string{"db", "ddev-ssh-agent"}, nil},
+		{"db,", []string{"ddev-ssh-agent"}, nil},
+		{"ddev-ssh-agent,", []string{"db"}, nil},
+		{"db,ddev-ssh-agent,", nil, []string{"db", "ddev-ssh-agent"}},
+		{"ddev-ssh-agent,db,", nil, []string{"db", "ddev-ssh-agent"}},
+	}
+
+	for _, tc := range tests {
+		t.Run("--omit-containers="+tc.input, func(_ *testing.T) {
+			out, err := exec.RunHostCommand(DdevBin, "__complete", "config", "--omit-containers", tc.input)
+			assert.NoError(err)
+			if tc.expected != nil {
+				for _, val := range tc.expected {
+					assert.Contains(out, val)
+				}
+			}
+			if tc.notExpected != nil {
+				for _, val := range tc.notExpected {
+					assert.NotContains(out, val)
+				}
+			}
+		})
+	}
+}
+
+// TestAutocompletionConfigGlobalCmd checks autocompletion for ddev config global
+func TestAutocompletionConfigGlobalCmd(t *testing.T) {
+	assert := asrt.New(t)
+
+	testCases := map[string][]string{
+		"--omit-containers":               globalconfig.GetValidOmitContainers(),
+		"--instrumentation-opt-in":        {"true", "false"},
+		"--router-bind-all-interfaces":    {"true", "false"},
+		"--internet-detection-timeout-ms": {strconv.Itoa(nodeps.InternetDetectionTimeoutDefault)},
+		"--use-letsencrypt":               {"true", "false"},
+		"--simple-formatting":             {"true", "false"},
+		"--use-hardened-images":           {"true", "false"},
+		"--fail-on-hook-fail":             {"true", "false"},
+		"--performance-mode":              types.ValidPerformanceModeOptions(types.ConfigTypeGlobal),
+		"--xhprof-mode":                   types.ValidXHProfModeOptions(types.ConfigTypeGlobal),
+		"--table-style":                   globalconfig.ValidTableStyleList(),
+		"--project-tld":                   {nodeps.DdevDefaultTLD},
+		"--no-bind-mounts":                {"true", "false"},
+		"--router-http-port":              {nodeps.DdevDefaultRouterHTTPPort},
+		"--router-https-port":             {nodeps.DdevDefaultRouterHTTPSPort},
+		"--mailpit-http-port":             {nodeps.DdevDefaultMailpitHTTPPort},
+		"--mailpit-https-port":            {nodeps.DdevDefaultMailpitHTTPSPort},
+		"--traefik-monitor-port":          {nodeps.TraefikMonitorPortDefault},
+	}
+
+	for flag, expected := range testCases {
+		t.Run(flag, func(_ *testing.T) {
+			var out string
+			var err error
+			if reflect.DeepEqual(expected, []string{"true", "false"}) {
+				// Cobra autocompletion for boolean works only with equal sign
+				out, err = exec.RunHostCommand(DdevBin, "__complete", "config", "global", flag+`=""`)
+			} else {
+				out, err = exec.RunHostCommand(DdevBin, "__complete", "config", "global", flag, "")
+			}
+			assert.NoError(err)
+			for _, val := range expected {
+				if val != "" {
+					assert.Contains(out, val)
+				}
+			}
+		})
+	}
+
+	// --omit-containers is special because it can take multiple values separated by commas
+	tests := []struct {
+		input       string
+		expected    []string
+		notExpected []string
+	}{
+		{"", []string{"ddev-router", "ddev-ssh-agent"}, nil},
+		{"ddev-router,", []string{"ddev-ssh-agent"}, nil},
+		{"ddev-ssh-agent,", []string{"ddev-router"}, nil},
+		{"ddev-router,ddev-ssh-agent,", nil, []string{"ddev-router", "ddev-ssh-agent"}},
+		{"ddev-ssh-agent,ddev-router,", nil, []string{"ddev-router", "ddev-ssh-agent"}},
+	}
+
+	for _, tc := range tests {
+		t.Run("--omit-containers="+tc.input, func(_ *testing.T) {
+			out, err := exec.RunHostCommand(DdevBin, "__complete", "config", "global", "--omit-containers", tc.input)
+			assert.NoError(err)
+			if tc.expected != nil {
+				for _, val := range tc.expected {
+					assert.Contains(out, val)
+				}
+			}
+			if tc.notExpected != nil {
+				for _, val := range tc.notExpected {
+					assert.NotContains(out, val)
+				}
+			}
+		})
+	}
 }
 
 // TestAutocompletionForCustomCmds checks custom autocompletion for custom host and container commands

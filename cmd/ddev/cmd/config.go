@@ -136,7 +136,7 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 var ConfigCommand = &cobra.Command{
 	Use:     "config [provider or 'global']",
 	Short:   "Create or modify a DDEV project configuration in the current directory",
-	Example: `"ddev config" or "ddev config --docroot=web  --project-type=drupal8"`,
+	Example: `"ddev config" or "ddev config --docroot=web --project-type=drupal11"`,
 	Args:    cobra.ExactArgs(0),
 	Run:     handleConfigRun,
 }
@@ -209,27 +209,35 @@ func init() {
 	ConfigCommand.Flags().StringVar(&composerRootRelPathArg, "composer-root", "", "Overrides the default Composer root directory for the web service")
 	ConfigCommand.Flags().BoolVar(&composerRootRelPathDefaultArg, "composer-root-default", false, "Unsets a web service Composer root directory override")
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("project-type", configCompletionFunc(ddevapp.GetValidAppTypes()))
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("php-version", configCompletionFunc(nodeps.GetValidPHPVersions()))
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project; deprecated alias for `--router-http-port`")
 	_ = ConfigCommand.Flags().MarkDeprecated("http-port", "--http-port is a deprecated alias for `--router-http-port`")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "router-http-port", "", "The router HTTP port for this project")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("router-http-port", configCompletionFunc([]string{nodeps.DdevDefaultRouterHTTPPort}))
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project; deprecated alias for `--router-https-port`")
 	_ = ConfigCommand.Flags().MarkDeprecated("https-port", "--https-port is a deprecated alias for `--router-https-port`")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "router-https-port", "", "The router HTTPS port for this project")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("router-https-port", configCompletionFunc([]string{nodeps.DdevDefaultRouterHTTPSPort}))
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not Xdebug is enabled in the web container")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("xdebug-enabled", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether or not to skip mounting project code into the web container")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("no-project-mount", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "A comma-delimited list of container types that should not be started when the project is started")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("omit-containers", configCompletionFuncWithCommas(nodeps.GetValidOmitContainers()))
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts DDEV to create the docroot if it doesn't exist")
 	_ = ConfigCommand.Flags().MarkDeprecated("create-docroot", "--create-docroot flag is no longer required")
-	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
-	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, "Sets the project's upload directories, the destination directories of the import-files command.")
-	ConfigCommand.Flags().String("upload-dir", "", "Sets the project's upload directories, the destination directories of the import-files command.")
+	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist")
+	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, "Sets the project's upload directories, the destination directories of the import-files command")
+	ConfigCommand.Flags().String("upload-dir", "", "Sets the project's upload directories, the destination directories of the import-files command")
 	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
-	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm/apache-fpm/generic")
+	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", fmt.Sprintf("Sets the project's desired webserver type: %s", strings.Join(nodeps.GetValidWebserverTypes(), "/")))
+	_ = ConfigCommand.RegisterFlagCompletionFunc("webserver-type", configCompletionFunc(nodeps.GetValidWebserverTypes()))
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Sets the web container image")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this DDEV version")
 	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Sets the db container image")
@@ -243,24 +251,29 @@ func init() {
 	ConfigCommand.Flags().Bool("mutagen-enabled", false, "Enable Mutagen asynchronous update of project in web container")
 	_ = ConfigCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
+	_ = ConfigCommand.RegisterFlagCompletionFunc(types.FlagPerformanceModeName, configCompletionFunc(types.ValidPerformanceModeOptions(types.ConfigTypeProject)))
 	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, true, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
 
 	ConfigCommand.Flags().String(types.FlagXHProfModeName, types.FlagXHProfModeDefault, types.FlagXHProfModeDescription(types.ConfigTypeProject))
+	_ = ConfigCommand.RegisterFlagCompletionFunc(types.FlagXHProfModeName, configCompletionFunc(types.ValidXHProfModeOptions(types.ConfigTypeProject)))
 	ConfigCommand.Flags().Bool(types.FlagXHProfModeResetName, true, types.FlagXHProfModeResetDescription(types.ConfigTypeProject))
 
 	ConfigCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting of project in container")
 	_ = ConfigCommand.Flags().MarkDeprecated("nfs-mount-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("fail-on-hook-fail", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 
 	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailpit-http-port", "", "Router HTTP port to be used for Mailpit access")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("mailpit-http-port", configCompletionFunc([]string{nodeps.DdevDefaultMailpitHTTPPort}))
 	ConfigCommand.Flags().StringVar(&mailpitHTTPPortArg, "mailhog-port", "", "Router port to be used for MailHog access")
 	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-port", "please use --mailpit-http-port instead")
 
 	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailpit-https-port", "", "Router port to be used for Mailpit access (https)")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("mailpit-https-port", configCompletionFunc([]string{nodeps.DdevDefaultMailpitHTTPSPort}))
 	ConfigCommand.Flags().StringVar(&mailpitHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for MailHog access (https)")
 	_ = ConfigCommand.Flags().MarkDeprecated("mailhog-https-port", "please use --mailpit-https-port instead")
 
@@ -269,7 +282,7 @@ func init() {
 	err = ConfigCommand.Flags().MarkDeprecated("projectname", "please use --project-name instead")
 	util.CheckErr(err)
 
-	// apptype flag exists for backwards compatibility.
+	// projecttype flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "projecttype", "", projectTypeUsage)
 	err = ConfigCommand.Flags().MarkDeprecated("projecttype", "please use --project-type instead")
 	util.CheckErr(err)
@@ -288,26 +301,36 @@ func init() {
 
 	ConfigCommand.Flags().String("dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
 
-	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", nodeps.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+nodeps.DdevDefaultTLD)
+	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", nodeps.DdevDefaultTLD, "Set the top-level domain to be used for projects")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("project-tld", configCompletionFunc([]string{nodeps.DdevDefaultTLD}))
 
 	ConfigCommand.Flags().BoolVarP(&useDNSWhenPossibleArg, "use-dns-when-possible", "", true, "Use DNS for hostname resolution instead of /etc/hosts when possible")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("use-dns-when-possible", configCompletionFunc([]string{"true", "false"}))
 
 	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share")
 
 	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and php, like Europe/London or America/Denver or GMT or UTC")
 
 	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent DDEV from creating or updating CMS settings files")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("disable-settings-management", configCompletionFunc([]string{"true", "false"}))
 
-	ConfigCommand.Flags().String("composer-version", "", `Specify override for Composer version in web container. This may be "", "1", "2", "2.2", "stable", "preview", "snapshot" or a specific version.`)
+	ConfigCommand.Flags().String("composer-version", "", `Specify override for Composer version in web container. This may be "", "1", "2", "2.2", "stable", "preview", "snapshot" or a specific version`)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("composer-version", configCompletionFunc([]string{"2", "2.2", "1", "stable", "preview", "snapshot"}))
 
-	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
+	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting`)
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not only on the localhost network interface`)
-	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to mariadb:%s`, nodeps.MariaDBDefaultVersion))
-	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
+	_ = ConfigCommand.RegisterFlagCompletionFunc("bind-all-interfaces", configCompletionFunc([]string{"true", "false"}))
+	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to %s:%s`, ddevapp.DatabaseDefault.Type, ddevapp.DatabaseDefault.Version))
+	_ = ConfigCommand.RegisterFlagCompletionFunc("database", configCompletionFunc(nodeps.GetValidDatabaseVersions()))
+	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the Node.js version to use if you don't want the default Node.js %s`, nodeps.NodeJSDefault))
+	_ = ConfigCommand.RegisterFlagCompletionFunc("nodejs-version", configCompletionFunc([]string{nodeps.NodeJSDefault, "auto", "engine"}))
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that DDEV waits for all containers to become ready on start`)
-	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using performance-mode=mutagen.`)
-	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against.`)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("default-container-timeout", configCompletionFunc([]string{nodeps.DefaultDefaultContainerTimeout}))
+	ConfigCommand.Flags().Bool("disable-upload-dirs-warning", true, `Disable warnings about upload-dirs not being set when using --performance-mode=mutagen`)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("disable-upload-dirs-warning", configCompletionFunc([]string{"true", "false"}))
+	ConfigCommand.Flags().StringVar(&ddevVersionConstraint, "ddev-version-constraint", "", `Specify a ddev version constraint to validate ddev against`)
 	ConfigCommand.Flags().Bool("corepack-enable", true, `Do 'corepack enable' to enable latest yarn/pnpm'`)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("corepack-enable", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides (except for 'generic' type)`)
 
 	RootCmd.AddCommand(ConfigCommand)
@@ -767,4 +790,34 @@ func processFlag(cmd *cobra.Command, flagName string, currentValue []string) []s
 
 	// If the flag value is not an empty string, split it by commas and return the resulting slice.
 	return strings.Split(arg, ",")
+}
+
+// configCompletionFunc returns a Cobra completion function with static values.
+func configCompletionFunc(values []string) func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return values, cobra.ShellCompDirectiveNoFileComp
+	}
+}
+
+// configCompletionFuncWithCommas returns a Cobra completion function for comma-separated values.
+func configCompletionFuncWithCommas(values []string) func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		entered := strings.Split(toComplete, ",")
+		last := entered[len(entered)-1]
+		prefix := entered[:len(entered)-1]
+
+		used := make(map[string]bool, len(prefix))
+		for _, e := range prefix {
+			used[e] = true
+		}
+
+		var completions []string
+		for _, value := range values {
+			if strings.HasPrefix(value, last) && !used[value] {
+				completion := append(prefix, value)
+				completions = append(completions, strings.Join(completion, ","))
+			}
+		}
+		return completions, cobra.ShellCompDirectiveNoSpace
+	}
 }
