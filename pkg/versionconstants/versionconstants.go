@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250213_rfay_mariadb_11.8" // Note that this can be overridden by make
+var WebTag = "20250612_stasadev_rebuild_images" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -23,7 +23,7 @@ var BaseDBTag = "20250213_rfay_mariadb_11.8"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "v1.24.6"
+var TraefikRouterTag = "20250612_stasadev_rebuild_images"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
