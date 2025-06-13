@@ -14,6 +14,15 @@ ddev xhgui
 
 Visit the pages you want to study, and then revisit the XHGui UI using `ddev xhgui`.
 
+!!!tip "How to disable XHGui profiling while running PHPUnit"
+    Set the `DDEV_XHGUI_PROFILER_DISABLED` environment variable set to `true` in your `phpunit.xml` file:
+
+    ```xml
+    <php>
+        <env name="DDEV_XHGUI_PROFILER_DISABLED" value="true"/>
+    </php>
+    ```
+
 ## Traditional XHProf Usage with `prepend`
 
 If you are having issues with XHGui, you can go back to the regular xhprof web interface.

@@ -31,7 +31,10 @@ return [
   ],
   // Profile all requests.
   'profiler.enable' => function () {
-    return TRUE;
+    if (in_array(getenv('DDEV_XHGUI_PROFILER_DISABLED'), ['true', '1'])) {
+      return false;
+    }
+    return true;
   },
 
   // 'profiler.simple_url' => function ($url) {
