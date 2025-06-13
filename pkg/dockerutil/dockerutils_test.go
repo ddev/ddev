@@ -422,8 +422,8 @@ func TestFindContainerByName(t *testing.T) {
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil, nil, nil)
-	assert.NoError(err)
+	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, containerName, []string{"sleep", "2"}, nil, nil, nil, "25", false, false, nil, nil, nil)
+	require.NoError(t, err)
 
 	defer func() {
 		_ = dockerutil.RemoveContainer(cID)
