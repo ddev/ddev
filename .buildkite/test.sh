@@ -123,12 +123,14 @@ if [ "${OSTYPE:-unknown}" = "msys" ]; then
   case ${DOCKER_TYPE:-none} in
     "docker-desktop")
       docker desktop start
+      sleep 5
       docker context use desktop-linux
       ;;
     "rancher-desktop")
       docker desktop stop
       rdctl start
       docker context use default
+      sleep 15
       ;;
     *)
       echo "no DOCKER_TYPE specified, exiting" && exit 10
