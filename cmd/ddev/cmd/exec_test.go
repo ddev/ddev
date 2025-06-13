@@ -154,8 +154,7 @@ func TestCmdExec(t *testing.T) {
 	bashPath := util.FindBashPath()
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
 	filename := t.Name() + "_junk.txt"
-	ddevBinForBash := util.WindowsPathToCygwinPath(DdevBin)
-	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`printf "This file was piped into ddev exec" | %s exec "cat >/var/www/html/%s"`, ddevBinForBash, filename))
+	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`printf "This file was piped into ddev exec" | %s exec "cat >/var/www/html/%s"`, DdevBin, filename))
 	assert.NoError(err)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
@@ -171,8 +170,8 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	defer os.Remove(f.Name()) // nolint: errcheck
 
-	bashTempName := util.WindowsPathToCygwinPath(f.Name())
-	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", ddevBinForBash, bashTempName))
+	bashTempName := f.Name()
+	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", DdevBin, bashTempName))
 
 	out, err = fileutil.ReadFileIntoString(f.Name())
 	assert.NoError(err)
