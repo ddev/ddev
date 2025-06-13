@@ -991,25 +991,6 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
 		}
 	}
-
-	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
-	if runtime.GOOS == "windows" {
-		for i := range binds {
-			binds[i] = strings.ReplaceAll(binds[i], `\`, `/`)
-			if strings.Index(binds[i], ":") == 1 {
-				binds[i] = strings.Replace(binds[i], ":", "", 1)
-				binds[i] = "/" + binds[i]
-				// And amazingly, the drive letter must be lower-case.
-				re := regexp.MustCompile("^/[A-Z]/")
-				driveLetter := re.FindString(binds[i])
-				if len(driveLetter) == 3 {
-					binds[i] = strings.TrimPrefix(binds[i], driveLetter)
-					binds[i] = strings.ToLower(driveLetter) + binds[i]
-				}
-			}
-		}
-	}
-
 	containerConfig := &dockerContainer.Config{
 		Image:        image,
 		Cmd:          cmd,
