@@ -119,12 +119,13 @@ if [ "${OSTYPE:-unknown}" = "msys" ]; then
   docker context ls
 
   # Now start the docker provider we want
-  case ${DOCKER_TYPE:=none} in
+  case ${DOCKER_TYPE:-none} in
     "docker-desktop")
       docker desktop start
       docker context use desktop-linux
       ;;
     "rancher-desktop")
+      docker desktop stop
       rdctl start
       docker context use default
       ;;
