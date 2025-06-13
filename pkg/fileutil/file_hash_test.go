@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -45,6 +46,9 @@ func TestFileHash(t *testing.T) {
 			// But we have to add the filepath to the testFile before
 			// we can use the externalComputeSha1Sum successfully
 			canonicalFileName := testFile
+			if runtime.GOOS == "windows" {
+				canonicalFileName = util.WindowsPathToCygwinPath(testFile)
+			}
 			f, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			require.NoError(t, err)
 			_, err = f.WriteString(canonicalFileName)
@@ -64,9 +68,12 @@ func TestFileHash(t *testing.T) {
 }
 
 // externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
+// Used only in tests
 func externalComputeSha1Sum(filePath string) (string, error) {
-	dir := path.Dir(filePath)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", filePath}, nil, nil, []string{dir + ":" + dir}, "0", true, false, nil, nil, nil)
+
+	dir := filepath.Dir(filePath)
+	fName := filepath.Base(filePath)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", path.Join("/mnt/mounteddir", fName)}, nil, nil, []string{dir + ":" + "/mnt/mounteddir"}, "0", true, false, nil, nil, nil)
 
 	if err != nil {
 		return "", err
