@@ -39,13 +39,14 @@ We have automated testing and support for a staggering range of Docker providers
 | Colima (macOS)             | officially tested and supported                                        |
 | Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu. Recommended. |
 | Rancher Desktop (macOS)    | officially tested and supported on macOS                               |
+| Rancher Desktop (Windows)  | officially tested and supported on traditional Windows                 |
+
 
 #### Unsupported
 
 The following environments do not have automated test coverage and may result in problems.
 
 * Docker Desktop for Linux. We recommend the documented [docker-ce](../install/docker-installation.md) installation instead.
-* Rancher Desktop for Windows.
 
 ### How can I migrate from one Docker provider to another?
 
