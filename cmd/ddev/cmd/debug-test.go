@@ -3,7 +3,6 @@ package cmd
 import (
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -40,8 +39,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
-		p := util.WindowsPathToCygwinPath(tmpDir)
-		c := []string{"-c", path.Join(p, "test_ddev.sh") + " " + outputFilename}
+		c := []string{"-c", filepath.Join(tmpDir, "test_ddev.sh") + " " + outputFilename}
 		util.Debug("Running %s %v", bashPath, c)
 
 		// Create a new file to capture output
