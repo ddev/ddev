@@ -121,6 +121,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Docker Desktop for Windows can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). DDEV has extensive automated testing using Docker Desktop, and Docker Desktop with DDEV works both on traditional Windows and in WSL2.
 
+    ### Rancher Desktop for Windows
+
+    [Rancher Desktop](https://rancherdesktop.io/) works with DDEV on Windows. DDEV has extensive automated testing on traditional Windows.
+
     See [WSL2 DDEV Installation](ddev-installation.md#wsl2-docker-desktop-install-script) for help installing DDEV with Docker Desktop on WSL2.
 
 === "Codespaces"
