@@ -30,7 +30,7 @@ You can launch the web interface with:
 ddev xhgui
 ```
 
-More details in this blog post: https://ddev.com/blog/xhgui-feature/
+More details in [the announcement blog post for the xhgui feature](https://ddev.com/blog/xhgui-feature/)
 
 ## Traditional XHProf Usage with `prepend`
 
