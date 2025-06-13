@@ -107,6 +107,7 @@ if [ "${OSTYPE:-unknown}" = "msys" ]; then
     fi
     # Leave Docker Desktop running by default
     echo "Starting Docker Desktop"
+    (docker desktop stop || true)
     (docker desktop start || true)
     docker context use desktop-linux
     sleep 15
