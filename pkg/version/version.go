@@ -50,10 +50,6 @@ func GetVersionInfo() map[string]string {
 	versionInfo["mutagen"] = versionconstants.RequiredMutagenVersion
 	versionInfo["xhgui-image"] = docker.GetXhguiImage()
 
-	if runtime.GOOS == "windows" {
-		versionInfo["docker type"] = "Docker Desktop For Windows"
-	}
-
 	return versionInfo
 }
 
