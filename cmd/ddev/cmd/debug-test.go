@@ -3,7 +3,9 @@ package cmd
 import (
 	"io"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -39,7 +41,14 @@ var DebugTestCmdCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
-		c := []string{"-c", filepath.Join(tmpDir, "test_ddev.sh") + " " + outputFilename}
+		p := tmpDir
+		if runtime.GOOS == "windows" {
+			if !fileutil.FileExists(bashPath) {
+				util.Failed("%s does not exist, please install git-bash to use 'ddev debug test'", bashPath)
+			}
+			p = util.WindowsPathToCygwinPath(tmpDir)
+		}
+		c := []string{"-c", path.Join(p, "test_ddev.sh") + " " + outputFilename}
 		util.Debug("Running %s %v", bashPath, c)
 
 		// Create a new file to capture output
