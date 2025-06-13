@@ -11,7 +11,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250213_rfay_mariadb_11.8" // Note that this can be overridden by make
+var WebTag = "20250613_sreichel_xhgui_env" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -38,7 +38,7 @@ var BusyboxImage = "busybox:stable"
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "v1.24.6"
+var XhguiTag = "20250613_sreichel_xhgui_env"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities"
