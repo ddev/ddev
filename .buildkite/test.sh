@@ -32,7 +32,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       echo "Starting orbstack" && (nohup orb start &)
     else
       docker context use desktop-linux
-      open -a Docker
+      docker desktop start
     fi
     sleep 5
   }
@@ -41,7 +41,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   # Start with a predictable docker provider running
   cleanup
 
-  echo "starting docker context situation:"
+  echo "initial docker context situation:"
   docker context ls
 
   # For Lima and Colima, as of Lima 1.0.4, having orbstack running
@@ -91,6 +91,43 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       docker context use rancher-desktop
       ;;
 
+    *)
+      echo "no DOCKER_TYPE specified, exiting" && exit 10
+      ;;
+  esac
+fi
+
+# On Windows (msys), support multiple docker providers
+if [ "${OSTYPE:-unknown}" = "msys" ]; then
+  function cleanup {
+    # Stop Rancher Desktop if available
+    if command -v rdctl >/dev/null 2>&1; then
+      echo "Stopping Rancher Desktop"
+      (rdctl shutdown || true)
+    fi
+    # Leave Docker Desktop running by default
+    echo "Starting Docker Desktop"
+    (docker desktop start || true)
+    sleep 5
+  }
+  trap cleanup EXIT
+
+  # Start with a predictable docker provider running
+  cleanup
+
+  echo "initial docker context situation:"
+  docker context ls
+
+  # Now start the docker provider we want
+  case ${DOCKER_TYPE:=none} in
+    "docker-desktop")
+      docker desktop start
+      docker context use desktop-linux
+      ;;
+    "rancher-desktop")
+      rdctl start
+      docker context use default
+      ;;
     *)
       echo "no DOCKER_TYPE specified, exiting" && exit 10
       ;;
