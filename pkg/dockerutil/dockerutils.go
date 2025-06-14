@@ -991,6 +991,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
 		}
 	}
+
 	containerConfig := &dockerContainer.Config{
 		Image:        image,
 		Cmd:          cmd,
