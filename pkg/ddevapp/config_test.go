@@ -1260,8 +1260,8 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Lima/Colima, lots of network connections failed")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Lima/Colima/Rancher, lots of network connections failed")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}

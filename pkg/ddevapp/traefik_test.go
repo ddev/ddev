@@ -20,10 +20,10 @@ import (
 
 // TestTraefikSimple tests basic Traefik router usage
 func TestTraefikSimple(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Skipping on Colima/Lima because they don't predictably return ports")
+		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
 	}
 
 	assert := asrt.New(t)
@@ -152,10 +152,10 @@ func TestTraefikVirtualHost(t *testing.T) {
 
 // TestTraefikStaticConfig tests static config usage and merging
 func TestTraefikStaticConfig(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Skipping on Colima/Lima because they don't predictably return ports")
+		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
 	}
 	origDir, _ := os.Getwd()
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
