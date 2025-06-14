@@ -4337,7 +4337,7 @@ func TestHostDBPort(t *testing.T) {
 			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.PostgresDefaultVersion}
 		}
 
-		for _, hostDBPort := range []string{"", "9998"} {
+		for _, hostDBPort := range []string{"", "19998"} {
 			app.HostDBPort = hostDBPort
 			err = app.Stop(true, false)
 			require.NoError(t, err)
