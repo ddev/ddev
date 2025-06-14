@@ -32,7 +32,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
       echo "Starting orbstack" && (nohup orb start &)
     else
       docker context use desktop-linux
-      docker desktop start
+      open -a Docker
     fi
     sleep 5
   }
