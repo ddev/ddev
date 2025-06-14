@@ -1696,7 +1696,7 @@ func IsRancherDesktop() bool {
 		util.Warning("IsRancherDesktop(): Unable to get Docker info, err=%v", err)
 		return false
 	}
-	if strings.HasPrefix(info.Name, "lima-rancher-desktop") {
+	if strings.HasPrefix(info.Name, "lima-rancher-desktop") || strings.Contains(info.OperatingSystem, "Rancher Desktop") {
 		return true
 	}
 	return false
