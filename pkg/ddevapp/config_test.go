@@ -1685,8 +1685,8 @@ func TestConfigFunctionality(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	hostHTTPPort := "9998"
-	hostHTTPSPort := "9999"
+	hostHTTPPort := "19998"
+	hostHTTPSPort := "19999"
 	hostDBPort := "10099"
 
 	app.HostWebserverPort = hostHTTPPort
