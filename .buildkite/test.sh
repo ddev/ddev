@@ -97,48 +97,6 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   esac
 fi
 
-# On Windows (msys), support multiple docker providers
-if [ "${OSTYPE:-unknown}" = "msys" ]; then
-  function cleanup {
-    # Stop Rancher Desktop if available
-    if command -v rdctl >/dev/null 2>&1; then
-      echo "Stopping Rancher Desktop"
-      (rdctl shutdown || true)
-    fi
-    # Leave Docker Desktop running by default
-    echo "Starting Docker Desktop"
-    (docker desktop stop || true)
-    (docker desktop start || true)
-    docker context use desktop-linux
-    sleep 15
-  }
-  trap cleanup EXIT
-
-  # Start with a predictable docker provider running
-  cleanup
-
-  echo "initial docker context situation:"
-  docker context ls
-
-  # Now start the docker provider we want
-  case ${DOCKER_TYPE:-none} in
-    "docker-desktop")
-      docker desktop start
-      sleep 5
-      docker context use desktop-linux
-      ;;
-    "rancher-desktop")
-      docker desktop stop
-      rdctl start
-      docker context use default
-      sleep 15
-      ;;
-    *)
-      echo "no DOCKER_TYPE specified, exiting" && exit 10
-      ;;
-  esac
-fi
-
 export TIMEOUT_CMD="timeout -v"
 if [ ${OSTYPE%%-*} = "linux" ]; then
   TIMEOUT_CMD="timeout"
