@@ -70,7 +70,6 @@ func TestFileHash(t *testing.T) {
 // externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
 // Used only in tests
 func externalComputeSha1Sum(filePath string) (string, error) {
-
 	dir := filepath.Dir(filePath)
 	fName := filepath.Base(filePath)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", path.Join("/mnt/mounteddir", fName)}, nil, nil, []string{dir + ":" + "/mnt/mounteddir"}, "0", true, false, nil, nil, nil)
