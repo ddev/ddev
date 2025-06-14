@@ -41,12 +41,11 @@ We have automated testing and support for a staggering range of Docker providers
 | Rancher Desktop (macOS)    | officially tested and supported on macOS                               |
 | Rancher Desktop (Windows)  | officially tested and supported on traditional Windows                 |
 
-
 #### Unsupported
 
 The following environments do not have automated test coverage and may result in problems.
 
-* Docker Desktop for Linux. We recommend the documented [docker-ce](../install/docker-installation.md) installation instead.
+* Docker Desktop for Linux. Although Docker Desktop for Linux appears to work successfully in limited manual testing, we recommend the documented [docker-ce](../install/docker-installation.md) installation instead.
 
 ### How can I migrate from one Docker provider to another?
 
