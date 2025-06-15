@@ -91,7 +91,6 @@ var AuthSSHCommand = &cobra.Command{
 				filename = fmt.Sprintf("%s_%d", filename, i)
 			}
 			addedKeys[filename] = struct{}{}
-			keyPath = util.WindowsPathToCygwinPath(keyPath)
 			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
 			// Mount optional OpenSSH certificate
 			if certPath, certName := getCertificateForPrivateKey(keyPath, filename); certPath != "" && certName != "" {
@@ -194,7 +193,6 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 		util.Warning("Unable to read %s file: file is not readable", certPath)
 		return "", ""
 	}
-	certPath = util.WindowsPathToCygwinPath(certPath)
 	certName := name + "-cert.pub"
 	return certPath, certName
 }

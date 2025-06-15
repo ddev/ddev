@@ -332,7 +332,6 @@ func Chdir(path string) func() {
 func ClearDockerEnv() {
 	envVars := []string{
 		"COMPOSE_PROJECT_NAME",
-		"COMPOSE_CONVERT_WINDOWS_PATHS",
 		"DDEV_SITENAME",
 		"DDEV_DBIMAGE",
 		"DDEV_WEBIMAGE",

@@ -23,7 +23,7 @@ NO_V_VERSION=${LATEST_VERSION#v}
 URL="https://github.com/buildkite/agent/releases/download/$LATEST_VERSION/buildkite-agent-windows-amd64-${NO_V_VERSION}.zip"
 mkdir -p /c/buildkite-agent/bin && cd /tmp && curl -L -O $URL
 cd /c/buildkite-agent && unzip /tmp/buildkite-agent-windows-amd64-${NO_V_VERSION}.zip
-perl -pi.bak -e 's/# tags="key1=val2,key2=val2"/tags="os=windows,architecture=amd64,osvariant=windows10pro,dockertype=dockerforwindows"/' /c/buildkite-agent/buildkite-agent.cfg
+perl -pi.bak -e 's/# tags="key1=val2,key2=val2"/tags="os=windows,architecture=amd64,osvariant=windows10pro,docker-desktop=true"/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e 's/^build-path=.*$/build-path=C:\\Users\\testbot\\tmp\\buildkite/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e 's/^build-path=.*$/build-path=C:\\Users\\testbot\\tmp\\buildkite/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e "s/^token=.*\$/token=${BUILDKITE_AGENT_TOKEN}/" /c/buildkite-agent/buildkite-agent.cfg

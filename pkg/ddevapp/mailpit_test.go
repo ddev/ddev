@@ -6,6 +6,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	assert2 "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,9 @@ import (
 
 // TestMailpit does a basic test of mailpit.
 func TestMailpit(t *testing.T) {
+	if dockerutil.IsRancherDesktop() || nodeps.IsWSL2MirroredMode() {
+		t.Skip("Skipping TestMailpit on Rancher Desktop and WSL2 Mirrored Mode. Both test fine manually and the test runs fine manually in both environments.")
+	}
 	assert := assert2.New(t)
 
 	testcommon.ClearDockerEnv()
