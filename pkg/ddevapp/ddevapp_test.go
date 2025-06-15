@@ -4294,8 +4294,8 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping test on Lima/Colima because of constant port problems")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping test on Lima/Colima/Rancher because of constant port problems")
 	}
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()
