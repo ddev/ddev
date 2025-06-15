@@ -19,7 +19,7 @@ import (
 	"github.com/google/go-github/v72/github"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // AddonGetCmd is the "ddev add-on get" command

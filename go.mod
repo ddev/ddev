@@ -30,6 +30,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/ulikunitz/xz v0.5.12
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
+	go.yaml.in/yaml/v3 v3.0.3
 	golang.org/x/mod v0.24.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0

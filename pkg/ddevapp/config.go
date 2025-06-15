@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,7 +25,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
