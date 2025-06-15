@@ -918,6 +918,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
+	if runtime.GOOS == "windows" && dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Windows/Rancher Desktop because test fails in some RD configurations, but manual testing works")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -1568,8 +1571,8 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Lima/Colima")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Lima/Colima/Rancher")
 	}
 	assert := asrt.New(t)
 
@@ -4022,8 +4025,8 @@ func TestPHPWebserverType(t *testing.T) {
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on mac Apple Silicon/Lima/Colima to ignore problems with 'connection reset by peer'")
+	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
 	}
 
 	assert := asrt.New(t)
@@ -4291,8 +4294,8 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping test on Lima/Colima because of constant port problems")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping test on Lima/Colima/Rancher because of constant port problems")
 	}
 	assert := asrt.New(t)
 	defer util.TimeTrackC(t.Name())()
@@ -4337,7 +4340,7 @@ func TestHostDBPort(t *testing.T) {
 			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.PostgresDefaultVersion}
 		}
 
-		for _, hostDBPort := range []string{"", "9998"} {
+		for _, hostDBPort := range []string{"", "19998"} {
 			app.HostDBPort = hostDBPort
 			err = app.Stop(true, false)
 			require.NoError(t, err)

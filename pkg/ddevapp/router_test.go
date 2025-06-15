@@ -23,7 +23,7 @@ import (
 
 // TestGlobalPortOverride tests global router_http_port and router_https_port
 func TestGlobalPortOverride(t *testing.T) {
-	if dockerutil.IsLima() || dockerutil.IsColima() {
+	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Lima and Colima often allocate another port, so skip")

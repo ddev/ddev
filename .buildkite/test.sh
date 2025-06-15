@@ -41,7 +41,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   # Start with a predictable docker provider running
   cleanup
 
-  echo "starting docker context situation:"
+  echo "initial docker context situation:"
   docker context ls
 
   # For Lima and Colima, as of Lima 1.0.4, having orbstack running
