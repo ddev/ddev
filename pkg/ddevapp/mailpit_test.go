@@ -6,6 +6,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	assert2 "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,9 @@ import (
 
 // TestMailpit does a basic test of mailpit.
 func TestMailpit(t *testing.T) {
+	if nodeps.IsWSL2MirroredMode() {
+		t.Skip("Skipping TestMailpit in WSL2 mirrored mode; Manual testing and manual test run works fine, but can fail with 'remote error: tls: unrecognized name' in WSL2 mirrored mode.")
+	}
 	assert := assert2.New(t)
 
 	testcommon.ClearDockerEnv()
