@@ -7,7 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )

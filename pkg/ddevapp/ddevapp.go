@@ -32,8 +32,8 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v3"
 )
 
 const (
