@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -171,6 +172,9 @@ func TestCmdExec(t *testing.T) {
 	defer os.Remove(f.Name()) // nolint: errcheck
 
 	bashTempName := f.Name()
+	if runtime.GOOS == "windows" {
+		bashTempName = util.WindowsPathToCygwinPath(bashTempName)
+	}
 	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", DdevBin, bashTempName))
 
 	out, err = fileutil.ReadFileIntoString(f.Name())
