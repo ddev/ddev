@@ -918,9 +918,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
-	if runtime.GOOS == "windows" && dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on Windows/Rancher Desktop because test fails in some RD configurations, but manual testing works")
-	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()

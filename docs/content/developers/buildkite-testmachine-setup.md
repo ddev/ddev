@@ -10,20 +10,20 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. In admin PowerShell, `wsl --install`.
-3. (WSL2/Docker Desktop and traditional Windows only): Install either [Docker Desktop for Windows](https://docs.docker.com/desktop/release-notes/) (from the release notes page, which is best maintained) or [Rancher Desktop](https://rancherdesktop.io/). With Rancher Desktop, turn off Kubernetes.
+3. (WSL2/Docker Desktop and traditional Windows only): Install either [Docker Desktop for Windows](https://docs.docker.com/desktop/release-notes/) (from the release notes page, which is best maintained) or [Rancher Desktop](https://rancherdesktop.io/). With Rancher Desktop, turn off Kubernetes. (Rancher Desktop on Windows appears to be too unreliable to use at this point in its history.)
 4. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "Unrestricted"`.
 5. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
 6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make` are only required for a traditional Windows test machine. `choco install -y git jq  mysql-cli golang make mkcert netcat zip`.
 7. After restart, in **administrative** Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`.
 8. (Traditional Windows test runner only): Download and run [windows_buildkite_setup.sh](scripts/windows_buildkite_setup.sh).
-9. If using Rancher Desktop, adjust the /c/buildkite-agent/buildkite-agent.cfg file to set the `rancher-desktop=true` in the tags instead of `docker-desktop`. If using Docker Desktop, set the `docker-desktop=true`.
+9. If using Rancher Desktop, adjust the /c/buildkite-agent/buildkite-agent.cfg file to set `rancher-desktop=true` in the tags instead of `docker-desktop`. If using Docker Desktop, set `docker-desktop=true`.
 10. (Traditional Windows test runner only): Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh).
 11. (Traditional Windows or Docker Desktop WSL2 Only) Launch Docker. It may require you to take further actions.
     * Check "Start Docker Desktop when you sign in" or the equivalent with Rancher Desktop.
     * Check "Add the *.docker.internal names to the host's /etc/hosts file"
     * Uncheck "SBOM Indexing"
     * Under "Resources" uncheck "Resource Saver"
-12. After starting Docker Desktop or Rancher Desktop, set the correct Docker context in the Git Bash window with `docker context use default` (Docker Desktop) or `docker context use rancher-desktop` (Rancher Desktop).
+12. After starting Docker Desktop or Rancher Desktop, set the correct Docker context in the Git Bash window with `docker context use desktop-linux` (Docker Desktop) or `docker context use default` (Rancher Desktop).
 13. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
 14. (Traditional Windows test runner only): Enable gd, fileinfo, and curl extensions in `/c/tools/php*/php.ini`.
 15. Set the “Sleep after time” setting in settings to never.
