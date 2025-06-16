@@ -1,6 +1,6 @@
 # WSL2 Mirrored Mode networking with docker-ce (docker native inside WSL2 == Docker inside)
 # See https://buildkite.com/ddev/wsl2-mirrored/settings/repository
-# Runs on main and PRs, including forked PRs
+# Runs on main and PRs
 
   - command: ".buildkite/test.sh"
     if: |
