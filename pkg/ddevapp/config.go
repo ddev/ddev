@@ -1180,10 +1180,12 @@ stopasgroup=true
 		return "", err
 	}
 
-	// Include PostgreSQL support for EOL Debian releases
-	// debian-security updates added for "stretch" only because this archive is not available for "buster" yet
-	// Based on: https://serverfault.com/a/1131653
-	// And add .pgpass to homedir on PostgreSQL
+	// Patch legacy postgres images for EOL Debian compatibility
+	// Rewrites APT sources for Stretch-based images (PostgreSQL 9-11)
+	// Ref: https://serverfault.com/a/1131653
+	// Buster is added to the list in case people themselves override $BASE_IMAGE
+	// Adds PGDG archive repo and installs required keys/certs
+	// Configures postgres environment: healthcheck, .pgpass, config mounts, pg_hba.conf
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = extraDBContent + fmt.Sprintf(`
@@ -1196,9 +1198,7 @@ source /etc/os-release || true
 if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buster" ]; then
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
-    if [ "${VERSION_CODENAME:-}" = "stretch" ]; then
-        echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    fi
+    echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
     timeout %s apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
         -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
