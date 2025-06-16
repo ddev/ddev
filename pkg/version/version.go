@@ -3,6 +3,7 @@ package version
 import (
 	"context"
 	"fmt"
+	"github.com/ddev/ddev/pkg/environment"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -25,6 +26,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo := make(map[string]string)
 
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
+	versionInfo["ddev-environment"] = environment.GetDDEVEnvironment()
 	versionInfo["cgo_enabled"] = strconv.FormatInt(versionconstants.CGOEnabled, 10)
 	versionInfo["global-ddev-dir"] = globalconfig.GetGlobalDdevDir()
 	versionInfo["go-version"] = runtime.Version()

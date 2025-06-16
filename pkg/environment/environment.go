@@ -23,10 +23,10 @@ func GetDDEVEnvironment() string {
 		e = DDEVEnvironmentCodespaces
 	case nodeps.IsGitpod():
 		e = DDEVEnvironmentGitpod
-	case nodeps.IsWSL2():
-		e = DDEVEnvironmentWSL2
 	case nodeps.IsWSL2MirroredMode():
 		e = DDEVEnvironmentWSL2Mirrored
+	case nodeps.IsWSL2():
+		e = DDEVEnvironmentWSL2
 	}
 
 	return e

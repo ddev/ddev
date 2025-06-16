@@ -234,9 +234,10 @@ func identify() {
 	dockerVersion, _ := dockerutil.GetDockerVersion()
 	dockerPlaform, _ := version.GetDockerPlatform()
 	timezone, _ := time.Now().In(time.Local).Zone()
+	ddevEnvironment := environment.GetDDEVEnvironment()
 
 	builder := ampli.Identify.Builder().
-		DdevEnvironment(environment.GetDDEVEnvironment()).
+		DdevEnvironment(ddevEnvironment).
 		DockerPlatform(dockerPlaform).
 		DockerVersion(dockerVersion).
 		Timezone(timezone)
