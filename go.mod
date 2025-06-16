@@ -1,7 +1,7 @@
 module github.com/ddev/ddev
 
 require (
-	dario.cat/mergo v1.0.1
+	dario.cat/mergo v1.0.2
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Masterminds/sprig/v3 v3.3.0
@@ -30,12 +30,12 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/ulikunitz/xz v0.5.12
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
+	go.yaml.in/yaml/v3 v3.0.3
 	golang.org/x/mod v0.24.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0
 	golang.org/x/term v0.30.0
 	golang.org/x/text v0.23.0
-	gopkg.in/yaml.v3 v3.0.1
 	muzzammil.xyz/jsonc v1.0.0
 )
 
@@ -79,6 +79,7 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )
 
