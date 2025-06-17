@@ -4,6 +4,24 @@ DDEV has built-in support for [xhprof](https://www.php.net/manual/en/book.xhprof
 
 ## Simplest XHProf Usage With XHGui
 
+In DDEV v1.24.4+ you can switch to the XHGui profiling mode (permanently) with:
+
+```bash
+ddev config global --xhprof-mode=xhgui && ddev restart
+```
+
+Start profiling with:
+
+```bash
+ddev xhgui on
+```
+
+Visit a few pages in your app to collect profiling data, then:
+
+```bash
+ddev xhgui launch
+```
+
 The easiest way to work with XHProf is to turn on XHGui, `ddev config global --xhprof-mode=xhgui`.
 
 You can launch the web interface with:
@@ -12,7 +30,7 @@ You can launch the web interface with:
 ddev xhgui
 ```
 
-Visit the pages you want to study, and then revisit the XHGui UI using `ddev xhgui`.
+More details in [XHGui Feature Makes Profiling Even Easier](https://ddev.com/blog/xhgui-feature/).
 
 ## Traditional XHProf Usage with `prepend`
 
