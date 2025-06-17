@@ -67,8 +67,9 @@ ddev exec --raw -- ls -lR`,
 		}
 
 		_, _, err = app.Exec(opts)
+		verbose, _ := cmd.Flags().GetBool("verbose")
 
-		if err != nil {
+		if err != nil && verbose {
 			util.Failed("Failed to execute command `%s`: %v", opts.Cmd, err)
 		}
 	},
@@ -102,6 +103,7 @@ func init() {
 	_ = DdevExecCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(true))
 	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Defines the execution directory within the container")
 	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with Bash inside container)")
+	DdevExecCmd.Flags().BoolP("verbose", "v", false, "Add DDEV default error output")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)
