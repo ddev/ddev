@@ -385,7 +385,7 @@ func ArrayToReadableOutput(slice []string) (string, error) {
 }
 
 // WindowsPathToCygwinPath changes C:/path/to/something to //c/path/to/something
-// This is required for Docker bind mounts on Docker toolbox.
+// This should only be used in CYGWIN/git-bash context
 // Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
 func WindowsPathToCygwinPath(windowsPath string) string {
 	windowsPath = filepath.ToSlash(windowsPath)

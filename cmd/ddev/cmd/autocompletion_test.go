@@ -527,8 +527,8 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 
 // TestAutocompleteTermsForCustomCmds tests the AutocompleteTerms annotation for custom host and container commands
 func TestAutocompleteTermsForCustomCmds(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Colima/Lima")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Colima/Lima/Rancher")
 	}
 	assert := asrt.New(t)
 

@@ -7,7 +7,7 @@
       build.message !~ /\[(skip ci|skip buildkite)\]/
     agents:
       - "os=windows"
-      - "dockertype=dockerforwindows"
+      - "docker-desktop=true"
       - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true

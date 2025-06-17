@@ -1260,8 +1260,8 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Lima/Colima, lots of network connections failed")
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Lima/Colima/Rancher, lots of network connections failed")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -1664,6 +1664,9 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 func TestConfigFunctionality(t *testing.T) {
 	assert := asrt.New(t)
 
+	if dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Rancher Desktop, host ports fail sometimes. On Windows 'Get \"http://127.0.0.1:19998/readme.html\": read tcp 127.0.0.1:59065->127.0.0.1:19998: wsarecv: An existing connection was forcibly closed by the remote host.'")
+	}
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
@@ -1685,8 +1688,8 @@ func TestConfigFunctionality(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	hostHTTPPort := "9998"
-	hostHTTPSPort := "9999"
+	hostHTTPPort := "19998"
+	hostHTTPSPort := "19999"
 	hostDBPort := "10099"
 
 	app.HostWebserverPort = hostHTTPPort

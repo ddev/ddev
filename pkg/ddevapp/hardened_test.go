@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,7 +20,7 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if nodeps.IsAppleSilicon() {
+	if nodeps.IsAppleSilicon() || nodeps.IsWSL2() || dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms, no need to test hardened on arm64")
 	}
 
