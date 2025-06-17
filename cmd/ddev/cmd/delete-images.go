@@ -198,18 +198,22 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		}
 
 		skip := false
+		// Get list of third-party services
 		var serviceNames []string
 		if slices.Contains(composeProjectNames, projectName) {
 			if app := projectMap[projectName]; app != nil {
 				if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
 					for serviceName := range services {
-						serviceNames = append(serviceNames, serviceName)
+						if !slices.Contains([]string{"web", "db"}, serviceName) {
+							serviceNames = append(serviceNames, serviceName)
+						}
 					}
 				}
 			}
 		}
 
 		for _, tag := range image.RepoTags {
+			// check for third-party service images that should not be deleted
 			if projectName != "" {
 				for _, serviceName := range serviceNames {
 					if strings.Contains(tag, serviceName) {
