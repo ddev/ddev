@@ -3016,10 +3016,14 @@ func deleteImages(app *DdevApp) {
 	}
 	for _, img := range images {
 		_ = dockerutil.RemoveImage(img.ID)
+		imageName := img.ID
+		if len(img.RepoTags) > 0 {
+			imageName = strings.Join(img.RepoTags, ", ")
+		}
 		if err != nil {
-			util.Warning("Could not remove image %s: %v", strings.Join(img.RepoTags, ", "), err)
+			util.Warning("Could not remove image %s: %v", imageName, err)
 		} else {
-			util.Success("Image %s for project %s was deleted", strings.Join(img.RepoTags, ", "), app.Name)
+			util.Success("Image %s for project %s was deleted", imageName, app.Name)
 		}
 	}
 	// These images should already be deleted, but just in case, delete these two by name
