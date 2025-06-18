@@ -99,13 +99,13 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 
 ## `corepack_enable`
 
-Whether to `corepack enable` on Node.js configuration.
+Whether to run `corepack enable` on Node.js configuration.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
-When `true`, `corepack_enable` will be executed, making latest `yarn` and `pnpm` package managers available.
+When `true`, `corepack enable` will be executed, making latest `yarn` and `pnpm` package managers available.
 
 ## `database`
 
@@ -531,7 +531,7 @@ Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev desc
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`. If you don't like the table lines in `ddev list` or `ddev describe`, you can completely turn them off with `ddev config --simple-formatting=true`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`. If you don't like the table lines in `ddev list` or `ddev describe`, you can completely turn them off with `ddev config global --simple-formatting=true`.
 
 When `true`, turns off most table formatting in [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) and suppresses colorized text everywhere.
 
@@ -543,7 +543,7 @@ Style for [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usag
 | -- | -- | --
 | :octicons-globe-16: global | `default` | Can be `default`, `bold`, and `bright`.
 
-`bright` is a pleasant, colorful output some people may prefer. If you don't like the table lines at all, you can remove them with `ddev config --simple-formatting=true`.
+`bright` is a pleasant, colorful output some people may prefer. If you don't like the table lines at all, you can remove them with `ddev config global --simple-formatting=true`.
 
 ## `timezone`
 
@@ -763,4 +763,4 @@ Whether XHProf should use `prepend` or `xhgui` mode.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | `prepend` or `xhgui`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | Can be `global`, `prepend` or `xhgui`.

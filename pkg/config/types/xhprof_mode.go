@@ -82,9 +82,9 @@ const FlagXHProfModeResetName = "xhprof-mode-reset"
 func FlagXHProfModeResetDescription(configType ConfigType) string {
 	switch configType {
 	case ConfigTypeGlobal:
-		return "Reset xhprof mode to default"
+		return "Reset XHProf mode to default"
 	case ConfigTypeProject:
-		return "Reset xhprof mode to global configuration"
+		return "Reset XHProf mode to global configuration"
 	default:
 		panic(fmt.Errorf("invalid ConfigType: %v", configType))
 	}
