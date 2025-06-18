@@ -80,8 +80,10 @@ Additional commands that can help clean up resources:
 			os.Exit(1)
 		}
 
-		util.Success("Powering off DDEV to avoid conflicts.")
-		ddevapp.PowerOff()
+		if needsPoweroffToDeleteImages {
+			util.Success("Powering off DDEV to avoid conflicts.")
+			ddevapp.PowerOff()
+		}
 
 		globalDdevDir := globalconfig.GetGlobalDdevDir()
 		_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))

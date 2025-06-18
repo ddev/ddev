@@ -18,6 +18,7 @@ import (
 )
 
 var hasImagesToRemove = true
+var needsPoweroffToDeleteImages = false
 
 // DeleteImagesCmd implements the ddev delete images command
 var DeleteImagesCmd = &cobra.Command{
@@ -56,8 +57,10 @@ var DeleteImagesCmd = &cobra.Command{
 			}
 		}
 
-		util.Success("Powering off DDEV to avoid conflicts")
-		ddevapp.PowerOff()
+		if needsPoweroffToDeleteImages {
+			util.Success("Powering off DDEV to avoid conflicts")
+			ddevapp.PowerOff()
+		}
 
 		if err := deleteDdevImages(deleteAllImages, false); err != nil {
 			util.Failed("Failed to delete images: %v", err)
@@ -104,21 +107,98 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		}
 	}
 
+	if len(images) == 0 {
+		hasImagesToRemove = false
+		return nil
+	}
+
+	if !deleteAll {
+		allProjects, err := ddevapp.GetProjects(false)
+		if err != nil {
+			return err
+		}
+
+		projectMap := make(map[string]*ddevapp.DdevApp, len(allProjects))
+		var composeProjectNames []string
+		for _, project := range allProjects {
+			name := project.GetComposeProjectName()
+			projectMap[name] = project
+			composeProjectNames = append(composeProjectNames, name)
+		}
+
+		webImage := ddevImages.GetWebImage()
+		dbImagePrefix := versionconstants.DBImg
+		dbImageSuffix := versionconstants.BaseDBTag
+		routerImage := ddevImages.GetRouterImage()
+		sshImage := ddevImages.GetSSHAuthImage()
+		xhguiImage := ddevImages.GetXhguiImage()
+		utilitiesImage := versionconstants.UtilitiesImage
+
+		var filteredImages []dockerImage.Summary
+		for _, image := range images {
+			projectName := image.Labels["com.docker.compose.project"]
+			// Remove images from unlisted or not properly deleted projects
+			if projectName != "" && projectName != ddevapp.SSHAuthName && !slices.Contains(composeProjectNames, projectName) {
+				filteredImages = append(filteredImages, image)
+				continue
+			}
+
+			skip := false
+			// Get list of third-party services
+			var serviceNames []string
+			if slices.Contains(composeProjectNames, projectName) {
+				if app := projectMap[projectName]; app != nil {
+					if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
+						for serviceName := range services {
+							if !slices.Contains([]string{"web", "db"}, serviceName) {
+								serviceNames = append(serviceNames, serviceName)
+							}
+						}
+					}
+				}
+			}
+
+			for _, tag := range image.RepoTags {
+				// check for third-party service images that should not be deleted
+				if projectName != "" {
+					for _, serviceName := range serviceNames {
+						if strings.Contains(tag, serviceName) {
+							skip = true
+							break
+						}
+					}
+				}
+				if skip {
+					break
+				}
+
+				if tag == webImage ||
+					(strings.HasPrefix(tag, webImage) && strings.HasSuffix(tag, "-built")) ||
+					(strings.HasPrefix(tag, dbImagePrefix) && strings.HasSuffix(tag, dbImageSuffix)) ||
+					(strings.HasPrefix(tag, dbImagePrefix) && strings.Contains(tag, dbImageSuffix) && strings.HasSuffix(tag, "-built")) ||
+					tag == routerImage ||
+					tag == sshImage ||
+					(strings.HasPrefix(tag, sshImage) && strings.HasSuffix(tag, "-built")) ||
+					tag == xhguiImage ||
+					strings.HasPrefix(tag, utilitiesImage) {
+					skip = true
+					break
+				}
+			}
+			if !skip {
+				filteredImages = append(filteredImages, image)
+			}
+		}
+		images = filteredImages
+	}
+
+	if len(images) == 0 {
+		hasImagesToRemove = false
+		return nil
+	}
+
 	// Sort for more readable output
 	sort.Slice(images, func(i, j int) bool {
-		labelI, okI := images[i].Labels["com.docker.compose.project"]
-		labelJ, okJ := images[j].Labels["com.docker.compose.project"]
-
-		if okI && okJ && labelI != labelJ {
-			return labelI < labelJ
-		}
-		if okI && !okJ {
-			return true
-		}
-		if !okI && okJ {
-			return false
-		}
-
 		var tagI, tagJ string
 		if len(images[i].RepoTags) > 0 {
 			tagI = images[i].RepoTags[0]
@@ -129,153 +209,36 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		return tagI < tagJ
 	})
 
-	if len(images) == 0 {
-		hasImagesToRemove = false
-		return nil
-	}
-
-	if deleteAll {
-		if dryRun {
-			util.Warning("Warning: the following %d Docker image(s) will be deleted:", len(images))
-		}
-		for _, image := range images {
-			projectName := image.Labels["com.docker.compose.project"]
-			imageName := image.ID
-			if len(image.RepoTags) > 0 {
-				imageName = strings.Join(image.RepoTags, ", ")
-			}
-			if dryRun {
-				output.UserOut.Printf("Image to be deleted%s: %s",
-					func() string {
-						if projectName != "" {
-							return " from " + projectName
-						}
-						return ""
-					}(),
-					imageName,
-				)
-				continue
-			}
-			if err := dockerutil.RemoveImage(image.ID); err != nil {
-				return err
-			}
-		}
-		if dryRun {
-			util.Warning("Deleting images is a non-destructive operation.")
-			util.Warning("You may need to download images again when you need them.\n")
-		}
-		return nil
-	}
-
-	allProjects, err := ddevapp.GetProjects(false)
+	dockerContainers, err := dockerutil.GetDockerContainers(true)
 	if err != nil {
 		return err
 	}
-
-	projectMap := make(map[string]*ddevapp.DdevApp, len(allProjects))
-	var composeProjectNames []string
-	for _, project := range allProjects {
-		name := project.GetComposeProjectName()
-		projectMap[name] = project
-		composeProjectNames = append(composeProjectNames, name)
-	}
-
-	webImage := ddevImages.GetWebImage()
-	dbImagePrefix := versionconstants.DBImg
-	dbImageSuffix := versionconstants.BaseDBTag
-	routerImage := ddevImages.GetRouterImage()
-	sshImage := ddevImages.GetSSHAuthImage()
-	xhguiImage := ddevImages.GetXhguiImage()
-	utilitiesImage := versionconstants.UtilitiesImage
-
-	var filteredImages []dockerImage.Summary
-	for _, image := range images {
-		projectName := image.Labels["com.docker.compose.project"]
-		// Remove images from unlisted or not properly deleted projects
-		if projectName != "" && projectName != ddevapp.SSHAuthName && !slices.Contains(composeProjectNames, projectName) {
-			filteredImages = append(filteredImages, image)
-			continue
-		}
-
-		skip := false
-		// Get list of third-party services
-		var serviceNames []string
-		if slices.Contains(composeProjectNames, projectName) {
-			if app := projectMap[projectName]; app != nil {
-				if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-					for serviceName := range services {
-						if !slices.Contains([]string{"web", "db"}, serviceName) {
-							serviceNames = append(serviceNames, serviceName)
-						}
-					}
-				}
-			}
-		}
-
-		for _, tag := range image.RepoTags {
-			// check for third-party service images that should not be deleted
-			if projectName != "" {
-				for _, serviceName := range serviceNames {
-					if strings.Contains(tag, serviceName) {
-						skip = true
-						break
-					}
-				}
-			}
-			if skip {
-				break
-			}
-
-			if tag == webImage ||
-				(strings.HasPrefix(tag, webImage) && strings.HasSuffix(tag, "-built")) ||
-				(strings.HasPrefix(tag, dbImagePrefix) && strings.HasSuffix(tag, dbImageSuffix)) ||
-				(strings.HasPrefix(tag, dbImagePrefix) && strings.Contains(tag, dbImageSuffix) && strings.HasSuffix(tag, "-built")) ||
-				tag == routerImage ||
-				tag == sshImage ||
-				(strings.HasPrefix(tag, sshImage) && strings.HasSuffix(tag, "-built")) ||
-				tag == xhguiImage ||
-				strings.HasPrefix(tag, utilitiesImage) {
-				skip = true
-				break
-			}
-		}
-		if !skip {
-			filteredImages = append(filteredImages, image)
-		}
-	}
-
-	if len(filteredImages) == 0 {
-		hasImagesToRemove = false
-		return nil
+	imageIDinUse := make([]string, 0, len(dockerContainers))
+	for _, c := range dockerContainers {
+		imageIDinUse = append(imageIDinUse, c.ImageID)
 	}
 
 	if dryRun {
-		util.Warning("Warning: the following %d Docker image(s) will be deleted:", len(filteredImages))
+		util.Warning("Warning: the following %d Docker image(s) will be deleted:", len(images))
+		output.UserOut.Printf("IMAGE ID       REPOSITORY:TAG")
 	}
-
-	for _, image := range filteredImages {
-		projectName := image.Labels["com.docker.compose.project"]
-		imageName := image.ID
+	for _, image := range images {
+		shortImageID := dockerutil.TruncateID(image.ID)
+		imageName := "<none>:<none>"
 		if len(image.RepoTags) > 0 {
 			imageName = strings.Join(image.RepoTags, ", ")
 		}
 		if dryRun {
-			output.UserOut.Printf("Image to be deleted%s: %s",
-				func() string {
-					if projectName != "" {
-						return " from " + projectName
-					}
-					return ""
-				}(),
-				imageName,
-			)
+			if slices.Contains(imageIDinUse, image.ID) {
+				needsPoweroffToDeleteImages = true
+			}
+			output.UserOut.Printf(shortImageID + "   " + imageName)
 			continue
 		}
 		if err := dockerutil.RemoveImage(image.ID); err != nil {
 			return err
 		}
 	}
-
 	if dryRun {
 		util.Warning("Deleting images is a non-destructive operation.")
 		util.Warning("You may need to download images again when you need them.\n")
