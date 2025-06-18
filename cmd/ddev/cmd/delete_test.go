@@ -51,6 +51,7 @@ func TestDeleteCmd(t *testing.T) {
 	vols := []string{
 		app.GetMariaDBVolumeName(),
 		app.GetPostgresVolumeName(),
+		"third-party-tmp-busybox-volume",
 	}
 	if app.IsMutagenEnabled() {
 		vols = append(vols, ddevapp.GetMutagenVolumeName(app))
@@ -62,7 +63,6 @@ func TestDeleteCmd(t *testing.T) {
 		assert.Contains(out, fmt.Sprintf("Volume %s for project %s was deleted", volName, app.Name))
 		assert.False(dockerutil.VolumeExists(volName))
 	}
-	assert.Contains(out, "Deleting third-party persistent volume third-party-tmp-busybox-volume")
 
 	// Check that images are deleted
 	imgs := []string{

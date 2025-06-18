@@ -2998,7 +2998,7 @@ func deleteServiceVolumes(app *DdevApp) {
 				if err != nil {
 					util.Warning("Could not remove volume %s: %v", volName, err)
 				} else {
-					util.Success("Deleting third-party persistent volume %s", volName)
+					util.Success("Volume %s for project %s was deleted", volName, app.Name)
 				}
 			}
 		}
@@ -3014,15 +3014,12 @@ func deleteImages(app *DdevApp) {
 	if err != nil {
 		util.Warning("Could not find images for project %s: %v", app.Name, err)
 	}
-	for _, img := range images {
-		_ = dockerutil.RemoveImage(img.ID)
-		imageName := img.ID
-		if len(img.RepoTags) > 0 {
-			imageName = strings.Join(img.RepoTags, ", ")
+	for _, image := range images {
+		imageName := "<none>:<none> " + dockerutil.TruncateID(image.ID)
+		if len(image.RepoTags) > 0 {
+			imageName = strings.Join(image.RepoTags, ", ")
 		}
-		if err != nil {
-			util.Warning("Could not remove image %s: %v", imageName, err)
-		} else {
+		if err = dockerutil.RemoveImage(image.ID); err == nil {
 			util.Success("Image %s for project %s was deleted", imageName, app.Name)
 		}
 	}
