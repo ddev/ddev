@@ -66,6 +66,7 @@ var DeleteImagesCmd = &cobra.Command{
 			util.Failed("Failed to delete images: %v", err)
 		}
 		util.Success("All DDEV images discovered were deleted.")
+		util.Success("Optionally, run `docker builder prune` to clean unused builder cache.")
 	},
 }
 

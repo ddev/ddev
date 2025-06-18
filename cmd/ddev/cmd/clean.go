@@ -115,6 +115,7 @@ Additional commands that can help clean up resources:
 		}
 
 		util.Success("Finished cleaning DDEV projects.")
+		util.Success("Optionally, run `docker builder prune` to clean unused builder cache.")
 	},
 }
 
