@@ -38,6 +38,8 @@ func TestCmdAddon(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"))
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "globalextras"))
 	})
 
 	// Make sure 'ddev add-on list' works first
