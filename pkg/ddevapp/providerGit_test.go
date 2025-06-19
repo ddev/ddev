@@ -9,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/mitchellh/go-homedir"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,7 +42,7 @@ func TestGitPull(t *testing.T) {
 
 		_ = os.Chdir(testDir)
 		_ = os.RemoveAll(siteDir)
-		home, _ := homedir.Dir()
+		home, _ := os.UserHomeDir()
 		_ = os.RemoveAll(filepath.Join(home, "tmp", "ddev-pull-git-test-repo"))
 	})
 
