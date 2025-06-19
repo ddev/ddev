@@ -221,7 +221,7 @@ func init() {
 	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", nodeps.WebserverDefault, fmt.Sprintf("Set the project's desired webserver type: %s", strings.Join(nodeps.GetValidWebserverTypes(), "/")))
 	_ = ConfigCommand.RegisterFlagCompletionFunc("webserver-type", configCompletionFunc(nodeps.GetValidWebserverTypes()))
-	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Set the web container image")
+	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Set the web container image (for advanced use only)")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, `Sets the default web container image, the same as --web-image=""`)
 	ConfigCommand.Flags().StringVar(&webWorkingDirArg, "web-working-dir", "", "Override the default working directory for the web service")
 	ConfigCommand.Flags().StringVar(&dbWorkingDirArg, "db-working-dir", "", "Override the default working directory for the db service")

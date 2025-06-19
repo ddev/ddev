@@ -350,7 +350,7 @@ Flags:
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible (default `true`).
 * `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove previously configured values.
 * `--web-environment-add`: Append environment variables to the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`
-* `--web-image`: Set the `web` container image.
+* `--web-image`: Set the `web` container image ([for advanced use only](../configuration/config.md#webimage)).
 * `--web-image-default`: Set the default `web` container image, the same as `--web-image=""`.
 * `--web-working-dir`: Override the default working directory for the `web` service.
 * `--web-working-dir-default`: Unset a `web` service working directory override, the same as `--web-working-dir=""`.
@@ -394,8 +394,8 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration, `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`.
 * `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 * `--web-environment-add`: Append environment variables to the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`
-* `--wsl2-no-windows-hosts-mgt`: WSL2 only; make DDEV ignore Windows-side hosts file.
-* `--xdebug-ide-location`: For less usual IDE locations specify where the IDE is running for Xdebug to reach it.
+* `--wsl2-no-windows-hosts-mgt`: WSL2 only; make DDEV ignore Windows-side hosts file ([for advanced use only](../configuration/config.md#wsl2_no_windows_hosts_mgt)).
+* `--xdebug-ide-location`: For less usual IDE locations specify where the IDE is running for Xdebug to reach it ([for advanced use only](../configuration/config.md#xdebug_ide_location)).
 * `--xhprof-mode`: XHProf mode, possible values are `prepend`, `xhgui` (see [default](../configuration/config.md#xhprof_mode)).
 * `--xhprof-mode-reset`: Reset XHProf mode to default.
 
