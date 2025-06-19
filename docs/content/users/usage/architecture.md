@@ -159,6 +159,9 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.ssh-auth-compose.yaml`
 : The base docker-compose directive used in generating `.ssh-auth-compose-full.yaml`.
 
+`ssh-auth-compose.*.yaml`
+: `docker-compose` files with the name `ssh-auth-compose.*.yaml` can be used to override stanzas in the `.ssh-auth-compose.yaml` file.
+
 `.sshimageBuild`
 : Directory used for storing DDEV’s generated `Dockerfile` used in building the SSH agent image.
 
