@@ -639,6 +639,14 @@ func (app *DdevApp) CheckCustomConfig() {
 		customConfig = true
 	}
 
+	sshAuthComposeFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.*.yaml"))
+	util.CheckErr(err)
+	if len(sshAuthComposeFiles) > 0 {
+		printableFiles, _ := util.ArrayToReadableOutput(sshAuthComposeFiles)
+		util.Warning("Using custom global ssh-auth-compose configuration (use `docker logs ddev-ssh-agent` for troubleshooting): %v", printableFiles)
+		customConfig = true
+	}
+
 	traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	if _, err := os.Stat(traefikGlobalConfigPath); err == nil {
 		traefikGlobalFiles, err := filepath.Glob(filepath.Join(traefikGlobalConfigPath, "static_config.*.yaml"))
