@@ -47,7 +47,7 @@ Additional commands that can help clean up resources:
 			util.Failed("Failed to get project(s) '%v': %v", strings.Join(args, ", "), err)
 		}
 
-		util.Warning("Warning: snapshots for the following project(s) will be permanently deleted:")
+		util.Warning("Warning: snapshots for the following project(s) will be permanently deleted:\n")
 
 		// Show the user how many snapshots per project that will be deleted
 		for _, project := range projects {
@@ -63,6 +63,18 @@ Additional commands that can help clean up resources:
 		}
 
 		output.UserOut.Println()
+
+		globalDdevDir := globalconfig.GetGlobalDdevDir()
+		globalDirectoriesToRemove := []string{
+			filepath.Join(globalDdevDir, "bin"),
+			filepath.Join(globalDdevDir, "testcache"),
+		}
+
+		if cleanAll {
+			dirList, _ := util.ArrayToReadableOutput(globalDirectoriesToRemove)
+			util.Warning("Warning: the following directories will be removed:")
+			output.UserOut.Printf("%s", dirList)
+		}
 
 		err = deleteDdevImages(cleanAll, true)
 		if err != nil {
@@ -83,11 +95,20 @@ Additional commands that can help clean up resources:
 		if needsPoweroffToDeleteImages {
 			util.Success("Powering off DDEV to avoid conflicts.")
 			ddevapp.PowerOff()
+		} else {
+			for _, project := range projects {
+				err = project.Stop(false, false)
+				if err != nil {
+					util.Warning("Failed to stop project %s: %v", project.Name, err)
+				}
+			}
 		}
 
-		globalDdevDir := globalconfig.GetGlobalDdevDir()
-		_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
-		_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
+		if cleanAll {
+			for _, dir := range globalDirectoriesToRemove {
+				_ = os.RemoveAll(dir)
+			}
+		}
 
 		amplitude.Clean()
 
