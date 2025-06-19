@@ -95,6 +95,7 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
 		return "", nil
 	}
+	_, err = os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("could not get home directory for current user. Is it set?")
 	}
