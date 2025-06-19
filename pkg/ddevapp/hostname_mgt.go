@@ -9,34 +9,11 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/ddev/ddev/pkg/ddevhosts"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 )
-
-// IsHostnameInHostsFile checks to see if the hostname already exists
-// On WSL2 it normally assumes that the hosts file is in WSL2WindowsHostsFile
-// Otherwise it lets goodhosts decide where the hosts file is.
-func IsHostnameInHostsFile(hostname string) (bool, error) {
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		return false, fmt.Errorf("could not get Docker IP: %v", err)
-	}
-
-	var hosts = &ddevhosts.DdevHosts{}
-	if nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
-	} else {
-		hosts, err = ddevhosts.New()
-	}
-	if err != nil {
-		return false, fmt.Errorf("unable to open hosts file: %v", err)
-	}
-	return hosts.Has(dockerIP, hostname), nil
-}
 
 // AddHostsEntriesIfNeeded will run sudo ddev hostname to the site URL to the host's /etc/hosts.
 // This should be run without admin privs; the DDEV hostname command will handle escalation.
@@ -70,7 +47,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 
 		// We likely won't hit the hosts.Has() as true because
 		// we already did a lookup. But check anyway.
-		exists, err := IsHostnameInHostsFile(name)
+		exists, err := hostname.IsHostnameInHostsFile(name)
 		if exists {
 			continue
 		}
@@ -108,7 +85,7 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	}
 
 	for _, name := range app.GetHostnames() {
-		exists, err := IsHostnameInHostsFile(name)
+		exists, err := hostname.IsHostnameInHostsFile(name)
 		if !exists {
 			continue
 		}

@@ -2,6 +2,8 @@ package hostname
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/ddevhosts"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -131,4 +133,25 @@ func IsDdevHostnameAvailable() bool {
 		ddevHostnameAvailable = false
 	}
 	return ddevHostnameAvailable
+}
+
+// IsHostnameInHostsFile checks to see if the hostname already exists
+// On WSL2 it normally assumes that the hosts file is in WSL2WindowsHostsFile
+// Otherwise it lets goodhosts decide where the hosts file is.
+func IsHostnameInHostsFile(hostname string) (bool, error) {
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return false, fmt.Errorf("could not get Docker IP: %v", err)
+	}
+
+	var hosts = &ddevhosts.DdevHosts{}
+	if nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
+	} else {
+		hosts, err = ddevhosts.New()
+	}
+	if err != nil {
+		return false, fmt.Errorf("unable to open hosts file: %v", err)
+	}
+	return hosts.Has(dockerIP, hostname), nil
 }
