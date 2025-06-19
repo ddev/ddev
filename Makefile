@@ -59,16 +59,24 @@ build: $(DEFAULT_BUILD)
 
 
 # Provide shorthand targets
-linux_amd64: $(GOTMP)/bin/linux_amd64/ddev
-linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
-linux_arm: $(GOTMP)/bin/linux_arm/ddev
-darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
-darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
+linux_amd64: $(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_amd64/ddev_hostname
+linux_arm64: $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm64/ddev_hostname
+linux_arm: $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/linux_arm/ddev_hostname
+darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev_hostname
+darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev_hostname
 windows_amd64: windows_amd64_install
 windows_arm64: windows_arm64_install
+
+#ddev_hostname_linux_amd64: $(GOTMP)/bin/linux_amd64/ddev_hostname
+#ddev_hostname_linux_arm64: $(GOTMP)/bin/linux_arm64/ddev_hostname
+#ddev_hostname_linux_arm: $(GOTMP)/bin/linux_arm/ddev_hostname
+#ddev_hostname_darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev_hostname
+#ddev_hostname_darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev_hostname
+#ddev_hostname_windows_amd64: $(GOTMP)/bin/windows_amd64/ddev_hostname.exe)
+#ddev_hostname_windows_arm64: $(GOTMP)/bin/windows_arm64/ddev_hostname.exe
 completions: $(GOTMP)/bin/completions.tar.gz
 
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev_hostname $(GOTMP)/bin/linux_arm64/ddev_hostname $(GOTMP)/bin/darwin_amd64/ddev_hostname $(GOTMP)/bin/darwin_arm64/ddev_hostname $(GOTMP)/bin/windows_amd64/ddev_hostname.exe $(GOTMP)/bin/windows_arm64/ddev_hostname.exe
 $(TARGETS): mkcert $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER) GORACE=$(GORACE) CGO_ENABLED=$(CGO_ENABLED)";
 	@#echo "LDFLAGS=$(LDFLAGS)";

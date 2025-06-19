@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
@@ -54,7 +55,7 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
-			err = ddevapp.RemoveHostEntry(name, dockerIP)
+			err = hostname.RemoveHostEntry(name, dockerIP)
 			if err != nil {
 				util.Warning("Failed to remove host entry %s: %v", name, err)
 			}
@@ -71,7 +72,7 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 			os.Exit(1)
 		}
 		// By default, add a host name
-		err = ddevapp.AddHostEntry(name, dockerIP)
+		err = hostname.AddHostEntry(name, dockerIP)
 
 		if err != nil {
 			util.Warning("Failed to add hosts entry %s: %v", name, err)
