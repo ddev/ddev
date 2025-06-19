@@ -26,7 +26,7 @@
   },
   "properties": {
     "additional_fqdns": {
-      "description": "Comma-delimited list of FQDNs for the project.",
+      "description": "List of FQDNs for the project.",
       "type": "array",
       "items": {
         "type": "string"
@@ -34,7 +34,7 @@
       "uniqueItems": true
     },
     "additional_hostnames": {
-      "description": "Comma-delimited list of hostnames for the project.",
+      "description": "List of hostnames for the project.",
       "type": "array",
       "items": {
         "type": "string"
@@ -499,7 +499,7 @@
       "type": "boolean"
     },
     "xhprof_mode": {
-      "description": "Defines the XHProf usage mode used by the project.",
+      "description": "Define the XHProf usage mode used by the project.",
       "type": "string",
       "enum": [
         "global",

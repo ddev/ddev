@@ -84,7 +84,7 @@
       "uniqueItems": true
     },
     "performance_mode": {
-      "description": "Defines the performance optimization mode to be used. Currently, Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
+      "description": "Define the performance optimization mode to be used. Currently, Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",
       "enum": [
         "none",
@@ -157,7 +157,7 @@
       "type": "string"
     },
     "xhprof_mode": {
-      "description": "Defines the default XHProf usage mode.",
+      "description": "Define the default XHProf usage mode.",
       "type": "string",
       "enum": [
         "prepend",
