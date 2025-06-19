@@ -101,7 +101,7 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 	}
 
 	if !IsDdevHostnameAvailable() {
-		return "", fmt.Errorf("ddev_hostname.exe is not installed, please install it.")
+		return "", fmt.Errorf("ddev_hostname is not installed, please install it.")
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
 	if (runtime.GOOS == "windows" || nodeps.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
@@ -115,33 +115,33 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 }
 
 // TODO: Check on all platforms
-// windowsDdevExeAvailable says if ddev.exe is available on Windows side
-var windowsDdevExeAvailable bool
+// windowsDdevHostnameExeAvailable says if ddev_hostname.exe is available in WSL2
+var windowsDdevHostnameExeAvailable bool
 
 // TODO: Check on all platforms
 // IsDdevHostnameAvailable checks to see if we can use ddev.exe on Windows side
 func IsDdevHostnameAvailable() bool {
-	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !windowsDdevExeAvailable && nodeps.IsWSL2() {
-		_, err := exec2.LookPath("ddev.exe")
+	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !windowsDdevHostnameExeAvailable && nodeps.IsWSL2() {
+		_, err := exec2.LookPath("ddev_hostname.exe")
 		if err != nil {
 			util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
-			windowsDdevExeAvailable = false
-			return windowsDdevExeAvailable
+			windowsDdevHostnameExeAvailable = false
+			return windowsDdevHostnameExeAvailable
 		}
 		out, err := exec.RunHostCommand("ddev.exe", "--version")
 		if err != nil {
 			util.Warning("Unable to run ddev.exe, please check it on Windows side; err=%v; output=%s", err, out)
-			windowsDdevExeAvailable = false
-			return windowsDdevExeAvailable
+			windowsDdevHostnameExeAvailable = false
+			return windowsDdevHostnameExeAvailable
 		}
 
 		_, err = exec2.LookPath("gsudo.exe")
 		if err != nil {
 			util.Warning("gsudo.exe not found in $PATH, please install DDEV on Windows side; err=%v", err)
-			windowsDdevExeAvailable = false
-			return windowsDdevExeAvailable
+			windowsDdevHostnameExeAvailable = false
+			return windowsDdevHostnameExeAvailable
 		}
-		windowsDdevExeAvailable = true
+		windowsDdevHostnameExeAvailable = true
 	}
-	return windowsDdevExeAvailable
+	return windowsDdevHostnameExeAvailable
 }
