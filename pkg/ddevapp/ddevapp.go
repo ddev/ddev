@@ -3018,6 +3018,13 @@ func deleteImages(app *DdevApp) {
 		imageName := "<none>:<none> " + dockerutil.TruncateID(image.ID)
 		if len(image.RepoTags) > 0 {
 			imageName = strings.Join(image.RepoTags, ", ")
+		} else if len(image.RepoDigests) > 0 {
+			var names []string
+			for _, digest := range image.RepoDigests {
+				name := strings.SplitN(digest, "@", 2)[0]
+				names = append(names, name+":<none> "+dockerutil.TruncateID(image.ID))
+			}
+			imageName = strings.Join(names, ", ")
 		}
 		if err = dockerutil.RemoveImage(image.ID); err == nil {
 			util.Success("Image %s for project %s was deleted", imageName, app.Name)

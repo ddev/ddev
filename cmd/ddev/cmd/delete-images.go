@@ -102,6 +102,17 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 			}
 		}
 		if !exists {
+			if len(image.RepoDigests) > 0 {
+				for _, tag := range image.RepoDigests {
+					if strings.HasPrefix(tag, "ddev/ddev-") || strings.HasPrefix(tag, "drud/ddev-") {
+						images = append(images, image)
+						exists = true
+						break
+					}
+				}
+			}
+		}
+		if !exists {
 			if projectName, ok := image.Labels["com.docker.compose.project"]; ok && strings.HasPrefix(projectName, "ddev-") {
 				images = append(images, image)
 			}
@@ -228,6 +239,13 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		imageName := "<none>:<none>"
 		if len(image.RepoTags) > 0 {
 			imageName = strings.Join(image.RepoTags, ", ")
+		} else if len(image.RepoDigests) > 0 {
+			var names []string
+			for _, digest := range image.RepoDigests {
+				name := strings.SplitN(digest, "@", 2)[0]
+				names = append(names, name+":<none>")
+			}
+			imageName = strings.Join(names, ", ")
 		}
 		if dryRun {
 			if slices.Contains(imageIDinUse, image.ID) {
