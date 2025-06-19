@@ -220,7 +220,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 	}
 
 	if dryRun {
-		util.Warning("Warning: the following %d Docker image(s) will be deleted:", len(images))
+		util.Warning("Warning: the following %d Docker image(s) will be deleted:\n", len(images))
 		output.UserOut.Printf("IMAGE ID       REPOSITORY:TAG")
 	}
 	for _, image := range images {
@@ -241,7 +241,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		}
 	}
 	if dryRun {
-		util.Warning("Deleting images is a non-destructive operation.")
+		util.Warning("\nDeleting images is a non-destructive operation.")
 		util.Warning("You may need to download images again when you need them.\n")
 	}
 
