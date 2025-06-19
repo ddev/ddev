@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
 )
 
 func main() {
@@ -66,6 +69,9 @@ to allow ddev_hostname to modify your hosts file. If you are connected to the in
 		name, dockerIP := args[0], args[1]
 		var err error
 
+		util.Debug("Escalating privileges to add host entry %s -> %s", name, dockerIP)
+		escalateIfNeeded()
+
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
 			err = hostname.RemoveHostEntry(name, dockerIP)
@@ -112,4 +118,25 @@ func init() {
 	RootCmd.Flags().BoolVarP(&removeHostnameFlag, "remove", "r", false, "Remove the provided host name - ip correlation")
 	RootCmd.Flags().BoolVarP(&checkHostnameFlag, "check", "c", false, "Check to see if provided hostname is already in hosts file")
 	//RootCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
+}
+
+func escalateIfNeeded() {
+	// If we’re not root (UID 0), re‐exec via sudo
+	if syscall.Geteuid() != 0 {
+		// Prepend our own path to the args
+		args := append([]string{os.Args[0]}, os.Args[1:]...)
+		cmd := exec.Command("sudo", args...)
+		// Pass through the terminal’s stdin/stdout/stderr
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to escalate: %v\n", err)
+			os.Exit(1)
+		}
+		// If sudo succeeds, it will have done the real work,
+		// so we just exit in the parent process.
+		os.Exit(0)
+	}
+	// else: we’re already root, continue
 }
