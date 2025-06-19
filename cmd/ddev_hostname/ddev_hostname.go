@@ -1,16 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
-	"os/exec"
 	"runtime"
 	"strings"
-	"syscall"
-	"unsafe"
 )
 
 func main() {
@@ -120,85 +116,3 @@ func init() {
 	RootCmd.Flags().BoolVarP(&checkHostnameFlag, "check", "c", false, "Check to see if provided hostname is already in hosts file")
 	//RootCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
 }
-
-func escalateIfNeeded() {
-	// If we’re not root (UID 0), re‐exec via sudo
-	if syscall.Geteuid() != 0 {
-		// Prepend our own path to the args
-		args := append([]string{os.Args[0]}, os.Args[1:]...)
-		cmd := exec.Command("sudo", args...)
-		// Pass through the terminal’s stdin/stdout/stderr
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to escalate: %v\n", err)
-			os.Exit(1)
-		}
-		// If sudo succeeds, it will have done the real work,
-		// so we just exit in the parent process.
-		os.Exit(0)
-	}
-	// else: we’re already root, continue
-}
-
-// +build windows
-
-import (
-"fmt"
-"os"
-"syscall"
-"unsafe"
-
-"golang.org/x/sys/windows"
-)
-
-func isElevated() bool {
-	var token windows.Token
-	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_QUERY, &token); err != nil {
-		return false
-	}
-	defer token.Close()
-
-	var elevation windows.TokenElevation
-	var retLen uint32
-	if err := windows.GetTokenInformation(token, windows.TokenElevation, (*byte)(unsafe.Pointer(&elevation)), uint32(unsafe.Sizeof(elevation)), &retLen); err != nil {
-		return false
-	}
-	return elevation.IsElevated != 0
-}
-
-func elevateSelf() {
-	verbPtr, _ := syscall.UTF16PtrFromString("runas")
-	exePath, _ := os.Executable()
-	exePtr, _ := syscall.UTF16PtrFromString(exePath)
-
-	// Reconstruct command-line arguments
-	args := ""
-	if len(os.Args) > 1 {
-		args = " " + windows.EscapeArg(os.Args[1:])
-	}
-	argsPtr, _ := syscall.UTF16PtrFromString(args)
-
-	var sei windows.ShellExecuteInfo
-	sei.CbSize = uint32(unsafe.Sizeof(sei))
-	sei.FMask = windows.SEE_MASK_NOCLOSEPROCESS
-	sei.LpVerb = verbPtr
-	sei.LpFile = exePtr
-	sei.LpParameters = argsPtr
-	sei.NShow = windows.SW_NORMAL
-
-	if err := windows.ShellExecuteEx(&sei); err != nil {
-		fmt.Fprintln(os.Stderr, "Elevation failed:", err)
-		os.Exit(1)
-	}
-	// Wait for elevated process to finish
-	windows.WaitForSingleObject(sei.HProcess, windows.INFINITE)
-
-	// Propagate its exit code
-	var code uint32
-	windows.GetExitCodeProcess(sei.HProcess, &code)
-	os.Exit(int(code))
-}
-
-
