@@ -1998,3 +1998,16 @@ func ValidatePort(port interface{}) error {
 	}
 	return nil
 }
+
+// TruncateID returns a shorthand version of a string identifier for convenience.
+// This is a copy of github.com/docker/docker/pkg/stringid.TruncateID
+func TruncateID(id string) string {
+	if i := strings.IndexRune(id, ':'); i >= 0 {
+		id = id[i+1:]
+	}
+	shortLen := 12
+	if len(id) > shortLen {
+		id = id[:shortLen]
+	}
+	return id
+}

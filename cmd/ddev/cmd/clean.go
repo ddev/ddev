@@ -8,6 +8,7 @@ import (
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -17,26 +18,24 @@ var CleanCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
 	Use:               "clean [projectname ...]",
 	Short:             "Removes items DDEV has created",
-	Long: `Stops all running projects and then removes downloads and snapshots
-for the selected projects. Then clean will remove "ddev/ddev-*" images.
+	Long: `Stops all running projects and removes downloads and snapshots for the selected projects.
+If --all flag is used, removes all "ddev/ddev-" images, otherwise removes only unused images.
 
-Warning - This command will permanently delete your snapshots for the named project[s].
+Warning: this command will permanently delete your snapshots for the named project(s).
 
 Additional commands that can help clean up resources:
   ddev delete --omit-snapshot
   docker rmi -f $(docker images -q)
   docker system prune --volumes
+  docker builder prune
 	`,
-	Example: `ddev clean
-	ddev clean project1 project2
-	ddev clean --all`,
+	Example: heredoc.DocI2S(`
+		ddev clean
+		ddev clean project1 project2
+		ddev clean --all
+	`),
 	Run: func(cmd *cobra.Command, args []string) {
-
-		// Make sure the user provides a project or flag
 		cleanAll, _ := cmd.Flags().GetBool("all")
-		if len(args) == 0 && !cleanAll {
-			util.Failed("No project provided. See ddev clean --help for usage")
-		}
 
 		// Skip project validation
 		originalRunValidateConfig := ddevapp.RunValidateConfig
@@ -45,10 +44,10 @@ Additional commands that can help clean up resources:
 		ddevapp.RunValidateConfig = originalRunValidateConfig
 
 		if err != nil {
-			util.Failed("Failed to get project(s) '%v': %v", args, err)
+			util.Failed("Failed to get project(s) '%v': %v", strings.Join(args, ", "), err)
 		}
 
-		util.Warning("Warning - Snapshots for the following project[s] will be permanently deleted")
+		util.Warning("Warning: snapshots for the following project(s) will be permanently deleted:\n")
 
 		// Show the user how many snapshots per project that will be deleted
 		for _, project := range projects {
@@ -63,23 +62,53 @@ Additional commands that can help clean up resources:
 			}
 		}
 
+		output.UserOut.Println()
+
+		globalDdevDir := globalconfig.GetGlobalDdevDir()
+		globalDirectoriesToRemove := []string{
+			filepath.Join(globalDdevDir, "bin"),
+			filepath.Join(globalDdevDir, "testcache"),
+		}
+
+		if cleanAll {
+			dirList, _ := util.ArrayToReadableOutput(globalDirectoriesToRemove)
+			util.Warning("Warning: the following directories will be removed:")
+			output.UserOut.Printf("%s", dirList)
+		}
+
+		err = deleteDdevImages(cleanAll, true)
+		if err != nil {
+			util.Failed("Failed to delete images: %v", err)
+		}
+
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
+
 		if dryRun {
 			util.Warning("Dry run terminated without removing items")
 			return
 		}
 
-		confirm := util.Prompt("Are you sure you want to continue? y/n", "n")
-		if strings.ToLower(confirm) != "y" {
-			return
+		if !util.ConfirmTo("Are you sure you want to continue?", false) {
+			os.Exit(1)
 		}
 
-		util.Success("Powering off DDEV to avoid conflicts.")
-		ddevapp.PowerOff()
+		if needsPoweroffToDeleteImages {
+			util.Success("Powering off DDEV to avoid conflicts.")
+			ddevapp.PowerOff()
+		} else {
+			for _, project := range projects {
+				err = project.Stop(false, false)
+				if err != nil {
+					util.Warning("Failed to stop project %s: %v", project.Name, err)
+				}
+			}
+		}
 
-		globalDdevDir := globalconfig.GetGlobalDdevDir()
-		_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
-		_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
+		if cleanAll {
+			for _, dir := range globalDirectoriesToRemove {
+				_ = os.RemoveAll(dir)
+			}
+		}
 
 		amplitude.Clean()
 
@@ -96,12 +125,18 @@ Additional commands that can help clean up resources:
 			}
 		}
 
-		output.UserOut.Print("Deleting Docker images that DDEV created...")
-		err = deleteDdevImages(true)
-		if err != nil {
-			util.Failed("Failed to delete image tag", err)
+		if cleanAll {
+			output.UserOut.Print("Deleting all Docker images that DDEV created...")
+		} else {
+			output.UserOut.Print("Deleting unused Docker images that DDEV created...")
 		}
-		util.Success("Finished cleaning DDEV projects")
+		err = deleteDdevImages(cleanAll, false)
+		if err != nil {
+			util.Warning("Failed to delete images: %v", err)
+		}
+
+		util.Success("Finished cleaning DDEV projects.")
+		util.Success("Optionally, run `docker builder prune` to clean unused builder cache.")
 	},
 }
 

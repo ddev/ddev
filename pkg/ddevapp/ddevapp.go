@@ -2998,7 +2998,7 @@ func deleteServiceVolumes(app *DdevApp) {
 				if err != nil {
 					util.Warning("Could not remove volume %s: %v", volName, err)
 				} else {
-					util.Success("Deleting third-party persistent volume %s", volName)
+					util.Success("Volume %s for project %s was deleted", volName, app.Name)
 				}
 			}
 		}
@@ -3014,12 +3014,20 @@ func deleteImages(app *DdevApp) {
 	if err != nil {
 		util.Warning("Could not find images for project %s: %v", app.Name, err)
 	}
-	for _, img := range images {
-		_ = dockerutil.RemoveImage(img.ID)
-		if err != nil {
-			util.Warning("Could not remove image %s: %v", strings.Join(img.RepoTags, ", "), err)
-		} else {
-			util.Success("Image %s for project %s was deleted", strings.Join(img.RepoTags, ", "), app.Name)
+	for _, image := range images {
+		imageName := "<none>:<none> " + dockerutil.TruncateID(image.ID)
+		if len(image.RepoTags) > 0 {
+			imageName = strings.Join(image.RepoTags, ", ")
+		} else if len(image.RepoDigests) > 0 {
+			var names []string
+			for _, digest := range image.RepoDigests {
+				name := strings.SplitN(digest, "@", 2)[0]
+				names = append(names, name+":<none> "+dockerutil.TruncateID(image.ID))
+			}
+			imageName = strings.Join(names, ", ")
+		}
+		if err = dockerutil.RemoveImage(image.ID); err == nil {
+			util.Success("Image %s for project %s was deleted", imageName, app.Name)
 		}
 	}
 	// These images should already be deleted, but just in case, delete these two by name

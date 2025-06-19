@@ -79,6 +79,7 @@ ddev delete --all`,
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
 		}
+		util.Success("Optionally, run `docker builder prune` to clean unused builder cache.")
 	},
 }
 
