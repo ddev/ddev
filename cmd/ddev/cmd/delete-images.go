@@ -188,6 +188,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 					(strings.HasPrefix(tag, webImage) && strings.HasSuffix(tag, "-built")) ||
 					(strings.HasPrefix(tag, dbImagePrefix) && strings.HasSuffix(tag, dbImageSuffix)) ||
 					(strings.HasPrefix(tag, dbImagePrefix) && strings.Contains(tag, dbImageSuffix) && strings.HasSuffix(tag, "-built")) ||
+					(strings.HasPrefix(tag, "postgres:") && strings.HasSuffix(tag, "-built")) ||
 					tag == routerImage ||
 					tag == sshImage ||
 					(strings.HasPrefix(tag, sshImage) && strings.HasSuffix(tag, "-built")) ||
