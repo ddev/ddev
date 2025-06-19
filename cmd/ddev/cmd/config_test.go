@@ -273,7 +273,6 @@ func TestConfigSetValues(t *testing.T) {
 		"config",
 		"--composer-root-default",
 		"--web-image-default",
-		"--db-image-default",
 		"--web-working-dir-default",
 		"--db-working-dir-default",
 		`--omit-containers=""`,

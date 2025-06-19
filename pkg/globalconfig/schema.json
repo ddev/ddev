@@ -11,7 +11,7 @@
       "type": "boolean"
     },
     "fail_on_hook_fail": {
-      "description": "Whether ddev start should be interrupted by a failing hook, on a single project or for all projects if used globally.",
+      "description": "Whether \"ddev start\" should be interrupted by a failing hook, on a single project or for all projects if used globally.",
       "type": "boolean"
     },
     "instrumentation_opt_in": {
@@ -72,7 +72,7 @@
       "type": "boolean"
     },
     "omit_containers": {
-      "description": "A list of container types that should not be started when the project is started.",
+      "description": "List of container types that should not be started when the project is started.",
       "type": "array",
       "items": {
         "type": "string",
@@ -84,17 +84,16 @@
       "uniqueItems": true
     },
     "performance_mode": {
-      "description": "Defines the performance optimization mode to be used. Currently Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
+      "description": "Define the performance optimization mode to be used. Currently, Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",
       "enum": [
-        "global",
         "none",
         "mutagen",
         "nfs"
       ]
     },
     "project_tld": {
-      "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\").",
+      "description": "Set the top-level domain to be used for projects, defaults to \"ddev.site\".",
       "type": "string"
     },
     "required_docker_compose_version": {
@@ -114,11 +113,11 @@
       "type": "string"
     },
     "simple_formatting": {
-      "description": "Whether to disable most ddev list and ddev describe table formatting.",
+      "description": "Whether to disable most \"ddev list\" and \"ddev describe\" table formatting.",
       "type": "boolean"
     },
     "table_style": {
-      "description": "Style for ddev list and ddev describe.",
+      "description": "Style for \"ddev list\" and \"ddev describe\".",
       "type": "string",
       "enum": [
         "default",
@@ -139,7 +138,7 @@
       "type": "boolean"
     },
     "use_letsencrypt": {
-      "description": "Whether to enable Let's Encrypt integration. (Works in conjunction with letsencrypt_email.) (Not currently compatible with Traefik router.)",
+      "description": "Whether to enable Let's Encrypt integration. (Works in conjunction with letsencrypt_email.)",
       "type": "boolean"
     },
     "web_environment": {
@@ -150,7 +149,7 @@
       }
     },
     "wsl2_no_windows_hosts_mgt": {
-      "description": "(WSL2 only) Whether to disable the management and checking of the Windows hosts file. By default, when using WSL2, DDEV manages the system-wide hosts file on the Windows side (normally C:\\Windows\\system32\\drivers\\etc\\hosts) by using ddev.exe installed on the Windows side. This normally works better for all applications, including browsers and IDEs. However, this behavior can be disabled by setting wsl_no_windows_hosts_mgt: true.",
+      "description": "(WSL2 only) Whether to disable the management and checking of the Windows hosts file. By default, when using WSL2, DDEV manages the system-wide hosts file on the Windows side (normally C:\\Windows\\system32\\drivers\\etc\\hosts) by using ddev.exe installed on the Windows side. This normally works better for all applications, including browsers and IDEs. However, this behavior can be disabled by setting \"wsl_no_windows_hosts_mgt: true\".",
       "type": "boolean"
     },
     "xdebug_ide_location": {
@@ -158,7 +157,7 @@
       "type": "string"
     },
     "xhprof_mode": {
-      "description": "Defines the xhprof usage mode used by the project.",
+      "description": "Define the default XHProf usage mode.",
       "type": "string",
       "enum": [
         "prepend",

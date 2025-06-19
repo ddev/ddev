@@ -311,54 +311,55 @@ Flags:
 * `--additional-fqdns`: Comma-delimited list of project FQDNs or `--additional-fqdns=""` to remove any configured FQDNs.
 * `--additional-hostnames`: Comma-delimited list of project hostnames or `--additional-hostnames=""` to remove any configured additional hostnames.
 * `--auto`: Automatically run config without prompting.
-* `--bind-all-interfaces`: Bind host ports on all interfaces, not only on localhost network interface.
-* `--composer-root`: Overrides the default Composer root directory for the web service.
-* `--composer-root-default`: Unsets a web service Composer root directory override.
-* `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"1"`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version. (Note that if your project composer build requires `composer/composer` then the version you require there will be used instead of the version specified here.)
-* `--database`: Specify the database type:version to use. Defaults to `mariadb:10.11`.
-* `--db-image`: Sets the db container image.
-* `--db-image-default`: Sets the default db container image for this DDEV version.
-* `--db-working-dir`: Overrides the default working directory for the db service.
-* `--db-working-dir-default`: Unsets a db service working directory override.
-* `--dbimage-extra-packages`: A comma-delimited list of Debian packages that should be added to db container when the project is started or `--dbimage-extra-packages=""` to remove previously configured packages.
-* `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start. (default `120`)
+* `--bind-all-interfaces`: Bind host ports on all interfaces, not only on the localhost network interface.
+* `--composer-root`: The relative path, from the project root, to the directory containing `composer.json`. (This is where all Composer-related commands are executed.)
+* `--composer-root-default`: Unset a `web` service Composer root directory override, the same as `--composer-root=""`.
+* `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"1"`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
+* `--corepack-enable`: Whether to run `corepack enable` on Node.js configuration.
+* `--database`: Specify the database `type:version` to use (see [default](../configuration/config.md#database)).
+* `--db-working-dir`: Override the default working directory for the `db` service.
+* `--db-working-dir-default`: Unset a `db` service working directory override, the same as `--db-working-dir=""`.
+* `--dbimage-extra-packages`: Comma-delimited list of Debian packages that should be added to `db` container when the project is started or `--dbimage-extra-packages=""` to remove previously configured packages.
+* `--ddev-version-constraint`: Specify a `ddev_version_constraint` to validate `ddev` against.
+* `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start (see [default](../configuration/config.md#default_container_timeout)).
 * `--disable-settings-management`: Prevent DDEV from creating or updating CMS settings files.
-* `--disable-upload-dirs-warning`: Suppresses warning when a project is using `performance_mode: mutagen` but does not have `upload_dirs` set.
-* `--docroot`: Provide the relative docroot of the project, like `docroot` or `htdocs` or `web`. (defaults to empty, the current directory)
+* `--disable-upload-dirs-warning`: Disable warnings about `upload-dirs` not being set when using `--performance-mode=mutagen`.
+* `--docroot`: Provide the relative docroot of the project, like `docroot` or `htdocs` or `web`, defaults to empty, the current directory.
 * `--fail-on-hook-fail`: Decide whether `ddev start` should be interrupted by a failing hook.
-* `--host-db-port`: The db container’s localhost-bound port.
-* `--host-https-port`: The web container’s localhost-bound HTTPS port.
-* `--host-webserver-port`: The web container’s localhost-bound port.
-* `--http-port`: The router HTTP port for this project.
-* `--https-port`: The router HTTPS port for this project.
-* `--image-defaults`: Sets the default web and db container images.
-* `--mailpit-http-port`: Router port to be used for Mailpit HTTP access.
-* `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access.
-* `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
-* `--no-project-mount`: Whether or not to skip mounting project code into the web container.
-* `--nodejs-version`: Specify the Node.js version to use if you don’t want the default version.
+* `--host-db-port`: The `db` container’s localhost-bound port.
+* `--host-https-port`: The `web` container’s localhost-bound HTTPS port.
+* `--host-webserver-port`: The `web` container’s localhost-bound HTTP port.
+* `--mailpit-http-port`: Router port to be used for Mailpit HTTP access (see [default](../configuration/config.md#mailpit_http_port)).
+* `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access (see [default](../configuration/config.md#mailpit_https_port)).
+* `--ngrok-args`: Provide extra args to `ngrok` in `ddev share`.
+* `--no-project-mount`: Whether to skip mounting project code into the `web` container.
+* `--nodejs-version`: Specify the Node.js version to use (see [default](../configuration/config.md#nodejs_version)).
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
 * `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance mode to global configuration.
-* `--php-version`: PHP version that will be enabled in the web container.
-* `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
-* `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
+* `--php-version`: PHP version that will be enabled in the `web` container (see [default](../configuration/config.md#php_version)).
+* `--project-name`: Provide the project name of project to configure (normally the same as the last part of directory name).
+* `--project-tld`: Set the top-level domain to be used for projects (see [default](../configuration/config.md#project_tld)).
 * `--project-type`: Provide [the project type](../configuration/config.md#type) of project to configure. This is autodetected and this flag is necessary only to override the detection.
-* `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
-* `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
-* `--update`: Automatically detect and update settings by inspecting the code.
-* `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command, or `--upload-dirs=""` to remove previously configured values.
-* `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible. (default `true`)
-* `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove previously configured values.
-* `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
-* `--web-image`: Sets the web container image.
-* `--web-image-default`: Sets the default web container image for this DDEV version.
-* `--web-working-dir`: Overrides the default working directory for the web service.
-* `--web-working-dir-default`: Unsets a web service working directory override.
-* `--webimage-extra-packages`: A comma-delimited list of Debian packages that should be added to web container when the project is started or `--webimage-extra-packages=""` to remove any previously configured packages.
-* `--webserver-type`: Sets the project’s desired web server type: `nginx-fpm`, `apache-fpm`, `generic`.
-* `--working-dir-defaults`: Unsets all service working directory overrides.
-* `--xdebug-enabled`: Whether or not Xdebug is enabled in the web container.
+* `--router-http-port`: The router HTTP port for this project (see [default](../configuration/config.md#router_http_port)).
+* `--router-https-port`: The router HTTPS port for this project (see [default](../configuration/config.md#router_https_port)).
+* `--show-config-location`: Output the location of the `.ddev/config.yaml` file if it exists, or error that it doesn’t exist.
+* `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`. If unset, DDEV will attempt to derive it from the host system timezone.
+* `--update`: Update project settings based on detection and `project-type` overrides (except for `generic` type).
+* `--upload-dirs`: Set the project’s upload directories, the destination directories of the `ddev import-files` command, or `--upload-dirs=""` to remove previously configured values.
+* `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible (default `true`).
+* `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"` or `--web-environment=""` to remove previously configured values.
+* `--web-environment-add`: Append environment variables to the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--web-image`: Set the `web` container image ([for advanced use only](../configuration/config.md#webimage)).
+* `--web-image-default`: Set the default `web` container image, the same as `--web-image=""`.
+* `--web-working-dir`: Override the default working directory for the `web` service.
+* `--web-working-dir-default`: Unset a `web` service working directory override, the same as `--web-working-dir=""`.
+* `--webimage-extra-packages`: Comma-delimited list of Debian packages that should be added to `web` container when the project is started or `--webimage-extra-packages=""` to remove any previously configured packages.
+* `--webserver-type`: Set the project’s desired web server type: `nginx-fpm`, `apache-fpm`, `generic` (see [default](../configuration/config.md#webserver_type)).
+* `--working-dir-defaults`: Unset all service working directory overrides.
+* `--xdebug-enabled`: Whether Xdebug is enabled in the `web` container.
+* `--xhprof-mode`: XHProf mode, possible values are `global`, `prepend`, `xhgui` (see [default](../configuration/config.md#xhprof_mode)).
+* `--xhprof-mode-reset`: Reset XHProf mode to global configuration.
 
 ### `config global`
 
@@ -373,25 +374,30 @@ ddev config global --omit-containers=ddev-ssh-agent
 ```
 
 * `--fail-on-hook-fail`: If true, `ddev start` will fail when a hook fails.
-* `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
-* `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
-* `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
-* `--mailpit-http-port`: The Mailpit HTTP port *default* for all projects; can be overridden by project configuration.
-* `--mailpit-https-port`: The Mailpit HTTPS port *default* for all projects; can be overridden by project configuration.
-* `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
+* `--instrumentation-opt-in`: Whether to allow [instrumentation reporting](../usage/diagnostics.md) with `--instrumentation-opt-in=true` (see [default](../configuration/config.md#instrumentation_opt_in)).
+* `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds (see [default](../configuration/config.md#internet_detection_timeout_ms)).
+* `--letsencrypt-email`: Email associated with Let’s Encrypt, `ddev global --letsencrypt-email=me@example.com`.
+* `--mailpit-http-port`: The default Mailpit HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#mailpit_http_port)).
+* `--mailpit-https-port`: The default Mailpit HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#mailpit_https_port)).
+* `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible.
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
-* `--project-tld`: Set the default top-level domain to be used for all projects. (default `"ddev.site"`). Note that this will be overridden in a project that defines `project_tld`.
-* `--router-http-port`: The router HTTP port *default* for all projects; can be overridden by project configuration.
-* `--router-https-port`: The router HTTPS port *default* for all projects; can be overridden by project configuration.
+* `--project-tld`: Set the default top-level domain to be used for all projects, can be overridden by project configuration (see [default](../configuration/config.md#project_tld)).
+* `--router-bind-all-interfaces`: Bind host router ports on all interfaces, not only on the localhost network interface.
+* `--router-http-port`: The default router HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_http_port)).
+* `--router-https-port`: The default router HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_https_port)).
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
-* `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
-* `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999`.
+* `--table-style`: Table style for `ddev list` and `ddev describe`, possible values are `default`, `bold`, `bright` (see [default](../configuration/config.md#table_style)).
+* `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999` (see [default](../configuration/config.md#traefik_monitor_port)).
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
-* `--use-letsencrypt`: Enables experimental Let’s Encrypt integration; `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`.
-* `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
-* `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--use-letsencrypt`: Enables experimental Let’s Encrypt integration, `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`.
+* `--web-environment`: Set the environment variables in the `web` container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--web-environment-add`: Append environment variables to the `web` container: `--web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`
+* `--wsl2-no-windows-hosts-mgt`: WSL2 only; make DDEV ignore Windows-side hosts file ([for advanced use only](../configuration/config.md#wsl2_no_windows_hosts_mgt)).
+* `--xdebug-ide-location`: For less usual IDE locations specify where the IDE is running for Xdebug to reach it ([for advanced use only](../configuration/config.md#xdebug_ide_location)).
+* `--xhprof-mode`: XHProf mode, possible values are `prepend`, `xhgui` (see [default](../configuration/config.md#xhprof_mode)).
+* `--xhprof-mode-reset`: Reset XHProf mode to default.
 
 ## `console`
 

@@ -53,7 +53,7 @@ func IsValidPerformanceMode(performanceMode string, configType ConfigType) bool 
 	return false
 }
 
-// CheckValidPerformance checks to see if the given performance mode option
+// CheckValidPerformanceMode checks to see if the given performance mode option
 // is valid and returns an error in case the value is not valid.
 func CheckValidPerformanceMode(performanceMode string, configType ConfigType) error {
 	if !IsValidPerformanceMode(performanceMode, configType) {
@@ -83,7 +83,7 @@ const FlagPerformanceModeResetName = "performance-mode-reset"
 func FlagPerformanceModeResetDescription(configType ConfigType) string {
 	switch configType {
 	case ConfigTypeGlobal:
-		return "Reset performance mode to operating system default"
+		return `Reset performance mode to operating system default ("none" for Linux and WSL2, "mutagen" for macOS and traditional Windows)`
 	case ConfigTypeProject:
 		return "Reset performance mode to global configuration"
 	default:

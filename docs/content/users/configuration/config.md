@@ -99,13 +99,13 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 
 ## `corepack_enable`
 
-Whether to `corepack enable` on Node.js configuration.
+Whether to run `corepack enable` on Node.js configuration.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
-When `true`, `corepack_enable` will be executed, making latest `yarn` and `pnpm` package managers available.
+When `true`, `corepack enable` will be executed, making latest `yarn` and `pnpm` package managers available.
 
 ## `database`
 
@@ -531,7 +531,7 @@ Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev desc
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`. If you don't like the table lines in `ddev list` or `ddev describe`, you can completely turn them off with `ddev config --simple-formatting=true`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`. If you don't like the table lines in `ddev list` or `ddev describe`, you can completely turn them off with `ddev config global --simple-formatting=true`.
 
 When `true`, turns off most table formatting in [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) and suppresses colorized text everywhere.
 
@@ -543,7 +543,7 @@ Style for [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usag
 | -- | -- | --
 | :octicons-globe-16: global | `default` | Can be `default`, `bold`, and `bright`.
 
-`bright` is a pleasant, colorful output some people may prefer. If you don't like the table lines at all, you can remove them with `ddev config --simple-formatting=true`.
+`bright` is a pleasant, colorful output some people may prefer. If you don't like the table lines at all, you can remove them with `ddev config global --simple-formatting=true`.
 
 ## `timezone`
 
@@ -658,14 +658,14 @@ Additional named sets of ports to [expose via `ddev-router`](../extend/customiza
 
 ## `webimage`
 
+!!!warning "Proceed with caution"
+    It's unusual to change this option, and we don't recommend it without Docker experience and a good reason. Typically, this means additions to the existing web image using a `.ddev/web-build/Dockerfile.*`.
+
 The Docker image to use for the web server.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | [`ddev/ddev-webserver`](https://hub.docker.com/r/ddev/ddev-webserver) | Specify your own image based on [ddev/ddev-webserver](https://github.com/ddev/ddev/tree/main/containers/ddev-webserver).
-
-!!!warning "Proceed with caution"
-    It’s unusual to change this, and we don’t recommend it without Docker experience and a good reason. Typically, this means additions to the existing web image using a `.ddev/web-build/Dockerfile.*`.
 
 ## `webimage_extra_packages`
 
@@ -709,6 +709,9 @@ Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directo
 
 ## `wsl2_no_windows_hosts_mgt`
 
+!!!warning "Proceed with caution"
+    It's unusual to change this option, and we don't recommend it. On Windows, it may prevent site access when using a custom [`project_tld`](#project_tld) or working [offline](../usage/offline.md).
+
 (WSL2 only) Whether to disable the management and checking of the Windows hosts file. By default, when using WSL2, DDEV manages the system-wide hosts file on the Windows side (normally `C:\Windows\system32\drivers\etc\hosts`) by using `ddev.exe` installed on the *Windows* side. This normally works better for all applications, including browsers and IDEs. However, this behavior can be disabled by setting `wsl_no_windows_hosts_mgt: true`.
 
 | Type | Default | Usage
@@ -727,7 +730,10 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 
 ## `xdebug_ide_location`
 
-Adjust Xdebug listen location for WSL2 or in-container. This is used very rarely. Ask for help in one of our [support channels](../support.md) before changing it unless you understand its use completely.
+!!!warning "Proceed with caution"
+    It's unusual to change this option, and we don't recommend it. Ask for help in one of our [support channels](../support.md) before changing it unless you understand its use completely.
+
+Adjust Xdebug listen location for WSL2 or in-container. This is used very rarely.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -763,4 +769,4 @@ Whether XHProf should use `prepend` or `xhgui` mode.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | `prepend` or `xhgui`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | Can be `global`, `prepend` or `xhgui`.

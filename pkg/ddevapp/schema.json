@@ -26,7 +26,7 @@
   },
   "properties": {
     "additional_fqdns": {
-      "description": "A comma-delimited list of FQDNs for the project.",
+      "description": "List of FQDNs for the project.",
       "type": "array",
       "items": {
         "type": "string"
@@ -34,7 +34,7 @@
       "uniqueItems": true
     },
     "additional_hostnames": {
-      "description": "A comma-delimited list of hostnames for the project.",
+      "description": "List of hostnames for the project.",
       "type": "array",
       "items": {
         "type": "string"
@@ -42,7 +42,7 @@
       "uniqueItems": true
     },
     "bind_all_interfaces": {
-      "description": "Bind host ports on all interfaces, not just on localhost network interface.",
+      "description": "Bind host ports on all interfaces, not only on the localhost network interface.",
       "type": "boolean"
     },
     "composer_root": {
@@ -54,7 +54,7 @@
       "type": "string"
     },
     "corepack_enable": {
-      "description": "Whether to \"corepack enable\" on Node.js configuration.",
+      "description": "Whether to run \"corepack enable\" on Node.js configuration.",
       "type": "boolean"
     },
     "database": {
@@ -158,7 +158,7 @@
       }
     },
     "dbimage_extra_packages": {
-      "description": "A list of Debian packages that should be added to db container when the project is started.",
+      "description": "List of Debian packages that should be added to db container when the project is started.",
       "type": "array",
       "items": {
         "type": "string"
@@ -285,7 +285,7 @@
       "type": "string"
     },
     "host_mailpit_port": {
-      "description": "The mailpit localhost-bound port.",
+      "description": "The Mailpit localhost-bound port.",
       "type": "string"
     },
     "host_webserver_port": {
@@ -293,11 +293,11 @@
       "type": "string"
     },
     "mailpit_http_port": {
-      "description": "Router port to be used for mailpit access.",
+      "description": "Router port to be used for Mailpit HTTP access.",
       "type": "string"
     },
     "mailpit_https_port": {
-      "description": "Router port to be used for mailpit access (https).",
+      "description": "Router port to be used for Mailpit HTTPS access.",
       "type": "string"
     },
     "name": {
@@ -305,7 +305,7 @@
       "type": "string"
     },
     "ngrok_args": {
-      "description": "Provide extra args to ngrok in ddev share.",
+      "description": "Provide extra args to ngrok in \"ddev share\".",
       "type": "string"
     },
     "no_project_mount": {
@@ -333,7 +333,7 @@
       "type": "boolean"
     },
     "performance_mode": {
-      "description": "Defines the performance optimization mode to be used. Currently Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
+      "description": "Define the performance optimization mode to be used. Currently Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",
       "enum": [
         "global",
@@ -372,7 +372,7 @@
       "type": "string"
     },
     "timezone": {
-      "description": "Specify timezone for containers and PHP.",
+      "description": "Specify timezone for containers and PHP. If unset, DDEV will attempt to derive it from the host system timezone.",
       "type": "string"
     },
     "type": {
@@ -402,7 +402,7 @@
       ]
     },
     "upload_dirs": {
-      "description": "Sets multiple project upload directories, the first is taken as the destination directory of the import-files command.",
+      "description": "Set multiple project upload directories, the first is taken as the destination directory of the \"ddev import-files\" command.",
       "type": "array",
       "items": {
         "type": "string"
@@ -461,18 +461,18 @@
       }
     },
     "webimage": {
-      "description": "Sets the web container image.",
+      "description": "Set the web container image.",
       "type": "string"
     },
     "webimage_extra_packages": {
-      "description": "A list of Debian packages that should be added to web container when the project is started.",
+      "description": "List of Debian packages that should be added to web container when the project is started.",
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "webserver_type": {
-      "description": "Sets the project's desired webserver type.",
+      "description": "Set the project's desired webserver type.",
       "type": "string",
       "enum": [
         "nginx-fpm",
@@ -485,21 +485,21 @@
       "type": "object",
       "properties": {
         "web": {
-          "description": "Overrides the default working directory for the web service.",
+          "description": "Override the default working directory for the web service.",
           "type": "string"
         },
         "db": {
-          "description": "Overrides the default working directory for the db service.",
+          "description": "Override the default working directory for the db service.",
           "type": "string"
         }
       }
     },
     "xdebug_enabled": {
-      "description": "Whether or not Xdebug is enabled in the web container.",
+      "description": "Whether Xdebug is enabled in the web container.",
       "type": "boolean"
     },
     "xhprof_mode": {
-      "description": "Defines the xhprof usage mode used by the project.",
+      "description": "Define the XHProf usage mode used by the project.",
       "type": "string",
       "enum": [
         "global",
