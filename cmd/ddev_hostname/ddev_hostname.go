@@ -1,13 +1,30 @@
 package main
 
 import (
-	"github.com/ddev/ddev/pkg/hostname"
-	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/spf13/cobra"
+	"os"
 )
 
 func main() {
-	err := hostname.AddHostEntry("something.example.com", "127.0.0.1")
-	if err != nil {
-		util.Failed("Failed to add host entry: %v", err)
+	RootCmd.Execute()
+}
+
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
+	Use:     "ddev_hostname",
+	Short:   "Manage hostnames in hosts file",
+	Version: versionconstants.DdevVersion,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		command := os.Args[1]
+		_ = command // This is a placeholder to avoid unused variable error
+	},
+}
+
+// Execute adds all child commands to the root command sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	if err := RootCmd.Execute(); err != nil {
+		os.Exit(-1)
 	}
 }

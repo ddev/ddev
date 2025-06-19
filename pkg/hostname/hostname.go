@@ -9,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/goodhosts/hostsfile"
 	"os"
-	exec2 "os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -66,7 +65,7 @@ func RemoveHostEntry(name string, ip string) error {
 // EscalateToAddHostEntry runs the required DDEV hostname command to add the entry,
 // does it with sudo on the correct platform.
 func EscalateToAddHostEntry(hostname string, ip string) (string, error) {
-	ddevhostnameBinary := getDdevHostnameBInary()
+	ddevhostnameBinary := getDdevHostnameBinary()
 	out, err := escalateHostsManipulation([]string{ddevhostnameBinary, "hostname", hostname, ip})
 	return out, err
 }
@@ -74,17 +73,18 @@ func EscalateToAddHostEntry(hostname string, ip string) (string, error) {
 // EscalateToRemoveHostEntry runs the required ddev_hostname command to remove the entry,
 // does it with sudo on the correct platform.
 func EscalateToRemoveHostEntry(hostname string, ip string) (string, error) {
-	ddevhostnameBinary := getDdevHostnameBInary()
+	ddevhostnameBinary := getDdevHostnameBinary()
 	out, err := escalateHostsManipulation([]string{
 		ddevhostnameBinary, "hostname", "--remove", hostname, ip})
 	return out, err
 }
 
-func getDdevHostnameBInary() string {
+// getDdevHostnameBinary returns the path to the ddev_hostname or ddev_hostname.exe binary
+func getDdevHostnameBinary() string {
 	ddevBinary, _ := os.Executable()
 	ddevDir := filepath.Dir(ddevBinary)
 	ddevhostnameBinary := filepath.Join(ddevDir, ddevhostnameBinary)
-	if runtime.GOOS == "windows" || nodeps.IsWSL2() {
+	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
 		ddevhostnameBinary = filepath.Join(ddevDir, ddevhostnameWindowsBinary)
 	}
 	return ddevhostnameBinary
@@ -119,30 +119,16 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 // ddevHostnameAvailable says if ddev_hostname/ddev_hostname.exe is available
 var ddevHostnameAvailable bool
 
-// IsDdevHostnameAvailable checks to see if we can use ddev.exe on Windows side
+// IsDdevHostnameAvailable checks to see if we can use ddev_hostname
 func IsDdevHostnameAvailable() bool {
-	ddevHostnameBinary := getDdevHostnameBInary()
-	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !ddevHostnameAvailable && nodeps.IsWSL2() {
-		_, err := exec2.LookPath(ddevHostnameBinary)
-		if err != nil {
-			util.Warning("%s not found, please install it; err=%v", ddevhostnameBinary, err)
-			ddevHostnameAvailable = false
-			return ddevHostnameAvailable
-		}
-		out, err := exec.RunHostCommand("ddev_hostname.exe", "--version")
-		if err != nil {
-			util.Warning("Unable to run ddev_hostname.exe, please check it on Windows side; err=%v; output=%s", err, out)
-			ddevHostnameAvailable = false
-			return ddevHostnameAvailable
-		}
-
-		_, err = exec2.LookPath("gsudo.exe")
-		if err != nil {
-			util.Warning("gsudo.exe not found in $PATH, please install DDEV on Windows side; err=%v", err)
-			ddevHostnameAvailable = false
-			return ddevHostnameAvailable
-		}
+	ddevHostnameBinary := getDdevHostnameBinary()
+	// Use ddev_hostname --version to check if ddev_hostname is available
+	out, err := exec.RunHostCommand(ddevHostnameBinary, "--version")
+	if err == nil {
 		ddevHostnameAvailable = true
+	} else {
+		util.Warning("Unable to run %s, please check it; err=%v; output=%s", ddevhostnameBinary, err, out)
+		ddevHostnameAvailable = false
 	}
 	return ddevHostnameAvailable
 }
