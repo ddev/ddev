@@ -67,10 +67,10 @@ func EscalateToAddHostEntry(hostname string, ip string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if nodeps.IsWSL2() {
-		ddevBinary = "ddev.exe"
+	if runtime.GOOS == "windows" || nodeps.IsWSL2() {
+		ddevBinary = "ddev_hostname.exe"
 	}
-	out, err := runCommandWithSudo([]string{ddevBinary, "hostname", hostname, ip})
+	out, err := escalateHostsManipulation([]string{ddevBinary, "hostname", hostname, ip})
 	return out, err
 }
 
@@ -84,12 +84,12 @@ func EscalateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	if nodeps.IsWSL2() {
 		ddevBinary = "ddev.exe"
 	}
-	out, err := runCommandWithSudo([]string{ddevBinary, "hostname", "--remove", hostname, ip})
+	out, err := escalateHostsManipulation([]string{ddevBinary, "hostname", "--remove", hostname, ip})
 	return out, err
 }
 
-// runCommandWithSudo adds sudo to command if we aren't already running with root privs
-func runCommandWithSudo(args []string) (out string, err error) {
+// escalateHostsManipulation uses escalation (sudo or runas) to manipulate the hosts file.
+func escalateHostsManipulation(args []string) (out string, err error) {
 	// We can't escalate in tests, and they know how to deal with it.
 	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
 		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
@@ -99,8 +99,8 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		return "", fmt.Errorf("could not get home directory for current user. Is it set?")
 	}
 
-	if (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) && !IsWindowsDdevExeAvailable() {
-		return "", fmt.Errorf("ddev.exe is not installed on the Windows side, please install it with 'choco install -y ddev'. It is used to manage the Windows hosts file")
+	if !IsDdevHostnameAvailable() {
+		return "", fmt.Errorf("ddev_hostname.exe is not installed, please install it.")
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
 	if (runtime.GOOS == "windows" || nodeps.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
@@ -118,8 +118,8 @@ func runCommandWithSudo(args []string) (out string, err error) {
 var windowsDdevExeAvailable bool
 
 // TODO: Check on all platforms
-// IsWindowsDdevExeAvailable checks to see if we can use ddev.exe on Windows side
-func IsWindowsDdevExeAvailable() bool {
+// IsDdevHostnameAvailable checks to see if we can use ddev.exe on Windows side
+func IsDdevHostnameAvailable() bool {
 	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !windowsDdevExeAvailable && nodeps.IsWSL2() {
 		_, err := exec2.LookPath("ddev.exe")
 		if err != nil {
