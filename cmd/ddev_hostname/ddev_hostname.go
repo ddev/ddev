@@ -5,8 +5,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
-	"runtime"
-	"strings"
 )
 
 func main() {
@@ -40,10 +38,11 @@ implications and requires elevated privileges. You may be asked for a password
 to allow ddev_hostname to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(_ *cobra.Command, args []string) {
 
+		// TODO: Fix up for DDEV_NONINTERACTIVE- I think that should probably be done in the caller.
 		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
-		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag && !removeInactiveFlag && runtime.GOOS != "windows" {
-			util.Failed("'ddev hostname %s' must be run with administrator privileges", strings.Join(args, " "))
-		}
+		//if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag && !removeInactiveFlag && runtime.GOOS != "windows" {
+		//	util.Failed("'ddev hostname %s' must be run with administrator privileges", strings.Join(args, " "))
+		//}
 
 		// TODO: Reimplement this, figure out how to know what's inactive
 		// This may not be useful and not need to be implemented.
