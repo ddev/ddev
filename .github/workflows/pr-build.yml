@@ -61,7 +61,7 @@ jobs:
       - run: "(git log --oneline | head -5) || true"
 
       - name: Build DDEV executables
-        run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64_install windows_arm64_install
+        run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64_install windows_arm64_install linux_amd64_ddev_hostname linux_arm64_ddev_hostname darwin_amd64_ddev_hostname darwin_arm64_ddev_hostname windows_amd64_ddev_hostname windows_arm64_ddev_hostname
 
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
@@ -75,27 +75,27 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ddev-macos-amd64
-          path: .gotmp/bin/darwin_amd64/ddev
+          path: .gotmp/bin/darwin_amd64/ddev*
       - name: Upload macos-arm64 binary
         uses: actions/upload-artifact@v4
         with:
           name: ddev-macos-arm64
-          path: .gotmp/bin/darwin_arm64/ddev
+          path: .gotmp/bin/darwin_arm64/ddev*
       - name: Upload linux-arm64 binary
         uses: actions/upload-artifact@v4
         with:
           name: ddev-linux-arm64
-          path: .gotmp/bin/linux_arm64/ddev
+          path: .gotmp/bin/linux_arm64/ddev*
       - name: Upload linux-amd64 binary
         uses: actions/upload-artifact@v4
         with:
           name: ddev-linux-amd64
-          path: .gotmp/bin/linux_amd64/ddev
+          path: .gotmp/bin/linux_amd64/ddev*
       - name: Upload windows-amd64 binary
         uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-amd64
-          path: .gotmp/bin/windows_amd64/ddev.exe
+          path: .gotmp/bin/windows_amd64/ddev*
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v4
         with:
@@ -105,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ddev-windows-arm64
-          path: .gotmp/bin/windows_arm64/ddev.exe
+          path: .gotmp/bin/windows_arm64/ddev*
       - name: Upload windows_arm64 installer
         uses: actions/upload-artifact@v4
         with:
