@@ -28,10 +28,10 @@ var RootCmd = &cobra.Command{
 	Use:   "hostname [hostname] [ip]",
 	Short: "Manage your hostfile entries.",
 	Example: `
-ddev_hostname hostname junk.example.com 127.0.0.1
-ddev_hostname hostname -r junk.example.com 127.0.0.1
-ddev_hostname hostname --check junk.example.com 127.0.0.1
-ddev_hostname hostname --remove-inactive
+ddev_hostname junk.example.com 127.0.0.1
+ddev_hostname -r junk.example.com 127.0.0.1
+ddev_hostname --check junk.example.com 127.0.0.1
+ddev_hostname --remove-inactive
 `,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
@@ -59,7 +59,7 @@ to allow ddev_hostname to modify your hosts file. If you are connected to the in
 
 		// If operating on one host name, two arguments are required
 		if len(args) != 2 {
-			util.Failed("Invalid arguments supplied. Please use 'ddev_hostname hostname [hostname] [ip]'")
+			util.Failed("Invalid arguments supplied. Please use 'ddev_hostname [hostname] [ip]'")
 		}
 
 		name, dockerIP := args[0], args[1]

@@ -68,7 +68,7 @@ func RemoveHostEntry(name string, ip string) error {
 // does it with sudo on the correct platform.
 func EscalateToAddHostEntry(hostname string, ip string) (string, error) {
 	ddevhostnameBinary := getDdevHostnameBinary()
-	out, err := escalateHostsManipulation([]string{ddevhostnameBinary, "hostname", hostname, ip})
+	out, err := escalateHostsManipulation([]string{ddevhostnameBinary, hostname, ip})
 	return out, err
 }
 
@@ -77,7 +77,7 @@ func EscalateToAddHostEntry(hostname string, ip string) (string, error) {
 func EscalateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	ddevhostnameBinary := getDdevHostnameBinary()
 	out, err := escalateHostsManipulation([]string{
-		ddevhostnameBinary, "hostname", "--remove", hostname, ip})
+		ddevhostnameBinary, "--remove", hostname, ip})
 	return out, err
 }
 
