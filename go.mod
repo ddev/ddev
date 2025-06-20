@@ -20,7 +20,6 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/maruel/natural v1.1.1
 	github.com/mattn/go-isatty v0.0.20
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pkg/errors v0.9.1
