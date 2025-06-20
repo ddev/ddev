@@ -64,19 +64,17 @@ func RemoveHostEntry(name string, ip string) error {
 	return err
 }
 
-// EscalateToAddHostEntry runs the required DDEV hostname command to add the entry,
-// does it with sudo on the correct platform.
-func EscalateToAddHostEntry(hostname string, ip string) (string, error) {
+// ElevateToAddHostEntry runs the required DDEV hostname command to add the entry
+func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
 	ddevhostnameBinary := getDdevHostnameBinary()
-	out, err := escalateHostsManipulation([]string{ddevhostnameBinary, hostname, ip})
+	out, err := elevateHostsManipulation([]string{ddevhostnameBinary, hostname, ip})
 	return out, err
 }
 
-// EscalateToRemoveHostEntry runs the required ddev_hostname command to remove the entry,
-// does it with sudo on the correct platform.
-func EscalateToRemoveHostEntry(hostname string, ip string) (string, error) {
+// ElevateToRemoveHostEntry runs the required ddev_hostname command to remove the entry,
+func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	ddevhostnameBinary := getDdevHostnameBinary()
-	out, err := escalateHostsManipulation([]string{
+	out, err := elevateHostsManipulation([]string{
 		ddevhostnameBinary, "--remove", hostname, ip})
 	return out, err
 }
@@ -98,8 +96,8 @@ func getDdevHostnameBinary() string {
 	return ddevhostnameBinary
 }
 
-// escalateHostsManipulation uses escalation (sudo or runas) to manipulate the hosts file.
-func escalateHostsManipulation(args []string) (out string, err error) {
+// elevateHostsManipulation uses escalation (sudo or runas) to manipulate the hosts file.
+func elevateHostsManipulation(args []string) (out string, err error) {
 	// We can't escalate in tests, and they know how to deal with it.
 	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
 		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
@@ -113,10 +111,10 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 	if !IsDdevHostnameAvailable() {
 		return "", fmt.Errorf("%s is not installed, please install it", ddevhostnameBinary)
 	}
-	c := []string{"sudo", "--preserve-env=HOME"}
 
-	c = append(c, args...)
-	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", c[2], strings.Join(c, ` `))
+	c := args
+	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.", getDdevHostnameBinary())
+	output.UserOut.Printf("DDEV will issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
 	return out, err

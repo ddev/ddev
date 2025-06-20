@@ -1,3 +1,5 @@
+//go:build darwin || linux
+
 package main
 
 import (
@@ -7,7 +9,7 @@ import (
 	"syscall"
 )
 
-func escalateIfNeeded() {
+func elevateIfNeeded() {
 	// If we’re not root (UID 0), re‐exec via sudo
 	if syscall.Geteuid() != 0 {
 		// Prepend our own path to the args
@@ -18,7 +20,7 @@ func escalateIfNeeded() {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to escalate: %v\n", err)
+			fmt.Fprintf(os.Stderr, "failed to elevate command: %v\n", err)
 			os.Exit(1)
 		}
 		// If sudo succeeds, it will have done the real work,

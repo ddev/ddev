@@ -65,8 +65,8 @@ to allow ddev_hostname to modify your hosts file. If you are connected to the in
 		name, dockerIP := args[0], args[1]
 		var err error
 
-		util.Debug("Escalating privileges to add host entry %s -> %s", name, dockerIP)
-		escalateIfNeeded()
+		util.Debug("Elevating privileges to add host entry %s -> %s", name, dockerIP)
+		elevateIfNeeded()
 
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
