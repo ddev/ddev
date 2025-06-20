@@ -84,11 +84,17 @@ func EscalateToRemoveHostEntry(hostname string, ip string) (string, error) {
 // getDdevHostnameBinary returns the path to the ddev_hostname or ddev_hostname.exe binary
 func getDdevHostnameBinary() string {
 	ddevBinary, _ := os.Executable()
+	ddevBinary, err := filepath.EvalSymlinks(ddevBinary)
+	if err != nil {
+		util.Warning("Unable to resolve symlinks for ddev binary %s: %v", ddevBinary, err)
+	}
 	ddevDir := filepath.Dir(ddevBinary)
+
 	ddevhostnameBinary := filepath.Join(ddevDir, ddevhostnameBinary)
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
 		ddevhostnameBinary = filepath.Join(ddevDir, ddevhostnameWindowsBinary)
 	}
+	util.Debug("ddevDir=%s, ddevhostnameBinary=%s", ddevDir, ddevhostnameBinary)
 	return ddevhostnameBinary
 }
 
@@ -105,7 +111,7 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 	}
 
 	if !IsDdevHostnameAvailable() {
-		return "", fmt.Errorf("%s is not installed, please install it.", ddevhostnameBinary)
+		return "", fmt.Errorf("%s is not installed, please install it", ddevhostnameBinary)
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	RootCmd.Execute()
+	_ = RootCmd.Execute()
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
