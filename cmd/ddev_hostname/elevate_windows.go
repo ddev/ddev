@@ -97,19 +97,21 @@ func elevate() {
 
 	ret, _, lastErr := procShellExecuteExW.Call(uintptr(unsafe.Pointer(&sei)))
 	if ret == 0 {
-		fmt.Fprintln(os.Stderr, "Elevation failed:", lastErr)
-		os.Exit(1)
+		util.Warning("Windows elevation for hosts file manipulation failed:", lastErr)
+		return
 	}
 
 	if sei.hProcess != 0 {
 		_, err := windows.WaitForSingleObject(sei.hProcess, windows.INFINITE)
 		if err != nil {
-			util.Failed("Failed to wait for elevated process: %v", err)
+			util.Warning("Failed to wait for windows elevated process: %v", err)
+			return
 		}
 		var exitCode uint32
 		err = windows.GetExitCodeProcess(sei.hProcess, &exitCode)
 		if err != nil {
-			util.Failed("Failed to get exit code: %v", err)
+			util.Warning("Failed to get windows elevation exit code: %v", err)
+			return
 		}
 		os.Exit(int(exitCode))
 	} else {
