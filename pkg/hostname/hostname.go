@@ -108,11 +108,9 @@ func escalateHostsManipulation(args []string) (out string, err error) {
 		return "", fmt.Errorf("%s is not installed, please install it.", ddevhostnameBinary)
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
-	if (runtime.GOOS == "windows" || nodeps.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-		c = []string{"gsudo.exe"}
-	}
+
 	c = append(c, args...)
-	output.UserOut.Printf("DDEV needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", strings.Join(c, ` `))
+	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.\nDDEV is about to issue the command:\n  %s\n", c[2], strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
 	return out, err
