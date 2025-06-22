@@ -60,7 +60,11 @@ build: $(DEFAULT_BUILD)
 
 # Provide shorthand targets
 linux_amd64: $(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_amd64/ddev_hostname $(GOTMP)/bin/windows_amd64/ddev_hostname.exe
+	@cp $(GOTMP)/bin/windows_amd64/ddev_hostname.exe $(GOTMP)/bin/linux_amd64/ddev_hostname.exe
+
 linux_arm64: $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm64/ddev_hostname $(GOTMP)/bin/windows_arm64/ddev_hostname.exe
+	@cp $(GOTMP)/bin/windows_arm64/ddev_hostname.exe $(GOTMP)/bin/linux_arm64/ddev_hostname.exe
+
 darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev_hostname
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev_hostname
 windows_amd64: windows_amd64_install
