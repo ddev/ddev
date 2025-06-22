@@ -40,7 +40,7 @@ builds:
     - v1
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev_hostname{{.Ext}}
-  binary: ddev
+  binary: ddev_hostname
 
 
 - id: mkcert
