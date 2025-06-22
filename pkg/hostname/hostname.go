@@ -80,19 +80,13 @@ func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
 }
 
 // getDdevHostnameBinary returns the path to the ddev_hostname or ddev_hostname.exe binary
+// It must exist in the PATH
 func getDdevHostnameBinary() string {
-	ddevBinary, _ := os.Executable()
-	ddevBinary, err := filepath.EvalSymlinks(ddevBinary)
-	if err != nil {
-		util.Warning("Unable to resolve symlinks for ddev binary %s: %v", ddevBinary, err)
-	}
-	ddevDir := filepath.Dir(ddevBinary)
-
-	ddevhostnameBinary := filepath.Join(ddevDir, ddevhostnameBinary)
+	ddevhostnameBinary := ddevhostnameBinary
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
-		ddevhostnameBinary = filepath.Join(ddevDir, ddevhostnameWindowsBinary)
+		ddevhostnameBinary = ddevhostnameWindowsBinary
 	}
-	util.Debug("ddevDir=%s, ddevhostnameBinary=%s", ddevDir, ddevhostnameBinary)
+	util.Debug("ddevhostnameBinary=%s", ddevhostnameBinary)
 	return ddevhostnameBinary
 }
 
