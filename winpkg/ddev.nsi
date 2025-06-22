@@ -269,6 +269,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
 
     ; Copy files
     File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_hostname.exe"
     File /oname=license.txt "..\LICENSE"
 
     ; Install icons
