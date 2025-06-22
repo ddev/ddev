@@ -11,7 +11,7 @@ set -o nounset
 if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
 
 GITHUB_OWNER=${GITHUB_OWNER:-ddev}
-ARTIFACTS="ddev mkcert"
+ARTIFACTS="ddev ddev_hostname mkcert"
 TMPDIR=/tmp
 
 RED='\033[31m'
@@ -103,12 +103,6 @@ if [ $# -ge 1 ]; then
 fi
 RELEASE_BASE_URL="https://github.com/${GITHUB_OWNER}/ddev/releases/download/$VERSION"
 
-rv=$(semver_compare "${VERSION}" "v1.10.0")
-if [[ ${rv} -lt 0 ]]; then
-  printf "${RED}Sorry, this installer does not support specifying versions of ddev prior to v1.10.0${RESET}\n"
-  exit 1
-fi
-
 if [[ "$OS" == "Darwin" ]]; then
     SHACMD="shasum -a 256 --ignore-missing"
     FILEBASE="ddev_macos"
@@ -120,12 +114,8 @@ else
     exit 1
 fi
 
-USE_ARCH=$(semver_compare "${VERSION}" "v1.16.0-alpha4")
-# Versions after v1.16.0-alpha4 need the architecture in the filename
-if [ "${USE_ARCH}" == 1 ]; then
-  FILEBASE="${FILEBASE}-${ARCH}"
-fi
 
+FILEBASE="${FILEBASE}-${ARCH}"
 
 if ! docker --version >/dev/null 2>&1; then
     printf "${YELLOW}A docker provider is required for ddev. Please see https://ddev.readthedocs.io/en/stable/users/install/docker-installation/.${RESET}\n"
@@ -146,7 +136,7 @@ $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL
 
 
-printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
+printf "${GREEN}Download verified. Ready to place ddev, ddev_hostname, and mkcert in your /usr/local/bin.${RESET}\n"
 
 if command -v brew >/dev/null && brew info ddev >/dev/null 2>/dev/null ; then
   echo "Attempting to unlink any homebrew-installed ddev with 'brew unlink ddev'"
