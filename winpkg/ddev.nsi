@@ -87,13 +87,6 @@
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 
 /**
- * Third Party Applications
- */
-!define GSUDO_NAME "gsudo"
-!define GSUDO_SETUP "gsudo.exe"
-!define GSUDO_VERSION "v2.5.1"
-
-/**
  * Configuration
  *
  * Has to be done before including headers
@@ -103,8 +96,6 @@
 !endif
 Var TARGET_ARCH
 Var INSTALL_ARCH /* Architecture where installation is happening */
-Var GsudoExtractionSourceDir /* Used in extraction from the gsudo portable zipfile; x86 or arm64 */
-
 
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 Unicode true
@@ -188,13 +179,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_CUSTOMFUNCTION_PRE ddevLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ddevLicLeave
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
-
-; License page sudo
-!define MUI_PAGE_HEADER_TEXT "License Agreement for sudo"
-!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
-!define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_${TARGET_ARCH}\gsudo_license.txt"
 
 ; Components page
 Var MkcertSetup
@@ -343,152 +327,6 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
   SectionEnd
 SectionGroupEnd
 
-/**
- * gsudo application install
- */
-
-Section "${GSUDO_NAME}" SecSudo
-  ; Force installation
-  SectionIn 1 2 3
-  SetOutPath "$INSTDIR"
-  SetOverwrite try
-
-  ; Set URL and temporary file name
-  !define GSUDO_ZIP_DEST "$PLUGINSDIR\gsudo.portable.zip"
-  !define GSUDO_EXE_DEST "$INSTDIR\gsudo.exe"
-  !define GSUDO_LICENSE_URL "https://github.com/gerardog/gsudo/blob/master/LICENSE.txt"
-  !define GSUDO_LICENSE_DEST "$INSTDIR\gsudo_license.txt"
-  !define GSUDO_SHA256_URL "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip.sha256"
-  !define GSUDO_SHA256_DEST "$PLUGINSDIR\gsudo.portable.zip.sha256"
-
-  ; Download license file
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_LICENSE_URL}" "${GSUDO_LICENSE_DEST}" /END
-  Pop $R0 ; return value = exit code, "OK" if OK
-
-  ; Check download result
-  ${If} $R0 != "OK"
-    ; Download failed, show message and continue
-    SetDetailsView show
-    DetailPrint "Download of `${GSUDO_NAME}` license file failed:"
-    DetailPrint " $R0"
-    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` license file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
-  ${EndIf}
-
-  ; Download zip file
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip" "${GSUDO_ZIP_DEST}" /END
-  Pop $R0 ; return value = exit code, "OK" if OK
-
-  ; Check download result
-  ${If} $R0 != "OK"
-    ; Download failed, show message and continue
-    SetDetailsView show
-    DetailPrint "Download of `https://github.com/gerardog/gsudo/releases/download/${GSUDO_VERSION}/gsudo.portable.zip` to ${GSUDO_ZIP_DEST} failed: $R0"
-    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` zip file has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
-  ${Else}
-    ; Download SHA-256 hash
-    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_SHA256_URL}" "${GSUDO_SHA256_DEST}" /END
-    Pop $R0 ; return value = exit code, "OK" if OK
-
-    ; Check download result
-    ${If} $R0 != "OK"
-      ; Download failed, show message and continue
-      SetDetailsView show
-      DetailPrint "Download of `${GSUDO_NAME}` SHA-256 hash failed:"
-      DetailPrint " $R0"
-      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` SHA-256 hash has failed. Continue with the rest of the installation."
-    ${Else}
-      ; Calculate SHA-256 hash of the downloaded file
-      ExecDos::exec /TOSTACK 'certutil -hashfile "${GSUDO_ZIP_DEST}" SHA256'
-      Pop $R0 ; exit code
-      Pop $R1 ; stdout
-      Pop $R2 ; stderr
-
-      DetailPrint "R0 exit code='$R0'"
-      DetailPrint "R1 stdout='$R1'"
-      DetailPrint "R2 stderr='$R2'"
-
-      ; Copy the hash (R2) into $R9
-      StrCpy $R9 $R2
-
-      DetailPrint "R9 hash='$R9'"
-
-      ; Check calculation result
-      ${If} $R0 != "0"
-        ; Calculation failed, show message and continue
-        SetDetailsView show
-        DetailPrint "Calculation of `${GSUDO_NAME}` SHA-256 hash failed:"
-        DetailPrint " $R1"
-        MessageBox MB_ICONEXCLAMATION|MB_OK "Calculation of `${GSUDO_NAME}` SHA-256 hash has failed. Continue with the rest of the installation."
-      ${Else}
-        ; Open SHA-256 hash file
-        FileOpen $2 "${GSUDO_SHA256_DEST}" "r"
-
-        ; Check if file was opened successfully
-        ${If} $2 == ""
-          ; File could not be opened, show message and continue
-          SetDetailsView show
-          DetailPrint "Could not open `${GSUDO_NAME}` SHA-256 hash file:"
-          DetailPrint " ${GSUDO_SHA256_DEST}"
-          MessageBox MB_ICONEXCLAMATION|MB_OK "Could not open `${GSUDO_NAME}` SHA-256 hash file. Continue with the rest of the installation."
-        ${Else}
-          ; Read expected hash from file
-          FileRead $2 $R8
-          FileClose $2
-
-          ; Get rid of newline on end of expected from file
-          push $R8
-          Call trim
-          pop $R8
-
-          DetailPrint "actualHash=R9=$R9"
-          DetailPrint "expectedHash=R8=$R8"
-          SetDetailsView show
-          ; Compare calculated hash with expected hash
-          ${If} $R9 != $R8
-            ; Hashes do not match, show message and continue
-            SetDetailsView show
-            DetailPrint "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash:"
-            DetailPrint " actual: '$R9'"
-            DetailPrint " expect: '$R8'"
-            MessageBox MB_ICONEXCLAMATION|MB_OK "SHA-256 hash of `${GSUDO_NAME}` does not match expected hash. Continue with the rest of the installation."
-          ${Else}
-            ; Extract gsudo.exe from the zip file
-
-            ; Extract the ZIP file
-            ${If} ${TARGET_ARCH} == "arm64"
-              StrCpy $GsudoExtractionSourceDir "arm64"
-            ${Else}
-              StrCpy $GsudoExtractionSourceDir "x64"
-            ${EndIf}
-            DetailPrint "extracting the file $GsudoExtractionSourceDir/gsudo.exe from ${GSUDO_ZIP_DEST} to ${GSUDO_EXE_DEST} "
-
-            nsisunz::UnzipToLog /file "$GsudoExtractionSourceDir/gsudo.exe" "${GSUDO_ZIP_DEST}" "$PLUGINSDIR"
-
-            Pop $0
-            DetailPrint "Unzip results: $0"
-
-            ${If} $0 != "success"
-                ; Handle extraction failure
-                MessageBox MB_OK|MB_ICONSTOP "Failed to extract gsudo.exe from the zip archive. Error code: $0"
-            ${EndIf}
-
-            DetailPrint "CopyFiles $PLUGINSDIR\$GsudoExtractionSourceDir\gsudo.exe ${GSUDO_EXE_DEST}"
-            CopyFiles   "$PLUGINSDIR\$GsudoExtractionSourceDir\gsudo.exe" "${GSUDO_EXE_DEST}"
-
-            ; Since temp files were extracted in $PLUGINSDIR they automatically get cleaned up
-          ${EndIf}
-        ${EndIf}
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-
-  !undef GSUDO_ZIP_DEST
-  !undef GSUDO_EXE_DEST
-  !undef GSUDO_LICENSE_URL
-  !undef GSUDO_LICENSE_DEST
-  !undef GSUDO_SHA256_URL
-  !undef GSUDO_SHA256_DEST
-SectionEnd
 
 /**
  * mkcert group
@@ -586,8 +424,7 @@ SectionEnd
  * Provide language dependant descriptions
  */
 LangString DESC_SecDDEV ${LANG_ENGLISH} "Install ${PRODUCT_NAME_FULL} (required)"
-LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo) directory to the global PATH"
-LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/gerardog/gsudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file"
+LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} directory to the global PATH"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
 
@@ -599,7 +436,6 @@ LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDDEV} $(DESC_SecDDEV)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecAddToPath} $(DESC_SecAddToPath)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecSudo} $(DESC_SecSudo)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcert} $(DESC_SecMkcert)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcertSetup} $(DESC_SecMkcertSetup)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
@@ -781,22 +617,6 @@ Function ddevLicLeave
   WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:ddevLicenseAccepted" 0x00000001
 FunctionEnd
 
-/**
- * Disable sudo license page if component is not selected or already accepted before
- */
-Function sudoLicPre
-  ReadRegDWORD $R0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:SudoLicenseAccepted"
-  ${If} $R0 = 1
-    Abort
-  ${EndIf}
-FunctionEnd
-
-/**
- * Set sudo license accepted flag
- */
-Function sudoLicLeave
-  WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:SudoLicenseAccepted" 0x00000001
-FunctionEnd
 
 /**
  * Disable mkcert license page if component is not selected or already accepted before
@@ -893,9 +713,6 @@ Section Uninstall
   Delete "$INSTDIR\mkcert install.lnk"
   Delete "$INSTDIR\mkcert_license.txt"
   Delete "$INSTDIR\mkcert.exe"
-
-  Delete "$INSTDIR\gsudo_license.txt"
-  Delete "$INSTDIR\${GSUDO_SETUP}"
 
   Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\ddev.exe"
