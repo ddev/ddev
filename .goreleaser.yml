@@ -9,7 +9,7 @@ builds:
 - id: ddev
   main: ./cmd/ddev
 
-  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
+  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
   builder: prebuilt
   goos:
   - linux
@@ -23,6 +23,25 @@ builds:
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
+
+- id: ddev_hostname
+  main: ./cmd/ddev_hostname
+
+  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
+  builder: prebuilt
+  goos:
+    - linux
+    - windows
+    - darwin
+  goarch:
+    - amd64
+    - arm64
+  goamd64:
+    - v1
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev_hostname{{.Ext}}
+  binary: ddev
+
 
 - id: mkcert
   # requires make completions
@@ -307,6 +326,10 @@ nfpms:
   - deb
   - rpm
   contents:
+  - src: .gotmp/bin/windows_{{ .Arch }}/ddev_hostname.exe
+    dst: /usr/bin/ddev_hostname.exe
+    file_info:
+      mode: 0755
   - src: .gotmp/bin/completions/ddev_bash_completion.sh
     dst: /usr/share/bash-completion/completions/ddev
     file_info:
@@ -333,7 +356,12 @@ nfpms:
       dependencies:
       - nss-tools
       - xdg-utils
-
+  scripts:
+    postinstall: |
+      #!/bin/sh
+      if ! grep -qEi "(Microsoft|WSL)" /proc/version; then
+        rm -f /usr/bin/ddev_hostname.exe
+      fi
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'
 
