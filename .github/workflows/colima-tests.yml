@@ -88,7 +88,7 @@ jobs:
 
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - run: echo "/usr/local/opt/mysql-client/bin" >> $GITHUB_PATH
 

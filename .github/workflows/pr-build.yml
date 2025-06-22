@@ -46,7 +46,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Install build tools
         run: ./.github/workflows/linux-build-setup.sh

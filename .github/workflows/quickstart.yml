@@ -44,7 +44,7 @@ jobs:
           fetch-depth: 0
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
