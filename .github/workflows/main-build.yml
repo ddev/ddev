@@ -125,8 +125,10 @@ jobs:
         run: |
           signtool verify -pa .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
           signtool verify -pa .gotmp/bin/windows_amd64/ddev.exe
+          signtool verify -pa .gotmp/bin/windows_amd64/ddev_hostname.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/ddev_hostname.exe
 
       - name: Cache signed binaries
         # After 3.0.5 they were using zstdmt which is not available on Windows
