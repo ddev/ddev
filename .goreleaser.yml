@@ -321,6 +321,7 @@ nfpms:
     Open-source local web development tool
   ids:
   - ddev
+  - ddev_hostname
   - mkcert
   formats:
   - deb
