@@ -81,14 +81,14 @@ completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev_hostname $(GOTMP)/bin/linux_arm64/ddev_hostname $(GOTMP)/bin/darwin_amd64/ddev_hostname $(GOTMP)/bin/darwin_arm64/ddev_hostname $(GOTMP)/bin/windows_amd64/ddev_hostname.exe $(GOTMP)/bin/windows_arm64/ddev_hostname.exe
 $(TARGETS): mkcert $(GOFILES)
-	@echo "building $@ from $(SRC_AND_UNDER) GORACE=$(GORACE) CGO_ENABLED=$(CGO_ENABLED)";
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)); \
-	if [[ "$@" == *.exe ]]; then \
-		export CGO_ENABLED=0; \
+	if [[ "$@" == *ddev_hostname.exe ]]; then \
+		export CGO_ENABLED=0 GORACE=""; \
 	else \
-		export CGO_ENABLED=$(CGO_ENABLED); \
+		export CGO_ENABLED="$(CGO_ENABLED)" GORACE="$(GORACE)" ; \
 	fi; \
+	echo "building $@ from $(SRC_AND_UNDER) GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED"; \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
