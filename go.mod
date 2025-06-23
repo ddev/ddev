@@ -11,6 +11,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v28.0.2+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/go-viper/mapstructure/v2 v2.3.0
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v72 v72.0.0
 	github.com/google/uuid v1.6.0
@@ -20,7 +21,6 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/maruel/natural v1.1.1
 	github.com/mattn/go-isatty v0.0.20
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
