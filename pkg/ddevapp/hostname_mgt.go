@@ -10,7 +10,6 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -33,7 +32,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		// If we're able to resolve the hostname via DNS or otherwise we
 		// don't have to worry about this. This will allow resolution
 		// of <whatever>.ddev.site for example
-		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
+		if app.UseDNSWhenPossible {
 			// If they have provided "*.<name>" then look up the suffix
 			checkName := strings.TrimPrefix(name, "*.")
 			hostIPs, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", checkName)
