@@ -201,7 +201,6 @@ brews:
 - name: ddev
   ids:
   - ddev
-  - ddev_hostname
   repository:
     owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: homebrew-ddev
@@ -263,7 +262,6 @@ brews:
 - name: ddev-edge
   ids:
   - ddev
-  - ddev_hostname
   repository:
     owner: "{{ .Env.REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
