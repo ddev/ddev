@@ -82,15 +82,21 @@ completions: $(GOTMP)/bin/completions.tar.gz
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev_hostname $(GOTMP)/bin/linux_arm64/ddev_hostname $(GOTMP)/bin/darwin_amd64/ddev_hostname $(GOTMP)/bin/darwin_arm64/ddev_hostname $(GOTMP)/bin/windows_amd64/ddev_hostname.exe $(GOTMP)/bin/windows_arm64/ddev_hostname.exe
 $(TARGETS): mkcert $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER) GORACE=$(GORACE) CGO_ENABLED=$(CGO_ENABLED)";
-	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export CGO_ENABLED=$(CGO_ENABLED) GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
-	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
+	@export TARGET=$(word 3, $(subst /, ,$@)); \
+	if [[ "$@" == *.exe ]]; then \
+		export CGO_ENABLED=0; \
+	else \
+		export CGO_ENABLED=$(CGO_ENABLED); \
+	fi; \
+	echo "CGO_ENABLED=$$CGO_ENABLED"; \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
+	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
 	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $(BUILDARGS) -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
-	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
+	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi)
 	@echo $(VERSION) >VERSION.txt
+
 
 $(GOTMP)/bin/completions.tar.gz: build
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
