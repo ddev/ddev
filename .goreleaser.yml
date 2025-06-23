@@ -164,9 +164,9 @@ archives:
   files:
   - LICENSE
   - when:
-    goos: linux
-    goarch: amd64
-    file: .gotmp/bin/windows_amd64/ddev_hostname.exe
+      goos: linux
+      goarch: amd64
+      file: .gotmp/bin/windows_amd64/ddev_hostname.exe
   allow_different_binary_count: true
 
 - id: completions-tarball
