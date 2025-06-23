@@ -4,8 +4,9 @@ import (
 	"errors"
 	"reflect"
 
+	"github.com/go-viper/mapstructure/v2"
+
 	"github.com/ddev/ddev/pkg/config/state/types"
-	"github.com/mitchellh/mapstructure"
 )
 
 // New returns a new State interface to get and set states based on the
