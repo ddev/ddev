@@ -163,6 +163,10 @@ archives:
   wrap_in_directory: false
   files:
   - LICENSE
+  - when:
+    goos: linux
+    goarch: amd64
+    file: .gotmp/bin/windows_amd64/ddev_hostname.exe
   allow_different_binary_count: true
 
 - id: completions-tarball
@@ -245,12 +249,16 @@ brews:
         system "make", "build", "completions"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev_hostname", "#{bin}/ddev_hostname"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev_hostname.exe", "#{bin}/ddev_hostname.exe"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bin.install "ddev_hostname"
+        if OS.linux?
+          bin.install "ddev_hostname.exe"
+        end
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
@@ -303,12 +311,16 @@ brews:
         system "make", "build", "completions"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev_hostname", "#{bin}/ddev_hostname"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev_hostname.exe", "#{bin}/ddev_hostname.exe"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
         bin.install "ddev_hostname"
+        if OS.linux?
+          bin.install "ddev_hostname.exe"
+        end
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
