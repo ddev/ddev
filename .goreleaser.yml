@@ -147,6 +147,7 @@ archives:
 - id: ddev
   ids:
     - ddev
+    - ddev_hostname
     - mkcert
     - ddev_bash_completion.sh
     - ddev_zsh_completion.sh
