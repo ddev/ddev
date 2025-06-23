@@ -66,22 +66,22 @@ func RemoveHostEntry(name string, ip string) error {
 
 // ElevateToAddHostEntry runs the required DDEV hostname command to add the entry
 func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
-	ddevhostnameBinary := getDdevHostnameBinary()
+	ddevhostnameBinary := GetDdevHostnameBinary()
 	out, err := elevateHostsManipulation([]string{ddevhostnameBinary, hostname, ip})
 	return out, err
 }
 
 // ElevateToRemoveHostEntry runs the required ddev_hostname command to remove the entry,
 func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
-	ddevhostnameBinary := getDdevHostnameBinary()
+	ddevhostnameBinary := GetDdevHostnameBinary()
 	out, err := elevateHostsManipulation([]string{
 		ddevhostnameBinary, "--remove", hostname, ip})
 	return out, err
 }
 
-// getDdevHostnameBinary returns the path to the ddev_hostname or ddev_hostname.exe binary
+// GetDdevHostnameBinary returns the path to the ddev_hostname or ddev_hostname.exe binary
 // It must exist in the PATH
-func getDdevHostnameBinary() string {
+func GetDdevHostnameBinary() string {
 	ddevhostnameBinary := ddevhostnameBinary
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
 		ddevhostnameBinary = ddevhostnameWindowsBinary
@@ -107,7 +107,7 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 	}
 
 	c := args
-	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.", getDdevHostnameBinary())
+	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.", GetDdevHostnameBinary())
 	output.UserOut.Printf("DDEV will issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
@@ -119,7 +119,7 @@ var ddevHostnameAvailable bool
 
 // IsDdevHostnameAvailable checks to see if we can use ddev_hostname
 func IsDdevHostnameAvailable() bool {
-	ddevHostnameBinary := getDdevHostnameBinary()
+	ddevHostnameBinary := GetDdevHostnameBinary()
 	// Use ddev_hostname --version to check if ddev_hostname is available
 	out, err := exec.RunHostCommand(ddevHostnameBinary, "--version")
 	if err == nil {

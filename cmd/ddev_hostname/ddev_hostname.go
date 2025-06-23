@@ -20,7 +20,6 @@ func Execute() {
 }
 
 var removeHostnameFlag bool
-var removeInactiveFlag bool
 var checkHostnameFlag bool
 
 // RootCmd is the ddev_hostname command
@@ -31,7 +30,6 @@ var RootCmd = &cobra.Command{
 ddev_hostname junk.example.com 127.0.0.1
 ddev_hostname -r junk.example.com 127.0.0.1
 ddev_hostname --check junk.example.com 127.0.0.1
-ddev_hostname --remove-inactive
 `,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
@@ -95,23 +93,7 @@ to allow ddev_hostname to modify your hosts file. If you are connected to the in
 	},
 }
 
-// removeInactiveHostnames will remove all host names except those current in use by active projects.
-//func removeInactiveHostnames() {
-//	apps, err := ddevapp.GetInactiveProjects()
-//	if err != nil {
-//		util.Warning("Unable to run GetInactiveProjects: %v", err)
-//		return
-//	}
-//	for _, app := range apps {
-//		err := app.RemoveHostsEntriesIfNeeded()
-//		if err != nil {
-//			util.Warning("Unable to remove hosts entries for project '%s': %v", app.Name, err)
-//		}
-//	}
-//}
-
 func init() {
 	RootCmd.Flags().BoolVarP(&removeHostnameFlag, "remove", "r", false, "Remove the provided host name - ip correlation")
 	RootCmd.Flags().BoolVarP(&checkHostnameFlag, "check", "c", false, "Check to see if provided hostname is already in hosts file")
-	//RootCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
 }
