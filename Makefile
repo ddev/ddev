@@ -89,7 +89,6 @@ $(TARGETS): mkcert $(GOFILES)
 	else \
 		export CGO_ENABLED=$(CGO_ENABLED); \
 	fi; \
-	echo "CGO_ENABLED=$$CGO_ENABLED"; \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
