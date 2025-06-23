@@ -84,15 +84,15 @@ $(TARGETS): mkcert $(GOFILES)
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)); \
 	if [[ "$@" == *ddev_hostname.exe ]]; then \
-		export CGO_ENABLED=0 GORACE=""; \
+		export BUILDARGS="" CGO_ENABLED=0 GORACE=""; \
 	else \
-		export CGO_ENABLED="$(CGO_ENABLED)" GORACE="$(GORACE)" ; \
+		export CGO_ENABLED="$(CGO_ENABLED)" GORACE="$(GORACE)" BUILDARGS="$(BUILDARGS)" ; \
 	fi; \
-	echo "building $@ from $(SRC_AND_UNDER) GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED"; \
+	echo "building $@ from $(SRC_AND_UNDER) GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED BUILDARGS=$$BUILDARGS"; \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $(BUILDARGS) -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $$BUILDARGS -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
 	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi)
 	@echo $(VERSION) >VERSION.txt
 
