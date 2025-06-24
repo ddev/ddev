@@ -12,9 +12,6 @@ if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bi
 
 GITHUB_OWNER=${GITHUB_OWNER:-ddev}
 ARTIFACTS="ddev ddev_hostname mkcert"
-if [ "$WSL_DISTRO_NAME" != "" ]; then
-  ARTIFACTS="${ARTIFACTS} ddev_hostname.exe"
-fi
 
 TMPDIR=/tmp
 

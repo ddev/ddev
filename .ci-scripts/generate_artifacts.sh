@@ -62,13 +62,13 @@ popd >/dev/null
 # Generate linux-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_amd64 >/dev/null
 curl --fail -JL -s -o mkcert "https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64" && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev ddev_hostname ddev_hostname.exe mkcert
+tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev ddev_hostname mkcert
 popd >/dev/null
 
 # Generate linux-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm64 >/dev/null
 curl --fail -JL -s -o mkcert "https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm64" && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev ddev_hostname ../windows_arm64/ddev_hostname.exe mkcert
+tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev ddev_hostname mkcert
 popd >/dev/null
 
 # generate windows-amd64 tarball/zipball

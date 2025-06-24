@@ -332,10 +332,6 @@ nfpms:
   - deb
   - rpm
   contents:
-  - src: .gotmp/bin/windows_{{ .Arch }}/ddev_hostname.exe
-    dst: /usr/bin/ddev_hostname.exe
-    file_info:
-      mode: 0755
   - src: .gotmp/bin/completions/ddev_bash_completion.sh
     dst: /usr/share/bash-completion/completions/ddev
     file_info:
@@ -362,8 +358,6 @@ nfpms:
       dependencies:
       - nss-tools
       - xdg-utils
-  scripts:
-    postinstall: scripts/linux_postinstall.sh
 
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'
