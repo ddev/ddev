@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -24,8 +25,9 @@ var checkHostnameFlag bool
 
 // RootCmd is the ddev_hostname command
 var RootCmd = &cobra.Command{
-	Use:   "hostname [hostname] [ip]",
-	Short: "Manage your hostfile entries.",
+	Use:     "ddev_hostname [hostname] [ip]",
+	Short:   "Manage your hostfile entries.",
+	Version: versionconstants.DdevVersion,
 	Example: `
 ddev_hostname junk.example.com 127.0.0.1
 ddev_hostname -r junk.example.com 127.0.0.1
