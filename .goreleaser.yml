@@ -386,6 +386,7 @@ aurs:
   package: |-
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm755 "./ddev_hostname" "${pkgdir}/usr/bin/ddev_hostname"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
 
     # completions
@@ -425,6 +426,7 @@ aurs:
   package: |-
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm755 "./ddev_hostname" "${pkgdir}/usr/bin/ddev_hostname"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
 
     # completions
