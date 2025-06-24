@@ -4,7 +4,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"strings"
@@ -43,10 +42,10 @@ type shellExecuteInfo struct {
 
 func elevateIfNeeded() {
 	if !isElevated() {
-		fmt.Fprintln(os.Stderr, "This program requires elevated privileges. Attempting to elevate.")
+		util.Debug("Attempting to elevate ddev_hostname.exe")
 		elevate()
 	} else {
-		fmt.Println("Running with elevated privileges.")
+		util.Debug("ddev_hostname.exe is already running with elevated privileges.")
 	}
 }
 
@@ -59,7 +58,8 @@ func isElevated() bool {
 	defer token.Close()
 
 	// Query the TokenElevation field
-	var elevation struct{ TokenIsElevated uint32 }
+	type tokenElevation struct{ TokenIsElevated uint32 }
+	var elevation tokenElevation
 	var retLen uint32
 	err := windows.GetTokenInformation(
 		token,
