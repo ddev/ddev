@@ -18,9 +18,9 @@ func main() {
 		amplitude.Flush()
 	}()
 
-	// Prevent running as root for most cases
+	// Prevent running as root
 	// We really don't want ~/.ddev to have root ownership, breaks things.
-	if os.Geteuid() == 0 && len(os.Args) > 1 && os.Args[1] != "hostname" {
+	if os.Geteuid() == 0 {
 		util.Failed("DDEV is not designed to be run with root privileges, please run as normal user and without sudo")
 	}
 
