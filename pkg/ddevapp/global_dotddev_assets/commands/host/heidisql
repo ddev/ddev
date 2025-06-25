@@ -7,24 +7,24 @@
 ## OSTypes: windows,wsl2,linux
 ## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql,/snap/bin/heidisql-wine
 
-# This function determines the correct PostgreSQL library.
-# It prints the library path on success, or an error message and returns 1 on failure.
+is_wine_or_windows_binary() {
+  [[ "$1" == *wine* || "$1" == *.exe ]]
+}
+
 get_postgres_library() {
   local binary_path="$1"
 
-  # 1. If the user specified a library, we must use it.
   if [ -n "$db_library" ]; then
     echo "$db_library"
     return 0
   fi
 
-  # 2. If it's a Wine or WSL app, it needs the Windows DLL.
-  if [[ "$binary_path" == *wine* || "$binary_path" == *.exe ]]; then
+  if is_wine_or_windows_binary "$binary_path"; then
     echo "libpq-10.dll"
     return 0
   fi
 
-  # 3. It must be a native Linux app, so find the native .so library.
+  local native_libpq
   native_libpq=$(ldconfig -p | grep -o '/.*libpq\.so\.5' | head -n1)
   if [ -n "$native_libpq" ]; then
     echo "$native_libpq"
@@ -36,24 +36,20 @@ get_postgres_library() {
   fi
 }
 
-# This function determines the correct MariaDB library.
-# It prints the library path on success, or an error message and returns 1 on failure.
 get_mariadb_library() {
   local binary_path="$1"
 
-  # 1. If the user specified a library, we must use it.
   if [ -n "$db_library" ]; then
     echo "$db_library"
     return 0
   fi
 
-  # 2. If it's a Wine or WSL app, use the default DLL.
-  if [[ "$binary_path" == *wine* || "$binary_path" == *.exe ]]; then
+  if is_wine_or_windows_binary "$binary_path"; then
     echo "libmariadb.dll"
     return 0
   fi
 
-  # 3. Native Linux .so lookup
+  local native_libmariadb
   native_libmariadb=$(ldconfig -p | grep -o '/.*libmariadb\.so\.3' | head -n1)
   if [ -n "$native_libmariadb" ]; then
     echo "$native_libmariadb"
@@ -75,7 +71,7 @@ fi
 db_name="${1:-db}"
 db_user="${2:-root}"
 db_password="${3:-root}"
-db_network_type="${4:-0}" # Default: MariaDB/MySQL (TCP/IP) check https://www.heidisql.com/help.php#commandline
+db_network_type="${4:-0}" # Default: MariaDB/MySQL (TCP/IP)
 db_library="${5}"
 
 db_type="$(echo "$DDEV_DATABASE" | sed 's/:.*//')"
@@ -98,38 +94,38 @@ arguments=(
 
 case $OSTYPE in
 "win"* | "msys"*)
-  if [ "$db_type" = "postgres" ]; then
-    win_lib="${db_library:-libpq-10.dll}"
-    arguments+=("--library=${win_lib}")
-  elif [ "$db_type" = "mariadb" ] || [ "$db_type" = "mysql" ]; then
-    win_lib="${db_library:-libmariadb.dll}"
-    arguments+=("--library=${win_lib}")
-  fi
+  case "$db_type" in
+    postgres)
+      arguments+=("--library=${db_library:-libpq-10.dll}")
+      ;;
+    mariadb | mysql)
+      arguments+=("--library=${db_library:-libmariadb.dll}")
+      ;;
+  esac
   start "" "C:\Program Files\HeidiSQL\heidisql.exe" "${arguments[@]}" &
   ;;
 
 "linux-gnu")
   BINARIES=(
-    /usr/local/bin/heidisql
-    /usr/bin/heidisql
-    /snap/bin/heidisql-wine
+    "/usr/local/bin/heidisql"
+    "/usr/bin/heidisql"
+    "/snap/bin/heidisql-wine"
     "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
   )
   for binary in "${BINARIES[@]}"; do
     if [ -x "$binary" ]; then
       launch_args=("${arguments[@]}")
+      case "$db_type" in
+        postgres)
+          postgres_lib=$(get_postgres_library "$binary") || continue
+          launch_args+=("--library=${postgres_lib}")
+          ;;
+        mariadb | mysql)
+          mariadb_lib=$(get_mariadb_library "$binary") || continue
+          launch_args+=("--library=${mariadb_lib}")
+          ;;
+      esac
 
-      if [ "$db_type" = "postgres" ]; then
-        postgres_lib=$(get_postgres_library "$binary")
-        if [ $? -ne 0 ]; then continue; fi
-        launch_args+=("--library=${postgres_lib}")
-      elif [ "$db_type" = "mariadb" ] || [ "$db_type" = "mysql" ]; then
-        mariadb_lib=$(get_mariadb_library "$binary")
-        if [ $? -ne 0 ]; then continue; fi
-        launch_args+=("--library=${mariadb_lib}")
-      fi
-
-      echo "Launching $binary"
       "$binary" "${launch_args[@]}" &>/dev/null &
       disown
       exit 0
