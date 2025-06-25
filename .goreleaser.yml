@@ -347,17 +347,16 @@ nfpms:
   suggests:
     - bash-completion
     - zsh-completions
+    - xdg-utils
   overrides:
     deb:
       dependencies:
       - libnss3-tools
-      - xdg-utils
       replaces:
       - mkcert
     rpm:
       dependencies:
       - nss-tools
-      - xdg-utils
 
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'
