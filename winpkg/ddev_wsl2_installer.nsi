@@ -4,8 +4,6 @@
 !ifndef TARGET_ARCH # passed on command-line
   !error "TARGET_ARCH define is missing!"
 !endif
-Var TARGET_ARCH
-Var INSTALL_ARCH /* Architecture where installation is happening */
 
 Name "DDEV WSL2 Installer"
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_wsl2_installer_${TARGET_ARCH}.exe"
@@ -75,7 +73,7 @@ Section "Install DDEV and Docker integration"
 
   ; Download and install DDEV for Windows (static version, update as needed)
   DetailPrint "Downloading DDEV for Windows v1.23.4..."
-  ExecWait 'powershell -Command "Invoke-WebRequest -Uri https://github.com/ddev/ddev/releases/download/v1.23.4/ddev_windows_amd64_installer.v1.23.4.exe -OutFile $env:TEMP\\ddev_installer.exe; Start-Process $env:TEMP\\ddev_installer.exe -ArgumentList \"/S\" -Wait"'
+  ExecWait 'powershell -Command "Invoke-WebRequest -Uri https://github.com/ddev/ddev/releases/download/v1.23.4/ddev_windows_amd64_installer.v1.23.4.exe -OutFile $TEMP\\ddev_installer.exe; Start-Process $TEMP\\ddev_installer.exe -ArgumentList \"/S\" -Wait"'
 
   ; Add DDEV to PATH
   ReadRegStr $0 HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "PATH"
@@ -115,8 +113,6 @@ Section "Install DDEV and Docker integration"
   ExecWait 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
   ; Add Docker repository
   ExecWait 'wsl -u root -e bash -c "echo deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
-  ; Add DDEV GPG key
-  ExecWait 'wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
   ; Add DDEV repository
   ExecWait 'wsl -u root -e bash -c "echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * * > /etc/apt/sources.list.d/ddev.list"'
   ; Install DDEV, Docker CE, and dependencies
@@ -124,7 +120,7 @@ Section "Install DDEV and Docker integration"
   ; Upgrade packages
   ExecWait 'wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"'
   ; Add user to docker group
-  ExecWait 'wsl bash -c "sudo usermod -aG docker $USER"'
+  ExecWait 'wsl bash -c "sudo usermod -aG docker $$USER"'
   ; Install mkcert root CA in WSL
   ExecWait 'wsl -u root mkcert -install'
   ; Test Docker
