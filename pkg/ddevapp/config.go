@@ -24,7 +24,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
-	log "github.com/sirupsen/logrus"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
@@ -1713,7 +1712,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 	var err error
 	dir := app.GetConfigPath("")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		log.WithFields(log.Fields{
+		output.UserOut.WithFields(output.Fields{
 			"directory": dir,
 		}).Debug("Config Directory does not exist, attempting to create.")
 

@@ -10,7 +10,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
-	"github.com/sirupsen/logrus"
 )
 
 // TimeTrack determines the amount of time a function takes to return. Timer
@@ -74,10 +73,10 @@ func timeTrack(name *string) func() {
 	start := time.Now()
 
 	// Print message and return func. Printf is avoided to minimize impact.
-	logrus.Print("PERF: enter " + *name + " at " + start.Format("15:04:05.000000000"))
+	output.UserOut.Print("PERF: enter " + *name + " at " + start.Format("15:04:05.000000000"))
 
 	return func() {
-		logrus.Print("PERF: exit " + *name + " at " + time.Now().Format("15:04:05.000000000") + " after " + strconv.FormatInt(time.Since(start).Milliseconds(), 10) + "ms")
+		output.UserOut.Print("PERF: exit " + *name + " at " + time.Now().Format("15:04:05.000000000") + " after " + strconv.FormatInt(time.Since(start).Milliseconds(), 10) + "ms")
 	}
 }
 

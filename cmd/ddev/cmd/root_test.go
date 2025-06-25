@@ -21,7 +21,6 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/pkg/homedir"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -75,11 +74,11 @@ func TestMain(m *testing.M) {
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
-	log.Println("Running DDEV with ddev=", DdevBin)
+	output.UserOut.Println("Running DDEV with ddev=", DdevBin)
 
 	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
 	if err != nil {
-		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
+		output.UserErr.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
 
 	// We don't want the tests reporting telemetry.
@@ -98,33 +97,33 @@ func TestMain(m *testing.M) {
 		TestSites = []testcommon.TestSite{TestSites[useSite]}
 	}
 
-	log.Debugln("Preparing TestSites")
+	output.UserOut.Debugln("Preparing TestSites")
 	for i := range TestSites {
 		oldProject := globalconfig.GetProject(TestSites[i].Name)
 		if oldProject != nil {
 			out, err := osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
 			if err != nil {
-				log.Fatalf("ddev stop -RO on %s failed: %v, output=%s", TestSites[i].Name, err, out)
+				output.UserErr.Fatalf("ddev stop -RO on %s failed: %v, output=%s", TestSites[i].Name, err, out)
 			}
 		}
 		if err = globalconfig.ReadGlobalConfig(); err != nil {
-			log.Fatalf("Failed to read global config: %v", err)
+			output.UserErr.Fatalf("Failed to read global config: %v", err)
 		}
 
-		log.Debugf("Preparing %s", TestSites[i].Name)
+		output.UserOut.Debugf("Preparing %s", TestSites[i].Name)
 		err = TestSites[i].Prepare()
 		if err != nil {
-			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", TestSites[i].Name, err)
+			output.UserErr.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", TestSites[i].Name, err)
 		}
 	}
-	log.Debugln("Adding TestSites")
+	output.UserOut.Debugln("Adding TestSites")
 	err = addSites()
 	if err != nil {
 		removeSites()
 		util.Failed("addSites() failed: %v", err)
 	}
 
-	log.Debugln("Running tests.")
+	output.UserOut.Debugln("Running tests.")
 	testRun := m.Run()
 
 	removeSites()
@@ -434,12 +433,12 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 // addSites runs `ddev start` on the test apps
 func addSites() error {
-	log.Debugln("Removing any existing TestSites")
+	output.UserOut.Debugln("Removing any existing TestSites")
 	for _, site := range TestSites {
 		// Make sure the site is gone in case it was hanging around
 		_, _ = exec.RunHostCommand(DdevBin, "stop", "-RO", site.Name)
 	}
-	log.Debugln("Starting TestSites")
+	output.UserOut.Debugln("Starting TestSites")
 	origDir, _ := os.Getwd()
 	defer func() {
 		_ = os.Chdir(origDir)
@@ -447,11 +446,11 @@ func addSites() error {
 	for _, site := range TestSites {
 		err := os.Chdir(site.Dir)
 		if err != nil {
-			log.Fatalf("Failed to Chdir to %v", site.Dir)
+			output.UserErr.Fatalf("Failed to Chdir to %v", site.Dir)
 		}
 		out, err := exec.RunHostCommand(DdevBin, "start", "-y")
 		if err != nil {
-			log.Fatalln("Error Output from ddev start:", out, "err:", err)
+			output.UserErr.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
 	}
 	return nil
@@ -465,7 +464,7 @@ func removeSites() {
 		args := []string{"stop", "-RO"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
-			log.Errorf("Failed to run ddev remove -RO command, err: %v, output: %s\n", err, out)
+			output.UserErr.Errorf("Failed to run ddev remove -RO command, err: %v, output: %s\n", err, out)
 		}
 	}
 }

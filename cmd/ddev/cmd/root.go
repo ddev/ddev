@@ -35,10 +35,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support/`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		command := os.Args[1]
 
-		// LogSetup() has already been done, but now needs to be done
-		// again *after* --json flag is parsed.
-		output.LogSetUp()
-
 		// Anonymize user defined custom commands.
 		cmdCopy := *cmd
 		argsCopy := args
@@ -130,6 +126,8 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
 
+	// Parse flags early to initialize output.JSONOutput
+	_ = RootCmd.ParseFlags(os.Args[1:])
 	output.LogSetUp()
 
 	// Determine if Docker is running by getting the version.

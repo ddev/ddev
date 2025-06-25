@@ -24,7 +24,6 @@ import (
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	"github.com/docker/go-connections/nat"
-	logOutput "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,13 +53,13 @@ func testMain(m *testing.M) int {
 	// Prep Docker container for Docker util tests
 	imageExists, err := dockerutil.ImageExistsLocally(ddevImages.GetWebImage())
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", ddevImages.GetWebImage(), err)
+		output.UserErr.Errorf("Failed to check for local image %s: %v", ddevImages.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
 		err := dockerutil.Pull(ddevImages.GetWebImage())
 		if err != nil {
-			logOutput.Errorf("Failed to pull test image: %v", err)
+			output.UserErr.Errorf("Failed to pull test image: %v", err)
 			return 7
 		}
 	}
@@ -70,14 +69,14 @@ func testMain(m *testing.M) int {
 	if foundContainer != nil {
 		err = dockerutil.RemoveContainer(foundContainer.ID)
 		if err != nil {
-			logOutput.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
+			output.UserErr.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
 			return 5
 		}
 	}
 
 	containerID, err := startTestContainer()
 	if err != nil {
-		logOutput.Errorf("-- FAIL: dockerutils_test failed to start test container: %v", err)
+		output.UserErr.Errorf("-- FAIL: dockerutils_test failed to start test container: %v", err)
 		return 3
 	}
 	defer func() {
@@ -85,7 +84,7 @@ func testMain(m *testing.M) int {
 		if foundContainer != nil {
 			err = dockerutil.RemoveContainer(foundContainer.ID)
 			if err != nil {
-				logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+				output.UserErr.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 			}
 		}
 	}()
