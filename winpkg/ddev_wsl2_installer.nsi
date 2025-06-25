@@ -255,7 +255,7 @@ common_setup:
 
   ; Install initial dependencies
   DetailPrint "Installing dependencies..."
-  nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg libsecret-1-0 lsb-release'
+  nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
   Pop $1
   Pop $0
   ${If} $1 != 0
