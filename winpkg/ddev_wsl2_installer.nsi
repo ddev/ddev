@@ -217,44 +217,23 @@ mkcert_found:
   StrCpy $1 "$1;CAROOT/up"
   WriteRegStr HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "WSLENV" $1
 
-  StrCmp $DOCKER_OPTION "docker-ce" docker_ce docker_desktop
+  StrCmp $DOCKER_OPTION "docker-ce" pre_docker_setup pre_docker_setup
 
-docker_ce:
-  DetailPrint "Installing Docker CE and DDEV inside WSL2..."
-
-  ; Add Docker GPG key
-  DetailPrint "Adding Docker repository key..."
-  nsExec::ExecToStack 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
-  Pop $1
-  Pop $0
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to add Docker repository key. Please check your internet connection."
-    Abort
-  ${EndIf}
-
-  ; Add Docker repository
-  DetailPrint "Adding Docker repository..."
-  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
-  Pop $1
-  Pop $0
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to add Docker repository. Please check the logs."
-    Abort
-  ${EndIf}
-
-docker_desktop:
-  DetailPrint "Setting up $DOCKER_OPTION..."
-  Goto common_setup
-
-common_setup:
+pre_docker_setup:
   ; Remove old Docker versions first
   DetailPrint "Removing old Docker versions if present..."
   nsExec::ExecToStack 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
   Pop $1
   Pop $0
 
-  ; Install initial dependencies
-  DetailPrint "Installing dependencies..."
+  ; apt-get upgrade
+  DetailPrint "Doing apt-get upgrade..."
+  nsExec::ExecToStack 'wsl -u root bash -c "apt-get update && apt-get upgrade -y >/dev/null 2>&1"'
+  Pop $1
+  Pop $0
+
+  ; Install linux packages
+  DetailPrint "Installing linux packages..."
   nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
   Pop $1
   Pop $0
@@ -269,6 +248,40 @@ common_setup:
   Pop $1
   Pop $0
 
+  StrCmp $DOCKER_OPTION "docker-ce" docker_ce docker_desktop
+
+docker_ce:
+  DetailPrint "Installing Docker CE and DDEV inside WSL2..."
+
+  ; Add Docker GPG key
+  DetailPrint "Adding Docker repository key..."
+  nsExec::ExecToStack 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
+  Pop $1
+  Pop $0
+  DetailPrint "Key installation output: $0"
+  DetailPrint "Key installation exit code: $1"
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add Docker repository key. Please check your internet connection. Exit code: $1, Output: $0"
+    Abort
+  ${EndIf}
+
+  ; Add Docker repository
+  DetailPrint "Adding Docker repository..."
+  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+  Pop $1
+  Pop $0
+  DetailPrint "Repository addition output: $0"
+  DetailPrint "Repository addition exit code: $1"
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add Docker repository. Exit code: $1, Output: $0"
+    Abort
+  ${EndIf}
+
+docker_desktop:
+  DetailPrint "Setting up $DOCKER_OPTION..."
+  Goto common_setup
+
+common_setup:
   ; Add DDEV GPG key
   DetailPrint "Adding DDEV repository key..."
   nsExec::ExecToStack 'wsl -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
