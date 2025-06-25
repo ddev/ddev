@@ -3,9 +3,67 @@
 ## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Run HeidiSQL against current db
 ## Usage: heidisql [database] [user] [password] [nettype] [library]
-## Example: "ddev heidisql" or "ddev heidisql db db db 8 libpq-12.dll"
+## Example: "ddev heidisql" or "ddev heidisql db db db 8 libpq-10.dll"
 ## OSTypes: windows,wsl2,linux
 ## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql,/snap/bin/heidisql-wine
+
+# This function determines the correct PostgreSQL library.
+# It prints the library path on success, or an error message and returns 1 on failure.
+get_postgres_library() {
+  local binary_path="$1"
+
+  # 1. If the user specified a library, we must use it.
+  if [ -n "$db_library" ]; then
+    echo "$db_library"
+    return 0
+  fi
+
+  # 2. If it's a Wine or WSL app, it needs the Windows DLL.
+  if [[ "$binary_path" == *wine* || "$binary_path" == *.exe ]]; then
+    echo "libpq-10.dll"
+    return 0
+  fi
+
+  # 3. It must be a native Linux app, so find the native .so library.
+  native_libpq=$(ldconfig -p | grep -o '/.*libpq\.so\.5' | head -n1)
+  if [ -n "$native_libpq" ]; then
+    echo "$native_libpq"
+    return 0
+  else
+    echo "Error: Native PostgreSQL connection requires 'libpq5'." >&2
+    echo "Please install it (e.g., 'sudo apt install libpq5')." >&2
+    return 1
+  fi
+}
+
+# This function determines the correct MariaDB library.
+# It prints the library path on success, or an error message and returns 1 on failure.
+get_mariadb_library() {
+  local binary_path="$1"
+
+  # 1. If the user specified a library, we must use it.
+  if [ -n "$db_library" ]; then
+    echo "$db_library"
+    return 0
+  fi
+
+  # 2. If it's a Wine or WSL app, use the default DLL.
+  if [[ "$binary_path" == *wine* || "$binary_path" == *.exe ]]; then
+    echo "libmariadb.dll"
+    return 0
+  fi
+
+  # 3. Native Linux .so lookup
+  native_libmariadb=$(ldconfig -p | grep -o '/.*libmariadb\.so\.3' | head -n1)
+  if [ -n "$native_libmariadb" ]; then
+    echo "$native_libmariadb"
+    return 0
+  else
+    echo "Error: Native MariaDB connection requires 'libmariadb3'." >&2
+    echo "Please install it (e.g., 'sudo apt install libmariadb3')." >&2
+    return 1
+  fi
+}
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
@@ -17,19 +75,15 @@ fi
 db_name="${1:-db}"
 db_user="${2:-root}"
 db_password="${3:-root}"
-db_network_type="${4:-0}" # Default: MySQL/MariaDB
-db_library="${5:-libmariadb.dll}"
+db_network_type="${4:-0}" # Default: MariaDB/MySQL (TCP/IP) check https://www.heidisql.com/help.php#commandline
+db_library="${5}"
 
 db_type="$(echo "$DDEV_DATABASE" | sed 's/:.*//')"
-db_version=$(yq e '.database.version' .ddev/config.yaml 2>/dev/null || echo "")
 
 if [ "$db_type" = "postgres" ]; then
-  db_network_type="8"
-  db_user="db"
-  db_password="db"
-  if [ -z "$5" ]; then
-    db_library="libpq-${db_version:-12}.dll"
-  fi
+  db_network_type="${4:-8}" # PostgreSQL (TCP/IP)
+  db_user="${2:-db}"
+  db_password="${3:-db}"
 fi
 
 arguments=(
@@ -40,25 +94,46 @@ arguments=(
   "--database=${db_name}"
   "--description=${DDEV_SITENAME}"
   "--nettype=${db_network_type}"
-  "--library=${db_library}"
 )
 
 case $OSTYPE in
-  "win"* | "msys"*)
-    start "" "C:\Program Files\HeidiSQL\heidisql.exe" "${arguments[@]}" &
-    ;;
-  "linux-gnu")
-    BINARIES=(
-      /usr/local/bin/heidisql
-      /usr/bin/heidisql
-      /snap/bin/heidisql-wine
-      "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
-    )
-    for binary in "${BINARIES[@]}"; do
-      if [ -x "$binary" ]; then
-        "$binary" "${arguments[@]}" &>/dev/null & disown
-        exit 0
+"win"* | "msys"*)
+  if [ "$db_type" = "postgres" ]; then
+    win_lib="${db_library:-libpq-10.dll}"
+    arguments+=("--library=${win_lib}")
+  elif [ "$db_type" = "mariadb" ] || [ "$db_type" = "mysql" ]; then
+    win_lib="${db_library:-libmariadb.dll}"
+    arguments+=("--library=${win_lib}")
+  fi
+  start "" "C:\Program Files\HeidiSQL\heidisql.exe" "${arguments[@]}" &
+  ;;
+
+"linux-gnu")
+  BINARIES=(
+    /usr/local/bin/heidisql
+    /usr/bin/heidisql
+    /snap/bin/heidisql-wine
+    "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
+  )
+  for binary in "${BINARIES[@]}"; do
+    if [ -x "$binary" ]; then
+      launch_args=("${arguments[@]}")
+
+      if [ "$db_type" = "postgres" ]; then
+        postgres_lib=$(get_postgres_library "$binary")
+        if [ $? -ne 0 ]; then continue; fi
+        launch_args+=("--library=${postgres_lib}")
+      elif [ "$db_type" = "mariadb" ] || [ "$db_type" = "mysql" ]; then
+        mariadb_lib=$(get_mariadb_library "$binary")
+        if [ $? -ne 0 ]; then continue; fi
+        launch_args+=("--library=${mariadb_lib}")
       fi
-    done
-    ;;
+
+      echo "Launching $binary"
+      "$binary" "${launch_args[@]}" &>/dev/null &
+      disown
+      exit 0
+    fi
+  done
+  ;;
 esac
