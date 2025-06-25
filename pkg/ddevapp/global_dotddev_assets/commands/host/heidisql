@@ -2,8 +2,8 @@
 
 ## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Run HeidiSQL against current db
-## Usage: heidisql [database]
-## Example: "ddev heidisql" or "ddev heidisql my_other_db"
+## Usage: heidisql [database] [user] [password] [nettype] [library]
+## Example: "ddev heidisql" or "ddev heidisql db db db 8 libpq-12.dll"
 ## OSTypes: windows,wsl2,linux
 ## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql,/snap/bin/heidisql-wine
 
@@ -14,12 +14,33 @@ if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   exit $?
 fi
 
+db_name="${1:-db}"
+db_user="${2:-root}"
+db_password="${3:-root}"
+db_network_type="${4:-0}" # Default: MySQL/MariaDB
+db_library="${5:-libmariadb.dll}"
+
+db_type="$(echo "$DDEV_DATABASE" | sed 's/:.*//')"
+db_version=$(yq e '.database.version' .ddev/config.yaml 2>/dev/null || echo "")
+
+if [ "$db_type" = "postgres" ]; then
+  db_network_type="8"
+  db_user="db"
+  db_password="db"
+  if [ -z "$5" ]; then
+    db_library="libpq-${db_version:-12}.dll"
+  fi
+fi
+
 arguments=(
   "--host=127.0.0.1"
   "--port=${DDEV_HOST_DB_PORT}"
-  "--user=root"
-  "--password=root"
+  "--user=${db_user}"
+  "--password=${db_password}"
+  "--database=${db_name}"
   "--description=${DDEV_SITENAME}"
+  "--nettype=${db_network_type}"
+  "--library=${db_library}"
 )
 
 case $OSTYPE in
@@ -33,10 +54,8 @@ case $OSTYPE in
       /snap/bin/heidisql-wine
       "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
     )
-
     for binary in "${BINARIES[@]}"; do
       if [ -x "$binary" ]; then
-        echo "Launching $binary"
         "$binary" "${arguments[@]}" &>/dev/null & disown
         exit 0
       fi
