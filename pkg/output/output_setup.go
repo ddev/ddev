@@ -24,7 +24,7 @@ var (
 	UserErr = func() *log.Logger {
 		l := log.New()
 		l.SetFormatter(DdevOutputFormatter)
-		l.SetOutput(os.Stderr)
+		l.SetOutput(&ErrorWriter{})
 		return l
 	}()
 	// DdevOutputFormatter is the specialized formatter for UserOut
@@ -49,4 +49,13 @@ func LogSetUp() {
 		UserErr.SetFormatter(DdevOutputJSONFormatter)
 		log.SetFormatter(DdevOutputJSONFormatter)
 	}
+}
+
+// ErrorWriter allows writing stderr
+// Splitting to stderr approach from
+// https://huynvk.dev/blog/4-tips-for-logging-on-gcp-using-golang-and-logrus
+type ErrorWriter struct{}
+
+func (w *ErrorWriter) Write(p []byte) (n int, err error) {
+	return os.Stderr.Write(p)
 }
