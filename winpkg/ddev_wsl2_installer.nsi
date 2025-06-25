@@ -1,5 +1,6 @@
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
+!include "WinMessages.nsh"
 
 !ifndef TARGET_ARCH # passed on command-line
   !error "TARGET_ARCH define is missing!"
@@ -126,26 +127,92 @@ Section "Install DDEV and Docker integration"
 
   DetailPrint "Non-root user detected successfully."
 
-  ; Download and install DDEV for Windows (static version, update as needed)
-  DetailPrint "Downloading DDEV for Windows v1.24.7..."
-  nsExec::ExecToLog 'powershell -Command "Invoke-WebRequest -Uri https://github.com/ddev/ddev/releases/download/v1.24.7/ddev_windows_amd64_installer.v1.24.7.exe -OutFile $TEMP\\ddev_installer.exe"'
-  ExecWait '"$TEMP\\ddev_installer.exe" /S'
+  ; Download DDEV for Windows
+  DetailPrint "Downloading DDEV for Windows v1.24.6..."
+  nsExec::ExecToLog 'powershell -Command "Invoke-WebRequest -Uri https://github.com/ddev/ddev/releases/download/v1.24.6/ddev_windows_amd64_installer.v1.24.6.exe -OutFile $TEMP\\ddev_installer.exe"'
+  Pop $1  ; error code
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to download DDEV installer. Please check your internet connection."
+    Abort
+  ${EndIf}
+
+  DetailPrint "Installing DDEV..."
+  DetailPrint "Running: $TEMP\\ddev_installer.exe /S"
+  ExecWait '"$TEMP\\ddev_installer.exe" /S' $R0
+  DetailPrint "DDEV installer completed with exit code: $R0"
+  ${If} $R0 != 0
+    MessageBox MB_ICONSTOP "DDEV Windows installation failed with error code $R0"
+    Abort
+  ${EndIf}
+
+  DetailPrint "DDEV installer completed successfully. Setting up environment..."
 
   ; Add DDEV to PATH
   ReadRegStr $0 HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "PATH"
-  StrCpy $0 "$0;$PROGRAMFILES\\DDEV"
+  ${If} $0 == ""
+    StrCpy $0 "$PROGRAMFILES\\DDEV"
+  ${Else}
+    StrCpy $0 "$0;$PROGRAMFILES\\DDEV"
+  ${EndIf}
   WriteRegStr HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "PATH" $0
 
-  ; Wait for mkcert.exe
-  DetailPrint "Waiting for mkcert.exe..."
-  Sleep 5000
+  ; Notify Windows of the PATH change
+  DetailPrint "Updating system PATH..."
+  SendMessage ${HWND_BROADCAST} ${WM_SETTINGCHANGE} 0 "STR:Environment" /TIMEOUT=5000
+
+  DetailPrint "Looking for existing mkcert.exe..."
+  ; Check Program Files first as that's where DDEV installs it
+  ${If} ${FileExists} "C:\Program Files\DDEV\mkcert.exe"
+    DetailPrint "Found mkcert.exe in C:\Program Files\DDEV"
+    StrCpy $3 "C:\Program Files\DDEV\mkcert.exe"
+    Goto mkcert_found
+  ${EndIf}
+
+  ; Try where command as backup
+  nsExec::ExecToStack 'cmd /c where mkcert.exe'
+  Pop $1  ; error code
+  Pop $0  ; output
+  DetailPrint "where mkcert.exe exit code: $1"
+  DetailPrint "where mkcert.exe output: $0"
+  ${If} $1 == 0
+  ${AndIf} $0 != ""
+    DetailPrint "Found mkcert.exe in PATH: $0"
+    StrCpy $3 "$0"  ; Save path for later
+    Goto mkcert_found
+  ${EndIf}
+
+  DetailPrint "Checking current user path..."
+  ReadEnvStr $0 "PATH"
+  DetailPrint "Current PATH: $0"
+
+  MessageBox MB_ICONSTOP "mkcert.exe not found in C:\Program Files\DDEV or PATH. PATH: $0"
+  Abort
+
+mkcert_found:
+  DetailPrint "Using mkcert.exe from: $3"
 
   ; Install mkcert root CA
-  ExecWait '"$PROGRAMFILES\\DDEV\\mkcert.exe" -install'
+  DetailPrint "Installing mkcert root CA using: $3"
+  nsExec::ExecToLog '"$3" -install'
+  Pop $1  ; error code
+  Pop $0  ; output
+  DetailPrint "mkcert -install exit code: $1"
+  DetailPrint "mkcert -install output: $0"
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "mkcert installation failed. Error code: $1, Output: $0"
+    Abort
+  ${EndIf}
+
+  DetailPrint "mkcert root CA installed successfully."
 
   ; Set CAROOT environment variable
-  nsExec::ExecToStack '"$PROGRAMFILES\\DDEV\\mkcert.exe" -CAROOT'
-  Pop $0
+  nsExec::ExecToStack '"$3" -CAROOT'
+  Pop $1  ; error code
+  Pop $0  ; output
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Could not get CAROOT. Please check the logs."
+    Abort
+  ${EndIf}
   WriteRegStr HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "CAROOT" $0
 
   ; Set WSLENV for CAROOT
@@ -158,40 +225,117 @@ Section "Install DDEV and Docker integration"
   ; --- Docker CE inside WSL2 ---
   DetailPrint "Installing Docker CE and DDEV inside WSL2..."
   ; Remove old Docker versions
-  ExecWait 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
+  nsExec::ExecToStack 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
+  Pop $1
+  Pop $0
   ; Update package lists
-  ExecWait 'wsl -u root apt-get update'
+  DetailPrint "Updating package lists..."
+  nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get -qq update"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to update package lists. Error code: $1, Output: $0"
+    Abort
+  ${EndIf}
+
   ; Install dependencies
-  ExecWait 'wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release'
+  DetailPrint "Installing dependencies..."
+  nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to install dependencies. Please check the logs."
+    Abort
+  ${EndIf}
+
   ; Create keyrings directory
-  ExecWait 'wsl -u root install -m 0755 -d /etc/apt/keyrings'
+  nsExec::ExecToStack 'wsl -u root install -m 0755 -d /etc/apt/keyrings'
+  Pop $1
+  Pop $0
+
   ; Add Docker GPG key
-  ExecWait 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
+  DetailPrint "Adding Docker GPG key..."
+  nsExec::ExecToStack 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add Docker GPG key. Please check your internet connection."
+    Abort
+  ${EndIf}
+
   ; Add Docker repository
-  ExecWait 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+  DetailPrint "Adding Docker repository..."
+  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add Docker repository. Please check the logs."
+    Abort
+  ${EndIf}
+
   ; Add DDEV repository
-  ExecWait 'wsl -u root -e bash -c "echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * * > /etc/apt/sources.list.d/ddev.list"'
+  DetailPrint "Adding DDEV repository..."
+  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * * > /etc/apt/sources.list.d/ddev.list"'
+  Pop $1
+  Pop $0
+
   ; Install DDEV, Docker CE, and dependencies
-  ExecWait 'wsl -u root -e bash -c "apt-get update && apt-get install -y ddev docker-ce docker-ce-cli containerd.io wslu"'
-  ; Upgrade packages
-  ExecWait 'wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"'
+  DetailPrint "Installing DDEV and Docker CE..."
+  nsExec::ExecToStack 'wsl -u root -e bash -c "apt-get update && apt-get install -y ddev docker-ce docker-ce-cli containerd.io wslu"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to install DDEV and Docker CE. Please check the logs."
+    Abort
+  ${EndIf}
+
+  DetailPrint "Setting up final configuration..."
   ; Add user to docker group
-  ExecWait 'wsl bash -c "sudo usermod -aG docker $$USER"'
+  nsExec::ExecToStack 'wsl bash -c "sudo usermod -aG docker $$USER"'
+  Pop $1
+  Pop $0
+
   ; Install mkcert root CA in WSL
-  ExecWait 'wsl -u root mkcert -install'
+  nsExec::ExecToStack 'wsl -u root mkcert -install'
+  Pop $1
+  Pop $0
+
   ; Test Docker
-  ExecWait 'wsl -e docker ps'
+  DetailPrint "Testing Docker installation..."
+  nsExec::ExecToStack 'wsl -e docker ps'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Docker test failed. Please check the logs."
+    Abort
+  ${EndIf}
+
   ; Remove old .docker config if present
-  ExecWait 'wsl rm -rf ~/.docker'
+  nsExec::ExecToStack 'wsl rm -rf ~/.docker'
+  Pop $1
+  Pop $0
+
   ; Enable systemd in WSL
-  ExecWait 'wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep \"[boot]\" /etc/wsl.conf >/dev/null; then printf \"\n[boot]\nsystemd=true\n\" >>/etc/wsl.conf; fi"'
+  DetailPrint "Enabling systemd in WSL..."
+  nsExec::ExecToStack 'wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep \"[boot]\" /etc/wsl.conf >/dev/null; then printf \"\n[boot]\nsystemd=true\n\" >>/etc/wsl.conf; fi"'
+  Pop $1
+  Pop $0
+
   ; Show DDEV version
-  ExecWait 'wsl ddev version'
+  DetailPrint "Verifying DDEV installation..."
+  nsExec::ExecToStack 'wsl ddev version'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "DDEV verification failed. Please check the logs."
+    Abort
+  ${EndIf}
+  DetailPrint "Installation completed successfully!"
   Goto done
 
 docker_desktop:
   DetailPrint "Using Docker Desktop for Windows. Please ensure Docker Desktop is installed and WSL2 integration is enabled."
-  ; Optionally, check for Docker Desktop and prompt if not found
 
 done:
+  DetailPrint "All done! Please restart your WSL distro for all changes to take effect."
 SectionEnd
