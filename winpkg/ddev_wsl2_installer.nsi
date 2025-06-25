@@ -1,10 +1,6 @@
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
-!include "StrFunc.nsh"
-
-; Initialize StrTrimNewLines function
-${StrTrimNewLines}
 
 !ifndef TARGET_ARCH # passed on command-line
   !error "TARGET_ARCH define is missing!"
@@ -32,7 +28,7 @@ Function DockerChoicePage
   Pop $1
   ${NSD_CreateRadioButton} 0 30u 100% 12u "Install Docker CE inside WSL2 (recommended)"
   Pop $2
-  ${NSD_CreateRadioButton} 0 45u 100% 12u "Use existing Docker Desktop for Windows"
+  ${NSD_CreateRadioButton} 0 45u 100% 12u "Use Docker Desktop for Windows integration"
   Pop $3
   ${NSD_SetState} $2 ${BST_CHECKED}
   nsDialogs::Show
@@ -137,7 +133,7 @@ Section "Install DDEV and Docker integration"
     Abort
   ${EndIf}
 
-  DetailPrint "Installing DDEV..."
+  DetailPrint "Installing DDEV on Windows..."
   DetailPrint "Running: $TEMP\\ddev_installer.exe /S"
   ExecWait '"$TEMP\\ddev_installer.exe" /S' $R0
   DetailPrint "DDEV installer completed with exit code: $R0"
@@ -221,30 +217,10 @@ mkcert_found:
   StrCpy $1 "$1;CAROOT/up"
   WriteRegStr HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "WSLENV" $1
 
-  StrCmp $DOCKER_OPTION "docker-ce" 0 docker_desktop
+  StrCmp $DOCKER_OPTION "docker-ce" docker_ce docker_desktop
 
-  ; --- Docker CE inside WSL2 ---
+docker_ce:
   DetailPrint "Installing Docker CE and DDEV inside WSL2..."
-  ; Remove old Docker versions
-  nsExec::ExecToStack 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
-  Pop $1
-  Pop $0
-
-  ; Install initial dependencies
-  DetailPrint "Installing dependencies..."
-  nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release'
-  Pop $1
-  Pop $0
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to install dependencies. Please check the logs."
-    Abort
-  ${EndIf}
-
-  ; Create keyrings directory
-  DetailPrint "Setting up keyrings directory..."
-  nsExec::ExecToStack 'wsl -u root install -m 0755 -d /etc/apt/keyrings'
-  Pop $1
-  Pop $0
 
   ; Add Docker GPG key
   DetailPrint "Adding Docker repository key..."
@@ -253,16 +229,6 @@ mkcert_found:
   Pop $0
   ${If} $1 != 0
     MessageBox MB_ICONSTOP "Failed to add Docker repository key. Please check your internet connection."
-    Abort
-  ${EndIf}
-
-  ; Add DDEV GPG key
-  DetailPrint "Adding DDEV repository key..."
-  nsExec::ExecToStack 'wsl -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
-  Pop $1
-  Pop $0
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to add DDEV repository key. Error: $0"
     Abort
   ${EndIf}
 
@@ -276,6 +242,43 @@ mkcert_found:
     Abort
   ${EndIf}
 
+docker_desktop:
+  DetailPrint "Setting up $DOCKER_OPTION..."
+  Goto common_setup
+
+common_setup:
+  ; Remove old Docker versions first
+  DetailPrint "Removing old Docker versions if present..."
+  nsExec::ExecToStack 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
+  Pop $1
+  Pop $0
+
+  ; Install initial dependencies
+  DetailPrint "Installing dependencies..."
+  nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg libsecret-1-0 lsb-release'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to install dependencies. Please check the logs."
+    Abort
+  ${EndIf}
+
+  ; Create keyrings directory if it doesn't exist
+  DetailPrint "Setting up keyrings directory..."
+  nsExec::ExecToStack 'wsl -u root install -m 0755 -d /etc/apt/keyrings'
+  Pop $1
+  Pop $0
+
+  ; Add DDEV GPG key
+  DetailPrint "Adding DDEV repository key..."
+  nsExec::ExecToStack 'wsl -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add DDEV repository key. Error: $0"
+    Abort
+  ${EndIf}
+
   ; Add DDEV repository
   DetailPrint "Adding DDEV repository..."
   nsExec::ExecToStack 'wsl -u root -e bash -c "echo \"deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *\" > /etc/apt/sources.list.d/ddev.list"'
@@ -286,7 +289,7 @@ mkcert_found:
     Abort
   ${EndIf}
 
-  ; Now update package lists after both repos are properly set up
+  ; Update package lists
   DetailPrint "Updating package lists..."
   nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
   Pop $1
@@ -297,56 +300,19 @@ mkcert_found:
     Abort
   ${EndIf}
 
-  ; Install packages
-  DetailPrint "Installing DDEV and Docker CE..."
-  nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev docker-ce docker-ce-cli containerd.io wslu 2>&1"'
-  Pop $1
-  Pop $0
-  DetailPrint "Installation output: $0"
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to install DDEV and Docker CE. Error: $0"
-    Abort
+  ; Install packages based on Docker option
+  DetailPrint "Installing packages..."
+  ${If} $DOCKER_OPTION == "docker-ce"
+    StrCpy $0 "ddev docker-ce docker-ce-cli containerd.io wslu"
+  ${Else}
+    StrCpy $0 "ddev wslu"
   ${EndIf}
-
-  DetailPrint "Setting up final configuration..."
-  ; Get username by writing to a temp file
-  DetailPrint "Attempting to get WSL username..."
-
-  ; Create a unique temp file name
-  GetTempFileName $R1
-  DetailPrint "Using temp file: $R1"
-
-  ; Execute whoami and redirect to temp file
-  nsExec::ExecToStack 'cmd /c wsl whoami > "$R1"'
-  Pop $1  ; error code
-
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to execute whoami command. Error code: $1"
-    Delete "$R1"
-    Abort
-  ${EndIf}
-
-  ; Read the temp file content
-  FileOpen $0 "$R1" r
-  FileRead $0 $R0
-  FileClose $0
-  Delete "$R1"
-
-  ; Trim any whitespace/newlines
-  ${StrTrimNewLines} $R0 $R0
-  DetailPrint "Username from file: '$R0'"
-
-  ${If} $R0 == ""
-    MessageBox MB_ICONSTOP "Could not get WSL username"
-    Abort
-  ${EndIf}
-
-  DetailPrint "DEBUG: About to execute: wsl -u root usermod -aG docker $R0"
-  nsExec::ExecToStack 'wsl -u root usermod -aG docker $R0'
+  nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
   Pop $1
   Pop $2
+  DetailPrint "Installation output: $2"
   ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to add user to docker group. Error: $2"
+    MessageBox MB_ICONSTOP "Failed to install packages. Error: $2"
     Abort
   ${EndIf}
 
@@ -369,12 +335,14 @@ mkcert_found:
     MessageBox MB_ICONSTOP "DDEV verification failed. Please check the logs."
     Abort
   ${EndIf}
-  DetailPrint "Installation completed successfully!"
+
+  ${If} $DOCKER_OPTION == "docker-desktop"
+    DetailPrint "All done! Please ensure Docker Desktop is running with WSL2 integration enabled."
+  ${Else}
+    DetailPrint "All done! Installation completed successfully."
+  ${EndIf}
   Goto done
 
-docker_desktop:
-  DetailPrint "Using Docker Desktop for Windows. Please ensure Docker Desktop is installed and WSL2 integration is enabled."
-
 done:
-  DetailPrint "All done! Installation completed successfully."
+  DetailPrint "Installation completed successfully."
 SectionEnd
