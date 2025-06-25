@@ -1,6 +1,10 @@
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "WinMessages.nsh"
+!include "StrFunc.nsh"
+
+; Initialize StrTrimNewLines function
+${StrTrimNewLines}
 
 !ifndef TARGET_ARCH # passed on command-line
   !error "TARGET_ARCH define is missing!"
@@ -59,9 +63,9 @@ Section "Install DDEV and Docker integration"
 
   ; Check for Ubuntu-based default distro
   DetailPrint "Checking for Ubuntu-based default distro..."
-  nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep ^NAME="'
+  nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep -i ^NAME="'
   Pop $1  ; First pop is error code
-  Pop $0  ; Second pop is output
+  Pop $0  ; output
   DetailPrint "WSL Output: $0"
   DetailPrint "Exit Code: $1"
 
@@ -75,15 +79,12 @@ Section "Install DDEV and Docker integration"
     Abort
   ${EndIf}
 
-  ; Strip any trailing newline
-  StrCpy $2 $0 1 -1
-  ${If} $2 == "$\n"
-    StrCpy $0 $0 -1
-  ${EndIf}
-  DetailPrint "Cleaned Output: $0"
-
-  ${If} $0 != 'NAME="Ubuntu"'
-    MessageBox MB_ICONSTOP "Your default WSL2 distro is not Ubuntu-based ($0). Please set Ubuntu as your default WSL2 distro."
+  ; Simple case-insensitive grep for Ubuntu in the output
+  nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep -i ^NAME= | grep -i ubuntu"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Your default WSL2 distro is not Ubuntu-based. Please set Ubuntu as your default WSL2 distro."
     Abort
   ${EndIf}
 
@@ -228,17 +229,8 @@ mkcert_found:
   nsExec::ExecToStack 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
   Pop $1
   Pop $0
-  ; Update package lists
-  DetailPrint "Updating package lists..."
-  nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get -qq update"'
-  Pop $1
-  Pop $0
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to update package lists. Error code: $1, Output: $0"
-    Abort
-  ${EndIf}
 
-  ; Install dependencies
+  ; Install initial dependencies
   DetailPrint "Installing dependencies..."
   nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release'
   Pop $1
@@ -249,23 +241,34 @@ mkcert_found:
   ${EndIf}
 
   ; Create keyrings directory
+  DetailPrint "Setting up keyrings directory..."
   nsExec::ExecToStack 'wsl -u root install -m 0755 -d /etc/apt/keyrings'
   Pop $1
   Pop $0
 
   ; Add Docker GPG key
-  DetailPrint "Adding Docker GPG key..."
+  DetailPrint "Adding Docker repository key..."
   nsExec::ExecToStack 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
   Pop $1
   Pop $0
   ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to add Docker GPG key. Please check your internet connection."
+    MessageBox MB_ICONSTOP "Failed to add Docker repository key. Please check your internet connection."
+    Abort
+  ${EndIf}
+
+  ; Add DDEV GPG key
+  DetailPrint "Adding DDEV repository key..."
+  nsExec::ExecToStack 'wsl -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add DDEV repository key. Error: $0"
     Abort
   ${EndIf}
 
   ; Add Docker repository
   DetailPrint "Adding Docker repository..."
-  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
   Pop $1
   Pop $0
   ${If} $1 != 0
@@ -283,32 +286,67 @@ mkcert_found:
     Abort
   ${EndIf}
 
-  ; Install DDEV, Docker CE, and dependencies
-  DetailPrint "Installing DDEV and Docker CE..."
-  nsExec::ExecToStack 'wsl -u root -e bash -c "apt-get update && apt-get install -y ddev docker-ce docker-ce-cli containerd.io wslu"'
+  ; Now update package lists after both repos are properly set up
+  DetailPrint "Updating package lists..."
+  nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
   Pop $1
   Pop $0
+  DetailPrint "apt-get update output: $0"
   ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to install DDEV and Docker CE. Please check the logs."
+    MessageBox MB_ICONSTOP "Failed to update package lists. Error: $0"
+    Abort
+  ${EndIf}
+
+  ; Install packages
+  DetailPrint "Installing DDEV and Docker CE..."
+  nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev docker-ce docker-ce-cli containerd.io wslu 2>&1"'
+  Pop $1
+  Pop $0
+  DetailPrint "Installation output: $0"
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to install DDEV and Docker CE. Error: $0"
     Abort
   ${EndIf}
 
   DetailPrint "Setting up final configuration..."
-  ; Get current WSL username first
-  nsExec::ExecToStack 'wsl whoami'
-  Pop $1
-  Pop $0
+  ; Get username by writing to a temp file
+  DetailPrint "Attempting to get WSL username..."
+
+  ; Create a unique temp file name
+  GetTempFileName $R1
+  DetailPrint "Using temp file: $R1"
+
+  ; Execute whoami and redirect to temp file
+  nsExec::ExecToStack 'cmd /c wsl whoami > "$R1"'
+  Pop $1  ; error code
+
   ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to get WSL username. Please check the logs."
+    MessageBox MB_ICONSTOP "Failed to execute whoami command. Error code: $1"
+    Delete "$R1"
     Abort
   ${EndIf}
-  ; Add user to docker group using root and captured username
-  DetailPrint "Adding user $0 to docker group..."
-  nsExec::ExecToStack 'wsl -u root usermod -aG docker $0'
+
+  ; Read the temp file content
+  FileOpen $0 "$R1" r
+  FileRead $0 $R0
+  FileClose $0
+  Delete "$R1"
+
+  ; Trim any whitespace/newlines
+  ${StrTrimNewLines} $R0 $R0
+  DetailPrint "Username from file: '$R0'"
+
+  ${If} $R0 == ""
+    MessageBox MB_ICONSTOP "Could not get WSL username"
+    Abort
+  ${EndIf}
+
+  DetailPrint "DEBUG: About to execute: wsl -u root usermod -aG docker $R0"
+  nsExec::ExecToStack 'wsl -u root usermod -aG docker $R0'
   Pop $1
-  Pop $0
+  Pop $2
   ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Failed to add user to docker group. Please check the logs."
+    MessageBox MB_ICONSTOP "Failed to add user to docker group. Error: $2"
     Abort
   ${EndIf}
 
