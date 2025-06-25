@@ -248,11 +248,6 @@ pre_docker_setup:
   Pop $1
   Pop $0
 
-  StrCmp $DOCKER_OPTION "docker-ce" docker_ce docker_desktop
-
-docker_ce:
-  DetailPrint "Installing Docker CE and DDEV inside WSL2..."
-
   ; Add Docker GPG key
   DetailPrint "Adding Docker repository key..."
   nsExec::ExecToStack 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
@@ -276,6 +271,12 @@ docker_ce:
     MessageBox MB_ICONSTOP "Failed to add Docker repository. Exit code: $1, Output: $0"
     Abort
   ${EndIf}
+
+  StrCmp $DOCKER_OPTION "docker-ce" docker_ce docker_desktop
+
+docker_ce:
+  DetailPrint "Installing Docker CE and DDEV inside WSL2..."
+  Goto common_setup
 
 docker_desktop:
   DetailPrint "Setting up $DOCKER_OPTION..."
@@ -318,7 +319,7 @@ common_setup:
   ${If} $DOCKER_OPTION == "docker-ce"
     StrCpy $0 "ddev docker-ce docker-ce-cli containerd.io wslu"
   ${Else}
-    StrCpy $0 "ddev wslu"
+    StrCpy $0 "ddev docker-ce-cli wslu"
   ${EndIf}
   nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
   Pop $1
