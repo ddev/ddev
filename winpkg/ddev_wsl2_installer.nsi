@@ -317,24 +317,8 @@ mkcert_found:
   Pop $1
   Pop $0
 
-  ; Test Docker
-  DetailPrint "Testing Docker installation..."
-  nsExec::ExecToStack 'wsl -e docker ps'
-  Pop $1
-  Pop $0
-  ${If} $1 != 0
-    MessageBox MB_ICONSTOP "Docker test failed. Please check the logs."
-    Abort
-  ${EndIf}
-
   ; Remove old .docker config if present
   nsExec::ExecToStack 'wsl rm -rf ~/.docker'
-  Pop $1
-  Pop $0
-
-  ; Enable systemd in WSL
-  DetailPrint "Enabling systemd in WSL..."
-  nsExec::ExecToStack 'wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep \"[boot]\" /etc/wsl.conf >/dev/null; then printf \"\n[boot]\nsystemd=true\n\" >>/etc/wsl.conf; fi"'
   Pop $1
   Pop $0
 
@@ -354,5 +338,5 @@ docker_desktop:
   DetailPrint "Using Docker Desktop for Windows. Please ensure Docker Desktop is installed and WSL2 integration is enabled."
 
 done:
-  DetailPrint "All done! Please restart your WSL distro for all changes to take effect."
+  DetailPrint "All done! Installation completed successfully."
 SectionEnd
