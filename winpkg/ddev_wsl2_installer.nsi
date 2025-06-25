@@ -45,35 +45,91 @@ FunctionEnd
 Section "Install DDEV and Docker integration"
 
   ; Check for WSL2
-  ExecWait 'powershell -Command "wsl -l -v"' $0
-  ${If} $0 != 0
+  DetailPrint "Checking WSL2 version..."
+  nsExec::ExecToStack 'wsl.exe -l -v'
+  Pop $1  ; error code
+  Pop $0  ; output
+  DetailPrint "WSL version check output: $0"
+  DetailPrint "WSL version check exit code: $1"
+  ${If} $1 != 0
     MessageBox MB_ICONSTOP "WSL2 does not seem to be installed. Please install WSL2 and Ubuntu before running this installer."
     Abort
   ${EndIf}
 
   ; Check for Ubuntu-based default distro
-  ExecWait 'powershell -Command "wsl -e grep ^NAME=.Ubuntu //etc/os-release"' $0
-  ${If} $0 != 0
-    MessageBox MB_ICONSTOP "Your default WSL2 distro is not Ubuntu-based. Please set Ubuntu as your default WSL2 distro."
+  DetailPrint "Checking for Ubuntu-based default distro..."
+  nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep ^NAME="'
+  Pop $1  ; First pop is error code
+  Pop $0  ; Second pop is output
+  DetailPrint "WSL Output: $0"
+  DetailPrint "Exit Code: $1"
+
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Could not check your default WSL2 distro. Please ensure WSL is working."
     Abort
   ${EndIf}
 
-  ; Check for WSL2 version
-  ExecWait 'powershell -Command "wsl -e bash -c \"env | grep WSL_INTEROP=\""' $0
-  ${If} $0 != 0
+  ${If} $0 == ""
+    MessageBox MB_ICONSTOP "Could not detect distro name. Please ensure WSL is working."
+    Abort
+  ${EndIf}
+
+  ; Strip any trailing newline
+  StrCpy $2 $0 1 -1
+  ${If} $2 == "$\n"
+    StrCpy $0 $0 -1
+  ${EndIf}
+  DetailPrint "Cleaned Output: $0"
+
+  ${If} $0 != 'NAME="Ubuntu"'
+    MessageBox MB_ICONSTOP "Your default WSL2 distro is not Ubuntu-based ($0). Please set Ubuntu as your default WSL2 distro."
+    Abort
+  ${EndIf}
+
+  DetailPrint "Ubuntu-based distro detected successfully."
+
+  ; Check for WSL2 version (must be WSL2, not WSL1)
+  DetailPrint "Checking for WSL2..."
+  nsExec::ExecToStack 'wsl uname -v'
+  Pop $1  ; error code
+  Pop $0  ; output
+  DetailPrint "WSL kernel version: $0"
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Could not check WSL version. Please ensure WSL is working."
+    Abort
+  ${EndIf}
+  ${If} $0 == ""
+    MessageBox MB_ICONSTOP "Could not detect WSL version. Please ensure WSL is working."
+    Abort
+  ${EndIf}
+  ${If} $0 == "WSL"
     MessageBox MB_ICONSTOP "Your default WSL distro is not WSL2. Please upgrade to WSL2."
     Abort
   ${EndIf}
 
+  DetailPrint "WSL2 detected successfully."
+
   ; Check for non-root default user
-  ExecWait 'powershell -Command "wsl -e whoami"' $1
-  StrCmp $1 "root" 0 +2
+  DetailPrint "Checking for non-root user..."
+  nsExec::ExecToStack 'wsl whoami'
+  Pop $1  ; error code
+  Pop $0  ; output
+  DetailPrint "Current user: $0"
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Could not check WSL user. Please ensure WSL is working."
+    Abort
+  ${EndIf}
+  ${If} $0 == "root"
     MessageBox MB_ICONSTOP "Default user in your WSL2 distro is root. Please configure an ordinary default user."
     Abort
+  ${EndIf}
+
+  DetailPrint "Non-root user detected successfully."
 
   ; Download and install DDEV for Windows (static version, update as needed)
-  DetailPrint "Downloading DDEV for Windows v1.23.4..."
-  ExecWait 'powershell -Command "Invoke-WebRequest -Uri https://github.com/ddev/ddev/releases/download/v1.23.4/ddev_windows_amd64_installer.v1.23.4.exe -OutFile $TEMP\\ddev_installer.exe; Start-Process $TEMP\\ddev_installer.exe -ArgumentList \"/S\" -Wait"'
+  DetailPrint "Downloading DDEV for Windows v1.24.7..."
+  nsExec::ExecToLog 'powershell -Command "Invoke-WebRequest -Uri https://github.com/ddev/ddev/releases/download/v1.24.7/ddev_windows_amd64_installer.v1.24.7.exe -OutFile $TEMP\\ddev_installer.exe"'
+  ExecWait '"$TEMP\\ddev_installer.exe" /S'
 
   ; Add DDEV to PATH
   ReadRegStr $0 HKLM "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" "PATH"
@@ -112,7 +168,7 @@ Section "Install DDEV and Docker integration"
   ; Add Docker GPG key
   ExecWait 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
   ; Add Docker repository
-  ExecWait 'wsl -u root -e bash -c "echo deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+  ExecWait 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
   ; Add DDEV repository
   ExecWait 'wsl -u root -e bash -c "echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * * > /etc/apt/sources.list.d/ddev.list"'
   ; Install DDEV, Docker CE, and dependencies
