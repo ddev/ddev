@@ -275,9 +275,13 @@ mkcert_found:
 
   ; Add DDEV repository
   DetailPrint "Adding DDEV repository..."
-  nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * * > /etc/apt/sources.list.d/ddev.list"'
+  nsExec::ExecToStack 'wsl -u root -e bash -c "echo \"deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *\" > /etc/apt/sources.list.d/ddev.list"'
   Pop $1
   Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add DDEV repository. Please check the logs."
+    Abort
+  ${EndIf}
 
   ; Install DDEV, Docker CE, and dependencies
   DetailPrint "Installing DDEV and Docker CE..."
@@ -290,10 +294,23 @@ mkcert_found:
   ${EndIf}
 
   DetailPrint "Setting up final configuration..."
-  ; Add user to docker group
-  nsExec::ExecToStack 'wsl bash -c "sudo usermod -aG docker $$USER"'
+  ; Get current WSL username first
+  nsExec::ExecToStack 'wsl whoami'
   Pop $1
   Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to get WSL username. Please check the logs."
+    Abort
+  ${EndIf}
+  ; Add user to docker group using root and captured username
+  DetailPrint "Adding user $0 to docker group..."
+  nsExec::ExecToStack 'wsl -u root usermod -aG docker $0'
+  Pop $1
+  Pop $0
+  ${If} $1 != 0
+    MessageBox MB_ICONSTOP "Failed to add user to docker group. Please check the logs."
+    Abort
+  ${EndIf}
 
   ; Install mkcert root CA in WSL
   nsExec::ExecToStack 'wsl -u root mkcert -install'
