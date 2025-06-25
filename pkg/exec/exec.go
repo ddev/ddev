@@ -11,9 +11,7 @@ import (
 	"syscall"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
-
 	"github.com/ddev/ddev/pkg/output"
-	log "github.com/sirupsen/logrus"
 )
 
 // HostCommand wraps RunCommand() to inject environment variables.
@@ -34,7 +32,7 @@ func RunCommand(command string, args []string) (string, error) {
 		command, args...,
 	).CombinedOutput()
 
-	output.UserOut.WithFields(log.Fields{
+	output.UserOut.WithFields(output.Fields{
 		"Result": string(out),
 	}).Debug("Command ")
 
@@ -44,7 +42,7 @@ func RunCommand(command string, args []string) (string, error) {
 // RunCommandPipe runs a command on the host system
 // Returns combined output as string, and error
 func RunCommandPipe(command string, args []string) (string, error) {
-	output.UserOut.WithFields(log.Fields{
+	output.UserOut.WithFields(output.Fields{
 		"Command": command + " " + strings.Join(args[:], " "),
 	}).Info("Running ")
 

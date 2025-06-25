@@ -11,16 +11,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDescribeBadArgs ensures the binary behaves as expected when used with invalid arguments or working directories.
@@ -372,16 +371,16 @@ func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 
 // unmarshalJSONLogs takes a string buffer and splits it into lines,
 // discards empty lines, and unmarshals into an array of logs
-func unmarshalJSONLogs(in string) ([]log.Fields, error) {
-	logData := make([]log.Fields, 0)
+func unmarshalJSONLogs(in string) ([]output.Fields, error) {
+	logData := make([]output.Fields, 0)
 	logStrings := strings.Split(in, "\n")
 
 	for _, logLine := range logStrings {
 		if logLine != "" {
-			data := make(log.Fields, 4)
+			data := make(output.Fields, 4)
 			err := json.Unmarshal([]byte(logLine), &data)
 			if err != nil {
-				return []log.Fields{}, fmt.Errorf("failed to unmarshal logLine='%v'", logLine)
+				return []output.Fields{}, fmt.Errorf("failed to unmarshal logLine='%v'", logLine)
 			}
 			logData = append(logData, data)
 		}

@@ -12,13 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ddev/ddev/pkg/globalconfig/types"
-
 	configTypes "github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/sirupsen/logrus"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -163,7 +161,7 @@ func checkMutagenSocketPathLength() {
 		limit = 108
 	}
 	if socketPathLength >= limit {
-		logrus.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.\nConsider using a shorter path to DDEV global config with XDG_CONFIG_HOME env.", limit, socketPathLength))
+		output.UserErr.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.\nConsider using a shorter path to DDEV global config with XDG_CONFIG_HOME env.", limit, socketPathLength))
 	}
 	checkedMutagenSocketPathLength = true
 }
@@ -173,7 +171,7 @@ func checkMutagenSocketPathLength() {
 func GetMutagenDataDirectory() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+		output.UserErr.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
 	}
 	mutagenDataDirectory := filepath.Join(home, ".ddev_mutagen_data_directory")
 	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, mutagenDataDirectory)
@@ -236,7 +234,7 @@ func ReadGlobalConfig() error {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
 		// Then create global config.
 		if os.Geteuid() == 0 {
-			logrus.Warning("Not reading global config file because running with root privileges")
+			output.UserErr.Warning("Not reading global config file because running with root privileges")
 			return nil
 		}
 		if os.IsNotExist(err) {
@@ -499,7 +497,7 @@ func ReadProjectList() error {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
 		// Then create global projects list.
 		if os.Geteuid() == 0 {
-			logrus.Warning("Not reading global projects file because running with root privileges")
+			output.UserErr.Warning("Not reading global projects file because running with root privileges")
 			return nil
 		}
 		if os.IsNotExist(err) {
@@ -539,7 +537,7 @@ func ReadProjectList() error {
 	// Sanitize the project list
 	for name, project := range DdevProjectList {
 		if project == nil || project.AppRoot == "" {
-			logrus.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
+			output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)
 			delete(DdevProjectList, name)
 		}
 	}
@@ -586,7 +584,7 @@ func GetGlobalDdevDir() string {
 		}
 		err = os.MkdirAll(ddevDir, 0755)
 		if err != nil {
-			logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
+			output.UserErr.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
 		}
 	}
 	// config.yaml is not allowed in ~/.ddev, can only result in disaster
@@ -605,7 +603,7 @@ func GetGlobalDdevDir() string {
 func GetGlobalDdevDirLocation() string {
 	userHome, err := os.UserHomeDir()
 	if err != nil {
-		logrus.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+		output.UserErr.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
 	}
 	userHomeDotDdev := filepath.Join(userHome, ".ddev")
 

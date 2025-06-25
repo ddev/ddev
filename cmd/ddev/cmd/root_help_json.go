@@ -14,11 +14,6 @@ func setHelpFunc(command *cobra.Command) {
 			// Use the default help function for plain text output
 			originalHelpFunc(command, strings)
 		} else {
-			// LogSetup already happened in init, but that's before flags were parsed.
-			// It seems like the --help flag bypasses the second call of LogSetUp after parsing
-			// flags, which means the output doesn't want to output JSON.
-			output.LogSetUp()
-
 			// JSON representation of a subcommand
 			type jsonSubCommand struct {
 				Name        string

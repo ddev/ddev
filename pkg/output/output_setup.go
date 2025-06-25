@@ -5,50 +5,48 @@ import (
 	"os"
 )
 
+type Fields = log.Fields
+
 var (
 	// UserOut is the customized logrus log used for direct user output
-	UserOut = log.New()
+	UserOut = func() *log.Logger {
+		l := log.New()
+		l.SetFormatter(DdevOutputFormatter)
+		l.SetOutput(os.Stdout)
+		logLevel := log.InfoLevel
+		if os.Getenv("DDEV_DEBUG") != "" {
+			logLevel = log.DebugLevel
+		}
+		l.SetLevel(logLevel)
+		return l
+	}()
 	// UserErr is the customized logrus log used for direct user stderr
-	UserErr = log.New()
-	// UserOutFormatter is the specialized formatter for UserOut
-	UserOutFormatter = new(TextFormatter)
+	UserErr = func() *log.Logger {
+		l := log.New()
+		l.SetFormatter(DdevOutputFormatter)
+		l.SetOutput(os.Stderr)
+		return l
+	}()
+	// DdevOutputFormatter is the specialized formatter for UserOut
+	DdevOutputFormatter = &TextFormatter{
+		// TODO: add DisableColors handler in a different PR
+		DisableTimestamp: true,
+	}
+	// DdevOutputJSONFormatter is the specialized JSON formatter for UserOut
+	DdevOutputJSONFormatter = &log.JSONFormatter{}
 	// JSONOutput is a bool telling whether we're outputting in json. Set by command-line args.
 	JSONOutput = false
 )
 
 // LogSetUp sets up UserOut and log loggers as needed by ddev
 func LogSetUp() {
-	UserOut.Out = os.Stdout
-	UserErr.Out = os.Stderr
-	UserErr.SetOutput(&ErrorWriter{})
+	// We don't use logrus directly in our code, but configure it here anyway
+	log.SetFormatter(DdevOutputFormatter)
+	log.SetLevel(UserOut.GetLevel())
 
-	if !JSONOutput {
-		UserOut.Formatter = UserOutFormatter
-		UserErr.Formatter = UserOutFormatter
-	} else {
-		UserOut.Formatter = &log.JSONFormatter{}
-		UserErr.Formatter = &log.JSONFormatter{}
+	if JSONOutput {
+		UserOut.SetFormatter(DdevOutputJSONFormatter)
+		UserErr.SetFormatter(DdevOutputJSONFormatter)
+		log.SetFormatter(DdevOutputJSONFormatter)
 	}
-
-	UserOutFormatter.DisableTimestamp = true
-	// Use default log.InfoLevel for UserOut
-	UserOut.Level = log.InfoLevel // UserOut will by default always output
-	logLevel := log.InfoLevel
-
-	// But we use custom DDEV_DEBUG-settable loglevel for log; export DDEV_DEBUG=true
-	ddevDebug := os.Getenv("DDEV_DEBUG")
-	if ddevDebug != "" {
-		logLevel = log.DebugLevel
-		UserOut.Level = log.DebugLevel
-	}
-	log.SetLevel(logLevel)
-}
-
-// ErrorWriter allows writing stderr
-// Splitting to stderr approach from
-// https://huynvk.dev/blog/4-tips-for-logging-on-gcp-using-golang-and-logrus
-type ErrorWriter struct{}
-
-func (w *ErrorWriter) Write(p []byte) (n int, err error) {
-	return os.Stderr.Write(p)
 }
