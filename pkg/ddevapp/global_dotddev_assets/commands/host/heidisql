@@ -5,11 +5,7 @@
 ## Usage: heidisql [database] [user] [password] [nettype] [library]
 ## Example: "ddev heidisql" or "ddev heidisql db db db 8 libpq-10.dll"
 ## OSTypes: windows,wsl2,linux
-## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql,/snap/bin/heidisql-wine
-
-is_wine_or_windows_binary() {
-  [[ "$1" == *wine* || "$1" == *.exe ]]
-}
+## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql
 
 get_postgres_library() {
   local binary_path="$1"
@@ -19,7 +15,7 @@ get_postgres_library() {
     return 0
   fi
 
-  if is_wine_or_windows_binary "$binary_path"; then
+  if [[ "$binary_path" == *.exe ]]; then
     echo "libpq-10.dll"
     return 0
   fi
@@ -44,7 +40,7 @@ get_mariadb_library() {
     return 0
   fi
 
-  if is_wine_or_windows_binary "$binary_path"; then
+  if [[ "$binary_path" == *.exe ]]; then
     echo "libmariadb.dll"
     return 0
   fi
@@ -71,7 +67,11 @@ fi
 db_name="${1:-db}"
 db_user="${2:-root}"
 db_password="${3:-root}"
-db_network_type="${4:-0}" # Default: MariaDB/MySQL (TCP/IP)
+
+# Default: MariaDB/MySQL (TCP/IP)
+# See: https://www.heidisql.com/help.php#commandline
+db_network_type="${4:-0}"
+
 db_library="${5}"
 
 db_type="$(echo "$DDEV_DATABASE" | sed 's/:.*//')"
@@ -95,12 +95,12 @@ arguments=(
 case $OSTYPE in
 "win"* | "msys"*)
   case "$db_type" in
-    postgres)
-      arguments+=("--library=${db_library:-libpq-10.dll}")
-      ;;
-    mariadb | mysql)
-      arguments+=("--library=${db_library:-libmariadb.dll}")
-      ;;
+  postgres)
+    arguments+=("--library=${db_library:-libpq-10.dll}")
+    ;;
+  mariadb | mysql)
+    arguments+=("--library=${db_library:-libmariadb.dll}")
+    ;;
   esac
   start "" "C:\Program Files\HeidiSQL\heidisql.exe" "${arguments[@]}" &
   ;;
@@ -109,21 +109,20 @@ case $OSTYPE in
   BINARIES=(
     "/usr/local/bin/heidisql"
     "/usr/bin/heidisql"
-    "/snap/bin/heidisql-wine"
     "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
   )
   for binary in "${BINARIES[@]}"; do
     if [ -x "$binary" ]; then
       launch_args=("${arguments[@]}")
       case "$db_type" in
-        postgres)
-          postgres_lib=$(get_postgres_library "$binary") || continue
-          launch_args+=("--library=${postgres_lib}")
-          ;;
-        mariadb | mysql)
-          mariadb_lib=$(get_mariadb_library "$binary") || continue
-          launch_args+=("--library=${mariadb_lib}")
-          ;;
+      postgres)
+        postgres_lib=$(get_postgres_library "$binary") || continue
+        launch_args+=("--library=${postgres_lib}")
+        ;;
+      mariadb | mysql)
+        mariadb_lib=$(get_mariadb_library "$binary") || continue
+        launch_args+=("--library=${mariadb_lib}")
+        ;;
       esac
 
       "$binary" "${launch_args[@]}" &>/dev/null &
