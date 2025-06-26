@@ -43,17 +43,18 @@ to allow ddev-hostname to modify your hosts file. If you are connected to the in
 		}
 
 		name, dockerIP := args[0], args[1]
-		var err error
+
+		inHostsFile, err := hostname.IsHostnameInHostsFile(name)
+		if err != nil {
+			util.Warning("Could not check existence of %s in hosts file: %v", name, err)
+		}
 
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
-			if inHostsFile, err := hostname.IsHostnameInHostsFile(name); inHostsFile {
-				if err != nil {
-					util.Warning("Could not check existence of %s in hosts file: %v", name, err)
-				}
+			if inHostsFile {
 				util.Debug("Elevating privileges to remove host entry %s -> %s", name, dockerIP)
 				elevateIfNeeded()
-				err = hostname.RemoveHostEntry(name, dockerIP)
+				err := hostname.RemoveHostEntry(name, dockerIP)
 				if err != nil {
 					util.Warning("Failed to remove host entry %s: %v", name, err)
 				}
@@ -61,20 +62,13 @@ to allow ddev-hostname to modify your hosts file. If you are connected to the in
 			return
 		}
 		if checkHostnameFlag {
-			exists, err := hostname.IsHostnameInHostsFile(name)
-			if exists {
+			if inHostsFile {
 				return
-			}
-			if err != nil {
-				util.Warning("Could not check existence in hosts file: %v", err)
 			}
 			os.Exit(1)
 		}
 		// By default, add a host name
-		if inHostsFile, err := hostname.IsHostnameInHostsFile(name); !inHostsFile {
-			if err != nil {
-				util.Warning("Could not check existence of %s in hosts file: %v", name, err)
-			}
+		if !inHostsFile {
 			util.Debug("Elevating privileges to add host entry %s -> %s", name, dockerIP)
 			elevateIfNeeded()
 			err = hostname.AddHostEntry(name, dockerIP)
