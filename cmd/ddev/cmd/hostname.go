@@ -47,8 +47,12 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 		name, dockerIP := args[0], args[1]
 		var err error
 
+		hostnameInHostsFile, err := hostname.IsHostnameInHostsFile(name)
+		if err != nil {
+			util.Warning("Could not check existence of %s in hosts file: %v", name, err)
+		}
 		// If requested, remove the provided host name and exit
-		if removeHostnameFlag {
+		if removeHostnameFlag && hostnameInHostsFile {
 			out, err := exec.RunHostCommand(ddevHostnameBinary, "--remove", name, dockerIP)
 			if err != nil {
 				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
@@ -56,19 +60,18 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 			return
 		}
 		if checkHostnameFlag {
-			exists, err := hostname.IsHostnameInHostsFile(name)
-			if exists {
+			if hostnameInHostsFile {
 				return
 			}
-			if err != nil {
-				util.Warning("Could not check existence in hosts file: %v", err)
-			}
+
 			os.Exit(1)
 		}
 		// By default, add a host name
-		out, err := exec.RunHostCommand(ddevHostnameBinary, "--add", name, dockerIP)
-		if err != nil {
-			util.Warning("Failed to add hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+		if !hostnameInHostsFile {
+			out, err := exec.RunHostCommand(ddevHostnameBinary, name, dockerIP)
+			if err != nil {
+				util.Warning("Failed to add hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+			}
 		}
 	},
 }
