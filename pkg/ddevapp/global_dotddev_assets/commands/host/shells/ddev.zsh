@@ -6,7 +6,7 @@
 # "ddevcd project-name" to cd into the project directory.
 
 ddevcd() {
-  cd "$(DDEV_VERBOSE=false DDEV_DEBUG=false ddev debug cd "$1" --get-approot)"
+  cd "$(DDEV_VERBOSE=false DDEV_DEBUG=false ddev debug cd --get-approot -- "$1")"
 }
 
 _ddevcd_autocomplete() {

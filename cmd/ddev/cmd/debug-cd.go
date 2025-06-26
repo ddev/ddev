@@ -55,7 +55,7 @@ var DebugCdCmd = &cobra.Command{
 			if len(args) != 0 {
 				util.Failed("The provided flag does not take any arguments")
 			}
-			projects, _ := cmd.ValidArgsFunction(cmd, args, "")
+			projects, _ := cmd.ValidArgsFunction(cmd, nil, "")
 			output.UserOut.Println(strings.Join(projects, "\n"))
 			return
 		}
@@ -68,7 +68,8 @@ var DebugCdCmd = &cobra.Command{
 			ddevapp.RunValidateConfig = false
 			app, err := ddevapp.GetActiveApp(projectName)
 			if err != nil {
-				util.Failed("Failed to find path for project: %v", err)
+				projects, _ := cmd.ValidArgsFunction(cmd, nil, "")
+				util.Failed("Usage: 'ddevcd project-name' where project name matches one of: %s", strings.Join(projects, ", "))
 			}
 			ddevapp.RunValidateConfig = originalRunValidateConfig
 			output.UserOut.Println(app.AppRoot)
