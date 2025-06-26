@@ -269,7 +269,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
 
     ; Copy files
     File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
-    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_hostname.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
     File /oname=license.txt "..\LICENSE"
 
     ; Install icons
@@ -681,7 +681,7 @@ Section Uninstall
 
   Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\ddev.exe"
-  Delete "$INSTDIR\ddev_hostname.exe"
+  Delete "$INSTDIR\ddev-hostname.exe"
 
   ; Load start menu folder
   !insertmacro MUI_STARTMENU_GETFOLDER "Application" $ICONS_GROUP

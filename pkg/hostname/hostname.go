@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-const ddevhostnameBinary = "ddev_hostname"
+const ddevhostnameBinary = "ddev-hostname"
 const ddevhostnameWindowsBinary = ddevhostnameBinary + ".exe"
 
 // AddHostEntry adds an entry to default hosts file
@@ -71,7 +71,7 @@ func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
 	return out, err
 }
 
-// ElevateToRemoveHostEntry runs the required ddev_hostname command to remove the entry,
+// ElevateToRemoveHostEntry runs the required ddev-hostname command to remove the entry,
 func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	ddevhostnameBinary := GetDdevHostnameBinary()
 	out, err := elevateHostsManipulation([]string{
@@ -79,7 +79,7 @@ func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	return out, err
 }
 
-// GetDdevHostnameBinary returns the path to the ddev_hostname or ddev_hostname.exe binary
+// GetDdevHostnameBinary returns the path to the ddev-hostname or ddev-hostname.exe binary
 // It must exist in the PATH
 func GetDdevHostnameBinary() string {
 	ddevhostnameBinary := ddevhostnameBinary
@@ -114,13 +114,13 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 	return out, err
 }
 
-// ddevHostnameAvailable says if ddev_hostname/ddev_hostname.exe is available
+// ddevHostnameAvailable says if ddev-hostname/ddev-hostname.exe is available
 var ddevHostnameAvailable bool
 
-// IsDdevHostnameAvailable checks to see if we can use ddev_hostname
+// IsDdevHostnameAvailable checks to see if we can use ddev-hostname
 func IsDdevHostnameAvailable() bool {
 	ddevHostnameBinary := GetDdevHostnameBinary()
-	// Use ddev_hostname --version to check if ddev_hostname is available
+	// Use ddev-hostname --version to check if ddev-hostname is available
 	out, err := exec.RunHostCommand(ddevHostnameBinary, "--version")
 	if err == nil {
 		ddevHostnameAvailable = true

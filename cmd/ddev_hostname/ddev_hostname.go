@@ -23,19 +23,19 @@ func Execute() {
 var removeHostnameFlag bool
 var checkHostnameFlag bool
 
-// RootCmd is the ddev_hostname command
+// RootCmd is the ddev-hostname command
 var RootCmd = &cobra.Command{
-	Use:     "ddev_hostname [hostname] [ip]",
+	Use:     "ddev-hostname [hostname] [ip]",
 	Short:   "Manage your hostfile entries.",
 	Version: versionconstants.DdevVersion,
 	Example: `
-ddev_hostname junk.example.com 127.0.0.1
-ddev_hostname -r junk.example.com 127.0.0.1
-ddev_hostname --check junk.example.com 127.0.0.1
+ddev-hostname junk.example.com 127.0.0.1
+ddev-hostname -r junk.example.com 127.0.0.1
+ddev-hostname --check junk.example.com 127.0.0.1
 `,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
-to allow ddev_hostname to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
+to allow ddev-hostname to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(_ *cobra.Command, args []string) {
 
 		// TODO: Fix up for DDEV_NONINTERACTIVE- I think that should probably be done in the caller.
@@ -59,7 +59,7 @@ to allow ddev_hostname to modify your hosts file. If you are connected to the in
 
 		// If operating on one host name, two arguments are required
 		if len(args) != 2 {
-			util.Failed("Invalid arguments supplied. Please use 'ddev_hostname [hostname] [ip]'")
+			util.Failed("Invalid arguments supplied. Please use 'ddev-hostname [hostname] [ip]'")
 		}
 
 		name, dockerIP := args[0], args[1]

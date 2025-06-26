@@ -11,7 +11,7 @@ set -o nounset
 if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
 
 GITHUB_OWNER=${GITHUB_OWNER:-ddev}
-ARTIFACTS="ddev ddev_hostname mkcert"
+ARTIFACTS="ddev ddev-hostname mkcert"
 
 TMPDIR=/tmp
 
@@ -137,7 +137,7 @@ $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL
 
 
-printf "${GREEN}Download verified. Ready to place ddev, ddev_hostname, and mkcert in your /usr/local/bin.${RESET}\n"
+printf "${GREEN}Download verified. Ready to place ddev, ddev-hostname, and mkcert in your /usr/local/bin.${RESET}\n"
 
 if command -v brew >/dev/null && brew info ddev >/dev/null 2>/dev/null ; then
   echo "Attempting to unlink any homebrew-installed ddev with 'brew unlink ddev'"
