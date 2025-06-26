@@ -78,10 +78,9 @@ to allow ddev-hostname to modify your hosts file. If you are connected to the in
 			util.Debug("Elevating privileges to add host entry %s -> %s", name, dockerIP)
 			elevateIfNeeded()
 			err = hostname.AddHostEntry(name, dockerIP)
-		}
-
-		if err != nil {
-			util.Warning("Failed to add hosts entry %s: %v", name, err)
+			if err != nil {
+				util.Warning("Failed to add hosts entry %s:%s: %v", name, dockerIP, err)
+			}
 		}
 	},
 }
