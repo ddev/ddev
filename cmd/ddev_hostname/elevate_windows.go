@@ -40,12 +40,12 @@ type shellExecuteInfo struct {
 }
 
 func elevateIfNeeded() {
-	if !isElevated() {
-		util.Debug("Attempting to elevate ddev-hostname.exe")
-		elevate()
-	} else {
+	if isElevated() {
 		util.Debug("ddev-hostname.exe is already running with elevated privileges.")
+		return
 	}
+	util.Debug("Attempting to elevate ddev-hostname.exe")
+	elevate()
 }
 
 func isElevated() bool {
