@@ -41,7 +41,7 @@ In general:
 2. You can base your test on an example like the [Backdrop test](https://github.com/ddev/ddev/blob/main/docs/tests/backdrop.bats) and adapt to cover the steps in your quickstart.
 3. You can run `bats` locally.
     - See [`bats-core` documentation](https://bats-core.readthedocs.io/en/stable/).
-    - See [`bats-assert`, `bats-file`, and `bats-support` libraries documentation](https://github.com/ztombol/bats-docs).
+    - See [`bats-assert`, `bats-file`, and `bats-support` libraries documentation](https://github.com/bats-core/homebrew-bats-core).
     - If you install `bats` libraries manually (without package managers), make sure to set the `BATS_LIB_PATH` environment variable to the appropriate path. For example:
 
         ```bash

@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 # Requires bats-assert and bats-support
-# brew tap kaos/shell &&
+# brew tap bats-core/bats-core &&
 # brew install bats-core bats-assert bats-support
 setup() {
   load setup.sh

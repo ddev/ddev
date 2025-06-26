@@ -67,7 +67,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
-      - name: Install Docker and deps (Linux)
+      - name: Install test dependencies (linux-setup.sh)
         if: matrix.os == 'ubuntu-24.04'
         run: ./.github/workflows/linux-setup.sh
 
