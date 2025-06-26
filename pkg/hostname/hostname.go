@@ -103,7 +103,7 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 	}
 
 	if !IsDdevHostnameAvailable() {
-		return "", fmt.Errorf("%s is not installed, please install it", ddevhostnameBinary)
+		return "", fmt.Errorf("%s is not installed, please install it, see https://ddev.readthedocs.io/en/stable/users/usage/commands/#hostname", ddevhostnameBinary)
 	}
 
 	c := args
