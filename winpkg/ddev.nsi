@@ -681,6 +681,7 @@ Section Uninstall
 
   Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\ddev.exe"
+  Delete "$INSTDIR\ddev_hostname.exe"
 
   ; Load start menu folder
   !insertmacro MUI_STARTMENU_GETFOLDER "Application" $ICONS_GROUP

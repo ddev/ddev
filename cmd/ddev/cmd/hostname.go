@@ -51,7 +51,7 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 		if removeHostnameFlag {
 			out, err := exec.RunHostCommand(ddevHostnameBinary, "--remove", name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v'", name, dockerIP, err, out)
+				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
 			}
 			return
 		}
@@ -68,7 +68,7 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 		// By default, add a host name
 		out, err := exec.RunHostCommand(ddevHostnameBinary, "--add", name, dockerIP)
 		if err != nil {
-			util.Warning("Failed to add hosts entry %s:%s: %v (output='%v'", name, dockerIP, err, out)
+			util.Warning("Failed to add hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
 		}
 	},
 }
