@@ -52,7 +52,10 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 			util.Warning("Could not check existence of %s in hosts file: %v", name, err)
 		}
 		// If requested, remove the provided host name and exit
-		if removeHostnameFlag && hostnameInHostsFile {
+		if removeHostnameFlag {
+			if !hostnameInHostsFile {
+				return
+			}
 			out, err := exec.RunHostCommand(ddevHostnameBinary, "--remove", name, dockerIP)
 			if err != nil {
 				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
