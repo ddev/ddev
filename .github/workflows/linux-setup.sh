@@ -29,7 +29,7 @@ source ~/.bashrc
 
 brew tap bats-core/bats-core >/dev/null
 brew tap ddev/ddev >/dev/null
-for item in bats-core ddev docker-compose ghr golangci-lint bats-assert bats-file; do
+for item in bats-core ddev docker-compose ghr golangci-lint bats-assert bats-file bats-support; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
