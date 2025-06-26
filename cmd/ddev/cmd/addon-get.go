@@ -169,11 +169,20 @@ ddev add-on get /path/to/tarball.tar.gz
 				util.Warning("Unable to import yaml file %s: %v", fullpath, err)
 			}
 		}
-		for k, v := range map[string]string{"DdevGlobalConfig": globalconfig.GetGlobalConfigPath(), "DdevProjectConfig": app.GetConfigPath("config.yaml")} {
-			yamlMap[k], err = util.YamlFileToMap(v)
-			if err != nil {
-				util.Warning("Unable to read file %s", v)
-			}
+
+		yamlMap["DdevGlobalConfig"], err = util.YamlFileToMap(globalconfig.GetGlobalConfigPath())
+		if err != nil {
+			util.Warning("Unable to read file %s: %v", globalconfig.GetGlobalConfigPath(), err)
+		}
+
+		// Get project config with overrides
+		var projectConfigMap map[string]interface{}
+		if b, err := yaml.Marshal(app); err != nil {
+			util.Warning("Unable to marshal app: %v", err)
+		} else if err = yaml.Unmarshal(b, &projectConfigMap); err != nil {
+			util.Warning("Unable to unmarshal app: %v", err)
+		} else {
+			yamlMap["DdevProjectConfig"] = projectConfigMap
 		}
 
 		dict, err := util.YamlToDict(yamlMap)
