@@ -2,7 +2,6 @@ package dockerutil_test
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -87,17 +86,17 @@ func testMain(m *testing.M) int {
 		}
 	}()
 
-	log.Printf("ContainerWait at %v", time.Now())
+	output.UserOut.Printf("ContainerWait at %v", time.Now())
 	out, err := dockerutil.ContainerWait(60, map[string]string{
 		"com.ddev.site-name":        testContainerName,
 		"com.docker.compose.oneoff": "False",
 	})
-	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
+	output.UserOut.Printf("ContainerWait returned at %v out='%s' err='%v'", time.Now(), out, err)
 
 	if err != nil {
 		logout, _ := exec.RunHostCommand("docker", "logs", containerID)
 		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", containerID))
-		log.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		output.UserErr.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()
