@@ -18,6 +18,7 @@ var (
 			logLevel = log.DebugLevel
 		}
 		l.SetLevel(logLevel)
+		log.SetLevel(logLevel)
 		if JSONOutput {
 			l.SetFormatter(DdevOutputJSONFormatter)
 			log.SetFormatter(DdevOutputJSONFormatter)
