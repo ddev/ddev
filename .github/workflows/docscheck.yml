@@ -39,7 +39,7 @@ jobs:
   build:
     name: Docs check (spellcheck, links, markdownlint, textlint)
     # linkspector seems to fail with "No usable sandbox"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,12 +48,6 @@ jobs:
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
-
-      - name: Setup tmate session
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
 
       - name: Spellcheck
         uses: rojopolis/spellcheck-github-actions@v0
@@ -67,8 +61,13 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
       - name: Run linkspector to check external links
-        uses: umbrelladocs/action-linkspector@v1
+        uses: umbrelladocs/action-linkspector@v1.2.5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
