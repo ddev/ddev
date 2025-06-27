@@ -3,7 +3,6 @@ package output
 import (
 	log "github.com/sirupsen/logrus"
 	"os"
-	"slices"
 )
 
 type Fields = log.Fields
@@ -47,9 +46,17 @@ var (
 	// DdevOutputJSONFormatter is the specialized JSON formatter for UserOut
 	DdevOutputJSONFormatter = &log.JSONFormatter{}
 	// JSONOutput is a bool telling whether we're outputting in JSON. Set by command-line args.
+	// Parsed early (before Cobra) because logging initialization depends on this value.
 	JSONOutput = func() bool {
-		args := os.Args[1:]
-		return slices.Contains(args, "-j") || slices.Contains(args, "--json-output")
+		for _, arg := range os.Args[1:] {
+			switch arg {
+			case "-j", "--json-output": // Standalone flags
+				return true
+			case "-j=true", "-j=1", "--json-output=true", "--json-output=1": // Explicit true/1 values
+				return true
+			}
+		}
+		return false
 	}()
 )
 
