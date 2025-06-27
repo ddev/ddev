@@ -125,11 +125,6 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
-
-	// Parse flags early to initialize output.JSONOutput
-	_ = RootCmd.ParseFlags(os.Args[1:])
-	output.LogSetUp()
-
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()

@@ -67,8 +67,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	output.LogSetUp()
-
 	testcommon.ClearDockerEnv()
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
