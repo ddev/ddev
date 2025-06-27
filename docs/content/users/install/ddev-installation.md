@@ -96,7 +96,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     # Install DDEV
     sudo sh -c 'echo ""'
-    sudo dnf install --refresh ddev xdg-utils
+    sudo dnf install --refresh ddev
 
     # One-time initialization of mkcert
     mkcert -install
