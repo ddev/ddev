@@ -2,6 +2,7 @@ package exec
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 	"os/exec"
@@ -115,7 +116,7 @@ func RunHostCommand(command string, args ...string) (string, error) {
 	c.Stdin = os.Stdin
 	o, err := c.CombinedOutput()
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommand returned. output=%v err=%v", string(o), err)
+		output.UserOut.Printf("RunHostCommand returned output=%v err=%v", string(bytes.TrimSpace(o)), err)
 	}
 
 	return string(o), err
