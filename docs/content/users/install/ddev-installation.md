@@ -271,10 +271,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     1. Download and run the [Windows-side installer](https://github.com/ddev/ddev/releases) (used for hosts-file management only).
     2. In an administrative PowerShell, run `mkcert -install` and follow the prompt to install the Certificate Authority.
     3. In an administrative PowerShell, run `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side. In some cases it takes a reboot to work correctly.
-    4. In administrative PowerShell, run `wsl --install <distro>`, for example `wsl --install Ubuntu` or `wsl --install Debian`. This will install WSL2 the distro for you. Reboot when this is done.
+    4. In administrative PowerShell, run `wsl --install <distro>`, for example `wsl --install Ubuntu` or `wsl --install Debian`. This will install the WSL2 distro for you. Reboot when this is done.
     5. **Docker CE:** Follow the instructions in the Linux install section here to install Docker CE and DDEV.
     6. **Docker Desktop for Windows:** 
-        * Install Docker Desktop for WIndows and configure the WSL2-based engine (not legacy Hyper-V) when installing. Download the installer from [docker.com](https://www.docker.com/products/docker-desktop/).  Start Docker Desktop. It may prompt you to log out and log in again, or reboot.
+        * Install Docker Desktop for Windows and configure the WSL2-based engine (not legacy Hyper-V) when installing. Download the installer from [docker.com](https://www.docker.com/products/docker-desktop/). Start Docker Desktop. It may prompt you to log out and log in again, or reboot.
         * Go to Docker Desktop’s *Settings* → *Resources* → *WSL integration* → *enable integration for your distro*. Now `docker` commands will be available from within your WSL2 distro.
     7. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
     8. Check that Docker is working inside Ubuntu (or your distro) by running `docker ps`.
