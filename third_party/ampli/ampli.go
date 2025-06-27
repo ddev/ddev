@@ -591,7 +591,7 @@ type Ampli struct {
 // Call once when your application starts.
 func (a *Ampli) Load(options LoadOptions) {
 	if a.Client != nil {
-		if debugEnabled() {
+		if debugOrVerboseEnabled() {
 			output.UserErr.Warning("Warn: Ampli is already initialized. Ampli.Load() should be called once at application start up.")
 		}
 
@@ -609,7 +609,7 @@ func (a *Ampli) Load(options LoadOptions) {
 	}
 
 	if apiKey == "" && options.Client.Instance == nil {
-		if debugEnabled() {
+		if debugOrVerboseEnabled() {
 			output.UserErr.Warning("Error: Ampli.Load() requires option.Environment, " +
 				"and apiKey from either options.Instance.APIKey or APIKey[options.Environment], " +
 				"or options.Instance.Instance")
@@ -649,7 +649,7 @@ func (a *Ampli) Load(options LoadOptions) {
 // InitializedAndEnabled checks if Ampli is initialized and enabled.
 func (a *Ampli) InitializedAndEnabled() bool {
 	if a.Client == nil {
-		if debugEnabled() {
+		if debugOrVerboseEnabled() {
 			output.UserErr.Warning("Error: Ampli is not yet initialized. Have you called Ampli.Load() on app start?")
 		}
 
@@ -722,7 +722,7 @@ func (a *Ampli) Project(userID string, event ProjectEvent, eventOptions ...Event
 	a.Track(userID, event, eventOptions...)
 }
 
-// debugEnabled returns true if DDEV_DEBUG=true or DDEV_VERBOSE=true
-func debugEnabled() bool {
+// debugOrVerboseEnabled returns true if DDEV_DEBUG=true or DDEV_VERBOSE=true
+func debugOrVerboseEnabled() bool {
 	return os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true"
 }
