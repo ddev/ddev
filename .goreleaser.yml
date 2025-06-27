@@ -9,7 +9,7 @@ builds:
 - id: ddev
   main: ./cmd/ddev
 
-  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
+  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
   builder: prebuilt
   goos:
   - linux
@@ -23,6 +23,25 @@ builds:
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
+
+- id: ddev-hostname
+  main: ./cmd/ddev-hostname
+
+  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
+  builder: prebuilt
+  goos:
+    - linux
+    - windows
+    - darwin
+  goarch:
+    - amd64
+    - arm64
+  goamd64:
+    - v1
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev-hostname{{.Ext}}
+  binary: ddev-hostname
+
 
 - id: mkcert
   # requires make completions
@@ -128,6 +147,7 @@ archives:
 - id: ddev
   ids:
     - ddev
+    - ddev-hostname
     - mkcert
     - ddev_bash_completion.sh
     - ddev_zsh_completion.sh
@@ -224,11 +244,13 @@ brews:
         system "mkdir", "-p", "#{bin}"
         system "make", "build", "completions"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev-hostname", "#{bin}/ddev-hostname"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
+        bin.install "ddev-hostname"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
@@ -280,11 +302,13 @@ brews:
         system "mkdir", "-p", "#{bin}"
         system "make", "build", "completions"
         system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev-hostname", "#{bin}/ddev-hostname"
         bash_completion.install ".gotmp/bin/completions/ddev_bash_completion.sh" => "ddev"
         zsh_completion.install ".gotmp/bin/completions/ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install ".gotmp/bin/completions/ddev_fish_completion.sh" => "ddev.fish"
     else
         bin.install "ddev"
+        bin.install "ddev-hostname"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "_ddev"
         fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
@@ -302,6 +326,7 @@ nfpms:
     Open-source local web development tool
   ids:
   - ddev
+  - ddev-hostname
   - mkcert
   formats:
   - deb
@@ -337,18 +362,11 @@ nfpms:
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'
 
-#before_publish:
-#  - cmd: |
-#      echo "Debug before_publish"
-#      echo "REPOSITORY_OWNER='{{.Env.REPOSITORY_OWNER}}'"
-#      echo "Prerelease='{{.Prerelease}}'"
-#      echo "Skip upload evaluates to: '{{ if and (eq .Env.REPOSITORY_OWNER "ddev") (not .Prerelease) }}false{{ else }}true{{ end }}'"
-#    output: true
-
 aurs:
 - name: "{{ .Env.AUR_PACKAGE_NAME }}"
   ids:
   - ddev
+  - ddev-hostname
   homepage: "https://github.com/ddev/ddev"
   description: "DDEV: a local web development environment"
   maintainers:
@@ -368,6 +386,7 @@ aurs:
   package: |-
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm755 "./ddev-hostname" "${pkgdir}/usr/bin/ddev-hostname"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
 
     # completions
@@ -387,6 +406,7 @@ aurs:
 - name: "{{ .Env.AUR_PACKAGE_NAME }}-edge"
   ids:
   - ddev
+  - ddev-hostname
   homepage: "https://github.com/ddev/ddev"
   description: "DDEV: a local web development environment (edge)"
   maintainers:
@@ -406,6 +426,7 @@ aurs:
   package: |-
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm755 "./ddev-hostname" "${pkgdir}/usr/bin/ddev-hostname"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
 
     # completions

@@ -125,8 +125,10 @@ jobs:
         run: |
           signtool verify -pa .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
           signtool verify -pa .gotmp/bin/windows_amd64/ddev.exe
+          signtool verify -pa .gotmp/bin/windows_amd64/ddev-hostname.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/ddev-hostname.exe
 
       - name: Cache signed binaries
         # After 3.0.5 they were using zstdmt which is not available on Windows
@@ -182,7 +184,7 @@ jobs:
           set -o errexit -o pipefail
           if [ -z "${DDEV_MACOS_SIGNING_PASSWORD}" ] ; then echo "DDEV_MACOS_SIGNING_PASSWORD is empty"; exit 1; fi
           if [ -z "${DDEV_MACOS_APP_PASSWORD}" ] ; then echo "DDEV_MACOS_APP_PASSWORD is empty"; exit 1; fi
-          for item in .gotmp/bin/darwin*/ddev; do
+          for item in .gotmp/bin/darwin*/ddev .gotmp/bin/darwin*/ddev-hostname; do
             echo "Signing and notarizing ${item} ..."
             codesign --remove-signature "${item}" || true
             curl -s https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="${item}"

@@ -838,8 +838,10 @@ Flags:
 Example:
 
 ```shell
-ddev hostname somesite.ddev.local 127.0.0.1
+ddev hostname somesite.example.com 127.0.0.1
 ```
+
+In most cases `ddev hostname` runs a special `ddev-hostname` or `ddev-hostname.exe` executable to elevate privileges. The extra executable is installed/updated by DDEV's normal installation process or by the Windows installation process.
 
 ## `import-db`
 

@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
-	"runtime"
-	"strings"
 )
 
 var removeHostnameFlag bool
@@ -27,12 +27,7 @@ ddev hostname --remove-inactive
 implications and requires elevated privileges. You may be asked for a password
 to allow DDEV to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(_ *cobra.Command, args []string) {
-
-		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
-		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag && !removeInactiveFlag && runtime.GOOS != "windows" {
-			util.Failed("'ddev hostname %s' must be run with administrator privileges", strings.Join(args, " "))
-		}
-
+		ddevHostnameBinary := hostname.GetDdevHostnameBinary()
 		// If requested, remove all inactive host names and exit
 		if removeInactiveFlag {
 			if len(args) > 0 {
@@ -52,29 +47,34 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 		name, dockerIP := args[0], args[1]
 		var err error
 
+		hostnameInHostsFile, err := hostname.IsHostnameInHostsFile(name)
+		if err != nil {
+			util.Warning("Could not check existence of %s in hosts file: %v", name, err)
+		}
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
-			err = ddevapp.RemoveHostEntry(name, dockerIP)
+			if !hostnameInHostsFile {
+				return
+			}
+			out, err := exec.RunHostCommand(ddevHostnameBinary, "--remove", name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to remove host entry %s: %v", name, err)
+				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
 			}
 			return
 		}
 		if checkHostnameFlag {
-			exists, err := ddevapp.IsHostnameInHostsFile(name)
-			if exists {
+			if hostnameInHostsFile {
 				return
 			}
-			if err != nil {
-				util.Warning("Could not check existence in hosts file: %v", err)
-			}
+
 			os.Exit(1)
 		}
 		// By default, add a host name
-		err = ddevapp.AddHostEntry(name, dockerIP)
-
-		if err != nil {
-			util.Warning("Failed to add hosts entry %s: %v", name, err)
+		if !hostnameInHostsFile {
+			out, err := exec.RunHostCommand(ddevHostnameBinary, name, dockerIP)
+			if err != nil {
+				util.Warning("Failed to add hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+			}
 		}
 	},
 }

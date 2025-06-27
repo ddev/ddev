@@ -52,34 +52,40 @@ GITHUB_ORG := ddev
 BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/versionconstants.$(v)=$($(v))')
-LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
+# Static link, version variables, strip symbols and dwarf info
+LDFLAGS=-extldflags -static $(VERSION_LDFLAGS) -s -w
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build: $(DEFAULT_BUILD)
 
 
 # Provide shorthand targets
-linux_amd64: $(GOTMP)/bin/linux_amd64/ddev
-linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
-linux_arm: $(GOTMP)/bin/linux_arm/ddev
-darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
-darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
+linux_amd64: $(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_amd64/ddev-hostname
+linux_arm64: $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm64/ddev-hostname
+darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
+darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev-hostname
 windows_amd64: windows_amd64_install
 windows_arm64: windows_arm64_install
+
 completions: $(GOTMP)/bin/completions.tar.gz
 
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
 $(TARGETS): mkcert $(GOFILES)
-	@echo "building $@ from $(SRC_AND_UNDER) GORACE=$(GORACE) CGO_ENABLED=$(CGO_ENABLED)";
-	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export CGO_ENABLED=$(CGO_ENABLED) GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
-	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $(BUILDARGS) -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
-	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
+	@export TARGET=$(word 3, $(subst /, ,$@)); \
+	if [[ "$@" == *ddev-hostname.exe ]]; then \
+		export BUILDARGS="" CGO_ENABLED=0 GORACE=""; \
+	else \
+		export CGO_ENABLED="$(CGO_ENABLED)" GORACE="$(GORACE)" BUILDARGS="$(BUILDARGS)" ; \
+	fi; \
+	echo "building $@ from $(SRC_AND_UNDER) GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED BUILDARGS=$$BUILDARGS"; \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
+	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $$BUILDARGS -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi)
 	@echo $(VERSION) >VERSION.txt
+
 
 $(GOTMP)/bin/completions.tar.gz: build
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
@@ -200,39 +206,50 @@ textlint:
 		echo "textlint is not installed (see .envrc file)"; \
 	fi
 
-darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
-	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
-		set -o errexit -o pipefail; \
-		$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
+darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ]; then \
+		echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; \
+	else \
+		for bin in $^; do \
+			set -o errexit -o pipefail; \
+			codesign --remove-signature "$$bin" || true; \
+			$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | \
+				bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$$bin"; \
+		done; \
 	fi
-darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev
-	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
-		set -o errexit -o pipefail; \
-		codesign --remove-signature "$(GOTMP)/bin/darwin_arm64/ddev" || true; \
-		$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
+darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev-hostname
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ]; then \
+		echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; \
+	else \
+		for bin in $^; do \
+			set -o errexit -o pipefail; \
+			codesign --remove-signature "$$bin" || true; \
+			$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | \
+				bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$$bin"; \
+		done; \
 	fi
-
 darwin_amd64_notarized: darwin_amd64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
-		echo "Notarizing $(GOTMP)/bin/darwin_amd64/ddev ..." ; \
+		echo "Notarizing $(GOTMP)/bin/darwin_amd64/ddev and ddev-hostname ..." ; \
 		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev-hostname" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
-		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev ..." ; \
+		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev and ddev-hostname ..." ; \
 		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev-hostname" ; \
 	fi
 
 windows_amd64_install: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
 windows_arm64_install: $(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe
 
-windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
-	ls -l .gotmp/bin/windows_amd64
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
+windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/ddev-hostname.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
 	ls -l .gotmp/bin/windows_arm64
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/ddev-hostname.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
 
 $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_sign_binaries $(GOTMP)/bin/windows_amd64/gsudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
 	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
