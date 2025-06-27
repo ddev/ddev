@@ -112,8 +112,8 @@ case $OSTYPE in
   linux-gnu)
     if [[ ! -z "${GITPOD_INSTANCE_ID}" ]]; then
         gp preview ${FULLURL}
-    elif command -v explorer.exe; then explorer.exe ${FULLURL};
-    elif command -v xdg-open; then xdg-open ${FULLURL};
+    elif command -v explorer.exe >/dev/null; then explorer.exe ${FULLURL} || true;
+    elif command -v xdg-open >/dev/null; then xdg-open ${FULLURL};
     else
         echo "No technique found to open URL: ${FULLURL}; please install xdg-utils."
         exit 1
