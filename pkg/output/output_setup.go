@@ -46,14 +46,22 @@ var (
 	// DdevOutputJSONFormatter is the specialized JSON formatter for UserOut
 	DdevOutputJSONFormatter = &log.JSONFormatter{}
 	// JSONOutput is a bool telling whether we're outputting in JSON. Set by command-line args.
-	// Parsed early (before Cobra) because logging initialization depends on this value.
+	// Parsed early (before Cobra init) because logging initialization depends on this value.
 	JSONOutput = func() bool {
 		for _, arg := range os.Args[1:] {
-			switch arg {
-			case "-j", "--json-output": // Standalone flags
+			switch {
+			case arg == "-j", arg == "--json-output",
+				arg == "-j=true", arg == "-j=1",
+				arg == "--json-output=true", arg == "--json-output=1":
 				return true
-			case "-j=true", "-j=1", "--json-output=true", "--json-output=1": // Explicit true/1 values
-				return true
+			case arg == "-j=false", arg == "-j=0":
+				return false
+			case len(arg) >= 2 && arg[0] == '-' && arg[1] != '-':
+				for i := 1; i < len(arg); i++ {
+					if arg[i] == 'j' {
+						return true
+					}
+				}
 			}
 		}
 		return false
