@@ -293,6 +293,39 @@ Function InstallWSL2DockerCE
     ; Configure Docker to start automatically
     nsExec::ExecToLog 'wsl -d Ubuntu -- sudo systemctl enable docker'
 
+    ; Install required Windows components
+    SetOutPath $INSTDIR
+    SetOverwrite on
+
+    ; Only install ddev-hostname.exe, not ddev.exe
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
+
+    ; Install mkcert
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
+
+    ; Install icons for mkcert
+    SetOutPath "$INSTDIR\Icons"
+    SetOverwrite try
+    File /oname=ca-install.ico "graphics\ca-install.ico"
+    File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
+
+    ; Create mkcert shortcuts
+    CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
+    CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
+
+    ; Initialize mkcert
+    MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
+    nsExec::ExecToLog '"$INSTDIR\mkcert.exe" -install'
+    Pop $R0
+    ${If} $R0 = 0
+        WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup" 1
+    ${EndIf}
+
+    ; Add to PATH (needed for ddev-hostname.exe)
+    EnVar::SetHKLM
+    EnVar::AddValue "Path" "$INSTDIR"
+
     DetailPrint "Docker CE installation completed."
 FunctionEnd
 
