@@ -10,7 +10,7 @@ const (
 	DDEVEnvironmentWindows          = "windows"
 	DDEVEnvironmentLinux            = "linux"
 	DDEVEnvironmentWSL2             = "wsl2"
-	DDEVEnvironmentWSL2Mirrored = "wsl2-mirrored"
+	DDEVEnvironmentWSL2Mirrored     = "wsl2-mirrored"
 	DDEVEnvironmentGitpod           = "gitpod"
 	DDEVEnvironmentCodespaces       = "codespaces"
 	DDEVEnvironmentRemoteContainers = "remotecontainers"
