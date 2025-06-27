@@ -14,7 +14,7 @@ var (
 		l := log.New()
 		l.SetOutput(os.Stdout)
 		logLevel := log.InfoLevel
-		if os.Getenv("DDEV_DEBUG") != "" {
+		if os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true" {
 			logLevel = log.DebugLevel
 		}
 		l.SetLevel(logLevel)
