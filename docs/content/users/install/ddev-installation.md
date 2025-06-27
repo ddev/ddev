@@ -63,7 +63,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     # Update package information and install DDEV
     sudo sh -c 'echo ""'
-    sudo apt-get update && sudo apt-get install --install-suggests -y ddev
+    sudo apt-get update && sudo apt-get install -y ddev
 
     # One-time initialization of mkcert
     mkcert -install
@@ -284,7 +284,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         sudo install -m 0755 -d /etc/apt/keyrings
         curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/ddev.gpg > /dev/null
         echo "deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
-        sudo apt-get update && sudo apt-get install -y ddev
+        sudo apt-get update && sudo apt-get install --no-install-recommends -y ddev
         ```
 
     12. In WSL2, run `mkcert -install`.

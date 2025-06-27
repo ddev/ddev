@@ -344,10 +344,11 @@ nfpms:
     dst:  /usr/share/zsh/vendor-completions/_ddev
     file_info:
       mode: 0644
+  recommends:
+    - xdg-utils
   suggests:
     - bash-completion
     - zsh-completions
-    - xdg-utils
   overrides:
     deb:
       dependencies:

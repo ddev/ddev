@@ -113,7 +113,8 @@ $env:CAROOT = & $mkcertPath -CAROOT
 wsl -u root -e bash -c "apt-get update && apt-get install -y curl"
 wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ \* \* > /etc/apt/sources.list.d/ddev.list'
-wsl -u root -e bash -c "apt-get update && apt-get install -y ddev wslu"
+wsl -u root -e bash -c "apt-get update && apt-get install -y wslu"
+wsl -u root -e bash -c "apt-get install -y --no-install-recommends ddev"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 
 
