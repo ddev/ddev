@@ -39,7 +39,7 @@ jobs:
   build:
     name: Docs check (spellcheck, links, markdownlint, textlint)
     # linkspector seems to fail with "No usable sandbox"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
