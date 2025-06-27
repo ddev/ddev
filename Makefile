@@ -68,7 +68,6 @@ windows_amd64: windows_amd64_install
 windows_arm64: windows_arm64_install
 
 completions: $(GOTMP)/bin/completions.tar.gz
-wsl2_installer_amd64: $(GOTMP)/bin/windows_amd64/ddev_wsl2_installer_amd64.exe
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
 $(TARGETS): mkcert $(GOFILES)
@@ -252,19 +251,14 @@ windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_
 	ls -l .gotmp/bin/windows_arm64
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/ddev-hostname.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_sign_binaries $(GOTMP)/bin/windows_amd64/gsudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
-	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_sign_binaries $(GOTMP)/bin/windows_amd64/gsudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
+	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer amd64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
 
-$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_sign_binaries $(GOTMP)/bin/windows_arm64/gsudo_license.txt $(GOTMP)/bin/windows_arm64/mkcert_license.txt winpkg/ddev.nsi
-	@makensis -DTARGET_ARCH=arm64 -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_sign_binaries $(GOTMP)/bin/windows_arm64/gsudo_license.txt $(GOTMP)/bin/windows_arm64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
+	@makensis -DTARGET_ARCH=arm64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer arm64 binary..." && signtool sign -fd SHA256 "$@"; fi
-	$(SHASUM) $@ >$@.sha256.txt
-
-$(GOTMP)/bin/windows_amd64/ddev_wsl2_installer_amd64.exe: windows_sign_binaries $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev_wsl2_installer.nsi
-	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev_wsl2_installer.nsi
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows wsl2 installer amd64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
 
 no_v_version:
