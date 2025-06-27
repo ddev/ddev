@@ -62,7 +62,7 @@ jobs:
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
       - name: Setup tmate session
-        if: ${{ failure() }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
