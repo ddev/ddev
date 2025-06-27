@@ -123,8 +123,8 @@ Section "-Initialize"
     CreateDirectory "$INSTDIR"
 SectionEnd
 
-SectionGroup /e "${PRODUCT_NAME_FULL}"
-    Section "${PRODUCT_NAME_FULL}" SecDDEV
+SectionGroup /e "${PRODUCT_NAME}"
+    Section "${PRODUCT_NAME}" SecDDEV
         SectionIn 1 2 3 RO
 
         SetOutPath "$INSTDIR"
@@ -220,7 +220,7 @@ Section -Post
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NoRepair" 1
 
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME_FULL}.lnk" "$INSTDIR\ddev_uninstall.exe"
+    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME}.lnk" "$INSTDIR\ddev_uninstall.exe"
     !insertmacro MUI_STARTMENU_WRITE_END
 SectionEnd
 
@@ -246,61 +246,47 @@ Function CheckWSL2Requirements
     DetailPrint "WSL2 requirements satisfied."
 FunctionEnd
 
-Function InstallWSL2
-    DetailPrint "Installing DDEV for WSL2..."
+Function InstallWSL2DockerCE
+    DetailPrint "DEBUG: Starting InstallWSL2DockerCE"
 
-    ${If} $DOCKER_OPTION == "docker-ce"
-        Call InstallWSL2DockerCE
-    ${Else}
-        Call InstallWSL2DockerDesktop
+    ; Check if the default WSL distro is Ubuntu
+    nsExec::ExecToStack 'wsl bash -c "grep ^NAME..Ubuntu /etc/os-release"'
+    Pop $0
+    Pop $1
+    DetailPrint "DEBUG: Output of grep /etc/os-release for Ubuntu: $1"
+    ${If} $1 == ""
+        MessageBox MB_ICONSTOP|MB_OK "Your default WSL distro is not Ubuntu. Please set Ubuntu as your default WSL distro."
+        Abort "Default WSL distro is not Ubuntu"
     ${EndIf}
 
-    ; Install common WSL2 components
-    SetOutPath $INSTDIR
-    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
-    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
-    File /oname=license.txt "..\LICENSE"
-
-    ; Add to PATH
-    EnVar::SetHKLM
-    EnVar::AddValue "Path" "$INSTDIR"
-
-    ; Create shortcuts and registry entries
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk" "$INSTDIR\ddev.exe"
-    !insertmacro MUI_STARTMENU_WRITE_END
-
-    DetailPrint "WSL2 installation completed."
-FunctionEnd
-
-Function InstallWSL2DockerCE
-    DetailPrint "Setting up Docker CE in WSL2..."
-
-    ; Install Ubuntu distribution if not present
-    nsExec::ExecToLog 'wsl --install -d Ubuntu'
+    ; Install Docker CE in the default WSL Ubuntu distro
+    DetailPrint "DEBUG: Installing Docker CE in default WSL Ubuntu distro..."
+    MessageBox MB_ICONINFORMATION|MB_OK "DEBUG: About to run: wsl -- bash -c curl -fsSL https://get.docker.com | sh"
+    nsExec::ExecToLog 'wsl -- bash -c curl -fsSL https://get.docker.com | sh'
     Pop $0
-
-    ; Install Docker CE in WSL2
-    DetailPrint "Installing Docker CE in WSL2..."
-    nsExec::ExecToLog 'wsl -d Ubuntu -- bash -c "curl -fsSL https://get.docker.com | sh"'
-    Pop $0
+    MessageBox MB_OK "DEBUG: Result of Docker CE install: $0"
     ${If} $0 != 0
         MessageBox MB_ICONSTOP|MB_OK "Failed to install Docker CE in WSL2. Please check the logs."
         Abort "Docker CE installation failed"
     ${EndIf}
 
     ; Configure Docker to start automatically
-    nsExec::ExecToLog 'wsl -d Ubuntu -- sudo systemctl enable docker'
+    DetailPrint "DEBUG: Enabling Docker to start automatically"
+    MessageBox MB_OK "DEBUG: About to run: wsl -- bash -c sudo systemctl enable docker"
+    nsExec::ExecToLog 'wsl -- bash -c sudo systemctl enable docker'
+    Pop $8
+    MessageBox MB_OK "DEBUG: Result of systemctl enable docker: $8"
 
     ; Install required Windows components
     SetOutPath $INSTDIR
     SetOverwrite on
 
     ; Only install ddev-hostname.exe, not ddev.exe
+    DetailPrint "DEBUG: Installing ddev-hostname.exe"
     File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
 
     ; Install mkcert
+    DetailPrint "DEBUG: Installing mkcert"
     File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
     File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
@@ -316,29 +302,35 @@ Function InstallWSL2DockerCE
 
     ; Initialize mkcert
     MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
-    nsExec::ExecToLog '"$INSTDIR\mkcert.exe" -install'
+    nsExec::ExecToLog '$INSTDIR\mkcert.exe -install'
     Pop $R0
+    MessageBox MB_OK "DEBUG: mkcert -install result: $R0"
     ${If} $R0 = 0
         WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup" 1
     ${EndIf}
 
     ; Add to PATH (needed for ddev-hostname.exe)
+    DetailPrint "DEBUG: Adding $INSTDIR to PATH"
     EnVar::SetHKLM
     EnVar::AddValue "Path" "$INSTDIR"
 
     DetailPrint "Docker CE installation completed."
+    MessageBox MB_ICONINFORMATION|MB_OK "DDEV WSL2 Docker CE installation completed successfully."
 FunctionEnd
 
 Function InstallWSL2DockerDesktop
-    DetailPrint "Configuring Docker Desktop integration..."
+    DetailPrint "DEBUG: Starting InstallWSL2DockerDesktop"
+    MessageBox MB_OK "DEBUG: Entered InstallWSL2DockerDesktop"
 
     ; Check if Docker Desktop is installed
     ${If} ${FileExists} "$PROGRAMFILES\Docker\Docker\Docker Desktop.exe"
         ; Start Docker Desktop if not running
         nsExec::ExecToLog 'docker version'
         Pop $0
+        MessageBox MB_OK "DEBUG: docker version result: $0"
         ${If} $0 != 0
             DetailPrint "Starting Docker Desktop..."
+            MessageBox MB_OK "DEBUG: About to run: docker desktop start"
             nsExec::ExecToLog 'docker desktop start'
             Sleep 10000 ; Wait for Docker to start
         ${EndIf}
@@ -349,13 +341,16 @@ Function InstallWSL2DockerDesktop
 
     ; Enable WSL2 integration
     DetailPrint "Ensuring WSL2 integration is enabled..."
+    MessageBox MB_OK "DEBUG: About to run: wsl --set-default-version 2"
     nsExec::ExecToLog 'wsl --set-default-version 2'
 
     DetailPrint "Docker Desktop configuration completed."
+    MessageBox MB_ICONINFORMATION|MB_OK "DDEV WSL2 Docker Desktop installation completed successfully."
 FunctionEnd
 
 Function InstallTraditionalWindows
-    DetailPrint "Installing DDEV for traditional Windows..."
+    DetailPrint "DEBUG: Starting InstallTraditionalWindows"
+    MessageBox MB_OK "DEBUG: Entered InstallTraditionalWindows"
 
     SetOutPath $INSTDIR
     SetOverwrite on
@@ -384,50 +379,17 @@ Function InstallTraditionalWindows
     !insertmacro MUI_STARTMENU_WRITE_END
 
     DetailPrint "Traditional Windows installation completed."
+    MessageBox MB_ICONINFORMATION|MB_OK "DDEV Traditional Windows installation completed successfully."
 FunctionEnd
-
-Section "Uninstall"
-  ; Read start menu group from registry
-  !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuGroup
-
-  ; Remove start menu shortcuts
-  RMDir /r "$SMPROGRAMS\$StartMenuGroup"
-
-  ; Remove installed files
-  Delete "$INSTDIR\ddev.exe"
-  Delete "$INSTDIR\ddev-hostname.exe"
-  Delete "$INSTDIR\license.txt"
-  Delete "$INSTDIR\mkcert.exe"
-  Delete "$INSTDIR\mkcert_license.txt"
-  Delete "$INSTDIR\ddev_uninstall.exe"
-
-  ; Remove icons
-  RMDir /r "$INSTDIR\Icons"
-
-  ; Remove from PATH
-  EnVar::SetHKLM
-  EnVar::DeleteValue "Path" "$INSTDIR"
-
-  ; Uninstall mkcert CA if installed
-  nsExec::ExecToLog '"$INSTDIR\mkcert.exe" -uninstall'
-
-  ; Remove installation directory
-  RMDir "$INSTDIR"
-
-  ; Remove registry keys
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
-
-  SetAutoClose true
-SectionEnd
 
 Function un.onInit
-  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES +2
+  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES DoUninstall
   Abort
-FunctionEnd
 
-Function un.onUninstSuccess
-  HideWindow
-  MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) was successfully removed from your computer."
+DoUninstall:
+  ; Switch to 64 bit view and disable FS redirection
+  SetRegView 64
+  ${DisableX64FSRedirection}
 FunctionEnd
 
 Function DirectoryPre
@@ -458,7 +420,47 @@ Function .onInit
     ${If} ${RunningX64}
         StrCpy $INSTDIR "$PROGRAMFILES64\${PRODUCT_NAME}"
     ${Else}
-        MessageBox MB_OK|MB_ICONSTOP "This installer is for 64-bit Windows only."
+        MessageBox MB_ICONSTOP|MB_OK "This installer is for 64-bit Windows only."
         Abort
     ${EndIf}
+FunctionEnd
+
+; Helper: returns "1" if $R0 contains $R1, else ""
+Function StrContains
+    Exch $R1 ; substring
+    Exch
+    Exch $R0 ; string
+    Push $R2
+    StrCpy $R2 ""
+    ${DoWhile} $R0 != ""
+        StrCpy $R2 $R0 6
+        StrCmp $R2 $R1 0 found
+            Push "1"
+            Goto done
+        found:
+        StrCpy $R0 $R0 "" 1
+    ${Loop}
+    Push ""
+done:
+    Pop $R2
+    Pop $R1
+    Pop $R0
+FunctionEnd
+
+; Helper: Trim leading spaces from a string
+Function TrimLeft
+    Exch $R0
+    Push $R1
+    StrCpy $R1 0
+    loop_trimleft:
+        StrCpy $R2 $R0 1 $R1
+        StrCmp $R2 " " trimmed
+        StrCmp $R2 "" done_trimleft
+        IntOp $R1 $R1 + 1
+        Goto loop_trimleft
+    trimmed:
+        StrCpy $R0 $R0 "" $R1
+    done_trimleft:
+        Pop $R1
+        Exch $R0
 FunctionEnd
