@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
@@ -15,4 +16,6 @@ func init() {
 	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
 	// GetMutagenDataDirectory() sets MUTAGEN_DATA_DIRECTORY
 	_ = globalconfig.GetMutagenDataDirectory()
+	// GetDockerClient should be called early to get DOCKER_HOST set
+	_, _ = dockerutil.GetDockerClient()
 }
