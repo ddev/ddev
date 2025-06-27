@@ -249,108 +249,353 @@ FunctionEnd
 Function InstallWSL2DockerCE
     DetailPrint "DEBUG: Starting InstallWSL2DockerCE"
 
-    ; Check if the default WSL distro is Ubuntu
-    nsExec::ExecToStack 'wsl bash -c "grep ^NAME..Ubuntu /etc/os-release"'
-    Pop $0
+    ; Check for WSL2
+    DetailPrint "Checking WSL2 version..."
+    nsExec::ExecToStack 'wsl.exe -l -v'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "WSL version check output: $0"
+    DetailPrint "WSL version check exit code: $1"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "WSL2 does not seem to be installed. Please install WSL2 and Ubuntu before running this installer."
+        Abort
+    ${EndIf}
+
+    ; Check for Ubuntu-based default distro
+    DetailPrint "Checking for Ubuntu-based default distro..."
+    nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep -i ^NAME="'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "WSL Output: $0"
+    DetailPrint "Exit Code: $1"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Could not check your default WSL2 distro. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == ""
+        MessageBox MB_ICONSTOP|MB_OK "Could not detect distro name. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep -i ^NAME= | grep -i ubuntu"'
     Pop $1
-    DetailPrint "DEBUG: Output of grep /etc/os-release for Ubuntu: $1"
-    ${If} $1 == ""
-        MessageBox MB_ICONSTOP|MB_OK "Your default WSL distro is not Ubuntu. Please set Ubuntu as your default WSL distro."
-        Abort "Default WSL distro is not Ubuntu"
-    ${EndIf}
-
-    ; Install Docker CE in the default WSL Ubuntu distro
-    DetailPrint "DEBUG: Installing Docker CE in default WSL Ubuntu distro..."
-    MessageBox MB_ICONINFORMATION|MB_OK "DEBUG: About to run: wsl -- bash -c curl -fsSL https://get.docker.com | sh"
-    nsExec::ExecToLog 'wsl -- bash -c curl -fsSL https://get.docker.com | sh'
     Pop $0
-    MessageBox MB_OK "DEBUG: Result of Docker CE install: $0"
-    ${If} $0 != 0
-        MessageBox MB_ICONSTOP|MB_OK "Failed to install Docker CE in WSL2. Please check the logs."
-        Abort "Docker CE installation failed"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Your default WSL2 distro is not Ubuntu-based. Please set Ubuntu as your default WSL2 distro."
+        Abort
+    ${EndIf}
+    DetailPrint "Ubuntu-based distro detected successfully."
+
+    ; Check for WSL2 kernel
+    DetailPrint "Checking for WSL2..."
+    nsExec::ExecToStack 'wsl uname -v'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "WSL kernel version: $0"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Could not check WSL version. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == ""
+        MessageBox MB_ICONSTOP|MB_OK "Could not detect WSL version. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == "WSL"
+        MessageBox MB_ICONSTOP|MB_OK "Your default WSL distro is not WSL2. Please upgrade to WSL2."
+        Abort
+    ${EndIf}
+    DetailPrint "WSL2 detected successfully."
+
+    ; Check for non-root default user
+    DetailPrint "Checking for non-root user..."
+    nsExec::ExecToStack 'wsl whoami'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "Current user: $0"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Could not check WSL user. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == "root"
+        MessageBox MB_ICONSTOP|MB_OK "Default user in your WSL2 distro is root. Please configure an ordinary default user."
+        Abort
+    ${EndIf}
+    DetailPrint "Non-root user detected successfully."
+
+    ; Remove old Docker versions first
+    DetailPrint "Removing old Docker versions if present..."
+    nsExec::ExecToStack 'wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
+    Pop $1
+    Pop $0
+
+    ; apt-get upgrade
+    DetailPrint "Doing apt-get upgrade..."
+    nsExec::ExecToStack 'wsl -u root bash -c "apt-get update && apt-get upgrade -y >/dev/null 2>&1"'
+    Pop $1
+    Pop $0
+
+    ; Install linux packages
+    DetailPrint "Installing linux packages..."
+    nsExec::ExecToStack 'wsl -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install dependencies. Please check the logs."
+        Abort
     ${EndIf}
 
-    ; Configure Docker to start automatically
-    DetailPrint "DEBUG: Enabling Docker to start automatically"
-    MessageBox MB_OK "DEBUG: About to run: wsl -- bash -c sudo systemctl enable docker"
-    nsExec::ExecToLog 'wsl -- bash -c sudo systemctl enable docker'
-    Pop $8
-    MessageBox MB_OK "DEBUG: Result of systemctl enable docker: $8"
+    ; Create keyrings directory if it doesn't exist
+    DetailPrint "Setting up keyrings directory..."
+    nsExec::ExecToStack 'wsl -u root install -m 0755 -d /etc/apt/keyrings'
+    Pop $1
+    Pop $0
 
-    ; Install required Windows components
-    SetOutPath $INSTDIR
-    SetOverwrite on
-
-    ; Only install ddev-hostname.exe, not ddev.exe
-    DetailPrint "DEBUG: Installing ddev-hostname.exe"
-    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
-
-    ; Install mkcert
-    DetailPrint "DEBUG: Installing mkcert"
-    File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
-    File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
-
-    ; Install icons for mkcert
-    SetOutPath "$INSTDIR\Icons"
-    SetOverwrite try
-    File /oname=ca-install.ico "graphics\ca-install.ico"
-    File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
-
-    ; Create mkcert shortcuts
-    CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
-    CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
-
-    ; Initialize mkcert
-    MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
-    nsExec::ExecToLog '$INSTDIR\mkcert.exe -install'
-    Pop $R0
-    MessageBox MB_OK "DEBUG: mkcert -install result: $R0"
-    ${If} $R0 = 0
-        WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup" 1
+    ; Add Docker GPG key
+    DetailPrint "Adding Docker repository key..."
+    nsExec::ExecToStack 'wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to add Docker repository key. Please check your internet connection. Exit code: $1, Output: $0"
+        Abort
     ${EndIf}
 
-    ; Add to PATH (needed for ddev-hostname.exe)
-    DetailPrint "DEBUG: Adding $INSTDIR to PATH"
-    EnVar::SetHKLM
-    EnVar::AddValue "Path" "$INSTDIR"
+    ; Add Docker repository
+    DetailPrint "Adding Docker repository..."
+    nsExec::ExecToStack 'wsl -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to add Docker repository. Exit code: $1, Output: $0"
+        Abort
+    ${EndIf}
 
-    DetailPrint "Docker CE installation completed."
+    ; --- Common setup (DDEV repo, apt update, install) ---
+    ; Add DDEV GPG key
+    DetailPrint "Adding DDEV repository key..."
+    nsExec::ExecToStack 'wsl -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to add DDEV repository key. Error: $0"
+        Abort
+    ${EndIf}
+
+    ; Add DDEV repository
+    DetailPrint "Adding DDEV repository..."
+    nsExec::ExecToStack 'wsl -u root -e bash -c "echo \"deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *\" > /etc/apt/sources.list.d/ddev.list"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to add DDEV repository. Please check the logs."
+        Abort
+    ${EndIf}
+
+    ; Update package lists
+    DetailPrint "Updating package lists..."
+    nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to update package lists. Error: $0"
+        Abort
+    ${EndIf}
+
+    ; Install packages for Docker CE
+    DetailPrint "Installing packages..."
+    StrCpy $0 "ddev docker-ce docker-ce-cli containerd.io wslu"
+    nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install packages. Error: $2"
+        Abort
+    ${EndIf}
+
+    ; Detect default user in WSL2 (use wsl whoami)
+    DetailPrint "Detecting default user in WSL2..."
+    nsExec::ExecToStack 'wsl whoami'
+    Pop $1
+    Pop $0
+    DetailPrint "whoami output: $0"
+    ; Remove any trailing newline or carriage return
+    Push $0
+    Call TrimNewline
+    Pop $9
+    DetailPrint "Default user detected: $9"
+
+    ; Add user to docker group using root (no sudo)
+    DetailPrint "Adding user $9 to docker group with root..."
+    nsExec::ExecToStack 'wsl -u root bash -c "usermod -aG docker $9"'
+    Pop $1
+    Pop $0
+    DetailPrint "usermod output: $0"
+
+    ; Install mkcert root CA in WSL
+    nsExec::ExecToStack 'wsl -u root mkcert -install'
+    Pop $1
+    Pop $0
+
+    ; Remove old .docker config if present
+    nsExec::ExecToStack 'wsl rm -rf ~/.docker'
+    Pop $1
+    Pop $0
+
+    ; Show DDEV version
+    DetailPrint "Verifying DDEV installation..."
+    nsExec::ExecToStack 'wsl ddev version'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "DDEV verification failed. Please check the logs."
+        Abort
+    ${EndIf}
+
+    DetailPrint "All done! Installation completed successfully."
     MessageBox MB_ICONINFORMATION|MB_OK "DDEV WSL2 Docker CE installation completed successfully."
 FunctionEnd
 
 Function InstallWSL2DockerDesktop
     DetailPrint "DEBUG: Starting InstallWSL2DockerDesktop"
-    MessageBox MB_OK "DEBUG: Entered InstallWSL2DockerDesktop"
 
-    ; Check if Docker Desktop is installed
-    ${If} ${FileExists} "$PROGRAMFILES\Docker\Docker\Docker Desktop.exe"
-        ; Start Docker Desktop if not running
-        nsExec::ExecToLog 'docker version'
-        Pop $0
-        MessageBox MB_OK "DEBUG: docker version result: $0"
-        ${If} $0 != 0
-            DetailPrint "Starting Docker Desktop..."
-            MessageBox MB_OK "DEBUG: About to run: docker desktop start"
-            nsExec::ExecToLog 'docker desktop start'
-            Sleep 10000 ; Wait for Docker to start
-        ${EndIf}
-    ${Else}
-        MessageBox MB_ICONSTOP|MB_OK "Docker Desktop is not installed. Please install Docker Desktop with WSL2 backend first."
-        Abort "Docker Desktop not found"
+    ; Check for WSL2
+    DetailPrint "Checking WSL2 version..."
+    nsExec::ExecToStack 'wsl.exe -l -v'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "WSL version check output: $0"
+    DetailPrint "WSL version check exit code: $1"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "WSL2 does not seem to be installed. Please install WSL2 and Ubuntu before running this installer."
+        Abort
     ${EndIf}
 
-    ; Enable WSL2 integration
-    DetailPrint "Ensuring WSL2 integration is enabled..."
-    MessageBox MB_OK "DEBUG: About to run: wsl --set-default-version 2"
-    nsExec::ExecToLog 'wsl --set-default-version 2'
+    ; Check for Ubuntu-based default distro
+    DetailPrint "Checking for Ubuntu-based default distro..."
+    nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep -i ^NAME="'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "WSL Output: $0"
+    DetailPrint "Exit Code: $1"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Could not check your default WSL2 distro. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == ""
+        MessageBox MB_ICONSTOP|MB_OK "Could not detect distro name. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    nsExec::ExecToStack 'wsl bash -c "cat /etc/os-release | grep -i ^NAME= | grep -i ubuntu"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Your default WSL2 distro is not Ubuntu-based. Please set Ubuntu as your default WSL2 distro."
+        Abort
+    ${EndIf}
+    DetailPrint "Ubuntu-based distro detected successfully."
 
-    DetailPrint "Docker Desktop configuration completed."
+    ; Check for WSL2 kernel
+    DetailPrint "Checking for WSL2..."
+    nsExec::ExecToStack 'wsl uname -v'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "WSL kernel version: $0"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Could not check WSL version. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == ""
+        MessageBox MB_ICONSTOP|MB_OK "Could not detect WSL version. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == "WSL"
+        MessageBox MB_ICONSTOP|MB_OK "Your default WSL distro is not WSL2. Please upgrade to WSL2."
+        Abort
+    ${EndIf}
+    DetailPrint "WSL2 detected successfully."
+
+    ; Check for non-root default user
+    DetailPrint "Checking for non-root user..."
+    nsExec::ExecToStack 'wsl whoami'
+    Pop $1  ; error code
+    Pop $0  ; output
+    DetailPrint "Current user: $0"
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Could not check WSL user. Please ensure WSL is working."
+        Abort
+    ${EndIf}
+    ${If} $0 == "root"
+        MessageBox MB_ICONSTOP|MB_OK "Default user in your WSL2 distro is root. Please configure an ordinary default user."
+        Abort
+    ${EndIf}
+    DetailPrint "Non-root user detected successfully."
+
+    ; Add DDEV GPG key
+    DetailPrint "Adding DDEV repository key..."
+    nsExec::ExecToStack 'wsl -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to add DDEV repository key. Error: $0"
+        Abort
+    ${EndIf}
+
+    ; Add DDEV repository
+    DetailPrint "Adding DDEV repository..."
+    nsExec::ExecToStack 'wsl -u root -e bash -c "echo \"deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *\" > /etc/apt/sources.list.d/ddev.list"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to add DDEV repository. Please check the logs."
+        Abort
+    ${EndIf}
+
+    ; Update package lists
+    DetailPrint "Updating package lists..."
+    nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to update package lists. Error: $0"
+        Abort
+    ${EndIf}
+
+    ; Install packages for Docker Desktop (no docker-ce, only docker-ce-cli and wslu)
+    DetailPrint "Installing packages..."
+    StrCpy $0 "ddev docker-ce-cli wslu"
+    nsExec::ExecToStack 'wsl -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install packages. Error: $2"
+        Abort
+    ${EndIf}
+
+    ; Install mkcert root CA in WSL
+    nsExec::ExecToStack 'wsl -u root mkcert -install'
+    Pop $1
+    Pop $0
+
+    ; Remove old .docker config if present
+    nsExec::ExecToStack 'wsl rm -rf ~/.docker'
+    Pop $1
+    Pop $0
+
+    ; Show DDEV version
+    DetailPrint "Verifying DDEV installation..."
+    nsExec::ExecToStack 'wsl ddev version'
+    Pop $1
+    Pop $0
+    ${If} $1 != 0
+        MessageBox MB_ICONSTOP|MB_OK "DDEV verification failed. Please check the logs."
+        Abort
+    ${EndIf}
+
+    DetailPrint "All done! Installation completed successfully."
     MessageBox MB_ICONINFORMATION|MB_OK "DDEV WSL2 Docker Desktop installation completed successfully."
 FunctionEnd
 
 Function InstallTraditionalWindows
     DetailPrint "DEBUG: Starting InstallTraditionalWindows"
-    MessageBox MB_OK "DEBUG: Entered InstallTraditionalWindows"
 
     SetOutPath $INSTDIR
     SetOverwrite on
@@ -463,4 +708,24 @@ Function TrimLeft
     done_trimleft:
         Pop $R1
         Exch $R0
+FunctionEnd
+
+; Helper: Trim trailing newline and carriage return from a string
+Function TrimNewline
+    Exch $R0
+    Push $R1
+    StrCpy $R1 $R0 -1
+    loop_trimnl:
+        StrCpy $R1 $R0 -1
+        StrCpy $R2 $R1 1 -1
+        ${If} $R2 == "$\n"
+            StrCpy $R0 $R0 -1
+            Goto loop_trimnl
+        ${EndIf}
+        ${If} $R2 == "$\r"
+            StrCpy $R0 $R0 -1
+            Goto loop_trimnl
+        ${EndIf}
+    Pop $R1
+    Exch $R0
 FunctionEnd
