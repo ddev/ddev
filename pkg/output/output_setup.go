@@ -1,8 +1,11 @@
 package output
 
 import (
-	log "github.com/sirupsen/logrus"
 	"os"
+	"strconv"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Fields = log.Fields
@@ -45,27 +48,10 @@ var (
 	}
 	// DdevOutputJSONFormatter is the specialized JSON formatter for UserOut
 	DdevOutputJSONFormatter = &log.JSONFormatter{}
-	// JSONOutput is a bool telling whether we're outputting in JSON. Set by command-line args.
-	// Parsed early (before Cobra init) because logging initialization depends on this value.
-	JSONOutput = func() bool {
-		for _, arg := range os.Args[1:] {
-			switch {
-			case arg == "-j", arg == "--json-output",
-				arg == "-j=true", arg == "-j=1",
-				arg == "--json-output=true", arg == "--json-output=1":
-				return true
-			case arg == "-j=false", arg == "-j=0":
-				return false
-			case len(arg) >= 2 && arg[0] == '-' && arg[1] != '-':
-				for i := 1; i < len(arg); i++ {
-					if arg[i] == 'j' {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	}()
+	// JSONOutput indicates if JSON output mode is enabled, determined by command-line flags.
+	// Parsed early, prior to Cobra flag initialization, to configure logging correctly from start.
+	// Manual parsing is necessary because Cobra registers flags too late for this early use.
+	JSONOutput = parseBoolFlag(os.Args[1:], "json-output", "j")
 )
 
 // ErrorWriter allows writing stderr
@@ -75,4 +61,40 @@ type ErrorWriter struct{}
 
 func (w *ErrorWriter) Write(p []byte) (n int, err error) {
 	return os.Stderr.Write(p)
+}
+
+// parseBoolFlag scans args backward to apply last-occurrence precedence for a boolean flag.
+// Supports both --long[=true|false] and -s[=true|false] forms.
+// Detects presence of short flag character in combined flags (e.g. -xj) as implicit true.
+// Returns false if no matching flag is found or value cannot be parsed.
+func parseBoolFlag(args []string, long string, short string) bool {
+	longPrefix := "--" + long + "="
+	shortPrefix := "-" + short + "="
+
+	for i := len(args) - 1; i >= 0; i-- {
+		arg := args[i]
+		switch {
+		case arg == "--"+long, arg == "-"+short:
+			return true
+		case strings.HasPrefix(arg, shortPrefix):
+			v, err := strconv.ParseBool(arg[len(shortPrefix):])
+			if err == nil {
+				return v
+			}
+		case strings.HasPrefix(arg, longPrefix):
+			v, err := strconv.ParseBool(arg[len(longPrefix):])
+			if err == nil {
+				return v
+			}
+		default:
+			if len(arg) > 1 && arg[0] == '-' && arg[1] != '-' {
+				for _, ch := range arg[1:] {
+					if string(ch) == short {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
 }
