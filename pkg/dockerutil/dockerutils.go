@@ -181,11 +181,11 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 		if err != nil && !CanRunWithoutDocker() {
 			util.Failed("Unable to get Docker context: %v", err)
 		}
-		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
+		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
 	}
 	// Respect DOCKER_HOST in case it's set, otherwise use host we got from context
 	if os.Getenv("DOCKER_HOST") == "" {
-		util.Debug("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
+		util.Verbose("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
 		_ = os.Setenv("DOCKER_HOST", DockerHost)
 	}
 	if DockerClient == nil {
@@ -215,14 +215,14 @@ func GetDockerContext() (string, string, error) {
 		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure Docker client is in path and up-to-date: %v", err)
 	}
 	contextInfo = strings.Trim(contextInfo, " \r\n")
-	util.Debug("GetDockerContext: contextInfo='%s'", contextInfo)
+	util.Verbose("GetDockerContext: contextInfo='%s'", contextInfo)
 	parts := strings.SplitN(contextInfo, " ", 2)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("unable to run split Docker context info %s: %v", contextInfo, err)
 	}
 	dockerContext = parts[0]
 	dockerHost = parts[1]
-	util.Debug("Using Docker context %s (%v)", dockerContext, dockerHost)
+	util.Verbose("Using Docker context %s (%v)", dockerContext, dockerHost)
 	return dockerContext, dockerHost, nil
 }
 
