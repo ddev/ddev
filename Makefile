@@ -246,7 +246,8 @@ darwin_arm64_notarized: darwin_arm64_signed
 windows_amd64_install: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
 windows_arm64_install: $(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe
 
-windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
+windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
+#windows_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/ddev-hostname.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
 	ls -l .gotmp/bin/windows_arm64
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/ddev-hostname.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi

@@ -3,6 +3,7 @@
 !include "WinMessages.nsh"
 !include "FileFunc.nsh"
 !include "Sections.nsh"
+!include "x64.nsh"
 
 !ifndef TARGET_ARCH # passed on command-line
   !error "TARGET_ARCH define is missing!"
@@ -11,15 +12,18 @@
 Name "DDEV Windows Installer"
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 
-InstallDir "$PROGRAMFILES\DDEV"
+; Use proper Program Files directory for 64-bit applications
+InstallDir "$PROGRAMFILES64\DDEV"
 RequestExecutionLevel admin
 
 !define PRODUCT_NAME "DDEV"
 !define PRODUCT_VERSION "${VERSION}"
 !define PRODUCT_PUBLISHER "DDEV Foundation"
 
+; Variables
 Var /GLOBAL INSTALL_OPTION
 Var /GLOBAL DOCKER_OPTION
+Var StartMenuGroup
 
 !define REG_INSTDIR_ROOT "HKLM"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -40,7 +44,7 @@ InstType "Minimal"
 
 !define MUI_ABORTWARNING
 
-; Welcome page
+; Define pages first
 !insertmacro MUI_PAGE_WELCOME
 
 ; License page for DDEV
@@ -56,21 +60,26 @@ Page custom InstallChoicePage InstallChoicePageLeave
 !insertmacro MUI_PAGE_DIRECTORY
 
 ; Start menu page
-Var ICONS_GROUP
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER "${PRODUCT_NAME}"
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT ${REG_UNINST_ROOT}
 !define MUI_STARTMENUPAGE_REGISTRY_KEY "${REG_UNINST_KEY}"
-!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "NSIS:StartMenuDir"
-!insertmacro MUI_PAGE_STARTMENU Application $ICONS_GROUP
+!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "StartMenuGroup"
+!insertmacro MUI_PAGE_STARTMENU Application $StartMenuGroup
 
 ; Installation page
 !insertmacro MUI_PAGE_INSTFILES
 
-; Finish page with release notes link
+; Finish page
 !define MUI_FINISHPAGE_SHOWREADME "https://github.com/ddev/ddev/releases/tag/${VERSION}"
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Review the release notes"
 !insertmacro MUI_PAGE_FINISH
+
+; Uninstaller pages
+!insertmacro MUI_UNPAGE_INSTFILES
+
+; Language - must come after pages
+!insertmacro MUI_LANGUAGE "English"
 
 Function InstallChoicePage
     nsDialogs::Create 1018
@@ -109,75 +118,247 @@ Function InstallChoicePageLeave
     StrCpy $INSTALL_OPTION "traditional"
 FunctionEnd
 
-Section "Install DDEV"
-  ${If} $INSTALL_OPTION == "traditional"
-    Call InstallTraditionalWindows
-  ${Else}
-    Call CheckWSL2Requirements
-    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-      StrCpy $DOCKER_OPTION "docker-ce"
-    ${Else}
-      StrCpy $DOCKER_OPTION "docker-desktop"
-    ${EndIf}
-    Call InstallWSL2
-  ${EndIf}
+Section "-Initialize"
+    ; Create the installation directory
+    CreateDirectory "$INSTDIR"
 SectionEnd
 
-Function InstallTraditionalWindows
-  DetailPrint "Installing DDEV for traditional Windows..."
+SectionGroup /e "${PRODUCT_NAME_FULL}"
+    Section "${PRODUCT_NAME_FULL}" SecDDEV
+        SectionIn 1 2 3 RO
 
-  SetOutPath $INSTDIR
+        SetOutPath "$INSTDIR"
+        SetOverwrite on
 
-  ; Copy core files
-  File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
-  File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
-  File /oname=license.txt "..\LICENSE"
+        ; Install core files for all installation types
+        File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
+        File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
+        File /oname=license.txt "..\LICENSE"
 
-  ; Install mkcert
-  File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
-  File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
+        ; Install icons
+        SetOutPath "$INSTDIR\Icons"
+        SetOverwrite try
+        File /oname=ddev.ico "graphics\ddev-install.ico"
 
-  ; Install icons
-  SetOutPath "$INSTDIR\Icons"
-  SetOverwrite try
-  File /oname=ddev.ico "graphics\ddev-install.ico"
+        ${If} $INSTALL_OPTION == "traditional"
+            Call InstallTraditionalWindows
+        ${Else}
+            Call CheckWSL2Requirements
+            ${If} $INSTALL_OPTION == "wsl2-docker-ce"
+                Call InstallWSL2DockerCE
+            ${Else}
+                Call InstallWSL2DockerDesktop
+            ${EndIf}
+        ${EndIf}
 
-  ; Add to PATH
-  EnVar::SetHKLM
-  EnVar::AddValue "Path" "$INSTDIR"
+        ; Create common shortcuts
+        !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+        CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
+        CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk" "$INSTDIR\ddev.exe" "" "$INSTDIR\Icons\ddev.ico"
+        !insertmacro MUI_STARTMENU_WRITE_END
+    SectionEnd
 
-  ; Install mkcert root CA
-  DetailPrint "Installing mkcert root CA..."
-  MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
-  nsExec::ExecToLog '"$INSTDIR\mkcert.exe" -install'
+    Section "Add to PATH" SecAddToPath
+        SectionIn 1 2 3
+        EnVar::SetHKLM
+        EnVar::AddValue "Path" "$INSTDIR"
+    SectionEnd
+SectionGroupEnd
 
-  ; Create start menu shortcuts
-  CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  CreateShortcut "$SMPROGRAMS\${PRODUCT_NAME}\DDEV.lnk" "$INSTDIR\ddev.exe" "" "$INSTDIR\Icons\ddev.ico"
+SectionGroup /e "mkcert"
+    Section "mkcert" SecMkcert
+        SectionIn 1 2
+        SetOutPath "$INSTDIR"
+        SetOverwrite try
 
-  ; Create uninstaller
-  WriteUninstaller "$INSTDIR\ddev_uninstall.exe"
+        ; Copy mkcert files
+        File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
+        File "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert_license.txt"
 
-  ; Write uninstaller keys
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayName" "$(^Name)"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "UninstallString" "$INSTDIR\ddev_uninstall.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayVersion" "${PRODUCT_VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "Publisher" "${PRODUCT_PUBLISHER}"
+        ; Install icons
+        SetOutPath "$INSTDIR\Icons"
+        SetOverwrite try
+        File /oname=ca-install.ico "graphics\ca-install.ico"
+        File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
 
-  DetailPrint "Traditional Windows installation completed."
-FunctionEnd
+        ; Create shortcuts
+        CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
+        CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
+
+        !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+        CreateDirectory "$SMPROGRAMS\$StartMenuGroup\mkcert"
+        CreateShortCut "$SMPROGRAMS\$StartMenuGroup\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
+        CreateShortCut "$SMPROGRAMS\$StartMenuGroup\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
+        !insertmacro MUI_STARTMENU_WRITE_END
+    SectionEnd
+
+    Section "Setup mkcert" SecMkcertSetup
+        SectionIn 1 2
+        MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
+        nsExec::ExecToLog '"$INSTDIR\mkcert.exe" -install'
+        Pop $R0
+        ${If} $R0 = 0
+            WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup" 1
+        ${EndIf}
+    SectionEnd
+SectionGroupEnd
+
+Section -Post
+    WriteUninstaller "$INSTDIR\ddev_uninstall.exe"
+
+    ; Remember install directory for updates
+    WriteRegStr ${REG_INSTDIR_ROOT} "${REG_INSTDIR_KEY}" "" "$INSTDIR\ddev.exe"
+    WriteRegStr ${REG_INSTDIR_ROOT} "${REG_INSTDIR_KEY}" "Path" "$INSTDIR"
+
+    ; Write uninstaller keys
+    WriteRegStr ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "DisplayName" "$(^Name)"
+    WriteRegStr ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "UninstallString" "$INSTDIR\ddev_uninstall.exe"
+    WriteRegStr ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "DisplayIcon" "$INSTDIR\Icons\ddev.ico"
+    WriteRegStr ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
+    WriteRegStr ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
+    WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NoModify" 1
+    WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NoRepair" 1
+
+    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME_FULL}.lnk" "$INSTDIR\ddev_uninstall.exe"
+    !insertmacro MUI_STARTMENU_WRITE_END
+SectionEnd
 
 Function CheckWSL2Requirements
-  ; ... existing WSL2 check code ...
+    DetailPrint "Checking WSL2 requirements..."
+
+    ; Check if WSL is installed
+    nsExec::ExecToLog 'wsl --status'
+    Pop $0
+    ${If} $0 != 0
+        MessageBox MB_ICONSTOP|MB_OK "WSL2 is not installed. Please install WSL2 first by running 'wsl --install' in an administrative PowerShell window."
+        Abort "WSL2 not installed"
+    ${EndIf}
+
+    ; Check WSL2 version
+    nsExec::ExecToLog 'wsl --set-default-version 2'
+    Pop $0
+    ${If} $0 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to set WSL2 as default. Please ensure WSL2 is properly installed."
+        Abort "WSL2 setup failed"
+    ${EndIf}
+
+    DetailPrint "WSL2 requirements satisfied."
 FunctionEnd
 
 Function InstallWSL2
-  ; ... existing WSL2 installation code ...
+    DetailPrint "Installing DDEV for WSL2..."
+
+    ${If} $DOCKER_OPTION == "docker-ce"
+        Call InstallWSL2DockerCE
+    ${Else}
+        Call InstallWSL2DockerDesktop
+    ${EndIf}
+
+    ; Install common WSL2 components
+    SetOutPath $INSTDIR
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
+    File /oname=license.txt "..\LICENSE"
+
+    ; Add to PATH
+    EnVar::SetHKLM
+    EnVar::AddValue "Path" "$INSTDIR"
+
+    ; Create shortcuts and registry entries
+    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+    CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk" "$INSTDIR\ddev.exe"
+    !insertmacro MUI_STARTMENU_WRITE_END
+
+    DetailPrint "WSL2 installation completed."
+FunctionEnd
+
+Function InstallWSL2DockerCE
+    DetailPrint "Setting up Docker CE in WSL2..."
+
+    ; Install Ubuntu distribution if not present
+    nsExec::ExecToLog 'wsl --install -d Ubuntu'
+    Pop $0
+
+    ; Install Docker CE in WSL2
+    DetailPrint "Installing Docker CE in WSL2..."
+    nsExec::ExecToLog 'wsl -d Ubuntu -- bash -c "curl -fsSL https://get.docker.com | sh"'
+    Pop $0
+    ${If} $0 != 0
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install Docker CE in WSL2. Please check the logs."
+        Abort "Docker CE installation failed"
+    ${EndIf}
+
+    ; Configure Docker to start automatically
+    nsExec::ExecToLog 'wsl -d Ubuntu -- sudo systemctl enable docker'
+
+    DetailPrint "Docker CE installation completed."
+FunctionEnd
+
+Function InstallWSL2DockerDesktop
+    DetailPrint "Configuring Docker Desktop integration..."
+
+    ; Check if Docker Desktop is installed
+    ${If} ${FileExists} "$PROGRAMFILES\Docker\Docker\Docker Desktop.exe"
+        ; Start Docker Desktop if not running
+        nsExec::ExecToLog 'docker version'
+        Pop $0
+        ${If} $0 != 0
+            DetailPrint "Starting Docker Desktop..."
+            nsExec::ExecToLog 'docker desktop start'
+            Sleep 10000 ; Wait for Docker to start
+        ${EndIf}
+    ${Else}
+        MessageBox MB_ICONSTOP|MB_OK "Docker Desktop is not installed. Please install Docker Desktop with WSL2 backend first."
+        Abort "Docker Desktop not found"
+    ${EndIf}
+
+    ; Enable WSL2 integration
+    DetailPrint "Ensuring WSL2 integration is enabled..."
+    nsExec::ExecToLog 'wsl --set-default-version 2'
+
+    DetailPrint "Docker Desktop configuration completed."
+FunctionEnd
+
+Function InstallTraditionalWindows
+    DetailPrint "Installing DDEV for traditional Windows..."
+
+    SetOutPath $INSTDIR
+    SetOverwrite on
+
+    ; Copy core files
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev.exe"
+    File "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
+    File /oname=license.txt "..\LICENSE"
+
+    ; Install icons
+    SetOutPath "$INSTDIR\Icons"
+    SetOverwrite try
+    File /oname=ddev.ico "graphics\ddev-install.ico"
+
+    ; Create shortcuts
+    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+    CreateDirectory "$INSTDIR\Links"
+    CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
+
+    WriteIniStr "$INSTDIR\Links\${PRODUCT_WEB_SITE}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE_URL}"
+    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\${PRODUCT_WEB_SITE}.lnk" "$INSTDIR\Links\${PRODUCT_WEB_SITE}.url" "" "$INSTDIR\Icons\ddev.ico"
+
+    WriteIniStr "$INSTDIR\Links\${PRODUCT_DOCUMENTATION}.url" "InternetShortcut" "URL" "${PRODUCT_DOCUMENTATION_URL}"
+    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\${PRODUCT_DOCUMENTATION}.lnk" "$INSTDIR\Links\${PRODUCT_DOCUMENTATION}.url" "" "$INSTDIR\Icons\ddev.ico"
+
+    !insertmacro MUI_STARTMENU_WRITE_END
+
+    DetailPrint "Traditional Windows installation completed."
 FunctionEnd
 
 Section "Uninstall"
+  ; Read start menu group from registry
+  !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuGroup
+
   ; Remove start menu shortcuts
-  RMDir /r "$SMPROGRAMS\${PRODUCT_NAME}"
+  RMDir /r "$SMPROGRAMS\$StartMenuGroup"
 
   ; Remove installed files
   Delete "$INSTDIR\ddev.exe"
@@ -233,4 +414,18 @@ FunctionEnd
 
 Function ddevLicLeave
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:ddevLicenseAccepted" 0x00000001
+FunctionEnd
+
+Function .onInit
+    ; Set proper 64-bit handling
+    SetRegView 64
+    ${DisableX64FSRedirection}
+
+    ; Initialize directory to proper Program Files location
+    ${If} ${RunningX64}
+        StrCpy $INSTDIR "$PROGRAMFILES64\${PRODUCT_NAME}"
+    ${Else}
+        MessageBox MB_OK|MB_ICONSTOP "This installer is for 64-bit Windows only."
+        Abort
+    ${EndIf}
 FunctionEnd
