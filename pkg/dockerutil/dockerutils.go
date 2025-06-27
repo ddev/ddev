@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/url"
 	"os"
@@ -103,7 +102,7 @@ func EnsureDdevNetwork() {
 	}
 	err := EnsureNetwork(ctx, client, NetName, netOptions)
 	if err != nil {
-		log.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
+		output.UserErr.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
 	}
 }
 
@@ -240,7 +239,7 @@ func GetDockerHostID() string {
 	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
-		log.Fatal(err)
+		output.UserErr.Fatal(err)
 	}
 	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
 	return alphaOnly

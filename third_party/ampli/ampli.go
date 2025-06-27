@@ -18,10 +18,11 @@
 package ampli
 
 import (
-	"log"
+	"os"
 	"sync"
 
 	"github.com/amplitude/analytics-go/amplitude"
+	"github.com/ddev/ddev/pkg/output"
 )
 
 type (
@@ -590,7 +591,9 @@ type Ampli struct {
 // Call once when your application starts.
 func (a *Ampli) Load(options LoadOptions) {
 	if a.Client != nil {
-		log.Print("Warn: Ampli is already initialized. Ampli.Load() should be called once at application start up.")
+		if debugEnabled() {
+			output.UserErr.Warning("Warn: Ampli is already initialized. Ampli.Load() should be called once at application start up.")
+		}
 
 		return
 	}
@@ -606,9 +609,11 @@ func (a *Ampli) Load(options LoadOptions) {
 	}
 
 	if apiKey == "" && options.Client.Instance == nil {
-		log.Print("Error: Ampli.Load() requires option.Environment, " +
-			"and apiKey from either options.Instance.APIKey or APIKey[options.Environment], " +
-			"or options.Instance.Instance")
+		if debugEnabled() {
+			output.UserErr.Warning("Error: Ampli.Load() requires option.Environment, " +
+				"and apiKey from either options.Instance.APIKey or APIKey[options.Environment], " +
+				"or options.Instance.Instance")
+		}
 	}
 
 	clientConfig := options.Client.Configuration
@@ -644,7 +649,9 @@ func (a *Ampli) Load(options LoadOptions) {
 // InitializedAndEnabled checks if Ampli is initialized and enabled.
 func (a *Ampli) InitializedAndEnabled() bool {
 	if a.Client == nil {
-		log.Print("Error: Ampli is not yet initialized. Have you called Ampli.Load() on app start?")
+		if debugEnabled() {
+			output.UserErr.Warning("Error: Ampli is not yet initialized. Have you called Ampli.Load() on app start?")
+		}
 
 		return false
 	}
@@ -713,4 +720,9 @@ func (a *Ampli) Command(userID string, event CommandEvent, eventOptions ...Event
 
 func (a *Ampli) Project(userID string, event ProjectEvent, eventOptions ...EventOptions) {
 	a.Track(userID, event, eventOptions...)
+}
+
+// debugEnabled returns true if DDEV_DEBUG=true or DDEV_VERBOSE=true
+func debugEnabled() bool {
+	return os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true"
 }
