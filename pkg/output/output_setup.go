@@ -4,6 +4,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"testing"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -51,7 +52,7 @@ var (
 	// JSONOutput indicates if JSON output mode is enabled, determined by command-line flags.
 	// Parsed early, prior to Cobra flag initialization, to configure logging correctly from start.
 	// Manual parsing is necessary because Cobra registers flags too late for this early use.
-	JSONOutput = parseBoolFlag(os.Args[1:], "json-output", "j")
+	JSONOutput = parseBoolFlag("json-output", "j")
 )
 
 // ErrorWriter allows writing stderr
@@ -63,11 +64,16 @@ func (w *ErrorWriter) Write(p []byte) (n int, err error) {
 	return os.Stderr.Write(p)
 }
 
-// parseBoolFlag scans args backward to apply last-occurrence precedence for a boolean flag.
-// Supports both --long[=true|false] and -s[=true|false] forms.
-// Detects presence of short flag character in combined flags (e.g. -xj) as implicit true.
-// Returns false if no matching flag is found or value cannot be parsed.
-func parseBoolFlag(args []string, long string, short string) bool {
+// parseBoolFlag scans os.Args backward to apply last-occurrence precedence for a boolean flag.
+// Handles both --long[=true|false] and -s[=true|false] forms.
+// Treats short flag in combined group (e.g. -xj) as implicit true.
+// Returns false if the flag is absent or its value is invalid.
+// Disabled entirely when running under `go test`.
+func parseBoolFlag(long string, short string) bool {
+	if testing.Testing() {
+		return false
+	}
+	args := os.Args[1:]
 	longPrefix := "--" + long + "="
 	shortPrefix := "-" + short + "="
 
