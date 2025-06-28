@@ -32,7 +32,6 @@ import (
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -376,8 +375,6 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	output.LogSetUp()
-
 	testcommon.ClearDockerEnv()
 
 	// Since this may be the first time DDEV has been used, we need the
@@ -407,7 +404,7 @@ func TestMain(m *testing.M) {
 	testRun := 0
 	err := globalconfig.ReadGlobalConfig()
 	if err != nil {
-		log.Fatalf("could not read globalconfig: %v", err)
+		output.UserErr.Fatalf("could not read globalconfig: %v", err)
 	}
 
 	for i, site := range TestSites {
@@ -421,7 +418,7 @@ func TestMain(m *testing.M) {
 
 		err := TestSites[i].Prepare()
 		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", TestSites[i].Name, err)
+			output.UserErr.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", TestSites[i].Name, err)
 		}
 
 		switchDir := TestSites[i].Chdir()
@@ -432,13 +429,13 @@ func TestMain(m *testing.M) {
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
 			testRun = -1
-			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
 		err = ddevapp.PrepDdevDirectory(app)
 		if err != nil {
 			testRun = -1
-			log.Errorf("TestMain startup: ddevapp.PrepDdevDirectory() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Errorf("TestMain startup: ddevapp.PrepDdevDirectory() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
 		// Use DDEV binary here because app.WriteConfig() doesn't
@@ -446,25 +443,25 @@ func TestMain(m *testing.M) {
 		err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 		if err != nil {
 			testRun = -1
-			log.Errorf("TestMain startup: ddevapp.PopulateExamplesCommandsHomeadditions() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Errorf("TestMain startup: ddevapp.PopulateExamplesCommandsHomeadditions() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
 		err = app.WriteConfig()
 		if err != nil {
 			testRun = -1
-			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
 		// Pre-download any images we may need, to get them out of the way so they don't clutter tests
 		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
 		if err != nil {
-			log.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
 		for _, volume := range []string{app.Name + "-mariadb"} {
 			err = dockerutil.RemoveVolume(volume)
 			if err != nil {
-				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
+				output.UserErr.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
 			}
 		}
 
@@ -472,7 +469,7 @@ func TestMain(m *testing.M) {
 	}
 
 	if testRun == 0 {
-		log.Debugln("Running tests.")
+		output.UserOut.Debugln("Running tests.")
 		testRun = m.Run()
 	}
 
@@ -487,14 +484,14 @@ func TestMain(m *testing.M) {
 
 		err := app.Init(site.Dir)
 		if err != nil {
-			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
 		status, _ := app.SiteStatus()
 		if status != ddevapp.SiteStopped {
 			err = app.Stop(true, false)
 			if err != nil {
-				log.Fatalf("TestMain shutdown: app.Stop() failed on site %s, err=%v", TestSites[i].Name, err)
+				output.UserErr.Fatalf("TestMain shutdown: app.Stop() failed on site %s, err=%v", TestSites[i].Name, err)
 			}
 		}
 		site.Cleanup()
