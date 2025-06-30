@@ -1962,16 +1962,15 @@ func CanRunWithoutDocker() bool {
 	if len(os.Args) < 2 {
 		return true
 	}
-	// Check the first arg
-	if slices.Contains([]string{"-v", "--version", "-h", "--help", "help", "hostname"}, os.Args[1]) {
+	// Some commands don't support Cobra help, because they are wrappers
+	if slices.Contains([]string{"composer"}, os.Args[1]) {
+		return false
+	}
+	if output.ParseBoolFlag("version", "v") || output.ParseBoolFlag("help", "h") {
 		return true
 	}
-	// Check the last arg
-	if slices.Contains([]string{"-h", "--help"}, os.Args[len(os.Args)-1]) {
-		// Some commands don't support Cobra help, because they are wrappers
-		if slices.Contains([]string{"composer"}, os.Args[1]) {
-			return false
-		}
+	// help and hostname should not require docker
+	if slices.Contains([]string{"help", "hostname"}, os.Args[1]) {
 		return true
 	}
 	return false
