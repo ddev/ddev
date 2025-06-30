@@ -83,7 +83,12 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 func init() {
 	RootCmd.AddCommand(PullCmd)
 
-	app, err := ddevapp.GetActiveApp("")
+	activeAppRoot, err := ddevapp.GetActiveAppRoot("")
+	if err != nil {
+		return
+	}
+
+	app, err := ddevapp.NewApp(activeAppRoot, true)
 	if err != nil {
 		return
 	}

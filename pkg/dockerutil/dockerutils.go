@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/url"
 	"os"
@@ -103,7 +102,7 @@ func EnsureDdevNetwork() {
 	}
 	err := EnsureNetwork(ctx, client, NetName, netOptions)
 	if err != nil {
-		log.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
+		output.UserErr.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
 	}
 }
 
@@ -181,11 +180,11 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 		if err != nil && !CanRunWithoutDocker() {
 			util.Failed("Unable to get Docker context: %v", err)
 		}
-		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
+		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
 	}
 	// Respect DOCKER_HOST in case it's set, otherwise use host we got from context
 	if os.Getenv("DOCKER_HOST") == "" {
-		util.Debug("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
+		util.Verbose("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
 		_ = os.Setenv("DOCKER_HOST", DockerHost)
 	}
 	if DockerClient == nil {
@@ -215,14 +214,14 @@ func GetDockerContext() (string, string, error) {
 		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure Docker client is in path and up-to-date: %v", err)
 	}
 	contextInfo = strings.Trim(contextInfo, " \r\n")
-	util.Debug("GetDockerContext: contextInfo='%s'", contextInfo)
+	util.Verbose("GetDockerContext: contextInfo='%s'", contextInfo)
 	parts := strings.SplitN(contextInfo, " ", 2)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("unable to run split Docker context info %s: %v", contextInfo, err)
 	}
 	dockerContext = parts[0]
 	dockerHost = parts[1]
-	util.Debug("Using Docker context %s (%v)", dockerContext, dockerHost)
+	util.Verbose("Using Docker context %s (%v)", dockerContext, dockerHost)
 	return dockerContext, dockerHost, nil
 }
 
@@ -240,7 +239,7 @@ func GetDockerHostID() string {
 	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
-		log.Fatal(err)
+		output.UserErr.Fatal(err)
 	}
 	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
 	return alphaOnly
@@ -1963,16 +1962,15 @@ func CanRunWithoutDocker() bool {
 	if len(os.Args) < 2 {
 		return true
 	}
-	// Check the first arg
-	if slices.Contains([]string{"-v", "--version", "-h", "--help", "help", "hostname"}, os.Args[1]) {
+	// Some commands don't support Cobra help, because they are wrappers
+	if slices.Contains([]string{"composer"}, os.Args[1]) {
+		return false
+	}
+	if output.ParseBoolFlag("version", "v") || output.ParseBoolFlag("help", "h") {
 		return true
 	}
-	// Check the last arg
-	if slices.Contains([]string{"-h", "--help"}, os.Args[len(os.Args)-1]) {
-		// Some commands don't support Cobra help, because they are wrappers
-		if slices.Contains([]string{"composer"}, os.Args[1]) {
-			return false
-		}
+	// help and hostname should not require docker
+	if slices.Contains([]string{"help", "hostname"}, os.Args[1]) {
 		return true
 	}
 	return false

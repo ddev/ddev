@@ -16,7 +16,6 @@ import (
 	"github.com/cheggaaa/pb"
 	"github.com/ddev/ddev/pkg/output"
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
-	log "github.com/sirupsen/logrus"
 )
 
 // DownloadFile retrieves a file with retry logic, optional progress bar, and SHA256 verification.
@@ -209,7 +208,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 			return nil
 		}
 		// Log expected vs. actual if we do not get a match.
-		output.UserOut.WithFields(log.Fields{
+		output.UserOut.WithFields(output.Fields{
 			"URL":      o.URL,
 			"headers":  o.Headers,
 			"expected": o.ExpectedStatus,

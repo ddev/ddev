@@ -2,6 +2,7 @@ package exec
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 	"os/exec"
@@ -11,9 +12,7 @@ import (
 	"syscall"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
-
 	"github.com/ddev/ddev/pkg/output"
-	log "github.com/sirupsen/logrus"
 )
 
 // HostCommand wraps RunCommand() to inject environment variables.
@@ -34,7 +33,7 @@ func RunCommand(command string, args []string) (string, error) {
 		command, args...,
 	).CombinedOutput()
 
-	output.UserOut.WithFields(log.Fields{
+	output.UserOut.WithFields(output.Fields{
 		"Result": string(out),
 	}).Debug("Command ")
 
@@ -44,7 +43,7 @@ func RunCommand(command string, args []string) (string, error) {
 // RunCommandPipe runs a command on the host system
 // Returns combined output as string, and error
 func RunCommandPipe(command string, args []string) (string, error) {
-	output.UserOut.WithFields(log.Fields{
+	output.UserOut.WithFields(output.Fields{
 		"Command": command + " " + strings.Join(args[:], " "),
 	}).Info("Running ")
 
@@ -117,7 +116,7 @@ func RunHostCommand(command string, args ...string) (string, error) {
 	c.Stdin = os.Stdin
 	o, err := c.CombinedOutput()
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommand returned. output=%v err=%v", string(o), err)
+		output.UserOut.Printf("RunHostCommand returned output=%v err=%v", string(bytes.TrimSpace(o)), err)
 	}
 
 	return string(o), err

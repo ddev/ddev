@@ -79,21 +79,29 @@ func Success(format string, a ...interface{}) {
 	}
 }
 
-// Output controlled by DDEV_DEBUG environment variable
+// Debug Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
 	if globalconfig.DdevDebug {
 		n := time.Now()
 		s := fmt.Sprintf(format, a...)
-		output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.999"), s)
+		if !output.JSONOutput {
+			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
+		} else {
+			output.UserOut.Debugf(s)
+		}
 	}
 }
 
-// Output controlled by DDEV_VERBOSE environment variable
+// Verbose Output controlled by DDEV_VERBOSE environment variable
 func Verbose(format string, a ...interface{}) {
 	if globalconfig.DdevVerbose {
 		n := time.Now()
 		s := fmt.Sprintf(format, a...)
-		output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.999"), s)
+		if !output.JSONOutput {
+			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
+		} else {
+			output.UserOut.Debugf(s)
+		}
 	}
 }
 
@@ -104,10 +112,14 @@ func ShowDots() chan bool {
 		for {
 			select {
 			case <-done:
-				_, _ = fmt.Fprintln(os.Stderr)
+				if !output.JSONOutput {
+					_, _ = fmt.Fprintln(os.Stderr)
+				}
 				return
 			default:
-				_, _ = fmt.Fprintf(os.Stderr, ".")
+				if !output.JSONOutput {
+					_, _ = fmt.Fprintf(os.Stderr, ".")
+				}
 				time.Sleep(1 * time.Second)
 			}
 		}
@@ -306,7 +318,7 @@ func DisableColors() {
 
 // ColorizeText colorizes text unless SimpleFormatting is turned on
 func ColorizeText(s string, c string) (out string) {
-	if globalconfig.DdevGlobalConfig.SimpleFormatting {
+	if globalconfig.DdevGlobalConfig.SimpleFormatting || output.JSONOutput {
 		text.DisableColors()
 	}
 	switch c {

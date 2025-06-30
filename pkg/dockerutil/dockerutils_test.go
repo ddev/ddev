@@ -2,7 +2,6 @@ package dockerutil_test
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,7 +23,6 @@ import (
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	"github.com/docker/go-connections/nat"
-	logOutput "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,8 +37,6 @@ func init() {
 func TestMain(m *testing.M) { os.Exit(testMain(m)) }
 
 func testMain(m *testing.M) int {
-	output.LogSetUp()
-
 	testcommon.ClearDockerEnv()
 
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
@@ -54,13 +50,13 @@ func testMain(m *testing.M) int {
 	// Prep Docker container for Docker util tests
 	imageExists, err := dockerutil.ImageExistsLocally(ddevImages.GetWebImage())
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", ddevImages.GetWebImage(), err)
+		output.UserErr.Errorf("Failed to check for local image %s: %v", ddevImages.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
 		err := dockerutil.Pull(ddevImages.GetWebImage())
 		if err != nil {
-			logOutput.Errorf("Failed to pull test image: %v", err)
+			output.UserErr.Errorf("Failed to pull test image: %v", err)
 			return 7
 		}
 	}
@@ -70,14 +66,14 @@ func testMain(m *testing.M) int {
 	if foundContainer != nil {
 		err = dockerutil.RemoveContainer(foundContainer.ID)
 		if err != nil {
-			logOutput.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
+			output.UserErr.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
 			return 5
 		}
 	}
 
 	containerID, err := startTestContainer()
 	if err != nil {
-		logOutput.Errorf("-- FAIL: dockerutils_test failed to start test container: %v", err)
+		output.UserErr.Errorf("-- FAIL: dockerutils_test failed to start test container: %v", err)
 		return 3
 	}
 	defer func() {
@@ -85,22 +81,22 @@ func testMain(m *testing.M) int {
 		if foundContainer != nil {
 			err = dockerutil.RemoveContainer(foundContainer.ID)
 			if err != nil {
-				logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+				output.UserErr.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 			}
 		}
 	}()
 
-	log.Printf("ContainerWait at %v", time.Now())
+	output.UserOut.Printf("ContainerWait at %v", time.Now())
 	out, err := dockerutil.ContainerWait(60, map[string]string{
 		"com.ddev.site-name":        testContainerName,
 		"com.docker.compose.oneoff": "False",
 	})
-	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
+	output.UserOut.Printf("ContainerWait returned at %v out='%s' err='%v'", time.Now(), out, err)
 
 	if err != nil {
 		logout, _ := exec.RunHostCommand("docker", "logs", containerID)
 		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", containerID))
-		log.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		output.UserErr.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()

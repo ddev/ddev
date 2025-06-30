@@ -28,7 +28,6 @@ import (
 	"github.com/docker/docker/pkg/homedir"
 	copy2 "github.com/otiai10/copy"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -193,7 +192,7 @@ func (site *TestSite) Cleanup() {
 func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
 	if err != nil {
-		log.Warn(fmt.Sprintf("Failed to remove directory %s, err: %v", dir, err))
+		output.UserErr.Warn(fmt.Sprintf("Failed to remove directory %s, err: %v", dir, err))
 	}
 }
 
@@ -218,7 +217,7 @@ func CreateTmpDir(prefix string) string {
 	_ = os.MkdirAll(baseTmpDir, 0755)
 	fullPath, err := os.MkdirTemp(baseTmpDir, prefix)
 	if err != nil {
-		log.Fatalf("Failed to create temp directory %s, err=%v", fullPath, err)
+		output.UserErr.Fatalf("Failed to create temp directory %s, err=%v", fullPath, err)
 	}
 	// Make the tmpdir fully writeable/readable, NFS problems
 	_ = util.Chmod(fullPath, 0777)
@@ -316,13 +315,13 @@ func Chdir(path string) func() {
 	curDir, _ := os.Getwd()
 	err := os.Chdir(path)
 	if err != nil {
-		log.Errorf("Could not change to directory %s: %v\n", path, err)
+		output.UserErr.Errorf("Could not change to directory %s: %v\n", path, err)
 	}
 
 	return func() {
 		err := os.Chdir(curDir)
 		if err != nil {
-			log.Errorf("Failed to change directory to original dir=%s, err=%v", curDir, err)
+			output.UserErr.Errorf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
 	}
 }
@@ -358,7 +357,7 @@ func ClearDockerEnv() {
 	for _, env := range envVars {
 		err := os.Unsetenv(env)
 		if err != nil {
-			log.Printf("failed to unset %s: %v\n", env, err)
+			output.UserErr.Warnf("failed to unset %s: %v\n", env, err)
 		}
 	}
 }
@@ -370,7 +369,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 
 	c, err := dockerutil.FindContainerByName(checkName)
 	if err != nil {
-		log.Fatal(err)
+		output.UserErr.Fatal(err)
 	}
 	if c == nil {
 		return false, errors.New("unable to find container " + checkName)

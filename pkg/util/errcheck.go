@@ -1,18 +1,17 @@
 package util
 
 import (
+	"github.com/ddev/ddev/pkg/output"
 	"io"
-
-	log "github.com/sirupsen/logrus"
 )
 
-// CheckErr exits with a log.Fatal() if an error is encountered.
+// CheckErr exits if an error is encountered.
 // It is normally used for errors that we never expect to happen,
 // and don't have any normal handling technique.
 // From https://davidnix.io/post/error-handling-in-go/
 func CheckErr(err error) {
 	if err != nil {
-		log.Panic("CheckErr(): ERROR:", err)
+		output.UserErr.Panic("CheckErr(): ERROR:", err)
 	}
 }
 
@@ -21,6 +20,6 @@ func CheckErr(err error) {
 func CheckClose(c io.Closer) {
 	err := c.Close()
 	if err != nil {
-		log.Println("Failed to close deferred io.Closer, err: ", err)
+		output.UserErr.Println("Failed to close deferred io.Closer, err: ", err)
 	}
 }

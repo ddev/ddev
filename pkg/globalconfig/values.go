@@ -26,10 +26,11 @@ var ValidOmitContainers = map[string]bool{
 var DdevNoInstrumentation = os.Getenv("DDEV_NO_INSTRUMENTATION") == "true"
 
 // DdevDebug is set to true if the env var is set
-var DdevDebug = (os.Getenv("DDEV_DEBUG") == "true")
+// If DdevVerbose is true, DdevDebug is true
+var DdevDebug = os.Getenv("DDEV_DEBUG") == "true" || DdevVerbose
 
 // DdevVerbose is set to true if the env var is set
-var DdevVerbose = (os.Getenv("DDEV_VERBOSE") == "true")
+var DdevVerbose = os.Getenv("DDEV_VERBOSE") == "true"
 
 var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELocationWSL2, ""}
 
