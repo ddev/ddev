@@ -67,7 +67,7 @@ jobs:
         with:
           limit-access-to-actor: true
       - name: Run linkspector to check external links
-        uses: umbrelladocs/action-linkspector@v1.2.5
+        uses: umbrelladocs/action-linkspector@v1.3.5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
