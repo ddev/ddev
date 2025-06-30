@@ -1,4 +1,4 @@
-package globalconfig //nolint:revive
+package globalconfig
 
 import (
 	"github.com/ddev/ddev/pkg/config/types"

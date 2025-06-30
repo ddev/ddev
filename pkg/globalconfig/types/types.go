@@ -1,4 +1,4 @@
-package types //nolint:revive
+package types
 
 import "github.com/ddev/ddev/pkg/nodeps"
 
