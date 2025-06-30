@@ -50,9 +50,7 @@ jobs:
       - name: Lint Go Files
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
-          # Check code only for the changed lines for PRs
-          only-new-issues: ${{ github.event_name == 'pull_request' && true || false }}
+          version: v2.2.1
           args: --config=.golangci.yml
 
   check_modules:
