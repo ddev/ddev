@@ -1,4 +1,4 @@
-package remoteconfig
+package remoteconfig //nolint:revive
 
 import (
 	"time"

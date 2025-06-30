@@ -1,4 +1,4 @@
-package types
+package types //nolint:revive
 
 // RawState is used to hold a weak type in-memory representation of the state.
 type RawState = map[string]any

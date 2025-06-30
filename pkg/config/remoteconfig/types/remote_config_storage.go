@@ -1,4 +1,4 @@
-package types
+package types //nolint:revive
 
 import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"

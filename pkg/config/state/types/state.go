@@ -1,4 +1,4 @@
-package types
+package types //nolint:revive
 
 type StateEntry = interface{}
 type StateEntryKey = string
