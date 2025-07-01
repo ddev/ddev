@@ -36,10 +36,10 @@ Usage examples:
 To set the `NO_COLOR` variable in all containers across all projects, define the `NO_COLOR` environment variable in your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`), outside of DDEV, for example:
 
 ```bash
-export NO_COLOR=true
+export NO_COLOR=1
 ```
 
-`NO_COLOR=true` can also be implicitly set using [`simple_formatting`](../configuration/config.md#simple_formatting) option.
+`NO_COLOR=1` can also be implicitly set using [`simple_formatting`](../configuration/config.md#simple_formatting) option.
 
 ## Using `PAGER` Inside Containers
 

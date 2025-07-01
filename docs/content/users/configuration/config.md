@@ -527,7 +527,7 @@ See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-o
 
 ## `simple_formatting`
 
-Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) table formatting and implicitly set `NO_COLOR=true`.
+Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) table formatting and implicitly set `NO_COLOR=1`.
 
 | Type | Default | Usage
 | -- | -- | --
