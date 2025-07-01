@@ -4729,6 +4729,45 @@ func TestEnvironmentVariables(t *testing.T) {
 	}
 }
 
+// TestNoColorInsideContainers ensures that the NO_COLOR environment variable,
+// when set on the host, is propagated into the container environment.
+func TestNoColorInsideContainers(t *testing.T) {
+	assert := asrt.New(t)
+
+	t.Setenv("NO_COLOR", "1")
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	assert.NoError(err)
+
+	err = os.Chdir(site.Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     `printenv NO_COLOR`,
+	})
+	assert.NoError(err)
+	assert.Equal("1", strings.TrimSpace(out))
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `printenv NO_COLOR`,
+	})
+	assert.NoError(err)
+	assert.Equal("1", strings.TrimSpace(out))
+}
+
 // TestEnvFile tests checks behavior of .ddev/.env files
 func TestEnvFile(t *testing.T) {
 	assert := asrt.New(t)

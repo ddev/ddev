@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"go.yaml.in/yaml/v3"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
@@ -183,6 +184,18 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 				}
 			}
 		}
+		// Pass NO_COLOR to containers
+		if !output.ColorsEnabled() {
+			if serviceMap["environment"] == nil {
+				serviceMap["environment"] = map[string]interface{}{}
+			}
+			if environmentMap, ok := serviceMap["environment"].(map[string]interface{}); ok {
+				if _, exists := environmentMap["NO_COLOR"]; !exists {
+					environmentMap["NO_COLOR"] = os.Getenv("NO_COLOR")
+				}
+			}
+		}
+
 		// Assign the host_ip for each port if it's not already set.
 		// This is needed for custom-defined user ports. For example:
 		// ports:

@@ -31,6 +31,16 @@ Usage examples:
     alias ll="ls -lhA"
     ```
 
+## Using `NO_COLOR` Inside Containers
+
+To set the `NO_COLOR` variable in all containers across all projects, define the `NO_COLOR` environment variable in your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`), outside of DDEV, for example:
+
+```bash
+export NO_COLOR=true
+```
+
+`NO_COLOR=true` can also be implicitly set using [`simple_formatting`](../configuration/config.md#simple_formatting) option.
+
 ## Using `PAGER` Inside Containers
 
 To set the `PAGER` variable in the `web` and `db` containers across all projects, define the `DDEV_PAGER` environment variable in your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`), outside of DDEV, for example:

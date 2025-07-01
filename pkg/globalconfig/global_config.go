@@ -100,7 +100,7 @@ func New() GlobalConfig {
 	return cfg
 }
 
-// Make sure the global configuration has been initialized
+// EnsureGlobalConfig Make sure the global configuration has been initialized
 func EnsureGlobalConfig() {
 	DdevGlobalConfig = New()
 	DdevProjectList = make(map[string]*ProjectInfo)
@@ -111,6 +111,11 @@ func EnsureGlobalConfig() {
 	err = ReadProjectList()
 	if err != nil {
 		output.UserErr.Fatalf("unable to read global projects list: %v", err)
+	}
+	// Using simple formatting means we don't use colors
+	if DdevGlobalConfig.SimpleFormatting {
+		_ = os.Setenv("NO_COLOR", "1")
+		output.DdevOutputFormatter.DisableColors = !output.ColorsEnabled()
 	}
 }
 
