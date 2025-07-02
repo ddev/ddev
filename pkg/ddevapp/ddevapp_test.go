@@ -3504,6 +3504,8 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
+	app.DockerEnv()
+
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
