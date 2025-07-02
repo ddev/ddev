@@ -1,10 +1,10 @@
 package ddevapp
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 
 	composeLoader "github.com/compose-spec/compose-go/v2/loader"
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
@@ -111,7 +111,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	project, err := composeLoader.LoadWithContext(
 		context.Background(),
 		cfg,
-		composeLoader.WithProfiles([]string{"*"}),
+		composeLoader.WithProfiles([]string{`*`}),
 	)
 
 	if err != nil {
@@ -168,7 +168,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 			filename := filepath.Base(envFile)
 			// Variables from .ddev/.env should be available in all containers,
 			// and variables from .ddev/.env.* should only be available in a specific container.
-			if filename == ".env" || filename == ".env."+service.Name {
+			if filename == ".env" || filename == ".env."+name {
 				envMap, _, err := ReadProjectEnvFile(envFile)
 				if err != nil && !os.IsNotExist(err) {
 					util.Failed("Unable to read %s file: %v", envFile, err)
@@ -178,10 +178,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 						service.Environment = map[string]*string{}
 					}
 					for envKey, envValue := range envMap {
-						// Escape $ characters in environment variables
-						// The same thing is done in `docker-compose config`
-						// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
-						val := strings.ReplaceAll(envValue, `$`, `$$`)
+						val := envValue
 						service.Environment[envKey] = &val
 					}
 				}
@@ -207,7 +204,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		// ports:
 		//   - 127.0.0.1:3000:3000
 		for port := range service.Ports {
-			if service.Ports[port].Published != "" && service.Ports[port].HostIP == "" {
+			if service.Ports[port].HostIP == "" {
 				service.Ports[port].HostIP = bindIP
 			}
 		}
@@ -218,10 +215,19 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	if err != nil {
 		return nil, err
 	}
+	yamlBytes = escapeDollarSign(yamlBytes)
 	var result map[string]interface{}
 	err = yaml.Unmarshal(yamlBytes, &result)
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
+}
+
+// escapeDollarSign the same thing is done in `docker-compose config`
+// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
+func escapeDollarSign(marshal []byte) []byte {
+	dollar := []byte{'$'}
+	escDollar := []byte{'$', '$'}
+	return bytes.ReplaceAll(marshal, dollar, escDollar)
 }
