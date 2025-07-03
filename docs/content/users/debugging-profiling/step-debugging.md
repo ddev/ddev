@@ -107,6 +107,13 @@ By default, DDEV is set up to contact the default port, port 9003 on your IDE. H
 !!!tip
     If you’re using a PHP version below 7.2, you’ll be using Xdebug version 2.x instead of 3.x and your port config should be `xdebug.remote_port` instead.
 
+## Composer
+Composer disables Xdebug even when Xdebug is enabled on DDEV, you may need to force its activation if you need to debug it.
+
+As per [Composer docs](https://getcomposer.org/doc/articles/troubleshooting.md#xdebug-impact-on-composer) you can set `COMPOSER_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every Composer call to be run with Xdebug when the PHP extension is enabled.
+
+Be aware that composer moves some classes to temporary files (ex: plugins) at runtime so IDE breakpoints will not be always triggered, you'll have to add `xdebug_break()` to your code.
+
 ## Troubleshooting Xdebug
 
 The basic thing to understand about Xdebug is that it’s a network protocol. Your IDE (like PhpStorm) will listen on the Xdebug port (port 9003). If Xdebug is enabled in the DDEV web container (`ddev xdebug on`), PHP inside that container will try to open a TCP connection to the IDE. Docker’s networking places the host-side listening IDE at `host.docker.internal:9003`, so you have to make sure the network connection is clear and can be made and everything should work. Firewalls may get in the way.
