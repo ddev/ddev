@@ -10,3 +10,6 @@ updates:
     # Check for updates once a week
     schedule:
       interval: "weekly"
+    # Don't respond to updates right away
+    cooldown:
+      - default-days: 30
