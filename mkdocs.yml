@@ -150,7 +150,7 @@ markdown_extensions:
 - smarty
 
 nav:
-  - "Start!":
+  - 'Start!':
     - index.md
     - 'Installing':
       - users/install/index.md
@@ -217,17 +217,19 @@ nav:
       - 'Platform.sh': users/providers/platform.md
       - 'Upsun': users/providers/upsun.md
   - 'Development':
-      - developers/index.md
-      - developers/building-contributing.md
-      - developers/buildkite-testmachine-setup.md
-      - developers/github-selfhosted-setup.md
-      - developers/project-types.md
-      - developers/quickstart-maintenance.md
-      - developers/release-management.md
-      - developers/brand-guide.md
-      - developers/testing-docs.md
-      - developers/writing-style-guide.md
-      - developers/remote-config.md
-      - developers/maintainers.md
-      - developers/network-test-environments.md
-      - developers/secret-management.md
+    - developers/index.md
+    - developers/building-contributing.md
+    - developers/buildkite-testmachine-setup.md
+    - developers/github-selfhosted-setup.md
+    - developers/project-types.md
+    - developers/quickstart-maintenance.md
+    - developers/release-management.md
+    - developers/brand-guide.md
+    - developers/testing-docs.md
+    - developers/writing-style-guide.md
+    - developers/remote-config.md
+    - developers/maintainers.md
+    - developers/network-test-environments.md
+    - developers/secret-management.md
+  - 'Blog': https://ddev.com
+  - 'Add-on Registry': https://addons.ddev.com
