@@ -308,7 +308,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev config global --use-letsencrypt' or 'ddev config global --use-letsencrypt=false'")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("use-letsencrypt", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, 'ddev config global --letsencrypt-email=me@example.com'")
-	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
+	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting for tables and implicitly set 'NO_COLOR=1'")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("simple-formatting", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("use-hardened-images", configCompletionFunc([]string{"true", "false"}))

@@ -387,7 +387,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--router-bind-all-interfaces`: Bind host router ports on all interfaces, not only on the localhost network interface.
 * `--router-http-port`: The default router HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_http_port)).
 * `--router-https-port`: The default router HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_https_port)).
-* `--simple-formatting`: If `true`, use simple formatting and no color for tables.
+* `--simple-formatting`: If `true`, use simple formatting for tables and implicitly set `NO_COLOR=1`.
 * `--table-style`: Table style for `ddev list` and `ddev describe`, possible values are `default`, `bold`, `bright` (see [default](../configuration/config.md#table_style)).
 * `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999` (see [default](../configuration/config.md#traefik_monitor_port)).
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.

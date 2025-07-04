@@ -312,13 +312,9 @@ func IsBeforeCutoffTime(cutoff string) bool {
 	return false
 }
 
-func DisableColors() {
-	text.DisableColors()
-}
-
 // ColorizeText colorizes text unless SimpleFormatting is turned on
 func ColorizeText(s string, c string) (out string) {
-	if globalconfig.DdevGlobalConfig.SimpleFormatting || output.JSONOutput {
+	if !output.ColorsEnabled() || output.JSONOutput {
 		text.DisableColors()
 	}
 	switch c {

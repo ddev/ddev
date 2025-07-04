@@ -44,7 +44,7 @@ var (
 	}()
 	// DdevOutputFormatter is the specialized formatter for UserOut
 	DdevOutputFormatter = &TextFormatter{
-		// TODO: add DisableColors handler in a different PR
+		DisableColors:    !ColorsEnabled(),
 		DisableTimestamp: true,
 	}
 	// DdevOutputJSONFormatter is the specialized JSON formatter for UserOut
@@ -103,4 +103,10 @@ func ParseBoolFlag(long string, short string) bool {
 		}
 	}
 	return false
+}
+
+// ColorsEnabled returns true if colored output is enabled
+// Implementation from https://no-color.org/
+func ColorsEnabled() bool {
+	return os.Getenv("NO_COLOR") == "" || os.Getenv("NO_COLOR") == "0"
 }
