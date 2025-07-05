@@ -751,17 +751,6 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
     
-    ; Hold the DDEV package to prevent automatic upgrades
-    DetailPrint "WSL($SELECTED_DISTRO): Holding DDEV package to prevent upgrades..."
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-mark hold ddev'
-    Pop $1
-    Pop $2
-    ${If} $1 != 0
-        DetailPrint "WARNING: Failed to hold DDEV package - exit code: $1, output: $2"
-        ; This is a warning, not fatal, so we don't abort
-    ${Else}
-        DetailPrint "Successfully held DDEV package to prevent automatic upgrades"
-    ${EndIf}
 
     ; Add the unprivileged user to the docker group for docker-ce installation
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
