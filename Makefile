@@ -136,6 +136,10 @@ testnotddevapp: $(DEFAULT_BUILD) setup
 testfullsitesetup: $(DEFAULT_BUILD) setup
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
 
+testwininstaller: windows_amd64_install
+	@echo "Running Windows installer tests..."
+	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 30m -v ./winpkg -run TestWindowsInstaller $(TESTARGS)
+
 setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
