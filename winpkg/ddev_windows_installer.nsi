@@ -1024,19 +1024,86 @@ Function SetupMkcertInWSL2
         MessageBox MB_ICONEXCLAMATION|MB_OK "Failed to access CAROOT environment variable in WSL2. Certificate sharing may not work properly."
     ${EndIf}
     
-    ; Run mkcert -install in WSL2
-    DetailPrint "Running mkcert -install in WSL2..."
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root mkcert -install'
+    ; Get the default username
+    DetailPrint "Getting default username..."
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO whoami'
+    Pop $R2
+    Pop $R3
+    ${If} $R2 = 0
+        Push $R3
+        Call TrimNewline
+        Pop $R3
+        DetailPrint "Default username: $R3"
+    ${Else}
+        DetailPrint "Failed to get username: $R3"
+        MessageBox MB_ICONSTOP|MB_OK "Critical error: Failed to get default username. Installation cannot continue."
+        Abort
+    ${EndIf}
+    
+    ; Create temporary passwordless sudo for the user during mkcert installation
+    DetailPrint "Creating temporary passwordless sudo for mkcert installation..."
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "echo \"$R3 ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/temp-mkcert-install"'
+    Pop $R4
+    Pop $R5
+    ${If} $R4 != 0
+        DetailPrint "Failed to create temporary sudoers entry: $R5"
+        MessageBox MB_ICONSTOP|MB_OK "Critical error: Failed to create temporary sudoers entry. Installation cannot continue. Error: $R5"
+        Abort
+    ${EndIf}
+
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo $$CAROOT"'
+    Pop $R8
+    Pop $R9
+    DetailPrint "CAROOT value: $R9"
+    MessageBox MB_ICONINFORMATION|MB_OK "CAROOT value: $R9"
+
+    ; Get Windows CAROOT from registry and convert to WSL path
+    ReadRegStr $R12 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+    DetailPrint "Windows CAROOT from registry: $R12"
+    
+    ; Convert Windows path to WSL path manually (C:\Users\... -> /mnt/c/Users/...)
+    Push $R12
+    Push "C:\"
+    Push "/mnt/c/"
+    Call StrRep
+    Pop $R13
+    
+    Push $R13
+    Push "\"
+    Push "/"
+    Call StrRep
+    Pop $R14
+    DetailPrint "WSL CAROOT path: $R14"
+    
+    ; Run mkcert -install with explicit CAROOT
+    DetailPrint "Running mkcert -install with CAROOT=$R14..."
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "CAROOT=\"$R14\" mkcert -install"'
     Pop $R0
     Pop $R1
+
+    ; Always print the return code and output for debugging
+    DetailPrint "mkcert -install return code: $R0"
+    DetailPrint "mkcert -install output: $R1"
+
+    MessageBox MB_ICONSTOP|MB_OK "mkcert -install result in WSL2. Return code: $R0 Output: $R1"
+    
+    ; Remove temporary passwordless sudo
+    ;DetailPrint "Removing temporary passwordless sudo..."
+    ;nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root rm -f /etc/sudoers.d/temp-mkcert-install'
+    ;Pop $R6
+    ;Pop $R7
+    ;${If} $R6 != 0
+    ;    DetailPrint "Warning: Failed to remove temporary sudoers entry: $R7"
+    ;${Else}
+    ;    DetailPrint "Temporary sudoers entry removed successfully"
+    ;${EndIf}
     
     ${If} $R0 = 0
         DetailPrint "mkcert -install completed successfully in WSL2."
-        DetailPrint "WSL2 mkcert output: $R1"
     ${Else}
         DetailPrint "mkcert -install failed in WSL2 with exit code: $R0"
-        DetailPrint "WSL2 mkcert error: $R1"
-        MessageBox MB_ICONEXCLAMATION|MB_OK "mkcert -install failed in WSL2 with exit code: $R0. Error: $R1. You may need to run 'mkcert -install' manually in WSL2 later."
+        MessageBox MB_ICONSTOP|MB_OK "mkcert -install failed in WSL2.$\r$\nReturn code: $R0$\r$\nOutput: $R1$\r$\nCAROOT: $R9"
+        Abort
     ${EndIf}
 
 FunctionEnd
