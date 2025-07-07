@@ -16,7 +16,7 @@ var DebugMessageConditionsCmd = &cobra.Command{
 		conditions := remoteconfig.ListConditions()
 
 		t := table.NewWriter()
-		styles.SetGlobalTableStyle(t)
+		styles.SetGlobalTableStyle(t, false)
 
 		t.AppendHeader(table.Row{"Condition", "Description"})
 

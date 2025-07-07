@@ -59,14 +59,14 @@ ddev add-on list --installed --project my-project
 	},
 }
 
-// ListInstalledAddons() show the add-ons that have a manifest file
+// ListInstalledAddons show the add-ons that have a manifest file
 func ListInstalledAddons(app *ddevapp.DdevApp) {
 	manifests := ddevapp.GetInstalledAddons(app)
 
 	var out bytes.Buffer
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
-	styles.SetGlobalTableStyle(t)
+	styles.SetGlobalTableStyle(t, false)
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
 		t.SetColumnConfigs([]table.ColumnConfig{
@@ -104,7 +104,7 @@ func renderRepositoryList(repos []*github.Repository) string {
 
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
-	styles.SetGlobalTableStyle(t)
+	styles.SetGlobalTableStyle(t, false)
 	//tWidth, _ := nodeps.GetTerminalWidthHeight()
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
