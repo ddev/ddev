@@ -11,7 +11,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/maruel/natural"
-	"github.com/pkg/errors"
 )
 
 // appTypeFuncs prototypes
@@ -485,7 +484,7 @@ func (app *DdevApp) PostStartAction() error {
 // dispatchImportFilesAction executes the relevant import files workflow for each app type.
 func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extractPath string) error {
 	if strings.TrimSpace(uploadDir) == "" {
-		return errors.Errorf("upload_dirs is not set for this project (%s)", app.Type)
+		return fmt.Errorf("upload_dirs is not set for this project (%s)", app.Type)
 	}
 
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok {
