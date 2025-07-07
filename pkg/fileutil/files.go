@@ -573,15 +573,16 @@ func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {
 	return expanded, nil
 }
 
-// ShortHomeJoin returns the same result as filepath.Join() path with $HOME/ replaced by ~/
-func ShortHomeJoin(elem ...string) string {
-	userHome, err := os.UserHomeDir()
+// RenderHomeRootedDir shortens a directory name to replace homedir with ~
+func RenderHomeRootedDir(path ...string) string {
+	home, err := os.UserHomeDir()
 	if err != nil {
-		output.UserErr.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
+		util.Failed("Could not get home directory for current user. Is it set? err=%v", err)
 	}
-	fullPath := filepath.Join(elem...)
-	if strings.HasPrefix(fullPath, userHome) {
-		return strings.Replace(fullPath, userHome, "~", 1)
+	homeSlash := filepath.ToSlash(home)
+	joined := filepath.ToSlash(filepath.Join(path...))
+	if strings.HasPrefix(joined, homeSlash) {
+		return "~" + joined[len(homeSlash):]
 	}
-	return fullPath
+	return joined
 }

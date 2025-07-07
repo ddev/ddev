@@ -165,7 +165,7 @@ func TestCmdDescribe(t *testing.T) {
 		require.EqualValues(t, "running", raw["status"])
 		require.EqualValues(t, "running", raw["status_desc"])
 		require.EqualValues(t, v.Name, raw["name"])
-		require.Equal(t, ddevapp.RenderHomeRootedDir(v.Dir), raw["shortroot"].(string))
+		require.Equal(t, fileutil.RenderHomeRootedDir(v.Dir), raw["shortroot"].(string))
 		require.EqualValues(t, v.Dir, raw["approot"].(string))
 
 		// exposed and host ports
@@ -302,7 +302,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		require.EqualValues(t, ddevapp.SiteRunning, desc["status"])
 		require.EqualValues(t, ddevapp.SiteRunning, desc["status_desc"])
 		require.EqualValues(t, app.GetName(), desc["name"])
-		require.EqualValues(t, ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		require.EqualValues(t, fileutil.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
 		require.EqualValues(t, v.Dir, desc["approot"].(string))
 		require.Equal(t, app.GetHTTPURL(), desc["httpurl"])
 		require.Equal(t, app.GetName(), desc["name"])
@@ -335,13 +335,13 @@ func TestCmdDescribeAppUsingSitename(t *testing.T) {
 		assert.EqualValues(ddevapp.SiteRunning, desc["status"])
 		assert.EqualValues(ddevapp.SiteRunning, desc["status_desc"])
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		assert.EqualValues(fileutil.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
 		assert.EqualValues(v.Dir, desc["approot"].(string))
 
 		out, _ := json.Marshal(desc)
 		assert.NoError(err)
 		assert.Contains(string(out), "running")
-		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(v.Dir))
+		assert.Contains(string(out), fileutil.RenderHomeRootedDir(v.Dir))
 	}
 }
 

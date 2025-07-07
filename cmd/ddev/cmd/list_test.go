@@ -11,6 +11,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -65,7 +66,7 @@ func TestCmdList(t *testing.T) {
 		}
 		assert.Contains(string(out), testURL)
 		assert.Contains(string(out), app.GetType())
-		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(app.GetAppRoot()))
+		assert.Contains(string(out), fileutil.RenderHomeRootedDir(app.GetAppRoot()))
 
 		// Look through list results in json for this site.
 		found := false
@@ -79,7 +80,7 @@ func TestCmdList(t *testing.T) {
 				assert.Equal(app.GetHTTPSURL(), item["httpsurl"])
 				assert.Equal(app.Name, item["name"])
 				assert.Equal(app.GetType(), item["type"])
-				assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), item["shortroot"])
+				assert.EqualValues(fileutil.RenderHomeRootedDir(app.GetAppRoot()), item["shortroot"])
 				assert.EqualValues(app.GetAppRoot(), item["approot"])
 				break
 			}

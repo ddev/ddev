@@ -330,7 +330,7 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")
 	configGlobalCommand.Flags().String("project-tld", nodeps.DdevDefaultTLD, "Set the default top-level domain to be used for all projects, can be overridden by project configuration")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("project-tld", configCompletionFunc([]string{nodeps.DdevDefaultTLD}))
-	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", false, fmt.Sprintf("If true, use docker-compose from path instead of private %s (used only in development testing)", fileutil.ShortHomeJoin(globalconfig.GetDDEVBinDir(), "docker-compose")))
+	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", false, fmt.Sprintf("If true, use docker-compose from path instead of private %s (used only in development testing)", fileutil.RenderHomeRootedDir(globalconfig.GetDDEVBinDir(), "docker-compose")))
 	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", false, "If true, don't use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("no-bind-mounts", configCompletionFunc([]string{"true", "false"}))

@@ -59,15 +59,6 @@ func GetActiveProjects() []*DdevApp {
 	return apps
 }
 
-// RenderHomeRootedDir shortens a directory name to replace homedir with ~
-func RenderHomeRootedDir(path string) string {
-	userDir, err := os.UserHomeDir()
-	util.CheckErr(err)
-	result := strings.Replace(path, userDir, "~", 1)
-	result = strings.ReplaceAll(result, "\\", "/")
-	return result
-}
-
 // RenderAppRow will add an application row to an existing table for describe and list output.
 func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	status := fmt.Sprint(row["status_desc"])
