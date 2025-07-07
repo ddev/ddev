@@ -1692,14 +1692,15 @@ func (app *DdevApp) AppTypePrompt() error {
 		defaultAppType = detectedAppType
 	}
 
-	fmt.Printf(typePrompt, validAppTypes, defaultAppType)
-	appType := strings.ToLower(util.GetInput(defaultAppType))
+	appType := ""
 
-	for !IsValidAppType(appType) {
-		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
-
-		fmt.Printf(typePrompt, validAppTypes, appType)
-		return fmt.Errorf("invalid project type")
+	for {
+		fmt.Printf(typePrompt, validAppTypes, defaultAppType)
+		appType = strings.ToLower(util.GetInput(defaultAppType))
+		if IsValidAppType(appType) {
+			break
+		}
+		util.Warning("'%s' is not a valid project type.\n", appType)
 	}
 
 	app.Type = appType

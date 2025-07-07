@@ -733,7 +733,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		if err != nil {
 			if isArchive && extPathPrompt {
 				output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-				fmt.Print("Archive extraction path:")
+				fmt.Print("Archive extraction path: ")
 
 				extractPath = util.GetQuotedInput("")
 			} else {

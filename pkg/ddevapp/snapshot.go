@@ -281,7 +281,9 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 				break
 			}
 			time.Sleep(1 * time.Second)
-			fmt.Print(".")
+			if !output.JSONOutput {
+				fmt.Print(".")
+			}
 		}
 	}
 	app.DefaultContainerTimeout = origTimeout

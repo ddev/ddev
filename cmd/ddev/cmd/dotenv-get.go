@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -80,7 +81,7 @@ ddev dotenv get .ddev/.env.redis --redis-tag`,
 		if val, exists := envMap[envName]; exists {
 			// Show a raw, unescaped value without double quotes.
 			// See https://stackoverflow.com/questions/50054666/golang-not-escape-a-string-variable
-			fmt.Println(strings.Trim(fmt.Sprintf("%#v", val), `"`))
+			output.UserOut.Printf(strings.Trim(fmt.Sprintf("%#v", val), `"`))
 		} else {
 			util.Failed("The environment variable '%s' not found in %s", envName, envFile)
 		}
