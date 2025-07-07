@@ -215,7 +215,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)
 	}
 
-	shortRoot := fileutil.RenderHomeRootedDir(app.GetAppRoot())
+	shortRoot := fileutil.ShortHomeJoin(app.GetAppRoot())
 	appDesc := make(map[string]interface{})
 	status, statusDesc := app.SiteStatus()
 

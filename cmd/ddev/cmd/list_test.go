@@ -66,7 +66,7 @@ func TestCmdList(t *testing.T) {
 		}
 		assert.Contains(string(out), testURL)
 		assert.Contains(string(out), app.GetType())
-		assert.Contains(string(out), fileutil.RenderHomeRootedDir(app.GetAppRoot()))
+		assert.Contains(string(out), fileutil.ShortHomeJoin(app.GetAppRoot()))
 
 		// Look through list results in json for this site.
 		found := false
@@ -80,7 +80,7 @@ func TestCmdList(t *testing.T) {
 				assert.Equal(app.GetHTTPSURL(), item["httpsurl"])
 				assert.Equal(app.Name, item["name"])
 				assert.Equal(app.GetType(), item["type"])
-				assert.EqualValues(fileutil.RenderHomeRootedDir(app.GetAppRoot()), item["shortroot"])
+				assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), item["shortroot"])
 				assert.EqualValues(app.GetAppRoot(), item["approot"])
 				break
 			}

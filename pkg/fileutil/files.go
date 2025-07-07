@@ -573,8 +573,8 @@ func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {
 	return expanded, nil
 }
 
-// RenderHomeRootedDir shortens a directory name to replace homedir with ~
-func RenderHomeRootedDir(path ...string) string {
+// ShortHomeJoin returns the same result as filepath.Join() path with $HOME/ replaced by ~/
+func ShortHomeJoin(path ...string) string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		util.Failed("Could not get home directory for current user. Is it set? err=%v", err)
