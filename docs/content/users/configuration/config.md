@@ -86,6 +86,9 @@ The relative path, from the project root, to the directory containing `composer.
 | -- | -- | --
 | :octicons-file-directory-16: project | &zwnj; | &zwnj;
 
+!!!tip "Using `vendor/bin/composer`"
+    See the example in [Composer from `vendor/bin/composer`](../usage/developer-tools.md#composer-from-vendorbincomposer).
+
 ## `composer_version`
 
 Composer version for the web container and the [`ddev composer`](../usage/commands.md#composer) command.
@@ -93,9 +96,6 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
-
-!!!tip "Using `vendor/bin/composer`"
-    See the example in [Composer from `vendor/bin/composer`](../usage/developer-tools.md#composer-from-vendorbincomposer).
 
 ## `corepack_enable`
 
