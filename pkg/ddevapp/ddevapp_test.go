@@ -3202,7 +3202,7 @@ func TestDdevDescribe(t *testing.T) {
 	assert.NoError(err)
 	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 	assert.EqualValues(app.GetName(), desc["name"])
-	assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
+	assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), desc["shortroot"])
 	assert.EqualValues(app.GetAppRoot(), desc["approot"])
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
 
