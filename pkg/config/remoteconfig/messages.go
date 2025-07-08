@@ -266,7 +266,7 @@ const (
 )
 
 func applyTableStyle(preset preset, writer table.Writer) {
-	styles.SetGlobalTableStyle(writer)
+	styles.SetGlobalTableStyle(writer, true)
 
 	termWidth, _ := nodeps.GetTerminalWidthHeight()
 	util.Debug("termWidth: %d", termWidth)

@@ -69,7 +69,7 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 	var out bytes.Buffer
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
-	styles.SetGlobalTableStyle(t)
+	styles.SetGlobalTableStyle(t, false)
 
 	if len(apps) > 1 {
 		columns = append(columns, "Project")

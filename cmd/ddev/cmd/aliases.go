@@ -21,9 +21,7 @@ var AliasesCmd = &cobra.Command{
 		var out bytes.Buffer
 		t := table.NewWriter()
 		t.SetOutputMirror(&out)
-
-		// Use simple output
-		t.SetStyle(styles.GetTableStyle("default"))
+		styles.SetGlobalTableStyle(t, false)
 
 		// Append table header
 		t.AppendHeader(table.Row{"Command", "Aliases"})

@@ -147,7 +147,7 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 			},
 		})
 	}
-	styles.SetGlobalTableStyle(t)
+	styles.SetGlobalTableStyle(t, false)
 	t.SetOutputMirror(out)
 	return t
 }

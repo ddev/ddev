@@ -67,7 +67,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
-	styles.SetGlobalTableStyle(t)
+	styles.SetGlobalTableStyle(t, false)
 	tWidth, _ := nodeps.GetTerminalWidthHeight()
 	urlPortWidth := float64(35)
 	infoWidth := 30
