@@ -126,6 +126,14 @@ func init() {
 	// This flag represents the output.JSONOutput variable, and parsed very early in pkg/output/output_setup.go
 	RootCmd.PersistentFlags().BoolP("json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
+
+	// Override Cobra version template for JSON output
+	if output.JSONOutput {
+		userOutFunc := util.CaptureUserOut()
+		output.UserOut.WithField("raw", map[string]string{"version": RootCmd.Version}).Printf("%s version %s", RootCmd.DisplayName(), RootCmd.Version)
+		RootCmd.SetVersionTemplate(userOutFunc())
+	}
+
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
