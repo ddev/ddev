@@ -756,9 +756,10 @@ To run your command in a different service container, run `ddev exec --service <
 
 Flags:
 
-* `--dir`, `-d`: Defines the execution directory within the container.
+* `--dir`, `-d`: Define the execution directory within the container.
 * `--raw`: Use raw exec (do not interpret with Bash inside container). (default `true`)
-* `--service`, `-s`: Defines the service to connect to. (e.g. `web`, `db`) (default `"web"`)
+* `--service`, `-s`: Define the service to connect to. (e.g. `web`, `db`) (default `"web"`)
+* `--quiet`, `-q`: Suppress detailed error message.
 
 Example:
 
@@ -771,6 +772,10 @@ ddev exec --dir /var/www/html/vendor ls
 
 # Output a long, recursive list of the files in the web container
 ddev exec --raw -- ls -lR
+
+# Suppress detailed error message: 
+# "Failed to execute command `exit 1`: exit status 1"
+ddev exec -q "exit 1"
 ```
 
 ## `export-db`

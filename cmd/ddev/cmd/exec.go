@@ -69,8 +69,12 @@ ddev exec --raw -- ls -lR`,
 		_, _, err = app.Exec(opts)
 		quiet, _ := cmd.Flags().GetBool("quiet")
 
-		if err != nil && !quiet {
-			util.Failed("Failed to execute command `%s`: %v", opts.Cmd, err)
+		if err != nil {
+			if !quiet {
+				util.Failed("Failed to execute command `%s`: %v", opts.Cmd, err)
+			} else {
+				os.Exit(1)
+			}
 		}
 	},
 }
@@ -99,11 +103,11 @@ func quoteArgs(args []string) string {
 }
 
 func init() {
-	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Define the service to connect to. [e.g. web, db]")
 	_ = DdevExecCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(true))
-	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Defines the execution directory within the container")
+	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Define the execution directory within the container")
 	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with Bash inside container)")
-	DdevExecCmd.Flags().BoolP("quiet", "q", false, "Disables DDEV default error output")
+	DdevExecCmd.Flags().BoolP("quiet", "q", false, "Suppress detailed error output")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)
