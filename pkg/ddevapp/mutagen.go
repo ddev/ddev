@@ -25,7 +25,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/pkg/errors"
 )
 
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
@@ -465,7 +464,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	}
 	syncName := MutagenSyncName(app.Name)
 	if !MutagenSyncExists(app) {
-		return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
+		return fmt.Errorf("mutagen sync session '%s' does not exist", syncName)
 	}
 	if status, shortResult, session, err := app.MutagenStatus(); err == nil {
 		util.Verbose("Mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
@@ -539,7 +538,7 @@ func DownloadMutagen() error {
 
 	err = os.MkdirAll(globalMutagenDir, 0777)
 	if err != nil {
-		return errors.Errorf("Unable to create directory %s: %v", globalMutagenDir, err)
+		return fmt.Errorf("unable to create directory %s: %v", globalMutagenDir, err)
 	}
 	err = util.DownloadFile(destFile, mutagenURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumFileURL)
 	if err != nil {
@@ -617,7 +616,7 @@ func MutagenReset(app *DdevApp) error {
 		err := app.Stop(false, false)
 		if err != nil {
 			util.Warning("Failed to stop project '%s': %v", app.Name, err)
-			return errors.Errorf("Failed to stop project %s: %v", app.Name, err)
+			return fmt.Errorf("failed to stop project %s: %v", app.Name, err)
 		}
 		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 		if err != nil {

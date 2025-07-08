@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"io/fs"
 	"os"
@@ -411,7 +410,7 @@ func RemoveContents(dir string) error {
 func RemoveFilesMatchingGlob(pattern string) error {
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
-		return errors.Errorf("Error finding files matching %s: %v", pattern, err)
+		return fmt.Errorf("error finding files matching %s: %v", pattern, err)
 	}
 
 	// If no matches, just return (e.g., directory might not exist)
@@ -421,7 +420,7 @@ func RemoveFilesMatchingGlob(pattern string) error {
 
 	for _, match := range matches {
 		if err := os.Remove(match); err != nil {
-			return errors.Errorf("Unable to remove file %s: %v", match, err)
+			return fmt.Errorf("unable to remove file %s: %v", match, err)
 		}
 	}
 
