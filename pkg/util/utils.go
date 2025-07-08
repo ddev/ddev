@@ -263,7 +263,7 @@ func FindBashPath() string {
 		// This one could come back with the WSL Bash, in which case we may have some trouble.
 		windowsBashPath, err = osexec.LookPath("bash.exe")
 		if err != nil {
-			fmt.Println("Not loading custom commands; Bash is not in PATH")
+			Warning("Not loading custom commands; Bash is not in PATH")
 			return ""
 		}
 	}

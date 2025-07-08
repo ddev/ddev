@@ -387,36 +387,22 @@ func (app *DdevApp) WarnIfConfigReplace() {
 // PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
 func (app *DdevApp) PromptForConfig() error {
 	app.WarnIfConfigReplace()
-
-	for {
-		err := app.promptForName()
-
-		if err == nil {
-			break
-		}
-
-		output.UserOut.Printf("%v", err)
-	}
-
-	if err := app.docrootPrompt(); err != nil {
+	var err error
+	if err = app.projectNamePrompt(); err != nil {
 		return err
 	}
-
-	err := app.AppTypePrompt()
-	if err != nil {
+	if err = app.docrootPrompt(); err != nil {
 		return err
 	}
-
-	err = app.ConfigFileOverrideAction(false)
-	if err != nil {
+	if err = app.AppTypePrompt(); err != nil {
 		return err
 	}
-
-	err = app.ValidateConfig()
-	if err != nil {
+	if err = app.ConfigFileOverrideAction(false); err != nil {
 		return err
 	}
-
+	if err = app.ValidateConfig(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1568,8 +1554,8 @@ func HasAllowedLocation(app *DdevApp) error {
 	return nil
 }
 
-// Prompt for a project name.
-func (app *DdevApp) promptForName() error {
+// projectNamePrompt Prompt for a project name.
+func (app *DdevApp) projectNamePrompt() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
 		if err == nil && hostRegex.MatchString(NormalizeProjectName(filepath.Base(dir))) {
@@ -1577,15 +1563,19 @@ func (app *DdevApp) promptForName() error {
 		}
 	}
 
-	name := util.Prompt("Project name", app.Name)
-	if err := ValidateProjectName(name); err != nil {
-		return err
+	for {
+		name := util.Prompt("Project name", app.Name)
+		if err := ValidateProjectName(name); err != nil {
+			output.UserOut.Printf(util.ColorizeText(err.Error(), "yellow"))
+		} else {
+			app.Name = name
+			break
+		}
 	}
-	app.Name = name
 
 	err := app.CheckExistingAppInApproot()
 	if err != nil {
-		util.Failed(err.Error())
+		return err
 	}
 
 	return nil
@@ -1643,7 +1633,7 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	return defaultDocroot
 }
 
-// Determine the document root.
+// docrootPrompt Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
 	// Determine the document root.
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s\n", app.AppRoot)
@@ -1657,12 +1647,17 @@ func (app *DdevApp) docrootPrompt() error {
 		docrootPrompt = fmt.Sprintf("%s (project root)", docrootPrompt)
 	}
 
-	fmt.Print(docrootPrompt + ": ")
-	app.Docroot = util.GetQuotedInput(defaultDocroot)
+	for {
+		fmt.Print(docrootPrompt + ": ")
+		app.Docroot = util.GetQuotedInput(defaultDocroot)
 
-	// Ensure that the docroot exists
-	if err := app.CreateDocroot(); err != nil {
-		return fmt.Errorf("unable to create docroot at '%s': %v", app.GetAbsDocroot(false), err)
+		// Ensure that the docroot exists
+		if err := app.CreateDocroot(); err != nil {
+			output.UserOut.Printf(util.ColorizeText(err.Error(), "yellow"))
+		} else {
+			output.UserOut.Println()
+			break
+		}
 	}
 
 	return nil
@@ -1692,14 +1687,15 @@ func (app *DdevApp) AppTypePrompt() error {
 		defaultAppType = detectedAppType
 	}
 
-	fmt.Printf(typePrompt, validAppTypes, defaultAppType)
-	appType := strings.ToLower(util.GetInput(defaultAppType))
+	appType := ""
 
-	for !IsValidAppType(appType) {
-		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
-
-		fmt.Printf(typePrompt, validAppTypes, appType)
-		return fmt.Errorf("invalid project type")
+	for {
+		fmt.Printf(typePrompt, validAppTypes, defaultAppType)
+		appType = strings.ToLower(util.GetInput(defaultAppType))
+		if IsValidAppType(appType) {
+			break
+		}
+		output.UserOut.Printf(util.ColorizeText(fmt.Sprintf("'%s' is not a valid project type", appType), "yellow"))
 	}
 
 	app.Type = appType

@@ -41,7 +41,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	if runtime.GOOS == "windows" {
 		windowsBashPath := util.FindBashPath()
 		if windowsBashPath == "" {
-			fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
+			util.Warning("Unable to find bash.exe in PATH, not loading custom commands")
 			return nil
 		}
 	}

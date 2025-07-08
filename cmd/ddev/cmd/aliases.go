@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
@@ -38,15 +38,15 @@ var AliasesCmd = &cobra.Command{
 		sort.Strings(sortedCommands)
 
 		// Append rows to the table in sorted order
+		rawOutput := make(map[string][]string, len(sortedCommands))
 		for _, cmdPath := range sortedCommands {
-			t.AppendRows([]table.Row{
-				{cmdPath, strings.Join(commandAliases[cmdPath], ", ")},
-			})
+			t.AppendRow(table.Row{cmdPath, strings.Join(commandAliases[cmdPath], ", ")})
+			rawOutput[cmdPath] = commandAliases[cmdPath]
 		}
 
 		// Render the table
 		t.Render()
-		fmt.Println(out.String())
+		output.UserOut.WithField("raw", rawOutput).Println(out.String())
 	},
 }
 
