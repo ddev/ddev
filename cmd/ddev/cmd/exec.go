@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -80,7 +79,7 @@ ddev exec --raw -- ls -lR`,
 				exitCode = exiterr.ExitCode()
 			}
 			if !quiet {
-				output.UserErr.Errorf(util.ColorizeText(fmt.Sprintf("Failed to execute command `%s`: %v", opts.Cmd, err), "red"))
+				util.Error("Failed to execute command `%s`: %v", opts.Cmd, err)
 			}
 			output.UserErr.Exit(exitCode)
 		}
