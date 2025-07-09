@@ -35,6 +35,7 @@ Var /GLOBAL SELECTED_DISTRO
 Var /GLOBAL SILENT_INSTALL_TYPE
 Var /GLOBAL SILENT_DISTRO
 Var /GLOBAL WINDOWS_CAROOT
+Var /GLOBAL DEBUG_LOG_HANDLE
 Var StartMenuGroup
 
 !define REG_INSTDIR_ROOT "HKLM"
@@ -60,6 +61,34 @@ InstType "Minimal"
 
 ; Function declarations - must be before page definitions
 
+; InitializeDebugLog - Open debug log file for writing
+Function InitializeDebugLog
+    FileOpen $DEBUG_LOG_HANDLE "$TEMP\ddev_installer_debug.log" w
+    ${If} $DEBUG_LOG_HANDLE != ""
+        FileWrite $DEBUG_LOG_HANDLE "=== DDEV Installer Debug Log ===$\r$\n"
+        FileWrite $DEBUG_LOG_HANDLE "Log location: $TEMP\ddev_installer_debug.log$\r$\n"
+        FileWrite $DEBUG_LOG_HANDLE "Installer started at: $\r$\n"
+    ${EndIf}
+FunctionEnd
+
+; LogPrint - DetailPrint wrapper that also writes to debug log
+; Usage: Push "message" ; Call LogPrint
+Function LogPrint
+    Exch $R0  ; Get message from stack
+    Push $R1
+    
+    ; Always do DetailPrint
+    DetailPrint "$R0"
+    
+    ; Write to log file if handle is open
+    ${If} $DEBUG_LOG_HANDLE != ""
+        FileWrite $DEBUG_LOG_HANDLE "$R0$\r$\n"
+    ${EndIf}
+    
+    Pop $R1
+    Pop $R0
+FunctionEnd
+
 ; InstallScriptToDistro - Copy a script from Windows temp to WSL2 distro and make it executable
 ; Usage: 
 ;   Push "distro_name"     ; WSL2 distro name
@@ -70,7 +99,8 @@ Function InstallScriptToDistro
     Pop $R0  ; Get script name from stack
     Pop $R1  ; Get distro name from stack
     
-    DetailPrint "Installing script $R0 to WSL2 distro $R1..."
+    Push "Installing script $R0 to WSL2 distro $R1..."
+    Call LogPrint
     
     ; Copy script from Windows temp to WSL2 /tmp
     nsExec::ExecToStack 'wsl -d $R1 -u root cp "/mnt/c/Windows/Temp/ddev_installer/$R0" /tmp/'
@@ -78,7 +108,8 @@ Function InstallScriptToDistro
     Pop $R3  ; Output
     
     ${If} $R2 != 0
-        DetailPrint "Failed to copy script $R0 to distro $R1: $R3"
+        Push "Failed to copy script $R0 to distro $R1: $R3"
+        Call LogPrint
         Push $R2
         Return
     ${EndIf}
@@ -89,54 +120,67 @@ Function InstallScriptToDistro
     Pop $R3  ; Output
     
     ${If} $R2 != 0
-        DetailPrint "Failed to make script $R0 executable in distro $R1: $R3"
+        Push "Failed to make script $R0 executable in distro $R1: $R3"
+        Call LogPrint
         Push $R2
         Return
     ${EndIf}
     
-    DetailPrint "Successfully installed script $R0 to /tmp/$R0 in distro $R1"
+    Push "Successfully installed script $R0 to /tmp/$R0 in distro $R1"
+    Call LogPrint
     Push 0  ; Success
 FunctionEnd
 
 Function DistroSelectionPage
-    DetailPrint "Starting DistroSelectionPage..."
+    Push "Starting DistroSelectionPage..."
+    Call LogPrint
     ${If} $INSTALL_OPTION != "wsl2-docker-ce"
     ${AndIf} $INSTALL_OPTION != "wsl2-docker-desktop"
-        DetailPrint "Skipping distro selection for non-WSL2 install"
+        Push "Skipping distro selection for non-WSL2 install"
+        Call LogPrint
         Abort
     ${EndIf}
 
     ; Skip this page if distro was specified via command line
     ${If} $SILENT_DISTRO != ""
-        DetailPrint "Skipping distro selection - using command line distro: $SILENT_DISTRO"
+        Push "Skipping distro selection - using command line distro: $SILENT_DISTRO"
+        Call LogPrint
         StrCpy $SELECTED_DISTRO $SILENT_DISTRO
         Abort
     ${EndIf}
 
-    DetailPrint "Creating dialog..."
+    Push "Creating dialog..."
+    Call LogPrint
     nsDialogs::Create 1018
     Pop $0
-    DetailPrint "Dialog create result: $0"
+    Push "Dialog create result: $0"
+    Call LogPrint
     ${If} $0 == error
-        DetailPrint "Failed to create dialog"
+        Push "Failed to create dialog"
+        Call LogPrint
         Abort
     ${EndIf}
 
     ; Get Ubuntu distros before creating any controls
     Call GetUbuntuDistros
     Pop $R0
-    DetailPrint "Got distros: [$R0]"
+    Push "Got distros: [$R0]"
+    Call LogPrint
     ${If} $R0 == ""
-        DetailPrint "ERROR: No Ubuntu-based WSL2 distributions found"
+        Push "ERROR: No Ubuntu-based WSL2 distributions found"
+        Call LogPrint
+        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $TEMP\ddev_installer_debug.log$\n$\nYou can check this file to see what distributions were detected."
         Push "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first."
         Call ShowErrorAndAbort
     ${EndIf}
 
-    DetailPrint "Creating label..."
+    Push "Creating label..."
+    Call LogPrint
     ${NSD_CreateLabel} 0 0 100% 24u "Select your Ubuntu-based WSL2 distribution:"
     Pop $1
 
-    DetailPrint "Creating radio buttons..."
+    Push "Creating radio buttons..."
+    Call LogPrint
 
     ; Process the pipe-separated list and create radio buttons
     StrCpy $R1 $R0    ; Working copy of the list
@@ -159,7 +203,8 @@ Function DistroSelectionPage
         ; Extract the item
         ${If} $R5 > 0
             StrCpy $R7 $R1 $R5    ; Extract item
-            DetailPrint "Adding radio button: [$R7]"
+            Push "Adding radio button: [$R7]"
+            Call LogPrint
             
             ; Calculate Y position for radio button
             IntOp $R8 $R3 * 24
@@ -197,53 +242,62 @@ Function DistroSelectionPage
         ${EndIf}
     ${Loop}
 
-    DetailPrint "Added $R2 radio buttons"
+    Push "Added $R2 radio buttons"
+    Call LogPrint
 
-    DetailPrint "About to show dialog..."
+    Push "About to show dialog..."
+    Call LogPrint
     nsDialogs::Show
 FunctionEnd
 
 Function DistroSelectionPageLeave
-    DetailPrint "Getting selected distro..."
+    Push "Getting selected distro..."
+    Call LogPrint
     
     ; Check which radio button is selected and get its text
     ${NSD_GetState} $2 $R0
     ${If} $R0 == ${BST_CHECKED}
         ${NSD_GetText} $2 $SELECTED_DISTRO
-        DetailPrint "Selected distro: $SELECTED_DISTRO"
+        Push "Selected distro: $SELECTED_DISTRO"
+        Call LogPrint
         Return
     ${EndIf}
     
     ${NSD_GetState} $3 $R0
     ${If} $R0 == ${BST_CHECKED}
         ${NSD_GetText} $3 $SELECTED_DISTRO
-        DetailPrint "Selected distro: $SELECTED_DISTRO"
+        Push "Selected distro: $SELECTED_DISTRO"
+        Call LogPrint
         Return
     ${EndIf}
     
     ${NSD_GetState} $4 $R0
     ${If} $R0 == ${BST_CHECKED}
         ${NSD_GetText} $4 $SELECTED_DISTRO
-        DetailPrint "Selected distro: $SELECTED_DISTRO"
+        Push "Selected distro: $SELECTED_DISTRO"
+        Call LogPrint
         Return
     ${EndIf}
     
     ${NSD_GetState} $5 $R0
     ${If} $R0 == ${BST_CHECKED}
         ${NSD_GetText} $5 $SELECTED_DISTRO
-        DetailPrint "Selected distro: $SELECTED_DISTRO"
+        Push "Selected distro: $SELECTED_DISTRO"
+        Call LogPrint
         Return
     ${EndIf}
     
     ${NSD_GetState} $6 $R0
     ${If} $R0 == ${BST_CHECKED}
         ${NSD_GetText} $6 $SELECTED_DISTRO
-        DetailPrint "Selected distro: $SELECTED_DISTRO"
+        Push "Selected distro: $SELECTED_DISTRO"
+        Call LogPrint
         Return
     ${EndIf}
     
     ; Fallback - should not happen if we have proper radio button logic
-    DetailPrint "No distro selected - using first available"
+    Push "No distro selected - using first available"
+    Call LogPrint
     ${NSD_GetText} $2 $SELECTED_DISTRO
 FunctionEnd
 
@@ -343,34 +397,41 @@ Function InstallChoicePageLeave
 FunctionEnd
 
 Function GitCheckPage
-    DetailPrint "Starting GitCheckPage..."
+    Push "Starting GitCheckPage..."
+    Call LogPrint
     ; Skip this page if not traditional Windows installation
     ${If} $INSTALL_OPTION != "traditional"
-        DetailPrint "Skipping Git check for non-traditional install: $INSTALL_OPTION"
+        Push "Skipping Git check for non-traditional install: $INSTALL_OPTION"
+        Call LogPrint
         Abort
     ${EndIf}
 
     ; Skip this page if install type was specified via command line
     ${If} $SILENT_INSTALL_TYPE != ""
-        DetailPrint "Skipping Git check page for command line install"
+        Push "Skipping Git check page for command line install"
+        Call LogPrint
         Abort
     ${EndIf}
 
     ; Check for Git for Windows
-    DetailPrint "Checking for Git for Windows before proceeding..."
+    Push "Checking for Git for Windows before proceeding..."
+    Call LogPrint
     Call CheckGitForWindows
     Pop $R0
     ${If} $R0 == "1"
-        DetailPrint "Git for Windows found, proceeding with installation"
+        Push "Git for Windows found, proceeding with installation"
+        Call LogPrint
         Abort ; Skip this page since Git is already installed
     ${EndIf}
 
     ; Git not found - show page to inform user
-    DetailPrint "Git for Windows not found, showing information page"
+    Push "Git for Windows not found, showing information page"
+    Call LogPrint
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
-        DetailPrint "Failed to create Git check dialog"
+        Push "Failed to create Git check dialog"
+        Call LogPrint
         Abort
     ${EndIf}
 
@@ -394,60 +455,73 @@ Function GitCheckPageLeave
     Call CheckGitForWindows
     Pop $R0
     ${If} $R0 == "1"
-        DetailPrint "Git for Windows now detected, continuing installation"
+        Push "Git for Windows now detected, continuing installation"
+        Call LogPrint
         Return
     ${EndIf}
     
     ; If we get here, Git is still not found but user somehow left the page
     ; This shouldn't normally happen with our button handlers
-    DetailPrint "Leaving Git check page without Git installed"
+    Push "Leaving Git check page without Git installed"
+    Call LogPrint
 FunctionEnd
 
 Function GitInstallButtonClick
-    DetailPrint "User clicked Install Git for Windows button"
+    Push "User clicked Install Git for Windows button"
+    Call LogPrint
     ExecShell "open" "https://gitforwindows.org/"
     MessageBox MB_ICONINFORMATION|MB_OK "Git for Windows download page opened in your browser.$\n$\nPlease download and install Git for Windows, then restart this installer.$\n$\nThe installer will now exit."
-    DetailPrint "Exiting installer so user can install Git for Windows"
+    Push "Exiting installer so user can install Git for Windows"
+    Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
 FunctionEnd
 
 Function GitCancelButtonClick
-    DetailPrint "User clicked Cancel Installation button"
+    Push "User clicked Cancel Installation button"
+    Call LogPrint
     MessageBox MB_ICONINFORMATION|MB_OK "Installation cancelled.$\n$\nGit for Windows is required for traditional Windows installation.$\n$\nThe installer will now exit."
-    DetailPrint "Exiting installer - user cancelled Git installation"
+    Push "Exiting installer - user cancelled Git installation"
+    Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
 FunctionEnd
 
 Function CheckDockerProvider
-    DetailPrint "Checking for Docker provider..."
+    Push "Checking for Docker provider..."
+    Call LogPrint
     
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Check if Docker is accessible in WSL2
-        DetailPrint "Checking Docker Desktop connectivity in WSL2..."
+        Push "Checking Docker Desktop connectivity in WSL2..."
+        Call LogPrint
         nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO docker ps'
         Pop $R0
         Pop $R1
         ${If} $R0 == 0
-            DetailPrint "Docker provider found in WSL2: $R1"
+            Push "Docker provider found in WSL2: $R1"
+            Call LogPrint
             Push "1"
             Return
         ${Else}
-            DetailPrint "Docker provider not accessible in WSL2: $R1"
+            Push "Docker provider not accessible in WSL2: $R1"
+            Call LogPrint
             Push "0"
             Return
         ${EndIf}
     ${Else}
         ; Check if Docker is accessible on Windows (traditional or WSL2 Docker CE setup)
-        DetailPrint "Checking Docker provider on Windows..."
+        Push "Checking Docker provider on Windows..."
+        Call LogPrint
         nsExec::ExecToStack 'docker ps'
         Pop $R0
         Pop $R1
         ${If} $R0 == 0
-            DetailPrint "Docker provider found on Windows: $R1"
+            Push "Docker provider found on Windows: $R1"
+            Call LogPrint
             Push "1"
             Return
         ${Else}
-            DetailPrint "Docker provider not accessible on Windows: $R1"
+            Push "Docker provider not accessible on Windows: $R1"
+            Call LogPrint
             Push "0"
             Return
         ${EndIf}
@@ -455,35 +529,42 @@ Function CheckDockerProvider
 FunctionEnd
 
 Function DockerCheckPage
-    DetailPrint "Starting DockerCheckPage..."
+    Push "Starting DockerCheckPage..."
+    Call LogPrint
     
     ; Skip this page for wsl2-docker-ce since Docker CE will be installed during the process
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-        DetailPrint "Skipping Docker check for wsl2-docker-ce install (Docker CE will be installed)"
+        Push "Skipping Docker check for wsl2-docker-ce install (Docker CE will be installed)"
+        Call LogPrint
         Abort
     ${EndIf}
     
     ; Skip this page if install type was specified via command line
     ${If} $SILENT_INSTALL_TYPE != ""
-        DetailPrint "Skipping Docker check page for command line install"
+        Push "Skipping Docker check page for command line install"
+        Call LogPrint
         Abort
     ${EndIf}
 
     ; Check for Docker provider
-    DetailPrint "Checking for Docker provider before proceeding..."
+    Push "Checking for Docker provider before proceeding..."
+    Call LogPrint
     Call CheckDockerProvider
     Pop $R0
     ${If} $R0 == "1"
-        DetailPrint "Docker provider found, proceeding with installation"
+        Push "Docker provider found, proceeding with installation"
+        Call LogPrint
         Abort ; Skip this page since Docker is already working
     ${EndIf}
 
     ; Docker not found - show page to inform user
-    DetailPrint "Docker provider not found, showing information page"
+    Push "Docker provider not found, showing information page"
+    Call LogPrint
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
-        DetailPrint "Failed to create Docker check dialog"
+        Push "Failed to create Docker check dialog"
+        Call LogPrint
         Abort
     ${EndIf}
 
@@ -514,16 +595,19 @@ Function DockerCheckPageLeave
     Call CheckDockerProvider
     Pop $R0
     ${If} $R0 == "1"
-        DetailPrint "Docker provider now detected, continuing installation"
+        Push "Docker provider now detected, continuing installation"
+        Call LogPrint
         Return
     ${EndIf}
     
     ; If we get here, Docker is still not found but user somehow left the page
-    DetailPrint "Leaving Docker check page without Docker provider"
+    Push "Leaving Docker check page without Docker provider"
+    Call LogPrint
 FunctionEnd
 
 Function DockerExitButtonClick
-    DetailPrint "User clicked Exit to Install Docker button"
+    Push "User clicked Exit to Install Docker button"
+    Call LogPrint
     ${If} $INSTALL_OPTION == "traditional"
         MessageBox MB_ICONINFORMATION|MB_OK "Please install Docker Desktop or Rancher Desktop, ensure it's running, then restart this installer.$\n$\nThe installer will now exit."
     ${ElseIf} $INSTALL_OPTION == "wsl2-docker-desktop"
@@ -531,14 +615,17 @@ Function DockerExitButtonClick
     ${Else}
         MessageBox MB_ICONINFORMATION|MB_OK "Please install and configure a Docker provider, then restart this installer.$\n$\nThe installer will now exit."
     ${EndIf}
-    DetailPrint "Exiting installer so user can install/configure Docker"
+    Push "Exiting installer so user can install/configure Docker"
+    Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
 FunctionEnd
 
 Function DockerCancelButtonClick
-    DetailPrint "User clicked Cancel Installation button"
+    Push "User clicked Cancel Installation button"
+    Call LogPrint
     MessageBox MB_ICONINFORMATION|MB_OK "Installation cancelled.$\n$\nA Docker provider is required for DDEV installation.$\n$\nThe installer will now exit."
-    DetailPrint "Exiting installer - user cancelled Docker installation"
+    Push "Exiting installer - user cancelled Docker installation"
+    Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
 FunctionEnd
 
@@ -586,16 +673,20 @@ SectionGroup /e "${PRODUCT_NAME}"
         Call RunMkcertInstall
 
         ; Add DDEV installation directory to PATH (EnVar::AddValue handles duplicates)
-        DetailPrint "Adding DDEV installation directory to system PATH..."
+        Push "Adding DDEV installation directory to system PATH..."
+        Call LogPrint
         ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
-        DetailPrint "PATH before addition: $R0"
+        Push "PATH before addition: $R0"
+        Call LogPrint
         
         EnVar::SetHKLM
         EnVar::AddValue "Path" "$INSTDIR"
         Pop $R1
-        DetailPrint "EnVar::AddValue result: $R1"
+        Push "EnVar::AddValue result: $R1"
+        Call LogPrint
         
-        DetailPrint "PATH addition completed with result: $R1"
+        Push "PATH addition completed with result: $R1"
+        Call LogPrint
 
         ${If} $INSTALL_OPTION == "traditional"
             Call InstallTraditionalWindows
@@ -686,19 +777,24 @@ Section Uninstall
 SectionEnd
 
 Function GetUbuntuDistros
-    DetailPrint "Starting GetUbuntuDistros..."
     StrCpy $R0 ""  ; Result string
 
-    DetailPrint "Checking registry key..."
+    Push "=== Starting GetUbuntuDistros ==="
+    Call LogPrint
+
+    Push "Checking registry key HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss..."
+    Call LogPrint
     SetRegView 64
     ClearErrors
     EnumRegKey $R1 HKCU "Software\Microsoft\Windows\CurrentVersion\Lxss" 0
     ${If} ${Errors}
-        DetailPrint "Error accessing Lxss registry key"
+        Push "ERROR: Cannot access Lxss registry key - WSL may not be installed"
+        Call LogPrint
         Push ""
         Return
     ${EndIf}
-    DetailPrint "Registry key exists and is accessible"
+    Push "Registry key exists and is accessible"
+    Call LogPrint
 
     ; Count total number of keys first
     StrCpy $R1 0   ; Index for enumeration
@@ -714,7 +810,8 @@ Function GetUbuntuDistros
         IntOp $R1 $R1 + 1
         Goto count_loop
     count_done:
-    DetailPrint "Found $R5 total WSL distributions"
+    Push "Found $R5 total WSL distributions"
+    Call LogPrint
 
     ; Now enumerate and check each key
     StrCpy $R1 0   ; Reset index
@@ -722,213 +819,284 @@ Function GetUbuntuDistros
         ClearErrors
         EnumRegKey $R2 HKCU "Software\Microsoft\Windows\CurrentVersion\Lxss" $R1
         ${If} ${Errors}
-            DetailPrint "Error enumerating key at index $R1"
+            Push "Error enumerating key at index $R1"
+            Call LogPrint
             Goto next_key
         ${EndIf}
 
         ClearErrors
         ReadRegStr $R3 HKCU "Software\Microsoft\Windows\CurrentVersion\Lxss\$R2" "DistributionName"
         ${If} ${Errors}
-            DetailPrint "Error reading DistributionName for key $R2"
+            Push "Error reading DistributionName for key $R2"
+            Call LogPrint
             Goto next_key
         ${EndIf}
+        Push "Found distribution: $R3"
+        Call LogPrint
 
-        ; Check if it starts with "Ubuntu"
-        StrCpy $R4 $R3 6
-        ${If} $R4 == "Ubuntu"
-            DetailPrint "Found Ubuntu distribution: $R3"
-            ${If} $R0 != ""
-                StrCpy $R0 "$R0|"
+        ; Check if Flavor is "ubuntu"
+        ClearErrors
+        ReadRegStr $R4 HKCU "Software\Microsoft\Windows\CurrentVersion\Lxss\$R2" "Flavor"
+        ${If} ${Errors}
+            Push "No Flavor field found for $R3 - falling back to name check"
+            Call LogPrint
+            ; No Flavor field - fall back to name check for backward compatibility
+            StrCpy $R4 $R3 6
+            Push "First 6 chars of '$R3': '$R4'"
+            Call LogPrint
+            ${If} $R4 == "Ubuntu"
+                Push "Found Ubuntu distribution (name-based): $R3"
+                Call LogPrint
+                ${If} $R0 != ""
+                    StrCpy $R0 "$R0|"
+                ${EndIf}
+                StrCpy $R0 "$R0$R3"
+            ${Else}
+                Push "Distribution '$R3' does not start with 'Ubuntu' (starts with '$R4')"
+                Call LogPrint
             ${EndIf}
-            StrCpy $R0 "$R0$R3"
+        ${Else}
+            Push "Found Flavor field for $R3: '$R4'"
+            Call LogPrint
+            ; Check if Flavor is "ubuntu" (case-insensitive)
+            ${StrStr} $R6 $R4 "ubuntu"
+            ${If} $R6 != ""
+                Push "Found Ubuntu distribution (Flavor-based): $R3"
+                Call LogPrint
+                ${If} $R0 != ""
+                    StrCpy $R0 "$R0|"
+                ${EndIf}
+                StrCpy $R0 "$R0$R3"
+            ${Else}
+                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu'"
+                Call LogPrint
+            ${EndIf}
         ${EndIf}
 
         next_key:
         IntOp $R1 $R1 + 1
     ${EndWhile}
 
-    DetailPrint "Registry enumeration complete. Final list: [$R0]"
+    Push "Registry enumeration complete. Final list: [$R0]"
+    Call LogPrint
     Push $R0
 FunctionEnd
 
 ; TODO: there seem to be missing error checks here.
 Function InstallWSL2CommonSetup
     ; Check for WSL2
-    DetailPrint "Checking WSL2 version..."
+    Push "Checking WSL2 version..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl.exe -l -v'
     Pop $1
     Pop $0
-    DetailPrint "WSL version check output: $0"
-    DetailPrint "WSL version check exit code: $1"
+    Push "WSL version check output: $0"
+    Call LogPrint
+    Push "WSL version check exit code: $1"
+    Call LogPrint
     ${If} $1 != 0
-        DetailPrint "ERROR: WSL2 not detected - exit code: $1, output: $0"
+        Push "ERROR: WSL2 not detected - exit code: $1, output: $0"
+        Call LogPrint
         Push "WSL2 does not seem to be installed. Please install WSL2 and Ubuntu before running this installer."
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Check for Ubuntu in selected distro
-    DetailPrint "Checking selected distro $SELECTED_DISTRO..."
+    Push "Checking selected distro $SELECTED_DISTRO..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "cat /etc/os-release | grep -i ^NAME="'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Cannot access distro $SELECTED_DISTRO - exit code: $1, output: $0"
+        Push "ERROR: Cannot access distro $SELECTED_DISTRO - exit code: $1, output: $0"
+        Call LogPrint
         Push "Could not access the selected distro. Please ensure it's working properly."
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Check for WSL2 kernel
-    DetailPrint "Checking WSL2 kernel..."
+    Push "Checking WSL2 kernel..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO uname -v'
     Pop $1
     Pop $0
-    DetailPrint "WSL kernel version: $0"
+    Push "WSL kernel version: $0"
+    Call LogPrint
     ${If} $1 != 0
-        DetailPrint "ERROR: WSL version check failed - exit code: $1, output: $0"
+        Push "ERROR: WSL version check failed - exit code: $1, output: $0"
+        Call LogPrint
         Push "Could not check WSL version. Please ensure WSL is working."
         Call ShowErrorAndAbort
     ${EndIf}
     ${If} $0 == ""
-        DetailPrint "ERROR: Empty WSL version output"
+        Push "ERROR: Empty WSL version output"
+        Call LogPrint
         Push "Could not detect WSL version. Please ensure WSL is working."
         Call ShowErrorAndAbort
     ${EndIf}
     ${If} $0 == "WSL"
-        DetailPrint "ERROR: WSL1 detected instead of WSL2 - version output: $0"
+        Push "ERROR: WSL1 detected instead of WSL2 - version output: $0"
+        Call LogPrint
         Push "The selected distro ($SELECTED_DISTRO) is not WSL2. Please use a WSL2 distro."
         Call ShowErrorAndAbort
     ${EndIf}
-    DetailPrint "WSL2 detected successfully."
+    Push "WSL2 detected successfully."
+    Call LogPrint
 
     ; Check for non-root default user
-    DetailPrint "Checking for non-root user..."
+    Push "Checking for non-root user..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO whoami'
     Pop $1  ; error code
     Pop $0  ; output
-    DetailPrint "Current user: $0"
+    Push "Current user: $0"
+    Call LogPrint
     ${If} $1 != 0
-        DetailPrint "ERROR: WSL user check failed - exit code: $1, output: $0"
+        Push "ERROR: WSL user check failed - exit code: $1, output: $0"
+        Call LogPrint
         Push "Could not check WSL user. Please ensure WSL is working."
         Call ShowErrorAndAbort
     ${EndIf}
     ${If} $0 == "root"
-        DetailPrint "ERROR: Default WSL user is root - this is not supported"
+        Push "ERROR: Default WSL user is root - this is not supported"
+        Call LogPrint
         Push "The default user in your WSL2 distro is root. Please configure an ordinary default user."
         Call ShowErrorAndAbort
     ${EndIf}
-    DetailPrint "Non-root user detected successfully."
+    Push "Non-root user detected successfully."
+    Call LogPrint
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
-        DetailPrint "Verifying Docker installation type..."
+        Push "Verifying Docker installation type..."
+        Call LogPrint
         nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO pgrep dockerd'
         Pop $1
         Pop $0
         ${If} $1 == 0
-            DetailPrint "ERROR: Local Docker daemon detected in WSL2 - conflicts with Docker Desktop. Process list: $0"
+            Push "ERROR: Local Docker daemon detected in WSL2 - conflicts with Docker Desktop. Process list: $0"
+            Call LogPrint
             Push "A local Docker daemon (from docker-ce or docker.io) is running in WSL2. This conflicts with Docker Desktop. Please remove Docker first ('sudo apt-get remove docker-ce' or 'sudo apt-get remove docker.io')."
             Call ShowErrorAndAbort
         ${EndIf}
     ${EndIf}
 
     ; Remove old Docker versions first
-    DetailPrint "WSL($SELECTED_DISTRO): Removing old Docker packages if present..."
+    Push "WSL($SELECTED_DISTRO): Removing old Docker packages if present..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
     Pop $1
     Pop $0
     ; Note: This command is allowed to fail if packages aren't installed
 
     ; apt-get upgrade
-    DetailPrint "WSL($SELECTED_DISTRO): Doing apt-get upgrade..."
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update && apt-get upgrade -y >/dev/null 2>&1"'
+    Push "WSL($SELECTED_DISTRO): Doing apt-get upgrade..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1"'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: apt-get update/upgrade failed - exit code: $1, output: $0"
-        Push "Failed to update/upgrade packages. Error: $0"
+        Push "ERROR: apt-get update failed - exit code: $1, output: $0"
+        Call LogPrint
+        Push "Failed to apt-get update. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Install linux packages
-    DetailPrint "WSL($SELECTED_DISTRO): Installing required linux packages..."
+    Push "WSL($SELECTED_DISTRO): Installing required linux packages..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to install dependencies - exit code: $1, output: $0"
-        Push "Failed to install dependencies. Error: $0"
+        Push "ERROR: Failed to apt-get install - exit code: $1, output: $0"
+        Call LogPrint
+        Push "Failed to apt-get install. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Create keyrings directory if it doesn't exist
-    DetailPrint "WSL($SELECTED_DISTRO): Setting up keyrings directory..."
+    Push "WSL($SELECTED_DISTRO): Setting up keyrings directory..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root install -m 0755 -d /etc/apt/keyrings'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to create keyrings directory - exit code: $1, output: $0"
+        Push "ERROR: Failed to create keyrings directory - exit code: $1, output: $0"
+        Call LogPrint
         Push "Failed to create keyrings directory. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Add Docker GPG key
-    DetailPrint "WSL($SELECTED_DISTRO): Adding Docker repository key..."
+    Push "WSL($SELECTED_DISTRO): Adding Docker repository key..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to add Docker repository key - exit code: $1, output: $0"
+        Push "ERROR: Failed to add Docker repository key - exit code: $1, output: $0"
+        Call LogPrint
         Push "Failed to add Docker apt repository key. Please check your internet connection. Exit code: $1, Output: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Add Docker repository
-    DetailPrint "WSL($SELECTED_DISTRO): Adding Docker apt repository..."
+    Push "WSL($SELECTED_DISTRO): Adding Docker apt repository..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to add Docker repository - exit code: $1, output: $0"
+        Push "ERROR: Failed to add Docker repository - exit code: $1, output: $0"
+        Call LogPrint
         Push "Failed to add Docker repository. Exit code: $1, Output: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Add DDEV GPG key
-    DetailPrint "WSL($SELECTED_DISTRO): Adding DDEV apt repository key..."
+    Push "WSL($SELECTED_DISTRO): Adding DDEV apt repository key..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to add DDEV repository key - exit code: $1, output: $0"
+        Push "ERROR: Failed to add DDEV repository key - exit code: $1, output: $0"
+        Call LogPrint
         Push "Failed to add DDEV repository key. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Add DDEV repository
-    DetailPrint "WSL($SELECTED_DISTRO): Adding DDEV apt repository..."
+    Push "WSL($SELECTED_DISTRO): Adding DDEV apt repository..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root -e bash -c "echo \"deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *\" > /etc/apt/sources.list.d/ddev.list"'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to add DDEV repository - exit code: $1, output: $0"
+        Push "ERROR: Failed to add DDEV repository - exit code: $1, output: $0"
+        Call LogPrint
         Push "Failed to add DDEV repository. Exit code: $1, Output: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Update package lists
-    DetailPrint "WSL($SELECTED_DISTRO): apt-get update..."
+    Push "WSL($SELECTED_DISTRO): apt-get update..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: apt-get update failed - exit code: $1, output: $0"
+        Push "ERROR: apt-get update failed - exit code: $1, output: $0"
+        Call LogPrint
         Push "Failed to apt-get update. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
 FunctionEnd
 
 Function InstallWSL2Common
-    DetailPrint "Starting WSL2 Docker installation for $SELECTED_DISTRO"
+    Push "Starting WSL2 Docker installation for $SELECTED_DISTRO"
+    Call LogPrint
     Call InstallWSL2CommonSetup
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
@@ -940,23 +1108,27 @@ Function InstallWSL2Common
     ${EndIf}
 
     ; Install the selected packages
-    DetailPrint "WSL($SELECTED_DISTRO): apt-get install $0."
+    Push "WSL($SELECTED_DISTRO): apt-get install $0."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
     Pop $1
     Pop $2
     ${If} $1 != 0
-        DetailPrint "ERROR: Package installation failed - exit code: $1, output: $2"
-        Push "Failed to install packages. Error: $2"
+        Push "ERROR: apt-get install failed $0 - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to apt-get install. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
 
     ; Overwrite the installed DDEV binary with the bundled version
-    DetailPrint "WSL($SELECTED_DISTRO): Overwriting DDEV binary with bundled version..."
+    Push "WSL($SELECTED_DISTRO): Overwriting DDEV binary with bundled version..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "/mnt/c/Windows/Temp/ddev_installer/ddev_linux" /usr/bin/ddev'
     Pop $1
     Pop $2
     ${If} $1 != 0
-        DetailPrint "ERROR: DDEV binary overwrite failed - exit code: $1, output: $2"
+        Push "ERROR: DDEV binary overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
         Push "Failed to overwrite DDEV binary. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
@@ -966,18 +1138,21 @@ Function InstallWSL2Common
     Pop $1
     Pop $2
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to make DDEV binary executable - exit code: $1, output: $2"
+        Push "ERROR: Failed to make DDEV binary executable - exit code: $1, output: $2"
+        Call LogPrint
         Push "Failed to make DDEV binary executable. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
     
     ; Overwrite the installed ddev-hostname binary with the bundled version
-    DetailPrint "WSL($SELECTED_DISTRO): Overwriting ddev-hostname binary with bundled version..."
+    Push "WSL($SELECTED_DISTRO): Overwriting ddev-hostname binary with bundled version..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "/mnt/c/Windows/Temp/ddev_installer/ddev-hostname_linux" /usr/bin/ddev-hostname'
     Pop $1
     Pop $2
     ${If} $1 != 0
-        DetailPrint "ERROR: ddev-hostname binary overwrite failed - exit code: $1, output: $2"
+        Push "ERROR: ddev-hostname binary overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
         Push "Failed to overwrite ddev-hostname binary. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
@@ -987,7 +1162,8 @@ Function InstallWSL2Common
     Pop $1
     Pop $2
     ${If} $1 != 0
-        DetailPrint "ERROR: Failed to make ddev-hostname binary executable - exit code: $1, output: $2"
+        Push "ERROR: Failed to make ddev-hostname binary executable - exit code: $1, output: $2"
+        Call LogPrint
         Push "Failed to make ddev-hostname binary executable. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
@@ -995,12 +1171,14 @@ Function InstallWSL2Common
 
     ; Add the unprivileged user to the docker group for docker-ce installation
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-        DetailPrint "WSL($SELECTED_DISTRO): Getting username of unprivileged user..."
+        Push "WSL($SELECTED_DISTRO): Getting username of unprivileged user..."
+        Call LogPrint
         nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO whoami'
         Pop $1
         Pop $2
         ${If} $1 != 0
-            DetailPrint "ERROR: Failed to get WSL2 username - exit code: $1, output: $2"
+            Push "ERROR: Failed to get WSL2 username - exit code: $1, output: $2"
+            Call LogPrint
             Push "Failed to get WSL2 username. Error: $2"
             Call ShowErrorAndAbort
         ${EndIf}
@@ -1010,25 +1188,30 @@ Function InstallWSL2Common
         Call TrimNewline
         Pop $2
         
-        DetailPrint "WSL($SELECTED_DISTRO): Adding user '$2' to docker group..."
+        Push "WSL($SELECTED_DISTRO): Adding user '$2' to docker group..."
+        Call LogPrint
         nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root usermod -aG docker $2'
         Pop $1
         Pop $3
         ${If} $1 != 0
-            DetailPrint "Warning: Failed to add user to docker group. Error: $3"
+            Push "Warning: Failed to add user to docker group. Error: $3"
+            Call LogPrint
             MessageBox MB_ICONEXCLAMATION|MB_OK "Warning: Failed to add user '$2' to docker group. You may need to run 'sudo usermod -aG docker $2' manually in WSL2."
         ${Else}
-            DetailPrint "Successfully added user '$2' to docker group."
+            Push "Successfully added user '$2' to docker group."
+            Call LogPrint
         ${EndIf}
     ${EndIf}
 
     ; Show DDEV version
-    DetailPrint "Verifying DDEV installation with 'ddev version'..."
+    Push "Verifying DDEV installation with 'ddev version'..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO ddev version'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: DDEV version check failed - exit code: $1, output: $0"
+        Push "ERROR: DDEV version check failed - exit code: $1, output: $0"
+        Call LogPrint
         Push "WSL($SELECTED_DISTRO) doesn't seem to have working 'ddev version'. Please execute it manually in $SELECTED_DISTRO to debug the problem. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
@@ -1040,45 +1223,53 @@ Function InstallWSL2Common
     ${EndIf}
 
     ; Final validation - ensure DDEV is actually working
-    DetailPrint "Performing final validation of DDEV installation..."
+    Push "Performing final validation of DDEV installation..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO ddev version'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        DetailPrint "ERROR: Final DDEV validation failed - exit code: $1, output: $0"
+        Push "ERROR: Final DDEV validation failed - exit code: $1, output: $0"
+        Call LogPrint
         Push "Installation validation failed. DDEV may not be working properly. Error: $0"
         Call ShowErrorAndAbort
     ${EndIf}
     
     ; Clean up temp directory
-    DetailPrint "Cleaning up temporary files..."
+    Push "Cleaning up temporary files..."
+    Call LogPrint
     Delete "C:\Windows\Temp\ddev_installer\ddev_linux"
     Delete "C:\Windows\Temp\ddev_installer\ddev-hostname_linux"
     RMDir "C:\Windows\Temp\ddev_installer"
     
-    DetailPrint "All done! Installation completed successfully and validated."
+    Push "All done! Installation completed successfully and validated."
+    Call LogPrint
     ${IfNot} ${Silent}
         MessageBox MB_ICONINFORMATION|MB_OK "DDEV WSL2 installation completed successfully."
     ${EndIf}
 FunctionEnd
 
 Function CheckGitForWindows
-    DetailPrint "Checking for Git for Windows..."
+    Push "Checking for Git for Windows..."
+    Call LogPrint
     
     ; Check if Git for Windows is installed in the standard location
     ${If} ${FileExists} "$PROGRAMFILES64\Git\bin\git.exe"
         ${If} ${FileExists} "$PROGRAMFILES64\Git\bin\bash.exe"
-            DetailPrint "Git for Windows found in Program Files"
+            Push "Git for Windows found in Program Files"
+            Call LogPrint
             ; Verify it's working by checking version
             nsExec::ExecToStack '"$PROGRAMFILES64\Git\bin\git.exe" --version'
             Pop $R0
             Pop $R1
             ${If} $R0 == 0
-                DetailPrint "Git version check successful: $R1"
+                Push "Git version check successful: $R1"
+                Call LogPrint
                 ; Check if it contains "windows" to confirm it's Git for Windows
                 ${StrStr} $R2 $R1 "windows"
                 ${If} $R2 != ""
-                    DetailPrint "Confirmed Git for Windows installation"
+                    Push "Confirmed Git for Windows installation"
+                    Call LogPrint
                     Push "1"
                     Return
                 ${EndIf}
@@ -1098,22 +1289,26 @@ Function CheckGitForWindows
             Pop $R3
             Pop $R4
             ${If} $R3 == 0
-                DetailPrint "Git for Windows found in PATH: $R1"
+                Push "Git for Windows found in PATH: $R1"
+                Call LogPrint
                 Push "1"
                 Return
             ${EndIf}
         ${EndIf}
     ${EndIf}
     
-    DetailPrint "Git for Windows not found"
+    Push "Git for Windows not found"
+    Call LogPrint
     Push "0"
 FunctionEnd
 
 Function InstallTraditionalWindows
-    DetailPrint "Starting InstallTraditionalWindows"
+    Push "Starting InstallTraditionalWindows"
+    Call LogPrint
 
     ; Remove CAROOT environment variable for traditional Windows (WSL2-specific)
-    DetailPrint "Removing CAROOT environment variable (not needed for traditional Windows)"
+    Push "Removing CAROOT environment variable (not needed for traditional Windows)"
+    Call LogPrint
     DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
 
     SetOutPath $INSTDIR
@@ -1143,7 +1338,8 @@ Function InstallTraditionalWindows
 
     !insertmacro MUI_STARTMENU_WRITE_END
 
-    DetailPrint "Traditional Windows installation completed."
+    Push "Traditional Windows installation completed."
+    Call LogPrint
     ${IfNot} ${Silent}
         MessageBox MB_ICONINFORMATION|MB_OK "DDEV Traditional Windows installation completed successfully."
     ${EndIf}
@@ -1155,15 +1351,18 @@ Function RunMkcertInstall
         ; But still set up CAROOT environment variable for WSL2 installs
         ${If} $INSTALL_OPTION == "wsl2-docker-ce"
         ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-            DetailPrint "Setting up CAROOT environment variable for WSL2 in silent mode..."
+            Push "Setting up CAROOT environment variable for WSL2 in silent mode..."
+            Call LogPrint
             Call SetupWindowsCAROOT
         ${Else}
-            DetailPrint "Skipping mkcert setup in silent mode for traditional Windows install"
+            Push "Skipping mkcert setup in silent mode for traditional Windows install"
+            Call LogPrint
         ${EndIf}
         Return
     ${EndIf}
     
-    DetailPrint "Setting up mkcert.exe (Windows) for trusted HTTPS certificates..."
+    Push "Setting up mkcert.exe (Windows) for trusted HTTPS certificates..."
+    Call LogPrint
     MessageBox MB_ICONINFORMATION|MB_OK "Now setting up mkcert.exe to enable trusted https. Please accept the mkcert dialog box that may follow."
     
     ; Unset CAROOT environment variable in current process
@@ -1171,12 +1370,14 @@ Function RunMkcertInstall
     Pop $0
 
     ; Run mkcert.exe -install to create fresh certificate authority
-    DetailPrint "Running mkcert.exe -install to create certificate authority..."
+    Push "Running mkcert.exe -install to create certificate authority..."
+    Call LogPrint
     nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -install'
     Pop $R0
     Pop $R1 ; Output
     ${If} $R0 = 0
-        DetailPrint "mkcert.exe -install completed successfully"
+        Push "mkcert.exe -install completed successfully"
+        Call LogPrint
         WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup" 1
         
         ; Set up CAROOT environment variable for WSL2 sharing (only for WSL2 installs)
@@ -1185,13 +1386,15 @@ Function RunMkcertInstall
             Call SetupWindowsCAROOT
         ${EndIf}
     ${Else}
-        DetailPrint "mkcert.exe -install failed with exit code: $R0"
+        Push "mkcert.exe -install failed with exit code: $R0"
+        Call LogPrint
         MessageBox MB_ICONEXCLAMATION|MB_OK "mkcert -install failed with exit code: $R0. Output: $R1. You may need to run 'mkcert.exe -install' manually on Windows."
     ${EndIf}
 FunctionEnd
 
 Function SetupWindowsCAROOT
-    DetailPrint "Setting up mkcert certificate sharing with WSL2..."
+    Push "Setting up mkcert certificate sharing with WSL2..."
+    Call LogPrint
     
     ; Get the CAROOT directory from mkcert (mkcert -install already completed)
     nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -CAROOT'
@@ -1204,17 +1407,20 @@ Function SetupWindowsCAROOT
         Call TrimNewline
         Pop $R1
         
-        DetailPrint "CAROOT directory: $R1"
+        Push "CAROOT directory: $R1"
+        Call LogPrint
         
         ; Set CAROOT environment variable using EnVar plugin
         EnVar::SetHKLM
         EnVar::Delete "CAROOT"  ; Remove entire variable first
         Pop $0  ; Get error code from Delete
-        DetailPrint "EnVar::Delete CAROOT result: $0"
+        Push "EnVar::Delete CAROOT result: $0"
+        Call LogPrint
         
         EnVar::AddValue "CAROOT" "$R1"
         Pop $0  ; Get error code from AddValue
-        DetailPrint "EnVar::AddValue CAROOT result: $0"
+        Push "EnVar::AddValue CAROOT result: $0"
+        Call LogPrint
         
         ; Get current WSLENV value from registry
         ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
@@ -1246,24 +1452,28 @@ Function SetupWindowsCAROOT
         ReadRegStr $R5 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
         ; DetailPrint "WSLENV read back from registry: [$R5]"
         
-        DetailPrint "mkcert certificate sharing with WSL2 configured successfully."
+        Push "mkcert certificate sharing with WSL2 configured successfully."
+        Call LogPrint
         
         ; Read current value from registry for verification
         ; ReadRegStr $R6 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
         ; DetailPrint "WSLENV verification - Original: [$R4], Set to: [$R2], Actual: [$R6]"
     ${Else}
-        DetailPrint "Failed to get CAROOT directory from mkcert"
+        Push "Failed to get CAROOT directory from mkcert"
+        Call LogPrint
         MessageBox MB_ICONEXCLAMATION|MB_OK "Failed to get CAROOT directory from mkcert. WSL2 certificate sharing may not work properly."
     ${EndIf}
 FunctionEnd
 
 Function SetupMkcertInWSL2
-    DetailPrint "Setting up mkcert inside WSL2 distro: $SELECTED_DISTRO"
+    Push "Setting up mkcert inside WSL2 distro: $SELECTED_DISTRO"
+    Call LogPrint
     
     ; Check current Windows CAROOT environment variable from registry
     ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
     StrCpy $WINDOWS_CAROOT $R2  ; Save to global variable for later use
-    DetailPrint "Windows CAROOT environment variable: $WINDOWS_CAROOT"
+    Push "Windows CAROOT environment variable: $WINDOWS_CAROOT"
+    Call LogPrint
     
     ; Check current Windows WSLENV environment variable from registry
     ReadRegStr $R3 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
@@ -1275,21 +1485,25 @@ Function SetupMkcertInWSL2
     Call InstallScriptToDistro
     Pop $R4
     ${If} $R4 != 0
-        DetailPrint "Failed to install temporary sudoers script"
+        Push "Failed to install temporary sudoers script"
+        Call LogPrint
         MessageBox MB_ICONSTOP|MB_OK "Failed to install temporary sudoers script to WSL2 distro"
         Abort
     ${EndIf}
     
-    DetailPrint "Running temporary sudoers installation..."
+    Push "Running temporary sudoers installation..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/install_temp_sudoers.sh'
     Pop $R4
     Pop $R5
     ${If} $R4 != 0
-        DetailPrint "Failed to create temporary sudoers: $R5"
+        Push "Failed to create temporary sudoers: $R5"
+        Call LogPrint
         MessageBox MB_ICONSTOP|MB_OK "Failed to create temporary sudoers entry: $R5"
         Abort
     ${Else}
-        DetailPrint "Temporary sudoers created successfully"
+        Push "Temporary sudoers created successfully"
+        Call LogPrint
     ${EndIf}
     
     ; Install mkcert_install.sh check script to WSL2 distro
@@ -1300,27 +1514,34 @@ Function SetupMkcertInWSL2
     Call InstallScriptToDistro
     Pop $R8  ; Check result
     ${If} $R8 != 0
-        DetailPrint "Failed to install mkcert_install.sh script"
+        Push "Failed to install mkcert_install.sh script"
+        Call LogPrint
         MessageBox MB_ICONSTOP|MB_OK "Failed to mkcert_install.sh script to WSL2 distro"
         Abort
     ${EndIf}
     
-    DetailPrint "Running /tmp/mkcert_install.sh in WSL2 distro: $SELECTED_DISTRO"
+    Push "Running /tmp/mkcert_install.sh in WSL2 distro: $SELECTED_DISTRO"
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "WINDOWS_CAROOT=\"$WINDOWS_CAROOT\" /tmp/mkcert_install.sh"'
     Pop $R0
     Pop $R1
-    DetailPrint "mkcert_install.sh script exit code: $R0"
-    DetailPrint "mkcert_install.sh output: '$R1'"
+    Push "mkcert_install.sh script exit code: $R0"
+    Call LogPrint
+    Push "mkcert_install.sh output: '$R1'"
+    Call LogPrint
 
     ; Remove temporary passwordless sudo
-    DetailPrint "Removing temporary passwordless sudo..."
+    Push "Removing temporary passwordless sudo..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root rm -f /etc/sudoers.d/temp-mkcert-install'
     Pop $R6
     Pop $R7
     ${If} $R6 != 0
-        DetailPrint "Warning: Failed to remove temporary sudoers entry: $R7"
+        Push "Warning: Failed to remove temporary sudoers entry: $R7"
+        Call LogPrint
     ${Else}
-        DetailPrint "Temporary sudoers entry removed successfully"
+        Push "Temporary sudoers entry removed successfully"
+        Call LogPrint
     ${EndIf}
 
 FunctionEnd
@@ -1355,7 +1576,8 @@ Function ParseCommandLine
     
     ; Get command line
     ${GetParameters} $R0
-    DetailPrint "Command line parameters: $R0"
+    Push "Command line parameters: $R0"
+    Call LogPrint
     
     ; Check for /help argument
     ${GetOptions} $R0 "/help" $R1
@@ -1397,42 +1619,48 @@ Function ParseCommandLine
     ${GetOptions} $R0 "/docker-ce" $R1
     ${IfNot} ${Errors}
         StrCpy $SILENT_INSTALL_TYPE "wsl2-docker-ce"
-        DetailPrint "Found /docker-ce argument"
+        Push "Found /docker-ce argument"
+        Call LogPrint
     ${EndIf}
     
     ; Check for /docker-desktop argument
     ${GetOptions} $R0 "/docker-desktop" $R1
     ${IfNot} ${Errors}
         StrCpy $SILENT_INSTALL_TYPE "wsl2-docker-desktop"
-        DetailPrint "Found /docker-desktop argument"
+        Push "Found /docker-desktop argument"
+        Call LogPrint
     ${EndIf}
     
     ; Check for /rancher-desktop argument
     ${GetOptions} $R0 "/rancher-desktop" $R1
     ${IfNot} ${Errors}
         StrCpy $SILENT_INSTALL_TYPE "wsl2-docker-desktop"
-        DetailPrint "Found /rancher-desktop argument"
+        Push "Found /rancher-desktop argument"
+        Call LogPrint
     ${EndIf}
     
     ; Check for /traditional argument
     ${GetOptions} $R0 "/traditional" $R1
     ${IfNot} ${Errors}
         StrCpy $SILENT_INSTALL_TYPE "traditional"
-        DetailPrint "Found /traditional argument"
+        Push "Found /traditional argument"
+        Call LogPrint
     ${EndIf}
     
     ; Check for /distro argument
     ${GetOptions} $R0 "/distro=" $R1
     ${IfNot} ${Errors}
         StrCpy $SILENT_DISTRO $R1
-        DetailPrint "Found /distro argument: $SILENT_DISTRO"
+        Push "Found /distro argument: $SILENT_DISTRO"
+        Call LogPrint
     ${EndIf}
     
     ; Validate that distro is specified for WSL2 installation types
     ${If} $SILENT_INSTALL_TYPE == "wsl2-docker-ce"
     ${OrIf} $SILENT_INSTALL_TYPE == "wsl2-docker-desktop"
         ${If} $SILENT_DISTRO == ""
-            DetailPrint "ERROR: Missing required /distro argument for WSL2 installation type: $SILENT_INSTALL_TYPE"
+            Push "ERROR: Missing required /distro argument for WSL2 installation type: $SILENT_INSTALL_TYPE"
+            Call LogPrint
             MessageBox MB_ICONSTOP|MB_OK "The /distro=<distro_name> argument is required when using /docker-ce, /docker-desktop, or /rancher-desktop.$\n$\nExample: installer.exe /docker-ce /distro=Ubuntu-22.04"
             Abort
         ${EndIf}
@@ -1442,7 +1670,8 @@ Function ParseCommandLine
     ${If} $SILENT_INSTALL_TYPE != ""
         ${IfNot} ${Silent}
             SetSilent silent
-            DetailPrint "Command line install type detected, enabling silent mode"
+            Push "Command line install type detected, enabling silent mode"
+            Call LogPrint
         ${EndIf}
     ${EndIf}
 FunctionEnd
@@ -1460,6 +1689,11 @@ Function .onInit
         Abort
     ${EndIf}
     
+    ; Initialize debug logging
+    Call InitializeDebugLog
+    Push "Debug log initialized at: $TEMP\ddev_installer_debug.log"
+    Call LogPrint
+    
     ; Parse command line arguments
     Call ParseCommandLine
     
@@ -1470,11 +1704,13 @@ Function .onInit
         ${If} $SILENT_DISTRO != ""
             StrCpy $SELECTED_DISTRO $SILENT_DISTRO
         ${EndIf}
-        DetailPrint "Command line install with type: $INSTALL_OPTION"
+        Push "Command line install with type: $INSTALL_OPTION"
+        Call LogPrint
     ${ElseIf} ${Silent}
         ; Legacy silent install (Chocolatey) - default to traditional
         StrCpy $INSTALL_OPTION "traditional"
-        DetailPrint "Silent install detected, defaulting to traditional Windows installation"
+        Push "Silent install detected, defaulting to traditional Windows installation"
+        Call LogPrint
     ${EndIf}
 FunctionEnd
 
@@ -1482,7 +1718,8 @@ FunctionEnd
 ; Call with error message on stack
 Function ShowErrorAndAbort
     Exch $R0  ; Get error message from stack
-    DetailPrint "INSTALLATION ERROR: $R0"
+    Push "INSTALLATION ERROR: $R0"
+    Call LogPrint
     ${IfNot} ${Silent}
         MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nUse 'Show details' for more information. Then click 'Cancel', fix the issue, and retry the installer."
     ${EndIf}
