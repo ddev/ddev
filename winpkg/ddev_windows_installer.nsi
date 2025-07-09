@@ -52,7 +52,8 @@ InstType "Minimal"
 !define MUI_ICON "graphics\ddev-install.ico"
 !define MUI_UNICON "graphics\ddev-uninstall.ico"
 
-!define MUI_FINISHPAGE_NOAUTOCLOSE
+!define MUI_INSTFILESPAGE_ABORTHEADER_TEXT "Installation Aborted"
+!define MUI_INSTFILESPAGE_ABORTHEADER_SUBTEXT "Setup was not completed successfully."
 
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "graphics\ddev-header.bmp"
@@ -1044,8 +1045,8 @@ Function InstallWSL2CommonSetup
     Pop $0
     ; Note: This command is allowed to fail if packages aren't installed
 
-    ; apt-get upgrade
-    Push "WSL($SELECTED_DISTRO): Doing apt-get upgrade..."
+    ; apt-get update
+    Push "WSL($SELECTED_DISTRO): Doing apt-get update..."
     Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1"'
     Pop $1
@@ -1769,6 +1770,7 @@ Function .onInit
     ${EndIf}
 FunctionEnd
 
+; Helper: Show error message with standard guidance and abort
 ; Helper: Show error message with standard guidance and abort
 ; Call with error message on stack
 Function ShowErrorAndAbort
