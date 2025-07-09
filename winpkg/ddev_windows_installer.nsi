@@ -301,6 +301,59 @@ Function DistroSelectionPageLeave
     ${NSD_GetText} $2 $SELECTED_DISTRO
 FunctionEnd
 
+; RootUserCheckPage - Page to check for root user after distro selection
+Function RootUserCheckPage
+    Push "Starting RootUserCheckPage..."
+    Call LogPrint
+    
+    ; Skip this page if not WSL2 installation
+    ${If} $INSTALL_OPTION != "wsl2-docker-ce"
+    ${AndIf} $INSTALL_OPTION != "wsl2-docker-desktop"
+        Push "Skipping root user check for non-WSL2 install: $INSTALL_OPTION"
+        Call LogPrint
+        Abort
+    ${EndIf}
+    
+    ; Run the root user check
+    Call CheckRootUser
+    
+    ; If we get here, the check passed - skip showing the page
+    Abort
+FunctionEnd
+
+; CheckRootUser - Verify the default user is not root
+Function CheckRootUser
+    Push "=== Checking for root user in distro: $SELECTED_DISTRO ==="
+    Call LogPrint
+    
+    Push $SELECTED_DISTRO
+    Push "check_root_user.sh"
+    Call InstallScriptToDistro
+    Pop $R4
+    ${If} $R4 != 0
+        Push "Failed to install check_root_user.sh script"
+        Call LogPrint
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install check_root_user to WSL2 distro"
+        Abort
+    ${EndIf}
+
+    Push "Running check_root_user.sh..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash /tmp/check_root_user.sh'
+    Pop $R4
+    Pop $R5
+    ${If} $R4 != 0
+        Push "check_root_user.sh script failed: $R5"
+        Call LogPrint
+        MessageBox MB_ICONSTOP|MB_OK "check_root_user.sh failed: $R5"
+        Abort
+    ${Else}
+        Push "Nonroot user check passed: $R5"
+        Call LogPrint
+    ${EndIf}
+
+FunctionEnd
+
 ; Define pages
 !insertmacro MUI_PAGE_WELCOME
 
@@ -314,6 +367,9 @@ Page custom InstallChoicePage InstallChoicePageLeave
 
 ; Add WSL2 distro selection page
 Page custom DistroSelectionPage DistroSelectionPageLeave
+
+; Root user check page for WSL2 installations
+Page custom RootUserCheckPage
 
 ; Git for Windows check page for traditional installation
 Page custom GitCheckPage GitCheckPageLeave
@@ -662,6 +718,7 @@ SectionGroup /e "${PRODUCT_NAME}"
             File /oname=ddev-hostname_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev-hostname"
             File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
             File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
+            File /oname=check_root_user.sh "scripts\check_root_user.sh"
         ${EndIf}
 
         ; Install icons
@@ -948,28 +1005,6 @@ Function InstallWSL2CommonSetup
     Push "WSL2 detected successfully."
     Call LogPrint
 
-    ; Check for non-root default user
-    Push "Checking for non-root user..."
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO whoami'
-    Pop $1  ; error code
-    Pop $0  ; output
-    Push "Current user: $0"
-    Call LogPrint
-    ${If} $1 != 0
-        Push "ERROR: WSL user check failed - exit code: $1, output: $0"
-        Call LogPrint
-        Push "Could not check WSL user. Please ensure WSL is working."
-        Call ShowErrorAndAbort
-    ${EndIf}
-    ${If} $0 == "root"
-        Push "ERROR: Default WSL user is root - this is not supported"
-        Call LogPrint
-        Push "The default user in your WSL2 distro is root. Please configure an ordinary default user."
-        Call ShowErrorAndAbort
-    ${EndIf}
-    Push "Non-root user detected successfully."
-    Call LogPrint
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
