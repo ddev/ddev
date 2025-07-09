@@ -472,7 +472,7 @@ dockerhub:
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.0'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.4'
 
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-dbserver image
@@ -483,7 +483,7 @@ dockerhub:
   #ddev-gitpod-base
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-gitpod-base'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: Gitpod integration for DDEV
@@ -495,7 +495,7 @@ dockerhub:
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-php-base'
       - '{{ .Env.DOCKER_ORG }}/ddev-php-prod'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-php-base image, base image for ddev-webserver
@@ -506,7 +506,7 @@ dockerhub:
   #ddev-ssh-agent
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-ssh-agent'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-ssh-agent image
@@ -517,7 +517,7 @@ dockerhub:
   #ddev-traefik-router
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-traefik-router'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-traefik-router, a wrapper on traefik
@@ -528,7 +528,7 @@ dockerhub:
   #ddev-utilities
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-utilities'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: Utility provider for jq, base64, etc
@@ -540,7 +540,7 @@ dockerhub:
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-webserver'
       - '{{ .Env.DOCKER_ORG }}/ddev-webserver-prod'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's ddev-webserver image
@@ -551,7 +551,7 @@ dockerhub:
   #ddev-xhgui
   - images:
       - '{{ .Env.DOCKER_ORG }}/ddev-xhgui'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: xhgui facility for DDEV integration
@@ -562,7 +562,7 @@ dockerhub:
   #mysql == mysql-arm64-images
   - images:
       - '{{ .Env.DOCKER_ORG }}/mysql'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: ARM64 base images for ddev-dbserver-mysql-8.0 and 5.7
@@ -573,7 +573,7 @@ dockerhub:
   #mysql-client-build
   - images:
       - '{{ .Env.DOCKER_ORG }}/mysql-client-build'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: Utility builder for mysql client binaries
@@ -584,7 +584,7 @@ dockerhub:
   #test-ssh-server
   - images:
       - '{{ .Env.DOCKER_ORG }}/test-ssh-server'
-    disable: '{{ hasPrefix .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
+    disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'
     secret_name: "DOCKERHUB_TOKEN"
     description: DDEV's test-ssh-server image, used only for automated tests
