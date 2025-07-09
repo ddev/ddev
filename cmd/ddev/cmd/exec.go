@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -70,11 +74,15 @@ ddev exec --raw -- ls -lR`,
 		quiet, _ := cmd.Flags().GetBool("quiet")
 
 		if err != nil {
-			if !quiet {
-				util.Failed("Failed to execute command `%s`: %v", opts.Cmd, err)
-			} else {
-				os.Exit(1)
+			exitCode := 1
+			var exiterr *exec.ExitError
+			if errors.As(err, &exiterr) {
+				exitCode = exiterr.ExitCode()
 			}
+			if !quiet {
+				output.UserErr.Errorf(util.ColorizeText(fmt.Sprintf("Failed to execute command `%s`: %v", opts.Cmd, err), "red"))
+			}
+			output.UserErr.Exit(exitCode)
 		}
 	},
 }
