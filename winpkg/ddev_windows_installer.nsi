@@ -36,6 +36,7 @@ Var /GLOBAL SILENT_INSTALL_TYPE
 Var /GLOBAL SILENT_DISTRO
 Var /GLOBAL WINDOWS_CAROOT
 Var /GLOBAL DEBUG_LOG_HANDLE
+Var /GLOBAL DEBUG_LOG_PATH
 Var StartMenuGroup
 
 !define REG_INSTDIR_ROOT "HKLM"
@@ -63,10 +64,11 @@ InstType "Minimal"
 
 ; InitializeDebugLog - Open debug log file for writing
 Function InitializeDebugLog
-    FileOpen $DEBUG_LOG_HANDLE "$TEMP\ddev_installer_debug.log" w
+    StrCpy $DEBUG_LOG_PATH "$TEMP\ddev_installer_debug.log"
+    FileOpen $DEBUG_LOG_HANDLE "$DEBUG_LOG_PATH" w
     ${If} $DEBUG_LOG_HANDLE != ""
         FileWrite $DEBUG_LOG_HANDLE "=== DDEV Installer Debug Log ===$\r$\n"
-        FileWrite $DEBUG_LOG_HANDLE "Log location: $TEMP\ddev_installer_debug.log$\r$\n"
+        FileWrite $DEBUG_LOG_HANDLE "Log location: $DEBUG_LOG_PATH$\r$\n"
         FileWrite $DEBUG_LOG_HANDLE "Installer started at: $\r$\n"
     ${EndIf}
 FunctionEnd
@@ -101,6 +103,17 @@ Function InstallScriptToDistro
     
     Push "Installing script $R0 to WSL2 distro $R1..."
     Call LogPrint
+    
+    ; Scripts should already be copied to temp directory by this point
+    ${If} ${FileExists} "C:\Windows\Temp\ddev_installer\$R0"
+        Push "Using script $R0 from temp directory"
+        Call LogPrint
+    ${Else}
+        Push "ERROR: Script $R0 not found in temp directory"
+        Call LogPrint
+        Push 1
+        Return
+    ${EndIf}
     
     ; Copy script from Windows temp to WSL2 /tmp
     nsExec::ExecToStack 'wsl -d $R1 -u root cp "/mnt/c/Windows/Temp/ddev_installer/$R0" /tmp/'
@@ -169,7 +182,7 @@ Function DistroSelectionPage
     ${If} $R0 == ""
         Push "ERROR: No Ubuntu-based WSL2 distributions found"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $TEMP\ddev_installer_debug.log$\n$\nYou can check this file to see what distributions were detected."
+        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nYou can check this file to see what distributions were detected."
         Push "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first."
         Call ShowErrorAndAbort
     ${EndIf}
@@ -260,7 +273,7 @@ Function DistroSelectionPageLeave
         ${NSD_GetText} $2 $SELECTED_DISTRO
         Push "Selected distro: $SELECTED_DISTRO"
         Call LogPrint
-        Return
+        Goto CopyScripts
     ${EndIf}
     
     ${NSD_GetState} $3 $R0
@@ -268,7 +281,7 @@ Function DistroSelectionPageLeave
         ${NSD_GetText} $3 $SELECTED_DISTRO
         Push "Selected distro: $SELECTED_DISTRO"
         Call LogPrint
-        Return
+        Goto CopyScripts
     ${EndIf}
     
     ${NSD_GetState} $4 $R0
@@ -276,7 +289,7 @@ Function DistroSelectionPageLeave
         ${NSD_GetText} $4 $SELECTED_DISTRO
         Push "Selected distro: $SELECTED_DISTRO"
         Call LogPrint
-        Return
+        Goto CopyScripts
     ${EndIf}
     
     ${NSD_GetState} $5 $R0
@@ -284,7 +297,7 @@ Function DistroSelectionPageLeave
         ${NSD_GetText} $5 $SELECTED_DISTRO
         Push "Selected distro: $SELECTED_DISTRO"
         Call LogPrint
-        Return
+        Goto CopyScripts
     ${EndIf}
     
     ${NSD_GetState} $6 $R0
@@ -292,34 +305,37 @@ Function DistroSelectionPageLeave
         ${NSD_GetText} $6 $SELECTED_DISTRO
         Push "Selected distro: $SELECTED_DISTRO"
         Call LogPrint
-        Return
+        Goto CopyScripts
     ${EndIf}
     
     ; Fallback - should not happen if we have proper radio button logic
     Push "No distro selected - using first available"
     Call LogPrint
     ${NSD_GetText} $2 $SELECTED_DISTRO
-FunctionEnd
-
-; RootUserCheckPage - Page to check for root user after distro selection
-Function RootUserCheckPage
-    Push "Starting RootUserCheckPage..."
+    
+    CopyScripts:
+    ; Copy all scripts to temp directory for later use
+    Push "Copying all scripts to temp directory..."
+    Call LogPrint
+    CreateDirectory "C:\Windows\Temp\ddev_installer"
+    SetOutPath "C:\Windows\Temp\ddev_installer"
+    File /oname=check_root_user.sh "scripts\check_root_user.sh"
+    File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
+    File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
+    Push "All scripts copied to temp directory"
     Call LogPrint
     
-    ; Skip this page if not WSL2 installation
-    ${If} $INSTALL_OPTION != "wsl2-docker-ce"
-    ${AndIf} $INSTALL_OPTION != "wsl2-docker-desktop"
-        Push "Skipping root user check for non-WSL2 install: $INSTALL_OPTION"
+    ; Check for root user immediately after distro selection (WSL2 only)
+    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
+    ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
+        Push "Checking for root user in selected distro..."
         Call LogPrint
-        Abort
+        Call CheckRootUser
+        Push "Root user check passed"
+        Call LogPrint
     ${EndIf}
-    
-    ; Run the root user check
-    Call CheckRootUser
-    
-    ; If we get here, the check passed - skip showing the page
-    Abort
 FunctionEnd
+
 
 ; CheckRootUser - Verify the default user is not root
 Function CheckRootUser
@@ -343,12 +359,14 @@ Function CheckRootUser
     Pop $R4
     Pop $R5
     ${If} $R4 != 0
-        Push "check_root_user.sh script failed: $R5"
+        Push "Root user detected in distro $SELECTED_DISTRO"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "check_root_user.sh failed: $R5"
-        Abort
+        Push "Exiting installer due to root user detection"
+        Call LogPrint
+        Push "The default user in distro $SELECTED_DISTRO is still 'root', but it needs to be a normal user.$\n$\nPlease configure your WSL2 distro to use a normal user account instead of root.$\n$\nRefer to WSL documentation for instructions on changing the default user."
+        Call ShowErrorAndAbort
     ${Else}
-        Push "Nonroot user check passed: $R5"
+        Push "Root user check passed for distro $SELECTED_DISTRO"
         Call LogPrint
     ${EndIf}
 
@@ -367,9 +385,6 @@ Page custom InstallChoicePage InstallChoicePageLeave
 
 ; Add WSL2 distro selection page
 Page custom DistroSelectionPage DistroSelectionPageLeave
-
-; Root user check page for WSL2 installations
-Page custom RootUserCheckPage
 
 ; Git for Windows check page for traditional installation
 Page custom GitCheckPage GitCheckPageLeave
@@ -1731,7 +1746,7 @@ Function .onInit
     
     ; Initialize debug logging
     Call InitializeDebugLog
-    Push "Debug log initialized at: $TEMP\ddev_installer_debug.log"
+    Push "Debug log initialized at: $DEBUG_LOG_PATH"
     Call LogPrint
     
     ; Parse command line arguments
@@ -1761,9 +1776,11 @@ Function ShowErrorAndAbort
     Push "INSTALLATION ERROR: $R0"
     Call LogPrint
     ${IfNot} ${Silent}
-        MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nUse 'Show details' for more information. Then click 'Cancel', fix the issue, and retry the installer."
+        MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nPlease fix the issue and retry the installer."
     ${EndIf}
-    Abort
+    Push "Exiting installer due to error"
+    Call LogPrint
+    SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
 FunctionEnd
 
 ; Helper: returns "1" if $R0 contains $R1, else ""
