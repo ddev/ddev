@@ -720,6 +720,11 @@ Section -Post
     WriteRegStr ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NoModify" 1
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NoRepair" 1
+    
+    ; Calculate and write estimated size for Add/Remove Programs
+    ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+    IntFmt $0 "0x%08X" $0
+    WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "EstimatedSize" "$0"
 
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateShortCut "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME}.lnk" "$INSTDIR\ddev_uninstall.exe"
