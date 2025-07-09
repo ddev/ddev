@@ -8,6 +8,9 @@ DDEV’s Pantheon integration pulls an existing backup from an existing Pantheon
 
 If you have DDEV installed, and have an active Pantheon account with an active site, you can follow this guide to spin up a Pantheon project locally.
 
+!!!tip "`ddev pull pantheon` fails due to Terminus version mismatch"
+    See [How to Downgrade Terminus in DDEV's Web Container and Customize Other Bundled Tools](https://ddev.com/blog/ddev-bundled-tools-using-custom-versions/).
+
 1. Get your Pantheon machine token:
     1. Log in to your Pantheon Dashboard and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for DDEV to use.
     2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`.

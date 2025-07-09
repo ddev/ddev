@@ -135,6 +135,9 @@ You can use this port with various tools that need a direct port, like `mysql` o
 
 [Terminus](https://docs.pantheon.io/terminus) is a command-line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
 
+!!!tip "How to change Terminus version?"
+    See [How to Downgrade Terminus in DDEV's Web Container and Customize Other Bundled Tools](https://ddev.com/blog/ddev-bundled-tools-using-custom-versions/).
+
 To use Terminus, you’ll first need to:
 
 1. Use a machine token. (See [Pantheon provider discussion](../providers/pantheon.md).)
