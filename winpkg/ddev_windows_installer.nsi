@@ -457,6 +457,12 @@ FunctionEnd
 Function DockerCheckPage
     DetailPrint "Starting DockerCheckPage..."
     
+    ; Skip this page for wsl2-docker-ce since Docker CE will be installed during the process
+    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
+        DetailPrint "Skipping Docker check for wsl2-docker-ce install (Docker CE will be installed)"
+        Abort
+    ${EndIf}
+    
     ; Skip this page if install type was specified via command line
     ${If} $SILENT_INSTALL_TYPE != ""
         DetailPrint "Skipping Docker check page for command line install"
@@ -1101,28 +1107,6 @@ Function CheckGitForWindows
     
     DetailPrint "Git for Windows not found"
     Push "0"
-FunctionEnd
-
-Function OfferGitForWindowsInstall
-    ${IfNot} ${Silent}
-        MessageBox MB_ICONQUESTION|MB_YESNO "Git for Windows is required for traditional Windows installation but was not found.$\n$\nGit for Windows provides both Git and a Bash shell that DDEV needs to function properly.$\n$\nWould you like to download and install Git for Windows now?" IDYES InstallGit IDNO SkipGit
-        
-        InstallGit:
-            DetailPrint "User chose to install Git for Windows"
-            MessageBox MB_ICONINFORMATION|MB_OK "Opening Git for Windows download page. Please download and install Git for Windows, then restart this installer."
-            ExecShell "open" "https://gitforwindows.org/"
-            Push "Git for Windows installation required. Please install Git for Windows and restart this installer."
-            Call ShowErrorAndAbort
-            
-        SkipGit:
-            DetailPrint "User chose to skip Git for Windows installation"
-            Push "Git for Windows is required for traditional Windows installation. Please install Git for Windows and restart this installer."
-            Call ShowErrorAndAbort
-    ${Else}
-        DetailPrint "Silent install mode - cannot prompt for Git for Windows installation"
-        Push "Git for Windows is required for traditional Windows installation but was not found. Please install Git for Windows and restart this installer."
-        Call ShowErrorAndAbort
-    ${EndIf}
 FunctionEnd
 
 Function InstallTraditionalWindows
