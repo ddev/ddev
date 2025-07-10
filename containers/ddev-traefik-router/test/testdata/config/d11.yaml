@@ -1,0 +1,15 @@
+http:
+  routers:
+    d11-web-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^d11\.ddev\.site$`)
+      service: "d11-web-80"
+      ruleSyntax: v3
+      tls: false
+
+  services:
+    d11-web-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-d11-web:80
