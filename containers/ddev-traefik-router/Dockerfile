@@ -1,7 +1,7 @@
 FROM traefik:3 AS ddev-traefik-router
 
 ENV TRAEFIK_MONITOR_PORT=10999
-RUN apk add --no-cache bash curl htop vim
+RUN apk add --no-cache bash curl htop jq vim
 WORKDIR /mnt/ddev-global-cache/traefik
 # Make Traefik commands work without --configFile by using default location
 # https://doc.traefik.io/traefik/getting-started/configuration-overview/#configuration-file
