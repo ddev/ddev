@@ -22,6 +22,12 @@ exit_code=$?
 # If ping is successful, inspect additional health indicators
 # Traefik API endpoints https://doc.traefik.io/traefik/operations/api/#endpoints
 if [ $exit_code -eq 0 ]; then
+    # If there is no dynamic config, don't check for additional endpoints
+    if [ ! -d /mnt/ddev-global-cache/traefik/config ]; then
+        printf "%s" "${check}"
+        touch /tmp/healthy
+        exit 0
+    fi
     # Count routers loaded via file provider (.ddev/traefik/config/<project>.yaml)
     file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
     # Sum up router/service/middleware config errors reported by Traefik
