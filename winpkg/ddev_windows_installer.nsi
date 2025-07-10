@@ -1048,7 +1048,9 @@ Function InstallWSL2CommonSetup
     ; Note: This command is allowed to fail if packages aren't installed
 
     ; apt-get update
-    Push "WSL($SELECTED_DISTRO): Doing apt-get update..."
+    Push "WSL($SELECTED_DISTRO): Updating package database using apt-get update..."
+    Call LogPrint
+    Push "Please be patient - updating package database..."
     Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1"'
     Pop $1
@@ -1062,6 +1064,8 @@ Function InstallWSL2CommonSetup
 
     ; Install linux packages
     Push "WSL($SELECTED_DISTRO): Installing required linux packages..."
+    Call LogPrint
+    Push "Please be patient - installing required packages..."
     Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
     Pop $1
@@ -1141,6 +1145,8 @@ Function InstallWSL2CommonSetup
     ; Update package lists
     Push "WSL($SELECTED_DISTRO): apt-get update..."
     Call LogPrint
+    Push "Please be patient - updating package database..."
+    Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
     Pop $1
     Pop $0
@@ -1167,6 +1173,8 @@ Function InstallWSL2Common
 
     ; Install the selected packages
     Push "WSL($SELECTED_DISTRO): apt-get install $0."
+    Call LogPrint
+    Push "Please be patient - installing packages..."
     Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
     Pop $1
