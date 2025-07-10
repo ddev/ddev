@@ -410,11 +410,13 @@ Page custom DockerCheckPage DockerCheckPageLeave
 ; Installation page
 !insertmacro MUI_PAGE_INSTFILES
 
-; Finish page
-; TODO: is this useful? How about just linking to 'releases'
-!define MUI_FINISHPAGE_SHOWREADME "https://github.com/ddev/ddev/releases/tag/${VERSION}"
-!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-!define MUI_FINISHPAGE_SHOWREADME_TEXT "Review the release notes"
+; Standard MUI finish page with custom run action
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_TEXT "✓ Support DDEV - Open GitHub Sponsors page"
+!define MUI_FINISHPAGE_RUN_FUNCTION "LaunchSponsors"
+!define MUI_FINISHPAGE_TITLE "DDEV Installation Complete"
+!define MUI_FINISHPAGE_TEXT "Thank you for installing DDEV!$\r$\n$\r$\nPlease consider supporting DDEV so we can continue supporting you."
+!define MUI_FINISHPAGE_RUN_CHECKED  ; Pre-check the box to encourage action
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -1300,9 +1302,7 @@ Function InstallWSL2Common
     
     Push "All done! Installation completed successfully and validated."
     Call LogPrint
-    ${IfNot} ${Silent}
-        MessageBox MB_ICONINFORMATION|MB_OK "DDEV WSL2 installation completed successfully."
-    ${EndIf}
+
 FunctionEnd
 
 Function CheckGitForWindows
@@ -1396,9 +1396,7 @@ Function InstallTraditionalWindows
 
     Push "Traditional Windows installation completed."
     Call LogPrint
-    ${IfNot} ${Silent}
-        MessageBox MB_ICONINFORMATION|MB_OK "DDEV Traditional Windows installation completed successfully."
-    ${EndIf}
+
 FunctionEnd
 
 Function RunMkcertInstall
@@ -1419,7 +1417,6 @@ Function RunMkcertInstall
     
     Push "Setting up mkcert.exe (Windows) for trusted HTTPS certificates..."
     Call LogPrint
-    MessageBox MB_ICONINFORMATION|MB_OK "Now setting up mkcert.exe to enable trusted https. Please accept the mkcert dialog box that may follow."
     
     ; Unset CAROOT environment variable in current process
     System::Call 'kernel32::SetEnvironmentVariable(t "CAROOT", i 0)'
@@ -1940,6 +1937,15 @@ Function un.CleanupMkcertEnvironment
     
     DetailPrint "mkcert environment variables cleanup completed"
 FunctionEnd
+
+
+; LaunchSponsors - Open GitHub sponsors page
+Function LaunchSponsors
+    Push "User clicked Support DDEV button - opening GitHub sponsors page"
+    Call LogPrint
+    ExecShell "open" "https://github.com/sponsors/ddev"
+FunctionEnd
+
 
 ; Installation completion callbacks for proper exit code handling
 Function .onInstSuccess
