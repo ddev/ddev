@@ -23,7 +23,7 @@ var BaseDBTag = "20250213_rfay_mariadb_11.8"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20250612_stasadev_rebuild_images"
+var TraefikRouterTag = "20250710_stasadev_traefik_healthcheck"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
