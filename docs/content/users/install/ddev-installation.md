@@ -175,7 +175,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     * Projects should live under the home directory of the Linux filesystem.  
       WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster and has proper permissions, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
     * Custom hostnames (non `ddev.site` hostnames) are managed via the Windows hosts file, not within WSL2.  
-      DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\system32\drivers\etc\hosts`.
+      DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\System32\drivers\etc\hosts`.
 
     The WSL2 install process involves:
 
