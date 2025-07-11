@@ -148,10 +148,13 @@ func GetUnknownFlags(cmd *cobra.Command) (map[string]string, error) {
 
 // prettyCmd formats the Docker command to be more readable.
 func prettyCmd(cmd []string) string {
+	out := make([]string, len(cmd))
 	for i, arg := range cmd {
 		if strings.Contains(arg, " ") {
-			cmd[i] = `"` + arg + `"`
+			out[i] = `"` + strings.ReplaceAll(arg, `"`, `\"`) + `"`
+		} else {
+			out[i] = arg
 		}
 	}
-	return strings.Join(cmd, " ")
+	return strings.Join(out, " ")
 }
