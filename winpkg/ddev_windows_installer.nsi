@@ -203,14 +203,24 @@ Function DistroSelectionPage
     Push "Previously selected distro: $R8"
     Call LogPrint
 
+    ; Initialize variables for dynamic radio button creation
+    Var /GLOBAL RADIO_BUTTON_COUNT
+    Var /GLOBAL RADIO_BUTTON_HANDLES    ; Will store pipe-separated list of handles
+    Var /GLOBAL RADIO_BUTTON_LABELS     ; Will store pipe-separated list of labels
+    Var /GLOBAL SELECTED_RADIO_INDEX    ; Index of selected radio button
+    
+    StrCpy $RADIO_BUTTON_COUNT 0
+    StrCpy $RADIO_BUTTON_HANDLES ""
+    StrCpy $RADIO_BUTTON_LABELS ""
+    StrCpy $SELECTED_RADIO_INDEX 0
+
     ; Process the pipe-separated list and create radio buttons
     StrCpy $R1 $R0    ; Working copy of the list
-    StrCpy $R2 0      ; Item count
+    StrCpy $R2 0      ; Current item index
     StrCpy $R3 0      ; Y position counter
 
     ${Do}
         ; Find position of next pipe or end
-        StrCpy $R4 1   ; Length to extract
         StrCpy $R5 0   ; Position
         ${Do}
             StrCpy $R6 $R1 1 $R5  ; Get character at position
@@ -235,52 +245,26 @@ Function DistroSelectionPage
             ${NSD_CreateRadioButton} 10 $R9u 280u 16u "$R7"
             Pop $9
             
-            ; Store radio button handle based on item count
-            ${If} $R2 == 0
-                StrCpy $2 $9  ; Store first radio button handle
-                ; Check if this matches the previously selected distro
-                ${If} $R8 == ""
-                ${OrIf} $R7 == $R8
-                    ${NSD_SetState} $9 ${BST_CHECKED}  ; Select this item
-                    ${If} $R8 == ""
-                        Push "Selected distro: $R7 (default)"
-                    ${Else}
-                        Push "Selected distro: $R7 (previous choice)"
-                    ${EndIf}
-                    Call LogPrint
-                ${EndIf}
-            ${ElseIf} $R2 == 1
-                StrCpy $3 $9  ; Store second radio button handle
-                ${If} $R7 == $R8
-                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
-                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
-                    Push "Selected distro: $R7 (previous choice)"
-                    Call LogPrint
-                ${EndIf}
-            ${ElseIf} $R2 == 2
-                StrCpy $4 $9  ; Store third radio button handle
-                ${If} $R7 == $R8
-                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
-                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
-                    Push "Selected distro: $R7 (previous choice)"
-                    Call LogPrint
-                ${EndIf}
-            ${ElseIf} $R2 == 3
-                StrCpy $5 $9  ; Store fourth radio button handle
-                ${If} $R7 == $R8
-                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
-                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
-                    Push "Selected distro: $R7 (previous choice)"
-                    Call LogPrint
-                ${EndIf}
-            ${ElseIf} $R2 == 4
-                StrCpy $6 $9  ; Store fifth radio button handle
-                ${If} $R7 == $R8
-                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
-                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
-                    Push "Selected distro: $R7 (previous choice)"
-                    Call LogPrint
-                ${EndIf}
+            ; Store handle and label in our lists
+            ${If} $RADIO_BUTTON_HANDLES == ""
+                StrCpy $RADIO_BUTTON_HANDLES "$9"
+                StrCpy $RADIO_BUTTON_LABELS "$R7"
+            ${Else}
+                StrCpy $RADIO_BUTTON_HANDLES "$RADIO_BUTTON_HANDLES|$9"
+                StrCpy $RADIO_BUTTON_LABELS "$RADIO_BUTTON_LABELS|$R7"
+            ${EndIf}
+            
+            ; Check if this matches the previously selected distro
+            ${If} $R7 == $R8
+                StrCpy $SELECTED_RADIO_INDEX $R2
+                ${NSD_SetState} $9 ${BST_CHECKED}
+                Push "Selected distro: $R7 (previous choice)"
+                Call LogPrint
+            ${ElseIf} $R2 == 0
+            ${AndIf} $R8 == ""
+                ${NSD_SetState} $9 ${BST_CHECKED}
+                Push "Selected distro: $R7 (default)"
+                Call LogPrint
             ${EndIf}
             
             IntOp $R2 $R2 + 1
@@ -297,7 +281,8 @@ Function DistroSelectionPage
         ${EndIf}
     ${Loop}
 
-    Push "Added $R2 radio buttons"
+    StrCpy $RADIO_BUTTON_COUNT $R2
+    Push "Added $RADIO_BUTTON_COUNT radio buttons"
     Call LogPrint
 
     Push "About to show dialog..."
@@ -309,53 +294,61 @@ Function DistroSelectionPageLeave
     Push "Getting selected distro..."
     Call LogPrint
     
-    ; Check which radio button is selected and get its text
-    ${NSD_GetState} $2 $R0
-    ${If} $R0 == ${BST_CHECKED}
-        ${NSD_GetText} $2 $SELECTED_DISTRO
-        Push "Selected distro: $SELECTED_DISTRO"
-        Call LogPrint
-        Goto CopyScripts
-    ${EndIf}
+    ; Find which radio button is selected by iterating through all handles
+    StrCpy $R1 $RADIO_BUTTON_HANDLES  ; Working copy of handles
+    StrCpy $R2 $RADIO_BUTTON_LABELS   ; Working copy of labels
+    StrCpy $R3 0                      ; Current index
+    StrCpy $SELECTED_DISTRO ""        ; Clear selection
     
-    ${NSD_GetState} $3 $R0
-    ${If} $R0 == ${BST_CHECKED}
-        ${NSD_GetText} $3 $SELECTED_DISTRO
-        Push "Selected distro: $SELECTED_DISTRO"
-        Call LogPrint
-        Goto CopyScripts
-    ${EndIf}
-    
-    ${NSD_GetState} $4 $R0
-    ${If} $R0 == ${BST_CHECKED}
-        ${NSD_GetText} $4 $SELECTED_DISTRO
-        Push "Selected distro: $SELECTED_DISTRO"
-        Call LogPrint
-        Goto CopyScripts
-    ${EndIf}
-    
-    ${NSD_GetState} $5 $R0
-    ${If} $R0 == ${BST_CHECKED}
-        ${NSD_GetText} $5 $SELECTED_DISTRO
-        Push "Selected distro: $SELECTED_DISTRO"
-        Call LogPrint
-        Goto CopyScripts
-    ${EndIf}
-    
-    ${NSD_GetState} $6 $R0
-    ${If} $R0 == ${BST_CHECKED}
-        ${NSD_GetText} $6 $SELECTED_DISTRO
-        Push "Selected distro: $SELECTED_DISTRO"
-        Call LogPrint
-        Goto CopyScripts
-    ${EndIf}
+    ${Do}
+        ; Extract current handle
+        ${WordFind} "$R1" "|" "+1{" $R4  ; Get first handle
+        ${If} $R4 == $R1
+            ; Last item (no more separators)
+            StrCpy $R5 $R1
+            StrCpy $R1 ""
+        ${Else}
+            ; More items remain
+            StrCpy $R5 $R4
+            ${WordFind} "$R1" "|" "+1}" $R1  ; Remove first item
+        ${EndIf}
+        
+        ; Extract corresponding label
+        ${WordFind} "$R2" "|" "+1{" $R6  ; Get first label
+        ${If} $R6 == $R2
+            ; Last item (no more separators)
+            StrCpy $R7 $R2
+            StrCpy $R2 ""
+        ${Else}
+            ; More items remain
+            StrCpy $R7 $R6
+            ${WordFind} "$R2" "|" "+1}" $R2  ; Remove first item
+        ${EndIf}
+        
+        ; Check if this radio button is selected
+        ${NSD_GetState} $R5 $R0
+        ${If} $R0 == ${BST_CHECKED}
+            StrCpy $SELECTED_DISTRO $R7
+            Push "Selected distro: $SELECTED_DISTRO"
+            Call LogPrint
+            ${Break}
+        ${EndIf}
+        
+        IntOp $R3 $R3 + 1
+        
+        ; Check if we're done
+        ${If} $R1 == ""
+            ${Break}
+        ${EndIf}
+    ${Loop}
     
     ; Fallback - should not happen if we have proper radio button logic
-    Push "No distro selected - using first available"
-    Call LogPrint
-    ${NSD_GetText} $2 $SELECTED_DISTRO
+    ${If} $SELECTED_DISTRO == ""
+        Push "No distro selected - using first available"
+        Call LogPrint
+        ${WordFind} "$RADIO_BUTTON_LABELS" "|" "+1{" $SELECTED_DISTRO
+    ${EndIf}
     
-    CopyScripts:
     ; Store the selected distro for next time
     WriteRegStr ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "SelectedDistro" $SELECTED_DISTRO
     Push "Stored selected distro: $SELECTED_DISTRO"
