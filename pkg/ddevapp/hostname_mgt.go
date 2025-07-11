@@ -3,13 +3,13 @@ package ddevapp
 import (
 	"context"
 	"fmt"
-	"github.com/ddev/ddev/pkg/hostname"
 	"net"
 	"os"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/util"
 )

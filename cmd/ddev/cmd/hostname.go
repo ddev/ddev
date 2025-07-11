@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var removeHostnameFlag bool
@@ -27,7 +27,6 @@ ddev hostname --remove-inactive
 implications and requires elevated privileges. You may be asked for a password
 to allow DDEV to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(_ *cobra.Command, args []string) {
-		ddevHostnameBinary := hostname.GetDdevHostnameBinary()
 		// If requested, remove all inactive host names and exit
 		if removeInactiveFlag {
 			if len(args) > 0 {
@@ -49,32 +48,38 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 
 		hostnameInHostsFile, err := hostname.IsHostnameInHostsFile(name)
 		if err != nil {
-			util.Warning("Could not check existence of %s in hosts file: %v", name, err)
+			util.Warning("Could not check existence of %s in the hosts file: %v", name, err)
 		}
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
 			if !hostnameInHostsFile {
+				util.Debug("Not removing host entry %s (%s) because it is not in the hosts file", name, dockerIP)
 				return
 			}
-			out, err := exec.RunHostCommand(ddevHostnameBinary, "--remove", name, dockerIP)
+			out, err := hostname.ElevateToRemoveHostEntry(name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+				util.Warning("Failed to remove hosts entry %s (%s): %v (output='%v')", name, dockerIP, err, out)
 			}
 			return
 		}
 		if checkHostnameFlag {
 			if hostnameInHostsFile {
+				util.Debug("Hostname %s (%s) is in the hosts file", name, dockerIP)
 				return
 			}
-
+			util.Debug("Hostname %s (%s) is not in the hosts file", name, dockerIP)
 			os.Exit(1)
 		}
 		// By default, add a host name
 		if !hostnameInHostsFile {
-			out, err := exec.RunHostCommand(ddevHostnameBinary, name, dockerIP)
+			out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to add hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+				util.Warning("Failed to add hosts entry %s (%s): %v (output='%v')", name, dockerIP, err, out)
+			} else {
+				util.Debug("Added %s (%s) to the hosts file", name, dockerIP)
 			}
+		} else {
+			util.Debug("Hostname %s (%s) is already in the hosts file", name, dockerIP)
 		}
 	},
 }
@@ -100,6 +105,7 @@ func init() {
 	HostNameCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
 	HostNameCmd.Flags().BoolVar(&removeInactiveFlag, "fire-bazooka", false, "Alias of --remove-inactive")
 	_ = HostNameCmd.Flags().MarkHidden("fire-bazooka")
+	HostNameCmd.MarkFlagsMutuallyExclusive("remove", "check")
 
 	RootCmd.AddCommand(HostNameCmd)
 }
