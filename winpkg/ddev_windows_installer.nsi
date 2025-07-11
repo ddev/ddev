@@ -646,7 +646,7 @@ Function DockerCheckPage
     ${If} $INSTALL_OPTION == "traditional"
         ${NSD_CreateLabel} 0 0 100% 60u "Docker provider is required for traditional Windows installation but was not found or is not running.$\r$\n$\r$\nPlease install and start Docker Desktop (https://www.docker.com/products/docker-desktop/) or Rancher Desktop (https://rancherdesktop.io/) before installing DDEV.$\r$\n$\r$\nYou can exit now to install Docker, or cancel this installation."
     ${ElseIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-        ${NSD_CreateLabel} 0 0 100% 60u "Docker Desktop or Rancher Desktop is required for this installation but is not accessible in WSL2.$\r$\n$\r$\nPlease install Docker Desktop or Rancher Desktop and enable WSL2 integration for the '$SELECTED_DISTRO' distro.$\r$\n$\r$\nYou can exit now to configure Docker, or cancel this installation."
+        ${NSD_CreateLabel} 0 0 100% 60u "Docker Desktop or Rancher Desktop is required for this installation but is not accessible in WSL2.$\r$\n$\r$\nEnsure that Docker Desktop or Rancher Desktop is installed, running, and has WSL2 integration enabled for the '$SELECTED_DISTRO' distro.$\r$\n$\r$\nThe 'docker ps' command must succeed inside WSL2 before launching this installer.$\r$\n$\r$\nYou can exit now to configure Docker, or cancel this installation."
     ${Else}
         ${NSD_CreateLabel} 0 0 100% 60u "Docker provider is required but was not found or is not running.$\r$\n$\r$\nPlease install and start a Docker provider before installing DDEV.$\r$\n$\r$\nYou can exit now to install Docker, or cancel this installation."
     ${EndIf}
