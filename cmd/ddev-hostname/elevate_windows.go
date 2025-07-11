@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/ddev/ddev/pkg/output"
 	"golang.org/x/sys/windows"
 )
 
