@@ -1129,7 +1129,7 @@ Function InstallWSL2CommonSetup
     ; Install linux packages
     Push "WSL($SELECTED_DISTRO): Installing required linux packages..."
     Call LogPrint
-    Push "Please be patient - installing required packages..."
+    Push "Please be patient - installing required linux packages..."
     Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
     Pop $1
