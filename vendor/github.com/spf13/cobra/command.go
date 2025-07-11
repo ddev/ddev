@@ -1296,6 +1296,11 @@ Simply type ` + c.DisplayName() + ` help [path to command] for full details.`,
 					c.Printf("Unknown help topic %#q\n", args)
 					CheckErr(c.Root().Usage())
 				} else {
+					// FLow the context down to be used in help text
+					if cmd.ctx == nil {
+						cmd.ctx = c.ctx
+					}
+
 					cmd.InitDefaultHelpFlag()    // make possible 'help' flag to be shown
 					cmd.InitDefaultVersionFlag() // make possible 'version' flag to be shown
 					CheckErr(cmd.Help())
@@ -2020,7 +2025,7 @@ func defaultUsageFunc(w io.Writer, in interface{}) error {
 		fmt.Fprint(w, trimRightSpace(c.InheritedFlags().FlagUsages()))
 	}
 	if c.HasHelpSubCommands() {
-		fmt.Fprintf(w, "\n\nAdditional help topcis:")
+		fmt.Fprintf(w, "\n\nAdditional help topics:")
 		for _, subcmd := range c.Commands() {
 			if subcmd.IsAdditionalHelpTopicCommand() {
 				fmt.Fprintf(w, "\n  %s %s", rpad(subcmd.CommandPath(), subcmd.CommandPathPadding()), subcmd.Short)
