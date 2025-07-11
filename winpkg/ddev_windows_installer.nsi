@@ -458,7 +458,7 @@ Page custom DockerCheckPage DockerCheckPageLeave
 
 ; Standard MUI finish page with custom run action
 !define MUI_FINISHPAGE_RUN
-!define MUI_FINISHPAGE_RUN_TEXT "✓ Support DDEV - Open GitHub Sponsors page"
+!define MUI_FINISHPAGE_RUN_TEXT "Support DDEV - Open GitHub Sponsors page"
 !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchSponsors"
 !define MUI_FINISHPAGE_TITLE "DDEV Installation Complete"
 !define MUI_FINISHPAGE_TEXT "Thank you for installing DDEV!$\r$\n$\r$\nPlease consider supporting DDEV so we can continue supporting you."
