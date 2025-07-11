@@ -1266,6 +1266,9 @@ func GetHostDockerInternalIP() (string, error) {
 	case nodeps.IsCodespaces():
 		util.Debug("host.docker.internal='%s' because on Codespaces", hostDockerInternal)
 		break
+	case nodeps.IsRemoteContainers():
+		util.Debug("host.docker.internal='%s' because on Remote Containers", hostDockerInternal)
+		break
 
 	case nodeps.IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
@@ -1344,7 +1347,7 @@ func GetNFSServerAddr() (string, error) {
 	// However, NFS will never be used on Gitpod.
 	case nodeps.IsGitpod():
 		break
-	case nodeps.IsCodespaces():
+	case nodeps.IsCodespaces() || nodeps.IsRemoteContainers():
 		break
 
 	case nodeps.IsWSL2() && IsDockerDesktop():
