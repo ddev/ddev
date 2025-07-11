@@ -6,8 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
-
-	"github.com/ddev/ddev/pkg/output"
 )
 
 func elevateIfNeeded() {
@@ -24,8 +22,8 @@ func elevateIfNeeded() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		output.UserErr.Warnf("failed to elevate command: %v", err)
-		output.UserErr.Exit(1)
+		printStderr("Failed to elevate command: %v\n", err)
+		os.Exit(1)
 	}
 	// If sudo succeeds, it will have done the real work,
 	// so we just exit in the parent process.

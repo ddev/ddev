@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/ddev/ddev/pkg/output"
+	"os"
+
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 )
@@ -35,7 +36,7 @@ because the hosts file never gets manipulated.`,
 
 		inHostsFile, err := isHostnameInHostsFile(name, dockerIP)
 		if err != nil {
-			output.UserErr.Warnf("Could not check existence of %s in hosts file: %v", name, err)
+			printStderr("Could not check existence of %s in hosts file: %v\n", name, err)
 		}
 
 		// If requested, remove the provided host name and exit
@@ -44,36 +45,36 @@ because the hosts file never gets manipulated.`,
 				elevateIfNeeded()
 				err := removeHostEntry(name, dockerIP)
 				if err != nil {
-					output.UserErr.Warnf("Failed to remove host entry %s (%s): %v", name, dockerIP, err)
-					output.UserErr.Exit(1)
+					printStderr("Failed to remove host entry %s (%s): %v\n", name, dockerIP, err)
+					os.Exit(1)
 				} else {
-					output.UserOut.Printf("Removed %s (%s) from the hosts file", name, dockerIP)
+					printStdout("Removed %s (%s) from the hosts file\n", name, dockerIP)
 				}
 			} else {
-				output.UserOut.Printf("%s (%s) is not in the hosts file", name, dockerIP)
+				printStdout("%s (%s) is not in the hosts file\n", name, dockerIP)
 			}
 			return
 		}
 		if checkHostnameFlag {
 			if inHostsFile {
-				output.UserOut.Printf("%s (%s) is in the hosts file", name, dockerIP)
+				printStdout("%s (%s) is in the hosts file\n", name, dockerIP)
 				return
 			}
-			output.UserErr.Warnf("%s is not in the hosts file", name)
-			output.UserErr.Exit(1)
+			printStderr("%s (%s) is not in the hosts file\n", name, dockerIP)
+			os.Exit(1)
 		}
 		// By default, add a host name
 		if !inHostsFile {
 			elevateIfNeeded()
 			err = addHostEntry(name, dockerIP)
 			if err != nil {
-				output.UserErr.Warnf("Failed to add hosts entry %s (%s): %v", name, dockerIP, err)
-				output.UserErr.Exit(1)
+				printStderr("Failed to add hosts entry %s (%s): %v\n", name, dockerIP, err)
+				os.Exit(1)
 			} else {
-				output.UserOut.Printf("Added %s (%s) to the hosts file", name, dockerIP)
+				printStdout("Added %s (%s) to the hosts file\n", name, dockerIP)
 			}
 		} else {
-			output.UserOut.Printf("%s (%s) is already in the hosts file", name, dockerIP)
+			printStdout("%s (%s) is already in the hosts file\n", name, dockerIP)
 		}
 	},
 }

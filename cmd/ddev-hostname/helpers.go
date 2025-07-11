@@ -5,13 +5,12 @@ import (
 	"os"
 
 	"github.com/ddev/ddev/pkg/ddevhosts"
-	"github.com/ddev/ddev/pkg/output"
 )
 
 // addHostEntry adds an entry to default hosts file
 func addHostEntry(name string, ip string) error {
 	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		output.UserErr.Warn("DDEV_NONINTERACTIVE is set. Not adding the host entry.")
+		printStderr("DDEV_NONINTERACTIVE is set. Not adding the host entry.\n")
 		return nil
 	}
 	hosts, err := getHostsFile()
@@ -30,7 +29,7 @@ func addHostEntry(name string, ip string) error {
 // removeHostEntry removes named /etc/hosts entry if it exists
 func removeHostEntry(name string, ip string) error {
 	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		output.UserErr.Warn("DDEV_NONINTERACTIVE is set. Not removing the host entry.")
+		printStderr("DDEV_NONINTERACTIVE is set. Not removing the host entry.\n")
 		return nil
 	}
 	hosts, err := getHostsFile()
@@ -69,4 +68,14 @@ func getHostsFile() (*ddevhosts.DdevHosts, error) {
 		return nil, fmt.Errorf("unable to open hosts file: %v", err)
 	}
 	return hosts, nil
+}
+
+// printStdout writes formatted output to standard output
+func printStdout(format string, a ...any) {
+	_, _ = fmt.Fprintf(os.Stdout, format, a...)
+}
+
+// printStderr writes formatted output to standard error
+func printStderr(format string, a ...any) {
+	_, _ = fmt.Fprintf(os.Stderr, format, a...)
 }

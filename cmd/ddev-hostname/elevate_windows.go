@@ -8,7 +8,6 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/ddev/ddev/pkg/output"
 	"golang.org/x/sys/windows"
 )
 
@@ -93,20 +92,20 @@ func elevate() {
 
 	ret, _, lastErr := procShellExecuteExW.Call(uintptr(unsafe.Pointer(&sei)))
 	if ret == 0 {
-		output.UserErr.Warnf("Windows elevation for hosts file manipulation failed: %v", lastErr)
+		printStderr("Windows elevation for hosts file manipulation failed: %v\n", lastErr)
 		return
 	}
 
 	if sei.hProcess != 0 {
 		_, err := windows.WaitForSingleObject(sei.hProcess, windows.INFINITE)
 		if err != nil {
-			output.UserErr.Warnf("Failed to wait for Windows elevated process: %v", err)
+			printStderr("Failed to wait for Windows elevated process: %v\n", err)
 			return
 		}
 		var exitCode uint32
 		err = windows.GetExitCodeProcess(sei.hProcess, &exitCode)
 		if err != nil {
-			output.UserErr.Warnf("Failed to get Windows elevation exit code: %v", err)
+			printStderr("Failed to get Windows elevation exit code: %v\n", err)
 			return
 		}
 		os.Exit(int(exitCode))
