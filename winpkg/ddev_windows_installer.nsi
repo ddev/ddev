@@ -1235,18 +1235,64 @@ Function InstallWSL2Common
         StrCpy $0 "docker-ce docker-ce-cli containerd.io wslu ddev"
     ${EndIf}
 
-    ; Install the selected packages
-    Push "WSL($SELECTED_DISTRO): apt-get install $0."
+    ; Install packages in multiple steps for better progress feedback
+    Push "WSL($SELECTED_DISTRO): Installing essential packages (1/4)..."
     Call LogPrint
-    Push "Please be patient - installing packages..."
+    Push "Please be patient - installing essential packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y $0 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass 2>&1"'
     Pop $1
     Pop $2
     ${If} $1 != 0
-        Push "ERROR: apt-get install failed $0 - exit code: $1, output: $2"
+        Push "ERROR: Failed to install essential packages - exit code: $1, output: $2"
         Call LogPrint
-        Push "Failed to apt-get install. Error: $2"
+        Push "Failed to install essential packages. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+
+    Push "WSL($SELECTED_DISTRO): Installing Docker components (2/4)..."
+    Call LogPrint
+    Push "Please be patient - installing Docker components..."
+    Call LogPrint
+    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io 2>&1"'
+    ${Else}
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli 2>&1"'
+    ${EndIf}
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: Failed to install Docker components - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to install Docker components. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+
+    Push "WSL($SELECTED_DISTRO): Installing WSL utilities (3/4)..."
+    Call LogPrint
+    Push "Please be patient - installing WSL utilities..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y wslu 2>&1"'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: Failed to install WSL utilities - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to install WSL utilities. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+
+    Push "WSL($SELECTED_DISTRO): Installing DDEV (4/4)..."
+    Call LogPrint
+    Push "Please be patient - installing DDEV..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev 2>&1"'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: Failed to install DDEV - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to install DDEV. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
 
