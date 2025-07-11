@@ -142,6 +142,29 @@ builds:
     path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
   binary: ddev-windows-arm64-installer
 
+# WSL2 builds that contain Windows ddev-hostname.exe in Linux-style directories
+- id: ddev-wsl2-amd64
+  builder: prebuilt
+  goos:
+  - linux
+  goarch:
+  - amd64
+  prebuilt:
+    path: .gotmp/bin/wsl_amd64/ddev-hostname.exe
+  binary: ddev-hostname.exe
+
+- id: ddev-wsl2-arm64
+  builder: prebuilt  
+  goos:
+  - linux
+  goarch:
+  - arm64
+  prebuilt:
+    path: .gotmp/bin/wsl_arm64/ddev-hostname.exe
+  binary: ddev-hostname.exe
+
+
+
 ###### Archives ######
 archives:
 - id: ddev
@@ -349,6 +372,7 @@ nfpms:
   suggests:
     - bash-completion
     - zsh-completions
+    - ddev-wsl2
   overrides:
     deb:
       dependencies:
@@ -358,6 +382,23 @@ nfpms:
     rpm:
       dependencies:
       - nss-tools
+
+# WSL2 package containing only Windows ddev-hostname.exe
+- id: ddev-wsl2
+  maintainer: Randy Fay
+  license: "Apache 2"
+  homepage: https://github.com/ddev/ddev
+  description: |
+    WSL2 components for DDEV (Windows-side ddev-hostname.exe)
+  package_name: ddev-wsl2
+  formats:
+    - deb
+    - rpm
+  builds:
+    - ddev-wsl2-amd64
+    - ddev-wsl2-arm64
+  dependencies:
+    - ddev
 
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'

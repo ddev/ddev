@@ -66,6 +66,8 @@ darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-host
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev-hostname
 windows_amd64: windows_amd64_install
 windows_arm64: windows_arm64_install
+wsl_amd64: $(GOTMP)/bin/wsl_amd64/ddev-hostname.exe
+wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe
 
 completions: $(GOTMP)/bin/completions.tar.gz
 
@@ -90,6 +92,15 @@ $(TARGETS): mkcert $(GOFILES)
 $(GOTMP)/bin/completions.tar.gz: build
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
 	tar -C $(GOTMP)/bin/completions -czf $(GOTMP)/bin/completions.tar.gz .
+
+# WSL2 build targets - copy Windows binaries to Linux-style directories for packaging
+$(GOTMP)/bin/wsl_amd64/ddev-hostname.exe: $(GOTMP)/bin/windows_amd64/ddev-hostname.exe
+	mkdir -p $(GOTMP)/bin/wsl_amd64
+	cp $< $@
+
+$(GOTMP)/bin/wsl_arm64/ddev-hostname.exe: $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
+	mkdir -p $(GOTMP)/bin/wsl_arm64
+	cp $< $@
 
 mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert
 
