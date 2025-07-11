@@ -43,6 +43,8 @@ Var StartMenuGroup
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
 !define REG_UNINST_ROOT "HKLM"
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+!define REG_SETTINGS_ROOT "HKLM"
+!define REG_SETTINGS_KEY "Software\DDEV\Settings"
 
 ; Installer Types
 InstType "Full"
@@ -196,6 +198,11 @@ Function DistroSelectionPage
     Push "Creating radio buttons..."
     Call LogPrint
 
+    ; Get previously selected distro
+    ReadRegStr $R8 ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "SelectedDistro"
+    Push "Previously selected distro: $R8"
+    Call LogPrint
+
     ; Process the pipe-separated list and create radio buttons
     StrCpy $R1 $R0    ; Working copy of the list
     StrCpy $R2 0      ; Item count
@@ -221,25 +228,59 @@ Function DistroSelectionPage
             Call LogPrint
             
             ; Calculate Y position for radio button
-            IntOp $R8 $R3 * 24
-            IntOp $R8 $R8 + 30
+            IntOp $R9 $R3 * 24
+            IntOp $R9 $R9 + 30
             
             ; Create radio button
-            ${NSD_CreateRadioButton} 10 $R8u 280u 16u "$R7"
-            Pop $R9
+            ${NSD_CreateRadioButton} 10 $R9u 280u 16u "$R7"
+            Pop $9
             
             ; Store radio button handle based on item count
             ${If} $R2 == 0
-                StrCpy $2 $R9  ; Store first radio button handle
-                ${NSD_SetState} $R9 ${BST_CHECKED}  ; Select first item by default
+                StrCpy $2 $9  ; Store first radio button handle
+                ; Check if this matches the previously selected distro
+                ${If} $R8 == ""
+                ${OrIf} $R7 == $R8
+                    ${NSD_SetState} $9 ${BST_CHECKED}  ; Select this item
+                    ${If} $R8 == ""
+                        Push "Selected distro: $R7 (default)"
+                    ${Else}
+                        Push "Selected distro: $R7 (previous choice)"
+                    ${EndIf}
+                    Call LogPrint
+                ${EndIf}
             ${ElseIf} $R2 == 1
-                StrCpy $3 $R9  ; Store second radio button handle
+                StrCpy $3 $9  ; Store second radio button handle
+                ${If} $R7 == $R8
+                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
+                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
+                    Push "Selected distro: $R7 (previous choice)"
+                    Call LogPrint
+                ${EndIf}
             ${ElseIf} $R2 == 2
-                StrCpy $4 $R9  ; Store third radio button handle
+                StrCpy $4 $9  ; Store third radio button handle
+                ${If} $R7 == $R8
+                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
+                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
+                    Push "Selected distro: $R7 (previous choice)"
+                    Call LogPrint
+                ${EndIf}
             ${ElseIf} $R2 == 3
-                StrCpy $5 $R9  ; Store fourth radio button handle
+                StrCpy $5 $9  ; Store fourth radio button handle
+                ${If} $R7 == $R8
+                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
+                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
+                    Push "Selected distro: $R7 (previous choice)"
+                    Call LogPrint
+                ${EndIf}
             ${ElseIf} $R2 == 4
-                StrCpy $6 $R9  ; Store fifth radio button handle
+                StrCpy $6 $9  ; Store fifth radio button handle
+                ${If} $R7 == $R8
+                    ${NSD_SetState} $2 ${BST_UNCHECKED}  ; Uncheck first item
+                    ${NSD_SetState} $9 ${BST_CHECKED}    ; Select this item
+                    Push "Selected distro: $R7 (previous choice)"
+                    Call LogPrint
+                ${EndIf}
             ${EndIf}
             
             IntOp $R2 $R2 + 1
@@ -315,6 +356,11 @@ Function DistroSelectionPageLeave
     ${NSD_GetText} $2 $SELECTED_DISTRO
     
     CopyScripts:
+    ; Store the selected distro for next time
+    WriteRegStr ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "SelectedDistro" $SELECTED_DISTRO
+    Push "Stored selected distro: $SELECTED_DISTRO"
+    Call LogPrint
+
     ; Copy all scripts to temp directory for later use
     Push "Copying all scripts to temp directory..."
     Call LogPrint
@@ -452,7 +498,27 @@ Function InstallChoicePage
     ${NSD_CreateRadioButton} 10 100u 98% 24u "Traditional Windows$\nClassic Windows installation using Git Bash, PowerShell, or Cmd (Requires a Windows Docker provider like Docker Desktop or Rancher Desktop)"
     Pop $4
 
-    ${NSD_SetState} $2 ${BST_CHECKED}
+    ; Read previous installation choice and set default
+    ReadRegStr $R0 ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "InstallType"
+    ${If} $R0 == "wsl2-docker-ce"
+        ${NSD_SetState} $2 ${BST_CHECKED}
+        Push "Set default to WSL2 with Docker CE based on previous installation"
+        Call LogPrint
+    ${ElseIf} $R0 == "wsl2-docker-desktop"
+        ${NSD_SetState} $3 ${BST_CHECKED}
+        Push "Set default to WSL2 with Docker Desktop based on previous installation"
+        Call LogPrint
+    ${ElseIf} $R0 == "traditional"
+        ${NSD_SetState} $4 ${BST_CHECKED}
+        Push "Set default to Traditional Windows based on previous installation"
+        Call LogPrint
+    ${Else}
+        ; Default to Docker CE if no previous installation found
+        ${NSD_SetState} $2 ${BST_CHECKED}
+        Push "No previous installation found, defaulting to WSL2 with Docker CE"
+        Call LogPrint
+    ${EndIf}
+
     nsDialogs::Show
 FunctionEnd
 
@@ -468,6 +534,11 @@ Function InstallChoicePageLeave
   ${NSD_GetState} $4 $0
   StrCmp $0 ${BST_CHECKED} 0 +2
     StrCpy $INSTALL_OPTION "traditional"
+
+  ; Store the selected installation type for next time
+  WriteRegStr ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "InstallType" $INSTALL_OPTION
+  Push "Stored installation type: $INSTALL_OPTION"
+  Call LogPrint
 FunctionEnd
 
 Function GitCheckPage
