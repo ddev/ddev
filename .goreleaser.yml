@@ -142,8 +142,8 @@ builds:
     path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
   binary: ddev-windows-arm64-installer
 
-# WSL2 builds that contain Windows ddev-hostname.exe in Linux-style directories
-- id: ddev-wsl2-amd64
+# WSL2 builds that contain Windows binaries in Linux-style directories
+- id: ddev-wsl2-hostname-amd64
   builder: prebuilt
   goos:
   - linux
@@ -153,7 +153,7 @@ builds:
     path: .gotmp/bin/wsl_amd64/ddev-hostname.exe
   binary: ddev-hostname.exe
 
-- id: ddev-wsl2-arm64
+- id: ddev-wsl2-hostname-arm64
   builder: prebuilt  
   goos:
   - linux
@@ -162,6 +162,26 @@ builds:
   prebuilt:
     path: .gotmp/bin/wsl_arm64/ddev-hostname.exe
   binary: ddev-hostname.exe
+
+- id: ddev-wsl2-mkcert-amd64
+  builder: prebuilt
+  goos:
+  - linux
+  goarch:
+  - amd64
+  prebuilt:
+    path: .gotmp/bin/wsl_amd64/mkcert.exe
+  binary: mkcert.exe
+
+- id: ddev-wsl2-mkcert-arm64
+  builder: prebuilt  
+  goos:
+  - linux
+  goarch:
+  - arm64
+  prebuilt:
+    path: .gotmp/bin/wsl_arm64/mkcert.exe
+  binary: mkcert.exe
 
 
 
@@ -383,20 +403,22 @@ nfpms:
       dependencies:
       - nss-tools
 
-# WSL2 package containing only Windows ddev-hostname.exe
+# WSL2 package containing Windows binaries (ddev-hostname.exe and mkcert.exe)
 - id: ddev-wsl2
   maintainer: DDEV Maintainers
   license: "Apache 2"
   homepage: https://github.com/ddev/ddev
   description: |
-    WSL2 components for DDEV (Windows-side ddev-hostname.exe)
+    WSL2 components for DDEV (Windows-side ddev-hostname.exe and mkcert.exe)
   package_name: ddev-wsl2
   formats:
     - deb
     - rpm
   builds:
-    - ddev-wsl2-amd64
-    - ddev-wsl2-arm64
+    - ddev-wsl2-hostname-amd64
+    - ddev-wsl2-hostname-arm64
+    - ddev-wsl2-mkcert-amd64
+    - ddev-wsl2-mkcert-arm64
   dependencies:
     - ddev
 

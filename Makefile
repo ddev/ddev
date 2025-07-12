@@ -66,8 +66,8 @@ darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-host
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev-hostname
 windows_amd64: windows_amd64_install
 windows_arm64: windows_arm64_install
-wsl_amd64: $(GOTMP)/bin/wsl_amd64/ddev-hostname.exe
-wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe
+wsl_amd64: $(GOTMP)/bin/wsl_amd64/ddev-hostname.exe $(GOTMP)/bin/wsl_amd64/mkcert.exe
+wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe $(GOTMP)/bin/wsl_arm64/mkcert.exe
 
 completions: $(GOTMP)/bin/completions.tar.gz
 
@@ -99,6 +99,14 @@ $(GOTMP)/bin/wsl_amd64/ddev-hostname.exe: $(GOTMP)/bin/windows_amd64/ddev-hostna
 	cp $< $@
 
 $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe: $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
+	mkdir -p $(GOTMP)/bin/wsl_arm64
+	cp $< $@
+
+$(GOTMP)/bin/wsl_amd64/mkcert.exe: $(GOTMP)/bin/windows_amd64/mkcert.exe
+	mkdir -p $(GOTMP)/bin/wsl_amd64
+	cp $< $@
+
+$(GOTMP)/bin/wsl_arm64/mkcert.exe: $(GOTMP)/bin/windows_arm64/mkcert.exe
 	mkdir -p $(GOTMP)/bin/wsl_arm64
 	cp $< $@
 
