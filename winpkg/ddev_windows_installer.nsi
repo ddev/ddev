@@ -1295,7 +1295,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing DDEV..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev ddev-wsl2 2>&1"'
     Pop $1
     Pop $2
     ${If} $1 != 0
