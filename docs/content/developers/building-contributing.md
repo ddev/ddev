@@ -269,6 +269,50 @@ make clean
 make staticrequired
 ```
 
+### Testing goreleaser package builds
+
+You can test the goreleaser configuration and package building locally without publishing:
+
+First, build all artifacts, as Goreleaser uses them as `prebuilt`. 
+
+```bash
+make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 wsl_amd64 wsl_arm64
+```
+
+Then, create a `goreleaser.yml` file in the root of the repository with the following content:
+```
+
+Then, you can use `goreleaser` to check the configuration and build packages. You must have [Goreleaser Pro](https://goreleaser.com/pro/) installed, as DDEV uses it for configuration. If you don't have it installed, see the [Goreleaser installation instructions](https://goreleaser.com/install/).
+```
+
+```bash
+# Install Goreleaser Pro (required for DDEV's configuration)
+# See https://goreleaser.com/install/ for installation instructions
+
+# Check configuration syntax
+REPOSITORY_OWNER=ddev goreleaser check
+
+# Build packages in snapshot mode (no publishing)
+REPOSITORY_OWNER=ddev goreleaser release --snapshot --clean
+
+# Build only specific packages (faster for testing)
+REPOSITORY_OWNER=ddev goreleaser build --snapshot --clean
+```
+
+Built packages will appear in the `dist/` directory. You can examine package contents:
+
+```bash
+# List created packages
+ls -la dist/*.{deb,rpm}
+
+# Examine DEB package contents
+dpkg-deb -c dist/ddev_*_linux_amd64.deb
+dpkg-deb -c dist/ddev-wsl2_*_linux_amd64.deb  # WSL2 package
+
+# Examine RPM package contents  
+rpm -qlp dist/ddev_*_linux_amd64.rpm
+```
+
 ## Testing
 
 Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name. This is also easy to do in Visual Studio Code.
