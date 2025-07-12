@@ -273,14 +273,13 @@ make staticrequired
 
 You can test the goreleaser configuration and package building locally without publishing:
 
-First, build all artifacts, as Goreleaser uses them as `prebuilt`. 
+First, build all artifacts, as Goreleaser uses them as `prebuilt`.
 
 ```bash
 make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 wsl_amd64 wsl_arm64
 ```
 
 Then, you can use `goreleaser` to check the configuration and build packages. You must have [Goreleaser Pro](https://goreleaser.com/pro/) installed, as DDEV uses it for configuration. If you don't have it installed, see the [Goreleaser installation instructions](https://goreleaser.com/install/).
-```
 
 ```bash
 # Install Goreleaser Pro (required for DDEV's configuration)
@@ -290,7 +289,6 @@ Then, you can use `goreleaser` to check the configuration and build packages. Yo
 REPOSITORY_OWNER=ddev goreleaser check
 
 # Build packages in snapshot mode (no publishing)
-
 ```
 
 Built packages will appear in the `dist/` directory. You can examine package contents:
