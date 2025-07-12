@@ -362,6 +362,7 @@ Function DistroSelectionPageLeave
     File /oname=check_root_user.sh "scripts\check_root_user.sh"
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
+    File /oname=ddev-wsl2-postinstall.sh "scripts\ddev-wsl2-postinstall.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
@@ -1286,7 +1287,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing DDEV..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev ddev-wsl2 2>&1"'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1411,11 +1412,56 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
     
+    ; Configure WSL2 security settings to prevent Windows security warnings
+    Push "Configuring WSL2 security settings to prevent Windows executable warnings..."
+    Call LogPrint
+    
+    ; Configure WSL2 security settings directly via registry
+    Push "Configuring WSL2 security settings..."
+    Call LogPrint
+    
+    ; Try to add wsl.localhost to Local Intranet zone via registry
+    Push "Adding *.wsl.localhost to Local Intranet security zone..."
+    Call LogPrint
+    nsExec::ExecToStack 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\wsl.localhost" /v "file" /t REG_DWORD /d 1 /f'
+    Pop $R0
+    Pop $R1
+    ${If} $R0 == 0
+        Push "WSL2 security settings configured successfully via registry"
+        Call LogPrint
+    ${Else}
+        ; Fallback: Try PowerShell approach
+        Push "Registry method failed, trying PowerShell approach..."
+        Call LogPrint
+        nsExec::ExecToStack 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { $$path = \"HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\Domains\\wsl.localhost\"; if (-not (Test-Path $$path)) { New-Item -Path $$path -Force | Out-Null }; Set-ItemProperty -Path $$path -Name \"file\" -Value 1 -Type DWord; Write-Host \"Success\" } catch { exit 1 }"'
+        Pop $R2
+        Pop $R3
+        ${If} $R2 == 0
+            Push "WSL2 security settings configured via PowerShell"
+            Call LogPrint
+        ${Else}
+            ; Final fallback: Show manual instructions
+            Push "Could not automatically configure WSL2 security settings."
+            Call LogPrint
+            Push "To resolve Windows security warnings manually:"
+            Call LogPrint
+            Push "1. Open Internet Options (Control Panel > Internet Options)"
+            Call LogPrint
+            Push "2. Go to Security tab > Local Intranet > Sites > Advanced"
+            Call LogPrint
+            Push "3. Add this website to the zone: \\\\wsl.localhost"
+            Call LogPrint
+            Push "4. Click OK to save"
+            Call LogPrint
+        ${EndIf}
+    ${EndIf}
+    
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
     Delete "C:\Windows\Temp\ddev_installer\ddev_linux"
     Delete "C:\Windows\Temp\ddev_installer\ddev-hostname_linux"
+    Delete "C:\Windows\Temp\ddev_installer\ddev-wsl2-postinstall.sh"
     RMDir "C:\Windows\Temp\ddev_installer"
     
     Push "All done! Installation completed successfully and validated."

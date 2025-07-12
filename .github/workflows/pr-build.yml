@@ -61,7 +61,7 @@ jobs:
       - run: "(git log --oneline | head -5) || true"
 
       - name: Build DDEV executables
-        run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64_install windows_arm64_install
+        run: make CGO_ENABLED=0 BUILDARGS="" linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64_install windows_arm64_install wsl_amd64 wsl_arm64
 
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts

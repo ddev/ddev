@@ -104,7 +104,7 @@ jobs:
         shell: bash
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; fi
-          make windows_amd64_install windows_arm64_install
+          make windows_amd64_install windows_arm64_install wsl_amd64 wsl_arm64
       - name: Show github.ref
         run: echo ${{ github.ref }}
       - name: Build chocolatey on release
@@ -126,9 +126,11 @@ jobs:
           signtool verify -pa .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
           signtool verify -pa .gotmp/bin/windows_amd64/ddev.exe
           signtool verify -pa .gotmp/bin/windows_amd64/ddev-hostname.exe
+          signtool verify -pa .gotmp/bin/windows_amd64/mkcert.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev.exe
           signtool verify -pa .gotmp/bin/windows_arm64/ddev-hostname.exe
+          signtool verify -pa .gotmp/bin/windows_arm64/mkcert.exe
 
       - name: Cache signed binaries
         # After 3.0.5 they were using zstdmt which is not available on Windows
@@ -136,7 +138,9 @@ jobs:
         # But trying again with @v3, 2023-02-18
         uses: actions/cache@v4
         with:
-          path: .gotmp/bin/windows*
+          path: |
+            .gotmp/bin/windows*
+            .gotmp/bin/wsl*
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
           enableCrossOsArchive: true
 
@@ -240,7 +244,9 @@ jobs:
         uses: actions/cache@v4
         id: signedwindows
         with:
-          path: .gotmp/bin/windows*
+          path: |
+            .gotmp/bin/windows*
+            .gotmp/bin/wsl*
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
           enableCrossOsArchive: true
           fail-on-cache-miss: true

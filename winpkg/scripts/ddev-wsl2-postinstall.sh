@@ -1,0 +1,1 @@
+../../scripts/ddev-wsl2-postinstall.sh
