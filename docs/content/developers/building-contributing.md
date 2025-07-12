@@ -279,9 +279,6 @@ First, build all artifacts, as Goreleaser uses them as `prebuilt`.
 make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 wsl_amd64 wsl_arm64
 ```
 
-Then, create a `goreleaser.yml` file in the root of the repository with the following content:
-```
-
 Then, you can use `goreleaser` to check the configuration and build packages. You must have [Goreleaser Pro](https://goreleaser.com/pro/) installed, as DDEV uses it for configuration. If you don't have it installed, see the [Goreleaser installation instructions](https://goreleaser.com/install/).
 ```
 
@@ -293,10 +290,7 @@ Then, you can use `goreleaser` to check the configuration and build packages. Yo
 REPOSITORY_OWNER=ddev goreleaser check
 
 # Build packages in snapshot mode (no publishing)
-REPOSITORY_OWNER=ddev goreleaser release --snapshot --clean
 
-# Build only specific packages (faster for testing)
-REPOSITORY_OWNER=ddev goreleaser build --snapshot --clean
 ```
 
 Built packages will appear in the `dist/` directory. You can examine package contents:
