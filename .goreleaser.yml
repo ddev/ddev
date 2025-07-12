@@ -421,6 +421,8 @@ nfpms:
     - ddev-wsl2-mkcert-arm64
   dependencies:
     - ddev
+  scripts:
+    postinstall: scripts/ddev-wsl2-postinstall.sh
 
 snapshot:
   version_template: '{{ .Version }}-{{.ShortCommit}}'

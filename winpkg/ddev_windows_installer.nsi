@@ -1419,6 +1419,20 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
     
+    ; Unblock WSL2 executables to prevent Windows security warnings
+    Push "Unblocking WSL2 executables to prevent Windows security warnings..."
+    Call LogPrint
+    nsExec::ExecToStack 'powershell.exe -WindowStyle Hidden -Command "Get-ChildItem \"\\wsl$$\\*\\usr\\bin\\ddev-hostname.exe\" -ErrorAction SilentlyContinue | Unblock-File; Get-ChildItem \"\\wsl$$\\*\\usr\\bin\\mkcert.exe\" -ErrorAction SilentlyContinue | Unblock-File"'
+    Pop $R0
+    Pop $R1
+    ${If} $R0 == 0
+        Push "WSL2 executables unblocked successfully"
+        Call LogPrint
+    ${Else}
+        Push "Warning: Failed to unblock WSL2 executables (this is usually not a problem): $R1"
+        Call LogPrint
+    ${EndIf}
+    
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
