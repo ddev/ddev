@@ -1422,15 +1422,32 @@ Function InstallWSL2Common
     ; Unblock WSL2 executables to prevent Windows security warnings
     Push "Unblocking WSL2 executables to prevent Windows security warnings..."
     Call LogPrint
-    nsExec::ExecToStack 'powershell.exe -WindowStyle Hidden -Command "Get-ChildItem \"\\wsl$$\\*\\usr\\bin\\ddev-hostname.exe\" -ErrorAction SilentlyContinue | Unblock-File; Get-ChildItem \"\\wsl$$\\*\\usr\\bin\\mkcert.exe\" -ErrorAction SilentlyContinue | Unblock-File"'
+    
+    ; Try newer wsl.localhost format first
+    nsExec::ExecToStack 'powershell.exe -WindowStyle Hidden -Command "Get-ChildItem \"\\wsl.localhost\\*\\usr\\bin\\ddev-hostname.exe\" -ErrorAction SilentlyContinue | Unblock-File; Get-ChildItem \"\\wsl.localhost\\*\\usr\\bin\\mkcert.exe\" -ErrorAction SilentlyContinue | Unblock-File"'
     Pop $R0
     Pop $R1
     ${If} $R0 == 0
-        Push "WSL2 executables unblocked successfully"
+        Push "WSL2 executables unblocked successfully (wsl.localhost)"
         Call LogPrint
     ${Else}
-        Push "Warning: Failed to unblock WSL2 executables (this is usually not a problem): $R1"
+        ; Fallback to legacy wsl$ format
+        Push "Trying legacy WSL path format..."
         Call LogPrint
+        nsExec::ExecToStack 'powershell.exe -WindowStyle Hidden -Command "Get-ChildItem \"\\wsl$$\\*\\usr\\bin\\ddev-hostname.exe\" -ErrorAction SilentlyContinue | Unblock-File; Get-ChildItem \"\\wsl$$\\*\\usr\\bin\\mkcert.exe\" -ErrorAction SilentlyContinue | Unblock-File"'
+        Pop $R2
+        Pop $R3
+        ${If} $R2 == 0
+            Push "WSL2 executables unblocked successfully (wsl$)"
+            Call LogPrint
+        ${Else}
+            Push "Note: Could not automatically unblock WSL2 executables."
+            Call LogPrint
+            Push "If you see Windows security warnings, manually run:"
+            Call LogPrint
+            Push "powershell.exe -c Get-ChildItem \\wsl.localhost\\*\\usr\\bin\\*.exe | Unblock-File"
+            Call LogPrint
+        ${EndIf}
     ${EndIf}
     
     ; Clean up temp directory
