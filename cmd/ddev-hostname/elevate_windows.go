@@ -3,7 +3,6 @@
 package main
 
 import (
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"strings"
 	"syscall"
@@ -41,10 +40,8 @@ type shellExecuteInfo struct {
 
 func elevateIfNeeded() {
 	if isElevated() {
-		util.Debug("ddev-hostname.exe is already running with elevated privileges.")
 		return
 	}
-	util.Debug("Attempting to elevate ddev-hostname.exe")
 	elevate()
 }
 
@@ -74,7 +71,6 @@ func isElevated() bool {
 }
 
 func elevate() {
-	util.Debug("elevate() called")
 	// Prepare UTF-16 pointers
 	verbPtr, _ := syscall.UTF16PtrFromString("runas")
 	exePath, _ := os.Executable()
@@ -96,20 +92,20 @@ func elevate() {
 
 	ret, _, lastErr := procShellExecuteExW.Call(uintptr(unsafe.Pointer(&sei)))
 	if ret == 0 {
-		util.Warning("Windows elevation for hosts file manipulation failed:", lastErr)
+		printStderr("Windows elevation for hosts file manipulation failed: %v\n", lastErr)
 		return
 	}
 
 	if sei.hProcess != 0 {
 		_, err := windows.WaitForSingleObject(sei.hProcess, windows.INFINITE)
 		if err != nil {
-			util.Warning("Failed to wait for windows elevated process: %v", err)
+			printStderr("Failed to wait for Windows elevated process: %v\n", err)
 			return
 		}
 		var exitCode uint32
 		err = windows.GetExitCodeProcess(sei.hProcess, &exitCode)
 		if err != nil {
-			util.Warning("Failed to get windows elevation exit code: %v", err)
+			printStderr("Failed to get Windows elevation exit code: %v\n", err)
 			return
 		}
 		os.Exit(int(exitCode))

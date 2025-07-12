@@ -2,6 +2,10 @@ package hostname
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevhosts"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -9,60 +13,10 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/goodhosts/hostsfile"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 )
 
 const ddevhostnameBinary = "ddev-hostname"
 const ddevhostnameWindowsBinary = ddevhostnameBinary + ".exe"
-
-// AddHostEntry adds an entry to default hosts file
-// This is only used by `ddev hostname` and only used with admin privs
-func AddHostEntry(name string, ip string) error {
-	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
-		return nil
-	}
-
-	osHostsFilePath := os.ExpandEnv(filepath.FromSlash(hostsfile.HostsFilePath))
-
-	hosts, err := hostsfile.NewCustomHosts(osHostsFilePath)
-
-	if err != nil {
-		return err
-	}
-	err = hosts.Add(ip, name)
-	if err != nil {
-		return err
-	}
-	hosts.HostsPerLine(8)
-	err = hosts.Flush()
-	return err
-}
-
-// RemoveHostEntry removes named /etc/hosts entry if it exists
-// This should be run with administrative privileges only and used by
-// DDEV hostname only
-func RemoveHostEntry(name string, ip string) error {
-	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
-		return nil
-	}
-
-	hosts, err := hostsfile.NewHosts()
-	if err != nil {
-		return err
-	}
-	err = hosts.Remove(ip, name)
-	if err != nil {
-		return err
-	}
-	err = hosts.Flush()
-	return err
-}
 
 // ElevateToAddHostEntry runs the required DDEV hostname command to add the entry
 func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
@@ -74,8 +28,7 @@ func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
 // ElevateToRemoveHostEntry runs the required ddev-hostname command to remove the entry,
 func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	ddevhostnameBinary := GetDdevHostnameBinary()
-	out, err := elevateHostsManipulation([]string{
-		ddevhostnameBinary, "--remove", hostname, ip})
+	out, err := elevateHostsManipulation([]string{ddevhostnameBinary, "--remove", hostname, ip})
 	return out, err
 }
 
@@ -102,8 +55,13 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 		return "", fmt.Errorf("could not get home directory for current user. Is it set?")
 	}
 
-	if !IsDdevHostnameAvailable() {
+	if !isDdevHostnameAvailable() {
 		return "", fmt.Errorf("%s is not installed, please install it, see https://ddev.readthedocs.io/en/stable/users/usage/commands/#hostname", ddevhostnameBinary)
+	}
+
+	// Edit the Windows hosts file inside WSL2
+	if nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+		args = append(args, "--wsl")
 	}
 
 	c := args
@@ -117,8 +75,8 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 // ddevHostnameAvailable says if ddev-hostname/ddev-hostname.exe is available
 var ddevHostnameAvailable bool
 
-// IsDdevHostnameAvailable checks to see if we can use ddev-hostname
-func IsDdevHostnameAvailable() bool {
+// isDdevHostnameAvailable checks to see if we can use ddev-hostname
+func isDdevHostnameAvailable() bool {
 	ddevHostnameBinary := GetDdevHostnameBinary()
 	// Use ddev-hostname --version to check if ddev-hostname is available
 	out, err := exec.RunHostCommand(ddevHostnameBinary, "--version")
@@ -140,7 +98,7 @@ func IsHostnameInHostsFile(hostname string) (bool, error) {
 		return false, fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
-	var hosts = &ddevhosts.DdevHosts{}
+	var hosts *ddevhosts.DdevHosts
 	if nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
 		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
 	} else {
