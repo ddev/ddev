@@ -14,7 +14,7 @@ var checkHostnameFlag bool
 
 // HostNameCmd represents the hostname command
 var HostNameCmd = &cobra.Command{
-	Use:   "hostname [hostname] [ip]",
+	Use:   "hostname [flags] [hostname] [ip]",
 	Short: "Manage your hostfile entries.",
 	Example: `
 ddev hostname junk.example.com 127.0.0.1

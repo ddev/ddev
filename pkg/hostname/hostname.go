@@ -20,27 +20,27 @@ const ddevHostnameWindowsBinary = ddevHostnameBinary + ".exe"
 
 // ElevateToAddHostEntry runs the required DDEV hostname command to add the entry
 func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
-	ddevHostnameBinary := GetDdevHostnameBinary()
-	out, err := elevateHostsManipulation([]string{ddevHostnameBinary, hostname, ip})
+	binary := GetDdevHostnameBinary()
+	out, err := elevateHostsManipulation([]string{binary, hostname, ip})
 	return out, err
 }
 
 // ElevateToRemoveHostEntry runs the required ddev-hostname command to remove the entry,
 func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
-	ddevHostnameBinary := GetDdevHostnameBinary()
-	out, err := elevateHostsManipulation([]string{ddevHostnameBinary, "--remove", hostname, ip})
+	binary := GetDdevHostnameBinary()
+	out, err := elevateHostsManipulation([]string{binary, "--remove", hostname, ip})
 	return out, err
 }
 
 // GetDdevHostnameBinary returns the path to the ddev-hostname or ddev-hostname.exe binary
 // It must exist in the PATH
 func GetDdevHostnameBinary() string {
-	ddevHostnameBinary := ddevHostnameBinary
+	binary := ddevHostnameBinary
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
-		ddevHostnameBinary = ddevHostnameWindowsBinary
+		binary = ddevHostnameWindowsBinary
 	}
-	util.Debug("ddevHostnameBinary=%s", ddevHostnameBinary)
-	return ddevHostnameBinary
+	util.Debug("ddevHostnameBinary=%s", binary)
+	return binary
 }
 
 // elevateHostsManipulation uses escalation (sudo or runas) to manipulate the hosts file.
@@ -68,13 +68,13 @@ var ddevHostnameAvailable bool
 
 // isDdevHostnameAvailable checks to see if we can use ddev-hostname
 func isDdevHostnameAvailable() bool {
-	ddevHostnameBinary := GetDdevHostnameBinary()
+	binary := GetDdevHostnameBinary()
 	// Use ddev-hostname --version to check if ddev-hostname is available
-	out, err := exec.RunHostCommand(ddevHostnameBinary, "--version")
+	out, err := exec.RunHostCommand(binary, "--version")
 	if err == nil {
 		ddevHostnameAvailable = true
 	} else {
-		util.Warning("Unable to run %s, please check it; err=%v; output=%s", ddevHostnameBinary, err, strings.TrimSpace(out))
+		util.Warning("Unable to run %s, please check it; err=%v; output=%s", binary, err, strings.TrimSpace(out))
 		ddevHostnameAvailable = false
 	}
 	return ddevHostnameAvailable
