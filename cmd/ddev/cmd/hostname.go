@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/hostname"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +24,9 @@ ddev hostname --remove-inactive
 `,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
-to allow DDEV to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
+to allow ddev-hostname to modify the hosts file. If you are connected to the
+internet and using the domain ddev.site this is generally not necessary,
+because the hosts file never gets manipulated.`,
 	Run: func(_ *cobra.Command, args []string) {
 		// If requested, remove all inactive host names and exit
 		if removeInactiveFlag {
@@ -47,39 +48,42 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 		var err error
 
 		hostnameInHostsFile, err := hostname.IsHostnameInHostsFile(name)
-		if err != nil {
-			util.Warning("Could not check existence of %s in the hosts file: %v", name, err)
+		if err != nil && checkHostnameFlag {
+			util.Warning("Could not check existence of '%s' in the hosts file: %v", name, err)
 		}
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
 			if !hostnameInHostsFile {
-				util.Debug("Not removing host entry %s (%s) because it is not in the hosts file", name, dockerIP)
+				util.Success("'%s' (%s) is not in the hosts file", name, dockerIP)
 				return
 			}
 			out, err := hostname.ElevateToRemoveHostEntry(name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to remove hosts entry %s (%s): %v (output='%v')", name, dockerIP, err, out)
+				util.Failed("%s: %v", out, err)
+			}
+			if out != "" {
+				util.Success(out)
 			}
 			return
 		}
 		if checkHostnameFlag {
 			if hostnameInHostsFile {
-				util.Debug("Hostname %s (%s) is in the hosts file", name, dockerIP)
+				util.Success("'%s' (%s) is in the hosts file", name, dockerIP)
 				return
 			}
-			util.Debug("Hostname %s (%s) is not in the hosts file", name, dockerIP)
-			os.Exit(1)
+			util.Failed("'%s' (%s) is not in the hosts file", name, dockerIP)
 		}
 		// By default, add a host name
 		if !hostnameInHostsFile {
 			out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to add hosts entry %s (%s): %v (output='%v')", name, dockerIP, err, out)
-			} else {
-				util.Debug("Added %s (%s) to the hosts file", name, dockerIP)
+				util.Failed("%s: %v", out, err)
+			}
+			if out != "" {
+				util.Success(out)
 			}
 		} else {
-			util.Debug("Hostname %s (%s) is already in the hosts file", name, dockerIP)
+			util.Success("'%s' (%s) is already in the hosts file", name, dockerIP)
 		}
 	},
 }
@@ -91,12 +95,18 @@ func removeInactiveHostnames() {
 		util.Warning("Unable to run GetInactiveProjects: %v", err)
 		return
 	}
+	hasErrors := false
 	for _, app := range apps {
 		err := app.RemoveHostsEntriesIfNeeded()
 		if err != nil {
+			hasErrors = true
 			util.Warning("Unable to remove hosts entries for project '%s': %v", app.Name, err)
 		}
 	}
+	if hasErrors {
+		output.UserErr.Exit(1)
+	}
+	util.Success("Removed hosts entries for all inactive projects")
 }
 
 func init() {

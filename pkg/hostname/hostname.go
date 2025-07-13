@@ -15,32 +15,32 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-const ddevhostnameBinary = "ddev-hostname"
-const ddevhostnameWindowsBinary = ddevhostnameBinary + ".exe"
+const ddevHostnameBinary = "ddev-hostname"
+const ddevHostnameWindowsBinary = ddevHostnameBinary + ".exe"
 
 // ElevateToAddHostEntry runs the required DDEV hostname command to add the entry
 func ElevateToAddHostEntry(hostname string, ip string) (string, error) {
-	ddevhostnameBinary := GetDdevHostnameBinary()
-	out, err := elevateHostsManipulation([]string{ddevhostnameBinary, hostname, ip})
+	ddevHostnameBinary := GetDdevHostnameBinary()
+	out, err := elevateHostsManipulation([]string{ddevHostnameBinary, hostname, ip})
 	return out, err
 }
 
 // ElevateToRemoveHostEntry runs the required ddev-hostname command to remove the entry,
 func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
-	ddevhostnameBinary := GetDdevHostnameBinary()
-	out, err := elevateHostsManipulation([]string{ddevhostnameBinary, "--remove", hostname, ip})
+	ddevHostnameBinary := GetDdevHostnameBinary()
+	out, err := elevateHostsManipulation([]string{ddevHostnameBinary, "--remove", hostname, ip})
 	return out, err
 }
 
 // GetDdevHostnameBinary returns the path to the ddev-hostname or ddev-hostname.exe binary
 // It must exist in the PATH
 func GetDdevHostnameBinary() string {
-	ddevhostnameBinary := ddevhostnameBinary
+	ddevHostnameBinary := ddevHostnameBinary
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
-		ddevhostnameBinary = ddevhostnameWindowsBinary
+		ddevHostnameBinary = ddevHostnameWindowsBinary
 	}
-	util.Debug("ddevhostnameBinary=%s", ddevhostnameBinary)
-	return ddevhostnameBinary
+	util.Debug("ddevHostnameBinary=%s", ddevHostnameBinary)
+	return ddevHostnameBinary
 }
 
 // elevateHostsManipulation uses escalation (sudo or runas) to manipulate the hosts file.
@@ -50,18 +50,9 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
 		return "", nil
 	}
-	_, err = os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("could not get home directory for current user. Is it set?")
-	}
 
 	if !isDdevHostnameAvailable() {
-		return "", fmt.Errorf("%s is not installed, please install it, see https://ddev.readthedocs.io/en/stable/users/usage/commands/#hostname", ddevhostnameBinary)
-	}
-
-	// Edit the Windows hosts file inside WSL2
-	if nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-		args = append(args, "--wsl")
+		return "Binary not found", fmt.Errorf("%s is not installed, please install it, see https://ddev.readthedocs.io/en/stable/users/usage/commands/#hostname", ddevHostnameBinary)
 	}
 
 	c := args
@@ -69,7 +60,7 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 	output.UserOut.Printf("DDEV will issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
-	return out, err
+	return strings.TrimSpace(out), err
 }
 
 // ddevHostnameAvailable says if ddev-hostname/ddev-hostname.exe is available
@@ -83,7 +74,7 @@ func isDdevHostnameAvailable() bool {
 	if err == nil {
 		ddevHostnameAvailable = true
 	} else {
-		util.Warning("Unable to run %s, please check it; err=%v; output=%s", ddevhostnameBinary, err, out)
+		util.Warning("Unable to run %s, please check it; err=%v; output=%s", ddevHostnameBinary, err, strings.TrimSpace(out))
 		ddevHostnameAvailable = false
 	}
 	return ddevHostnameAvailable

@@ -9,10 +9,6 @@ import (
 
 // addHostEntry adds an entry to default hosts file
 func addHostEntry(name string, ip string) error {
-	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		printStderr("DDEV_NONINTERACTIVE is set. Not adding the host entry.\n")
-		return nil
-	}
 	hosts, err := getHostsFile()
 	if err != nil {
 		return err
@@ -28,10 +24,6 @@ func addHostEntry(name string, ip string) error {
 
 // removeHostEntry removes named /etc/hosts entry if it exists
 func removeHostEntry(name string, ip string) error {
-	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		printStderr("DDEV_NONINTERACTIVE is set. Not removing the host entry.\n")
-		return nil
-	}
 	hosts, err := getHostsFile()
 	if err != nil {
 		return err
@@ -45,25 +37,17 @@ func removeHostEntry(name string, ip string) error {
 }
 
 // isHostnameInHostsFile checks to see if the hostname already exists
-func isHostnameInHostsFile(hostname string, dockerIP string) (bool, error) {
+func isHostnameInHostsFile(hostname string, ip string) (bool, error) {
 	hosts, err := getHostsFile()
 	if err != nil {
 		return false, err
 	}
-	return hosts.Has(dockerIP, hostname), nil
+	return hosts.Has(ip, hostname), nil
 }
 
 // getHostsFile returns the hosts file
-// On WSL2 it normally assumes that the hosts file is in WSL2WindowsHostsFile
-// Otherwise it lets goodhosts decide where the hosts file is.
 func getHostsFile() (*ddevhosts.DdevHosts, error) {
-	var hosts *ddevhosts.DdevHosts
-	var err error
-	if wslFlag {
-		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
-	} else {
-		hosts, err = ddevhosts.New()
-	}
+	hosts, err := ddevhosts.New()
 	if err != nil {
 		return nil, fmt.Errorf("unable to open hosts file: %v", err)
 	}
