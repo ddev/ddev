@@ -165,11 +165,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     * You **must** use WSL2, not WSL version 1.  
       Use `wsl.exe -l -v` to see the versions of the distros you are using they should be v2.
-    * WSL2 is supported on Windows 10 and 11.  
-      All Windows 10/11 editions, including Windows 10 Home support WSL2.
     * WSL2 offers a faster, smoother experience.  
-      It’s vastly more performant, and you’re less likely to have obscure Windows problems.
-
+      It’s more performant, and you’re less likely to have obscure Windows problems.
     * Execute DDEV commands inside WSL2.  
       You’ll want to run DDEV commands inside Ubuntu, for example, and never on the Windows side in PowerShell or Git Bash.
     * Projects should live under the home directory of the Linux filesystem.  
@@ -181,9 +178,21 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     * Installing WSL2 and installing an Ubuntu distro (or some other distro if you're installing manually).
     * Optionally installing Docker Desktop or Rancher Desktop for Windows and enabling WSL2 integration with the distro (if you're using the Docker/Rancher Desktop approach).
-    * Running the DDEV installer and choosing the approach you want.
+    * Running the DDEV installer and choosing the approach you have chosen.
+
+    ### Install WSL2 and a Distro First
+    
+    Before you begin installing DDEV or Docker, make sure WSL2 works:
+    ```bash
+    wsl --install
+    # Reboot is often required after this command.
+    wsl --install Ubuntu --name DDEV # the name DDEV is just a suggestion.
+    # You'll be required to set up a default username and password for the distro.
+    ```
 
     ### Windows Installer
+
+    You must have WSL2 installed before you can install DDEV on Windows.  If you're using DDEV's WSL2 options (recommended) then you also must have created a distro (like suggested "DDEV" distro above) before you can install DDEV.
 
     The easiest way to install DDEV on Windows is to use the DDEV Windows installer, which can handle different installation scenarios:
 
@@ -219,10 +228,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     If you prefer to install DDEV manually on WSL2, it's not hard. These techniques can be used to install on a non-Ubuntu distro, and can be adapted for Yum-based or ArchLinux-based distros as well:
 
-    1. In an administrative PowerShell, run `mkcert -install` and follow the prompt to install the Certificate Authority.
+    1. In PowerShell, run `mkcert -install` and follow the prompt to install the Certificate Authority.
     2. In an administrative PowerShell, run `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side. In some cases it takes a reboot to work correctly.
-    3. In administrative PowerShell, run `wsl --install <distro>`, for example `wsl --install Debian`. This will install the WSL2 distro for you.
-    5. **Docker CE:** Follow the instructions in the [Linux install section here](docker-installation.md#linux) to install Docker CE and DDEV.
+    3. In administrative PowerShell, run `wsl --install <distro> --name DDEV`, for example `wsl --install Debian --name DDEV`. This will install the WSL2 distro for you. (The name "DDEV" is just a suggestion; you can use any name you like.)
+    5. **Docker CE:** Follow the instructions in the [Linux install section here](docker-installation.md#linux) to install Docker CE and DDEV. In addition, `sudo apt-get install -y ddev-wsl2`.
     6. **Docker Desktop for Windows:** 
         * Install Docker Desktop for Windows and configure the WSL2-based engine (not legacy Hyper-V) when installing. Download the installer from [docker.com](https://www.docker.com/products/docker-desktop/). Start Docker Desktop. It may prompt you to log out and log in again, or reboot.
         * Go to Docker Desktop’s *Settings* → *Resources* → *WSL integration* → *enable integration for your distro*. Now `docker` commands will be available from within your WSL2 distro.
@@ -231,7 +240,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     9. Open the WSL2 terminal, for example `Debian` from the Windows start menu.
     10. Follow the [Linux install instructions](#linux) to install DDEV. You can use the `install_ddev_wsl2_docker_inside.sh` script, which is available in the [DDEV GitHub repository](
     11. In WSL2, run `mkcert -install`.
-
     12. For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
     You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV, remember to run all `ddev` commands inside the WSL2 distro, and make sure your projects are in the WSL2 filesystem (e.g. `/home/<your_username>/projects`) and **not** in the Windows filesystem (e.g. `/mnt/c/Users/<your_username>/projects`).

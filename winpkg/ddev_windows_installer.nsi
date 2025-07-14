@@ -284,6 +284,14 @@ Function DistroSelectionPage
     StrCpy $RADIO_BUTTON_COUNT $R2
     Push "Added $RADIO_BUTTON_COUNT radio buttons"
     Call LogPrint
+    
+    ; Ensure at least one radio button is selected (fallback to first one if no previous selection)
+    ${If} $R8 == ""
+        ${WordFind} "$RADIO_BUTTON_HANDLES" "|" "+1{" $R4
+        ${NSD_SetState} $R4 ${BST_CHECKED}
+        Push "No previous distro selection, defaulting to first distro"
+        Call LogPrint
+    ${EndIf}
 
     Push "About to show dialog..."
     Call LogPrint
@@ -1116,7 +1124,7 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - updating package database..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1 || true"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1211,7 +1219,7 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - updating package database..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1 || true"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1895,9 +1903,9 @@ Function ShowErrorAndAbort
     ${IfNot} ${Silent}
         MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nPlease fix the issue and retry the installer."
     ${EndIf}
-    Push "Exiting installer due to error"
+    Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH"
     Call LogPrint
-    SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
+    Quit
 FunctionEnd
 
 ; Helper: returns "1" if $R0 contains $R1, else ""
