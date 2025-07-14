@@ -198,23 +198,47 @@ The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and
 
 When significant changes are made to the `.goreleaser.yml` or related configuration, it's important to be able to test without actually deploying to `ddev/ddev/releases` of course. We have two ways to test the configuration; we can run `goreleaser` manually for simpler tests, or run a full release on `ddev-test/ddev` where needed.
 
-### Running `goreleaser` manually
+### Running `goreleaser` manually to create test packages and releases
 
 This approach is great for seeing what artifacts get created, without deploying them.
 
 Prerequisites:
 
-* GoReleaser Pro must be installed
+* GoReleaser Pro must be installed, see [GoReleaser installation instructions](https://goreleaser.com/install/).
 * `export GORELEASER_KEY=<key>`
 
+You can test the GoReleaser configuration and package building locally without publishing:
+
+First, build all artifacts, as Goreleaser uses them as `prebuilt`.
+
 ```bash
-export REPOSITORY_OWNER=ddev-test
-git tag <tagname> # Try to include context like PR number, for example v1.22.8-PR5824
-make windows_amd64 windows_arm64 darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 completions
+make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 wsl_amd64 wsl_arm64
+```
+
+Then, you can use `goreleaser` to check the configuration and build packages. You must have [GoReleaser Pro](https://goreleaser.com/pro/) installed, as DDEV uses it for configuration. If you don't have it installed, see the [GoReleaser installation instructions](https://goreleaser.com/install/).
+
+```bash
+# Check configuration syntax
+REPOSITORY_OWNER=ddev goreleaser check
+
+# Build packages in snapshot mode (no publishing)
+git tag <tagname> # Try to include context like PR number, for example v1.24.7-PR5824
 goreleaser release --prepare --nightly --clean
 ```
 
-This will create all the artifacts that would have been pushed in the `dist` directory. You can copy Linux packages from there to test them manually, download the built tarballs for use elsewhere.
+Built packages will appear in the `dist/` directory. You can examine package contents:
+
+```bash
+# List created packages
+ls -la dist/*.{deb,rpm}
+
+# Examine DEB package contents
+dpkg-deb -c dist/ddev_*_linux_amd64.deb
+dpkg-deb -c dist/ddev-wsl2_*_linux_amd64.deb  # WSL2 package
+
+# Examine RPM package contents
+rpm -qlp dist/ddev_*_linux_amd64.rpm
+```
 
 ### Creating a test release on `ddev-test/ddev`
 
