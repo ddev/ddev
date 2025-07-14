@@ -1895,9 +1895,9 @@ Function ShowErrorAndAbort
     ${IfNot} ${Silent}
         MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nPlease fix the issue and retry the installer."
     ${EndIf}
-    Push "Exiting installer due to error"
+    Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH"
     Call LogPrint
-    SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
+    Quit
 FunctionEnd
 
 ; Helper: returns "1" if $R0 contains $R1, else ""
