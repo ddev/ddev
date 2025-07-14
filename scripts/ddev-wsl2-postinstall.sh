@@ -4,10 +4,10 @@
 
 echo "Configuring WSL2 security settings..."
 
-# Try registry access using reg.exe from PATH
-if command -v reg.exe >/dev/null 2>&1; then
+# Try to find and use reg.exe
+for REG_EXE in /mnt/*/Windows/System32/reg.exe; do
     echo "Attempting registry modification via reg.exe..."
-    REG_OUTPUT=$(reg.exe add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\Domains\\wsl.localhost" /v "file" /t REG_DWORD /d 1 /f 2>&1)
+    REG_OUTPUT=$("$REG_EXE" add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\Domains\\wsl.localhost" /v "file" /t REG_DWORD /d 1 /f 2>&1)
     REG_EXIT_CODE=$?
     if [ $REG_EXIT_CODE -eq 0 ]; then
         echo "WSL2 security settings configured successfully via registry"
@@ -15,7 +15,8 @@ if command -v reg.exe >/dev/null 2>&1; then
     else
         echo "Registry method failed: $REG_OUTPUT"
     fi
-fi
+    break  # Only try the first one found
+done
 
 # If reg.exe method failed or not found, show manual instructions
 echo "Note: Could not automatically configure WSL2 security settings."
