@@ -205,7 +205,7 @@ This approach is great for seeing what artifacts get created, without deploying 
 Prerequisites:
 
 * GoReleaser Pro must be installed, see [GoReleaser installation instructions](https://goreleaser.com/install/).
-* `export GORELEASER_KEY=<key>`
+* `export GORELEASER_KEY=<key>` (not needed for simple snapshot)
 
 You can test the GoReleaser configuration and package building locally without publishing:
 
@@ -223,7 +223,7 @@ REPOSITORY_OWNER=ddev goreleaser check
 
 # Build packages in snapshot mode (no publishing)
 git tag <tagname> # Try to include context like PR number, for example v1.24.7-PR5824
-goreleaser release --prepare --nightly --clean
+REPOSITORY_OWNER=ddev goreleaser release --snapshot --clean
 ```
 
 Built packages will appear in the `dist/` directory. You can examine package contents:
