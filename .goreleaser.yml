@@ -436,7 +436,7 @@ aurs:
   description: "DDEV: a local web development environment"
   maintainers:
   - 'Randy Fay <randy.fay@ddev.com>'
-  - 'Stas Zhuk <ddevstas@gmail.com>'
+  - 'Stas Zhuk <stas.zhuk@ddev.com>'
   license: "Apache 2"
   # main ddev repo will only be uploaded on non-prerelease
   skip_upload: auto
@@ -477,7 +477,7 @@ aurs:
   description: "DDEV: a local web development environment (edge)"
   maintainers:
   - 'Randy Fay <randy.fay@ddev.com>'
-  - 'Stas Zhuk <ddevstas@gmail.com>'
+  - 'Stas Zhuk <stas.zhuk@ddev.com>'
   license: "Apache 2"
   # Always upload, even on prerelease
   skip_upload: "false"
