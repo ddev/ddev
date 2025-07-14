@@ -204,9 +204,9 @@ If they are not set automatically, they can be set manually in your `.bash_profi
 
 ### Configuring Docker Daemon for Proxy
 
-See [Docker documentation](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration) to configure the Docker daemon so that you can do things that involve the Docker registry (actions like `docker pull`).
+See the [Docker documentation](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration) to configure the Docker daemon for access to the Docker registry (for actions like `docker pull`).
 
-For example. `/etc/docker/daemon.json` might be:
+For example, `/etc/docker/daemon.json` might be:
 
 ```json
 {
@@ -226,11 +226,32 @@ sudo systemctl restart docker
 
 When this is working, you should be able to successfully `docker pull alpine`.
 
+### Configuring Docker Client for Proxy
+
+See the [Docker documentation](https://docs.docker.com/engine/cli/proxy/#configure-the-docker-client) for how to configure the Docker client to pass proxy variables during container build (`ddev start`) and runtime (`ddev exec`).
+
+For example, `~/.docker/config.json` might be:
+
+```json
+{
+  "proxies": {
+    "default": {
+      "httpProxy": "http://squid.host-only:3128",
+      "httpsProxy": "http://squid.host-only:3128",
+      "noProxy": "localhost,127.0.0.0/8"
+    }
+  }
+}
+```
+
+After configuration, restart the DDEV project if it is already running.
+
 ### Proxy Resources
 
 - [Configuring Rancher Desktop Proxy](https://github.com/rancher-sandbox/rancher-desktop/issues/2259#issuecomment-1136833849)
 - [Colima proxy setup](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
 - [Linux Docker Daemon Proxy Configuration](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration)
+- [Linux Docker Client Proxy Configuration](https://docs.docker.com/engine/cli/proxy/#configure-the-docker-client)
 - [Colima Proxy Configuration](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
 
 ## Restrictive DNS servers, especially Fritzbox routers
