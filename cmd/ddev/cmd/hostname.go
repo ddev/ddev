@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/hostname"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var removeHostnameFlag bool
@@ -15,7 +14,7 @@ var checkHostnameFlag bool
 
 // HostNameCmd represents the hostname command
 var HostNameCmd = &cobra.Command{
-	Use:   "hostname [hostname] [ip]",
+	Use:   "hostname [flags] [hostname] [ip]",
 	Short: "Manage your hostfile entries.",
 	Example: `
 ddev hostname junk.example.com 127.0.0.1
@@ -25,9 +24,10 @@ ddev hostname --remove-inactive
 `,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
-to allow DDEV to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
+to allow ddev-hostname to modify the hosts file. If you are connected to the
+internet and using the domain ddev.site this is generally not necessary,
+because the hosts file never gets manipulated.`,
 	Run: func(_ *cobra.Command, args []string) {
-		ddevHostnameBinary := hostname.GetDdevHostnameBinary()
 		// If requested, remove all inactive host names and exit
 		if removeInactiveFlag {
 			if len(args) > 0 {
@@ -48,33 +48,42 @@ to allow DDEV to modify your hosts file. If you are connected to the internet an
 		var err error
 
 		hostnameInHostsFile, err := hostname.IsHostnameInHostsFile(name)
-		if err != nil {
-			util.Warning("Could not check existence of %s in hosts file: %v", name, err)
+		if err != nil && checkHostnameFlag {
+			util.Warning("Could not check existence of '%s' in the hosts file: %v", name, err)
 		}
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
 			if !hostnameInHostsFile {
+				util.Success("'%s' (%s) is not in the hosts file", name, dockerIP)
 				return
 			}
-			out, err := exec.RunHostCommand(ddevHostnameBinary, "--remove", name, dockerIP)
+			out, err := hostname.ElevateToRemoveHostEntry(name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to remove hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+				util.Failed("%s: %v", out, err)
+			}
+			if out != "" {
+				util.Success(out)
 			}
 			return
 		}
 		if checkHostnameFlag {
 			if hostnameInHostsFile {
+				util.Success("'%s' (%s) is in the hosts file", name, dockerIP)
 				return
 			}
-
-			os.Exit(1)
+			util.Failed("'%s' (%s) is not in the hosts file", name, dockerIP)
 		}
 		// By default, add a host name
 		if !hostnameInHostsFile {
-			out, err := exec.RunHostCommand(ddevHostnameBinary, name, dockerIP)
+			out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
 			if err != nil {
-				util.Warning("Failed to add hosts entry %s:%s: %v (output='%v')", name, dockerIP, err, out)
+				util.Failed("%s: %v", out, err)
 			}
+			if out != "" {
+				util.Success(out)
+			}
+		} else {
+			util.Success("'%s' (%s) is already in the hosts file", name, dockerIP)
 		}
 	},
 }
@@ -86,12 +95,18 @@ func removeInactiveHostnames() {
 		util.Warning("Unable to run GetInactiveProjects: %v", err)
 		return
 	}
+	hasErrors := false
 	for _, app := range apps {
 		err := app.RemoveHostsEntriesIfNeeded()
 		if err != nil {
+			hasErrors = true
 			util.Warning("Unable to remove hosts entries for project '%s': %v", app.Name, err)
 		}
 	}
+	if hasErrors {
+		output.UserErr.Exit(1)
+	}
+	util.Success("Removed hosts entries for all inactive projects")
 }
 
 func init() {
@@ -100,6 +115,7 @@ func init() {
 	HostNameCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
 	HostNameCmd.Flags().BoolVar(&removeInactiveFlag, "fire-bazooka", false, "Alias of --remove-inactive")
 	_ = HostNameCmd.Flags().MarkHidden("fire-bazooka")
+	HostNameCmd.MarkFlagsMutuallyExclusive("remove", "check")
 
 	RootCmd.AddCommand(HostNameCmd)
 }

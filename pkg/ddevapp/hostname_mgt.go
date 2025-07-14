@@ -3,13 +3,13 @@ package ddevapp
 import (
 	"context"
 	"fmt"
-	"github.com/ddev/ddev/pkg/hostname"
 	"net"
 	"os"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -56,12 +56,14 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		}
 		if !govalidator.IsDNSName(name) {
 			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://ddev.readthedocs.io/en/stable/users/configuration/config/#additional_hostnames", name)
-		} else {
-			util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
-			out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
-			if err != nil {
-				return err
-			}
+			continue
+		}
+		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
+		out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
+		if err != nil {
+			return fmt.Errorf("%s: %v", out, err)
+		}
+		if out != "" {
 			util.Success(out)
 		}
 	}
@@ -92,11 +94,11 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 			util.Warning("Unable to open hosts file: %v", err)
 			continue
 		}
-
-		_, err = hostname.ElevateToRemoveHostEntry(name, dockerIP)
-
+		out, err := hostname.ElevateToRemoveHostEntry(name, dockerIP)
 		if err != nil {
-			util.Warning("Failed to remove host entry %s: %v", name, err)
+			util.Warning("%s: %v", out, err)
+		} else if out != "" {
+			util.Success(out)
 		}
 	}
 
