@@ -1116,7 +1116,7 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - updating package database..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1 || true"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1211,7 +1211,7 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - updating package database..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get update 2>&1 || true"'
     Pop $1
     Pop $0
     ${If} $1 != 0
