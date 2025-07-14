@@ -284,6 +284,14 @@ Function DistroSelectionPage
     StrCpy $RADIO_BUTTON_COUNT $R2
     Push "Added $RADIO_BUTTON_COUNT radio buttons"
     Call LogPrint
+    
+    ; Ensure at least one radio button is selected (fallback to first one if no previous selection)
+    ${If} $R8 == ""
+        ${WordFind} "$RADIO_BUTTON_HANDLES" "|" "+1{" $R4
+        ${NSD_SetState} $R4 ${BST_CHECKED}
+        Push "No previous distro selection, defaulting to first distro"
+        Call LogPrint
+    ${EndIf}
 
     Push "About to show dialog..."
     Call LogPrint
