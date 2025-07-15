@@ -1451,6 +1451,9 @@ Function InstallWSL2Common
         Call LogPrint
         Push "4. Click OK to save"
         Call LogPrint
+
+        ; Show message box with manual instructions
+        MessageBox MB_OK "WSL2 Security Configuration Required$\r$\n$\r$\nCould not automatically configure WSL2 security settings.$\r$\nTo resolve Windows security warnings manually:$\r$\n$\r$\n1. Open Internet Options (Control Panel > Internet Options)$\r$\n2. Go to Security tab > Local Intranet > Sites > Advanced$\r$\n3. Add to the zone: \\wsl.localhost$\r$\n4. Click OK to save"
     ${EndIf}
 
     ; Clean up temp directory
