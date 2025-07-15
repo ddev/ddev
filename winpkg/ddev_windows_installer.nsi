@@ -402,14 +402,14 @@ Function CheckRootUser
     Pop $R4
     Pop $R5
     ${If} $R4 != 0
-        Push "Root user detected in distro $SELECTED_DISTRO"
+        Push "Root user detected in distro $SELECTED_DISTRO - exit code: $R4, output: $R5"
         Call LogPrint
         Push "Exiting installer due to root user detection"
         Call LogPrint
         Push "The default user in distro $SELECTED_DISTRO is still 'root', but it needs to be a normal user.$\n$\nPlease configure your WSL2 distro to use a normal user account instead of root.$\n$\nRefer to WSL documentation for instructions on changing the default user."
         Call ShowErrorAndAbort
     ${Else}
-        Push "Root user check passed for distro $SELECTED_DISTRO"
+        Push "Root user check passed for distro $SELECTED_DISTRO - output: $R5"
         Call LogPrint
     ${EndIf}
 
@@ -1095,6 +1095,13 @@ Function InstallWSL2CommonSetup
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO wslpath -u "$WINDOWS_TEMP"'
     Pop $0
     Pop $WSL_WINDOWS_TEMP
+
+    ${If} $0 != 0
+        Push "ERROR: Failed to convert Windows TEMP path to WSL format - exit code: $0, output: $WSL_WINDOWS_TEMP"
+        Call LogPrint
+        Push "Failed to convert Windows TEMP path to WSL format. Error: $WSL_WINDOWS_TEMP"
+        Call ShowErrorAndAbort
+    ${EndIf}
     
     ; Trim newline from WSL path
     ${StrTrimNewLines} $WSL_WINDOWS_TEMP $WSL_WINDOWS_TEMP
