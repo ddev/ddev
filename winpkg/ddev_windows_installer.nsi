@@ -1250,6 +1250,17 @@ FunctionEnd
 Function InstallWSL2Common
     Push "Starting WSL2 Docker installation for $SELECTED_DISTRO"
     Call LogPrint
+    
+    ; Clean up any previous installation status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "rm -f /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
+    
+    ; Mark installation as started
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"STARTED: WSL2 installation for $SELECTED_DISTRO\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
+    
     Call InstallWSL2CommonSetup
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
@@ -1259,6 +1270,11 @@ Function InstallWSL2Common
         ; Install full Docker CE packages (including ddev)
         StrCpy $0 "docker-ce docker-ce-cli containerd.io wslu ddev"
     ${EndIf}
+    
+    ; Update status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing essential packages\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
 
     ; Install packages in multiple steps for better progress feedback
     Push "WSL($SELECTED_DISTRO): Installing essential packages (1/4)..."
@@ -1274,6 +1290,11 @@ Function InstallWSL2Common
         Push "Failed to install essential packages. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
+    
+    ; Update status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing Docker components\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
 
     Push "WSL($SELECTED_DISTRO): Installing Docker components (2/4)..."
     Call LogPrint
@@ -1306,6 +1327,11 @@ Function InstallWSL2Common
         Push "Failed to install WSL utilities. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
+    
+    ; Update status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing DDEV\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
 
     Push "WSL($SELECTED_DISTRO): Installing DDEV (4/4)..."
     Call LogPrint
@@ -1472,6 +1498,15 @@ Function InstallWSL2Common
         MessageBox MB_OK "WSL2 Security Configuration Required$\r$\n$\r$\nCould not automatically configure WSL2 security settings.$\r$\nTo resolve Windows security warnings manually:$\r$\n$\r$\n1. Open Internet Options (Control Panel > Internet Options)$\r$\n2. Go to Security tab > Local Intranet > Sites > Advanced$\r$\n3. Add to the zone: \\wsl.localhost$\r$\n4. Click OK to save"
     ${EndIf}
 
+    ; Mark installation as complete for external monitoring
+    Push "Marking installation as complete..."
+    Call LogPrint
+    DetailPrint "Marking installation as complete..."
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"COMPLETED: Installation completed successfully\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
+    DetailPrint "DDEV installation completed successfully"
+
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
@@ -1479,6 +1514,9 @@ Function InstallWSL2Common
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-wsl2-postinstall.sh"
     RMDir "$WINDOWS_TEMP\ddev_installer"
+    
+    ; Leave installation status file for external monitoring
+    ; This will be cleaned up by external tests or on next installation
     
     Push "All done! Installation completed successfully and validated."
     Call LogPrint
@@ -1957,11 +1995,20 @@ Function ShowErrorAndAbort
     Exch $R0  ; Get error message from stack
     Push "INSTALLATION ERROR: $R0"
     Call LogPrint
+    
+    ; Write error status to WSL2 distro if available
+    ${If} $SELECTED_DISTRO != ""
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"ERROR: $R0\" >> /tmp/ddev_installation_status.txt"'
+        Pop $1
+        Pop $2
+    ${EndIf}
+    
     ${IfNot} ${Silent}
         MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nPlease fix the issue and retry the installer."
     ${EndIf}
     Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH"
     Call LogPrint
+    SetErrorLevel 1
     Quit
 FunctionEnd
 
