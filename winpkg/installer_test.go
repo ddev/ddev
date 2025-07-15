@@ -93,10 +93,32 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 				require.NoError(err, "Installer failed: %v, output: %s", err, out)
 			}
-			t.Logf("Installer completed successfully")
-			t.Logf("Installer output: %s", out)
+			t.Logf("Installer completed successfully but may be asynchronous, output: %s", out)
 
-			// Immediately check if ddev is available to verify installer waited for completion
+			// Wait for installation completion by monitoring status file
+			const maxTries = 60
+			statusFile := "/tmp/ddev_installation_status.txt"
+
+			for i := 0; i < maxTries; i++ {
+				out, err := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^COMPLETED' "+statusFile+" 2>/dev/null")
+				if err == nil {
+					t.Logf("Installation completion confirmed: %s", strings.TrimSpace(out))
+					break
+				}
+
+				// Check for errors
+				errOut, errErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^ERROR' "+statusFile+" 2>/dev/null")
+				if errErr == nil {
+					require.Error(errErr, "Installation failed", "Error found in status file: %s", strings.TrimSpace(errOut))
+				}
+				if i == maxTries-1 {
+					require.Less(i, maxTries, "Installation timeout", "No completion marker found after %d tries", i)
+				}
+
+				time.Sleep(1 * time.Second)
+			}
+
+			// Check if ddev is available to verify installer waited for completion
 			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev version")
 			require.NoError(err, "ddev version check failed after installer: %v, output: %s", err, out)
 
