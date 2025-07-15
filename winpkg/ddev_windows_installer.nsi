@@ -1435,35 +1435,24 @@ Function InstallWSL2Common
     Pop $R0
     Pop $R1
     ${If} $R0 == 0
-        Push "WSL2 security settings configured successfully via registry"
+        Push "WSL2 ZoneMap Internet Domains settings configured successfully via registry"
         Call LogPrint
     ${Else}
-        ; Fallback: Try PowerShell approach
-        Push "Registry method failed, trying PowerShell approach..."
+        ; Fallback: Show manual instructions
+        Push "Could not automatically configure WSL2 security settings."
         Call LogPrint
-        nsExec::ExecToStack 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { $$path = \"HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap\\Domains\\wsl.localhost\"; if (-not (Test-Path $$path)) { New-Item -Path $$path -Force | Out-Null }; Set-ItemProperty -Path $$path -Name \"file\" -Value 1 -Type DWord; Write-Host \"Success\" } catch { exit 1 }"'
-        Pop $R2
-        Pop $R3
-        ${If} $R2 == 0
-            Push "WSL2 security settings configured via PowerShell"
-            Call LogPrint
-        ${Else}
-            ; Final fallback: Show manual instructions
-            Push "Could not automatically configure WSL2 security settings."
-            Call LogPrint
-            Push "To resolve Windows security warnings manually:"
-            Call LogPrint
-            Push "1. Open Internet Options (Control Panel > Internet Options)"
-            Call LogPrint
-            Push "2. Go to Security tab > Local Intranet > Sites > Advanced"
-            Call LogPrint
-            Push "3. Add to the zone: \\\\wsl.localhost"
-            Call LogPrint
-            Push "4. Click OK to save"
-            Call LogPrint
-        ${EndIf}
+        Push "To resolve Windows internet zone security warnings manually:"
+        Call LogPrint
+        Push "1. Open Internet Options (Control Panel > Internet Options)"
+        Call LogPrint
+        Push "2. Go to Security tab > Local Intranet > Sites > Advanced"
+        Call LogPrint
+        Push "3. Add to the zone: \\\\wsl.localhost"
+        Call LogPrint
+        Push "4. Click OK to save"
+        Call LogPrint
     ${EndIf}
-    
+
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
