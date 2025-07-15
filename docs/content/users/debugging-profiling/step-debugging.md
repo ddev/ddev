@@ -108,11 +108,13 @@ By default, DDEV is set up to contact the default port, port 9003 on your IDE. H
     If you’re using a PHP version below 7.2, you’ll be using Xdebug version 2.x instead of 3.x and your port config should be `xdebug.remote_port` instead.
 
 ## Composer
-Composer disables Xdebug even when Xdebug is enabled on DDEV, you may need to force its activation if you need to debug it.
 
-As per [Composer docs](https://getcomposer.org/doc/articles/troubleshooting.md#xdebug-impact-on-composer) you can set `COMPOSER_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services), allowing every Composer call to be run with Xdebug when the PHP extension is enabled.
+Composer disables Xdebug even if it's enabled in DDEV. To debug Composer itself, you need to force Xdebug to stay active.
 
-Be aware that composer moves some classes to temporary files (ex: plugins) at runtime so IDE breakpoints will not be always triggered, you'll have to add `xdebug_break()` to your code.
+According to the [Composer docs](https://getcomposer.org/doc/articles/troubleshooting.md#xdebug-impact-on-composer), set the `COMPOSER_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services) to allow all Composer commands to run with Xdebug when the extension is enabled.
+
+!!!note "Debugging code in runtime"
+    Composer may move some classes (like plugins) to temporary files at runtime, so IDE breakpoints may not always be triggered. Use `xdebug_break()` directly in code when needed.
 
 ## Troubleshooting Xdebug
 

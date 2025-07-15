@@ -62,8 +62,8 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
     You may want to synchronize created Composer configuration and installed packages with the DDEV’s [`homeadditions` directory](../extend/in-container-configuration.md) on your host machine.
 
-!!!tip "If you need to debug composer"
-    To use Xdebug with Composer [see instructions](../debugging-profiling/step-debugging.md#composer)
+!!!tip "How to debug Composer itself?"
+    To use Xdebug with Composer, [see instructions](../debugging-profiling/step-debugging.md#composer).
 
 ### Composer from `vendor/bin/composer`
 
