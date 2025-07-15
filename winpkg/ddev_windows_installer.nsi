@@ -1447,7 +1447,7 @@ Function InstallWSL2Common
         Call LogPrint
         Push "2. Go to Security tab > Local Intranet > Sites > Advanced"
         Call LogPrint
-        Push "3. Add to the zone: \\\\wsl.localhost"
+        Push "3. Add to the zone: \\wsl.localhost"
         Call LogPrint
         Push "4. Click OK to save"
         Call LogPrint
