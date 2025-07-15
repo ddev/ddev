@@ -1322,15 +1322,15 @@ Function InstallWSL2Common
     ${EndIf}
 
     ; Overwrite the installed DDEV binary with the bundled version
-    Push "WSL($SELECTED_DISTRO): Overwriting DDEV binary with bundled version..."
+    Push "WSL($SELECTED_DISTRO): Overwriting DDEV binaries with bundled version..."
     Call LogPrint
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev_linux" /usr/bin/ddev'
     Pop $1
     Pop $2
     ${If} $1 != 0
-        Push "ERROR: DDEV binary overwrite failed - exit code: $1, output: $2"
+        Push "ERROR: DDEV binaries overwrite failed - exit code: $1, output: $2"
         Call LogPrint
-        Push "Failed to overwrite DDEV binary. Error: $2"
+        Push "Failed to overwrite DDEV binaries. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
     
