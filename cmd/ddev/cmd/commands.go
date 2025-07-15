@@ -367,6 +367,9 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 					originalHelpFunc(command, strings)
 				})
 			}
+		} else {
+			// Disallow unknown flags to avoid silently ignoring errors
+			commandToAdd.FParseErrWhitelist.UnknownFlags = false
 		}
 
 		// Mark custom command
