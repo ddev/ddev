@@ -34,13 +34,13 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 		{
 			name:          "DockerCE",
 			distro:        "TestDockerCE",
-			installerArgs: []string{"/docker-ce", "/distro=Ubuntu-22.04", "/S"},
+			installerArgs: []string{"/docker-ce", "/distro=TestDockerCE", "/S"},
 			skipCondition: func() bool { return false }, // always run
 		},
 		{
 			name:          "DockerDesktop",
 			distro:        "TestDesktop",
-			installerArgs: []string{"/docker-desktop", "/distro=Ubuntu-24.04", "/S"},
+			installerArgs: []string{"/docker-desktop", "/distro=TestDesktop", "/S"},
 			skipCondition: func() bool { return !isDockerProviderAvailable("Ubuntu-24.04") },
 		},
 	}
@@ -97,11 +97,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 			// Immediately check if ddev is available to verify installer waited for completion
 			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev version")
-			if err != nil {
-				t.Logf("DDEV not immediately available after installer - installer may not be waiting: %v, output: %s", err, out)
-			} else {
-				t.Logf("DDEV immediately available after installer - installer properly waited for completion")
-			}
+			require.NoError(err, "ddev version check failed after installer: %v, output: %s", err, out)
 
 			// Test that ddev is installed and working
 			testDdevInstallation(t, tc.distro)
@@ -199,7 +195,7 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		// Get distro back to a fairly normal pre-ddev state.
 		// Makes test run much faster than completely deleting the distro.
 		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff || true) && (ddev stop --unlist -a) && rm -rf ~/tp")
-		t.Logf("ddev poweroff: err=%v, output: %s", err, out)
+		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
 		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev docker-ce-cli docker-ce || true)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
@@ -277,6 +273,12 @@ func testDdevInstallation(t *testing.T, distroName string) {
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "ddev-hostname", "--help")
 	require.NoError(err, "ddev-hostname failed: %v, output: %s", err, out)
 	t.Logf("ddev-hostname available")
+
+	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "command", "-v", "ddev-hostname.exe")
+	require.NoError(err, "ddev-hostname.exe failed: %v, output: %s", err, out)
+	out = strings.Trim(out, "\r\n ")
+	require.EqualValues("/usr/bin/ddev-hostname.exe", out, "Expected ddev-hostname.exe to be at /usr/bin/ddev-hostname.exe, got %s", out)
+	t.Logf("ddev-hostname available at %s", out)
 }
 
 // testBasicDdevFunctionality tests basic ddev project creation and start
