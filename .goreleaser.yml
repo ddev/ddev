@@ -514,9 +514,6 @@ furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
   secret_name: "FURY_TOKEN"
   disable: '{{ ne .Prerelease "" }}'
-  ids:
-    - ddev
-    - ddev-wsl2
 
 
 dockerhub:
