@@ -91,6 +91,7 @@ Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the contai
 * DDEV attempts to clean up for this situation. Since Windows 10/11+ (in developer mode) can create real symlinks, DDEV scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to “Developer Mode”.
 * To enable developer mode on Windows 10/11+, search for “developer” in settings:
     ![Finding developer mode](../../images/developer-mode-1.png)
+
     ![Setting developer mode](../../images/developer-mode-2.png)
 
 ## Email Capture and Review (Mailpit)
