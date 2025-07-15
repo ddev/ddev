@@ -1429,7 +1429,7 @@ Function InstallWSL2Common
     Call LogPrint
     
     ; Try to add wsl.localhost to Local Intranet zone via registry
-    Push "Adding *.wsl.localhost to Local Intranet security zone..."
+    Push "Adding file://*.wsl.localhost to Local Intranet security zone..."
     Call LogPrint
     nsExec::ExecToStack 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\wsl.localhost" /v "file" /t REG_DWORD /d 1 /f'
     Pop $R0
@@ -1457,7 +1457,7 @@ Function InstallWSL2Common
             Call LogPrint
             Push "2. Go to Security tab > Local Intranet > Sites > Advanced"
             Call LogPrint
-            Push "3. Add this website to the zone: \\\\wsl.localhost"
+            Push "3. Add to the zone: \\\\wsl.localhost"
             Call LogPrint
             Push "4. Click OK to save"
             Call LogPrint

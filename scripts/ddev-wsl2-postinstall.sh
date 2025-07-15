@@ -23,6 +23,6 @@ echo "Note: Could not automatically configure WSL2 security settings."
 echo "To resolve Windows security warnings manually:"
 echo "1. Open Internet Options (Control Panel > Internet Options)"
 echo "2. Go to Security tab > Local Intranet > Sites > Advanced"
-echo "3. Add this website to the zone:"
-echo "   - \\\\wsl.localhost"
+echo "3. Add to the zone:"
+echo '   - \\wsl.localhost'
 echo "4. Click OK to save"
