@@ -33,13 +33,13 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 	}{
 		{
 			name:          "DockerCE",
-			distro:        "Ubuntu-22.04",
+			distro:        "TestDockerCE",
 			installerArgs: []string{"/docker-ce", "/distro=Ubuntu-22.04", "/S"},
 			skipCondition: func() bool { return false }, // always run
 		},
 		{
 			name:          "DockerDesktop",
-			distro:        "Ubuntu-24.04",
+			distro:        "TestDesktop",
 			installerArgs: []string{"/docker-desktop", "/distro=Ubuntu-24.04", "/S"},
 			skipCondition: func() bool { return !isDockerProviderAvailable("Ubuntu-24.04") },
 		},
