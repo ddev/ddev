@@ -12,6 +12,7 @@
 
 !insertmacro WordFind
 ${StrStr}
+${StrTrimNewLines}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
 
 !ifndef TARGET_ARCH # passed on command-line
@@ -37,6 +38,8 @@ Var /GLOBAL SILENT_DISTRO
 Var /GLOBAL WINDOWS_CAROOT
 Var /GLOBAL DEBUG_LOG_HANDLE
 Var /GLOBAL DEBUG_LOG_PATH
+Var /GLOBAL WSL_WINDOWS_TEMP
+Var /GLOBAL WINDOWS_TEMP
 Var StartMenuGroup
 
 !define REG_INSTDIR_ROOT "HKLM"
@@ -108,7 +111,7 @@ Function InstallScriptToDistro
     Call LogPrint
     
     ; Scripts should already be copied to temp directory by this point
-    ${If} ${FileExists} "C:\Windows\Temp\ddev_installer\$R0"
+    ${If} ${FileExists} "$WINDOWS_TEMP\ddev_installer\$R0"
         Push "Using script $R0 from temp directory"
         Call LogPrint
     ${Else}
@@ -119,7 +122,7 @@ Function InstallScriptToDistro
     ${EndIf}
     
     ; Copy script from Windows temp to WSL2 /tmp
-    nsExec::ExecToStack 'wsl -d $R1 -u root cp "/mnt/c/Windows/Temp/ddev_installer/$R0" /tmp/'
+    nsExec::ExecToStack 'wsl -d $R1 -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/$R0" /tmp/'
     Pop $R2  ; Exit code
     Pop $R3  ; Output
     
@@ -365,8 +368,8 @@ Function DistroSelectionPageLeave
     ; Copy all scripts to temp directory for later use
     Push "Copying all scripts to temp directory..."
     Call LogPrint
-    CreateDirectory "C:\Windows\Temp\ddev_installer"
-    SetOutPath "C:\Windows\Temp\ddev_installer"
+    CreateDirectory "$WINDOWS_TEMP\ddev_installer"
+    SetOutPath "$WINDOWS_TEMP\ddev_installer"
     File /oname=check_root_user.sh "scripts\check_root_user.sh"
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
@@ -374,15 +377,6 @@ Function DistroSelectionPageLeave
     Push "All scripts copied to temp directory"
     Call LogPrint
     
-    ; Check for root user immediately after distro selection (WSL2 only)
-    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-    ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-        Push "Checking for root user in selected distro..."
-        Call LogPrint
-        Call CheckRootUser
-        Push "Root user check passed"
-        Call LogPrint
-    ${EndIf}
 FunctionEnd
 
 
@@ -398,7 +392,7 @@ Function CheckRootUser
     ${If} $R4 != 0
         Push "Failed to install check_root_user.sh script"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "Failed to install check_root_user to WSL2 distro"
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install check_root_user.sh to WSL2 distro"
         Abort
     ${EndIf}
 
@@ -804,7 +798,7 @@ SectionGroup /e "${PRODUCT_NAME}"
         ; Install Linux DDEV binaries to temp directory for WSL2 installations
         ${If} $INSTALL_OPTION == "wsl2-docker-ce"
         ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-            SetOutPath "C:\Windows\Temp\ddev_installer"
+            SetOutPath "$WINDOWS_TEMP\ddev_installer"
             File /oname=ddev_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev"
             File /oname=ddev-hostname_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev-hostname"
             File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
@@ -1035,7 +1029,6 @@ Function GetUbuntuDistros
     Push $R0
 FunctionEnd
 
-; TODO: there seem to be missing error checks here.
 Function InstallWSL2CommonSetup
     ; Check for WSL2
     Push "Checking WSL2 version..."
@@ -1096,6 +1089,22 @@ Function InstallWSL2CommonSetup
     Push "WSL2 detected successfully."
     Call LogPrint
 
+    ; Convert Windows TEMP path to WSL format using wslpath (only needed for WSL2 operations)
+    Push "Converting Windows TEMP path to WSL format..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO wslpath -u "$WINDOWS_TEMP"'
+    Pop $0
+    Pop $WSL_WINDOWS_TEMP
+    
+    ; Trim newline from WSL path
+    ${StrTrimNewLines} $WSL_WINDOWS_TEMP $WSL_WINDOWS_TEMP
+
+    ; Check for root user in selected distro
+    Push "Checking for root user in selected distro..."
+    Call LogPrint
+    Call CheckRootUser
+    Push "Root user check passed"
+    Call LogPrint
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
@@ -1308,7 +1317,7 @@ Function InstallWSL2Common
     ; Overwrite the installed DDEV binary with the bundled version
     Push "WSL($SELECTED_DISTRO): Overwriting DDEV binary with bundled version..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "/mnt/c/Windows/Temp/ddev_installer/ddev_linux" /usr/bin/ddev'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev_linux" /usr/bin/ddev'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1332,7 +1341,7 @@ Function InstallWSL2Common
     ; Overwrite the installed ddev-hostname binary with the bundled version
     Push "WSL($SELECTED_DISTRO): Overwriting ddev-hostname binary with bundled version..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "/mnt/c/Windows/Temp/ddev_installer/ddev-hostname_linux" /usr/bin/ddev-hostname'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev-hostname_linux" /usr/bin/ddev-hostname'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1459,10 +1468,10 @@ Function InstallWSL2Common
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
-    Delete "C:\Windows\Temp\ddev_installer\ddev_linux"
-    Delete "C:\Windows\Temp\ddev_installer\ddev-hostname_linux"
-    Delete "C:\Windows\Temp\ddev_installer\ddev-wsl2-postinstall.sh"
-    RMDir "C:\Windows\Temp\ddev_installer"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev-wsl2-postinstall.sh"
+    RMDir "$WINDOWS_TEMP\ddev_installer"
     
     Push "All done! Installation completed successfully and validated."
     Call LogPrint
@@ -1897,6 +1906,9 @@ Function .onInit
     ; Set proper 64-bit handling
     SetRegView 64
     ${DisableX64FSRedirection}
+
+    ; Get Windows TEMP environment variable
+    ReadEnvStr $WINDOWS_TEMP "TEMP"
 
     ; Initialize directory to proper Program Files location
     ${If} ${RunningX64}
