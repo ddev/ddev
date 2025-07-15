@@ -209,7 +209,7 @@ Prerequisites:
 
 You can test the GoReleaser configuration and package building locally without publishing:
 
-First, build all artifacts, as Goreleaser uses them as `prebuilt`.
+First, build all artifacts, as GoReleaser uses them as `prebuilt`.
 
 ```bash
 make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 wsl_amd64 wsl_arm64
