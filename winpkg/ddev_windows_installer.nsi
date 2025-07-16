@@ -1595,6 +1595,9 @@ Function InstallWSL2Common
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
+    Delete "$WINDOWS_TEMP\ddev_installer\check_root_user.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\install_temp_sudoers.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\mkcert_install.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
