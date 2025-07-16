@@ -801,6 +801,9 @@ SectionGroup /e "${PRODUCT_NAME}"
             SetOutPath "$WINDOWS_TEMP\ddev_installer"
             File /oname=ddev_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev"
             File /oname=ddev-hostname_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev-hostname"
+            File /oname=mkcert_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\mkcert"
+            File /oname=ddev-hostname.exe "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
+            File /oname=mkcert.exe "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
             File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
             File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
             File /oname=check_root_user.sh "scripts\check_root_user.sh"
@@ -1395,6 +1398,55 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
     
+    ; Overwrite the installed mkcert binary with the bundled version
+    Push "WSL($SELECTED_DISTRO): Overwriting mkcert binary with bundled version..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/mkcert_linux" /usr/bin/mkcert'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: mkcert binary overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to overwrite mkcert binary. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Make mkcert executable
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root chmod +x /usr/bin/mkcert'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: Failed to make mkcert binary executable - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to make mkcert binary executable. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Overwrite ddev-hostname.exe in WSL2 /usr/bin
+    Push "WSL($SELECTED_DISTRO): Overwriting ddev-hostname.exe with bundled version..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev-hostname.exe" /usr/bin/ddev-hostname.exe'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: ddev-hostname.exe overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to overwrite ddev-hostname.exe. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Overwrite mkcert.exe in WSL2 /usr/bin
+    Push "WSL($SELECTED_DISTRO): Overwriting mkcert.exe with bundled version..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/mkcert.exe" /usr/bin/mkcert.exe'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: mkcert.exe overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to overwrite mkcert.exe. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
 
     ; Add the unprivileged user to the docker group for docker-ce installation
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
@@ -1512,6 +1564,9 @@ Function InstallWSL2Common
     Call LogPrint
     Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname.exe"
+    Delete "$WINDOWS_TEMP\ddev_installer\mkcert.exe"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-wsl2-postinstall.sh"
     RMDir "$WINDOWS_TEMP\ddev_installer"
     
