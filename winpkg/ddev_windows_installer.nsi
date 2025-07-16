@@ -2101,29 +2101,6 @@ Function ShowErrorAndAbort
     Quit
 FunctionEnd
 
-; Helper: returns "1" if $R0 contains $R1, else ""
-Function StrContains
-    Exch $R1 ; substring
-    Exch
-    Exch $R0 ; string
-    Push $R2
-    StrCpy $R2 ""
-    ${DoWhile} $R0 != ""
-        StrCpy $R2 $R0 6
-        StrCmp $R2 $R1 0 found
-            Push "1"
-            Goto done
-        found:
-        StrCpy $R0 $R0 "" 1
-    ${Loop}
-    Push ""
-done:
-    Pop $R2
-    Pop $R1
-    Pop $R0
-FunctionEnd
-
-
 ; Helper: Trim trailing newline and carriage return from a string
 Function TrimNewline
     Exch $R0
