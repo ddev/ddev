@@ -333,8 +333,9 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	t.Logf("HTTPS project responding correctly inside distro")
 
 	// Test using windows PowerShell to check HTTPS
+	psInvoke := fmt.Sprintf("powershell.exe -NoProfile -ExecutionPolicy Bypass -Command Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName)
 	out, err = exec.RunHostCommand("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", fmt.Sprintf("Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName))
-	require.NoError(err, "HTTPS check failed (note that mkcert.exe -install must be run on test runner): %v, output: %s", err, out)
+	require.NoError(err, "HTTPS check from Windows failed (`%s`) (note that mkcert.exe -install must be run previously on test runner): %v, output: %s", psInvoke, err, out)
 	require.Contains(out, "Hello from DDEV!")
 	t.Logf("Project working and accessible from Windows")
 
