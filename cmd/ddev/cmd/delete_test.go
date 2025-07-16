@@ -7,7 +7,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -17,8 +16,6 @@ import (
 
 // TestDeleteCmd ensures that `ddev delete` removes expected data
 func TestDeleteCmd(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -27,15 +24,12 @@ func TestDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
-		assert.NoError(err, "output='%s'", out)
-		out, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", site.Name)
-		assert.NoError(err, "output='%s'", out)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", site.Name)
 		// And register the project again in the global list for other tests
-		out, err = exec.RunHostCommand(DdevBin, "config", "--auto")
-		assert.NoError(err, "output='%s'", out)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
+		require.NoError(t, err, "output='%s'", out)
+		_ = os.Chdir(origDir)
 	})
 
 	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
@@ -60,8 +54,8 @@ func TestDeleteCmd(t *testing.T) {
 		vols = append(vols, app.Name+"-ddev-config")
 	}
 	for _, volName := range vols {
-		assert.Contains(out, fmt.Sprintf("Volume %s for project %s was deleted", volName, app.Name))
-		assert.False(dockerutil.VolumeExists(volName))
+		require.Contains(t, out, fmt.Sprintf("Volume %s for project %s was deleted", volName, app.Name))
+		require.False(t, dockerutil.VolumeExists(volName))
 	}
 
 	// Check that images are deleted
@@ -71,7 +65,7 @@ func TestDeleteCmd(t *testing.T) {
 		ddevImages.GetWebImage() + "-" + app.Name + "-built",
 	}
 	for _, img := range imgs {
-		assert.Contains(out, fmt.Sprintf("Image %s for project %s was deleted", img, app.Name))
+		require.Contains(t, out, fmt.Sprintf("Image %s for project %s was deleted", img, app.Name))
 	}
 
 	labels := map[string]string{
@@ -79,5 +73,5 @@ func TestDeleteCmd(t *testing.T) {
 	}
 	images, err := dockerutil.FindImagesByLabels(labels, false)
 	require.NoError(t, err)
-	assert.Len(images, 0)
+	require.Len(t, images, 0)
 }
