@@ -846,7 +846,7 @@ Example:
 ddev hostname somesite.example.com 127.0.0.1
 ```
 
-In most cases `ddev hostname` runs a special `ddev-hostname` or `ddev-hostname.exe` executable to elevate privileges. The extra executable is installed/updated by DDEV's normal installation process or by the Windows installation process.
+`ddev hostname` runs a special `ddev-hostname` or `ddev-hostname.exe` executable to elevate privileges. The extra executable is installed/updated by DDEV's normal installation process or by the Windows installation process. On WSL2, `ddev-hostname.exe` is provided by the `ddev-wsl2` package and by the Windows installer. Install the package with `sudo apt-get update && sudo apt-get install -y ddev-wsl2` or the equivalent for your Linux system.
 
 ## `import-db`
 

@@ -33,22 +33,22 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 	}{
 		{
 			name:          "DockerCE",
-			distro:        "Ubuntu-22.04",
-			installerArgs: []string{"/docker-ce", "/distro=Ubuntu-22.04", "/S"},
+			distro:        "TestDockerCE",
+			installerArgs: []string{"/docker-ce", "/distro=TestDockerCE", "/S"},
 			skipCondition: func() bool { return false }, // always run
 		},
 		{
 			name:          "DockerDesktop",
-			distro:        "Ubuntu-24.04",
-			installerArgs: []string{"/docker-desktop", "/distro=Ubuntu-24.04", "/S"},
-			skipCondition: func() bool { return !isDockerProviderAvailable("Ubuntu-24.04") },
+			distro:        "TestDesktop",
+			installerArgs: []string{"/docker-desktop", "/distro=TestDesktop", "/S"},
+			skipCondition: func() bool { return !isDockerProviderAvailable("TestDesktop") },
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.skipCondition() {
-				t.Skipf("Skipping %s test - prerequisites not met", tc.name)
+				t.Skipf("Skipping %s test - Desktop distro must have integration with Rancher/Docker Desktop", tc.name)
 			}
 
 			require := require.New(t)
@@ -61,6 +61,8 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			t.Cleanup(func() {
 				t.Logf("Cleaning up %s test - powering off ddev", tc.name)
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
+				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
+
 			})
 
 			// Get absolute path to installer
@@ -79,7 +81,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 			out, err = exec.RunHostCommand(installerFullPath, tc.installerArgs...)
 			if err != nil {
-				t.Logf("Installer failed with error: %v", err)
+				t.Logf("Installer failed with error trying to run with '%s': %v", installerFullPath+" "+strings.Join(tc.installerArgs, " "), err)
 				t.Logf("Installer output: %s", out)
 
 				// Check for specific error patterns
@@ -92,16 +94,39 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 				require.NoError(err, "Installer failed: %v, output: %s", err, out)
 			}
-			t.Logf("Installer completed successfully")
-			t.Logf("Installer output: %s", out)
+			t.Logf("Installer completed successfully but may be asynchronous, output: %s", out)
 
-			// Immediately check if ddev is available to verify installer waited for completion
-			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev version")
-			if err != nil {
-				t.Logf("DDEV not immediately available after installer - installer may not be waiting: %v, output: %s", err, out)
-			} else {
-				t.Logf("DDEV immediately available after installer - installer properly waited for completion")
+			// Wait for installation completion by monitoring status file
+			const maxTries = 60
+			statusFile := "/tmp/ddev_installation_status.txt"
+
+			for i := 0; i < maxTries; i++ {
+				out, err := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "tail -1l "+statusFile+" 2>/dev/null")
+				if err == nil {
+					t.Logf("Installation status on try %d: %s", i, strings.TrimSpace(out))
+					break
+				}
+				out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^COMPLETED' "+statusFile+" 2>/dev/null")
+				if err == nil {
+					t.Logf("Installation completion confirmed: %s", strings.TrimSpace(out))
+					break
+				}
+
+				// Check for errors
+				errOut, errErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^ERROR' "+statusFile+" 2>/dev/null")
+				if errErr == nil {
+					require.Error(errErr, "Installation failed", "Error found in status file: %s", strings.TrimSpace(errOut))
+				}
+				if i == maxTries-1 {
+					require.Less(i, maxTries, "Installation timeout", "No completion marker found after %d tries", i)
+				}
+
+				time.Sleep(1 * time.Second)
 			}
+
+			// Check if ddev is available to verify installer waited for completion
+			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev version")
+			require.NoError(err, "ddev version check failed after installer: %v, output: %s", err, out)
 
 			// Test that ddev is installed and working
 			testDdevInstallation(t, tc.distro)
@@ -198,20 +223,11 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 
 		// Get distro back to a fairly normal pre-ddev state.
 		// Makes test run much faster than completely deleting the distro.
-		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff || true) && (ddev stop --unlist -a) && rm -rf ~/tp")
-		t.Logf("ddev poweroff: err=%v, output: %s", err, out)
+		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
+		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev docker-ce-cli docker-ce || true)")
+		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null || true)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
-
-		//t.Logf("Test distro %s exists, attempting to remove", distroName)
-		// Unregister (delete) the distro
-		//out, err = exec.RunHostCommand("wsl.exe", "--unregister", distroName)
-		//if err != nil {
-		//	t.Logf("Failed to unregister distro %s: %v, output: %s", distroName, err, out)
-		//} else {
-		//	t.Logf("Successfully removed test distro: %s", distroName)
-		//}
 	}
 }
 
@@ -268,7 +284,7 @@ func testDdevInstallation(t *testing.T, distroName string) {
 	t.Logf("Testing ddev installation in %s", distroName)
 
 	// Test ddev version
-	out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "ddev", "version")
+	out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "ddev version | egrep 'DDEV|docker'")
 	require.NoError(err, "ddev version failed: %v, output: %s", err, out)
 	require.Contains(out, "DDEV version")
 	t.Logf("ddev version output: %s", out)
@@ -277,6 +293,12 @@ func testDdevInstallation(t *testing.T, distroName string) {
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "ddev-hostname", "--help")
 	require.NoError(err, "ddev-hostname failed: %v, output: %s", err, out)
 	t.Logf("ddev-hostname available")
+
+	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "command", "-v", "ddev-hostname.exe")
+	require.NoError(err, "ddev-hostname.exe failed: %v, output: %s", err, out)
+	out = strings.TrimSpace(out)
+	require.EqualValues("/usr/bin/ddev-hostname.exe", out, "Expected ddev-hostname.exe to be at /usr/bin/ddev-hostname.exe, got %s", out)
+	t.Logf("ddev-hostname.exe available at %s", out)
 }
 
 // testBasicDdevFunctionality tests basic ddev project creation and start
@@ -307,11 +329,11 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("curl -s https://%s.ddev.site", projectName))
 	require.NoError(err, "curl to HTTPS site failed: %v, output: %s", err, out)
 	require.Contains(out, "Hello from DDEV!")
-	t.Logf("HTTPS site responding correctly inside distro")
+	t.Logf("HTTPS project responding correctly inside distro")
 
 	// Test using windows PowerShell to check HTTPS
 	out, err = exec.RunHostCommand("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", fmt.Sprintf("Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName))
-	require.NoError(err, "HTTPS check failed: %v, output: %s", err, out)
+	require.NoError(err, "HTTPS check failed (note that mkcert.exe -install must be run on test runner): %v, output: %s", err, out)
 	require.Contains(out, "Hello from DDEV!")
 	t.Logf("Project working and accessible from Windows")
 

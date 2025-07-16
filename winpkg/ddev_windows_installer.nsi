@@ -9,9 +9,11 @@
 
 !insertmacro GetParameters
 !insertmacro GetOptions
+!insertmacro GetTime
 
 !insertmacro WordFind
 ${StrStr}
+${StrTrimNewLines}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
 
 !ifndef TARGET_ARCH # passed on command-line
@@ -37,6 +39,8 @@ Var /GLOBAL SILENT_DISTRO
 Var /GLOBAL WINDOWS_CAROOT
 Var /GLOBAL DEBUG_LOG_HANDLE
 Var /GLOBAL DEBUG_LOG_PATH
+Var /GLOBAL WSL_WINDOWS_TEMP
+Var /GLOBAL WINDOWS_TEMP
 Var StartMenuGroup
 
 !define REG_INSTDIR_ROOT "HKLM"
@@ -67,12 +71,42 @@ InstType "Minimal"
 
 ; InitializeDebugLog - Open debug log file for writing
 Function InitializeDebugLog
-    StrCpy $DEBUG_LOG_PATH "$TEMP\ddev_installer_debug.log"
+    ; Get current timestamp for filename and log header
+    ; GetTime returns: $0=day, $1=month, $2=year, $3=dayofweek, $4=hour, $5=minute, $6=second
+    ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+    
+    ; Simple padding function for 2-digit format
+    StrLen $R1 $1
+    ${If} $R1 == 1
+        StrCpy $1 "0$1"
+    ${EndIf}
+    StrLen $R1 $0
+    ${If} $R1 == 1
+        StrCpy $0 "0$0"
+    ${EndIf}
+    StrLen $R1 $4
+    ${If} $R1 == 1
+        StrCpy $4 "0$4"
+    ${EndIf}
+    StrLen $R1 $5
+    ${If} $R1 == 1
+        StrCpy $5 "0$5"
+    ${EndIf}
+    StrLen $R1 $6
+    ${If} $R1 == 1
+        StrCpy $6 "0$6"
+    ${EndIf}
+    
+    ; Format: YYYYMMDD.HHMMSS
+    StrCpy $R0 "$2$1$0.$4$5$6"
+    
+    StrCpy $DEBUG_LOG_PATH "$TEMP\ddev_installer_debug_$R0.log"
     FileOpen $DEBUG_LOG_HANDLE "$DEBUG_LOG_PATH" w
     ${If} $DEBUG_LOG_HANDLE != ""
+        FileWrite $DEBUG_LOG_HANDLE "$R0$\r$\n"
         FileWrite $DEBUG_LOG_HANDLE "=== DDEV Installer Debug Log ===$\r$\n"
         FileWrite $DEBUG_LOG_HANDLE "Log location: $DEBUG_LOG_PATH$\r$\n"
-        FileWrite $DEBUG_LOG_HANDLE "Installer started at: $\r$\n"
+        FileWrite $DEBUG_LOG_HANDLE "Installer started at: $2-$1-$0 $4:$5:$6$\r$\n"
     ${EndIf}
 FunctionEnd
 
@@ -108,7 +142,7 @@ Function InstallScriptToDistro
     Call LogPrint
     
     ; Scripts should already be copied to temp directory by this point
-    ${If} ${FileExists} "C:\Windows\Temp\ddev_installer\$R0"
+    ${If} ${FileExists} "$WINDOWS_TEMP\ddev_installer\$R0"
         Push "Using script $R0 from temp directory"
         Call LogPrint
     ${Else}
@@ -119,7 +153,7 @@ Function InstallScriptToDistro
     ${EndIf}
     
     ; Copy script from Windows temp to WSL2 /tmp
-    nsExec::ExecToStack 'wsl -d $R1 -u root cp "/mnt/c/Windows/Temp/ddev_installer/$R0" /tmp/'
+    nsExec::ExecToStack 'wsl -d $R1 -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/$R0" /tmp/'
     Pop $R2  ; Exit code
     Pop $R3  ; Output
     
@@ -365,23 +399,14 @@ Function DistroSelectionPageLeave
     ; Copy all scripts to temp directory for later use
     Push "Copying all scripts to temp directory..."
     Call LogPrint
-    CreateDirectory "C:\Windows\Temp\ddev_installer"
-    SetOutPath "C:\Windows\Temp\ddev_installer"
+    CreateDirectory "$WINDOWS_TEMP\ddev_installer"
+    SetOutPath "$WINDOWS_TEMP\ddev_installer"
     File /oname=check_root_user.sh "scripts\check_root_user.sh"
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
-    ; Check for root user immediately after distro selection (WSL2 only)
-    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-    ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-        Push "Checking for root user in selected distro..."
-        Call LogPrint
-        Call CheckRootUser
-        Push "Root user check passed"
-        Call LogPrint
-    ${EndIf}
 FunctionEnd
 
 
@@ -397,7 +422,7 @@ Function CheckRootUser
     ${If} $R4 != 0
         Push "Failed to install check_root_user.sh script"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "Failed to install check_root_user to WSL2 distro"
+        MessageBox MB_ICONSTOP|MB_OK "Failed to install check_root_user.sh to WSL2 distro"
         Abort
     ${EndIf}
 
@@ -407,14 +432,14 @@ Function CheckRootUser
     Pop $R4
     Pop $R5
     ${If} $R4 != 0
-        Push "Root user detected in distro $SELECTED_DISTRO"
+        Push "Root user detected in distro $SELECTED_DISTRO - exit code: $R4, output: $R5"
         Call LogPrint
         Push "Exiting installer due to root user detection"
         Call LogPrint
         Push "The default user in distro $SELECTED_DISTRO is still 'root', but it needs to be a normal user.$\n$\nPlease configure your WSL2 distro to use a normal user account instead of root.$\n$\nRefer to WSL documentation for instructions on changing the default user."
         Call ShowErrorAndAbort
     ${Else}
-        Push "Root user check passed for distro $SELECTED_DISTRO"
+        Push "Root user check passed for distro $SELECTED_DISTRO - output: $R5"
         Call LogPrint
     ${EndIf}
 
@@ -764,6 +789,7 @@ Function DockerExitButtonClick
     Push "Exiting installer so user can install/configure Docker"
     Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
+    Quit
 FunctionEnd
 
 Function DockerCancelButtonClick
@@ -773,6 +799,7 @@ Function DockerCancelButtonClick
     Push "Exiting installer - user cancelled Docker installation"
     Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
+    Quit
 FunctionEnd
 
 Function StartMenuPagePre
@@ -803,9 +830,12 @@ SectionGroup /e "${PRODUCT_NAME}"
         ; Install Linux DDEV binaries to temp directory for WSL2 installations
         ${If} $INSTALL_OPTION == "wsl2-docker-ce"
         ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-            SetOutPath "C:\Windows\Temp\ddev_installer"
+            SetOutPath "$WINDOWS_TEMP\ddev_installer"
             File /oname=ddev_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev"
             File /oname=ddev-hostname_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\ddev-hostname"
+            File /oname=mkcert_linux "..\.gotmp\bin\linux_${TARGET_ARCH}\mkcert"
+            File /oname=ddev-hostname.exe "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev-hostname.exe"
+            File /oname=mkcert.exe "..\.gotmp\bin\windows_${TARGET_ARCH}\mkcert.exe"
             File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
             File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
             File /oname=check_root_user.sh "scripts\check_root_user.sh"
@@ -1034,7 +1064,6 @@ Function GetUbuntuDistros
     Push $R0
 FunctionEnd
 
-; TODO: there seem to be missing error checks here.
 Function InstallWSL2CommonSetup
     ; Check for WSL2
     Push "Checking WSL2 version..."
@@ -1095,6 +1124,29 @@ Function InstallWSL2CommonSetup
     Push "WSL2 detected successfully."
     Call LogPrint
 
+    ; Convert Windows TEMP path to WSL format using wslpath (only needed for WSL2 operations)
+    Push "Converting Windows TEMP path to WSL format..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO wslpath -u "$WINDOWS_TEMP"'
+    Pop $0
+    Pop $WSL_WINDOWS_TEMP
+
+    ${If} $0 != 0
+        Push "ERROR: Failed to convert Windows TEMP path to WSL format - exit code: $0, output: $WSL_WINDOWS_TEMP"
+        Call LogPrint
+        Push "Failed to convert Windows TEMP path to WSL format. Error: $WSL_WINDOWS_TEMP"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Trim newline from WSL path
+    ${StrTrimNewLines} $WSL_WINDOWS_TEMP $WSL_WINDOWS_TEMP
+
+    ; Check for root user in selected distro
+    Push "Checking for root user in selected distro..."
+    Call LogPrint
+    Call CheckRootUser
+    Push "Root user check passed"
+    Call LogPrint
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
@@ -1233,6 +1285,17 @@ FunctionEnd
 Function InstallWSL2Common
     Push "Starting WSL2 Docker installation for $SELECTED_DISTRO"
     Call LogPrint
+    
+    ; Clean up any previous installation status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "rm -f /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
+    
+    ; Mark installation as started
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"STARTED: WSL2 installation for $SELECTED_DISTRO\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
+    
     Call InstallWSL2CommonSetup
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
@@ -1242,6 +1305,11 @@ Function InstallWSL2Common
         ; Install full Docker CE packages (including ddev)
         StrCpy $0 "docker-ce docker-ce-cli containerd.io wslu ddev"
     ${EndIf}
+    
+    ; Update status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing essential packages\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
 
     ; Install packages in multiple steps for better progress feedback
     Push "WSL($SELECTED_DISTRO): Installing essential packages (1/4)..."
@@ -1257,6 +1325,11 @@ Function InstallWSL2Common
         Push "Failed to install essential packages. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
+    
+    ; Update status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing Docker components\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
 
     Push "WSL($SELECTED_DISTRO): Installing Docker components (2/4)..."
     Call LogPrint
@@ -1289,12 +1362,17 @@ Function InstallWSL2Common
         Push "Failed to install WSL utilities. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
+    
+    ; Update status
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing DDEV\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
 
     Push "WSL($SELECTED_DISTRO): Installing DDEV (4/4)..."
     Call LogPrint
     Push "Please be patient - installing DDEV..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ddev 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ddev ddev-wsl2 2>&1"'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1305,15 +1383,15 @@ Function InstallWSL2Common
     ${EndIf}
 
     ; Overwrite the installed DDEV binary with the bundled version
-    Push "WSL($SELECTED_DISTRO): Overwriting DDEV binary with bundled version..."
+    Push "WSL($SELECTED_DISTRO): Overwriting DDEV binaries with bundled version..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "/mnt/c/Windows/Temp/ddev_installer/ddev_linux" /usr/bin/ddev'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev_linux" /usr/bin/ddev'
     Pop $1
     Pop $2
     ${If} $1 != 0
-        Push "ERROR: DDEV binary overwrite failed - exit code: $1, output: $2"
+        Push "ERROR: DDEV binaries overwrite failed - exit code: $1, output: $2"
         Call LogPrint
-        Push "Failed to overwrite DDEV binary. Error: $2"
+        Push "Failed to overwrite DDEV binaries. Error: $2"
         Call ShowErrorAndAbort
     ${EndIf}
     
@@ -1331,7 +1409,7 @@ Function InstallWSL2Common
     ; Overwrite the installed ddev-hostname binary with the bundled version
     Push "WSL($SELECTED_DISTRO): Overwriting ddev-hostname binary with bundled version..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "/mnt/c/Windows/Temp/ddev_installer/ddev-hostname_linux" /usr/bin/ddev-hostname'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev-hostname_linux" /usr/bin/ddev-hostname'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1352,6 +1430,55 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
     
+    ; Overwrite the installed mkcert binary with the bundled version
+    Push "WSL($SELECTED_DISTRO): Overwriting mkcert binary with bundled version..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/mkcert_linux" /usr/bin/mkcert'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: mkcert binary overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to overwrite mkcert binary. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Make mkcert executable
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root chmod +x /usr/bin/mkcert'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: Failed to make mkcert binary executable - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to make mkcert binary executable. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Overwrite ddev-hostname.exe in WSL2 /usr/bin
+    Push "WSL($SELECTED_DISTRO): Overwriting ddev-hostname.exe with bundled version..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/ddev-hostname.exe" /usr/bin/ddev-hostname.exe'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: ddev-hostname.exe overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to overwrite ddev-hostname.exe. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    
+    ; Overwrite mkcert.exe in WSL2 /usr/bin
+    Push "WSL($SELECTED_DISTRO): Overwriting mkcert.exe with bundled version..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/mkcert.exe" /usr/bin/mkcert.exe'
+    Pop $1
+    Pop $2
+    ${If} $1 != 0
+        Push "ERROR: mkcert.exe overwrite failed - exit code: $1, output: $2"
+        Call LogPrint
+        Push "Failed to overwrite mkcert.exe. Error: $2"
+        Call ShowErrorAndAbort
+    ${EndIf}
 
     ; Add the unprivileged user to the docker group for docker-ce installation
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
@@ -1419,12 +1546,66 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
     
+    ; Configure WSL2 security settings to prevent Windows security warnings
+    Push "Configuring WSL2 security settings to prevent Windows executable warnings..."
+    Call LogPrint
+    
+    ; Configure WSL2 security settings directly via registry
+    Push "Configuring WSL2 security settings..."
+    Call LogPrint
+    
+    ; Try to add wsl.localhost to Local Intranet zone via registry
+    Push "Adding file://*.wsl.localhost to Local Intranet security zone..."
+    Call LogPrint
+    nsExec::ExecToStack 'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\wsl.localhost" /v "file" /t REG_DWORD /d 1 /f'
+    Pop $R0
+    Pop $R1
+    ${If} $R0 == 0
+        Push "WSL2 ZoneMap Internet Domains settings configured successfully via registry"
+        Call LogPrint
+    ${Else}
+        ; Fallback: Show manual instructions
+        Push "Could not automatically configure WSL2 security settings."
+        Call LogPrint
+        Push "To resolve Windows internet zone security warnings manually:"
+        Call LogPrint
+        Push "1. Open Internet Options (Control Panel > Internet Options)"
+        Call LogPrint
+        Push "2. Go to Security tab > Local Intranet > Sites > Advanced"
+        Call LogPrint
+        Push "3. Add to the zone: \\wsl.localhost"
+        Call LogPrint
+        Push "4. Click OK to save"
+        Call LogPrint
+
+        ; Show message box with manual instructions
+        MessageBox MB_OK "WSL2 Security Configuration Required$\r$\n$\r$\nCould not automatically configure WSL2 security settings.$\r$\nTo resolve Windows security warnings manually:$\r$\n$\r$\n1. Open Internet Options (Control Panel > Internet Options)$\r$\n2. Go to Security tab > Local Intranet > Sites > Advanced$\r$\n3. Add to the zone: \\wsl.localhost$\r$\n4. Click OK to save"
+    ${EndIf}
+
+    ; Mark installation as complete for external monitoring
+    Push "Marking installation as complete..."
+    Call LogPrint
+    DetailPrint "Marking installation as complete..."
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"COMPLETED: Installation completed successfully\" >> /tmp/ddev_installation_status.txt"'
+    Pop $1
+    Pop $2
+    DetailPrint "DDEV installation completed successfully"
+
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
     Call LogPrint
-    Delete "C:\Windows\Temp\ddev_installer\ddev_linux"
-    Delete "C:\Windows\Temp\ddev_installer\ddev-hostname_linux"
-    RMDir "C:\Windows\Temp\ddev_installer"
+    Delete "$WINDOWS_TEMP\ddev_installer\check_root_user.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\install_temp_sudoers.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\mkcert_install.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
+    Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname.exe"
+    Delete "$WINDOWS_TEMP\ddev_installer\mkcert.exe"
+    RMDir "$WINDOWS_TEMP\ddev_installer"
+    
+    ; Leave installation status file for external monitoring
+    ; This will be cleaned up by external tests or on next installation
     
     Push "All done! Installation completed successfully and validated."
     Call LogPrint
@@ -1860,6 +2041,9 @@ Function .onInit
     SetRegView 64
     ${DisableX64FSRedirection}
 
+    ; Get Windows TEMP environment variable
+    ReadEnvStr $WINDOWS_TEMP "TEMP"
+
     ; Initialize directory to proper Program Files location
     ${If} ${RunningX64}
         StrCpy $INSTDIR "$PROGRAMFILES64\DDEV"
@@ -1900,36 +2084,22 @@ Function ShowErrorAndAbort
     Exch $R0  ; Get error message from stack
     Push "INSTALLATION ERROR: $R0"
     Call LogPrint
+    
+    ; Write error status to WSL2 distro if available
+    ${If} $SELECTED_DISTRO != ""
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"ERROR: $R0\" >> /tmp/ddev_installation_status.txt"'
+        Pop $1
+        Pop $2
+    ${EndIf}
+    
     ${IfNot} ${Silent}
         MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nPlease fix the issue and retry the installer."
     ${EndIf}
     Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH"
     Call LogPrint
+    SetErrorLevel 1
     Quit
 FunctionEnd
-
-; Helper: returns "1" if $R0 contains $R1, else ""
-Function StrContains
-    Exch $R1 ; substring
-    Exch
-    Exch $R0 ; string
-    Push $R2
-    StrCpy $R2 ""
-    ${DoWhile} $R0 != ""
-        StrCpy $R2 $R0 6
-        StrCmp $R2 $R1 0 found
-            Push "1"
-            Goto done
-        found:
-        StrCpy $R0 $R0 "" 1
-    ${Loop}
-    Push ""
-done:
-    Pop $R2
-    Pop $R1
-    Pop $R0
-FunctionEnd
-
 
 ; Helper: Trim trailing newline and carriage return from a string
 Function TrimNewline
