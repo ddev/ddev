@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Post-install script for ddev-wsl2 package
 # Unblocks Windows executables to prevent security warnings
 

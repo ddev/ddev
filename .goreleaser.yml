@@ -393,6 +393,8 @@ nfpms:
     - bash-completion
     - zsh-completions
     - ddev-wsl2
+  scripts:
+    postinstall: scripts/ddev-linux-package-postinstall.sh
   overrides:
     deb:
       dependencies:
