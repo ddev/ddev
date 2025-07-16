@@ -1,6 +1,7 @@
 # ddev-webserver Docker image
 
 ## Overview
+
 DDEV's ddev-webserver image.
 
 This container image is part of DDEV, and is not typically used stand-alone.
@@ -9,7 +10,7 @@ This container image is part of DDEV, and is not typically used stand-alone.
 
 * Nginx
 * Apache
-* Many PHP versions
+* All supported, non-EOL PHP versions
 * [Composer](https://getcomposer.org/) (from the production container)
 * [Drush](http://www.drush.org) (from the production container)
 * [PHIVE](https://phar.io/) (from the production container)
@@ -18,7 +19,6 @@ This container image is part of DDEV, and is not typically used stand-alone.
 * [mailpit](https://github.com/axllent/mailpit)
 * npm
 * yarn
-
 
 ## Instructions
 
@@ -29,6 +29,7 @@ Use [DDEV](https://ddev.readthedocs.io)
 See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
 
 ### Running
+
 To run the container by itself:
 
 ```bash
@@ -36,20 +37,24 @@ docker run -it --rm ddev/ddev-webserver:<tag> bash
 ```
 
 ## Source:
+
 [ddev-webserver](https://github.com/ddev/ddev/tree/main/containers/ddev-webserver)
 
-
 ## Maintained by:
+
 The [DDEV Maintainers](https://github.com/ddev)
 
 ## Where to get help:
+
 * [DDEV Community Discord](https://ddev.com/s/discord)
 * [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev)
 
 ## Where to file issues:
+
 https://github.com/ddev/ddev/issues
 
 ## Documentation:
+
 * https://ddev.readthedocs.io/
 * https://ddev.com/
 

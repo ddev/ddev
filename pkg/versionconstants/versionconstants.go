@@ -11,25 +11,25 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250612_stasadev_rebuild_images" // Note that this can be overridden by make
+var WebTag = "v1.24.7" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20250716_das-peter_cnf"
+var BaseDBTag = "v1.24.7"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20250612_stasadev_rebuild_images"
+var TraefikRouterTag = "v1.24.7"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.24.6"
+var SSHAuthTag = "v1.24.7"
 
 // BusyboxImage is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
@@ -38,7 +38,7 @@ var BusyboxImage = "busybox:stable"
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "v1.24.6"
+var XhguiTag = "v1.24.7"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities"
@@ -51,4 +51,4 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.18.1"
 
-const RequiredDockerComposeVersionDefault = "v2.36.1"
+const RequiredDockerComposeVersionDefault = "v2.38.2"

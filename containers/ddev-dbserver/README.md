@@ -8,9 +8,9 @@ This container image is part of DDEV, and not typically used stand-alone.
 
 ### Features
 
-* MariaDB 5.5 though current stable
-* MySQL 5.5 through current stable
-* Backup facilities like xtrabackup and mariabackup.
+* MariaDB 5.5 through current LTS
+* MySQL 5.5 through current LTS
+* Backup facilities like `xtrabackup` and `mariadb-backup` (previously called `mariabackup`).
 
 ## Instructions
 
