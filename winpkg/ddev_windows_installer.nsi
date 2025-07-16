@@ -404,7 +404,6 @@ Function DistroSelectionPageLeave
     File /oname=check_root_user.sh "scripts\check_root_user.sh"
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
-    File /oname=ddev-wsl2-postinstall.sh "scripts\ddev-wsl2-postinstall.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
@@ -1603,7 +1602,6 @@ Function InstallWSL2Common
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname.exe"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert.exe"
-    Delete "$WINDOWS_TEMP\ddev_installer\ddev-wsl2-postinstall.sh"
     RMDir "$WINDOWS_TEMP\ddev_installer"
     
     ; Leave installation status file for external monitoring
