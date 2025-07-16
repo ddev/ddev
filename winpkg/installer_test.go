@@ -61,7 +61,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			t.Cleanup(func() {
 				t.Logf("Cleaning up %s test - powering off ddev", tc.name)
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
-				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2; apt-get remove docker-ce-cli docker-ce")
+				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
 
 			})
 
@@ -226,7 +226,7 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
 		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev docker-ce-cli docker-ce 2>/dev/null || true)")
+		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null || true)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
 	}
 }
