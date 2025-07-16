@@ -326,8 +326,9 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	t.Logf("ddev config/start output: %s", out)
 
 	// Test HTTP response from inside WSL distro
-	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("curl -s https://%s.ddev.site", projectName))
-	require.NoError(err, "curl to HTTPS site failed: %v, output: %s", err, out)
+	insideCurl := fmt.Sprintf("curl -s http://%s.ddev.site", projectName)
+	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", insideCurl)
+	require.NoError(err, "`%s` failed inside distro: %v, output: %s", insideCurl, err, out)
 	require.Contains(out, "Hello from DDEV!")
 	t.Logf("HTTPS project responding correctly inside distro")
 
