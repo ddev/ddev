@@ -35,8 +35,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			name:          "DockerCE",
 			distro:        "TestDockerCE",
 			installerArgs: []string{"/docker-ce", "/distro=TestDockerCE", "/S"},
-			//skipCondition: func() bool { return false }, // always run
-			skipCondition: func() bool { return true }, // always run
+			skipCondition: func() bool { return false }, // always run
 		},
 		{
 			name:          "DockerDesktop",
@@ -62,6 +61,8 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			t.Cleanup(func() {
 				t.Logf("Cleaning up %s test - powering off ddev", tc.name)
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
+				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2; apt-get remove docker-ce-cli docker-ce")
+
 			})
 
 			// Get absolute path to installer
@@ -100,7 +101,12 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			statusFile := "/tmp/ddev_installation_status.txt"
 
 			for i := 0; i < maxTries; i++ {
-				out, err := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^COMPLETED' "+statusFile+" 2>/dev/null")
+				out, err := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "tail -1l "+statusFile+" 2>/dev/null")
+				if err == nil {
+					t.Logf("Installation status on try %d: %s", i, strings.TrimSpace(out))
+					break
+				}
+				out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^COMPLETED' "+statusFile+" 2>/dev/null")
 				if err == nil {
 					t.Logf("Installation completion confirmed: %s", strings.TrimSpace(out))
 					break
@@ -222,15 +228,6 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 
 		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev docker-ce-cli docker-ce || true)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
-
-		//t.Logf("Test distro %s exists, attempting to remove", distroName)
-		// Unregister (delete) the distro
-		//out, err = exec.RunHostCommand("wsl.exe", "--unregister", distroName)
-		//if err != nil {
-		//	t.Logf("Failed to unregister distro %s: %v, output: %s", distroName, err, out)
-		//} else {
-		//	t.Logf("Successfully removed test distro: %s", distroName)
-		//}
 	}
 }
 
@@ -301,7 +298,7 @@ func testDdevInstallation(t *testing.T, distroName string) {
 	require.NoError(err, "ddev-hostname.exe failed: %v, output: %s", err, out)
 	out = strings.Trim(out, "\r\n ")
 	require.EqualValues("/usr/bin/ddev-hostname.exe", out, "Expected ddev-hostname.exe to be at /usr/bin/ddev-hostname.exe, got %s", out)
-	t.Logf("ddev-hostname available at %s", out)
+	t.Logf("ddev-hostname.exe available at %s", out)
 }
 
 // testBasicDdevFunctionality tests basic ddev project creation and start
