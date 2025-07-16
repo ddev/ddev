@@ -15,4 +15,6 @@
       DDEV_TEST_USE_NFSMOUNT: false
       DOCKER_TYPE: rancher-desktop
     parallelism: 1
+    concurrency: 1
+    concurrency_group: "windows-tests"
 
