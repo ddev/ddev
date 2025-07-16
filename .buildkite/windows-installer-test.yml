@@ -4,7 +4,7 @@
 # Runs exclusively (not concurrent with regular tests)
 
 steps:
-  - command: ".buildkite/test_installer.cmd"
+  - command: ".buildkite/test-installer.cmd"
     label: "Windows Installer Test"
     if: |
       build.message !~ /\[(skip ci|skip buildkite)\]/

@@ -2,7 +2,7 @@
 
 TASKKILL /T /F /IM mutagen.exe 2>NUL
 
-make testwininstaller
+"C:\Program Files\git\bin\bash" .buildkite/test-installer.sh
 
 if %ERRORLEVEL% EQU 0 (
    @echo Successful installer test
