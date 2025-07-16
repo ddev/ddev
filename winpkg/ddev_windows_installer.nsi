@@ -9,6 +9,7 @@
 
 !insertmacro GetParameters
 !insertmacro GetOptions
+!insertmacro GetTime
 
 !insertmacro WordFind
 ${StrStr}
@@ -70,12 +71,42 @@ InstType "Minimal"
 
 ; InitializeDebugLog - Open debug log file for writing
 Function InitializeDebugLog
-    StrCpy $DEBUG_LOG_PATH "$TEMP\ddev_installer_debug.log"
+    ; Get current timestamp for filename and log header
+    ; GetTime returns: $0=day, $1=month, $2=year, $3=dayofweek, $4=hour, $5=minute, $6=second
+    ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+    
+    ; Simple padding function for 2-digit format
+    StrLen $R1 $1
+    ${If} $R1 == 1
+        StrCpy $1 "0$1"
+    ${EndIf}
+    StrLen $R1 $0
+    ${If} $R1 == 1
+        StrCpy $0 "0$0"
+    ${EndIf}
+    StrLen $R1 $4
+    ${If} $R1 == 1
+        StrCpy $4 "0$4"
+    ${EndIf}
+    StrLen $R1 $5
+    ${If} $R1 == 1
+        StrCpy $5 "0$5"
+    ${EndIf}
+    StrLen $R1 $6
+    ${If} $R1 == 1
+        StrCpy $6 "0$6"
+    ${EndIf}
+    
+    ; Format: YYYYMMDD.HHMMSS
+    StrCpy $R0 "$2$1$0.$4$5$6"
+    
+    StrCpy $DEBUG_LOG_PATH "$TEMP\ddev_installer_debug_$R0.log"
     FileOpen $DEBUG_LOG_HANDLE "$DEBUG_LOG_PATH" w
     ${If} $DEBUG_LOG_HANDLE != ""
+        FileWrite $DEBUG_LOG_HANDLE "$R0$\r$\n"
         FileWrite $DEBUG_LOG_HANDLE "=== DDEV Installer Debug Log ===$\r$\n"
         FileWrite $DEBUG_LOG_HANDLE "Log location: $DEBUG_LOG_PATH$\r$\n"
-        FileWrite $DEBUG_LOG_HANDLE "Installer started at: $\r$\n"
+        FileWrite $DEBUG_LOG_HANDLE "Installer started at: $2-$1-$0 $4:$5:$6$\r$\n"
     ${EndIf}
 FunctionEnd
 
