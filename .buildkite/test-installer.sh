@@ -3,7 +3,10 @@
 
 set -eu -o pipefail
 
-export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+export TIMEOUT_CMD="timeout -v"
+if [ ${OSTYPE%%-*} = "linux" ]; then
+  TIMEOUT_CMD="timeout"
+fi
 
 # Make sure docker is working
 echo "Waiting for docker provider to come up: $(date)"
