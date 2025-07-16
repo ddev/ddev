@@ -223,10 +223,10 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 
 		// Get distro back to a fairly normal pre-ddev state.
 		// Makes test run much faster than completely deleting the distro.
-		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff || true) && (ddev stop --unlist -a) && rm -rf ~/tp")
+		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
 		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev docker-ce-cli docker-ce || true)")
+		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev docker-ce-cli docker-ce 2>/dev/null || true)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
 	}
 }
