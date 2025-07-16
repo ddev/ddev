@@ -154,7 +154,7 @@ builds:
   binary: ddev-hostname.exe
 
 - id: ddev-wsl2-hostname-arm64
-  builder: prebuilt  
+  builder: prebuilt
   goos:
   - linux
   goarch:
@@ -174,7 +174,7 @@ builds:
   binary: mkcert.exe
 
 - id: ddev-wsl2-mkcert-arm64
-  builder: prebuilt  
+  builder: prebuilt
   goos:
   - linux
   goarch:
@@ -182,8 +182,6 @@ builds:
   prebuilt:
     path: .gotmp/bin/wsl_arm64/mkcert.exe
   binary: mkcert.exe
-
-
 
 ###### Archives ######
 archives:

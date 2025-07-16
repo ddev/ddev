@@ -48,7 +48,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.skipCondition() {
-				t.Skipf("Skipping %s test - Desktop distro must have integration with Rancher/Docker Desktop ", tc.name)
+				t.Skipf("Skipping %s test - Desktop distro must have integration with Rancher/Docker Desktop", tc.name)
 			}
 
 			require := require.New(t)
@@ -296,7 +296,7 @@ func testDdevInstallation(t *testing.T, distroName string) {
 
 	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "command", "-v", "ddev-hostname.exe")
 	require.NoError(err, "ddev-hostname.exe failed: %v, output: %s", err, out)
-	out = strings.Trim(out, "\r\n ")
+	out = strings.TrimSpace(out)
 	require.EqualValues("/usr/bin/ddev-hostname.exe", out, "Expected ddev-hostname.exe to be at /usr/bin/ddev-hostname.exe, got %s", out)
 	t.Logf("ddev-hostname.exe available at %s", out)
 }
