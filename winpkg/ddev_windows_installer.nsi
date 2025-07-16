@@ -790,6 +790,7 @@ Function DockerExitButtonClick
     Push "Exiting installer so user can install/configure Docker"
     Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
+    Quit
 FunctionEnd
 
 Function DockerCancelButtonClick
@@ -799,6 +800,7 @@ Function DockerCancelButtonClick
     Push "Exiting installer - user cancelled Docker installation"
     Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
+    Quit
 FunctionEnd
 
 Function StartMenuPagePre
