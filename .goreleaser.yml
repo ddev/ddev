@@ -723,9 +723,7 @@ dockerhub:
 #    # App's dependencies
 #    # The version is not required.
 #    dependencies:
-#      - id: gsudo
 #      - id: ngrok
-#      - id: mkcert
 #
 #    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
 #

@@ -278,12 +278,12 @@ windows_arm64_sign_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/wi
 
 windows_sign_binaries: windows_amd64_sign_binaries windows_arm64_sign_binaries
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_sign_binaries linux_amd64 $(GOTMP)/bin/windows_amd64/gsudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
+$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_sign_binaries linux_amd64 $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
 	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer amd64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
 
-$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_sign_binaries linux_arm64 $(GOTMP)/bin/windows_arm64/gsudo_license.txt $(GOTMP)/bin/windows_arm64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
+$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_sign_binaries linux_arm64  $(GOTMP)/bin/windows_arm64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
 	@makensis -DTARGET_ARCH=arm64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer arm64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
@@ -311,14 +311,6 @@ $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.
 $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt:
 	$(CURL) --fail -JL -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/arm64"
 	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
-
-$(GOTMP)/bin/windows_amd64/gsudo_license.txt:
-	set -x
-	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o "$(GOTMP)/bin/windows_amd64/gsudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
-
-$(GOTMP)/bin/windows_arm64/gsudo_license.txt:
-	set -x
-	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o "$(GOTMP)/bin/windows_arm64/gsudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
