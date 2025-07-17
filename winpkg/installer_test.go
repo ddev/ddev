@@ -107,21 +107,14 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			mkcertOut, mkcertErr := exec.RunHostCommand("mkcert.exe", "-CAROOT")
 			t.Logf("Windows mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(mkcertOut), mkcertErr)
 			
-			// 3. Check currentUser and system CA store info
-			// Check current user CA store count
-			userStoreOut, userStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\CurrentUser\\Root).Count")
-			t.Logf("Current user CA store count: %s (err: %v)", strings.TrimSpace(userStoreOut), userStoreErr)
+			// 3. Check currentUser and system CA stores for mkcert CAs
+			// Check current user CA store for mkcert CAs
+			userStoreOut, userStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "Get-ChildItem -Path Cert:\\CurrentUser\\Root | Where-Object {$_.Subject -like '*mkcert*'} | Select-Object Subject, Issuer")
+			t.Logf("Current user mkcert CAs: %s (err: %v)", strings.TrimSpace(userStoreOut), userStoreErr)
 			
-			// Check system CA store count
-			systemStoreOut, systemStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\LocalMachine\\Root).Count")
-			t.Logf("System CA store count: %s (err: %v)", strings.TrimSpace(systemStoreOut), systemStoreErr)
-			
-			// Check for mkcert certs in stores
-			userMkcertOut, userMkcertErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\CurrentUser\\Root | Where-Object {$_.Subject -like '*mkcert*'}).Count")
-			t.Logf("Current user mkcert cert count: %s (err: %v)", strings.TrimSpace(userMkcertOut), userMkcertErr)
-			
-			systemMkcertOut, systemMkcertErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\LocalMachine\\Root | Where-Object {$_.Subject -like '*mkcert*'}).Count")
-			t.Logf("System mkcert cert count: %s (err: %v)", strings.TrimSpace(systemMkcertOut), systemMkcertErr)
+			// Check system CA store for mkcert CAs
+			systemStoreOut, systemStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "Get-ChildItem -Path Cert:\\LocalMachine\\Root | Where-Object {$_.Subject -like '*mkcert*'} | Select-Object Subject, Issuer")
+			t.Logf("System mkcert CAs: %s (err: %v)", strings.TrimSpace(systemStoreOut), systemStoreErr)
 			
 			t.Logf("=== END DEBUG: Windows-side certificate configuration ===")
 
@@ -136,21 +129,17 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			distroMkcertOut, distroMkcertErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -CAROOT; else echo 'mkcert not found'; fi")
 			t.Logf("WSL distro mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(distroMkcertOut), distroMkcertErr)
 			
-			// Check NSS trust store info
-			nssDbOut, nssDbErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d ~/.pki/nssdb ]; then certutil -L -d ~/.pki/nssdb | wc -l; else echo 'NSS DB not found'; fi")
-			t.Logf("WSL distro NSS DB cert count: %s (err: %v)", strings.TrimSpace(nssDbOut), nssDbErr)
+			// Check NSS trust store for mkcert CAs
+			nssDbOut, nssDbErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d ~/.pki/nssdb ]; then certutil -L -d ~/.pki/nssdb | grep -i mkcert || echo 'No mkcert CAs in NSS DB'; else echo 'NSS DB not found'; fi")
+			t.Logf("WSL distro NSS mkcert CAs: %s (err: %v)", strings.TrimSpace(nssDbOut), nssDbErr)
 			
-			// Check system CA certificates directory
-			systemCAOut, systemCAErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d /usr/local/share/ca-certificates ]; then ls -1 /usr/local/share/ca-certificates/ | wc -l; else echo 'System CA dir not found'; fi")
-			t.Logf("WSL distro system CA cert count: %s (err: %v)", strings.TrimSpace(systemCAOut), systemCAErr)
+			// Check system CA certificates directory for mkcert CAs
+			systemCAOut, systemCAErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d /usr/local/share/ca-certificates ]; then ls -1 /usr/local/share/ca-certificates/ | grep mkcert || echo 'No mkcert CAs in system CA dir'; else echo 'System CA dir not found'; fi")
+			t.Logf("WSL distro system mkcert CAs: %s (err: %v)", strings.TrimSpace(systemCAOut), systemCAErr)
 			
-			// Check for mkcert certs specifically
-			mkcertCAOut, mkcertCAErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d /usr/local/share/ca-certificates ]; then ls -1 /usr/local/share/ca-certificates/ | grep -c mkcert || echo '0'; else echo 'System CA dir not found'; fi")
-			t.Logf("WSL distro mkcert CA cert count: %s (err: %v)", strings.TrimSpace(mkcertCAOut), mkcertCAErr)
-			
-			// Check if ca-certificates package is installed
-			caCertStatusOut, caCertStatusErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "dpkg -l ca-certificates 2>/dev/null | grep -c '^ii' || echo '0'")
-			t.Logf("WSL distro ca-certificates package installed: %s (err: %v)", strings.TrimSpace(caCertStatusOut), caCertStatusErr)
+			// Show the actual mkcert CA certificate subject if it exists
+			caCertContentOut, caCertContentErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if ls /usr/local/share/ca-certificates/mkcert*.crt 2>/dev/null; then for cert in /usr/local/share/ca-certificates/mkcert*.crt; do echo \"CA: $cert\"; openssl x509 -in \"$cert\" -subject -noout 2>/dev/null || echo 'Failed to read cert'; done; else echo 'No mkcert CA certificate files found'; fi")
+			t.Logf("WSL distro mkcert CA certificates: %s (err: %v)", strings.TrimSpace(caCertContentOut), caCertContentErr)
 			
 			t.Logf("=== END DEBUG: WSL distro-side certificate configuration ===")
 
