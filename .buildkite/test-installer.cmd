@@ -3,7 +3,7 @@
 @echo "DEBUG: Concurrency group debug value: %CONCURRENCY_GROUP_DEBUG%"
 @echo "DEBUG: Agent ID: %BUILDKITE_AGENT_ID%"
 @echo "DEBUG: Agent Name: %BUILDKITE_AGENT_NAME%"
-@echo "DEBUG: Hostname: %HOSTNAME%"
+@echo "DEBUG: Computer Name: %COMPUTERNAME%"
 
 TASKKILL /T /F /IM mutagen.exe 2>NUL
 
