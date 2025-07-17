@@ -4,6 +4,7 @@
 set -eu -o pipefail
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+os=$(go env GOOS)
 
 # GOTEST_SHORT=16 means drupal11
 export GOTEST_SHORT=16
@@ -16,7 +17,7 @@ export DOCKER_SCOUT_SUGGEST=false
 
 # On macOS, we can have several different docker providers, allow testing all
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
-if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+if [ "${os:-}" = "darwin" ]; then
   function cleanup {
     command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
     sleep 3 # Since we backgrounded orb stop, make sure it completes
@@ -115,7 +116,7 @@ if ! docker ps >/dev/null 2>&1 ; then
 fi
 
 echo
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} for OS=${OSTYPE:-unknown} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT:-notset} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} for OS=${os:-} DOCKER_TYPE=${DOCKER_TYPE:-notset} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT:-notset} golang=$(go version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
 
 echo
 case ${DOCKER_TYPE:-none} in
@@ -201,6 +202,20 @@ if command -v killall >/dev/null ; then
 fi
 
 echo "--- Running tests..."
+
+# Run installer tests first on Windows
+if [ "${OS:-}" = "windows" ]; then
+  echo "--- Running Windows installer tests first..."
+  export DDEV_TEST_USE_REAL_INSTALLER=true
+  make testwininstaller TESTARGS="-failfast"
+  INSTALLER_RV=$?
+  if [ $INSTALLER_RV -ne 0 ]; then
+    echo "Windows installer tests failed with status=$INSTALLER_RV"
+    exit $INSTALLER_RV
+  fi
+  echo "Windows installer tests completed successfully"
+fi
+
 make test TESTARGS="-failfast"
 RV=$?
 echo "test.sh completed with status=$RV"
