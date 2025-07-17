@@ -98,6 +98,16 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 			// Debug: Check Windows-side certificate configuration
 			t.Logf("=== DEBUG: Windows-side certificate configuration ===")
+			
+			// Show current Windows user and environment
+			userOut, userErr := exec.RunHostCommand("cmd.exe", "/c", "echo %USERNAME%")
+			t.Logf("Current Windows user: %s (err: %v)", strings.TrimSpace(userOut), userErr)
+			
+			userDomainOut, userDomainErr := exec.RunHostCommand("cmd.exe", "/c", "echo %USERDOMAIN%")
+			t.Logf("Current Windows user domain: %s (err: %v)", strings.TrimSpace(userDomainOut), userDomainErr)
+			
+			whoamiOut, whoamiErr := exec.RunHostCommand("whoami.exe")
+			t.Logf("Current Windows user (whoami): %s (err: %v)", strings.TrimSpace(whoamiOut), whoamiErr)
 
 			// 1. Check $CAROOT env var on Windows side
 			caRootOut, caRootErr := exec.RunHostCommand("cmd.exe", "/c", "echo %CAROOT%")
@@ -106,6 +116,32 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			// 1. Check $WSLENV env var on Windows side
 			out, err = exec.RunHostCommand("cmd.exe", "/c", "echo %WSLENV%")
 			t.Logf("Windows WSLENV env var: %s (err: %v)", strings.TrimSpace(out), caRootErr)
+			
+			// Check registry values for CAROOT and WSLENV
+			t.Logf("=== Checking Windows Registry for Environment Variables ===")
+			
+			// Check user environment variables in registry
+			userCarootReg, userCarootRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_CURRENT_USER\\Environment", "/v", "CAROOT")
+			t.Logf("Registry HKCU\\Environment CAROOT: %s (err: %v)", strings.TrimSpace(userCarootReg), userCarootRegErr)
+			
+			userWslenvReg, userWslenvRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_CURRENT_USER\\Environment", "/v", "WSLENV")
+			t.Logf("Registry HKCU\\Environment WSLENV: %s (err: %v)", strings.TrimSpace(userWslenvReg), userWslenvRegErr)
+			
+			// Check system environment variables in registry
+			systemCarootReg, systemCarootRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "/v", "CAROOT")
+			t.Logf("Registry HKLM\\System\\Environment CAROOT: %s (err: %v)", strings.TrimSpace(systemCarootReg), systemCarootRegErr)
+			
+			systemWslenvReg, systemWslenvRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "/v", "WSLENV")
+			t.Logf("Registry HKLM\\System\\Environment WSLENV: %s (err: %v)", strings.TrimSpace(systemWslenvReg), systemWslenvRegErr)
+			
+			t.Logf("=== End Registry Check ===")
+			
+			// Also check what PowerShell sees for environment variables
+			psCarootOut, psCarootErr := exec.RunHostCommand("powershell.exe", "-Command", "[Environment]::GetEnvironmentVariable('CAROOT', 'User')")
+			t.Logf("PowerShell User CAROOT: %s (err: %v)", strings.TrimSpace(psCarootOut), psCarootErr)
+			
+			psWslenvOut, psWslenvErr := exec.RunHostCommand("powershell.exe", "-Command", "[Environment]::GetEnvironmentVariable('WSLENV', 'User')")
+			t.Logf("PowerShell User WSLENV: %s (err: %v)", strings.TrimSpace(psWslenvOut), psWslenvErr)
 
 			// 2. Check mkcert -CAROOT on Windows side
 			mkcertOut, mkcertErr := exec.RunHostCommand("mkcert.exe", "-CAROOT")
