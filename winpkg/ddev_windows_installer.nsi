@@ -13,6 +13,7 @@
 
 !insertmacro WordFind
 ${StrStr}
+${StrRep}
 ${StrTrimNewLines}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
 
