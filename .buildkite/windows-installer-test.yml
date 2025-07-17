@@ -15,6 +15,7 @@ steps:
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_REAL_INSTALLER: true
+      DDEV_NO_INSTRUMENTATION: true
     timeout_in_minutes: 35
     parallelism: 1
     concurrency: 1

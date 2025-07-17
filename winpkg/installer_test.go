@@ -124,6 +124,9 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 				time.Sleep(1 * time.Second)
 			}
 
+			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev config global --instrumentation-opt-in=false")
+			require.NoError(err, "Failed to set global instrumentation opt-in: %v, output: %s", err, out)
+
 			// Check if ddev is available to verify installer waited for completion
 			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev version")
 			require.NoError(err, "ddev version check failed after installer: %v, output: %s", err, out)
