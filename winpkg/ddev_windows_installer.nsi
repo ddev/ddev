@@ -1791,10 +1791,19 @@ Function SetupWindowsCAROOT
         ; Store original value for debugging
         StrCpy $R4 $R2
         
-        ${If} $R2 != ""
-            StrCpy $R2 "CAROOT/up;$R2"
+        ; Check if CAROOT/up is already in WSLENV
+        ${StrStr} $R3 $R2 "CAROOT/up"
+        ${If} $R3 == ""
+            ; CAROOT/up not found, add it
+            ${If} $R2 != ""
+                StrCpy $R2 "CAROOT/up;$R2"
+            ${Else}
+                StrCpy $R2 "CAROOT/up"
+            ${EndIf}
         ${Else}
-            StrCpy $R2 "CAROOT/up"
+            ; CAROOT/up already exists, leave WSLENV unchanged
+            Push "CAROOT/up already exists in WSLENV, not adding duplicate"
+            Call LogPrint
         ${EndIf}
         
         EnVar::SetHKLM
