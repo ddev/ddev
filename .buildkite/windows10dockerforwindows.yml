@@ -15,4 +15,4 @@
       DOCKER_TYPE: dockerforwindows
     parallelism: 1
     concurrency: 1
-    concurrency_group: "windows-tests-$${BUILDKITE_AGENT_NAME}"
+    concurrency_group: "windows-tests-$${BUILDKITE_AGENT_ID}"
