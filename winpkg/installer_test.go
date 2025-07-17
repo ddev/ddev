@@ -226,7 +226,19 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
 		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null || true)")
+		// Temp allow all sudo to let mkcert -uninstall work as normal user
+		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", `echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install`)
+		require.NoError(t, err)
+
+		// Now do mkcert -uninstall as normal user if mkcert is installed
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -uninstall; fi")
+		require.NoError(t, err)
+
+		// Now take away temp sudo
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "rm", "/etc/sudoers.d/temp-mkcert-install")
+		require.NoError(t, err)
+
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
 	}
 }
