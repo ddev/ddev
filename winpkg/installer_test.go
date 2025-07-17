@@ -98,49 +98,56 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 			// Debug: Check Windows-side certificate configuration
 			t.Logf("=== DEBUG: Windows-side certificate configuration ===")
-			
+
 			// 1. Check $CAROOT env var on Windows side
 			caRootOut, caRootErr := exec.RunHostCommand("cmd.exe", "/c", "echo %CAROOT%")
 			t.Logf("Windows $CAROOT env var: %s (err: %v)", strings.TrimSpace(caRootOut), caRootErr)
-			
+
+			// 1. Check $WSLENV env var on Windows side
+			out, err = exec.RunHostCommand("cmd.exe", "/c", "echo %WSLENV%")
+			t.Logf("Windows WSLENV env var: %s (err: %v)", strings.TrimSpace(out), caRootErr)
+
 			// 2. Check mkcert -CAROOT on Windows side
 			mkcertOut, mkcertErr := exec.RunHostCommand("mkcert.exe", "-CAROOT")
 			t.Logf("Windows mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(mkcertOut), mkcertErr)
-			
+
 			// 3. Check currentUser and system CA stores for mkcert CAs
 			// Check current user CA store for mkcert CAs
 			userStoreOut, userStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "Get-ChildItem -Path Cert:\\CurrentUser\\Root | Where-Object {$_.Subject -like '*mkcert*'} | Select-Object Subject, Issuer")
 			t.Logf("Current user mkcert CAs: %s (err: %v)", strings.TrimSpace(userStoreOut), userStoreErr)
-			
+
 			// Check system CA store for mkcert CAs
 			systemStoreOut, systemStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "Get-ChildItem -Path Cert:\\LocalMachine\\Root | Where-Object {$_.Subject -like '*mkcert*'} | Select-Object Subject, Issuer")
 			t.Logf("System mkcert CAs: %s (err: %v)", strings.TrimSpace(systemStoreOut), systemStoreErr)
-			
+
 			t.Logf("=== END DEBUG: Windows-side certificate configuration ===")
 
 			// Debug: Check WSL distro-side certificate configuration
 			t.Logf("=== DEBUG: WSL distro-side certificate configuration ===")
-			
-			// Check CAROOT inside the distro
+
+			// Check WSLENV inside the distro
+			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "echo $WSLENV")
+			t.Logf("WSL distro $WSLENV: %s (err: %v)", strings.TrimSpace(out), err)
+
 			distroCAROOTOut, distroCAROOTErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "echo $CAROOT")
 			t.Logf("WSL distro $CAROOT: %s (err: %v)", strings.TrimSpace(distroCAROOTOut), distroCAROOTErr)
-			
+
 			// Check if mkcert is available and get its CAROOT
 			distroMkcertOut, distroMkcertErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -CAROOT; else echo 'mkcert not found'; fi")
 			t.Logf("WSL distro mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(distroMkcertOut), distroMkcertErr)
-			
+
 			// Check NSS trust store for mkcert CAs
 			nssDbOut, nssDbErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d ~/.pki/nssdb ]; then certutil -L -d ~/.pki/nssdb | grep -i mkcert || echo 'No mkcert CAs in NSS DB'; else echo 'NSS DB not found'; fi")
 			t.Logf("WSL distro NSS mkcert CAs: %s (err: %v)", strings.TrimSpace(nssDbOut), nssDbErr)
-			
+
 			// Check system CA certificates directory for mkcert CAs
 			systemCAOut, systemCAErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d /usr/local/share/ca-certificates ]; then ls -1 /usr/local/share/ca-certificates/ | grep mkcert || echo 'No mkcert CAs in system CA dir'; else echo 'System CA dir not found'; fi")
 			t.Logf("WSL distro system mkcert CAs: %s (err: %v)", strings.TrimSpace(systemCAOut), systemCAErr)
-			
+
 			// Show the actual mkcert CA certificate subject if it exists
 			caCertContentOut, caCertContentErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if ls /usr/local/share/ca-certificates/mkcert*.crt 2>/dev/null; then for cert in /usr/local/share/ca-certificates/mkcert*.crt; do echo \"CA: $cert\"; openssl x509 -in \"$cert\" -subject -noout 2>/dev/null || echo 'Failed to read cert'; done; else echo 'No mkcert CA certificate files found'; fi")
 			t.Logf("WSL distro mkcert CA certificates: %s (err: %v)", strings.TrimSpace(caCertContentOut), caCertContentErr)
-			
+
 			t.Logf("=== END DEBUG: WSL distro-side certificate configuration ===")
 
 			// Wait for installation completion by monitoring status file
