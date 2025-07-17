@@ -204,7 +204,7 @@ fi
 echo "--- Running tests..."
 
 # Run installer tests first on Windows
-if [ "${OS:-}" = "windows" ]; then
+if [ "${os:-}" = "windows" ]; then
   echo "--- Running Windows installer tests first..."
   export DDEV_TEST_USE_REAL_INSTALLER=true
   make testwininstaller TESTARGS="-failfast"
