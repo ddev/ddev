@@ -4,6 +4,7 @@
 @echo "DEBUG: Agent ID: %BUILDKITE_AGENT_ID%"
 @echo "DEBUG: Agent Name: %BUILDKITE_AGENT_NAME%"
 @echo "DEBUG: Computer Name: %COMPUTERNAME%"
+@echo "DEBUG: Expected concurrency group: windows-tests-%BUILDKITE_AGENT_ID%-%BUILDKITE_AGENT_NAME%-%COMPUTERNAME%"
 
 TASKKILL /T /F /IM mutagen.exe
 
