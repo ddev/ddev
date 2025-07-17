@@ -8,7 +8,7 @@ This container image is part of DDEV, and not typically used stand-alone.
 
 ### Features
 
-* php-fpm and all dependencies for all supported, non-EOL PHP versions.
+* php-fpm and all dependencies for many PHP versions from 5.6 and up (non-EOL versions are bundled by default).
 
 ## Instructions
 

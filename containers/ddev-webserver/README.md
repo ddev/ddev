@@ -10,7 +10,7 @@ This container image is part of DDEV, and is not typically used stand-alone.
 
 * Nginx
 * Apache
-* All supported, non-EOL PHP versions
+* Many PHP versions (non-EOL versions are bundled by default)
 * [Composer](https://getcomposer.org/) (from the production container)
 * [Drush](http://www.drush.org) (from the production container)
 * [PHIVE](https://phar.io/) (from the production container)
