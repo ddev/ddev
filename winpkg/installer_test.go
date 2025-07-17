@@ -96,6 +96,64 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			}
 			t.Logf("Installer completed successfully but may be asynchronous, output: %s", out)
 
+			// Debug: Check Windows-side certificate configuration
+			t.Logf("=== DEBUG: Windows-side certificate configuration ===")
+			
+			// 1. Check $CAROOT env var on Windows side
+			caRootOut, caRootErr := exec.RunHostCommand("cmd.exe", "/c", "echo %CAROOT%")
+			t.Logf("Windows $CAROOT env var: %s (err: %v)", strings.TrimSpace(caRootOut), caRootErr)
+			
+			// 2. Check mkcert -CAROOT on Windows side
+			mkcertOut, mkcertErr := exec.RunHostCommand("mkcert.exe", "-CAROOT")
+			t.Logf("Windows mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(mkcertOut), mkcertErr)
+			
+			// 3. Check currentUser and system CA store info
+			// Check current user CA store count
+			userStoreOut, userStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\CurrentUser\\Root).Count")
+			t.Logf("Current user CA store count: %s (err: %v)", strings.TrimSpace(userStoreOut), userStoreErr)
+			
+			// Check system CA store count
+			systemStoreOut, systemStoreErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\LocalMachine\\Root).Count")
+			t.Logf("System CA store count: %s (err: %v)", strings.TrimSpace(systemStoreOut), systemStoreErr)
+			
+			// Check for mkcert certs in stores
+			userMkcertOut, userMkcertErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\CurrentUser\\Root | Where-Object {$_.Subject -like '*mkcert*'}).Count")
+			t.Logf("Current user mkcert cert count: %s (err: %v)", strings.TrimSpace(userMkcertOut), userMkcertErr)
+			
+			systemMkcertOut, systemMkcertErr := exec.RunHostCommand("powershell.exe", "-Command", "(Get-ChildItem -Path Cert:\\LocalMachine\\Root | Where-Object {$_.Subject -like '*mkcert*'}).Count")
+			t.Logf("System mkcert cert count: %s (err: %v)", strings.TrimSpace(systemMkcertOut), systemMkcertErr)
+			
+			t.Logf("=== END DEBUG: Windows-side certificate configuration ===")
+
+			// Debug: Check WSL distro-side certificate configuration
+			t.Logf("=== DEBUG: WSL distro-side certificate configuration ===")
+			
+			// Check CAROOT inside the distro
+			distroCAROOTOut, distroCAROOTErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "echo $CAROOT")
+			t.Logf("WSL distro $CAROOT: %s (err: %v)", strings.TrimSpace(distroCAROOTOut), distroCAROOTErr)
+			
+			// Check if mkcert is available and get its CAROOT
+			distroMkcertOut, distroMkcertErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -CAROOT; else echo 'mkcert not found'; fi")
+			t.Logf("WSL distro mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(distroMkcertOut), distroMkcertErr)
+			
+			// Check NSS trust store info
+			nssDbOut, nssDbErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d ~/.pki/nssdb ]; then certutil -L -d ~/.pki/nssdb | wc -l; else echo 'NSS DB not found'; fi")
+			t.Logf("WSL distro NSS DB cert count: %s (err: %v)", strings.TrimSpace(nssDbOut), nssDbErr)
+			
+			// Check system CA certificates directory
+			systemCAOut, systemCAErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d /usr/local/share/ca-certificates ]; then ls -1 /usr/local/share/ca-certificates/ | wc -l; else echo 'System CA dir not found'; fi")
+			t.Logf("WSL distro system CA cert count: %s (err: %v)", strings.TrimSpace(systemCAOut), systemCAErr)
+			
+			// Check for mkcert certs specifically
+			mkcertCAOut, mkcertCAErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "if [ -d /usr/local/share/ca-certificates ]; then ls -1 /usr/local/share/ca-certificates/ | grep -c mkcert || echo '0'; else echo 'System CA dir not found'; fi")
+			t.Logf("WSL distro mkcert CA cert count: %s (err: %v)", strings.TrimSpace(mkcertCAOut), mkcertCAErr)
+			
+			// Check if ca-certificates package is installed
+			caCertStatusOut, caCertStatusErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "dpkg -l ca-certificates 2>/dev/null | grep -c '^ii' || echo '0'")
+			t.Logf("WSL distro ca-certificates package installed: %s (err: %v)", strings.TrimSpace(caCertStatusOut), caCertStatusErr)
+			
+			t.Logf("=== END DEBUG: WSL distro-side certificate configuration ===")
+
 			// Wait for installation completion by monitoring status file
 			const maxTries = 60
 			statusFile := "/tmp/ddev_installation_status.txt"
