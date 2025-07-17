@@ -1792,7 +1792,7 @@ Function SetupWindowsCAROOT
         StrCpy $R4 $R2
         
         ${If} $R2 != ""
-            StrCpy $R2 "CAROOT/up:$R2"
+            StrCpy $R2 "CAROOT/up;$R2"
         ${Else}
             StrCpy $R2 "CAROOT/up"
         ${EndIf}
@@ -2202,13 +2202,13 @@ Function un.CleanupMkcertEnvironment
         
         DetailPrint "Current WSLENV: $R0"
         
-        ; Remove CAROOT/up: from the beginning
-        ${WordFind} "$R0" "CAROOT/up:" "E+1{" $R1
+        ; Remove CAROOT/up; from the beginning
+        ${WordFind} "$R0" "CAROOT/up;" "E+1{" $R1
         ${If} $R1 != $R0
             StrCpy $R0 $R1
         ${Else}
-            ; Remove :CAROOT/up from anywhere else
-            ${WordFind} "$R0" ":CAROOT/up" "E+1{" $R1
+            ; Remove ;CAROOT/up from anywhere else
+            ${WordFind} "$R0" ";CAROOT/up" "E+1{" $R1
             ${If} $R1 != $R0
                 StrCpy $R0 $R1
             ${Else}
