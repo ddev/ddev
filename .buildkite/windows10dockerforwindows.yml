@@ -13,6 +13,7 @@
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_NFSMOUNT: false
       DOCKER_TYPE: dockerforwindows
+      CONCURRENCY_GROUP_DEBUG: "windows-tests-$${BUILDKITE_AGENT_ID}-$${BUILDKITE_AGENT_NAME}-$${HOSTNAME}"
     parallelism: 1
     concurrency: 1
-    concurrency_group: "windows-tests-$${BUILDKITE_AGENT_ID}"
+    concurrency_group: "windows-tests-$${BUILDKITE_AGENT_ID}-$${BUILDKITE_AGENT_NAME}-$${HOSTNAME}"

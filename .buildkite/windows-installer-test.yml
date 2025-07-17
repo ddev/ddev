@@ -16,7 +16,8 @@ steps:
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_REAL_INSTALLER: true
       DDEV_NO_INSTRUMENTATION: true
+      CONCURRENCY_GROUP_DEBUG: "windows-tests-$${BUILDKITE_AGENT_ID}-$${BUILDKITE_AGENT_NAME}-$${HOSTNAME}"
     timeout_in_minutes: 35
     parallelism: 1
     concurrency: 1
-    concurrency_group: "windows-tests-$${BUILDKITE_AGENT_ID}"
+    concurrency_group: "windows-tests-$${BUILDKITE_AGENT_ID}-$${BUILDKITE_AGENT_NAME}-$${HOSTNAME}"
