@@ -63,6 +63,9 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
 
+				// Install system ddev to ensure subsequent tests have a working ddev
+				t.Logf("Installing system ddev for subsequent tests")
+				installSystemDdev(t)
 			})
 
 			// Get absolute path to installer
@@ -192,6 +195,10 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 	t.Cleanup(func() {
 		t.Logf("Cleaning up Traditional Windows test")
 		cleanupTraditionalWindowsEnv(t)
+
+		// Install system ddev to ensure subsequent tests have a working ddev
+		t.Logf("Installing system ddev for subsequent tests")
+		installSystemDdev(t)
 	})
 
 	// Get absolute path to installer
@@ -512,4 +519,31 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	t.Logf("Project working and accessible from Windows: %s", siteURL)
 
 	t.Logf("Basic Traditional Windows ddev functionality test completed successfully")
+}
+
+// installSystemDdev installs a system ddev using the traditional Windows installer
+func installSystemDdev(t *testing.T) {
+	t.Logf("Installing system ddev for subsequent tests using traditional Windows installer")
+
+	// Get absolute path to installer (same as used in tests)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Logf("Failed to get working directory: %v", err)
+		return
+	}
+	installerFullPath := filepath.Join(wd, installerPath)
+
+	if !fileutil.FileExists(installerFullPath) {
+		t.Logf("Installer not found at %s, cannot install system ddev", installerFullPath)
+		return
+	}
+
+	// Run installer in traditional Windows mode with silent flag
+	t.Logf("Running traditional Windows installer in silent mode: %s", installerFullPath)
+	out, err := exec.RunHostCommand(installerFullPath, "/traditional", "/S")
+	if err != nil {
+		t.Logf("Failed to install system ddev via traditional installer: %v, output: %s", err, out)
+	} else {
+		t.Logf("Successfully installed system ddev via traditional installer: %s", out)
+	}
 }
