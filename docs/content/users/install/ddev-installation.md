@@ -210,16 +210,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         ```bash
         # WSL2 with Docker CE and specified distro
-        ddev_windows_installer.exe /docker-ce /distro=Ubuntu-24.04 /S
+        ./ddev_windows_amd64_installer.exe /S /docker-ce /distro=DDEV
 
         # WSL2 with Docker Desktop and specified distro
-        ddev_windows_installer.exe /docker-desktop /distro=Ubuntu-22.04 /S
+        ./ddev_windows_amd64_installer.exe /S /docker-desktop /distro=Ubuntu
 
         # Traditional Windows (requires Docker Desktop/Rancher Desktop)
-        ddev_windows_installer.exe /traditional /S
+        ./ddev_windows_installer.exe /S /traditional
 
         # Get help with all options
-        ddev_windows_installer.exe /help
+        ./ddev_windows_amd64_installer.exe /help
         ```
 
         The `/S` flag makes the installation completely silent. Use `/distro=<name>` to specify your WSL2 distribution name (required for WSL2 options).
