@@ -17,7 +17,7 @@ var WebTag = "20250612_stasadev_rebuild_images" // Note that this can be overrid
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20250213_rfay_mariadb_11.8"
+var BaseDBTag = "20250716_das-peter_cnf"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
