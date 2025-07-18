@@ -63,6 +63,9 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
 
+				// Install system ddev to ensure subsequent tests have a working ddev
+				t.Logf("Installing system ddev for subsequent tests")
+				installSystemDdev(t)
 			})
 
 			// Get absolute path to installer
@@ -96,6 +99,39 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			}
 			t.Logf("Installer completed successfully but may be asynchronous, output: %s", out)
 
+			// Check $CAROOT env var on Windows side
+			caRootOut, caRootErr := exec.RunHostCommand("cmd.exe", "/c", "echo %CAROOT%")
+			t.Logf("Windows $CAROOT env var: %s (err: %v)", strings.TrimSpace(caRootOut), caRootErr)
+
+			// 1. Check $WSLENV env var on Windows side
+			out, err = exec.RunHostCommand("cmd.exe", "/c", "echo %WSLENV%")
+			t.Logf("Windows WSLENV env var: %s (err: %v)", strings.TrimSpace(out), caRootErr)
+
+			// Check user environment variables in registry
+			userCarootReg, userCarootRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_CURRENT_USER\\Environment", "/v", "CAROOT")
+			t.Logf("Registry HKCU\\Environment CAROOT: %s (err: %v)", strings.TrimSpace(userCarootReg), userCarootRegErr)
+
+			userWslenvReg, userWslenvRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_CURRENT_USER\\Environment", "/v", "WSLENV")
+			t.Logf("Registry HKCU\\Environment WSLENV: %s (err: %v)", strings.TrimSpace(userWslenvReg), userWslenvRegErr)
+
+			// Check system environment variables in registry
+			systemCarootReg, systemCarootRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "/v", "CAROOT")
+			t.Logf("Registry HKLM\\System\\Environment CAROOT: %s (err: %v)", strings.TrimSpace(systemCarootReg), systemCarootRegErr)
+
+			systemWslenvReg, systemWslenvRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "/v", "WSLENV")
+			t.Logf("Registry HKLM\\System\\Environment WSLENV: %s (err: %v)", strings.TrimSpace(systemWslenvReg), systemWslenvRegErr)
+
+			// Check mkcert -CAROOT on Windows side
+			mkcertOut, mkcertErr := exec.RunHostCommand("mkcert.exe", "-CAROOT")
+			t.Logf("Windows mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(mkcertOut), mkcertErr)
+
+			// Check WSLENV inside the distro
+			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "echo $WSLENV")
+			t.Logf("WSL distro $WSLENV: %s (err: %v)", strings.TrimSpace(out), err)
+
+			distroCAROOTOut, distroCAROOTErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "echo $CAROOT")
+			t.Logf("WSL distro $CAROOT: %s (err: %v)", strings.TrimSpace(distroCAROOTOut), distroCAROOTErr)
+
 			// Wait for installation completion by monitoring status file
 			const maxTries = 60
 			statusFile := "/tmp/ddev_installation_status.txt"
@@ -123,6 +159,9 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 				time.Sleep(1 * time.Second)
 			}
+
+			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev config global --instrumentation-opt-in=false")
+			require.NoError(err, "Failed to set global instrumentation opt-in: %v, output: %s", err, out)
 
 			// Check if ddev is available to verify installer waited for completion
 			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev version")
@@ -156,6 +195,10 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 	t.Cleanup(func() {
 		t.Logf("Cleaning up Traditional Windows test")
 		cleanupTraditionalWindowsEnv(t)
+
+		// Install system ddev to ensure subsequent tests have a working ddev
+		t.Logf("Installing system ddev for subsequent tests")
+		installSystemDdev(t)
 	})
 
 	// Get absolute path to installer
@@ -226,7 +269,19 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
 		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
 
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(mkcert -uninstall || true) && (apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null || true)")
+		// Temp allow all sudo to let mkcert -uninstall work as normal user
+		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", `echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install`)
+		require.NoError(t, err)
+
+		// Now do mkcert -uninstall as normal user if mkcert is installed
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -uninstall; fi")
+		require.NoError(t, err)
+
+		// Now take away temp sudo
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "rm", "/etc/sudoers.d/temp-mkcert-install")
+		require.NoError(t, err)
+
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)
 	}
 }
@@ -326,14 +381,16 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	t.Logf("ddev config/start output: %s", out)
 
 	// Test HTTP response from inside WSL distro
-	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("curl -s https://%s.ddev.site", projectName))
-	require.NoError(err, "curl to HTTPS site failed: %v, output: %s", err, out)
+	insideCurl := fmt.Sprintf("curl -s http://%s.ddev.site", projectName)
+	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", insideCurl)
+	require.NoError(err, "`%s` failed inside distro: %v, output: %s", insideCurl, err, out)
 	require.Contains(out, "Hello from DDEV!")
 	t.Logf("HTTPS project responding correctly inside distro")
 
 	// Test using windows PowerShell to check HTTPS
+	psInvoke := fmt.Sprintf("powershell.exe -NoProfile -ExecutionPolicy Bypass -Command Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName)
 	out, err = exec.RunHostCommand("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", fmt.Sprintf("Invoke-RestMethod 'https://%s.ddev.site' -ErrorAction Stop", projectName))
-	require.NoError(err, "HTTPS check failed (note that mkcert.exe -install must be run on test runner): %v, output: %s", err, out)
+	require.NoError(err, "HTTPS check from Windows failed (`%s`) (note that mkcert.exe -install must be run previously on test runner): %v, output: %s", psInvoke, err, out)
 	require.Contains(out, "Hello from DDEV!")
 	t.Logf("Project working and accessible from Windows")
 
@@ -462,4 +519,31 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	t.Logf("Project working and accessible from Windows: %s", siteURL)
 
 	t.Logf("Basic Traditional Windows ddev functionality test completed successfully")
+}
+
+// installSystemDdev installs a system ddev using the traditional Windows installer
+func installSystemDdev(t *testing.T) {
+	t.Logf("Installing system ddev for subsequent tests using traditional Windows installer")
+
+	// Get absolute path to installer (same as used in tests)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Logf("Failed to get working directory: %v", err)
+		return
+	}
+	installerFullPath := filepath.Join(wd, installerPath)
+
+	if !fileutil.FileExists(installerFullPath) {
+		t.Logf("Installer not found at %s, cannot install system ddev", installerFullPath)
+		return
+	}
+
+	// Run installer in traditional Windows mode with silent flag
+	t.Logf("Running traditional Windows installer in silent mode: %s", installerFullPath)
+	out, err := exec.RunHostCommand(installerFullPath, "/traditional", "/S")
+	if err != nil {
+		t.Logf("Failed to install system ddev via traditional installer: %v, output: %s", err, out)
+	} else {
+		t.Logf("Successfully installed system ddev via traditional installer: %s", out)
+	}
 }

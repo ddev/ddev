@@ -13,6 +13,7 @@
 
 !insertmacro WordFind
 ${StrStr}
+${StrRep}
 ${StrTrimNewLines}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
 
@@ -1791,11 +1792,66 @@ Function SetupWindowsCAROOT
         ; Store original value for debugging
         StrCpy $R4 $R2
         
-        ${If} $R2 != ""
-            StrCpy $R2 "CAROOT/up:$R2"
+        ; Clean up any existing CAROOT/up entries first
+        StrCpy $R3 $R2  ; Copy to working variable
+        
+        ; Remove all instances of CAROOT/up; (with semicolon)
+        ${Do}
+            ${StrStr} $R5 $R3 "CAROOT/up;"
+            ${If} $R5 == ""
+                ${Break}
+            ${EndIf}
+            ${StrRep} $R3 $R3 "CAROOT/up;" ""
+        ${Loop}
+        
+        ; Remove all instances of ;CAROOT/up (with leading semicolon)
+        ${Do}
+            ${StrStr} $R5 $R3 ";CAROOT/up"
+            ${If} $R5 == ""
+                ${Break}
+            ${EndIf}
+            ${StrRep} $R3 $R3 ";CAROOT/up" ""
+        ${Loop}
+        
+        ; Remove if it's exactly "CAROOT/up" by itself
+        ${If} $R3 == "CAROOT/up"
+            StrCpy $R3 ""
+        ${EndIf}
+        
+        ; Clean up any double semicolons that might have been created
+        ${Do}
+            ${StrStr} $R5 $R3 ";;"
+            ${If} $R5 == ""
+                ${Break}
+            ${EndIf}
+            ${StrRep} $R3 $R3 ";;" ";"
+        ${Loop}
+        
+        ; Remove leading or trailing semicolons
+        ${If} $R3 != ""
+            StrCpy $R5 $R3 1  ; Get first character
+            ${If} $R5 == ";"
+                StrCpy $R3 $R3 "" 1  ; Remove first character
+            ${EndIf}
+            ${If} $R3 != ""
+                StrLen $R6 $R3
+                IntOp $R6 $R6 - 1
+                StrCpy $R5 $R3 1 $R6  ; Get last character
+                ${If} $R5 == ";"
+                    StrCpy $R3 $R3 $R6  ; Remove last character
+                ${EndIf}
+            ${EndIf}
+        ${EndIf}
+        
+        ; Now add CAROOT/up to the cleaned string
+        ${If} $R3 != ""
+            StrCpy $R2 "CAROOT/up;$R3"
         ${Else}
             StrCpy $R2 "CAROOT/up"
         ${EndIf}
+        
+        Push "WSLENV cleaned and updated: [$R4] -> [$R2]"
+        Call LogPrint
         
         EnVar::SetHKLM
         EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
@@ -2202,13 +2258,13 @@ Function un.CleanupMkcertEnvironment
         
         DetailPrint "Current WSLENV: $R0"
         
-        ; Remove CAROOT/up: from the beginning
-        ${WordFind} "$R0" "CAROOT/up:" "E+1{" $R1
+        ; Remove CAROOT/up; from the beginning
+        ${WordFind} "$R0" "CAROOT/up;" "E+1{" $R1
         ${If} $R1 != $R0
             StrCpy $R0 $R1
         ${Else}
-            ; Remove :CAROOT/up from anywhere else
-            ${WordFind} "$R0" ":CAROOT/up" "E+1{" $R1
+            ; Remove ;CAROOT/up from anywhere else
+            ${WordFind} "$R0" ";CAROOT/up" "E+1{" $R1
             ${If} $R1 != $R0
                 StrCpy $R0 $R1
             ${Else}
