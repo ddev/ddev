@@ -1586,11 +1586,11 @@ Function InstallWSL2Common
     ; Mark installation as complete for external monitoring
     Push "Marking installation as complete..."
     Call LogPrint
-    DetailPrint "Marking installation as complete..."
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"COMPLETED: Installation completed successfully\" >> /tmp/ddev_installation_status.txt"'
     Pop $1
     Pop $2
-    DetailPrint "DDEV installation completed successfully"
+    Push "DDEV installation completed successfully"
+    Call LogPrint
 
     ; Clean up temp directory
     Push "Cleaning up temporary files..."
@@ -1670,11 +1670,6 @@ Function InstallTraditionalWindows
     Push "Starting InstallTraditionalWindows"
     Call LogPrint
 
-    ; Remove CAROOT environment variable for traditional Windows (WSL2-specific)
-    Push "Removing CAROOT environment variable (not needed for traditional Windows)"
-    Call LogPrint
-    DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
-
     SetOutPath $INSTDIR
     SetOverwrite on
 
@@ -1710,16 +1705,10 @@ FunctionEnd
 Function RunMkcertInstall
     ${If} ${Silent}
         ; In silent mode, skip mkcert.exe -install to avoid UAC prompts
-        ; But still set up CAROOT environment variable for WSL2 installs
-        ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-        ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-            Push "Setting up CAROOT environment variable for WSL2 in silent mode..."
-            Call LogPrint
-            Call SetupWindowsCAROOT
-        ${Else}
-            Push "Skipping mkcert setup in silent mode for traditional Windows install"
-            Call LogPrint
-        ${EndIf}
+        ; But still set up CAROOT environment variable
+        Push "Setting up CAROOT environment variable in silent mode..."
+        Call LogPrint
+        Call SetupWindowsCAROOT
         Return
     ${EndIf}
     
@@ -1741,11 +1730,8 @@ Function RunMkcertInstall
         Call LogPrint
         WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup" 1
         
-        ; Set up CAROOT environment variable for WSL2 sharing (only for WSL2 installs)
-        ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-        ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-            Call SetupWindowsCAROOT
-        ${EndIf}
+        ; Set up CAROOT environment variable for WSL2 sharing (only used in WSL2 installs)
+        Call SetupWindowsCAROOT
     ${Else}
         Push "mkcert.exe -install failed with exit code: $R0"
         Call LogPrint
@@ -1856,24 +1842,18 @@ Function SetupWindowsCAROOT
         EnVar::SetHKLM
         EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
         Pop $0  ; Get error code from Delete
-        ; DetailPrint "EnVar::Delete WSLENV result: $0"
-        
+
         EnVar::AddValue "WSLENV" "$R2"
         Pop $0  ; Get error code from AddValue
-        ; DetailPrint "EnVar::AddValue WSLENV result: $0"
-        ; DetailPrint "Original WSLENV was: [$R4]"
-        ; DetailPrint "New WSLENV set to: [$R2]"
         
         ; Verify by reading from registry
         ReadRegStr $R5 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
-        ; DetailPrint "WSLENV read back from registry: [$R5]"
-        
+
         Push "mkcert certificate sharing with WSL2 configured successfully."
         Call LogPrint
         
         ; Read current value from registry for verification
         ; ReadRegStr $R6 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
-        ; DetailPrint "WSLENV verification - Original: [$R4], Set to: [$R2], Actual: [$R6]"
     ${Else}
         Push "Failed to get CAROOT directory from mkcert"
         Call LogPrint
@@ -2293,19 +2273,19 @@ FunctionEnd
 
 ; LaunchSponsors - Open GitHub sponsors page
 Function LaunchSponsors
-    Push "User clicked Support DDEV button - opening GitHub sponsors page"
-    Call LogPrint
     ExecShell "open" "https://github.com/sponsors/ddev"
 FunctionEnd
 
 
 ; Installation completion callbacks for proper exit code handling
 Function .onInstSuccess
-    DetailPrint "Installation completed successfully"
+    Push "Installation completed successfully"
+    Call LogPrint
     SetErrorLevel 0
 FunctionEnd
 
 Function .onInstFailed
-    DetailPrint "Installation failed"
+    Push "Installation failed"
+    Call LogPrint
     SetErrorLevel 1
 FunctionEnd
