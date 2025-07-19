@@ -2442,7 +2442,7 @@ func (app *DdevApp) DockerEnv() {
 			app.HostWebserverPort = "80"
 		}
 	}
-	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
+	if nodeps.IsGitpod() || nodeps.IsCodespaces() || nodeps.IsRemoteContainers() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "8080"
 		}
@@ -2570,6 +2570,7 @@ func (app *DdevApp) DockerEnv() {
 		"IS_DDEV_PROJECT":               "true",
 		"IS_GITPOD":                     strconv.FormatBool(nodeps.IsGitpod()),
 		"IS_CODESPACES":                 strconv.FormatBool(nodeps.IsCodespaces()),
+		"IS_REMOTE_CONTAINERS":          strconv.FormatBool(nodeps.IsRemoteContainers()),
 		"IS_WSL2":                       isWSL2,
 		// TODO: Disable bake builder (default since compose v2.37.0) to restore image label
 		// com.docker.compose.project used by `ddev delete` to detect DDEV-created images
