@@ -45,8 +45,9 @@ import (
 const NetName = "ddev_default"
 
 type DockerVersionMatrix struct {
-	APIVersion string
-	Version    string
+	APIVersion               string
+	Version                  string
+	ComposeVersionConstraint string
 }
 
 // DockerRequirements defines the minimum Docker version required by DDEV.
@@ -55,9 +56,14 @@ type DockerVersionMatrix struct {
 // The values correspond to the API version matrix found here:
 // https://docs.docker.com/reference/api/engine/#api-version-matrix
 // List of supported Docker versions: https://endoflife.date/docker-engine
+//
+// ComposeVersionConstraint is in sync with https://docs.docker.com/desktop/release-notes/
+// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
+// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
 var DockerRequirements = DockerVersionMatrix{
-	APIVersion: "1.44",
-	Version:    "25.0",
+	APIVersion:               "1.44",
+	Version:                  "25.0",
+	ComposeVersionConstraint: ">= 2.24.3",
 }
 
 type ComposeCmdOpts struct {
@@ -862,7 +868,7 @@ func CheckDockerCompose() error {
 	if err != nil {
 		return err
 	}
-	versionConstraint := DockerComposeVersionConstraint
+	versionConstraint := DockerRequirements.ComposeVersionConstraint
 
 	v, err := GetDockerComposeVersion()
 	if err != nil {
@@ -1883,12 +1889,6 @@ func GetDockerAPIVersion() (string, error) {
 
 	return DockerAPIVersion, nil
 }
-
-// DockerComposeVersionConstraint is the versions allowed for ddev
-// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
-// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
-var DockerComposeVersionConstraint = ">= 2.5.1"
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
