@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
@@ -32,7 +33,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
-	"go.yaml.in/yaml/v3"
 	"golang.org/x/term"
 )
 
@@ -81,70 +81,70 @@ type WebExtraDaemon struct {
 // DdevApp is the struct that represents a DDEV app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	Name                      string                 `yaml:"name,omitempty"`
-	Type                      string                 `yaml:"type"`
-	AppRoot                   string                 `yaml:"-"`
-	Docroot                   string                 `yaml:"docroot"`
-	PHPVersion                string                 `yaml:"php_version"`
-	WebserverType             string                 `yaml:"webserver_type"`
-	WebImage                  string                 `yaml:"webimage,omitempty"`
-	RouterHTTPPort            string                 `yaml:"router_http_port,omitempty"`
-	RouterHTTPSPort           string                 `yaml:"router_https_port,omitempty"`
-	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
-	NoProjectMount            bool                   `yaml:"no_project_mount,omitempty"`
-	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
-	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
-	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
-	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
-	Database                  DatabaseDesc           `yaml:"database"`
-	PerformanceMode           types.PerformanceMode  `yaml:"performance_mode,omitempty"`
-	FailOnHookFail            bool                   `yaml:"fail_on_hook_fail,omitempty"`
-	BindAllInterfaces         bool                   `yaml:"bind_all_interfaces,omitempty"`
-	FailOnHookFailGlobal      bool                   `yaml:"-"`
-	ConfigPath                string                 `yaml:"-"`
-	DataDir                   string                 `yaml:"-"`
-	SiteSettingsPath          string                 `yaml:"-"`
-	SiteDdevSettingsFile      string                 `yaml:"-"`
-	ProviderInstance          *Provider              `yaml:"-"`
-	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
-	UploadDirDeprecated       string                 `yaml:"upload_dir,omitempty"`
-	UploadDirs                []string               `yaml:"upload_dirs,omitempty"`
-	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
-	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
-	OmitContainersGlobal      []string               `yaml:"-"`
-	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
-	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
-	MailpitHTTPPort           string                 `yaml:"mailpit_http_port,omitempty"`
-	MailpitHTTPSPort          string                 `yaml:"mailpit_https_port,omitempty"`
-	HostMailpitPort           string                 `yaml:"host_mailpit_port,omitempty"`
-	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool                   `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool                   `yaml:"-"`
-	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
-	Timezone                  string                 `yaml:"timezone,omitempty"`
-	ComposerRoot              string                 `yaml:"composer_root,omitempty"`
-	ComposerVersion           string                 `yaml:"composer_version"`
-	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
-	WebEnvironment            []string               `yaml:"web_environment"`
-	NodeJSVersion             string                 `yaml:"nodejs_version,omitempty"`
-	CorepackEnable            bool                   `yaml:"corepack_enable"`
-	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
-	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
-	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
-	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
-	DisableUploadDirsWarning  bool                   `yaml:"disable_upload_dirs_warning,omitempty"`
-	DdevVersionConstraint     string                 `yaml:"ddev_version_constraint,omitempty"`
-	XHGuiHTTPSPort            string                 `yaml:"xhgui_https_port,omitempty"`
-	XHGuiHTTPPort             string                 `yaml:"xhgui_http_port,omitempty"`
-	HostXHGuiPort             string                 `yaml:"host_xhgui_port,omitempty"`
-	XHProfMode                types.XHProfMode       `yaml:"xhprof_mode,omitempty"`
-	ComposeYaml               map[string]interface{} `yaml:"-"`
+	Name                      string                `yaml:"name,omitempty"`
+	Type                      string                `yaml:"type"`
+	AppRoot                   string                `yaml:"-"`
+	Docroot                   string                `yaml:"docroot"`
+	PHPVersion                string                `yaml:"php_version"`
+	WebserverType             string                `yaml:"webserver_type"`
+	WebImage                  string                `yaml:"webimage,omitempty"`
+	RouterHTTPPort            string                `yaml:"router_http_port,omitempty"`
+	RouterHTTPSPort           string                `yaml:"router_https_port,omitempty"`
+	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
+	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
+	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
+	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
+	MariaDBVersion            string                `yaml:"mariadb_version,omitempty"`
+	MySQLVersion              string                `yaml:"mysql_version,omitempty"`
+	Database                  DatabaseDesc          `yaml:"database"`
+	PerformanceMode           types.PerformanceMode `yaml:"performance_mode,omitempty"`
+	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
+	BindAllInterfaces         bool                  `yaml:"bind_all_interfaces,omitempty"`
+	FailOnHookFailGlobal      bool                  `yaml:"-"`
+	ConfigPath                string                `yaml:"-"`
+	DataDir                   string                `yaml:"-"`
+	SiteSettingsPath          string                `yaml:"-"`
+	SiteDdevSettingsFile      string                `yaml:"-"`
+	ProviderInstance          *Provider             `yaml:"-"`
+	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	UploadDirDeprecated       string                `yaml:"upload_dir,omitempty"`
+	UploadDirs                []string              `yaml:"upload_dirs,omitempty"`
+	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
+	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
+	OmitContainersGlobal      []string              `yaml:"-"`
+	HostDBPort                string                `yaml:"host_db_port,omitempty"`
+	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
+	MailpitHTTPPort           string                `yaml:"mailpit_http_port,omitempty"`
+	MailpitHTTPSPort          string                `yaml:"mailpit_https_port,omitempty"`
+	HostMailpitPort           string                `yaml:"host_mailpit_port,omitempty"`
+	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                  `yaml:"-"`
+	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                `yaml:"timezone,omitempty"`
+	ComposerRoot              string                `yaml:"composer_root,omitempty"`
+	ComposerVersion           string                `yaml:"composer_version"`
+	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string              `yaml:"web_environment"`
+	NodeJSVersion             string                `yaml:"nodejs_version,omitempty"`
+	CorepackEnable            bool                  `yaml:"corepack_enable"`
+	DefaultContainerTimeout   string                `yaml:"default_container_timeout,omitempty"`
+	WebExtraExposedPorts      []WebExposedPort      `yaml:"web_extra_exposed_ports,omitempty"`
+	WebExtraDaemons           []WebExtraDaemon      `yaml:"web_extra_daemons,omitempty"`
+	OverrideConfig            bool                  `yaml:"override_config,omitempty"`
+	DisableUploadDirsWarning  bool                  `yaml:"disable_upload_dirs_warning,omitempty"`
+	DdevVersionConstraint     string                `yaml:"ddev_version_constraint,omitempty"`
+	XHGuiHTTPSPort            string                `yaml:"xhgui_https_port,omitempty"`
+	XHGuiHTTPPort             string                `yaml:"xhgui_http_port,omitempty"`
+	HostXHGuiPort             string                `yaml:"host_xhgui_port,omitempty"`
+	XHProfMode                types.XHProfMode      `yaml:"xhprof_mode,omitempty"`
+	ComposeYaml               *composeTypes.Project `yaml:"-"`
 }
 
-// Global variable that's set from --skip-hooks global flag.
+// SkipHooks Global variable that's set from --skip-hooks global flag.
 // If true, all hooks would be skiped.
 var SkipHooks = false
 
@@ -582,15 +582,16 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	return proposedPrimaryRouterHTTPPort
 }
 
-// GetWebEnvVar gets an environment variable from
-// app.ComposeYaml["services"]["web"]["environment"]
+// GetWebEnvVar gets an environment variable from the web service
 // It returns empty string if there is no var or the ComposeYaml
 // is just not set.
 func (app *DdevApp) GetWebEnvVar(name string) string {
-	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if e, ok := s["web"].(map[string]interface{}); ok {
-			if v, ok := e["environment"].(map[string]interface{})[name]; ok {
-				return v.(string)
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		if service, ok := app.ComposeYaml.Services["web"]; ok {
+			if service.Environment != nil {
+				if v, ok := service.Environment[name]; ok && v != nil {
+					return *v
+				}
 			}
 		}
 	}
@@ -1470,11 +1471,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
 
-	err = app.CheckAddonIncompatibilities()
-	if err != nil {
-		return err
-	}
-
 	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
 		return err
@@ -1905,23 +1901,22 @@ func PullBaseContainerImages() error {
 // FindAllImages returns an array of image tags for all containers in the compose file
 func (app *DdevApp) FindAllImages() ([]string, error) {
 	var images []string
-	if app.ComposeYaml == nil {
+	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return images, nil
 	}
-	if y, ok := app.ComposeYaml["services"]; ok {
-		for _, v := range y.(map[string]interface{}) {
-			if i, ok := v.(map[string]interface{})["image"]; ok {
-				if strings.HasSuffix(i.(string), "-built") {
-					i = strings.TrimSuffix(i.(string), "-built")
-					if strings.HasSuffix(i.(string), "-"+app.Name) {
-						i = strings.TrimSuffix(i.(string), "-"+app.Name)
-					}
-				}
-				images = append(images, i.(string))
+	for _, service := range app.ComposeYaml.Services {
+		image := service.Image
+		if image == "" {
+			continue
+		}
+		if strings.HasSuffix(image, "-built") {
+			image = strings.TrimSuffix(image, "-built")
+			if strings.HasSuffix(image, "-"+app.Name) {
+				image = strings.TrimSuffix(image, "-"+app.Name)
 			}
 		}
+		images = append(images, image)
 	}
-
 	return images, nil
 }
 
@@ -1952,43 +1947,43 @@ func (app *DdevApp) GetMaxContainerWaitTime() int {
 	defaultContainerTimeout, _ := strconv.Atoi(app.DefaultContainerTimeout)
 	maxWaitTime := defaultContainerTimeout
 
-	if app.ComposeYaml == nil {
+	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return defaultContainerTimeout
 	}
-	if y, ok := app.ComposeYaml["services"]; ok {
-		for _, v := range y.(map[string]interface{}) {
-			if i, ok := v.(map[string]interface{})["healthcheck"]; ok {
-				if startPeriod, ok := i.(map[string]interface{})["start_period"]; ok {
-					duration, err := time.ParseDuration(startPeriod.(string))
-					if err != nil {
-						continue
-					}
-					t := int(duration.Seconds())
-					if t > maxWaitTime {
-						maxWaitTime = t
-					}
-				} else { /* In this case we didn't have a specified start_period, so guess at one */
-					// Use defaults for interval and retries
-					// https://docs.docker.com/reference/dockerfile/#healthcheck
-					interval := 5
-					retries := 3
-
-					if intervalStr, ok := i.(map[string]interface{})["interval"]; ok {
-						intervalInt, err := time.ParseDuration(intervalStr.(string))
-						if err == nil {
-							interval = int(intervalInt.Seconds())
-						}
-					}
-					if retriesSpecified, ok := i.(map[string]interface{})["retries"]; ok {
-						retries = retriesSpecified.(int)
-					}
-					// If the retries*interval is greater than what we've found before
-					// then use it. This will be unusual.
-					if retries*interval > maxWaitTime {
-						maxWaitTime = retries * interval
-					}
-				}
+	for _, service := range app.ComposeYaml.Services {
+		if service.HealthCheck == nil {
+			continue
+		}
+		if service.HealthCheck.StartPeriod != nil {
+			duration, err := time.ParseDuration(service.HealthCheck.StartPeriod.String())
+			if err != nil {
+				continue
 			}
+			t := int(duration.Seconds())
+			if t > maxWaitTime {
+				maxWaitTime = t
+			}
+			continue
+		}
+		// In this case we didn't have a specified start_period, so guess at one
+		// Use defaults for interval and retries
+		// https://docs.docker.com/reference/dockerfile/#healthcheck
+		interval := 5
+		retries := 3
+
+		if service.HealthCheck.Interval != nil {
+			intervalInt, err := time.ParseDuration(service.HealthCheck.Interval.String())
+			if err == nil {
+				interval = int(intervalInt.Seconds())
+			}
+		}
+		if service.HealthCheck.Retries != nil {
+			retries = int(*service.HealthCheck.Retries)
+		}
+		// If the retries*interval is greater than what we've found before
+		// then use it. This will be unusual.
+		if retries*interval > maxWaitTime {
+			maxWaitTime = retries * interval
 		}
 	}
 	return maxWaitTime
@@ -2646,8 +2641,8 @@ func (app *DdevApp) Pause() error {
 // WaitForServices waits for all the services in docker-compose to come up
 func (app *DdevApp) WaitForServices() error {
 	var requiredContainers []string
-	if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		for k := range services {
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		for k := range app.ComposeYaml.Services {
 			requiredContainers = append(requiredContainers, k)
 		}
 	} else {
@@ -2991,26 +2986,24 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 // deleteServiceVolumes finds all the volumes created by services and removes them.
 // All volumes that are not external (likely not global) are removed.
 func deleteServiceVolumes(app *DdevApp) {
+	if app.ComposeYaml == nil || app.ComposeYaml.Volumes == nil {
+		return
+	}
 	var err error
-	y := app.ComposeYaml
-	if s, ok := y["volumes"]; ok {
-		for _, v := range s.(map[string]interface{}) {
-			vol := v.(map[string]interface{})
-			if vol["external"] == true {
-				continue
-			}
-			if vol["name"] == nil {
-				continue
-			}
-			volName := vol["name"].(string)
-
-			if dockerutil.VolumeExists(volName) {
-				err = dockerutil.RemoveVolume(volName)
-				if err != nil {
-					util.Warning("Could not remove volume %s: %v", volName, err)
-				} else {
-					util.Success("Volume %s for project %s was deleted", volName, app.Name)
-				}
+	for _, volume := range app.ComposeYaml.Volumes {
+		if volume.External {
+			continue
+		}
+		volName := volume.Name
+		if volName == "" {
+			continue
+		}
+		if dockerutil.VolumeExists(volName) {
+			err = dockerutil.RemoveVolume(volName)
+			if err != nil {
+				util.Warning("Could not remove volume %s: %v", volName, err)
+			} else {
+				util.Success("Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
 	}
@@ -3432,34 +3425,10 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	return err
 }
 
-// CheckAddonIncompatibilities looks for problems with docker-compose.*.yaml 3rd-party services
-func (app *DdevApp) CheckAddonIncompatibilities() error {
-	if _, ok := app.ComposeYaml["services"]; !ok {
-		util.Warning("Unable to check 3rd-party services for missing networks stanza")
-		return nil
-	}
-	// Look for missing "networks" stanza and request it.
-	for s, v := range app.ComposeYaml["services"].(map[string]interface{}) {
-		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/stable/users/extend/custom-compose-files/#docker-composeyaml-examples")
-		var nets map[string]interface{}
-		x := v.(map[string]interface{})
-		ok := false
-		if nets, ok = x["networks"].(map[string]interface{}); !ok {
-			return errMsg
-		}
-		// Make sure both "default" and "ddev" networks are in there.
-		for _, requiredNetwork := range []string{"default", "ddev_default"} {
-			if _, ok := nets[requiredNetwork]; !ok {
-				return errMsg
-			}
-		}
-	}
-	return nil
-}
-
 // UpdateComposeYaml updates app.ComposeYaml from available content
 func (app *DdevApp) UpdateComposeYaml(content string) error {
-	err := yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+	var err error
+	app.ComposeYaml, err = fixupComposeYaml(content, app)
 	if err != nil {
 		return err
 	}

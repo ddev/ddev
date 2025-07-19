@@ -31,39 +31,38 @@ type TraefikRouting struct {
 // VIRTUAL_HOST and HTTP(S)_EXPOSE environment variables to set up routing
 // for the project
 func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
-	// app.ComposeYaml["services"];
 	var table []TraefikRouting
-	if services, ok := app.ComposeYaml["services"]; ok {
-		for serviceName, s := range services.(map[string]interface{}) {
-			service := s.(map[string]interface{})
-			if env, ok := service["environment"].(map[string]interface{}); ok {
-				var virtualHost string
-				var ok bool
-				if virtualHost, ok = env["VIRTUAL_HOST"].(string); ok {
-					util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
-				}
-				if virtualHost == "" {
-					continue
-				}
-				hostnames := strings.Split(virtualHost, ",")
-				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok && httpExpose != "" {
-					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
-					routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
-					if err != nil {
-						return nil, err
-					}
-					table = append(table, routeEntries...)
-				}
-
-				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok && httpsExpose != "" {
-					util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
-					routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
-					if err != nil {
-						return nil, err
-					}
-					table = append(table, routeEntries...)
-				}
+	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
+		return table, nil
+	}
+	for serviceName, service := range app.ComposeYaml.Services {
+		var virtualHost string
+		if virtualHostPointer, ok := service.Environment["VIRTUAL_HOST"]; ok && virtualHostPointer != nil && *virtualHostPointer != "" {
+			virtualHost = *virtualHostPointer
+			util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
+		}
+		if virtualHost == "" {
+			continue
+		}
+		hostnames := strings.Split(virtualHost, ",")
+		if httpExposePointer, ok := service.Environment["HTTP_EXPOSE"]; ok && httpExposePointer != nil && *httpExposePointer != "" {
+			httpExpose := *httpExposePointer
+			util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
+			routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
+			if err != nil {
+				return nil, err
 			}
+			table = append(table, routeEntries...)
+		}
+
+		if httpsExposePointer, ok := service.Environment["HTTPS_EXPOSE"]; ok && httpsExposePointer != nil && *httpsExposePointer != "" {
+			httpsExpose := *httpsExposePointer
+			util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
+			routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
+			if err != nil {
+				return nil, err
+			}
+			table = append(table, routeEntries...)
 		}
 	}
 	return table, nil
