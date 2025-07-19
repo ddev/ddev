@@ -54,7 +54,7 @@ This will launch a web server on port 8000 and automatically refresh pages as th
 !!!tip "Installing mkdocs locally on Debian/Ubuntu Linux or WSL2 with Ubuntu"
 
     ```bash
-    sudo apt update && sudo apt install python3-full python-is-python3 pipx
+    sudo apt-get update && sudo apt-get install python3-full python-is-python3 pipx
     export PIPX_BIN_DIR=/usr/local/bin
     export PIPX_HOME=/usr/local/pipx
     sudo --preserve-env pipx install mkdocs --pip-args "-r docs/mkdocs-pip-requirements"

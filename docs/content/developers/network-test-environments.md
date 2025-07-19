@@ -22,7 +22,7 @@ These instructions are for Debian/Ubuntu but can be adapted for container-based 
 1. **Install Squid**
 
     ```bash
-    sudo apt install squid-openssl ssl-cert
+    sudo apt-get install squid-openssl ssl-cert
     ```
 
 2. **Generate a Root CA for Signing**
