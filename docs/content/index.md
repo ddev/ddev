@@ -48,7 +48,22 @@ These environments can be extended, version controlled, and shared, so you can t
 
     **WSL2 in Mirrored Mode**
 
-    If you're using Windows WSL2 with the "Mirrored" Networking Mode, set the experimental `hostAddressLoopback=true` feature.
+    If you're using Windows WSL2 with ["Mirrored" networking mode](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking), enable the experimental `hostAddressLoopback=true` setting.
+
+    You can do this using the "WSL Settings" app:
+
+    - Networking > Networking mode: set to *Mirrored*
+    - Networking > Host Address Loopback: turn *On*.
+
+    Or by creating/editing the file at `C:\Users\<you>\.wslconfig`:
+
+    ```ini
+    [wsl2]
+    networkingMode=Mirrored
+
+    [experimental]
+    hostAddressLoopback=true
+    ```
 
 === "Traditional Windows"
 
