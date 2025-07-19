@@ -107,21 +107,29 @@ func createComposeProject(yamlStr string) (*composeTypes.Project, error) {
 	if err != nil {
 		return project, err
 	}
+	// Initialize Networks, Services, and Volumes to empty maps if nil
 	if project.Networks == nil {
-		project.Networks = make(map[string]composeTypes.NetworkConfig)
+		project.Networks = composeTypes.Networks{}
 	}
 	if project.Services == nil {
-		project.Services = make(map[string]composeTypes.ServiceConfig)
+		project.Services = composeTypes.Services{}
 	}
 	if project.Volumes == nil {
-		project.Volumes = make(map[string]composeTypes.VolumeConfig)
+		project.Volumes = composeTypes.Volumes{}
+	}
+	// Ensure nested fields like Labels, Networks, and Environment are initialized
+	for name, network := range project.Networks {
+		if network.Labels == nil {
+			network.Labels = composeTypes.Labels{}
+		}
+		project.Networks[name] = network
 	}
 	for name, service := range project.Services {
 		if service.Networks == nil {
 			service.Networks = map[string]*composeTypes.ServiceNetworkConfig{}
 		}
 		if service.Environment == nil {
-			service.Environment = map[string]*string{}
+			service.Environment = composeTypes.MappingWithEquals{}
 		}
 		project.Services[name] = service
 	}
@@ -157,9 +165,6 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			network.External = false
 		}
 		if !network.External {
-			if network.Labels == nil {
-				network.Labels = map[string]string{}
-			}
 			network.Labels["com.ddev.platform"] = "ddev"
 		}
 		project.Networks[name] = network
