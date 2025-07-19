@@ -131,3 +131,29 @@ DDEV uses YAML configuration files:
 - Code signing for macOS and Windows binaries
 - Chocolatey packaging for Windows
 - Container image building and publishing
+
+## Working with Claude Code
+
+### Branch Naming
+
+Use descriptive branch names that include:
+
+- Date in YYYYMMDD format
+- Your GitHub username
+- Brief description of the work
+
+Examples:
+
+- `20250719_rfay_vite_docs`
+- `20250719_username_fix_networking`
+- `20250719_contributor_update_tests`
+
+### Commit Messages
+
+After key Claude-initiated code changes, make a commit, and the commit message should mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+
+Examples:
+
+- `feat: add Vite documentation section - Claude assisted with migrating blog content`
+- `fix: resolve networking issues in containers - Claude helped debug connection problems`
+- `docs: update CLAUDE.md with workflow guidelines - Claude suggested development improvements`
