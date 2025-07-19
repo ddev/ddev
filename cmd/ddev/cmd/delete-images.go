@@ -160,8 +160,8 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 			var serviceNames []string
 			if slices.Contains(composeProjectNames, projectName) {
 				if app := projectMap[projectName]; app != nil {
-					if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-						for serviceName := range services {
+					if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+						for serviceName := range app.ComposeYaml.Services {
 							if !slices.Contains([]string{"web", "db"}, serviceName) {
 								serviceNames = append(serviceNames, serviceName)
 							}

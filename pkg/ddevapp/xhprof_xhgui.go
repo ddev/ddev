@@ -182,15 +182,16 @@ func (app *DdevApp) GetXHGuiHTTPSPort() string {
 	return port
 }
 
-// GetXHGuiEnvVar() gets an environment variable from
-// app.ComposeYaml["services"]["xhgui"]["environment"]
+// GetXHGuiEnvVar gets an environment variable from the xhgui service
 // It returns empty string if there is no var or the ComposeYaml
 // is just not set.
 func (app *DdevApp) GetXHGuiEnvVar(name string) string {
-	if s, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if e, ok := s["xhgui"].(map[string]interface{}); ok {
-			if v, ok := e["environment"].(map[string]interface{})[name]; ok {
-				return v.(string)
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		if service, ok := app.ComposeYaml.Services["xhgui"]; ok {
+			if service.Environment != nil {
+				if v, ok := service.Environment[name]; ok && v != nil {
+					return *v
+				}
 			}
 		}
 	}

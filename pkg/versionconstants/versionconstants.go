@@ -49,6 +49,10 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for Mutagen in use
 var MutagenVersion = ""
 
+// RequiredMutagenVersion defines the required version of Mutagen
 const RequiredMutagenVersion = "0.18.1"
 
+// RequiredDockerComposeVersionDefault defines the required version of docker-compose
+// Keep this in sync with github.com/compose-spec/compose-go/v2 in go.mod,
+// matching the version used in https://github.com/docker/compose/blob/main/go.mod for the same tag
 const RequiredDockerComposeVersionDefault = "v2.38.2"
