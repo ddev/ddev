@@ -3537,42 +3537,39 @@ func TestMultipleComposeFiles(t *testing.T) {
 	require.NotEmpty(t, app.ComposeYaml.Networks)
 	require.NotEmpty(t, app.ComposeYaml.Volumes)
 
+	webService, ok := app.ComposeYaml.Services["web"]
+	require.True(t, ok, "web service not found in app.ComposeYaml.Services")
 	// Verify that the env var DUMMY_BASE got set by docker-compose.override.yaml
-	for name, service := range app.ComposeYaml.Services {
-		if name != "web" {
-			continue
-		}
-		// The docker-compose.override should have won with the value of DUMMY_BASE
-		require.NotNil(t, service.Environment["DUMMY_BASE"])
-		assert.Equal("override", *service.Environment["DUMMY_BASE"])
-		// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
-		// should come through fine.
-		require.NotNil(t, service.Environment["DUMMY_COMPOSE_ONE"])
-		assert.Equal("1", *service.Environment["DUMMY_COMPOSE_ONE"])
-		require.NotNil(t, service.Environment["DUMMY_COMPOSE_TWO"])
-		assert.Equal("2", *service.Environment["DUMMY_COMPOSE_TWO"])
-		require.NotNil(t, service.Environment["DUMMY_COMPOSE_OVERRIDE"])
-		assert.Equal("override", *service.Environment["DUMMY_COMPOSE_OVERRIDE"])
+	// The docker-compose.override should have won with the value of DUMMY_BASE
+	require.NotNil(t, webService.Environment["DUMMY_BASE"])
+	assert.Equal("override", *webService.Environment["DUMMY_BASE"])
+	// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
+	// should come through fine.
+	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_ONE"])
+	assert.Equal("1", *webService.Environment["DUMMY_COMPOSE_ONE"])
+	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_TWO"])
+	assert.Equal("2", *webService.Environment["DUMMY_COMPOSE_TWO"])
+	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
+	assert.Equal("override", *webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
 
-		// Verify that users can add and override network properties
-		require.Nil(t, service.Networks["ddev_default"])
-		require.NotNil(t, service.Networks["default"])
-		assert.Equal(1, service.Networks["default"].Priority)
-		require.NotNil(t, service.Networks["dummy"])
-		assert.Equal(2, service.Networks["dummy"].Priority)
+	// Verify that users can add and override network properties
+	require.Nil(t, webService.Networks["ddev_default"])
+	require.NotNil(t, webService.Networks["default"])
+	assert.Equal(1, webService.Networks["default"].Priority)
+	require.NotNil(t, webService.Networks["dummy"])
+	assert.Equal(2, webService.Networks["dummy"].Priority)
 
-		assert.NotEmpty(service.Ports)
-		hasPort12345 := false
-		for _, port := range service.Ports {
-			// check all ports have host_ip set to default 127.0.0.1
-			assert.Equal("127.0.0.1", port.HostIP)
-			// and another explicit port check for docker-compose.ports.yaml
-			if port.Target == 12345 {
-				hasPort12345 = true
-			}
+	assert.NotEmpty(webService.Ports)
+	hasPort12345 := false
+	for _, port := range webService.Ports {
+		// check all ports have host_ip set to default 127.0.0.1
+		assert.Equal("127.0.0.1", port.HostIP)
+		// and another explicit port check for docker-compose.ports.yaml
+		if port.Target == 12345 {
+			hasPort12345 = true
 		}
-		assert.True(hasPort12345, "no port with Target 12345 found")
 	}
+	assert.True(hasPort12345, "no port with Target 12345 found")
 
 	// Verify that networks are properly set up
 	require.Len(t, app.ComposeYaml.Networks, 3)
