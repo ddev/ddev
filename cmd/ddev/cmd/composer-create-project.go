@@ -330,7 +330,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 func checkForComposerCreateAllowedPaths(app *ddevapp.DdevApp) {
 	appRoot := app.GetAbsAppRoot(false)
 	composerRoot := filepath.Join(app.GetComposerRoot(false, false), composerDirectoryArg)
-	skipDirs := []string{".ddev", ".git", ".idea", ".tarballs", ".vscode"}
+	skipDirs := []string{".ddev", ".DS_Store", ".git", ".idea", ".tarballs", ".vscode"}
 	composerCreateAllowedPaths, _ := app.GetComposerCreateAllowedPaths()
 	err := filepath.Walk(composerRoot,
 		func(walkPath string, walkInfo os.FileInfo, err error) error {
