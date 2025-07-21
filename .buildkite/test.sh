@@ -152,8 +152,12 @@ esac
 
 echo "Docker version:"
 docker version
-echo "ddev version"
-ddev version
+if command -v ddev >/dev/null ; then
+  echo "ddev version:"
+  ddev version
+else
+  echo "ddev not installed"
+fi
 echo
 
 export DDEV_NONINTERACTIVE=true
