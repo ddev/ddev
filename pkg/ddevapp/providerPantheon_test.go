@@ -87,12 +87,11 @@ func TestPantheonPull(t *testing.T) {
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
-	// Build our pantheon.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonPullTestSite), 1)
-	err = os.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
-	assert.NoError(err)
+	// Add PANTHEON_SITE and PANTHEON_ENVIRONMENT to the app config
+	parts := strings.Split(pantheonPullTestSite, ".")
+	site, env := parts[0], parts[1]
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", site))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", env))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -195,12 +194,11 @@ func TestPantheonPush(t *testing.T) {
 	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
 	require.NoError(t, err)
 
-	// Build our pantheon.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonPushTestSite), 1)
-	err = os.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
-	assert.NoError(err)
+	// Add PANTHEON_SITE and PANTHEON_ENVIRONMENT to the app config
+	parts := strings.Split(pantheonPushTestSite, ".")
+	site, env := parts[0], parts[1]
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", site))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", env))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
