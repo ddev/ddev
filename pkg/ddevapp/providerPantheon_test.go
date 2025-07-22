@@ -26,7 +26,7 @@ import (
 const pantheonPullTestSite = "ddev-test-site-do-not-delete.dev"
 const pantheonPushTestSite = "ddev-pantheon-push.dev"
 const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
-const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
+const pantheonSiteExpectation = "DDEV DRUPAL11 TEST SITE"
 const pantheonPullGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
 const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142@codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142.drush.in:2222/~/repository.git"
 
@@ -74,7 +74,8 @@ func TestPantheonPull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal8
+	app.Type = nodeps.AppTypeDrupal11
+	app.Docroot = "web"
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
 	_ = app.Stop(true, false)
@@ -100,16 +101,10 @@ func TestPantheonPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Make sure we have Drush
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
-	})
-	require.NoError(t, err)
-
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2017-07/22-24_tn.jpg"))
+	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2025-07/test-site-pic.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
