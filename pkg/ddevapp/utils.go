@@ -493,12 +493,11 @@ func GetServiceNamesFunc(existingOnly bool) func(*cobra.Command, []string, strin
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
-		rawServices, ok := app.ComposeYaml["services"].(map[string]interface{})
-		if !ok {
+		if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 		var services []string
-		for service := range rawServices {
+		for service := range app.ComposeYaml.Services {
 			if existingOnly {
 				c, err := app.FindContainerByType(service)
 				if err == nil && c != nil {

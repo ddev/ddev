@@ -1,16 +1,16 @@
 package ddevapp
 
 import (
+	"bytes"
+	"context"
 	"os"
 	"path/filepath"
-	"strings"
 
+	composeLoader "github.com/compose-spec/compose-go/v2/loader"
+	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"go.yaml.in/yaml/v3"
-	//compose_cli "github.com/compose-spec/compose-go/cli"
-	//compose_types "github.com/compose-spec/compose-go/types"
 )
 
 // WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
@@ -79,10 +79,11 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 			util.Warning("Error closing %s: %v", fullHandle.Name(), err)
 		}
 	}()
-	fullContentsBytes, err := yaml.Marshal(app.ComposeYaml)
+	fullContentsBytes, err := app.ComposeYaml.MarshalYAML()
 	if err != nil {
 		return err
 	}
+	fullContentsBytes = escapeDollarSign(fullContentsBytes)
 
 	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
@@ -92,72 +93,99 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	return nil
 }
 
+// createComposeProject creates a compose project from a string
+func createComposeProject(yamlStr string) (*composeTypes.Project, error) {
+	project, err := composeLoader.LoadWithContext(
+		context.Background(),
+		composeTypes.ConfigDetails{
+			ConfigFiles: []composeTypes.ConfigFile{
+				{Content: []byte(yamlStr)},
+			},
+		},
+		composeLoader.WithProfiles([]string{`*`}),
+	)
+	if err != nil {
+		return project, err
+	}
+	// Initialize Networks, Services, and Volumes to empty maps if nil
+	if project.Networks == nil {
+		project.Networks = composeTypes.Networks{}
+	}
+	if project.Services == nil {
+		project.Services = composeTypes.Services{}
+	}
+	if project.Volumes == nil {
+		project.Volumes = composeTypes.Volumes{}
+	}
+	// Ensure nested fields like Labels, Networks, and Environment are initialized
+	for name, network := range project.Networks {
+		if network.Labels == nil {
+			network.Labels = composeTypes.Labels{}
+		}
+		project.Networks[name] = network
+	}
+	for name, service := range project.Services {
+		if service.Networks == nil {
+			service.Networks = map[string]*composeTypes.ServiceNetworkConfig{}
+		}
+		if service.Environment == nil {
+			service.Environment = composeTypes.MappingWithEquals{}
+		}
+		project.Services[name] = service
+	}
+	return project, nil
+}
+
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
-func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, error) {
-	tempMap := make(map[string]interface{})
-	err := yaml.Unmarshal([]byte(yamlStr), &tempMap)
+func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, error) {
+	project, err := createComposeProject(yamlStr)
 	if err != nil {
-		return nil, err
-	}
-	envFiles, err := app.EnvFiles()
-	if err != nil {
-		return nil, err
+		return project, err
 	}
 
-	bindIP, _ := dockerutil.GetDockerIP()
+	envFiles, err := app.EnvFiles()
+	if err != nil {
+		return project, err
+	}
+
+	// Ensure that some important network properties are not overridden by users
+	if _, ok := project.Networks[dockerutil.NetName]; !ok {
+		project.Networks[dockerutil.NetName] = composeTypes.NetworkConfig{}
+	}
+	if _, ok := project.Networks["default"]; !ok {
+		project.Networks["default"] = composeTypes.NetworkConfig{}
+	}
+	for name, network := range project.Networks {
+		if name == dockerutil.NetName {
+			network.Name = dockerutil.NetName
+			network.External = true
+		} else if name == "default" {
+			network.Name = app.GetDefaultNetworkName()
+			network.External = false
+		}
+		if !network.External {
+			network.Labels["com.ddev.platform"] = "ddev"
+		}
+		project.Networks[name] = network
+	}
+
+	bindIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return project, err
+	}
 	if app.BindAllInterfaces {
 		bindIP = "0.0.0.0"
 	}
 
-	// Ensure that some important network properties are not overridden by users
-	for name, network := range tempMap["networks"].(map[string]interface{}) {
-		if network == nil {
-			continue
+	// Ensure all services have required networks and environment variables
+	for name, service := range project.Services {
+		if _, ok := service.Networks[dockerutil.NetName]; !ok {
+			service.Networks[dockerutil.NetName] = nil
 		}
-		networkMap := network.(map[string]interface{})
-		// Default networks don't allow to override these properties
-		if name == "ddev_default" {
-			networkMap["name"] = dockerutil.NetName
-			networkMap["external"] = true
+		if _, ok := service.Networks["default"]; !ok {
+			service.Networks["default"] = nil
 		}
-		if name == "default" {
-			networkMap["name"] = app.GetDefaultNetworkName()
-			// If "external" was added by user, remove it
-			delete(networkMap, "external")
-		}
-		// Add labels that are used to clean up internal networks when the project is stopped
-		if external, ok := networkMap["external"].(bool); !ok || !external {
-			labels, ok := networkMap["labels"].(map[string]interface{})
-			if !ok {
-				labels = make(map[string]interface{})
-				networkMap["labels"] = labels
-			}
-			labels["com.ddev.platform"] = "ddev"
-		}
-	}
-
-	// Make sure that all services have the `ddev_default` and `default` networks
-	for name, service := range tempMap["services"].(map[string]interface{}) {
-		if service == nil {
-			continue
-		}
-		serviceMap := service.(map[string]interface{})
-
-		// Make sure all services have our networks stanza
-		networks, ok := serviceMap["networks"].(map[string]interface{})
-		if !ok {
-			networks = make(map[string]interface{})
-		}
-		// Add default networks if they don't exist
-		if _, exists := networks["ddev_default"]; !exists {
-			networks["ddev_default"] = nil
-		}
-		if _, exists := networks["default"]; !exists {
-			networks["default"] = nil
-		}
-		// Update the serviceMap with the networks
-		serviceMap["networks"] = networks
 
 		// Add environment variables from .env files to services
 		for _, envFile := range envFiles {
@@ -169,31 +197,16 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 				if err != nil && !os.IsNotExist(err) {
 					util.Failed("Unable to read %s file: %v", envFile, err)
 				}
-				if len(envMap) > 0 {
-					if serviceMap["environment"] == nil {
-						serviceMap["environment"] = map[string]interface{}{}
-					}
-					if environmentMap, ok := serviceMap["environment"].(map[string]interface{}); ok {
-						for envKey, envValue := range envMap {
-							// Escape $ characters in environment variables
-							// The same thing is done in `docker-compose config`
-							// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
-							environmentMap[envKey] = strings.ReplaceAll(envValue, `$`, `$$`)
-						}
-					}
+				for envKey, envValue := range envMap {
+					val := envValue
+					service.Environment[envKey] = &val
 				}
 			}
 		}
 		// Pass NO_COLOR to containers
-		if !output.ColorsEnabled() {
-			if serviceMap["environment"] == nil {
-				serviceMap["environment"] = map[string]interface{}{}
-			}
-			if environmentMap, ok := serviceMap["environment"].(map[string]interface{}); ok {
-				if _, exists := environmentMap["NO_COLOR"]; !exists {
-					environmentMap["NO_COLOR"] = os.Getenv("NO_COLOR")
-				}
-			}
+		if !output.ColorsEnabled() && service.Environment["NO_COLOR"] == nil {
+			noColor := os.Getenv("NO_COLOR")
+			service.Environment["NO_COLOR"] = &noColor
 		}
 
 		// Assign the host_ip for each port if it's not already set.
@@ -203,18 +216,22 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		// Without this, Docker doesn't add a Docker IP, like this:
 		// ports:
 		//   - 127.0.0.1:3000:3000
-		if bindIP != "" {
-			if ports, ok := serviceMap["ports"].([]interface{}); ok {
-				for _, port := range ports {
-					if portMap, ok := port.(map[string]interface{}); ok {
-						if _, exists := portMap["host_ip"]; !exists {
-							portMap["host_ip"] = bindIP
-						}
-					}
-				}
+		for i, port := range service.Ports {
+			if port.HostIP == "" {
+				port.HostIP = bindIP
 			}
+			service.Ports[i] = port
 		}
+		project.Services[name] = service
 	}
 
-	return tempMap, nil
+	return project, nil
+}
+
+// escapeDollarSign the same thing is done in `docker-compose config`
+// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
+func escapeDollarSign(marshal []byte) []byte {
+	dollar := []byte{'$'}
+	escDollar := []byte{'$', '$'}
+	return bytes.ReplaceAll(marshal, dollar, escDollar)
 }

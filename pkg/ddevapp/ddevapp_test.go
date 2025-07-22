@@ -3504,6 +3504,8 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
+	app.DockerEnv()
+
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
@@ -3531,114 +3533,78 @@ func TestMultipleComposeFiles(t *testing.T) {
 	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
 
 	require.NotEmpty(t, app.ComposeYaml)
-	require.True(t, len(app.ComposeYaml) > 0)
+	require.NotEmpty(t, app.ComposeYaml.Services)
+	require.NotEmpty(t, app.ComposeYaml.Networks)
+	require.NotEmpty(t, app.ComposeYaml.Volumes)
 
+	webService, ok := app.ComposeYaml.Services["web"]
+	require.True(t, ok, "web service not found in app.ComposeYaml.Services")
 	// Verify that the env var DUMMY_BASE got set by docker-compose.override.yaml
-	if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
-		if w, ok := services["web"].(map[string]interface{}); ok {
-			if env, ok := w["environment"].(map[string]interface{}); ok {
-				// The docker-compose.override should have won with the value of DUMMY_BASE
-				assert.Equal("override", env["DUMMY_BASE"])
-				// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
-				// should come through fine.
-				assert.Equal("1", env["DUMMY_COMPOSE_ONE"])
-				assert.Equal("2", env["DUMMY_COMPOSE_TWO"])
-				assert.Equal("override", env["DUMMY_COMPOSE_OVERRIDE"])
-			} else {
-				t.Errorf("Failed to parse web environment: %v", w)
-			}
-			// Verify that users can add and override network properties
-			if networks, ok := w["networks"].(map[string]interface{}); ok {
-				assert.Nil(networks["ddev_default"])
-				if network, ok := networks["default"].(map[string]interface{}); ok {
-					assert.Equal(1, network["priority"])
-				} else {
-					t.Errorf("Failed to parse web default network: %v", networks)
-				}
-				if network, ok := networks["dummy"].(map[string]interface{}); ok {
-					assert.Equal(2, network["priority"])
-				} else {
-					t.Errorf("Failed to parse web dummy network: %v", networks)
-				}
-			} else {
-				t.Errorf("Failed to parse web service networks: %v", w)
-			}
-			// Verify that all ports have host_ip set to DOCKER_IP
-			if ports, ok := w["ports"].([]interface{}); ok {
-				hostIP12345 := ""
-				for _, port := range ports {
-					if portMap, ok := port.(map[string]interface{}); ok {
-						if _, exists := portMap["host_ip"]; exists {
-							// check all ports have host_ip set to default 127.0.0.1
-							assert.Equal("127.0.0.1", portMap["host_ip"])
-							// and another explicit port check for docker-compose.ports.yaml
-							if target, exists := portMap["target"]; exists {
-								if targetInt, ok := target.(int); ok && targetInt == 12345 {
-									// Check if host_ip exists and is a string
-									if hostIP, ok := portMap["host_ip"].(string); ok {
-										hostIP12345 = hostIP
-									} else {
-										t.Errorf("host_ip is not a string in web port: %v", portMap)
-									}
-								}
-							} else {
-								t.Errorf("target not found in web port: %v", portMap)
-							}
-						} else {
-							t.Errorf("host_ip not found in web port: %v", portMap)
-						}
-					} else {
-						t.Errorf("failed to parse web port: %v", port)
-					}
-				}
-				assert.Equal("127.0.0.1", hostIP12345, "host_ip not set for port 12345 in docker-compose.ports.yaml")
-			} else {
-				t.Errorf("failed to parse web ports: %v", w)
-			}
-		} else {
-			t.Errorf("failed to parse web services: %v", services)
+	// The docker-compose.override should have won with the value of DUMMY_BASE
+	require.NotNil(t, webService.Environment["DUMMY_BASE"])
+	assert.Equal("override", *webService.Environment["DUMMY_BASE"])
+	// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
+	// should come through fine.
+	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_ONE"])
+	assert.Equal("1", *webService.Environment["DUMMY_COMPOSE_ONE"])
+	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_TWO"])
+	assert.Equal("2", *webService.Environment["DUMMY_COMPOSE_TWO"])
+	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
+	assert.Equal("override", *webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
+
+	// Verify that users can add and override network properties
+	require.Nil(t, webService.Networks["ddev_default"])
+	require.NotNil(t, webService.Networks["default"])
+	assert.Equal(1, webService.Networks["default"].Priority)
+	require.NotNil(t, webService.Networks["dummy"])
+	assert.Equal(2, webService.Networks["dummy"].Priority)
+
+	assert.NotEmpty(webService.Ports)
+	hasPort12345 := false
+	for _, port := range webService.Ports {
+		// check all ports have host_ip set to default 127.0.0.1
+		assert.Equal("127.0.0.1", port.HostIP)
+		// and another explicit port check for docker-compose.ports.yaml
+		if port.Target == 12345 {
+			hasPort12345 = true
 		}
-	} else {
-		t.Error("Unable to access ComposeYaml[services]")
 	}
+	assert.True(hasPort12345, "no port with Target 12345 found")
 
 	// Verify that networks are properly set up
-	if networks, ok := app.ComposeYaml["networks"].(map[string]interface{}); ok {
-		assert.Len(networks, 3)
-		for name, network := range networks {
-			networkMap, ok := network.(map[string]interface{})
-			if !ok {
-				t.Errorf("failed to parse network %s", name)
-			} else {
-				if name == "ddev_default" {
-					assert.Equal("ddev_default", networkMap["name"])
-					if _, ok := networkMap["external"].(bool); !ok {
-						t.Errorf("failed to parse external network %s", name)
-					} else {
-						assert.True(networkMap["external"].(bool))
-					}
-				} else if name == "default" {
-					assert.Equal(app.GetDefaultNetworkName(), networkMap["name"])
-					if _, ok := networkMap["external"].(bool); ok {
-						t.Errorf("default network cannot be external")
-					}
-				} else if name == "dummy" {
-					assert.Equal("dummy_name", networkMap["name"])
-				} else {
-					t.Errorf("Unexpected network name %s", name)
-				}
-				if external, ok := networkMap["external"].(bool); !ok || !external {
-					labels, ok := networkMap["labels"].(map[string]interface{})
-					if !ok {
-						t.Errorf("failed to parse labels for network %s", name)
-					} else {
-						assert.Equal("ddev", labels["com.ddev.platform"])
-					}
-				}
-			}
+	require.Len(t, app.ComposeYaml.Networks, 3)
+
+	expected := map[string]struct {
+		Name     string
+		External bool
+		Label    string
+	}{
+		"ddev_default": {
+			Name:     "ddev_default",
+			External: true,
+		},
+		"default": {
+			Name:     app.GetDefaultNetworkName(),
+			External: false,
+			Label:    "com.ddev.platform",
+		},
+		"dummy": {
+			Name:     "dummy_name",
+			External: false,
+			Label:    "com.ddev.platform",
+		},
+	}
+
+	for key, exp := range expected {
+		network, ok := app.ComposeYaml.Networks[key]
+		require.True(t, ok, "network %s not found", key)
+		assert.Equal(exp.Name, network.Name, "unexpected name for %s", key)
+		assert.Equal(exp.External, bool(network.External), "unexpected external for %s", key)
+		if exp.Label != "" {
+			require.NotNil(t, network.Labels, "labels missing for %s", key)
+			_, ok := network.Labels[exp.Label]
+			assert.True(ok, "%s label missing for %s", exp.Label, key)
 		}
-	} else {
-		t.Error("Unable to access ComposeYaml[networks]")
 	}
 
 	_, err = app.ComposeFiles()
