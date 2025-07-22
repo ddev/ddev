@@ -75,7 +75,7 @@ db_pull_command:
     pushd /var/www/html/.ddev/.downloads >/dev/null
     terminus backup:get ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} --element=db --to=db.sql.gz
 
-files_import_command:
+files_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
