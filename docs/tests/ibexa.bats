@@ -39,4 +39,14 @@ teardown() {
   assert_success
   assert_output --partial "x-powered-by: Ibexa Open Source v5"
   assert_output --partial "HTTP/2 200"
+
+  run curl -sf https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "Open-source solution for building custom, scalable websites."
+  assert_output --partial "Powered by Ibexa DXP"
+
+  run curl -sf https://${PROJNAME}.ddev.site/admin/login
+  assert_success
+  assert_output --partial "Welcome to<br/> Ibexa DXP"
+  assert_output --partial "<h3 class=\"ibexa-login__support-headline\">Get to know Ibexa DXP</h3>"
 }
