@@ -24,8 +24,8 @@ teardown() {
   # ddev composer create-project ibexa/oss-skeleton
   run ddev composer create-project ibexa/oss-skeleton
   assert_success
-  # ddev exec console ibexa:install
-  run ddev exec console ibexa:install
+  # ddev exec console ibexa:install --no-interaction
+  run ddev exec console ibexa:install --no-interaction
   assert_success
   # ddev exec console ibexa:graphql:generate-schema
   run ddev exec console ibexa:graphql:generate-schema
@@ -37,6 +37,16 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "x-powered-by: Ibexa Open Source v4"
+  assert_output --partial "x-powered-by: Ibexa Open Source v5"
   assert_output --partial "HTTP/2 200"
+
+  run curl -sf https://${PROJNAME}.ddev.site
+  assert_success
+  assert_output --partial "Open-source solution for building custom, scalable websites."
+  assert_output --partial "Powered by Ibexa DXP"
+
+  run curl -sf https://${PROJNAME}.ddev.site/admin/login
+  assert_success
+  assert_output --partial "Welcome to<br/> Ibexa DXP"
+  assert_output --partial "<h3 class=\"ibexa-login__support-headline\">Get to know Ibexa DXP</h3>"
 }
