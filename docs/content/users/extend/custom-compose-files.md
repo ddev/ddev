@@ -58,6 +58,7 @@ When defining additional services for your project, we recommend following these
     ```yaml
     services:
       dummy-service:
+        image: ${YOUR_DOCKER_IMAGE:-example/example:latest}
         labels:
           com.ddev.site-name: ${DDEV_SITENAME}
           com.ddev.approot: ${DDEV_APPROOT}
