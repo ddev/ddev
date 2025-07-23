@@ -37,6 +37,6 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "x-powered-by: Ibexa Open Source v4"
+  assert_output --partial "x-powered-by: Ibexa Open Source v5"
   assert_output --partial "HTTP/2 200"
 }
