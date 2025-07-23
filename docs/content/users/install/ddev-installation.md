@@ -187,7 +187,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     wsl --install
     # Reboot is often required after this command.
     wsl --update
-    # Updating WSL will help to ensure DDEV can be installed successfully.
+    # Keeping WSL updated helps to ensure that DDEV installs successfully.
     wsl --install Ubuntu --name DDEV # the name DDEV is just a suggestion.
     # You'll be required to set up a default username and password for the distro.
     ```
