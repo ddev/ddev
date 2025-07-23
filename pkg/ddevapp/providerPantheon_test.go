@@ -23,8 +23,10 @@ import (
  *
  */
 
-const pantheonPullTestSite = "ddev-test-site-do-not-delete.dev"
-const pantheonPushTestSite = "ddev-pantheon-push.dev"
+const pantheonPullTestSite = "ddev-test-site-do-not-delete"
+const pantheonPullTestEnvironment = "dev"
+const pantheonPushTestSite = "ddev-pantheon-push"
+const pantheonPushTestEnvironment = "dev"
 const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
 const pantheonSiteExpectation = "DDEV DRUPAL11 TEST SITE"
 const pantheonPullGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
@@ -88,11 +90,8 @@ func TestPantheonPull(t *testing.T) {
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
-	// Add PANTHEON_SITE and PANTHEON_ENVIRONMENT to the app config
-	parts := strings.Split(pantheonPullTestSite, ".")
-	site, env := parts[0], parts[1]
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", site))
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", env))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", pantheonPullTestSite))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", pantheonPullTestEnvironment))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -189,11 +188,8 @@ func TestPantheonPush(t *testing.T) {
 	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
 	require.NoError(t, err)
 
-	// Add PANTHEON_SITE and PANTHEON_ENVIRONMENT to the app config
-	parts := strings.Split(pantheonPushTestSite, ".")
-	site, env := parts[0], parts[1]
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", site))
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", env))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", pantheonPushTestSite))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", pantheonPushTestEnvironment))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -233,14 +229,14 @@ func TestPantheonPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonPushTestSite),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonPushTestSite+"."+pantheonPushTestEnvironment),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonPushTestSite, fName, fName),
+		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonPushTestSite+"."+pantheonPushTestEnvironment, fName, fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
