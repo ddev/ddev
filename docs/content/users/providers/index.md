@@ -14,13 +14,13 @@ DDEV also provides the `push` command to push database and files to upstream. Th
 
 Each provider recipe is a YAML file that can have whatever name you want. The examples are mostly named after the hosting providers, but they could be named `upstream.yaml` or `live.yaml`, so you could `ddev pull upstream` or `ddev pull live`. If you wanted different upstream environments to pull from, you could name one “prod” and one “dev” and `ddev pull prod` and `ddev pull dev`.
 
-[Recipes](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/) are provided for:
+[Recipes and Integrations](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/) are provided for:
 
 - [Acquia](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/acquia.yaml)
 - [Git](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/git.yaml.example)
 - [Lagoon](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/lagoon.yaml)
 - [Local files](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) (like Dropbox, for example)
-- [Pantheon](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/pantheon.yaml.example)
+- [Pantheon](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/pantheon.yaml)
 - [Platform.sh](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/platform.yaml)
 - [rsync](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/rsync.yaml.example)
 - [Upsun](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/dotddev_assets/providers/upsun.yaml)
