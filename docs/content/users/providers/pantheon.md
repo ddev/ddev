@@ -54,6 +54,7 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
     Instead of setting the environment variables in configuration files, you can use
     `ddev pull pantheon --environment=PANTHEON_SITE=yourprojectname,PANTHEON_ENVIRONMENT=dev` for example.
+
 9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
 
 10. Run [`ddev restart`](../usage/commands.md#restart).
