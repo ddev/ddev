@@ -73,6 +73,7 @@ When defining additional services for your project, we recommend following these
           dockerfile_inline: |
             ARG CUSTOM_DOCKER_IMAGE="scratch"
             FROM $${CUSTOM_DOCKER_IMAGE}
+            # ...
           args:
             CUSTOM_DOCKER_IMAGE: ${CUSTOM_DOCKER_IMAGE:-busybox:latest}
     ```
@@ -114,11 +115,11 @@ services:
     command: "bash -c 'mkcert -install && original-start-command-from-image'"
     # Add an image and a build stage so we can add `mkcert`, etc.
     # The Dockerfile for the build stage goes in the `.ddev/example directory` here
-    image: ${EXAMPLE_DOCKER_IMAGE:-example/example}-${DDEV_SITENAME}-built
+    image: ${EXAMPLE_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
     build:
       context: example
       args:
-        EXAMPLE_DOCKER_IMAGE: ${EXAMPLE_DOCKER_IMAGE:-example/example}
+        EXAMPLE_DOCKER_IMAGE: ${EXAMPLE_DOCKER_IMAGE:-example/example:latest}
     environment:
       - HTTP_EXPOSE=3001:3000
       - HTTPS_EXPOSE=3000:3000
