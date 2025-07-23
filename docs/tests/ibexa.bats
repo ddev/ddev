@@ -24,8 +24,8 @@ teardown() {
   # ddev composer create-project ibexa/oss-skeleton
   run ddev composer create-project ibexa/oss-skeleton
   assert_success
-  # ddev exec console ibexa:install
-  run ddev exec console ibexa:install
+  # ddev exec console ibexa:install --no-interaction
+  run ddev exec console ibexa:install --no-interaction
   assert_success
   # ddev exec console ibexa:graphql:generate-schema
   run ddev exec console ibexa:graphql:generate-schema
