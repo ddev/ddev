@@ -71,7 +71,7 @@ There are many examples of [global](https://github.com/ddev/ddev/tree/main/pkg/d
 
 ## Command Line Completion
 
-If your custom command has a set of pre-determined valid arguments it can accept, you can use the [`AutocompleteTerms`](#autocompleteterms-annotation).
+If your custom command has a set of pre-determined valid arguments it can accept, you can use the [`AutocompleteTerms`](#autocompleteterms-annotation). For command flag completion, use the [`Flags`](#flags-annotation) annotation.
 
 For dynamic completion, you can create a separate script with the same name in a directory named `autocomplete`.
 For example, if your command is in `~/.ddev/commands/web/my-command`, your autocompletion script will be in `~/.ddev/commands/web/autocomplete/my-command`.
@@ -189,6 +189,9 @@ Example: `## Aliases: cacheclear,cache-clear,cache:clear`
 
 ### `Flags` Annotation
 
+!!!note "`Error: unknown flag` or `Error: unknown shorthand flag`"
+    Starting with DDEV v1.24.7, unknown flags are no longer parsed when using the `Flags` annotation. To avoid errors, either list *all* supported flags explicitly or remove the `Flags` annotation.
+
 `Flags` should explain any available flags, including their shorthand when relevant, for the help message. It has to be encoded according the following definition:
 
 If no flags are specified, the command will have its flags parsing disabled. Global flags like `--help` will not work unless the command supports them.
@@ -197,7 +200,7 @@ You can still do `ddev help <command>` to see the command's provided usage help.
 
 Usage: `## Flags: <json-definition>`
 
-This is the minimal usage of a flags definition:
+This is the minimal usage of a `Flags` definition:
 
 Example: `## Flags: [{"Name":"flag","Usage":"sets the flag option"}]`
 
