@@ -40,7 +40,20 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 7. If using Drupal 8+, verify that Drush is installed in your project with `ddev composer require drush/drush`. If using Drupal 6 or 7, Drush 8 is already provided in the web container’s `/usr/local/bin/drush`, so you can skip this step.
 
-8. In your **project’s** `.ddev/providers` directory, copy `pantheon.yaml.example` to `pantheon.yaml` (*This refers to your project `.ddev` folder and not the global `.ddev` folder*).  Edit the `project` environment variable under `environment_variables`. It will be in the format `<projectname>.<environment>`, for example `yourprojectname.dev` or (in cases of ambiguity) `<project_uuid>.<environment>`, for example `009a2cda-2c22-4eee-8f9d-96f017321555.dev`.
+8. In your **project's** `.ddev/providers` directory, copy `pantheon.yaml` to your providers directory (*This refers to your project `.ddev` folder and not the global `.ddev` folder*). Add `PANTHEON_SITE` and `PANTHEON_ENVIRONMENT` variables to your project `.ddev/config.yaml`:
+
+    ```yaml
+    web_environment:
+        - PANTHEON_SITE=yourprojectname
+        - PANTHEON_ENVIRONMENT=dev
+    ```
+
+    You can also do this with `ddev config --web-environment-add="PANTHEON_SITE=yourprojectname,PANTHEON_ENVIRONMENT=dev"`.
+
+    You can usually use the site name, but in some environments you may need the site ID, which is the long third component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
+
+    Instead of setting the environment variables in configuration files, you can use
+    `ddev pull pantheon --environment=PANTHEON_SITE=yourprojectname,PANTHEON_ENVIRONMENT=dev` for example.
 
 9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
 

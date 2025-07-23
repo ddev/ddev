@@ -23,10 +23,12 @@ import (
  *
  */
 
-const pantheonPullTestSite = "ddev-test-site-do-not-delete.dev"
-const pantheonPushTestSite = "ddev-pantheon-push.dev"
+const pantheonPullTestSite = "ddev-test-site-do-not-delete"
+const pantheonPullTestEnvironment = "dev"
+const pantheonPushTestSite = "ddev-pantheon-push"
+const pantheonPushTestEnvironment = "dev"
 const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
-const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
+const pantheonSiteExpectation = "DDEV DRUPAL11 TEST SITE"
 const pantheonPullGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
 const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142@codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142.drush.in:2222/~/repository.git"
 
@@ -74,7 +76,8 @@ func TestPantheonPull(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal8
+	app.Type = nodeps.AppTypeDrupal11
+	app.Docroot = "web"
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
 	_ = app.Stop(true, false)
@@ -87,12 +90,8 @@ func TestPantheonPull(t *testing.T) {
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
-	// Build our pantheon.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonPullTestSite), 1)
-	err = os.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
-	assert.NoError(err)
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", pantheonPullTestSite))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", pantheonPullTestEnvironment))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -101,16 +100,10 @@ func TestPantheonPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Make sure we have Drush
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
-	})
-	require.NoError(t, err)
-
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2017-07/22-24_tn.jpg"))
+	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2025-07/test-site-pic.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
@@ -195,12 +188,8 @@ func TestPantheonPush(t *testing.T) {
 	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
 	require.NoError(t, err)
 
-	// Build our pantheon.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonPushTestSite), 1)
-	err = os.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
-	assert.NoError(err)
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", pantheonPushTestSite))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", pantheonPushTestEnvironment))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -240,14 +229,14 @@ func TestPantheonPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonPushTestSite),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonPushTestSite+"."+pantheonPushTestEnvironment),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonPushTestSite, fName, fName),
+		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonPushTestSite+"."+pantheonPushTestEnvironment, fName, fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
