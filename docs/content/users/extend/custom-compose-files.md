@@ -22,7 +22,7 @@ To add custom configuration or additional services to your project, create `dock
 
 ```yaml
 services:
-  someservice:
+  dummy-service:
     ports:
     - "9999:9999"
 ```
@@ -31,8 +31,8 @@ That approach usually isn’t sustainable because two projects might want to use
 
 ```yaml
 services:
-  someservice:
-    container_name: "ddev-${DDEV_SITENAME}-someservice"
+  dummy-service:
+    container_name: "ddev-${DDEV_SITENAME}-dummy-service"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -57,7 +57,7 @@ When defining additional services for your project, we recommend following these
 
     ```yaml
     services:
-      someservice:
+      dummy-service:
         labels:
           com.ddev.site-name: ${DDEV_SITENAME}
           com.ddev.approot: ${DDEV_APPROOT}
@@ -67,15 +67,15 @@ When defining additional services for your project, we recommend following these
 
     ```yaml
     services:
-      someservice:
-        image: ${CUSTOM_DOCKER_IMAGE:-busybox:latest}-${DDEV_SITENAME}-built
+      dummy-service:
+        image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
         build:
           dockerfile_inline: |
-            ARG CUSTOM_DOCKER_IMAGE="scratch"
-            FROM $${CUSTOM_DOCKER_IMAGE}
+            ARG YOUR_DOCKER_IMAGE="scratch"
+            FROM $${YOUR_DOCKER_IMAGE}
             # ...
           args:
-            CUSTOM_DOCKER_IMAGE: ${CUSTOM_DOCKER_IMAGE:-busybox:latest}
+            YOUR_DOCKER_IMAGE: ${YOUR_DOCKER_IMAGE:-example/example:latest}
     ```
 
     This enables DDEV to operate in [offline mode](../usage/offline.md) once the base image has been pulled.
@@ -115,11 +115,11 @@ services:
     command: "bash -c 'mkcert -install && original-start-command-from-image'"
     # Add an image and a build stage so we can add `mkcert`, etc.
     # The Dockerfile for the build stage goes in the `.ddev/example directory` here
-    image: ${EXAMPLE_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
+    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
     build:
       context: example
       args:
-        EXAMPLE_DOCKER_IMAGE: ${EXAMPLE_DOCKER_IMAGE:-example/example:latest}
+        YOUR_DOCKER_IMAGE: ${YOUR_DOCKER_IMAGE:-example/example:latest}
     environment:
       - HTTP_EXPOSE=3001:3000
       - HTTPS_EXPOSE=3000:3000
@@ -129,7 +129,7 @@ services:
     external_links:
       - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
     labels:
-      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}
     restart: 'no'
     volumes:
@@ -141,8 +141,8 @@ services:
 ```
 
 ```Dockerfile
-ARG EXAMPLE_DOCKER_IMAGE="scratch"
-FROM $EXAMPLE_DOCKER_IMAGE
+ARG YOUR_DOCKER_IMAGE="scratch"
+FROM $YOUR_DOCKER_IMAGE
 
 # CAROOT for `mkcert` to use, has the CA config
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
