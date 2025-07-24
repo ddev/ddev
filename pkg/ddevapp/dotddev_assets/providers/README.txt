@@ -24,12 +24,12 @@ Recipes are provided for:
 - Git .ddev/providers/git.yaml.example
 - Lagoon .ddev/providers/lagoon.yaml
 - Local files .ddev/providers/localfile.yaml.example (like Dropbox, for example)
-- Pantheon .ddev/providers/pantheon.yaml.example
+- Pantheon .ddev/providers/pantheon.yaml
 - Platform.sh .ddev/providers/platform.yaml
 - rsync .ddev/providers/rsync.yaml.example
 - Upsun .ddev/providers/upsun.yaml
 
-Recipes are provided for Acquia (see .ddev/providers/acquia.yaml), Local files (see .ddev/providers/localfile.yaml.example) (like Dropbox, for example), Pantheon (see .ddev/providers/pantheon.yaml.example), Platform.sh (see .ddev/providers/platform.yaml, and rsync (see .ddev/providers/rsync.yaml.example).
+Recipes are provided for Acquia (see .ddev/providers/acquia.yaml), Local files (see .ddev/providers/localfile.yaml.example) (like Dropbox, for example), Pantheon (see .ddev/providers/pantheon.yaml), Platform.sh (see .ddev/providers/platform.yaml, and rsync (see .ddev/providers/rsync.yaml.example).
 
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 
