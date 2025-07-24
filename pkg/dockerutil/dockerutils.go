@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/archive"
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	ddevexec "github.com/ddev/ddev/pkg/exec"
@@ -68,6 +69,7 @@ var DockerRequirements = DockerVersionMatrix{
 
 type ComposeCmdOpts struct {
 	ComposeFiles []string
+	ComposeYaml  *composeTypes.Project
 	Profiles     []string
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
@@ -710,8 +712,13 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		return "", "", err
 	}
 
-	for _, file := range cmd.ComposeFiles {
-		arg = append(arg, "-f", file)
+	if cmd.ComposeYaml != nil {
+		// Read from stdin
+		arg = append(arg, "-f", "-")
+	} else {
+		for _, file := range cmd.ComposeFiles {
+			arg = append(arg, "-f", file)
+		}
 	}
 
 	for _, profile := range cmd.Profiles {
@@ -733,7 +740,16 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	}
 	proc := exec.CommandContext(ctx, path, arg...)
 	proc.Stdout = &stdout
-	proc.Stdin = os.Stdin
+	if cmd.ComposeYaml != nil {
+		yamlBytes, err := cmd.ComposeYaml.MarshalYAML()
+		if err != nil {
+			return "", "", err
+		}
+		yamlBytes = util.EscapeDollarSign(yamlBytes)
+		proc.Stdin = strings.NewReader(string(yamlBytes))
+	} else {
+		proc.Stdin = os.Stdin
+	}
 
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {
@@ -1111,22 +1127,6 @@ func ImageExistsLocally(imageName string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-// Pull pulls image if it doesn't exist locally.
-func Pull(imageName string) error {
-	exists, err := ImageExistsLocally(imageName)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return nil
-	}
-	cmd := exec.Command("docker", "pull", imageName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-	return err
 }
 
 // GetBoundHostPorts takes a container pointer and returns an array

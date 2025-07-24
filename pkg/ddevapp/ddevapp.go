@@ -1278,7 +1278,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	warnMissingDocroot(app)
 
-	err = PullBaseContainerImages()
+	err = PullBaseContainerImages(map[string]string{}, false)
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1466,7 +1466,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// This needs to be done after WriteDockerComposeYAML() to get the right images
-	err = app.PullContainerImages()
+	err = app.PullContainerImages(false)
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1859,52 +1859,49 @@ func (app *DdevApp) Restart() error {
 }
 
 // PullContainerImages configured Docker images with full output, since docker-compose up doesn't have nice output
-func (app *DdevApp) PullContainerImages() error {
+func (app *DdevApp) PullContainerImages(pullAlways bool) error {
 	images, err := app.FindAllImages()
 	if err != nil {
 		return err
 	}
-	// Don't pull xhgui if not in xhgui mode
-	if app.GetXHProfMode() != types.XHProfModeXHGui {
-		images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
-	}
-	images = append(images, FindNotOmittedImages(app)...)
-
-	for _, i := range images {
-		err := dockerutil.Pull(i)
-		if err != nil {
-			return err
-		}
-		util.Debug("Pulled image for %s", i)
-	}
-
-	return nil
+	return dockerutil.PullImages(images, pullAlways)
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image, busybox, and ddev-utilities for housekeeping.
-func PullBaseContainerImages() error {
-	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage, versionconstants.UtilitiesImage}
-	images = append(images, FindNotOmittedImages(nil)...)
-
-	for _, i := range images {
-		err := dockerutil.Pull(i)
-		if err != nil {
-			return err
-		}
-		util.Debug("Pulled image for %s", i)
+func PullBaseContainerImages(images map[string]string, pullAlways bool) error {
+	base := map[string]string{
+		"ddev-webserver": ddevImages.GetWebImage(),
+		"busybox":        versionconstants.BusyboxImage,
+		"ddev-utilities": versionconstants.UtilitiesImage,
 	}
-
-	return nil
+	for service, image := range FindNotOmittedImages(nil) {
+		base[service] = image
+	}
+	for service, image := range images {
+		// Ensure each image appears only once in base,
+		// remove any existing service using the same image
+		for k, v := range base {
+			if v == image {
+				delete(base, k)
+			}
+		}
+		base[service] = image
+	}
+	return dockerutil.PullImages(base, pullAlways)
 }
 
-// FindAllImages returns an array of image tags for all containers in the compose file
-func (app *DdevApp) FindAllImages() ([]string, error) {
-	var images []string
+// FindAllImages returns map of image tags for all containers in the compose file
+func (app *DdevApp) FindAllImages() (map[string]string, error) {
+	images := map[string]string{}
+
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
-		return images, nil
+		return images, fmt.Errorf("app.ComposeYaml is not initialized for %s", app.Name)
 	}
-	for _, service := range app.ComposeYaml.Services {
+
+	composeName := app.GetComposeProjectName()
+
+	for name, service := range app.ComposeYaml.Services {
 		image := service.Image
 		if image == "" {
 			continue
@@ -1915,14 +1912,15 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 				image = strings.TrimSuffix(image, "-"+app.Name)
 			}
 		}
-		images = append(images, image)
+		images[composeName+"-"+name] = image
 	}
+
 	return images, nil
 }
 
 // FindNotOmittedImages returns an array of image names not omitted by global or project configuration
-func FindNotOmittedImages(app *DdevApp) []string {
-	var images []string
+func FindNotOmittedImages(app *DdevApp) map[string]string {
+	images := map[string]string{}
 	containerImageMap := map[string]func() string{
 		SSHAuthName:            ddevImages.GetSSHAuthImage,
 		nodeps.RouterContainer: ddevImages.GetRouterImage,
@@ -1933,7 +1931,7 @@ func FindNotOmittedImages(app *DdevApp) []string {
 			continue
 		}
 		if app == nil || !nodeps.ArrayContainsString(app.OmitContainers, containerName) {
-			images = append(images, getImage())
+			images[containerName] = getImage()
 		}
 	}
 
