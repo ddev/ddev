@@ -1,12 +1,9 @@
 package ddevapp
 
 import (
-	"bytes"
-	"context"
 	"os"
 	"path/filepath"
 
-	composeLoader "github.com/compose-spec/compose-go/v2/loader"
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
@@ -83,7 +80,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	fullContentsBytes = escapeDollarSign(fullContentsBytes)
+	fullContentsBytes = util.EscapeDollarSign(fullContentsBytes)
 
 	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
@@ -93,53 +90,10 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	return nil
 }
 
-// createComposeProject creates a compose project from a string
-func createComposeProject(yamlStr string) (*composeTypes.Project, error) {
-	project, err := composeLoader.LoadWithContext(
-		context.Background(),
-		composeTypes.ConfigDetails{
-			ConfigFiles: []composeTypes.ConfigFile{
-				{Content: []byte(yamlStr)},
-			},
-		},
-		composeLoader.WithProfiles([]string{`*`}),
-	)
-	if err != nil {
-		return project, err
-	}
-	// Initialize Networks, Services, and Volumes to empty maps if nil
-	if project.Networks == nil {
-		project.Networks = composeTypes.Networks{}
-	}
-	if project.Services == nil {
-		project.Services = composeTypes.Services{}
-	}
-	if project.Volumes == nil {
-		project.Volumes = composeTypes.Volumes{}
-	}
-	// Ensure nested fields like Labels, Networks, and Environment are initialized
-	for name, network := range project.Networks {
-		if network.Labels == nil {
-			network.Labels = composeTypes.Labels{}
-		}
-		project.Networks[name] = network
-	}
-	for name, service := range project.Services {
-		if service.Networks == nil {
-			service.Networks = map[string]*composeTypes.ServiceNetworkConfig{}
-		}
-		if service.Environment == nil {
-			service.Environment = composeTypes.MappingWithEquals{}
-		}
-		project.Services[name] = service
-	}
-	return project, nil
-}
-
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
 func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, error) {
-	project, err := createComposeProject(yamlStr)
+	project, err := dockerutil.CreateComposeProject(yamlStr)
 	if err != nil {
 		return project, err
 	}
@@ -226,12 +180,4 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 	}
 
 	return project, nil
-}
-
-// escapeDollarSign the same thing is done in `docker-compose config`
-// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
-func escapeDollarSign(marshal []byte) []byte {
-	dollar := []byte{'$'}
-	escDollar := []byte{'$', '$'}
-	return bytes.ReplaceAll(marshal, dollar, escDollar)
 }

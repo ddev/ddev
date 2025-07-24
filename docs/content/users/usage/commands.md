@@ -508,6 +508,10 @@ Example:
 ```shell
 # Download DDEV’s basic Docker images
 ddev debug download-images
+# Download DDEV’s Docker images for `my-project`
+ddev debug download-images my-project
+# Download DDEV’s Docker images for all projects
+ddev debug download-images --all
 ```
 
 ### `debug fix-commands`
