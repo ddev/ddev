@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -77,4 +78,12 @@ func MergeYamlFiles(baseFile string, extraFile ...string) (string, error) {
 	}
 
 	return string(result), nil
+}
+
+// EscapeDollarSign the same thing is done in `docker-compose config`
+// See https://github.com/docker/compose/blob/361c0893a9e16d54f535cdb2e764362363d40702/cmd/compose/config.go#L405-L409
+func EscapeDollarSign(marshal []byte) []byte {
+	dollar := []byte{'$'}
+	escDollar := []byte{'$', '$'}
+	return bytes.ReplaceAll(marshal, dollar, escDollar)
 }
