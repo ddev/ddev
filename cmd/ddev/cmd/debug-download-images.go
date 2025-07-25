@@ -53,10 +53,17 @@ ddev debug download-images --all
 			if err != nil {
 				util.Failed("Failed to get projects: %v", err)
 			}
-			for _, project := range projects {
-				appImages, err := project.FindAllImages()
+			for _, app := range projects {
+				app.DockerEnv()
+				err = app.WriteDockerComposeYAML()
 				if err != nil {
-					util.Failed("Failed to get app images: %v", err)
+					util.Warning("Failed to run `docker-compose config` for '%s': %v", app.Name, err)
+					continue
+				}
+				appImages, err := app.FindAllImages()
+				if err != nil {
+					util.Warning("Failed to get images for '%s': %v", app.Name, err)
+					continue
 				}
 				for k, v := range appImages {
 					additionalImages[k] = v
@@ -69,11 +76,11 @@ ddev debug download-images --all
 				app.DockerEnv()
 				err = app.WriteDockerComposeYAML()
 				if err != nil {
-					util.Failed("Failed to get compose-config: %v", err)
+					util.Failed("Failed to run `docker-compose config` for '%s': %v", app.Name, err)
 				}
 				appImages, err := app.FindAllImages()
 				if err != nil {
-					util.Failed("Failed to get app images: %v", err)
+					util.Failed("Failed to get images for '%s': %v", app.Name, err)
 				}
 				additionalImages = appImages
 			} else {
