@@ -75,7 +75,7 @@ db_pull_command:
     echo "Using PANTHEON_SITE=${PANTHEON_SITE} PANTHEON_ENVIRONMENT=${PANTHEON_ENVIRONMENT}"
     pushd /var/www/html/.ddev/.downloads >/dev/null
     terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
-    FRESH_DB_DUMP_STRING=$(terminus connection:info "$project" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
+    FRESH_DB_DUMP_STRING=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
     eval "$FRESH_DB_DUMP_STRING | gzip > db.sql.gz" > /dev/null 2>&1
 
 files_pull_command:
