@@ -58,7 +58,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     less \
     libcap2-bin \
     libldap-common \
-    libmagickcore-6.q16-6-extra \
+    libmagickcore-7.q16-10-extra \
     locales \
     mariadb-client \
     openssh-client \
