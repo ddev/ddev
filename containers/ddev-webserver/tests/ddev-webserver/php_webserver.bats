@@ -80,12 +80,35 @@
   # TODO: PHP8.5: Enable for php8.5 when extensions are available
   if [ "${PHP_VERSION}" = "8.5" ]; then skip "Extensions not yet available on PHP8.5"; fi
 
-  extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+  # EXPERIMENTAL: Conditional extension list based on Debian Trixie Sury repository availability
+  # Base extensions that should always be available
+  extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+  
+  # Conditionally add extensions based on PHP version and known Sury repository issues
   case ${PHP_VERSION} in
-  8.[2345])
-    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+  5.6)
+    # php5.6: memcached missing on arm64, redis available, json available
+    extensions="$extensions redis json"
+    if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "arm64" ]; then
+      extensions="$extensions memcached"
+    fi
     ;;
-
+  7.0|7.1|7.2|7.3)
+    # php7.0-7.3: both memcached and redis missing in Debian Trixie Sury repo, json available
+    extensions="$extensions json"
+    ;;
+  7.4)
+    # php7.4: memcached missing, redis available, json available  
+    extensions="$extensions redis json"
+    ;;
+  8.0|8.1|8.2|8.3|8.4)
+    # php8.0+: memcached missing, redis available, json built into PHP core (not separate extension)
+    extensions="$extensions redis"
+    ;;
+  *)
+    # Default fallback for future PHP versions
+    extensions="$extensions redis"
+    ;;
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
