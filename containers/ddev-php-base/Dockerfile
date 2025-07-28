@@ -33,10 +33,11 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD generic-files /
 
-RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
+# TODO: Do we need nginx.org packages, or are Trixie (or deb.sury.org) good enough?
+#RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+#    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+#RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+#http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
 
 # This curl -I is debugging for intermittent failures on https://github.com/oerdnj/deb.sury.org/issues/2046
 RUN curl -s -I https://packages.sury.org/php/
