@@ -412,6 +412,7 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 // drupalConfigOverrideAction selects proper versions for
 func drupalConfigOverrideAction(app *DdevApp) error {
 	var drupalVersion int
+	app.CorepackEnable = false
 	switch app.Type {
 	case nodeps.AppTypeDrupal6:
 		app.PHPVersion = nodeps.PHP56
@@ -427,7 +428,6 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		app.PHPVersion = nodeps.PHP81
 		drupalVersion = 9
 	case nodeps.AppTypeDrupal10:
-		app.CorepackEnable = false
 		drupalVersion = 10
 	case nodeps.AppTypeDrupal:
 		fallthrough
