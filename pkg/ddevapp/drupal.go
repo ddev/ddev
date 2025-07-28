@@ -427,6 +427,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		app.PHPVersion = nodeps.PHP81
 		drupalVersion = 9
 	case nodeps.AppTypeDrupal10:
+		app.CorepackEnable = false
 		drupalVersion = 10
 	case nodeps.AppTypeDrupal:
 		fallthrough
