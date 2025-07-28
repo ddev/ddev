@@ -1,6 +1,6 @@
 ### ---------------------------------base-----------------------------------------
 ### Build the base Debian image that will be used in every other image
-FROM debian:bookworm-slim AS base
+FROM debian:trixie-slim AS base
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
