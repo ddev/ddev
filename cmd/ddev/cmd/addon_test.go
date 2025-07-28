@@ -20,6 +20,11 @@ func TestCmdAddon(t *testing.T) {
 	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
 		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
 	}
+	// EXPERIMENTAL: Skip memcached-related tests if running on Debian Trixie
+	// where memcached packages are missing from Sury repository
+	if os.Getenv("SKIP_MEMCACHED_TESTS") == "true" {
+		t.Skip("Skipping memcached add-on tests (SKIP_MEMCACHED_TESTS=true)")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -90,6 +95,11 @@ func TestCmdAddon(t *testing.T) {
 func TestCmdAddonInstalled(t *testing.T) {
 	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
 		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+	// EXPERIMENTAL: Skip memcached-related tests if running on Debian Trixie
+	// where memcached packages are missing from Sury repository
+	if os.Getenv("SKIP_MEMCACHED_TESTS") == "true" {
+		t.Skip("Skipping memcached add-on tests (SKIP_MEMCACHED_TESTS=true)")
 	}
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
