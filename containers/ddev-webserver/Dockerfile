@@ -2,8 +2,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20250824_akibaat_buildx_arm_builder AS ddev-webserver-base
+FROM ddev/ddev-php-base:20250728_rfay_debian_trixie AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
