@@ -93,13 +93,6 @@ RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s 
 RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
 RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
 
-### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
-### TODO: When we have this from upstream Debian 13 Trixie, we must remove this stanza
-ARG SQLITE_VERSION="3.45.1"
-RUN mkdir -p /usr/local/sqlite3-drupal11 && cd /usr/local/sqlite3-drupal11 && \
-    wget https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
-    wget https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETARCH}.deb
-
 ### -------------------------END ddev-webserver-base------------------------------
 
 ### -------------------------ddev-webserver-dev-base------------------------------
