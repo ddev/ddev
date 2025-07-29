@@ -139,6 +139,14 @@ Function InstallScriptToDistro
     Pop $R0  ; Get script name from stack
     Pop $R1  ; Get distro name from stack
     
+    ; Validate script name is not empty for security
+    ${If} $R0 == ""
+        Push "ERROR: Script name cannot be empty"
+        Call LogPrint
+        Push 1
+        Return
+    ${EndIf}
+
     Push "Installing script $R0 to WSL2 distro $R1..."
     Call LogPrint
     
