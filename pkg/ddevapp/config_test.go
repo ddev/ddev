@@ -1003,7 +1003,7 @@ func TestPHPConfig(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-redis"}
+		app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-solr"}
 		err = app.Restart()
 		require.NoError(t, err)
 
