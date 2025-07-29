@@ -64,4 +64,16 @@ if ! containercheck; then
 fi
 
 # Make sure internal access to monitor port is working
-docker exec -t $CONTAINER_NAME bash -c 'traefik healthcheck --ping 2>&1' || (echo "Failed to run http healthcheck inside container" && exit 104)
+docker exec -t $CONTAINER_NAME bash -c 'traefik healthcheck --ping 2>&1' || { echo "Failed to run http healthcheck inside container" && exit 104; }
+
+# Check that /api/http/routers endpoint is accessible and returns routers with providers
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/http/routers 2>&1 | jq -e 'length > 0' 2>&1" || { echo "Failed to get routers from /api/http/routers or no routers found" && exit 105; }
+
+# Verify that all routers have a provider field
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/http/routers 2>&1 | jq -e 'all(has(\"provider\"))' 2>&1" || { echo "Some routers are missing provider field" && exit 106; }
+
+# Check that /api/overview endpoint is accessible and has the required error fields
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/overview 2>&1 | jq -e 'has(\"http\") and .http.routers and .http.services and .http.middlewares' 2>&1" || { echo "Failed to get overview or missing http structure" && exit 107; }
+
+# Verify that the error fields exist in the overview (they can be null/missing, but the parent objects should exist)
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/overview 2>&1 | jq -e '.http.routers and .http.services and .http.middlewares' 2>&1" || { echo "Missing required router/service/middleware sections in overview" && exit 108; }
