@@ -1138,7 +1138,7 @@ func TestExtraPackages(t *testing.T) {
 	require.NoError(t, err)
 
 	addedDBPackage := "sudo"
-	addedWebPackage := "dnsutils"
+	addedWebPackage := "bind9-dnsutils"
 
 	// Test db container to make sure no sudo in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
