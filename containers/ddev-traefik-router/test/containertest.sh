@@ -72,8 +72,11 @@ docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MON
 # Verify that all routers have a provider field
 docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/http/routers 2>&1 | jq -e 'all(has(\"provider\"))' 2>&1" || { echo "Some routers are missing provider field" && exit 106; }
 
-# Check that /api/overview endpoint is accessible and has the required error fields
-docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/overview 2>&1 | jq -e 'has(\"http\") and .http.routers and .http.services and .http.middlewares' 2>&1" || { echo "Failed to get overview or missing http structure" && exit 107; }
+# Verify that there is at least one router with file provider
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/http/routers 2>&1 | jq -e '[.[] | select(.provider == \"file\")] | length > 0' 2>&1" || { echo "No routers found with file provider" && exit 107; }
 
-# Verify that the error fields exist in the overview (they can be null/missing, but the parent objects should exist)
-docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/overview 2>&1 | jq -e '.http.routers and .http.services and .http.middlewares' 2>&1" || { echo "Missing required router/service/middleware sections in overview" && exit 108; }
+# Check that /api/overview endpoint is accessible and has the required structure
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/overview 2>&1 | jq -e 'has(\"http\") and (.http | has(\"routers\") and has(\"services\") and has(\"middlewares\"))' 2>&1" || { echo "Failed to get overview or missing http structure" && exit 108; }
+
+# Verify that the specific error fields exist
+docker exec -t $CONTAINER_NAME bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/overview 2>&1 | jq -e '(.http.routers | has(\"errors\")) and (.http.services | has(\"errors\")) and (.http.middlewares | has(\"errors\"))' 2>&1" || { echo "Missing required error fields (.http.routers.errors, .http.services.errors, .http.middlewares.errors)" && exit 109; }
