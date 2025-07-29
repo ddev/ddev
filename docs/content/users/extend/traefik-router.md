@@ -76,11 +76,6 @@ Project-specific configuration is automatically generated in the project’s `.d
               permanent: true
       ```
 
-## Debugging Traefik Routing
-
-Traefik provides a dynamic description of its configuration you can visit at `http://localhost:10999`.
-When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`. The Traefik logs are set to a minimal set by default, but you can enable much more extensive logging and access logs with a `static_config.loglevel.yaml` as described above.
-
 ## Router `docker-compose` Customization
 
 The default Docker Compose configuration for the router container is found in `~/.ddev/.router-compose.yaml`. It is quite unusual to override this configuration, but it can be overridden in the same way project configuration can be overridden (project `.ddev/docker-compose.*.yaml`). These ultimately get merged into `~/.ddev/.router-compose-full.yaml`
@@ -93,4 +88,59 @@ services:
     environment:
       - CLOUDFLARE_EMAIL=you@example.com
       - CLOUDFLARE_API_KEY=some-key
+```
+
+## Troubleshooting Traefik Routing
+
+Traefik provides a dynamic description of its configuration you can visit at `http://localhost:10999`.
+When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`. The Traefik logs are set to a minimal set by default, but you can enable much more extensive logging and access logs with a `static_config.loglevel.yaml` as [described above](#traefik-static-configuration).
+
+If you encounter Traefik file watcher errors on Linux systems, these are common solutions:
+
+### Error adding file watcher: no space left on device
+
+This error appears in the router logs, `docker logs ddev-router`, as:
+
+> ERR Cannot start the provider *file.Provider error="error adding file watcher: no space left on device"
+
+This indicates that the system has reached the limit for inotify watches. First, check the current value:
+
+```bash
+sysctl fs.inotify.max_user_watches
+```
+
+Then create a configuration file to increase the limit (for example, if the current value is `65536`, you can increase it to `524288`):
+
+```bash
+echo 'fs.inotify.max_user_watches=524288' | sudo tee -a /etc/sysctl.d/60-inotify.conf
+```
+
+Apply the changes without restarting the system:
+
+```bash
+sudo sysctl -p /etc/sysctl.d/60-inotify.conf
+```
+
+### Error creating file watcher: too many open files
+
+This error appears in the router logs, `docker logs ddev-router`, as:
+
+> ERR Cannot start the provider *file.Provider error="error creating file watcher: too many open files"
+
+This indicates that too many inotify instances are open. First, check the current value:
+
+```bash
+sysctl fs.inotify.max_user_instances
+```
+
+Then create a configuration file to increase the limit (for example, if the current value is `128`, you can increase it to `8192`):
+
+```bash
+echo 'fs.inotify.max_user_instances=8192' | sudo tee -a /etc/sysctl.d/60-inotify.conf
+```
+
+Apply the changes without restarting the system:
+
+```bash
+sudo sysctl -p /etc/sysctl.d/60-inotify.conf
 ```

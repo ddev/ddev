@@ -157,7 +157,7 @@ Docker’s normal mounting can be slow, especially on macOS. See the [Performanc
 
 ### How can I troubleshoot what’s going wrong?
 
-See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
+See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation), [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
 
 ### How can I check that Docker is working?
 
