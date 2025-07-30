@@ -1,0 +1,44 @@
+package types
+
+import "time"
+
+// SponsorshipData represents the structure of the sponsorship data JSON
+type SponsorshipData struct {
+	GitHubDDEVSponsorships      GitHubSponsorship   `json:"github_ddev_sponsorships"`
+	GitHubRfaySponsorships      GitHubSponsorship   `json:"github_rfay_sponsorships"`
+	MonthlyInvoicedSponsorships InvoicedSponsorship `json:"monthly_invoiced_sponsorships"`
+	AnnualInvoicedSponsorships  AnnualSponsorship   `json:"annual_invoiced_sponsorships"`
+	PaypalSponsorships          int                 `json:"paypal_sponsorships"`
+	TotalMonthlyAverageIncome   int                 `json:"total_monthly_average_income"`
+	UpdatedDateTime             time.Time           `json:"updated_datetime"`
+}
+
+// GitHubSponsorship represents GitHub sponsorship data
+type GitHubSponsorship struct {
+	TotalMonthlySponsorship int            `json:"total_monthly_sponsorship"`
+	TotalSponsors           int            `json:"total_sponsors"`
+	SponsorsPerTier         map[string]int `json:"sponsors_per_tier"`
+}
+
+// InvoicedSponsorship represents monthly invoiced sponsorship data
+type InvoicedSponsorship struct {
+	TotalMonthlySponsorship int            `json:"total_monthly_sponsorship"`
+	TotalSponsors           int            `json:"total_sponsors"`
+	MonthlySponsorsPerTier  map[string]int `json:"monthly_sponsors_per_tier"`
+}
+
+// AnnualSponsorship represents annual sponsorship data
+type AnnualSponsorship struct {
+	TotalAnnualSponsorships      int            `json:"total_annual_sponsorships"`
+	TotalSponsors                int            `json:"total_sponsors"`
+	MonthlyEquivalentSponsorship int            `json:"monthly_equivalent_sponsorship"`
+	AnnualSponsorsPerTier        map[string]int `json:"annual_sponsors_per_tier"`
+}
+
+// SponsorshipManager defines the interface for managing sponsorship data
+type SponsorshipManager interface {
+	GetSponsorshipData() (*SponsorshipData, error)
+	GetTotalMonthlyIncome() int
+	GetTotalSponsors() int
+	IsDataStale() bool
+}
