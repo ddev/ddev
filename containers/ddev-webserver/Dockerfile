@@ -31,17 +31,8 @@ RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | b
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-# Workaround for Debian Trixie (13) not being supported yet - modify debian_version and os-release
-RUN cp /etc/os-release /etc/os-release.backup && \
-    cp /etc/debian_version /etc/debian_version.backup && \
-    sed -i 's/VERSION_ID="13"/VERSION_ID="12"/' /etc/os-release && \
-    sed -i 's/VERSION="13 (trixie)"/VERSION="12 (bookworm)"/' /etc/os-release && \
-    sed -i 's/VERSION_CODENAME=trixie/VERSION_CODENAME=bookworm/' /etc/os-release && \
-    sed -i 's/DEBIAN_VERSION_FULL=13.0/DEBIAN_VERSION_FULL=12.0/' /etc/os-release && \
-    echo "12.0" > /etc/debian_version && \
-    mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools && \
-    mv /etc/os-release.backup /etc/os-release && \
-    mv /etc/debian_version.backup /etc/debian_version
+# Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility
+RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm
 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
