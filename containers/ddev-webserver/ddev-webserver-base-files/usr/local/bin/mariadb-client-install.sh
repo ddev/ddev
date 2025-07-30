@@ -15,7 +15,7 @@ MARIADB_VERSION=${DDEV_DATABASE#*:}
 
 # Configure the correct repository for mariadb
 set -x
-log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm || exit $?
+log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm --skip-key-import || exit $?
 rm -f /etc/apt/sources.list.d/mariadb.list.old_*
 # --skip-key-import flag doesn't download the existing key again and omits "apt-get update",
 # so we can run "apt-get update" manually only for mariadb and debian repos to make it faster
