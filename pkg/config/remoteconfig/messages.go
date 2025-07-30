@@ -114,12 +114,13 @@ func (c *remoteConfig) ShowNotifications() {
 func (c *remoteConfig) ShowTicker() {
 	// defer util.TimeTrack()()
 
-	if !c.showTickerMessage() || len(c.remoteConfig.Messages.Ticker.Messages) == 0 {
+	tickerData := c.getTicker()
+	if !c.showTickerMessage() || len(tickerData.Messages) == 0 {
 		return
 	}
 
 	messageOffset := c.state.LastTickerMessage
-	messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+	messageCount := len(tickerData.Messages)
 
 	if messageOffset == 0 {
 		// As long as no message was shown, start with a random message. This
@@ -129,13 +130,13 @@ func (c *remoteConfig) ShowTicker() {
 		messageOffset = rand.Intn(messageCount)
 	}
 
-	for i := range c.remoteConfig.Messages.Ticker.Messages {
+	for i := range tickerData.Messages {
 		messageOffset++
 		if messageOffset > messageCount {
 			messageOffset = 1
 		}
 
-		message := &c.remoteConfig.Messages.Ticker.Messages[i+messageOffset-1]
+		message := &tickerData.Messages[i+messageOffset-1]
 
 		if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
 			t := table.NewWriter()
@@ -208,8 +209,9 @@ func (c *remoteConfig) getTickerInterval() time.Duration {
 		return time.Duration(c.tickerInterval) * time.Hour
 	}
 
-	if c.remoteConfig.Messages.Ticker.Interval != 0 {
-		return time.Duration(c.remoteConfig.Messages.Ticker.Interval) * time.Hour
+	tickerData := c.getTicker()
+	if tickerData.Interval != 0 {
+		return time.Duration(tickerData.Interval) * time.Hour
 	}
 
 	return time.Duration(tickerInterval) * time.Hour
@@ -255,6 +257,16 @@ func (c *remoteConfig) checkVersions(versions string) bool {
 	}
 
 	return true
+}
+
+// getTicker returns ticker data from either the direct structure or legacy structure
+func (c *remoteConfig) getTicker() internal.Ticker {
+	// Try direct ticker first (new format)
+	if len(c.remoteConfig.Ticker.Messages) > 0 || c.remoteConfig.Ticker.Interval > 0 {
+		return c.remoteConfig.Ticker
+	}
+	// Fall back to legacy structure
+	return c.remoteConfig.Messages.Ticker
 }
 
 type preset int
