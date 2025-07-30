@@ -97,5 +97,7 @@ func PullImages(images map[string]string, pullAlways bool) error {
 
 // Pull pulls image if it doesn't exist locally
 func Pull(image string) error {
-	return PullImages(map[string]string{"image": image}, false)
+	parts := strings.SplitN(image, "/", 2)
+	service := strings.SplitN(parts[len(parts)-1], ":", 2)[0]
+	return PullImages(map[string]string{service: image}, false)
 }
