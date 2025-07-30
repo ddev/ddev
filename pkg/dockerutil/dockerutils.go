@@ -670,7 +670,7 @@ func GetContainerHealth(container *dockerContainer.Summary) (string, string) {
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
 // stdin/stdout/stderr
-func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, action ...string) error {
+func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	defer util.TimeTrack()()
 
 	var arg []string
@@ -680,12 +680,16 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 		return err
 	}
 
-	for _, file := range composeFiles {
-		arg = append(arg, "-f")
-		arg = append(arg, file)
+	if cmd.ComposeYaml != nil {
+		// Read from stdin
+		arg = append(arg, "-f", "-")
+	} else {
+		for _, file := range cmd.ComposeFiles {
+			arg = append(arg, "-f", file)
+		}
 	}
 
-	arg = append(arg, action...)
+	arg = append(arg, cmd.Action...)
 
 	path, err := globalconfig.GetDockerComposePath()
 	if err != nil {
@@ -693,8 +697,17 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 	}
 	proc := exec.Command(path, arg...)
 	proc.Stdout = stdout
-	proc.Stdin = stdin
 	proc.Stderr = stderr
+	if cmd.ComposeYaml != nil {
+		yamlBytes, err := cmd.ComposeYaml.MarshalYAML()
+		if err != nil {
+			return err
+		}
+		yamlBytes = util.EscapeDollarSign(yamlBytes)
+		proc.Stdin = strings.NewReader(string(yamlBytes))
+	} else {
+		proc.Stdin = stdin
+	}
 
 	err = proc.Run()
 	return err

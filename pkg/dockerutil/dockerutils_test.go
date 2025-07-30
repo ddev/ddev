@@ -356,21 +356,30 @@ func TestComposeWithStreams(t *testing.T) {
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
 	stdout := util.CaptureStdOut()
-	err = dockerutil.ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ps", "-ef")
+	err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"exec", "-T", "web", "ps", "-ef"},
+	}, os.Stdin, os.Stdout, os.Stderr)
 	assert.NoError(err)
 	output := stdout()
 	assert.Contains(output, "supervisord")
 
 	// Reverse stdout and stderr and create an error and normal stdout. We should see only the error captured in stdout
 	stdout = util.CaptureStdOut()
-	err = dockerutil.ComposeWithStreams(composeFiles, os.Stdin, os.Stderr, os.Stdout, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
+	err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2"},
+	}, os.Stdin, os.Stderr, os.Stdout)
 	assert.Error(err)
 	output = stdout()
 	assert.Contains(output, "ls: cannot access 'xx': No such file or directory")
 
 	// Flip stdout and stderr and create an error and normal stdout. We should see only the success captured in stdout
 	stdout = util.CaptureStdOut()
-	err = dockerutil.ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
+	err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: composeFiles,
+		Action:       []string{"exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2"},
+	}, os.Stdin, os.Stdout, os.Stderr)
 	assert.Error(err)
 	output = stdout()
 	assert.Contains(output, "/var/run/apache2", output)

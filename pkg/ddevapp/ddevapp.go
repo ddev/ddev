@@ -2197,7 +2197,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		errcheck := "set -eu"
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
-	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 
 	stdout := os.Stdout
 	stderr := os.Stderr
@@ -2212,7 +2211,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	var outRes, errRes string
 	r := append(baseComposeExecCmd, opts.RawCmd...)
 	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
+		err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       r,
+		}, os.Stdin, stdout, stderr)
 	} else {
 		outRes, errRes, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
@@ -2277,7 +2279,10 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 	args = append(args, shell, "-c", opts.Cmd)
 
-	return dockerutil.ComposeWithStreams([]string{app.DockerComposeFullRenderedYAMLPath()}, os.Stdin, os.Stdout, os.Stderr, args...)
+	return dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Action:       args,
+	}, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {

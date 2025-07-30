@@ -2,12 +2,14 @@ package dockerutil
 
 import (
 	"context"
+	"os"
+	"strings"
+
 	composeLoader "github.com/compose-spec/compose-go/v2/loader"
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
-	"os"
 )
 
 // CreateComposeProject creates a compose project from a string
@@ -78,15 +80,17 @@ func PullImages(images map[string]string, pullAlways bool) error {
 		util.Debug(`Pulling image for %s ("%s" service)`, image, service)
 	}
 
-	progress := "plain"
 	if !output.JSONOutput && isatty.IsTerminal(os.Stdin.Fd()) {
-		progress = "tty"
+		err = ComposeWithStreams(&ComposeCmdOpts{
+			ComposeYaml: composeYamlPull,
+			Action:      []string{"pull"},
+		}, nil, os.Stdout, os.Stderr)
+	} else {
+		_, _, err = ComposeCmd(&ComposeCmdOpts{
+			ComposeYaml: composeYamlPull,
+			Action:      []string{"pull"},
+		})
 	}
-
-	_, _, err = ComposeCmd(&ComposeCmdOpts{
-		ComposeYaml: composeYamlPull,
-		Action:      []string{"--progress", progress, "pull"},
-	})
 
 	return err
 }
