@@ -139,6 +139,14 @@ Function InstallScriptToDistro
     Pop $R0  ; Get script name from stack
     Pop $R1  ; Get distro name from stack
     
+    ; Validate script name is not empty for security
+    ${If} $R0 == ""
+        Push "ERROR: Script name cannot be empty"
+        Call LogPrint
+        Push 1
+        Return
+    ${EndIf}
+
     Push "Installing script $R0 to WSL2 distro $R1..."
     Call LogPrint
     
@@ -153,20 +161,21 @@ Function InstallScriptToDistro
         Return
     ${EndIf}
     
-    ; Copy script from Windows temp to WSL2 /tmp
-    nsExec::ExecToStack 'wsl -d $R1 -u root cp "$WSL_WINDOWS_TEMP/ddev_installer/$R0" /tmp/'
+    ; Remove any existing script first, then copy from Windows temp to WSL2 /tmp
+    nsExec::ExecToStack 'wsl -d $R1 -u root rm -f /tmp/$R0'
+    nsExec::ExecToStack 'wsl -d $R1 cp "$WSL_WINDOWS_TEMP/ddev_installer/$R0" /tmp/'
     Pop $R2  ; Exit code
     Pop $R3  ; Output
     
     ${If} $R2 != 0
-        Push "Failed to copy script $R0 to distro $R1: $R3"
+        Push "Failed to copy script $R0 to distro $R1: exit code $R2, output: $R3"
         Call LogPrint
         Push $R2
         Return
     ${EndIf}
     
     ; Make script executable
-    nsExec::ExecToStack 'wsl -d $R1 -u root chmod +x /tmp/$R0'
+    nsExec::ExecToStack 'wsl -d $R1 chmod +x /tmp/$R0'
     Pop $R2  ; Exit code  
     Pop $R3  ; Output
     
@@ -220,7 +229,7 @@ Function DistroSelectionPage
     ${If} $R0 == ""
         Push "ERROR: No Ubuntu-based WSL2 distributions found"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nYou can check this file to see what distributions were detected."
+        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nYou can check this file to see what distributions were detected."
         Push "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first."
         Call ShowErrorAndAbort
     ${EndIf}
@@ -2114,7 +2123,6 @@ Function .onInit
 FunctionEnd
 
 ; Helper: Show error message with standard guidance and abort
-; Helper: Show error message with standard guidance and abort
 ; Call with error message on stack
 Function ShowErrorAndAbort
     Exch $R0  ; Get error message from stack
@@ -2129,9 +2137,9 @@ Function ShowErrorAndAbort
     ${EndIf}
     
     ${IfNot} ${Silent}
-        MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH$\n$\nPlease fix the issue and retry the installer."
+        MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nPlease fix the issue and retry the installer."
     ${EndIf}
-    Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH"
+    Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH (please include with any error report)"
     Call LogPrint
     SetErrorLevel 1
     Quit
