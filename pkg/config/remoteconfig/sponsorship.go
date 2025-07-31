@@ -21,7 +21,7 @@ const (
 // sponsorshipManager implements types.SponsorshipManager
 type sponsorshipManager struct {
 	downloader       downloader.JSONCDownloader
-	fileStorage      types.RemoteConfigStorage
+	fileStorage      storage.SponsorshipStorage
 	state            *state
 	updateInterval   time.Duration
 	isInternetActive func() bool
@@ -38,7 +38,7 @@ func NewSponsorshipManager(localPath string, stateManager statetypes.State, isIn
 			"data/all-sponsorships.json",
 			github.RepositoryContentGetOptions{Ref: "main"},
 		),
-		fileStorage:      storage.NewFileStorage(localPath + "/" + sponsorshipLocalFileName),
+		fileStorage:      storage.NewSponsorshipFileStorage(localPath + "/" + sponsorshipLocalFileName),
 		state:            newState(stateManager),
 		updateInterval:   time.Duration(sponsorshipUpdateInterval) * time.Hour,
 		isInternetActive: isInternetActive,
@@ -96,22 +96,14 @@ func (m *sponsorshipManager) loadFromLocalStorage() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// Try to read from file storage using the RemoteConfig interface
-	// This is a bit of a hack since we're reusing the existing file storage
-	// which expects internal.RemoteConfig, but we can work around it
-	err := m.loadSponsorshipDataFromFile()
+	data, err := m.fileStorage.Read()
 	if err != nil {
 		util.Debug("Error loading sponsorship data from local storage: %s", err)
+		// Initialize with empty data as fallback
 		m.data = &types.SponsorshipData{}
+	} else {
+		m.data = data
 	}
-}
-
-// loadSponsorshipDataFromFile loads sponsorship data directly from file
-func (m *sponsorshipManager) loadSponsorshipDataFromFile() error {
-	// For now, we'll update from GitHub if local file doesn't exist or is stale
-	// A more complete implementation would use a dedicated sponsorship file storage
-	m.data = &types.SponsorshipData{}
-	return nil
 }
 
 // updateFromGithub downloads fresh sponsorship data from GitHub
@@ -136,11 +128,17 @@ func (m *sponsorshipManager) updateFromGithub() {
 
 	err := m.downloader.Download(ctx, &newData)
 	if err != nil {
-		util.Debug("Error downloading sponsorship data: %s", err)
+		util.Debug("Error downloading sponsorship data from GitHub: %s", err)
+		// Don't update data if download fails, keep existing data
 		return
 	}
 
 	m.data = &newData
+
+	// Save to local storage
+	if err := m.fileStorage.Write(&newData); err != nil {
+		util.Debug("Error saving sponsorship data to local storage: %s", err)
+	}
 
 	// Update state
 	m.state.UpdatedAt = time.Now()
