@@ -142,18 +142,138 @@ Use descriptive branch names that include:
 - Your GitHub username
 - Brief description of the work
 
+Format: `YYYYMMDD_<username>_<short_description>`
+
 Examples:
 
 - `20250719_rfay_vite_docs`
 - `20250719_username_fix_networking`
 - `20250719_contributor_update_tests`
 
+**Branch Creation Strategy:**
+
+The recommended approach for creating branches is:
+
+```bash
+git fetch upstream && git checkout -b <branch_name> upstream/main --no-track
+```
+
+This method:
+
+- Fetches latest upstream changes
+- Creates branch directly from upstream/main
+- Doesn't require syncing local main branch
+- Uses --no-track to avoid tracking upstream/main
+
 ### Commit Messages
 
 After key Claude-initiated code changes, make a commit, and the commit message should mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+
+**Follow DDEV PR Title Guidelines:**
+
+Format: `<type>[optional !]: <description>[, fixes #<issue>]`
+
+Types: `build`, `ci`, `docs`, `feat`, `fix`, `refactor`, `test`
+
+- Use imperative, present tense ("change" not "changed")
+- Don't capitalize first letter
+- No period at end
+- Add `, fixes #<issue>` if applicable
+- Breaking changes require `!` after type
 
 Examples:
 
 - `feat: add Vite documentation section - Claude assisted with migrating blog content`
 - `fix: resolve networking issues in containers - Claude helped debug connection problems`
 - `docs: update CLAUDE.md with workflow guidelines - Claude suggested development improvements`
+
+### GitHub Issue Creation
+
+When creating GitHub issues, always use the proper issue template format:
+
+1. **Use the issue template structure:**
+   - Preliminary checklist (with checkboxes)
+   - Output of `ddev debug test` (in collapsible `<details>` section)
+   - Expected Behavior
+   - Actual Behavior  
+   - Steps To Reproduce
+   - Anything else?
+
+2. **Include `ddev debug test` output:**
+
+   ```bash
+   ddev debug test
+   ```
+
+   Copy the **entire output** (not just the file path) into the collapsible section using this format:
+
+   ```text
+   <details><summary>Expand `ddev debug test` diagnostic information</summary>
+   [triple backticks]
+   [PASTE COMPLETE OUTPUT HERE]
+   [triple backticks]
+   </details>
+   ```
+
+3. **Create issues with gh CLI:**
+
+   ```bash
+   gh issue create --title "Title" --body-file issue.md
+   ```
+
+### Pull Request Creation
+
+**PR Template Requirements:**
+
+The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
+
+- **The Issue:** Reference issue number with `#<issue>`
+- **How This PR Solves The Issue:** Technical explanation
+- **Manual Testing Instructions:** Step-by-step testing guide
+- **Automated Testing Overview:** Test strategy explanation
+- **Release/Deployment Notes:** Impact and considerations
+
+**Important:** For DDEV development, commit messages should include the complete PR template content. This ensures that when the PR is created on GitHub, it will be pre-populated and won't require additional editing. Use the full template format from `.github/PULL_REQUEST_TEMPLATE.md` in your commit message body.
+
+### Pre-Commit Workflow
+
+**Critical Requirements Before Committing:**
+
+1. **Run appropriate tests:**
+
+   ```bash
+   make test           # Run all tests (standard)
+   make testpkg        # Run package tests only
+   make testcmd        # Run command tests only
+   ```
+
+   For targeted testing:
+
+   ```bash
+   go test -v -run TestSpecificTestName ./pkg/...
+   ```
+
+   See [Testing Documentation](https://ddev.readthedocs.io/en/stable/developers/building-contributing/#testing) for detailed testing guidance.
+
+2. **Run static analysis:**
+
+   ```bash
+   make staticrequired
+   ```
+
+   This runs all required checks:
+
+   - golangci-lint (Go code quality)
+   - markdownlint (Markdown formatting)
+   - mkdocs (Documentation build)
+   - pyspelling (Spell checking)
+
+**Complete Pre-Commit Checklist:**
+
+1. Make your changes
+2. Run appropriate tests (`make test` or targeted tests)
+3. Run `make staticrequired`
+4. Fix any issues reported
+5. Stage changes with `git add`
+6. Commit with proper message format
+7. Push branch and create PR
