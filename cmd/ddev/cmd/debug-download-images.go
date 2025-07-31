@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -45,7 +43,7 @@ ddev debug download-images --all
 			}
 		}
 
-		additionalImages := map[string]string{}
+		var additionalImages []string
 
 		if downloadAll {
 			util.Success("Downloading images for all projects")
@@ -65,9 +63,7 @@ ddev debug download-images --all
 					util.Warning("Failed to get images for '%s': %v", app.Name, err)
 					continue
 				}
-				for k, v := range appImages {
-					additionalImages[k] = v
-				}
+				additionalImages = append(additionalImages, appImages...)
 			}
 		} else {
 			app, err := ddevapp.GetActiveApp(projectName)
@@ -86,16 +82,16 @@ ddev debug download-images --all
 			} else {
 				util.Success("Downloading basic images")
 
-				additionalImages = map[string]string{
+				additionalImages = []string{
 					// Provide at least the default database image
-					fmt.Sprintf("ddev-dbserver-%s-%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion): docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion),
+					docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion),
 				}
 			}
 		}
 
 		err = ddevapp.PullBaseContainerImages(additionalImages, true)
 		if err != nil {
-			util.Failed("Failed to PullBaseContainerImages(): %v", err)
+			util.Failed("Failed to pull DDEV images: %v", err)
 		}
 
 		util.Success("Successfully downloaded DDEV images")

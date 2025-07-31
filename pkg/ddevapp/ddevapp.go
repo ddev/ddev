@@ -1278,7 +1278,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	warnMissingDocroot(app)
 
-	err = PullBaseContainerImages(map[string]string{}, false)
+	var additionalImages []string
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		additionalImages = append(additionalImages, app.GetDBImage())
+	}
+
+	err = PullBaseContainerImages(additionalImages, false)
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1869,39 +1874,27 @@ func (app *DdevApp) PullContainerImages(pullAlways bool) error {
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image, busybox, and ddev-utilities for housekeeping.
-func PullBaseContainerImages(images map[string]string, pullAlways bool) error {
-	base := map[string]string{
-		"ddev-webserver": ddevImages.GetWebImage(),
-		"busybox":        versionconstants.BusyboxImage,
-		"ddev-utilities": versionconstants.UtilitiesImage,
+func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
+	base := []string{
+		ddevImages.GetWebImage(),
+		versionconstants.BusyboxImage,
+		versionconstants.UtilitiesImage,
 	}
-	for service, image := range FindNotOmittedImages(nil) {
-		base[service] = image
+	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
+		base = append(base, ddevImages.GetXhguiImage())
 	}
-	for service, image := range images {
-		// Ensure each image appears only once in base,
-		// remove any existing service using the same image
-		for k, v := range base {
-			if v == image {
-				delete(base, k)
-			}
-		}
-		base[service] = image
-	}
+	base = append(base, FindNotOmittedImages(nil)...)
+	base = append(base, additionalImages...)
 	return dockerutil.PullImages(base, pullAlways)
 }
 
-// FindAllImages returns map of image tags for all containers in the compose file
-func (app *DdevApp) FindAllImages() (map[string]string, error) {
-	images := map[string]string{}
-
+// FindAllImages returns an array of image tags for all containers in the compose file
+func (app *DdevApp) FindAllImages() ([]string, error) {
+	var images []string
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
-		return images, fmt.Errorf("app.ComposeYaml is not initialized for %s", app.Name)
+		return images, nil
 	}
-
-	composeName := app.GetComposeProjectName()
-
-	for name, service := range app.ComposeYaml.Services {
+	for _, service := range app.ComposeYaml.Services {
 		image := service.Image
 		if image == "" {
 			continue
@@ -1912,15 +1905,14 @@ func (app *DdevApp) FindAllImages() (map[string]string, error) {
 				image = strings.TrimSuffix(image, "-"+app.Name)
 			}
 		}
-		images[composeName+"-"+name] = image
+		images = append(images, image)
 	}
-
 	return images, nil
 }
 
 // FindNotOmittedImages returns an array of image names not omitted by global or project configuration
-func FindNotOmittedImages(app *DdevApp) map[string]string {
-	images := map[string]string{}
+func FindNotOmittedImages(app *DdevApp) []string {
+	var images []string
 	containerImageMap := map[string]func() string{
 		SSHAuthName:            ddevImages.GetSSHAuthImage,
 		nodeps.RouterContainer: ddevImages.GetRouterImage,
@@ -1931,7 +1923,7 @@ func FindNotOmittedImages(app *DdevApp) map[string]string {
 			continue
 		}
 		if app == nil || !nodeps.ArrayContainsString(app.OmitContainers, containerName) {
-			images[containerName] = getImage()
+			images = append(images, getImage())
 		}
 	}
 

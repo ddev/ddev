@@ -3,6 +3,7 @@ package dockerutil
 import (
 	"context"
 	"os"
+	"regexp"
 	"strings"
 
 	composeLoader "github.com/compose-spec/compose-go/v2/loader"
@@ -58,7 +59,7 @@ func CreateComposeProject(yamlStr string) (*composeTypes.Project, error) {
 // PullImages pulls images in parallel if they don't exist locally
 // If pullAlways is true, it will always pull
 // Otherwise, it will only pull if the image doesn't exist
-func PullImages(images map[string]string, pullAlways bool) error {
+func PullImages(images []string, pullAlways bool) error {
 	if len(images) == 0 {
 		return nil
 	}
@@ -68,11 +69,18 @@ func PullImages(images map[string]string, pullAlways bool) error {
 		return err
 	}
 
-	for service, image := range images {
+	for _, image := range images {
+		if image == "" {
+			continue
+		}
 		if !pullAlways {
 			if imageExists, _ := ImageExistsLocally(image); imageExists {
 				continue
 			}
+		}
+		service := sanitizeServiceName(image)
+		if _, exists := composeYamlPull.Services[service]; exists {
+			continue
 		}
 		composeYamlPull.Services[service] = composeTypes.ServiceConfig{
 			Image: image,
@@ -97,7 +105,24 @@ func PullImages(images map[string]string, pullAlways bool) error {
 
 // Pull pulls image if it doesn't exist locally
 func Pull(image string) error {
-	parts := strings.SplitN(image, "/", 2)
-	service := strings.SplitN(parts[len(parts)-1], ":", 2)[0]
-	return PullImages(map[string]string{service: image}, false)
+	return PullImages([]string{image}, false)
+}
+
+// sanitizeServiceName sanitizes a string to be a valid Docker Compose service name
+// by replacing any characters that don't match [a-zA-Z0-9._-] with hyphens
+// See https://github.com/compose-spec/compose-go/blob/main/schema/compose-spec.json for allowed pattern
+func sanitizeServiceName(input string) string {
+	if input == "" {
+		return ""
+	}
+
+	invalidChars := regexp.MustCompile(`[^a-zA-Z0-9._-]`)
+	sanitized := invalidChars.ReplaceAllString(input, "-")
+
+	multipleHyphens := regexp.MustCompile(`-+`)
+	sanitized = multipleHyphens.ReplaceAllString(sanitized, "-")
+
+	sanitized = strings.Trim(sanitized, "-")
+
+	return sanitized
 }
