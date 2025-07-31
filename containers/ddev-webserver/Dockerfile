@@ -2,7 +2,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
-FROM ddev/ddev-php-base:v1.24.7 AS ddev-webserver-base
+FROM ddev/ddev-php-base:20250728_rfay_debian_trixie AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -31,7 +31,8 @@ RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | b
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools
+# Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility
+RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm
 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
@@ -47,7 +48,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     less \
     libcap2-bin \
     libldap-common \
-    libmagickcore-6.q16-6-extra \
+    libmagickcore-7.q16-10-extra \
     locales \
     mariadb-client \
     openssh-client \
@@ -93,13 +94,6 @@ RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s 
 RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
 RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
 
-### Drupal 11+ requires a minimum sqlite3 version (3.45 currently)
-### TODO: When we have this from upstream Debian 13 Trixie, we must remove this stanza
-ARG SQLITE_VERSION="3.45.1"
-RUN mkdir -p /usr/local/sqlite3-drupal11 && cd /usr/local/sqlite3-drupal11 && \
-    wget https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/sqlite3_${SQLITE_VERSION}-1_${TARGETARCH}.deb && \
-    wget https://snapshot.debian.org/archive/debian/20240203T152533Z/pool/main/s/sqlite3/libsqlite3-0_${SQLITE_VERSION}-1_${TARGETARCH}.deb
-
 ### -------------------------END ddev-webserver-base------------------------------
 
 ### -------------------------ddev-webserver-dev-base------------------------------
@@ -110,8 +104,10 @@ SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.3"
 
+# Workaround for Blackfire SHA1 GPG signature issue on Debian Trixie
+# Skip signature verification for Blackfire repository due to SHA1 deprecation
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+RUN echo "deb [arch=$(dpkg --print-architecture) trusted=yes] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get -qq update
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
@@ -245,8 +241,10 @@ ENV PHP_DEFAULT_VERSION="8.3"
 ARG TARGETPLATFORM
 ARG TARGETARCH
 
+# Workaround for Blackfire SHA1 GPG signature issue on Debian Trixie
+# Skip signature verification for Blackfire repository due to SHA1 deprecation
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+RUN echo "deb [arch=$(dpkg --print-architecture) trusted=yes] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get -qq update
 
 # Blackfire outputs errors about not having systemd, but they do no harm to our usage
