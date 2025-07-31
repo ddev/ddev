@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -15,21 +17,16 @@ var downloadAll bool
 
 // DebugDownloadImagesCmd implements the ddev debug download-images command
 var DebugDownloadImagesCmd = &cobra.Command{
-	Use:   "download-images [project]",
-	Short: "Download all images required by DDEV",
+	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
+	Use:               "download-images [projectname ...]",
+	Short:             "Download all images required by DDEV",
 	Example: `ddev debug download-images
 ddev debug download-images <project-name>
 ddev debug download-images --all
 `,
-	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
-	Args:              cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		projectName := ""
-		if len(args) == 1 {
-			if downloadAll {
-				util.Failed("Cannot specify project name with --all")
-			}
-			projectName = args[0]
+		if len(args) > 0 && downloadAll {
+			util.Failed("Cannot specify project name with --all")
 		}
 
 		_, err := dockerutil.DownloadDockerComposeIfNeeded()
@@ -45,30 +42,22 @@ ddev debug download-images --all
 
 		var additionalImages []string
 
-		if downloadAll {
-			util.Success("Downloading images for all projects")
-			projects, err := ddevapp.GetProjects(false)
-			if err != nil {
-				util.Failed("Failed to get projects: %v", err)
-			}
-			for _, app := range projects {
-				app.DockerEnv()
-				err = app.WriteDockerComposeYAML()
-				if err != nil {
-					util.Warning("Failed to run `docker-compose config` for '%s': %v", app.Name, err)
-					continue
-				}
-				appImages, err := app.FindAllImages()
-				if err != nil {
-					util.Warning("Failed to get images for '%s': %v", app.Name, err)
-					continue
-				}
-				additionalImages = append(additionalImages, appImages...)
+		// Skip project validation
+		originalRunValidateConfig := ddevapp.RunValidateConfig
+		ddevapp.RunValidateConfig = false
+		projects, err := getRequestedProjects(args, downloadAll)
+		ddevapp.RunValidateConfig = originalRunValidateConfig
+
+		if err != nil {
+			util.Success("Downloading basic images")
+			additionalImages = []string{
+				// Provide at least the default database image
+				docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion),
 			}
 		} else {
-			app, err := ddevapp.GetActiveApp(projectName)
-			if err == nil {
-				util.Success("Downloading images for project '%s'", app.Name)
+			var projectNames []string
+			for _, app := range projects {
+				projectNames = append(projectNames, app.Name)
 				app.DockerEnv()
 				err = app.WriteDockerComposeYAML()
 				if err != nil {
@@ -78,15 +67,9 @@ ddev debug download-images --all
 				if err != nil {
 					util.Failed("Failed to get images for '%s': %v", app.Name, err)
 				}
-				additionalImages = appImages
-			} else {
-				util.Success("Downloading basic images")
-
-				additionalImages = []string{
-					// Provide at least the default database image
-					docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion),
-				}
+				additionalImages = append(additionalImages, appImages...)
 			}
+			util.Success("Downloading images for %s", strings.Join(projectNames, ", "))
 		}
 
 		err = ddevapp.PullBaseContainerImages(additionalImages, true)
