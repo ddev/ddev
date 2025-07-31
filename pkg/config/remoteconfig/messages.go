@@ -259,6 +259,14 @@ func (c *remoteConfig) checkVersions(versions string) bool {
 	return true
 }
 
+// ShowSponsorshipAppreciation shows a sponsorship appreciation message if data is available
+func (c *remoteConfig) ShowSponsorshipAppreciation() {
+	// This would integrate with sponsorship data when available
+	// Example implementation showing how sponsorship data could be used
+	// Currently just a placeholder to demonstrate integration capability
+	util.Debug("Sponsorship appreciation feature available - could show funding status, thank sponsors, etc.")
+}
+
 // getTicker returns ticker data from either the direct structure or legacy structure
 func (c *remoteConfig) getTicker() internal.Ticker {
 	// Try direct ticker first (new format)
