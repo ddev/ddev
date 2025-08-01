@@ -38,7 +38,7 @@ var XhguiImage = "ddev/ddev-xhgui"
 var XhguiTag = "v1.24.7"
 
 // UtilitiesImage is used in bash scripts
-var UtilitiesImage = "ddev/ddev-utilities"
+var UtilitiesImage = "ddev/ddev-utilities:latest"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
