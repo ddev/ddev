@@ -267,13 +267,8 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 	util.Debug("Sponsorship appreciation feature available - could show funding status, thank sponsors, etc.")
 }
 
-// getTicker returns ticker data from either the direct structure or legacy structure
+// getTicker returns ticker data from the messages structure
 func (c *remoteConfig) getTicker() internal.Ticker {
-	// Try direct ticker first (new format)
-	if len(c.remoteConfig.Ticker.Messages) > 0 || c.remoteConfig.Ticker.Interval > 0 {
-		return c.remoteConfig.Ticker
-	}
-	// Fall back to legacy structure
 	return c.remoteConfig.Messages.Ticker
 }
 

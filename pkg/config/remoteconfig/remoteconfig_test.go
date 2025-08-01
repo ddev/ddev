@@ -46,24 +46,21 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 		err := downloader.Download(ctx, &remoteConfig)
 		require.NoError(err, "Failed to download remote config")
 
-		// Debug: Print what we actually got (check both direct and legacy structure)
-		directMessages := len(remoteConfig.Ticker.Messages)
-		legacyMessages := len(remoteConfig.Messages.Ticker.Messages)
-		directInterval := remoteConfig.Ticker.Interval
-		legacyInterval := remoteConfig.Messages.Ticker.Interval
+		// Debug: Print what we actually got
+		tickerMessages := len(remoteConfig.Messages.Ticker.Messages)
+		tickerInterval := remoteConfig.Messages.Ticker.Interval
 
 		t.Logf("Downloaded remote config: UpdateInterval=%d", remoteConfig.UpdateInterval)
-		t.Logf("Direct ticker: Messages=%d, Interval=%d", directMessages, directInterval)
-		t.Logf("Legacy ticker: Messages=%d, Interval=%d", legacyMessages, legacyInterval)
+		t.Logf("Ticker: Messages=%d, Interval=%d", tickerMessages, tickerInterval)
 
-		// Verify we got meaningful data (use direct structure which should have the data)
+		// Verify we got meaningful data
 		require.Greater(remoteConfig.UpdateInterval, 0, "Update interval should be greater than 0")
-		require.Greater(len(remoteConfig.Ticker.Messages), 50, "Should have many ticker messages")
-		require.Greater(remoteConfig.Ticker.Interval, 0, "Ticker interval should be greater than 0")
+		require.Greater(len(remoteConfig.Messages.Ticker.Messages), 50, "Should have many ticker messages")
+		require.Greater(remoteConfig.Messages.Ticker.Interval, 0, "Ticker interval should be greater than 0")
 
 		// Verify some message content
 		foundDDEVMessage := false
-		for _, msg := range remoteConfig.Ticker.Messages {
+		for _, msg := range remoteConfig.Messages.Ticker.Messages {
 			require.NotEmpty(msg.Message, "Message content should not be empty")
 			if len(msg.Message) > 4 && msg.Message[:4] == "DDEV" {
 				foundDDEVMessage = true
@@ -254,12 +251,12 @@ func TestRemoteConfigStructure(t *testing.T) {
 
 	// Test structure
 	require.Equal(10, remoteConfig.UpdateInterval, "Update interval should be 10 hours as per remote config")
-	require.Greater(remoteConfig.Ticker.Interval, 0, "Ticker interval should be positive")
-	require.Greater(len(remoteConfig.Ticker.Messages), 70, "Should have many ticker messages (at least 70)")
+	require.Greater(remoteConfig.Messages.Ticker.Interval, 0, "Ticker interval should be positive")
+	require.Greater(len(remoteConfig.Messages.Ticker.Messages), 70, "Should have many ticker messages (at least 70)")
 
 	// Test message content quality
 	messageContentTypes := make(map[string]int)
-	for _, msg := range remoteConfig.Ticker.Messages {
+	for _, msg := range remoteConfig.Messages.Ticker.Messages {
 		require.NotEmpty(msg.Message, "Each message should have content")
 		require.LessOrEqual(len(msg.Message), 500, "Messages should be reasonably short")
 
@@ -289,7 +286,7 @@ func TestRemoteConfigStructure(t *testing.T) {
 
 	// The important test is that we have meaningful DDEV-related content
 	totalCategorized := messageContentTypes["ddev"] + messageContentTypes["command"] + messageContentTypes["community"] + messageContentTypes["sponsor"] + messageContentTypes["other"]
-	require.Equal(len(remoteConfig.Ticker.Messages), totalCategorized, "All messages should be categorized")
+	require.Equal(len(remoteConfig.Messages.Ticker.Messages), totalCategorized, "All messages should be categorized")
 
 	t.Logf("Message content distribution: %+v", messageContentTypes)
 }

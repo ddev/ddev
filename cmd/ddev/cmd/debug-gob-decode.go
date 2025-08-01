@@ -48,7 +48,6 @@ type RemoteConfig struct {
 	UpdateInterval int      `json:"update-interval,omitempty"`
 	Remote         Remote   `json:"remote,omitempty"`
 	Messages       Messages `json:"messages,omitempty"`
-	Ticker         Ticker   `json:"ticker,omitempty"`
 }
 
 type fileStorageData struct {
@@ -126,7 +125,8 @@ func decodeGobFile(filename string) error {
 		return fmt.Errorf("marshaling to JSON: %w", err)
 	}
 
-	output.UserOut.Printf("Decoded gob file contents:\n%s\n", string(jsonData))
+	fmt.Fprintf(os.Stderr, "Decoded gob file contents:\n")
+	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }
 
@@ -151,7 +151,8 @@ func tryDecodeRemoteConfig(filename string) error {
 		return err
 	}
 
-	output.UserOut.Printf("Remote config file contents:\n%s\n", string(jsonData))
+	fmt.Fprintf(os.Stderr, "Remote config file contents:\n")
+	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }
 

@@ -8,12 +8,7 @@ type Remote struct {
 }
 
 type RemoteConfig struct {
-	UpdateInterval int    `json:"update-interval,omitempty"`
-	Remote         Remote `json:"remote,omitempty"`
-
-	// Legacy structure for backward compatibility
-	Messages Messages `json:"messages,omitempty"`
-
-	// Direct ticker structure as it appears in the actual JSON
-	Ticker Ticker `json:"ticker,omitempty"`
+	UpdateInterval int      `json:"update-interval,omitempty"`
+	Remote         Remote   `json:"remote,omitempty"`
+	Messages       Messages `json:"messages,omitempty"`
 }
