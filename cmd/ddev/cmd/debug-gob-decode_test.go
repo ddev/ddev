@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/stretchr/testify/assert"
@@ -22,53 +23,10 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		assert.Error(err, "Should return error for non-existent file")
 	})
 
-	// Test with a valid gob file (create test data)
+	// Test with a valid gob file (using pre-generated test data)
 	t.Run("ValidGobFile", func(t *testing.T) {
-		// Create a temporary directory for test files
-		tmpDir, err := os.MkdirTemp("", "ddev-gob-test")
-		require.NoError(t, err)
-		defer os.RemoveAll(tmpDir)
-
-		// Create test remote config data that matches our structure
-		testRemoteConfig := RemoteConfig{
-			UpdateInterval: 24,
-			Remote: Remote{
-				Owner:    "test-owner",
-				Repo:     "test-repo",
-				Ref:      "test-ref",
-				Filepath: "test-config.jsonc",
-			},
-			Messages: Messages{
-				Notifications: Notifications{
-					Interval: 12,
-					Infos:    []Message{{Message: "Test info message"}},
-					Warnings: []Message{{Message: "Test warning message"}},
-				},
-				Ticker: Ticker{
-					Interval: 6,
-					Messages: []Message{
-						{Message: "Test ticker message 1"},
-						{Message: "Test ticker message 2", Title: "Custom Title"},
-					},
-				},
-			},
-		}
-
-		testData := fileStorageData{
-			RemoteConfig: testRemoteConfig,
-		}
-
-		// Write test gob file
-		testFile := filepath.Join(tmpDir, "test-remote-config")
-		file, err := os.Create(testFile)
-		require.NoError(t, err)
-		defer file.Close()
-
-		encoder := gob.NewEncoder(file)
-		err = encoder.Encode(testData)
-		require.NoError(t, err)
-		file.Close()
-
+		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-remote-config.gob")
+		
 		// Test decoding the file
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
 		assert.NoError(err)
@@ -78,7 +36,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		err = json.Unmarshal([]byte(out), &decodedConfig)
 		require.NoError(t, err, "failed to parse JSON output: %s", out)
 
-		// Verify the decoded data matches what we wrote
+		// Verify the decoded data matches expected test data
 		assert.Equal(24, decodedConfig.UpdateInterval)
 		assert.Equal("test-owner", decodedConfig.Remote.Owner)
 		assert.Equal("test-repo", decodedConfig.Remote.Repo)
@@ -176,6 +134,77 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 
 		_, err = exec.RunHostCommand(DdevBin, "debug", "gob-decode", invalidFile)
 		assert.Error(err, "Should return error for invalid gob file")
+	})
+	// Test amplitude cache gob file
+	t.Run("AmplitudeCacheFile", func(t *testing.T) {
+		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-amplitude-cache.gob")
+		
+		// Test decoding the file
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
+		assert.NoError(err)
+
+		// Parse the JSON output
+		var decodedCache eventCache
+		err = json.Unmarshal([]byte(out), &decodedCache)
+		require.NoError(t, err, "failed to parse JSON output: %s", out)
+
+		// Verify the decoded data matches expected test data
+		assert.Equal("2024-08-01T12:00:00Z", decodedCache.LastSubmittedAt.Format(time.RFC3339))
+		assert.Len(decodedCache.Events, 2)
+		
+		// Verify first event
+		assert.Equal("test_event_1", decodedCache.Events[0].EventType)
+		assert.Equal("user123", decodedCache.Events[0].UserID)
+		assert.Equal("device456", decodedCache.Events[0].DeviceID)
+		assert.Equal(int64(1722544763), decodedCache.Events[0].Time)
+		assert.Equal("test_value", decodedCache.Events[0].EventProps["test_prop"])
+		assert.Equal(float64(42), decodedCache.Events[0].EventProps["count"]) // JSON unmarshals numbers as float64
+		assert.Equal("developer", decodedCache.Events[0].UserProps["user_type"])
+
+		// Verify second event
+		assert.Equal("test_event_2", decodedCache.Events[1].EventType)
+		assert.Equal("device789", decodedCache.Events[1].DeviceID)
+		assert.Equal("debug_command", decodedCache.Events[1].EventProps["action"])
+	})
+
+	// Test sponsorship data gob file
+	t.Run("SponsorshipDataFile", func(t *testing.T) {
+		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-sponsorship-data.gob")
+		
+		// Test decoding the file
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
+		assert.NoError(err)
+
+		// Parse the JSON output
+		var decodedData SponsorshipData
+		err = json.Unmarshal([]byte(out), &decodedData)
+		require.NoError(t, err, "failed to parse JSON output: %s", out)
+
+		// Verify the decoded data matches expected test data
+		assert.Equal(1050.00, decodedData.TotalIncome)
+		assert.Equal(2, decodedData.SponsorCount)
+		assert.Len(decodedData.Sponsors, 2)
+
+		// Verify first sponsor
+		assert.Equal("ACME Corporation", decodedData.Sponsors[0].Name)
+		assert.Equal(1000.00, decodedData.Sponsors[0].Amount)
+		assert.Equal("USD", decodedData.Sponsors[0].Currency)
+		assert.Equal("monthly", decodedData.Sponsors[0].Type)
+		assert.Equal("Supporting open source development", decodedData.Sponsors[0].Description)
+
+		// Verify second sponsor
+		assert.Equal("Developer Jane", decodedData.Sponsors[1].Name)
+		assert.Equal(50.00, decodedData.Sponsors[1].Amount)
+		assert.Equal("one-time", decodedData.Sponsors[1].Type)
+	})
+
+	// Test generic gob fallback - should fail gracefully
+	t.Run("GenericGobFallback", func(t *testing.T) {
+		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-generic.gob")
+		
+		// Test decoding the file - this should fail because generic fallback has limitations
+		_, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", testFile)
+		assert.Error(err, "Generic gob decoding should fail for concrete types not encoded as interface{}")
 	})
 }
 
