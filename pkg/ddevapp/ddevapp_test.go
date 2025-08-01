@@ -3432,9 +3432,8 @@ func TestHttpsRedirection(t *testing.T) {
 	if app.GetPrimaryRouterHTTPSPort() == "443" && app.GetPrimaryRouterHTTPPort() == "80" {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php"})
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php"})
-		// Temporarily commented out directory redirect expectations for testing
-		// expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
-		// expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
 	types := ddevapp.GetValidAppTypes()
