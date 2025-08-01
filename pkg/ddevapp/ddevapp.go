@@ -1878,7 +1878,6 @@ func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 	base := []string{
 		ddevImages.GetWebImage(),
 		versionconstants.UtilitiesImage,
-		versionconstants.UtilitiesImage,
 	}
 	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
 		base = append(base, ddevImages.GetXhguiImage())
