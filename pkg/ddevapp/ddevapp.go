@@ -1278,7 +1278,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	warnMissingDocroot(app)
 
-	err = PullBaseContainerImages()
+	var additionalImages []string
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		additionalImages = append(additionalImages, app.GetDBImage())
+	}
+
+	err = PullBaseContainerImages(additionalImages, false)
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1466,7 +1471,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// This needs to be done after WriteDockerComposeYAML() to get the right images
-	err = app.PullContainerImages()
+	err = app.PullContainerImages(false)
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1859,43 +1864,28 @@ func (app *DdevApp) Restart() error {
 }
 
 // PullContainerImages configured Docker images with full output, since docker-compose up doesn't have nice output
-func (app *DdevApp) PullContainerImages() error {
+func (app *DdevApp) PullContainerImages(pullAlways bool) error {
 	images, err := app.FindAllImages()
 	if err != nil {
 		return err
 	}
-	// Don't pull xhgui if not in xhgui mode
-	if app.GetXHProfMode() != types.XHProfModeXHGui {
-		images = nodeps.RemoveItemFromSlice(images, ddevImages.GetXhguiImage())
-	}
-	images = append(images, FindNotOmittedImages(app)...)
-
-	for _, i := range images {
-		err := dockerutil.Pull(i)
-		if err != nil {
-			return err
-		}
-		util.Debug("Pulled image for %s", i)
-	}
-
-	return nil
+	return dockerutil.PullImages(images, pullAlways)
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image, busybox, and ddev-utilities for housekeeping.
-func PullBaseContainerImages() error {
-	images := []string{ddevImages.GetWebImage(), versionconstants.BusyboxImage, versionconstants.UtilitiesImage}
-	images = append(images, FindNotOmittedImages(nil)...)
-
-	for _, i := range images {
-		err := dockerutil.Pull(i)
-		if err != nil {
-			return err
-		}
-		util.Debug("Pulled image for %s", i)
+func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
+	base := []string{
+		ddevImages.GetWebImage(),
+		versionconstants.BusyboxImage,
+		versionconstants.UtilitiesImage,
 	}
-
-	return nil
+	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
+		base = append(base, ddevImages.GetXhguiImage())
+	}
+	base = append(base, FindNotOmittedImages(nil)...)
+	base = append(base, additionalImages...)
+	return dockerutil.PullImages(base, pullAlways)
 }
 
 // FindAllImages returns an array of image tags for all containers in the compose file
@@ -2199,7 +2189,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		errcheck := "set -eu"
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
-	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 
 	stdout := os.Stdout
 	stderr := os.Stderr
@@ -2214,7 +2203,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	var outRes, errRes string
 	r := append(baseComposeExecCmd, opts.RawCmd...)
 	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
+		err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       r,
+		}, os.Stdin, stdout, stderr)
 	} else {
 		outRes, errRes, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
@@ -2279,7 +2271,10 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 	args = append(args, shell, "-c", opts.Cmd)
 
-	return dockerutil.ComposeWithStreams([]string{app.DockerComposeFullRenderedYAMLPath()}, os.Stdin, os.Stdout, os.Stderr, args...)
+	return dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		Action:       args,
+	}, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
