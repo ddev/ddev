@@ -215,7 +215,7 @@ func TestContainerWait(t *testing.T) {
 	labels = map[string]string{"test": "quickexit"}
 	// Make sure none already exist
 	_ = dockerutil.RemoveContainersByLabels(labels)
-	c1, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+"-quickexit-"+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels, nil, nil)
+	c1, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-quickexit-"+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels, nil, nil)
 	t.Cleanup(func() {
 		_ = dockerutil.RemoveContainer(c1)
 		assert.NoError(err, "failed to remove container %v (%s)", labels, c1)
@@ -231,7 +231,7 @@ func TestContainerWait(t *testing.T) {
 	// Make sure none already exist
 	_ = dockerutil.RemoveContainersByLabels(labels)
 
-	c2, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+"-nohealthcheck-busybox-sleep-60-"+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels, nil, nil)
+	c2, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-nohealthcheck-busybox-sleep-60-"+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels, nil, nil)
 	t.Cleanup(func() {
 		err = dockerutil.RemoveContainer(c2)
 		assert.NoError(err, "failed to remove container (sleep 60) %v (%s)", labels, c2)
@@ -427,7 +427,7 @@ func TestFindContainerByName(t *testing.T) {
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, containerName, []string{"sleep", "2"}, nil, nil, nil, "25", false, false, nil, nil, nil)
+	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"sleep", "2"}, nil, nil, nil, "25", false, false, nil, nil, nil)
 	require.NoError(t, err)
 
 	defer func() {
@@ -532,7 +532,7 @@ func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
 	ctx, client := dockerutil.GetDockerClient()
 
-	id, _, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil, nil, nil)
+	id, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil, nil, nil)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -623,7 +623,7 @@ func TestCopyIntoVolume(t *testing.T) {
 
 	// Make sure that the content is the same, and that .test.sh is executable
 	// On Windows the upload can result in losing executable bit
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	assert.NoError(err)
 	assert.Equal(`.test.sh
 root.txt
@@ -635,7 +635,7 @@ hi this is a test file
 
 	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
 	assert.NoError(err)
-	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil, nil, nil)
+	_, out, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil, nil, nil)
 	assert.NoError(err)
 	assert.Equal(`/mnt/TestCopyIntoVolume/somesubdir
 .:
@@ -651,7 +651,7 @@ subdir1.txt
 	assert.NoError(err)
 
 	// Make sure that the content is the same, and that .test.sh is executable
-	_, out, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	_, out, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	assert.NoError(err)
 	assert.Equal("root.txt here\n", out)
 
@@ -659,10 +659,10 @@ subdir1.txt
 	err = dockerutil.CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()+"2"), t.Name(), "", "0", "", true)
 	require.NoError(t, err)
 
-	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/subdir1.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/subdir1.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	require.Error(t, err)
 
-	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	require.NoError(t, err)
 }
 

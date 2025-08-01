@@ -179,7 +179,7 @@ We can use a single Docker command to make sure Docker is set up to do what we w
 In your *project directory* run the following (using Git Bash if you’re on Windows!):
 
 ```
-docker run --rm -t -p 80:80 -p 443:443 -v "//$PWD:/tmp/projdir" busybox sh -c "echo ---- Project Directory && ls /tmp/projdir"
+docker run --rm -t -p 80:80 -p 443:443 -v "//$PWD:/tmp/projdir" ddev/ddev-utilities sh -c "echo ---- Project Directory && ls /tmp/projdir"
 ```
 
 The result should be a list of the files in your project directory.

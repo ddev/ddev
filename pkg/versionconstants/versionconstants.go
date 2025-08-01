@@ -31,9 +31,6 @@ var SSHAuthImage = "ddev/ddev-ssh-agent"
 // SSHAuthTag is ssh-agent auth tag
 var SSHAuthTag = "v1.24.7"
 
-// BusyboxImage is used a couple of places for a quick-pull
-var BusyboxImage = "busybox:stable"
-
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 

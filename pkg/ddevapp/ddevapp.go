@@ -1873,11 +1873,11 @@ func (app *DdevApp) PullContainerImages(pullAlways bool) error {
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
-// We always need web image, busybox, and ddev-utilities for housekeeping.
+// We always need web image, and ddev-utilities for housekeeping.
 func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 	base := []string{
 		ddevImages.GetWebImage(),
-		versionconstants.BusyboxImage,
+		versionconstants.UtilitiesImage,
 		versionconstants.UtilitiesImage,
 	}
 	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
