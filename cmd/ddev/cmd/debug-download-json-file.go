@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
@@ -170,14 +171,22 @@ func downloadSponsorshipData(url string, updateLocalStorage bool) error {
 // updateRemoteConfigStorage updates the local remote config cache
 func updateRemoteConfigStorage(config types.RemoteConfigData) error {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	fileStorage := storage.NewFileStorage(globalDir + "/.remote-config")
+	// Ensure the directory exists
+	if err := os.MkdirAll(globalDir, 0755); err != nil {
+		return err
+	}
+	fileStorage := storage.NewFileStorage(filepath.Join(globalDir, ".remote-config"))
 	return fileStorage.Write(config)
 }
 
 // updateSponsorshipDataStorage updates the local sponsorship data cache
 func updateSponsorshipDataStorage(data types.SponsorshipData) error {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	sponsorshipStorage := storage.NewSponsorshipFileStorage(globalDir + "/.sponsorship-data")
+	// Ensure the directory exists
+	if err := os.MkdirAll(globalDir, 0755); err != nil {
+		return err
+	}
+	sponsorshipStorage := storage.NewSponsorshipFileStorage(filepath.Join(globalDir, ".sponsorship-data"))
 	return sponsorshipStorage.Write(&data)
 }
 
