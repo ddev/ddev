@@ -84,7 +84,7 @@ ddev debug gob-decode /path/to/some/file.gob`,
 		if err != nil {
 			return fmt.Errorf("error decoding gob file %s: %w", filename, err)
 		}
-		
+
 		return nil
 	},
 }

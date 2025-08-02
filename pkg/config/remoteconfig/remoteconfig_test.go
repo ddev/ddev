@@ -188,7 +188,7 @@ func TestSponsorshipDataEndToEnd(t *testing.T) {
 
 	t.Run("SponsorshipManager", func(t *testing.T) {
 		// Create sponsorship manager
-		mgr := remoteconfig.NewSponsorshipManager(tmpDir, stateManager, alwaysInternetActive)
+		mgr := remoteconfig.NewSponsorshipManager(tmpDir, stateManager, alwaysInternetActive, 24, "ddev", "sponsorship-data", "data/all-sponsorships.json", "main")
 		require.NotNil(mgr, "Sponsorship manager should not be nil")
 
 		// Test getting sponsorship data
@@ -219,7 +219,7 @@ func TestSponsorshipDataEndToEnd(t *testing.T) {
 
 	t.Run("GlobalSponsorshipManager", func(t *testing.T) {
 		// Test global sponsorship manager
-		globalMgr := remoteconfig.InitGlobalSponsorship(tmpDir, stateManager, alwaysInternetActive)
+		globalMgr := remoteconfig.InitGlobalSponsorship(tmpDir, stateManager, alwaysInternetActive, 24, "ddev", "sponsorship-data", "data/all-sponsorships.json", "main")
 		require.NotNil(globalMgr, "Global sponsorship manager should not be nil")
 
 		// Test retrieval

@@ -474,13 +474,18 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Controls the display of the ticker messages.
 
 # remote_config: # Intended for debugging only, should not be changed.
-#   update_interval: 10 // Interval in hours to download the remote config
+#   update_interval: 10 // Interval in hours to download the remote config and sponsorship data
 #   remote:
 #     owner: ddev
 #     repo: remote-config
 #     ref: main
 #     filepath: remote-config.jsonc
-# Controls the download of the remote config. Please do not change.
+#   sponsorship:
+#     owner: ddev
+#     repo: sponsorship-data
+#     ref: main
+#     filepath: data/all-sponsorships.json
+# Controls the download of the remote config and sponsorship data. Please do not change.
 `
 	cfgbytes = append(cfgbytes, instructions...)
 
