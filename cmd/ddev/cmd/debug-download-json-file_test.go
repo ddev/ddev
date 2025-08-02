@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"encoding/json"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
@@ -66,7 +68,7 @@ func TestDebugDownloadJSONFileCmd(t *testing.T) {
 		require.NoError(t, err, "Output should be valid JSON: %s", out)
 
 		// Verify basic structure - these should be reasonable values
-		require.GreaterOrEqual(t, sponsorshipData.TotalMonthlyAverageIncome, 0, "Total income should be non-negative")
+		require.GreaterOrEqual(t, sponsorshipData.TotalMonthlyAverageIncome, 0.0, "Total income should be non-negative")
 		require.GreaterOrEqual(t, sponsorshipData.GitHubDDEVSponsorships.TotalSponsors, 0, "GitHub DDEV sponsors should be non-negative")
 		require.GreaterOrEqual(t, sponsorshipData.GitHubRfaySponsorships.TotalSponsors, 0, "GitHub rfay sponsors should be non-negative")
 
@@ -95,16 +97,8 @@ func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
-	// Set DDEV_GLOBAL_DDEV_DIR to our temp directory
-	originalGlobalDir := os.Getenv("DDEV_GLOBAL_DDEV_DIR")
-	os.Setenv("DDEV_GLOBAL_DDEV_DIR", tmpDir)
-	defer func() {
-		if originalGlobalDir != "" {
-			os.Setenv("DDEV_GLOBAL_DDEV_DIR", originalGlobalDir)
-		} else {
-			os.Unsetenv("DDEV_GLOBAL_DDEV_DIR")
-		}
-	}()
+	// Use t.Setenv to set XDG_CONFIG_HOME to tmpDir so .ddev is created there
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
 
 	t.Run("StorageUpdateEnabled", func(t *testing.T) {
 		// Test with storage update enabled (default)
@@ -113,14 +107,13 @@ func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
 		require.Contains(t, out, "Local remote config storage updated successfully")
 
 		// Verify that the storage file was created
-		storageFile := tmpDir + "/.remote-config"
+		storageFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".remote-config")
 		_, err = os.Stat(storageFile)
-		require.NoError(t, err, "Storage file should have been created")
+		require.NoErrorf(t, err, "Storage file should have been created at %s", storageFile)
 	})
 
 	t.Run("StorageUpdateDisabled", func(t *testing.T) {
-		// Remove any existing storage file
-		storageFile := tmpDir + "/.remote-config"
+		storageFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".remote-config")
 		os.Remove(storageFile)
 
 		// Test with storage update disabled

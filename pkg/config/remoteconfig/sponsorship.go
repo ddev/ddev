@@ -62,10 +62,10 @@ func (m *sponsorshipManager) GetSponsorshipData() (*types.SponsorshipData, error
 	return m.data, nil
 }
 
-// GetTotalMonthlyIncome returns the total monthly income from all sources
-func (m *sponsorshipManager) GetTotalMonthlyIncome() int {
+// GetTotalMonthlyIncome returns the total monthly average income as float64
+func (m *sponsorshipManager) GetTotalMonthlyIncome() float64 {
 	data, err := m.GetSponsorshipData()
-	if err != nil || data == nil {
+	if err != nil {
 		return 0
 	}
 	return data.TotalMonthlyAverageIncome

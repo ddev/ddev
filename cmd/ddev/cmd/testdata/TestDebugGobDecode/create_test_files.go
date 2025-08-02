@@ -6,67 +6,11 @@ import (
 	"encoding/gob"
 	"os"
 	"time"
+
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 )
 
 // Types matching the debug-gob-decode.go structures
-type Message struct {
-	Message    string   `json:"message"`
-	Title      string   `json:"title,omitempty"`
-	Conditions []string `json:"conditions,omitempty"`
-	Versions   string   `json:"versions,omitempty"`
-}
-
-type Notifications struct {
-	Interval int       `json:"interval"`
-	Infos    []Message `json:"infos"`
-	Warnings []Message `json:"warnings"`
-}
-
-type Ticker struct {
-	Interval int       `json:"interval"`
-	Messages []Message `json:"messages"`
-}
-
-type Messages struct {
-	Notifications Notifications `json:"notifications"`
-	Ticker        Ticker        `json:"ticker"`
-}
-
-type Remote struct {
-	Owner    string `json:"owner,omitempty"`
-	Repo     string `json:"repo,omitempty"`
-	Ref      string `json:"ref,omitempty"`
-	Filepath string `json:"filepath,omitempty"`
-}
-
-type RemoteConfig struct {
-	UpdateInterval int      `json:"update-interval,omitempty"`
-	Remote         Remote   `json:"remote,omitempty"`
-	Messages       Messages `json:"messages,omitempty"`
-}
-
-type fileStorageData struct {
-	RemoteConfig RemoteConfig
-}
-
-type SponsorshipData struct {
-	Sponsors     []Sponsor `json:"sponsors,omitempty"`
-	TotalIncome  float64   `json:"total_income,omitempty"`
-	SponsorCount int       `json:"sponsor_count,omitempty"`
-}
-
-type Sponsor struct {
-	Name        string  `json:"name,omitempty"`
-	Amount      float64 `json:"amount,omitempty"`
-	Currency    string  `json:"currency,omitempty"`
-	Type        string  `json:"type,omitempty"`
-	Description string  `json:"description,omitempty"`
-}
-
-type sponsorshipFileStorageData struct {
-	SponsorshipData SponsorshipData
-}
-
 type StorageEvent struct {
 	EventType  string                 `json:"event_type,omitempty"`
 	UserID     string                 `json:"user_id,omitempty"`
@@ -89,26 +33,34 @@ type customData struct {
 	Meta    map[string]string `json:"meta"`
 }
 
+type fileStorageData struct {
+	RemoteConfig types.RemoteConfigData
+}
+
+type sponsorshipFileStorageData struct {
+	SponsorshipData types.SponsorshipData
+}
+
 func main() {
 	// Create test remote config file
 	remoteConfigData := fileStorageData{
-		RemoteConfig: RemoteConfig{
+		RemoteConfig: types.RemoteConfigData{
 			UpdateInterval: 24,
-			Remote: Remote{
+			Remote: types.Remote{
 				Owner:    "test-owner",
 				Repo:     "test-repo",
 				Ref:      "test-ref",
 				Filepath: "test-config.jsonc",
 			},
-			Messages: Messages{
-				Notifications: Notifications{
+			Messages: types.Messages{
+				Notifications: types.Notifications{
 					Interval: 12,
-					Infos:    []Message{{Message: "Test info message"}},
-					Warnings: []Message{{Message: "Test warning message"}},
+					Infos:    []types.Message{{Message: "Test info message"}},
+					Warnings: []types.Message{{Message: "Test warning message"}},
 				},
-				Ticker: Ticker{
+				Ticker: types.Ticker{
 					Interval: 6,
-					Messages: []Message{
+					Messages: []types.Message{
 						{Message: "Test ticker message 1"},
 						{Message: "Test ticker message 2", Title: "Custom Title"},
 					},
@@ -155,25 +107,34 @@ func main() {
 
 	// Create test sponsorship data file
 	sponsorshipData := sponsorshipFileStorageData{
-		SponsorshipData: SponsorshipData{
-			Sponsors: []Sponsor{
-				{
-					Name:        "ACME Corporation",
-					Amount:      1000.00,
-					Currency:    "USD",
-					Type:        "monthly",
-					Description: "Supporting open source development",
-				},
-				{
-					Name:        "Developer Jane",
-					Amount:      50.00,
-					Currency:    "USD",
-					Type:        "one-time",
-					Description: "Thanks for the great tool!",
+		SponsorshipData: types.SponsorshipData{
+			GitHubDDEVSponsorships: types.GitHubSponsorship{
+				TotalMonthlySponsorship: 1000,
+				TotalSponsors:           2,
+				SponsorsPerTier: map[string]int{
+					"Gold":   1,
+					"Silver": 1,
 				},
 			},
-			TotalIncome:  1050.00,
-			SponsorCount: 2,
+			GitHubRfaySponsorships: types.GitHubSponsorship{
+				TotalMonthlySponsorship: 0,
+				TotalSponsors:           0,
+				SponsorsPerTier:         map[string]int{},
+			},
+			MonthlyInvoicedSponsorships: types.InvoicedSponsorship{
+				TotalMonthlySponsorship: 0,
+				TotalSponsors:           0,
+				MonthlySponsorsPerTier:  map[string]int{},
+			},
+			AnnualInvoicedSponsorships: types.AnnualSponsorship{
+				TotalAnnualSponsorships:      0,
+				TotalSponsors:                0,
+				MonthlyEquivalentSponsorship: 0,
+				AnnualSponsorsPerTier:        map[string]int{},
+			},
+			PaypalSponsorships:        0,
+			TotalMonthlyAverageIncome: 1050.00,
+			UpdatedDateTime:           time.Now(),
 		},
 	}
 

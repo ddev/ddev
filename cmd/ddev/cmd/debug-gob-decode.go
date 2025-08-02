@@ -9,74 +9,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-// Local type definitions for gob decoding (copied from internal packages)
-
-// Remote config structures
-type Message struct {
-	Message    string   `json:"message"`
-	Title      string   `json:"title,omitempty"`
-	Conditions []string `json:"conditions,omitempty"`
-	Versions   string   `json:"versions,omitempty"`
-}
-
-type Notifications struct {
-	Interval int       `json:"interval"`
-	Infos    []Message `json:"infos"`
-	Warnings []Message `json:"warnings"`
-}
-
-type Ticker struct {
-	Interval int       `json:"interval"`
-	Messages []Message `json:"messages"`
-}
-
-type Messages struct {
-	Notifications Notifications `json:"notifications"`
-	Ticker        Ticker        `json:"ticker"`
-}
-
-type Remote struct {
-	Owner    string `json:"owner,omitempty"`
-	Repo     string `json:"repo,omitempty"`
-	Ref      string `json:"ref,omitempty"`
-	Filepath string `json:"filepath,omitempty"`
-}
-
-type RemoteConfig struct {
-	UpdateInterval int      `json:"update-interval,omitempty"`
-	Remote         Remote   `json:"remote,omitempty"`
-	Messages       Messages `json:"messages,omitempty"`
-}
-
+// fileStorageData is used for gob decoding of remote config storage
 type fileStorageData struct {
-	RemoteConfig RemoteConfig
+	RemoteConfig types.RemoteConfigData
 }
 
-// Sponsorship data structures
-type SponsorshipData struct {
-	Sponsors     []Sponsor `json:"sponsors,omitempty"`
-	TotalIncome  float64   `json:"total_income,omitempty"`
-	SponsorCount int       `json:"sponsor_count,omitempty"`
-}
-
-type Sponsor struct {
-	Name        string  `json:"name,omitempty"`
-	Amount      float64 `json:"amount,omitempty"`
-	Currency    string  `json:"currency,omitempty"`
-	Type        string  `json:"type,omitempty"`
-	Description string  `json:"description,omitempty"`
-}
-
+// sponsorshipFileStorageData is used for gob decoding of sponsorship data storage
 type sponsorshipFileStorageData struct {
-	SponsorshipData SponsorshipData `json:"sponsorship_data"`
+	SponsorshipData types.SponsorshipData `json:"sponsorship_data"`
 }
 
-// Amplitude event cache structures
+// Amplitude event cache structures (not available in remoteconfig/types)
 type StorageEvent struct {
 	EventType  string                 `json:"event_type,omitempty"`
 	UserID     string                 `json:"user_id,omitempty"`

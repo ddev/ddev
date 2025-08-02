@@ -9,7 +9,7 @@ type SponsorshipData struct {
 	MonthlyInvoicedSponsorships InvoicedSponsorship `json:"monthly_invoiced_sponsorships"`
 	AnnualInvoicedSponsorships  AnnualSponsorship   `json:"annual_invoiced_sponsorships"`
 	PaypalSponsorships          int                 `json:"paypal_sponsorships"`
-	TotalMonthlyAverageIncome   int                 `json:"total_monthly_average_income"`
+	TotalMonthlyAverageIncome   float64             `json:"total_monthly_average_income"`
 	UpdatedDateTime             time.Time           `json:"updated_datetime"`
 }
 
@@ -38,7 +38,7 @@ type AnnualSponsorship struct {
 // SponsorshipManager defines the interface for managing sponsorship data
 type SponsorshipManager interface {
 	GetSponsorshipData() (*SponsorshipData, error)
-	GetTotalMonthlyIncome() int
+	GetTotalMonthlyIncome() float64
 	GetTotalSponsors() int
 	IsDataStale() bool
 }
