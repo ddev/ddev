@@ -13,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -35,17 +34,19 @@ Optionally updates the local cached storage file (enabled by default).`,
 	Example: `ddev debug download-json-file --type=remote-config
 ddev debug download-json-file --type=sponsorship-data --update-storage=false`,
 	Args: cobra.NoArgs,
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		// Validate type parameter
 		if dataType != "remote-config" && dataType != "sponsorship-data" {
-			util.Failed("Invalid data type '%s'. Must be 'remote-config' or 'sponsorship-data'", dataType)
+			return fmt.Errorf("invalid data type. Must be 'remote-config' or 'sponsorship-data'")
 		}
 
 		// Download and display the data
 		err := downloadAndDisplayJSON("", dataType, updateStorage)
 		if err != nil {
-			util.Failed("Error downloading JSON file: %v", err)
+			return fmt.Errorf("error downloading JSON file: %w", err)
 		}
+
+		return nil
 	},
 }
 

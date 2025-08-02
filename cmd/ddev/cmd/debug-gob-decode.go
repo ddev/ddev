@@ -10,7 +10,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -59,32 +58,34 @@ Go's gob encoding limitations.`,
 ddev debug gob-decode ~/.ddev/.amplitude.cache
 ddev debug gob-decode /path/to/some/file.gob`,
 	Args: cobra.ExactArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	RunE: func(_ *cobra.Command, args []string) error {
 		filename := args[0]
 
 		// Convert relative paths to absolute paths safely
 		if !filepath.IsAbs(filename) {
 			cwd, err := os.Getwd()
 			if err != nil {
-				util.Failed("Error getting current working directory: %v", err)
+				return fmt.Errorf("error getting current working directory: %w", err)
 			}
 			fullPath, err := filepath.Abs(filepath.Join(cwd, filename))
 			if err != nil {
-				util.Failed("Failed to derive absolute path for %s: %v", filename, err)
+				return fmt.Errorf("failed to derive absolute path for %s: %w", filename, err)
 			}
 			filename = fullPath
 		}
 
 		// Check if file exists
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			util.Failed("File does not exist: %s", filename)
+			return fmt.Errorf("file does not exist: %s", filename)
 		}
 
 		// Try to decode the file
 		err := decodeGobFile(filename)
 		if err != nil {
-			util.Failed("Error decoding gob file %s: %v", filename, err)
+			return fmt.Errorf("error decoding gob file %s: %w", filename, err)
 		}
+		
+		return nil
 	},
 }
 
