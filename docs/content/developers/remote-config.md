@@ -9,6 +9,86 @@ from the [`ddev/remote-config`](https://github.com/ddev/remote-config)
 GitHub repository with messages that will be shown to the user as a "Tip of the Day". This feature
 may be enhanced later with more information and filtering.
 
+## Overview
+
+DDEV's remote configuration system provides a way to deliver dynamic content to users, including:
+
+- **Ticker Messages**: Rotating "tip of the day" messages shown during various DDEV operations
+- **Notifications**: Important announcements and warnings displayed to users
+- **Sponsorship Data**: Information about DDEV's financial sponsors (separate repository)
+
+The system is designed to be:
+
+- **Non-intrusive**: Users can disable or configure intervals
+- **Version-aware**: Messages can target specific DDEV versions
+- **Condition-based**: Messages can be shown based on user environment (Docker provider, OS, etc.)
+- **Cached locally**: Configuration is cached to minimize network requests
+
+## Data Types
+
+### Remote Configuration
+
+The main configuration includes:
+
+- Update intervals for automatic refreshing
+- Notification messages (info and warning types)
+- Ticker messages with optional titles and conditions
+- Version constraints for message targeting
+
+### Sponsorship Information  
+
+Separate from the main config, DDEV downloads sponsorship data from [`ddev/sponsorship-data`](https://github.com/ddev/sponsorship-data) including:
+
+- Monthly and annual sponsor information
+- Sponsor counts and income totals
+- GitHub sponsorship details
+- Update timestamps
+
+## Storage Format
+
+DDEV stores downloaded data locally using Go's `gob` binary encoding format in the user's global DDEV directory:
+
+- `~/.ddev/.remote-config`: Main remote configuration cache
+- `~/.ddev/.sponsorship-data`: Sponsorship information cache  
+- `~/.ddev/.amplitude.cache`: Analytics event cache (if enabled)
+
+## Debugging Tools
+
+DDEV provides several debugging commands for working with remote configuration:
+
+### View Cached Data
+
+```bash
+# Decode and view cached remote config
+ddev debug gob-decode ~/.ddev/.remote-config
+
+# Decode sponsorship data
+ddev debug gob-decode ~/.ddev/.sponsorship-data
+
+# Decode analytics cache  
+ddev debug gob-decode ~/.ddev/.amplitude.cache
+```
+
+### Download Fresh Data
+
+```bash
+# Download latest remote config (updates cache by default)
+ddev debug download-json-file --type=remote-config
+
+# Download sponsorship data without updating cache
+ddev debug download-json-file --type=sponsorship-data --update-storage=false
+
+# Download from custom URL for testing
+ddev debug download-json-file https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc --type=remote-config
+```
+
+### View Available Conditions
+
+```bash
+# List all available message conditions
+ddev debug message-conditions
+```
+
 ## Messages
 
 ### Notifications
@@ -62,24 +142,117 @@ The field `versions` may contain a version constraint which must be met by the
 current version of DDEV. More information about the supported constraints can
 be found in the [Masterminds SemVer repository](https://github.com/Masterminds/semver#readme).
 
-## Testing
+## Configuration
 
-To test, create a pull request on your fork or the main repository.
+### Global Configuration
 
-1. Run `prettier -c remote-config.jsonc` to make sure prettier will not complain. Run `prettier -w remote-config.jsonc` to get it to update the file.
-2. For the fork `rfay` and branch `20240215_note_about_key_exp`, add configuration to your `~/.ddev/global_config.yaml`:
+Users can configure remote config behavior in `~/.ddev/global_config.yaml`:
 
-    ```yaml
-    remote_config:
-      update_interval: 1
-      remote:
-        owner: rfay
-        repo: remote-config
-        ref: 20240215_note_about_key_exp
-        filepath: remote-config.jsonc
-    ```
+```yaml
+remote_config:
+  update_interval: 24  # Hours between updates
+  ticker_interval: 20  # Hours between ticker messages
+  remote:
+    owner: ddev         # GitHub owner
+    repo: remote-config # Repository name  
+    ref: main          # Branch/tag/commit
+    filepath: remote-config.jsonc  # File path in repo
+```
 
-3. `rm ~/.ddev/.state.yaml ~/.ddev/.remote-config`
-4. `DDEV_VERBOSE=true ddev start <project>`
+### Per-User Control
 
-Watch for failure to download or failure to parse the remote configuration.
+Users can disable features entirely:
+
+```yaml
+# Disable ticker messages
+ticker_interval: -1
+
+# Disable notifications  
+remote_config:
+  update_interval: -1
+```
+
+## Architecture
+
+### File Structure
+
+The remote configuration system consists of several Go packages:
+
+- `pkg/config/remoteconfig/`: Main package with interfaces and logic
+- `pkg/config/remoteconfig/types/`: Public type definitions
+- `pkg/config/remoteconfig/storage/`: File and GitHub storage implementations
+- `pkg/config/remoteconfig/downloader/`: JSONC download functionality
+
+### Key Components
+
+- **RemoteConfig Interface**: Main interface for displaying messages
+- **Storage Interfaces**: Abstract file and network storage
+- **Message Processing**: Condition and version constraint evaluation
+- **State Management**: Tracking update times and message rotations
+
+## Testing and Development
+
+### Testing Remote Config Changes
+
+To test changes to remote configuration:
+
+1. **Format the configuration**:
+
+   ```bash
+   prettier -c remote-config.jsonc
+   prettier -w remote-config.jsonc  # Auto-fix formatting
+   ```
+
+2. **Set up test configuration** in `~/.ddev/global_config.yaml`:
+
+   ```yaml
+   remote_config:
+     update_interval: 1  # Update every hour for testing
+     remote:
+       owner: your-username      # Your fork
+       repo: remote-config
+       ref: your-test-branch      # Your test branch
+       filepath: remote-config.jsonc
+   ```
+
+3. **Clear cached data**:
+
+   ```bash
+   rm ~/.ddev/.state.yaml ~/.ddev/.remote-config
+   ```
+
+4. **Test with verbose output**:
+
+   ```bash
+   DDEV_VERBOSE=true ddev start <project>
+   ```
+
+### Testing with Debug Commands
+
+Use the debug commands to validate your configuration:
+
+```bash
+# Download and validate your test config
+ddev debug download-json-file https://raw.githubusercontent.com/your-username/remote-config/your-branch/remote-config.jsonc --type=remote-config --update-storage=false
+
+# View the current cached config
+ddev debug gob-decode ~/.ddev/.remote-config
+
+# Verify message conditions work
+ddev debug message-conditions
+```
+
+### Development Workflow
+
+1. **Make changes** to the remote-config.jsonc file
+2. **Test locally** using debug commands
+3. **Validate JSON structure** with prettier
+4. **Test with different DDEV versions** if using version constraints
+5. **Create pull request** with clear description of changes
+
+### Common Issues
+
+- **JSON Parsing Errors**: Use `prettier` to validate JSON syntax
+- **Version Constraints**: Test with multiple DDEV versions
+- **Condition Logic**: Verify conditions using `ddev debug message-conditions`
+- **Network Issues**: Debug with `DDEV_VERBOSE=true` to see download attempts

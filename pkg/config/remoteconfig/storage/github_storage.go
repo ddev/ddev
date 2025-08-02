@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/github"
 )
@@ -22,13 +21,13 @@ type githubStorage struct {
 	downloader downloader.JSONCDownloader
 }
 
-func (s *githubStorage) Read() (remoteConfig internal.RemoteConfig, err error) {
+func (s *githubStorage) Read() (remoteConfig types.RemoteConfigData, err error) {
 	ctx := context.Background()
 	err = s.downloader.Download(ctx, &remoteConfig)
 	return
 }
 
-func (s *githubStorage) Write(_ internal.RemoteConfig) error {
+func (s *githubStorage) Write(_ types.RemoteConfigData) error {
 	// do nothing, readonly storage
 	return errors.New("failed to push remoteConfig to readonly `githubStorage`")
 }

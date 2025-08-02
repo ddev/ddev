@@ -10,7 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -41,7 +41,7 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 			github.RepositoryContentGetOptions{Ref: "main"},
 		)
 
-		var remoteConfig internal.RemoteConfig
+		var remoteConfig types.RemoteConfigData
 		ctx := context.Background()
 		err := downloader.Download(ctx, &remoteConfig)
 		require.NoError(err, "Failed to download remote config")
@@ -244,7 +244,7 @@ func TestRemoteConfigStructure(t *testing.T) {
 		github.RepositoryContentGetOptions{Ref: "main"},
 	)
 
-	var remoteConfig internal.RemoteConfig
+	var remoteConfig types.RemoteConfigData
 	ctx := context.Background()
 	err := downloader.Download(ctx, &remoteConfig)
 	require.NoError(err, "Should download remote config successfully")

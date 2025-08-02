@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -19,7 +18,7 @@ import (
 
 type messageTypes struct {
 	messageType types.MessageType
-	messages    []internal.Message
+	messages    []types.Message
 }
 
 type conditionDefinition struct {
@@ -268,7 +267,7 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 }
 
 // getTicker returns ticker data from the messages structure
-func (c *remoteConfig) getTicker() internal.Ticker {
+func (c *remoteConfig) getTicker() types.Ticker {
 	return c.remoteConfig.Messages.Ticker
 }
 

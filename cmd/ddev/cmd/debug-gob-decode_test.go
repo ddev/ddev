@@ -26,7 +26,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 	// Test with a valid gob file (using pre-generated test data)
 	t.Run("ValidGobFile", func(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-remote-config.gob")
-		
+
 		// Test decoding the file
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
 		assert.NoError(err)
@@ -138,7 +138,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 	// Test amplitude cache gob file
 	t.Run("AmplitudeCacheFile", func(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-amplitude-cache.gob")
-		
+
 		// Test decoding the file
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
 		assert.NoError(err)
@@ -151,7 +151,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		// Verify the decoded data matches expected test data
 		assert.Equal("2024-08-01T12:00:00Z", decodedCache.LastSubmittedAt.Format(time.RFC3339))
 		assert.Len(decodedCache.Events, 2)
-		
+
 		// Verify first event
 		assert.Equal("test_event_1", decodedCache.Events[0].EventType)
 		assert.Equal("user123", decodedCache.Events[0].UserID)
@@ -170,7 +170,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 	// Test sponsorship data gob file
 	t.Run("SponsorshipDataFile", func(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-sponsorship-data.gob")
-		
+
 		// Test decoding the file
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
 		assert.NoError(err)
@@ -201,7 +201,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 	// Test generic gob fallback - should fail gracefully
 	t.Run("GenericGobFallback", func(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-generic.gob")
-		
+
 		// Test decoding the file - this should fail because generic fallback has limitations
 		_, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", testFile)
 		assert.Error(err, "Generic gob decoding should fail for concrete types not encoded as interface{}")
