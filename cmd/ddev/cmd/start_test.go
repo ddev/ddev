@@ -201,11 +201,15 @@ func TestCmdStartShowsMessages(t *testing.T) {
 		strings.Contains(out, "funding") || strings.Contains(out, "Internet connection not detected") ||
 		strings.Contains(out, "offline")
 
-	// We expect at least one of these systems to show evidence of attempting to work
-	assert.True(hasTickerAttempt || hasSponsorshipAttempt,
-		"ddev start should show evidence of ticker messages or sponsorship appreciation attempts, output: %s", out)
+	// Check for SponsorAppreciationMessage if present in the output
+	expectedAppreciation := "💚 DDEV currently receives sponsorships from our community"
+	hasAppreciationMessage := strings.Contains(out, expectedAppreciation)
 
-	t.Logf("ddev start output contained: ticker_attempt=%v, sponsorship_attempt=%v", hasTickerAttempt, hasSponsorshipAttempt)
+	// We expect at least one of these systems to show evidence of attempting to work
+	assert.True(hasTickerAttempt || hasSponsorshipAttempt || hasAppreciationMessage,
+		"ddev start should show evidence of ticker messages, sponsorship appreciation, or appreciation message, output: %s", out)
+
+	t.Logf("ddev start output contained: ticker_attempt=%v, sponsorship_attempt=%v, appreciation_message=%v", hasTickerAttempt, hasSponsorshipAttempt, hasAppreciationMessage)
 }
 
 // TestCmdStartShowsSponsorshipData tests that sponsorship data display works with isolated config

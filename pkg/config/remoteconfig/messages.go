@@ -1,7 +1,6 @@
 package remoteconfig
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -292,28 +291,16 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 		return
 	}
 
-	// Create a colorful, cheery message about current sponsorship level
-	totalIncome := sponsorshipData.TotalMonthlyAverageIncome
-	totalSponsors := sponsorshipMgr.GetTotalSponsors()
+	// Use the SponsorAppreciationMessage from the data
+	message := sponsorshipData.SponsorAppreciationMessage
+	if message == "" {
+		// Fallback if not present
+		message = "💚 DDEV currently receives sponsorships from our community. Consider becoming a sponsor at github.com/sponsors/ddev 🤝"
+	}
 
 	t := table.NewWriter()
 	applyTableStyle(sponsorship, t)
-
-	var message string
-	var title = "❤️  DDEV Sponsorship Status"
-
-	if totalIncome >= 5000 {
-		message = fmt.Sprintf("🎉 DDEV is thriving with $%.0f/month from %d amazing sponsors! This sustainable funding helps us deliver the best local development experience. Thank you for being part of our success! 🚀", totalIncome, totalSponsors)
-	} else if totalIncome >= 2500 {
-		message = fmt.Sprintf("🌟 DDEV is growing strong with $%.0f/month from %d generous sponsors! Your support helps us maintain and improve this project. Thank you for making DDEV better! 💪", totalIncome, totalSponsors)
-	} else if totalIncome >= 1000 {
-		message = fmt.Sprintf("💝 DDEV receives $%.0f/month from %d wonderful sponsors! This community support helps keep the project healthy and active. We're grateful for every contribution! 🙏", totalIncome, totalSponsors)
-	} else if totalIncome >= 500 {
-		message = fmt.Sprintf("🌱 DDEV has $%.0f/month from %d supportive sponsors! Every contribution helps us maintain this open-source project. Consider sponsoring us to help DDEV grow! 🌿", totalIncome, totalSponsors)
-	} else {
-		message = fmt.Sprintf("💚 DDEV currently receives $%.0f/month from %d sponsors. We need your support to keep this project thriving! Consider becoming a sponsor at github.com/sponsors/ddev 🤝", totalIncome, totalSponsors)
-	}
-
+	title := "❤️  DDEV Sponsorship Status"
 	t.AppendHeader(table.Row{title})
 	t.AppendRow(table.Row{message})
 
