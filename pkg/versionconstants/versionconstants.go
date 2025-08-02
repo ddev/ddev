@@ -31,9 +31,6 @@ var SSHAuthImage = "ddev/ddev-ssh-agent"
 // SSHAuthTag is ssh-agent auth tag
 var SSHAuthTag = "v1.24.7"
 
-// BusyboxImage is used a couple of places for a quick-pull
-var BusyboxImage = "busybox:stable"
-
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
@@ -41,7 +38,7 @@ var XhguiImage = "ddev/ddev-xhgui"
 var XhguiTag = "v1.24.7"
 
 // UtilitiesImage is used in bash scripts
-var UtilitiesImage = "ddev/ddev-utilities"
+var UtilitiesImage = "ddev/ddev-utilities:latest"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"

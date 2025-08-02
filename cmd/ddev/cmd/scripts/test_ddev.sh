@@ -171,7 +171,7 @@ if ddev debug dockercheck -h | grep dockercheck >/dev/null; then
   ddev debug dockercheck 2>/dev/null
 fi
 
-printf "\nDocker disk space:\n" && docker run --rm busybox:stable df -h //
+printf "\nDocker disk space:\n" && docker run --rm ddev/ddev-utilities df -h //
 
 header "Existing docker containers"
 docker ps -a

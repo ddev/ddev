@@ -57,7 +57,7 @@ func TestGetFreePort(t *testing.T) {
 		require.NotContains(t, globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
-		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, versionconstants.BusyboxImage}
+		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, versionconstants.UtilitiesImage}
 		out, err := exec.RunCommand("docker", dockerCommand)
 
 		require.NoError(t, err, "failed to 'docker %v': %v, output='%v'", dockerCommand, err, out)

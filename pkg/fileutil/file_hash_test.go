@@ -72,7 +72,7 @@ func TestFileHash(t *testing.T) {
 func externalComputeSha1Sum(filePath string) (string, error) {
 	dir := filepath.Dir(filePath)
 	fName := filepath.Base(filePath)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", path.Join("/mnt/mounteddir", fName)}, nil, nil, []string{dir + ":" + "/mnt/mounteddir"}, "0", true, false, nil, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"sha1sum", path.Join("/mnt/mounteddir", fName)}, nil, nil, []string{dir + ":" + "/mnt/mounteddir"}, "0", true, false, nil, nil, nil)
 
 	if err != nil {
 		return "", err
