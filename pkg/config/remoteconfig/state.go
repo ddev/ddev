@@ -29,6 +29,7 @@ type stateEntry struct {
 	LastNotificationAt time.Time `yaml:"last_notification_at"`
 	LastTickerAt       time.Time `yaml:"last_ticker_at"`
 	LastTickerMessage  int       `yaml:"last_ticker_message"`
+	LastSponsorshipAt  time.Time `yaml:"last_sponsorship_at"`
 }
 
 const stateKey = "remote_config"

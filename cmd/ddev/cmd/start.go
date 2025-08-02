@@ -63,8 +63,16 @@ ddev start --all`,
 			globalconfig.IsInternetActive,
 		)
 
+		// Initialize sponsorship manager
+		remoteconfig.InitGlobalSponsorship(
+			globalconfig.GetGlobalDdevDir(),
+			state,
+			globalconfig.IsInternetActive,
+		)
+
 		remoteconfig.GetGlobal().ShowTicker()
 		remoteconfig.GetGlobal().ShowNotifications()
+		remoteconfig.GetGlobal().ShowSponsorshipAppreciation()
 
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {
