@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/build"
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 )
 
 // Local is the struct defining the local source.
@@ -36,7 +36,7 @@ func (c *Config) getLocalSourceFileName() string {
 
 // getRemoteSourceOwner returns the owner to be used for the remote
 // config download from GitHub, the global config overwrites the default.
-func (c *Config) getRemoteSourceOwner(remoteConfig *internal.RemoteConfig) string {
+func (c *Config) getRemoteSourceOwner(remoteConfig *types.RemoteConfigData) string {
 	if c.Remote.Owner != "" {
 		return c.Remote.Owner
 	}
@@ -50,7 +50,7 @@ func (c *Config) getRemoteSourceOwner(remoteConfig *internal.RemoteConfig) strin
 
 // getRemoteSourceRepo returns the repo to be used for the remote
 // config download from GitHub, the global config overwrites the default.
-func (c *Config) getRemoteSourceRepo(remoteConfig *internal.RemoteConfig) string {
+func (c *Config) getRemoteSourceRepo(remoteConfig *types.RemoteConfigData) string {
 	if c.Remote.Repo != "" {
 		return c.Remote.Repo
 	}
@@ -64,7 +64,7 @@ func (c *Config) getRemoteSourceRepo(remoteConfig *internal.RemoteConfig) string
 
 // getRemoteSourceRef returns the ref to be used for the remote
 // config download from GitHub, the global config overwrites the default.
-func (c *Config) getRemoteSourceRef(remoteConfig *internal.RemoteConfig) string {
+func (c *Config) getRemoteSourceRef(remoteConfig *types.RemoteConfigData) string {
 	if c.Remote.Ref != "" {
 		return c.Remote.Ref
 	}
@@ -78,7 +78,7 @@ func (c *Config) getRemoteSourceRef(remoteConfig *internal.RemoteConfig) string 
 
 // getRemoteSourceFilepath returns the filepath to be used for the remote
 // config download from GitHub, the global config overwrites the default.
-func (c *Config) getRemoteSourceFilepath(remoteConfig *internal.RemoteConfig) string {
+func (c *Config) getRemoteSourceFilepath(remoteConfig *types.RemoteConfigData) string {
 	if c.Remote.Filepath != "" {
 		return c.Remote.Filepath
 	}
