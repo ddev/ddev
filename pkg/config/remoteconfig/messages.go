@@ -1,6 +1,7 @@
 package remoteconfig
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -224,6 +225,15 @@ func (c *remoteConfig) showTickerMessage() bool {
 		c.state.LastTickerAt.Add(c.getTickerInterval()).Before(time.Now())
 }
 
+// showSponsorshipMessage returns true if sponsorship message should be shown
+// Uses same logic as ticker - once per day
+func (c *remoteConfig) showSponsorshipMessage() bool {
+	// Use the same interval as ticker for consistency (once per day)
+	sponsorshipInterval := c.getTickerInterval()
+	return !output.JSONOutput &&
+		c.state.LastSponsorshipAt.Add(sponsorshipInterval).Before(time.Now())
+}
+
 func (c *remoteConfig) checkConditions(conditions []string) bool {
 	for _, rawCondition := range conditions {
 		condition, negated := strings.CutPrefix(strings.TrimSpace(rawCondition), "!")
@@ -260,10 +270,60 @@ func (c *remoteConfig) checkVersions(versions string) bool {
 
 // ShowSponsorshipAppreciation shows a sponsorship appreciation message if data is available
 func (c *remoteConfig) ShowSponsorshipAppreciation() {
-	// This would integrate with sponsorship data when available
-	// Example implementation showing how sponsorship data could be used
-	// Currently just a placeholder to demonstrate integration capability
-	util.Debug("Sponsorship appreciation feature available - could show funding status, thank sponsors, etc.")
+	// Get sponsorship manager
+	sponsorshipMgr := GetGlobalSponsorship()
+	if sponsorshipMgr == nil {
+		return
+	}
+
+	// Check if we should show sponsorship message (same logic as MOTD - once a day)
+	if !c.showSponsorshipMessage() {
+		return
+	}
+
+	sponsorshipData, err := sponsorshipMgr.GetSponsorshipData()
+	if err != nil {
+		util.Debug("Error getting sponsorship data: %s", err)
+		return
+	}
+
+	// Only show if we have meaningful data
+	if sponsorshipData == nil || sponsorshipData.TotalMonthlyAverageIncome == 0 {
+		return
+	}
+
+	// Create a colorful, cheery message about current sponsorship level
+	totalIncome := sponsorshipData.TotalMonthlyAverageIncome
+	totalSponsors := sponsorshipMgr.GetTotalSponsors()
+
+	t := table.NewWriter()
+	applyTableStyle(sponsorship, t)
+
+	var message string
+	var title = "❤️  DDEV Sponsorship Status"
+
+	if totalIncome >= 5000 {
+		message = fmt.Sprintf("🎉 DDEV is thriving with $%.0f/month from %d amazing sponsors! This sustainable funding helps us deliver the best local development experience. Thank you for being part of our success! 🚀", totalIncome, totalSponsors)
+	} else if totalIncome >= 2500 {
+		message = fmt.Sprintf("🌟 DDEV is growing strong with $%.0f/month from %d generous sponsors! Your support helps us maintain and improve this project. Thank you for making DDEV better! 💪", totalIncome, totalSponsors)
+	} else if totalIncome >= 1000 {
+		message = fmt.Sprintf("💝 DDEV receives $%.0f/month from %d wonderful sponsors! This community support helps keep the project healthy and active. We're grateful for every contribution! 🙏", totalIncome, totalSponsors)
+	} else if totalIncome >= 500 {
+		message = fmt.Sprintf("🌱 DDEV has $%.0f/month from %d supportive sponsors! Every contribution helps us maintain this open-source project. Consider sponsoring us to help DDEV grow! 🌿", totalIncome, totalSponsors)
+	} else {
+		message = fmt.Sprintf("💚 DDEV currently receives $%.0f/month from %d sponsors. We need your support to keep this project thriving! Consider becoming a sponsor at github.com/sponsors/ddev 🤝", totalIncome, totalSponsors)
+	}
+
+	t.AppendHeader(table.Row{title})
+	t.AppendRow(table.Row{message})
+
+	output.UserOut.Print("\n", t.Render(), "\n")
+
+	// Update state so we don't show this message again today
+	c.state.LastSponsorshipAt = time.Now()
+	if err := c.state.save(); err != nil {
+		util.Debug("Error while saving sponsorship display state: %s", err)
+	}
 }
 
 // getTicker returns ticker data from the messages structure
@@ -277,6 +337,7 @@ const (
 	information preset = iota
 	warning
 	ticker
+	sponsorship
 )
 
 func applyTableStyle(preset preset, writer table.Writer) {
@@ -316,6 +377,11 @@ func applyTableStyle(preset preset, writer table.Writer) {
 		style.Color = table.ColorOptions{
 			Header: text.Colors{text.BgHiWhite, text.FgBlack},
 			Row:    text.Colors{text.BgHiWhite, text.FgBlack},
+		}
+	case sponsorship:
+		style.Color = table.ColorOptions{
+			Header: text.Colors{text.BgHiGreen, text.FgBlack},
+			Row:    text.Colors{text.BgHiGreen, text.FgBlack},
 		}
 	}
 }
