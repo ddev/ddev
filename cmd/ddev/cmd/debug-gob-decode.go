@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
@@ -63,13 +62,17 @@ ddev debug gob-decode /path/to/some/file.gob`,
 	Run: func(_ *cobra.Command, args []string) {
 		filename := args[0]
 
-		// Expand ~ to home directory if needed
-		if strings.HasPrefix(filename, "~/") {
-			homeDir, err := os.UserHomeDir()
+		// Convert relative paths to absolute paths safely
+		if !filepath.IsAbs(filename) {
+			cwd, err := os.Getwd()
 			if err != nil {
-				util.Failed("Error getting home directory: %v", err)
+				util.Failed("Error getting current working directory: %v", err)
 			}
-			filename = filepath.Join(homeDir, filename[2:])
+			fullPath, err := filepath.Abs(filepath.Join(cwd, filename))
+			if err != nil {
+				util.Failed("Failed to derive absolute path for %s: %v", filename, err)
+			}
+			filename = fullPath
 		}
 
 		// Check if file exists
