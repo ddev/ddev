@@ -34,9 +34,9 @@ func GetGlobal() types.RemoteConfig {
 
 // InitGlobalSponsorship initializes the global sponsorship manager. This is done once,
 // subsequent calls do not have any effect.
-func InitGlobalSponsorship(localPath string, stateManager statetypes.State, isInternetActive func() bool) types.SponsorshipManager {
+func InitGlobalSponsorship(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, owner, repo, filepath, ref string) types.SponsorshipManager {
 	if globalSponsorshipManager == nil {
-		globalSponsorshipManager = NewSponsorshipManager(localPath, stateManager, isInternetActive)
+		globalSponsorshipManager = NewSponsorshipManager(localPath, stateManager, isInternetActive, updateInterval, owner, repo, filepath, ref)
 	}
 
 	return globalSponsorshipManager

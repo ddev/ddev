@@ -30,17 +30,17 @@ type sponsorshipManager struct {
 }
 
 // NewSponsorshipManager creates a new sponsorship data manager
-func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool) types.SponsorshipManager {
+func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, owner, repo, filepath, ref string) types.SponsorshipManager {
 	mgr := &sponsorshipManager{
 		downloader: downloader.NewGitHubJSONCDownloader(
-			"ddev",
-			"sponsorship-data",
-			"data/all-sponsorships.json",
-			github.RepositoryContentGetOptions{Ref: "main"},
+			owner,
+			repo,
+			filepath,
+			github.RepositoryContentGetOptions{Ref: ref},
 		),
 		fileStorage:      storage.NewSponsorshipFileStorage(localPath + "/" + sponsorshipLocalFileName),
 		state:            newState(stateManager),
-		updateInterval:   time.Duration(sponsorshipUpdateInterval) * time.Hour,
+		updateInterval:   time.Duration(updateInterval) * time.Hour,
 		isInternetActive: isInternetActive,
 	}
 

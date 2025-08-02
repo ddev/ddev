@@ -9,6 +9,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
+	statetypes "github.com/ddev/ddev/pkg/config/state/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -64,11 +65,7 @@ ddev start --all`,
 		)
 
 		// Initialize sponsorship manager
-		remoteconfig.InitGlobalSponsorship(
-			globalconfig.GetGlobalDdevDir(),
-			state,
-			globalconfig.IsInternetActive,
-		)
+		initSponsorshipManager(state)
 
 		remoteconfig.GetGlobal().ShowTicker()
 		remoteconfig.GetGlobal().ShowNotifications()
@@ -164,6 +161,49 @@ func emitReachProjectMessage(project *ddevapp.DdevApp) {
 	if project.GetPrimaryURL() != "" {
 		util.Success("Your project can be reached at %s\nSee 'ddev describe' for alternate URLs.", project.GetPrimaryURL())
 	}
+}
+
+// initSponsorshipManager initializes the sponsorship manager with proper config priority
+func initSponsorshipManager(state statetypes.State) {
+	config := globalconfig.DdevGlobalConfig.RemoteConfig
+
+	// Priority hierarchy for update interval:
+	// 1. Global config setting
+	// 2. Fallback constant (24 hours)
+	updateInterval := config.UpdateInterval
+	if updateInterval == 0 {
+		updateInterval = 24 // Default sponsorship update interval in hours
+	}
+
+	// Set defaults for sponsorship source if not configured
+	sponsorship := config.Sponsorship
+	owner := sponsorship.Owner
+	if owner == "" {
+		owner = "ddev"
+	}
+	repo := sponsorship.Repo
+	if repo == "" {
+		repo = "sponsorship-data"
+	}
+	filepath := sponsorship.Filepath
+	if filepath == "" {
+		filepath = "data/all-sponsorships.json"
+	}
+	ref := sponsorship.Ref
+	if ref == "" {
+		ref = "main"
+	}
+
+	remoteconfig.InitGlobalSponsorship(
+		globalconfig.GetGlobalDdevDir(),
+		state,
+		globalconfig.IsInternetActive,
+		updateInterval,
+		owner,
+		repo,
+		filepath,
+		ref,
+	)
 }
 
 func init() {
