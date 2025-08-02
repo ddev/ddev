@@ -635,8 +635,51 @@ Removes all diagnostic projects created with `ddev debug test`.
 Example:
 
 ```shell
-# Remove all DDEV’s diagnostic projects
+# Remove all DDEV's diagnostic projects
 ddev debug testcleanup
+```
+
+### `debug gob-decode`
+
+Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), and sponsorship data files.
+
+The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
+
+Example:
+
+```shell
+# Decode a remote config file
+ddev debug gob-decode ~/.ddev/.remote-config
+
+# Decode an amplitude cache file
+ddev debug gob-decode ~/.ddev/.amplitude.cache
+
+# Decode any gob file with path expansion
+ddev debug gob-decode ~/path/to/file.gob
+```
+
+### `debug download-json-file`
+
+Download and display JSON/JSONC files used by DDEV from remote sources. This command can download various data types including remote configuration and sponsorship information.
+
+The downloaded content is displayed as formatted JSON to stdout. Optionally updates the local cached storage file (enabled by default).
+
+Flags:
+
+* `--type`, `-t`: Type of data to download: `remote-config` (default) or `sponsorship-data`.  
+* `--update-storage`: Update local cached storage file (default `true`).
+
+Examples:
+
+```shell
+# Download remote config (default type)
+ddev debug download-json-file
+
+# Download sponsorship data without updating local storage
+ddev debug download-json-file --type=sponsorship-data --update-storage=false
+
+# Download from a custom URL
+ddev debug download-json-file https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc --type=remote-config
 ```
 
 ## `delete`

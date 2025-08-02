@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	statetypes "github.com/ddev/ddev/pkg/config/state/types"
@@ -50,7 +49,7 @@ const (
 // remoteConfig is a in memory representation of the DDEV RemoteConfig.
 type remoteConfig struct {
 	state        *state
-	remoteConfig internal.RemoteConfig
+	remoteConfig types.RemoteConfigData
 
 	fileStorage   types.RemoteConfigStorage
 	githubStorage types.RemoteConfigStorage
@@ -69,7 +68,8 @@ func (c *remoteConfig) write() {
 	err := c.fileStorage.Write(c.remoteConfig)
 
 	if err != nil {
-		util.Debug("Error while writing remote config: %s", err)
+		util.Debug("Error while writing remote config to local storage: %s", err)
+		// Don't fail the operation, just log the error since local caching is optional
 	}
 }
 
@@ -86,7 +86,9 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	c.remoteConfig, err = c.fileStorage.Read()
 
 	if err != nil {
-		util.Debug("Error while loading remote config: %s", err)
+		util.Debug("Error while loading remote config from local storage: %s", err)
+		// Initialize with empty config as fallback
+		c.remoteConfig = types.RemoteConfigData{}
 	}
 }
 

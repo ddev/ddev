@@ -12,4 +12,5 @@ type RemoteConfigRemote struct {
 type RemoteConfig struct {
 	UpdateInterval int                `yaml:"update_interval,omitempty"`
 	Remote         RemoteConfigRemote `yaml:"remote,omitempty"`
+	Sponsorship    RemoteConfigRemote `yaml:"sponsorship,omitempty"`
 }
