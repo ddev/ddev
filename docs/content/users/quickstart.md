@@ -221,6 +221,7 @@ Read more about customizing the environment and persisting configuration in [Pro
 === "Drupal 11"
 
     ```bash
+    # Don't open this folder in Finder yet – otherwise the `.DS_Store` file blocks the `composer create-project` script.
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal11 --docroot=web
     ddev start
@@ -229,7 +230,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
     # or automatically log in with
-    ddev launch $(ddev drush uli)
+    ddev launch $(ddev drush uli admin/reports/status)
     ```
 
     Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
@@ -249,6 +250,7 @@ Read more about customizing the environment and persisting configuration in [Pro
 === "Drupal 10"
 
     ```bash
+    # Don't open this folder in Finder yet – otherwise the `.DS_Store` file blocks the `composer create-project` script.
     mkdir my-drupal-site && cd my-drupal-site
     ddev config --project-type=drupal10 --docroot=web
     ddev start
@@ -257,7 +259,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
     # or automatically log in with
-    ddev launch $(ddev drush uli)
+    ddev launch $(ddev drush uli admin/reports/status)
     ```
 
     Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
