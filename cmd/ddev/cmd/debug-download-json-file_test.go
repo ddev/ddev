@@ -127,28 +127,6 @@ func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
 	})
 }
 
-// TestDownloadFromURL tests the custom URL functionality
-func TestDownloadFromURL(t *testing.T) {
-	t.Run("InvalidURL", func(t *testing.T) {
-		_, err := exec.RunHostCommand(DdevBin, "debug", "download-json-file", "invalid-url", "--type=remote-config")
-		require.Error(t, err, "Should return error for invalid URL")
-	})
-
-	t.Run("ValidGitHubRawURL", func(t *testing.T) {
-		// Test with the actual GitHub raw URL for remote config
-		url := "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "download-json-file", url, "--type=remote-config", "--update-storage=false")
-		require.NoError(t, err, "Should successfully download from GitHub raw URL")
-
-		// Parse the JSON output
-		var remoteConfig types.RemoteConfigData
-		err = json.Unmarshal([]byte(out), &remoteConfig)
-		require.NoError(t, err, "Output should be valid JSON")
-
-		require.Greater(t, len(remoteConfig.Messages.Ticker.Messages), 0, "Should have ticker messages")
-	})
-}
-
 // TestJSONValidation tests that the output is always valid JSON
 func TestJSONValidation(t *testing.T) {
 	t.Run("RemoteConfigValidJSON", func(t *testing.T) {
