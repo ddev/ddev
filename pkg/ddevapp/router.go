@@ -338,8 +338,9 @@ func GetRouterStatus() (string, string) {
 	return status, logOutput
 }
 
-// determineRouterPorts returns a list of port mappings retrieved from running site
-// containers defining HTTP_EXPOSE and HTTPS_EXPOSE env var
+// determineRouterPorts returns a list of port mappings retrieved from ports from
+// configuration files of all active projects, plus running site
+// containers defining HTTP_EXPOSE and HTTPS_EXPOSE env var.
 // It is only useful to call this when containers are actually running, before
 // starting ddev-router (so that we can bind the port mappings needed
 func determineRouterPorts() []string {
@@ -349,10 +350,41 @@ func determineRouterPorts() []string {
 		util.Failed("Failed to retrieve containers for determining port mappings: %v", err)
 	}
 
-	// Add potential ports that might not be in use by current containers
-	// 8142/8143 are for xhgui, which might not be enabled, but we don't want to
-	// have to rebuild traefik when it does get enabled.
-	routerPorts = []string{nodeps.DdevDefaultXHGuiHTTPSPort, nodeps.DdevDefaultXHGuiHTTPPort}
+	// Add ports from configuration files of all active projects
+	for _, app := range GetActiveProjects() {
+		err = app.ReadDockerComposeYAML()
+		if err != nil {
+			util.Warning("Unable to read '%s' project config for determining port mappings: %v", app.Name, err)
+			continue
+		}
+		if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
+			continue
+		}
+		// Extract ports from compose services
+		for _, service := range app.ComposeYaml.Services {
+			if service.Environment == nil {
+				continue
+			}
+
+			var exposePorts []string
+
+			if httpExposePtr, ok := service.Environment["HTTP_EXPOSE"]; ok && httpExposePtr != nil {
+				if httpExpose := *httpExposePtr; httpExpose != "" {
+					ports := strings.Split(httpExpose, ",")
+					exposePorts = append(exposePorts, ports...)
+				}
+			}
+
+			if httpsExposePtr, ok := service.Environment["HTTPS_EXPOSE"]; ok && httpsExposePtr != nil {
+				if httpsExpose := *httpsExposePtr; httpsExpose != "" {
+					ports := strings.Split(httpsExpose, ",")
+					exposePorts = append(exposePorts, ports...)
+				}
+			}
+
+			routerPorts = processExposePorts(exposePorts, routerPorts)
+		}
+	}
 
 	// Loop through all containers with site-name label
 	for _, container := range containers {
@@ -374,47 +406,57 @@ func determineRouterPorts() []string {
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			for _, exposePortPair := range exposePorts {
-				// Ports defined as hostPort:containerPort allow for router to configure upstreams
-				// for containerPort, with server listening on hostPort.
-				// Exposed ports for router should be hostPort:hostPort so router
-				// can determine on which port a request came in
-				// and route the request to the correct upstream
-				exposePort := ""
-				var ports []string
-
-				// Each port pair should be of the form <number>:<number> or <number>
-				// It's possible to have received a malformed HTTP_EXPOSE or HTTPS_EXPOSE from
-				// some random container, so don't break if that happens.
-				if !regexp.MustCompile(`^[0-9]+(:[0-9]+)?$`).MatchString(exposePortPair) {
-					continue
-				}
-
-				if strings.Contains(exposePortPair, ":") {
-					ports = strings.Split(exposePortPair, ":")
-				} else {
-					// HTTP_EXPOSE and HTTPS_EXPOSE can be a single port, meaning port:port
-					ports = []string{exposePortPair, exposePortPair}
-				}
-				exposePort = ports[0]
-
-				var match bool
-				for _, routerPort := range routerPorts {
-					if exposePort == routerPort {
-						match = true
-					}
-				}
-
-				// If no match, we are adding a new port mapping
-				if !match {
-					routerPorts = append(routerPorts, exposePort)
-				}
-			}
+			routerPorts = processExposePorts(exposePorts, routerPorts)
 		}
 	}
+
 	sort.Slice(routerPorts, func(i, j int) bool {
 		return routerPorts[i] < routerPorts[j]
 	})
+
+	return routerPorts
+}
+
+// processExposePorts processes HTTP_EXPOSE and HTTPS_EXPOSE port strings and returns
+// a list of external ports that need to be bound by the router.
+// It handles port pair formats like "8080:80" or "8080" and validates the format.
+func processExposePorts(exposePorts []string, routerPorts []string) []string {
+	for _, exposePortPair := range exposePorts {
+		// Ports defined as hostPort:containerPort allow for router to configure upstreams
+		// for containerPort, with server listening on hostPort.
+		// Exposed ports for router should be hostPort:hostPort so router
+		// can determine on which port a request came in
+		// and route the request to the correct upstream
+		exposePort := ""
+		var ports []string
+
+		// Each port pair should be of the form <number>:<number> or <number>
+		// It's possible to have received a malformed HTTP_EXPOSE or HTTPS_EXPOSE from
+		// some random container, so don't break if that happens.
+		if !regexp.MustCompile(`^[0-9]+(:[0-9]+)?$`).MatchString(exposePortPair) {
+			continue
+		}
+
+		if strings.Contains(exposePortPair, ":") {
+			ports = strings.Split(exposePortPair, ":")
+		} else {
+			// HTTP_EXPOSE and HTTPS_EXPOSE can be a single port, meaning port:port
+			ports = []string{exposePortPair, exposePortPair}
+		}
+		exposePort = ports[0]
+
+		var match bool
+		for _, routerPort := range routerPorts {
+			if exposePort == routerPort {
+				match = true
+			}
+		}
+
+		// If no match, we are adding a new port mapping
+		if !match {
+			routerPorts = append(routerPorts, exposePort)
+		}
+	}
 
 	return routerPorts
 }
