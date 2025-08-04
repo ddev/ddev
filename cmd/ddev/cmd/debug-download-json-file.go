@@ -35,6 +35,9 @@ Optionally updates the local cached storage file (enabled by default).`,
 ddev debug download-json-file --type=sponsorship-data --update-storage=false`,
 	Args: cobra.NoArgs,
 	RunE: func(_ *cobra.Command, args []string) error {
+		// Ensure global config is loaded
+		globalconfig.EnsureGlobalConfig()
+
 		// Validate type parameter
 		if dataType != "remote-config" && dataType != "sponsorship-data" {
 			return fmt.Errorf("invalid data type. Must be 'remote-config' or 'sponsorship-data'")
@@ -68,12 +71,13 @@ func downloadRemoteConfig(url string, updateLocalStorage bool) error {
 		return fmt.Errorf("custom URLs are not supported, use default remote config source")
 	}
 
-	// Use default remote config source
+	// Use configured remote config source from global config
+	config := globalconfig.DdevGlobalConfig.RemoteConfig.Remote
 	d := downloader.NewGitHubJSONCDownloader(
-		"ddev",
-		"remote-config",
-		"remote-config.jsonc",
-		github.RepositoryContentGetOptions{Ref: "main"},
+		config.Owner,
+		config.Repo,
+		config.Filepath,
+		github.RepositoryContentGetOptions{Ref: config.Ref},
 	)
 
 	ctx := context.Background()
@@ -110,12 +114,14 @@ func downloadSponsorshipData(url string, updateLocalStorage bool) error {
 		return fmt.Errorf("custom URLs are not supported, use default sponsorship data source")
 	}
 
-	// Use default sponsorship data source
+	// Use configured sponsorship data source from global config
+	config := globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship
+
 	d := downloader.NewGitHubJSONCDownloader(
-		"ddev",
-		"sponsorship-data",
-		"data/all-sponsorships.json",
-		github.RepositoryContentGetOptions{Ref: "main"},
+		config.Owner,
+		config.Repo,
+		config.Filepath,
+		github.RepositoryContentGetOptions{Ref: config.Ref},
 	)
 
 	ctx := context.Background()

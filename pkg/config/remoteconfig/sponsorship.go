@@ -33,11 +33,10 @@ type sponsorshipManager struct {
 func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, owner, repo, filepath, ref string) types.SponsorshipManager {
 	mgr := &sponsorshipManager{
 		downloader: downloader.NewGitHubJSONCDownloader(
-			// Use the temporary branch for sponsorship data
-			"ddev",
-			"sponsorship-data",
-			"data/all-sponsorships.json",
-			github.RepositoryContentGetOptions{Ref: "refs/heads/20250802_add_goals"},
+			owner,
+			repo,
+			filepath,
+			github.RepositoryContentGetOptions{Ref: ref},
 		),
 		fileStorage:      storage.NewSponsorshipFileStorage(localPath + "/" + sponsorshipLocalFileName),
 		state:            newState(stateManager),

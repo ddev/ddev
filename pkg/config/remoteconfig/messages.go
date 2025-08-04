@@ -291,8 +291,8 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 		return
 	}
 
-	// Use the SponsorAppreciationMessage from the data
-	message := sponsorshipData.SponsorAppreciationMessage
+	// Use the AppreciationMessage from the data
+	message := sponsorshipData.AppreciationMessage
 	if message == "" {
 		// Fallback if not present
 		message = "💚 DDEV currently receives sponsorships from our community. Consider becoming a sponsor at github.com/sponsors/ddev 🤝"

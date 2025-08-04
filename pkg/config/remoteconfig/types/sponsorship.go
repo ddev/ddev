@@ -4,16 +4,19 @@ import "time"
 
 // SponsorshipData represents the structure of the sponsorship data JSON
 type SponsorshipData struct {
-	GitHubDDEVSponsorships      GitHubSponsorship         `json:"github_ddev_sponsorships"`
-	GitHubRfaySponsorships      GitHubSponsorship         `json:"github_rfay_sponsorships"`
-	MonthlyInvoicedSponsorships InvoicedSponsorship       `json:"monthly_invoiced_sponsorships"`
-	AnnualInvoicedSponsorships  AnnualSponsorship         `json:"annual_invoiced_sponsorships"`
-	PaypalSponsorships          int                       `json:"paypal_sponsorships"`
-	TotalMonthlyAverageIncome   float64                   `json:"total_monthly_average_income"`
-	Goal                        SponsorshipGoal           `json:"goal"`
-	History                     []SponsorshipHistoryEntry `json:"history"`
-	SponsorAppreciationMessage  string                    `json:"sponsor_appreciation_message"`
-	UpdatedDateTime             time.Time                 `json:"updated_datetime"`
+	GitHubDDEVSponsorships      GitHubSponsorship                  `json:"github_ddev_sponsorships"`
+	GitHubRfaySponsorships      GitHubSponsorship                  `json:"github_rfay_sponsorships"`
+	MonthlyInvoicedSponsorships InvoicedSponsorship                `json:"monthly_invoiced_sponsorships"`
+	AnnualInvoicedSponsorships  AnnualSponsorship                  `json:"annual_invoiced_sponsorships"`
+	PaypalSponsorships          int                                `json:"paypal_sponsorships"`
+	TotalMonthlyAverageIncome   float64                            `json:"total_monthly_average_income"`
+	SponsorshipGoals            []SponsorshipGoalItem              `json:"sponsorship_goals"`
+	CurrentGoal                 SponsorshipCurrentGoal             `json:"current_goal"`
+	AppreciationMessageTemplate string                             `json:"appreciation_message_template"`
+	AppreciationMessage         string                             `json:"appreciation_message"`
+	HistoricalData              map[string]interface{}             `json:"historical_data"`
+	MonthlyHistoricalData       map[string]SponsorshipHistoryEntry `json:"monthly_historical_data"`
+	UpdatedDateTime             time.Time                          `json:"updated_datetime"`
 }
 
 // GitHubSponsorship represents GitHub sponsorship data
@@ -45,11 +48,27 @@ type SponsorshipGoal struct {
 	GoalURL    string  `json:"goal_url"`
 }
 
+// SponsorshipGoalItem represents a single sponsorship goal
+type SponsorshipGoalItem struct {
+	GoalID           string  `json:"goal_id"`
+	Description      string  `json:"description"`
+	TargetAmount     float64 `json:"target_amount"`
+	GoalCreationDate string  `json:"goal_creation_date"`
+	GoalTargetDate   string  `json:"goal_target_date"`
+	Status           string  `json:"status"`
+}
+
+// SponsorshipCurrentGoal represents the current active goal
+type SponsorshipCurrentGoal struct {
+	GoalID             string  `json:"goal_id"`
+	TargetAmount       float64 `json:"target_amount"`
+	ProgressPercentage float64 `json:"progress_percentage"`
+}
+
 // SponsorshipHistoryEntry represents a single entry in the sponsorship history
 type SponsorshipHistoryEntry struct {
-	Date                      time.Time `json:"date"`
-	TotalMonthlyAverageIncome float64   `json:"total_monthly_average_income"`
-	TotalSponsors             int       `json:"total_sponsors"`
+	Date                      string  `json:"date"`
+	TotalMonthlyAverageIncome float64 `json:"total_monthly_average_income"`
 }
 
 // SponsorshipManager defines the interface for managing sponsorship data

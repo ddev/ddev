@@ -476,7 +476,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # remote_config - Intended for debugging only, should not be changed.
 # Controls the download of the remote config and sponsorship data. Please do not change.
 #remote_config:
-#  update_interval: 10 // Interval in hours to download the remote config and sponsorship data
+#  update_interval: 10 #Interval in hours to download the remote config and sponsorship data
 #  remote:
 #    owner: ddev
 #    repo: remote-config
