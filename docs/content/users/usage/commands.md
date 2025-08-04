@@ -645,6 +645,8 @@ Decode and display the contents of Go gob-encoded binary files used by DDEV, suc
 
 The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
 
+*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+
 Example:
 
 ```shell
@@ -658,11 +660,24 @@ ddev debug gob-decode ~/.ddev/.amplitude.cache
 ddev debug gob-decode ~/path/to/file.gob
 ```
 
-### `debug download-json-file`
+### `debug message-conditions`
 
-Download and display JSON/JSONC files used by DDEV from remote sources. This command can download various data types including remote configuration and sponsorship information.
+Show message conditions of this version of DDEV.
+
+Example:
+
+```shell
+# Show message conditions for the current DDEV version
+ddev debug message-conditions
+```
+
+### `debug remote-data`
+
+Download and display remote configuration and sponsorship data used by DDEV from GitHub repositories.
 
 The downloaded content is displayed as formatted JSON to stdout. Optionally updates the local cached storage file (enabled by default).
+
+*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
 
 Flags:
 
@@ -673,13 +688,10 @@ Examples:
 
 ```shell
 # Download remote config (default type)
-ddev debug download-json-file
+ddev debug remote-data
 
 # Download sponsorship data without updating local storage
-ddev debug download-json-file --type=sponsorship-data --update-storage=false
-
-# Download from a custom URL
-ddev debug download-json-file https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc --type=remote-config
+ddev debug remote-data --type=sponsorship-data --update-storage=false
 ```
 
 ## `delete`

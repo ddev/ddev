@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDebugDownloadJSONFileCmd tests the ddev debug download-json-file command
-func TestDebugDownloadJSONFileCmd(t *testing.T) {
+// TestDebugRemoteDataCmd tests the ddev debug remote-data command
+func TestDebugRemoteDataCmd(t *testing.T) {
 	// Test help functionality
 	t.Run("Help", func(t *testing.T) {
-		out, err := exec.RunHostCommand(DdevBin, "debug", "download-json-file", "--help")
+		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--help")
 		require.NoError(t, err)
-		require.Contains(t, out, "Download and display JSON/JSONC files used by DDEV from remote sources")
+		require.Contains(t, out, "Download and display remote data used by DDEV from GitHub repositories")
 		require.Contains(t, out, "remote-config: DDEV remote configuration")
 		require.Contains(t, out, "sponsorship-data: DDEV sponsorship information")
 		require.Contains(t, out, "--type string")
@@ -27,13 +27,13 @@ func TestDebugDownloadJSONFileCmd(t *testing.T) {
 
 	// Test invalid data type
 	t.Run("InvalidDataType", func(t *testing.T) {
-		_, err := exec.RunHostCommand(DdevBin, "debug", "download-json-file", "--type=invalid")
+		_, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=invalid")
 		require.Error(t, err, "Should return error for invalid data type")
 	})
 
 	// Test remote config download (without updating storage)
 	t.Run("RemoteConfigDownload", func(t *testing.T) {
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "download-json-file", "--type=remote-config", "--update-storage=false")
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")
 		require.NoError(t, err, "Should successfully download remote config")
 
 		// Parse the JSON output
@@ -59,7 +59,7 @@ func TestDebugDownloadJSONFileCmd(t *testing.T) {
 
 	// Test sponsorship data download (without updating storage)
 	t.Run("SponsorshipDataDownload", func(t *testing.T) {
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "download-json-file", "--type=sponsorship-data", "--update-storage=false")
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=sponsorship-data", "--update-storage=false")
 		require.NoError(t, err, "Should successfully download sponsorship data")
 
 		// Parse the JSON output
@@ -78,7 +78,7 @@ func TestDebugDownloadJSONFileCmd(t *testing.T) {
 
 	// Test default behavior (should default to remote-config)
 	t.Run("DefaultBehavior", func(t *testing.T) {
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "download-json-file", "--update-storage=false")
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--update-storage=false")
 		require.NoError(t, err, "Should successfully download with default type")
 
 		// Should parse as remote config since that's the default
@@ -90,8 +90,8 @@ func TestDebugDownloadJSONFileCmd(t *testing.T) {
 	})
 }
 
-// TestDebugDownloadJSONFileWithStorage tests storage update functionality
-func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
+// TestDebugRemoteDataWithStorage tests storage update functionality
+func TestDebugRemoteDataWithStorage(t *testing.T) {
 	// Create a temporary directory for test storage
 	tmpDir, err := os.MkdirTemp("", "ddev-download-test")
 	require.NoError(t, err)
@@ -102,7 +102,7 @@ func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
 
 	t.Run("StorageUpdateEnabled", func(t *testing.T) {
 		// Test with storage update enabled (default)
-		out, err := exec.RunHostCommand(DdevBin, "debug", "download-json-file", "--type=remote-config")
+		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=remote-config")
 		require.NoError(t, err, "Should successfully download and update storage")
 		require.Contains(t, out, "Local remote config storage updated successfully")
 
@@ -117,7 +117,7 @@ func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
 		os.Remove(storageFile)
 
 		// Test with storage update disabled
-		out, err := exec.RunHostCommand(DdevBin, "debug", "download-json-file", "--type=remote-config", "--update-storage=false")
+		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")
 		require.NoError(t, err, "Should successfully download without updating storage")
 		require.NotContains(t, out, "Local remote config storage updated successfully")
 
@@ -130,7 +130,7 @@ func TestDebugDownloadJSONFileWithStorage(t *testing.T) {
 // TestJSONValidation tests that the output is always valid JSON
 func TestJSONValidation(t *testing.T) {
 	t.Run("RemoteConfigValidJSON", func(t *testing.T) {
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "download-json-file", "--type=remote-config", "--update-storage=false")
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")
 		require.NoError(t, err)
 
 		// Test that it's valid JSON by unmarshaling to interface{}
@@ -144,7 +144,7 @@ func TestJSONValidation(t *testing.T) {
 	})
 
 	t.Run("SponsorshipDataValidJSON", func(t *testing.T) {
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "download-json-file", "--type=sponsorship-data", "--update-storage=false")
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=sponsorship-data", "--update-storage=false")
 		require.NoError(t, err)
 
 		// Test that it's valid JSON

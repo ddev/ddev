@@ -19,20 +19,23 @@ import (
 var updateStorage bool
 var dataType string
 
-// DebugDownloadJSONFileCmd implements the ddev debug download-json-file command
-var DebugDownloadJSONFileCmd = &cobra.Command{
-	Use:   "download-json-file",
-	Short: "Download and display JSON/JSONC files with optional local storage update",
-	Long: `Download and display JSON/JSONC files used by DDEV from remote sources.
+// DebugRemoteDataCmd implements the ddev debug remote-data command
+var DebugRemoteDataCmd = &cobra.Command{
+	Use:    "remote-data",
+	Short:  "Download and display remote configuration and sponsorship data",
+	Hidden: true,
+	Long: `Download and display remote data used by DDEV from GitHub repositories.
 
 This command can download various data types:
   - remote-config: DDEV remote configuration (from ddev/remote-config repository)
   - sponsorship-data: DDEV sponsorship information (from ddev/sponsorship-data repository)
 
 The downloaded content is displayed as formatted JSON to stdout.
-Optionally updates the local cached storage file (enabled by default).`,
-	Example: `ddev debug download-json-file --type=remote-config
-ddev debug download-json-file --type=sponsorship-data --update-storage=false`,
+Optionally updates the local cached storage file (enabled by default).
+
+This is a developer/debugging tool and is hidden from normal help output.`,
+	Example: `ddev debug remote-data --type=remote-config
+ddev debug remote-data --type=sponsorship-data --update-storage=false`,
 	Args: cobra.NoArgs,
 	RunE: func(_ *cobra.Command, args []string) error {
 		// Ensure global config is loaded
@@ -175,7 +178,7 @@ func updateSponsorshipDataStorage(data types.SponsorshipData) error {
 }
 
 func init() {
-	DebugDownloadJSONFileCmd.Flags().StringVarP(&dataType, "type", "t", "remote-config", "Type of data to download (remote-config|sponsorship-data)")
-	DebugDownloadJSONFileCmd.Flags().BoolVar(&updateStorage, "update-storage", true, "Update local cached storage file")
-	DebugCmd.AddCommand(DebugDownloadJSONFileCmd)
+	DebugRemoteDataCmd.Flags().StringVarP(&dataType, "type", "t", "remote-config", "Type of data to download (remote-config|sponsorship-data)")
+	DebugRemoteDataCmd.Flags().BoolVar(&updateStorage, "update-storage", true, "Update local cached storage file")
+	DebugCmd.AddCommand(DebugRemoteDataCmd)
 }
