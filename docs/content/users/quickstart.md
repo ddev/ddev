@@ -229,10 +229,8 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # Visit the website by opening its frontpage with a welcome message:
-    ddev launch $(ddev drush uli)
-    # Visit the website by opening its more technical status report page:
-    ddev launch $(ddev drush uli admin/reports/status)
-    # (Both commands automatically signs you in to the admin interface.)
+    ddev launch $(ddev drush uli "/")
+    # This command automatically signs you in to Drupal's admin interface.
     ```
 
     Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
@@ -260,10 +258,8 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     # Visit the website by opening its frontpage with a welcome message:
-    ddev launch $(ddev drush uli)
-    # Visit the website by opening its more technical status report page:
-    ddev launch $(ddev drush uli admin/reports/status)
-    # (Both commands automatically signs you in to the admin interface.)
+    ddev launch $(ddev drush uli "/")
+    # This command automatically signs you in to Drupal's admin interface.
     ```
 
     Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
