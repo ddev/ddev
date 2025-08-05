@@ -37,7 +37,7 @@ The main configuration includes:
 
 ### Sponsorship Information  
 
-Separate from the main config, DDEV downloads sponsorship data from [`ddev/sponsorship-data`](https://github.com/ddev/sponsorship-data) including:
+Separate from the main config, DDEV downloads sponsorship data from a JSON endpoint including:
 
 - Monthly and annual sponsor information
 - Sponsor counts and income totals
@@ -73,13 +73,10 @@ ddev debug gob-decode ~/.ddev/.amplitude.cache
 
 ```bash
 # Download latest remote config (updates cache by default)
-ddev debug download-json-file --type=remote-config
+ddev debug remote-data --type=remote-config
 
 # Download sponsorship data without updating cache
-ddev debug download-json-file --type=sponsorship-data --update-storage=false
-
-# Download from custom URL for testing
-ddev debug download-json-file https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc --type=remote-config
+ddev debug remote-data --type=sponsorship-data --update-storage=false
 ```
 
 ### View Available Conditions
@@ -94,7 +91,7 @@ ddev debug message-conditions
 ### Notifications
 
 The defined messages are shown to the user every `interval` as long as not
-disabled (interval=0). Supported message types are `infos` and `warnings` where
+disabled (interval=-1). Supported message types are `infos` and `warnings` where
 `infos` are printed in a yellow box and `warnings` in a red box.
 
 Messages will be shown as configured in the `remote-config` repository and the
@@ -123,8 +120,8 @@ user cannot influence them.
 
 ### Ticker
 
-Messages rotate, with one shown to the user every `interval` as long as it’s not
-disabled (interval=0).
+Messages rotate, with one shown to the user every `interval` as long as it's not
+disabled (interval=-1).
 
 The user can disable the ticker or change the interval in the global config.
 
@@ -151,12 +148,8 @@ Users can configure remote config behavior in `~/.ddev/global_config.yaml`:
 ```yaml
 remote_config:
   update_interval: 24  # Hours between updates
-  ticker_interval: 20  # Hours between ticker messages
-  remote:
-    owner: ddev         # GitHub owner
-    repo: remote-config # Repository name  
-    ref: main          # Branch/tag/commit
-    filepath: remote-config.jsonc  # File path in repo
+  remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
+  sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"
 ```
 
 ### Per-User Control
@@ -164,10 +157,11 @@ remote_config:
 Users can disable features entirely:
 
 ```yaml
-# Disable ticker messages
-ticker_interval: -1
+# Disable ticker messages (set in messages section)
+messages:
+  ticker_interval: -1
 
-# Disable notifications  
+# Disable notifications and remote config updates
 remote_config:
   update_interval: -1
 ```
@@ -180,13 +174,13 @@ The remote configuration system consists of several Go packages:
 
 - `pkg/config/remoteconfig/`: Main package with interfaces and logic
 - `pkg/config/remoteconfig/types/`: Public type definitions
-- `pkg/config/remoteconfig/storage/`: File and GitHub storage implementations
+- `pkg/config/remoteconfig/storage/`: File storage implementations
 - `pkg/config/remoteconfig/downloader/`: JSONC download functionality
 
 ### Key Components
 
 - **RemoteConfig Interface**: Main interface for displaying messages
-- **Storage Interfaces**: Abstract file and network storage
+- **Storage Interfaces**: Abstract file storage
 - **Message Processing**: Condition and version constraint evaluation
 - **State Management**: Tracking update times and message rotations
 
@@ -208,11 +202,8 @@ To test changes to remote configuration:
    ```yaml
    remote_config:
      update_interval: 1  # Update every hour for testing
-     remote:
-       owner: your-username      # Your fork
-       repo: remote-config
-       ref: your-test-branch      # Your test branch
-       filepath: remote-config.jsonc
+     remote_config_url: "https://raw.githubusercontent.com/your-username/remote-config/your-test-branch/remote-config.jsonc"
+     sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"  # Or your test URL
    ```
 
 3. **Clear cached data**:
@@ -232,8 +223,8 @@ To test changes to remote configuration:
 Use the debug commands to validate your configuration:
 
 ```bash
-# Download and validate your test config
-ddev debug download-json-file https://raw.githubusercontent.com/your-username/remote-config/your-branch/remote-config.jsonc --type=remote-config --update-storage=false
+# Download and validate remote config (tests your configured URL from global config)
+ddev debug remote-data --type=remote-config --update-storage=false
 
 # View the current cached config
 ddev debug gob-decode ~/.ddev/.remote-config
