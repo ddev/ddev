@@ -100,6 +100,19 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 	// Use t.Setenv to set XDG_CONFIG_HOME to tmpDir so .ddev is created there
 	t.Setenv("XDG_CONFIG_HOME", tmpDir)
 
+	// Set up global config with remote config settings
+	globalconfig.EnsureGlobalConfig()
+	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner = "ddev"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo = "remote-config"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref = "main"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath = "remote-config.jsonc"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Owner = "ddev"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Repo = "sponsorship-data"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Ref = "main"
+	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Filepath = "data/all-sponsorships.json"
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
 	t.Run("StorageUpdateEnabled", func(t *testing.T) {
 		// Test with storage update enabled (default)
 		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=remote-config")
