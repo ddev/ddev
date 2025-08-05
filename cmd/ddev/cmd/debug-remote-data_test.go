@@ -34,7 +34,7 @@ func TestDebugRemoteDataCmd(t *testing.T) {
 	// Test remote config download (without updating storage)
 	t.Run("RemoteConfigDownload", func(t *testing.T) {
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")
-		require.NoError(t, err, "Should successfully download remote config")
+		require.NoError(t, err, "Should successfully download remote config, output='%v'", out)
 
 		// Parse the JSON output
 		var remoteConfig types.RemoteConfigData

@@ -95,6 +95,21 @@ func New() GlobalConfig {
 		MkcertCARoot:                 readCAROOT(),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
+		RemoteConfig: RemoteConfig{
+			UpdateInterval: 24, // Default update interval in hours
+			Remote: RemoteConfigRemote{
+				Owner:    "ddev",
+				Repo:     "remote-config",
+				Ref:      "main",
+				Filepath: "remote-config.jsonc",
+			},
+			Sponsorship: RemoteConfigRemote{
+				Owner:    "ddev",
+				Repo:     "sponsorship-data",
+				Ref:      "main",
+				Filepath: "data/all-sponsorships.json",
+			},
+		},
 	}
 
 	return cfg
