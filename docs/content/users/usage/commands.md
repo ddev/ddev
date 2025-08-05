@@ -532,111 +532,8 @@ Get the database type and version found in the `ddev-dbserver` database volume, 
 Example:
 
 ```shell
-# Print the database volume’s engine and version
+# Print the database volume's engine and version
 ddev debug get-volume-db-version
-```
-
-### `debug match-constraint`
-
-Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
-
-Example:
-
-```shell
-# This is only supported with DDEV versions above v1.24.0
-if ddev debug match-constraint "< 1.25" >/dev/null 2>&1; then
-  # do something for ddev versions below 1.25
-  ...
-else
-  # do something for ddev versions 1.25+
-  ...
-fi
-```
-
-!!!tip
-    You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
-
-### `debug migrate-database`
-
-Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
-
-Example:
-
-```shell
-# Migrate the current project’s database to MariaDB 10.7
-ddev debug migrate-database mariadb:10.7
-```
-
-### `debug mutagen`
-
-Allows access to any [Mutagen command](https://mutagen.io/documentation/introduction).
-
-Example:
-
-```shell
-# Run Mutagen’s `sync list` command
-ddev debug mutagen sync list
-```
-
-### `debug nfsmount`
-
-Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
-
-Example:
-
-```shell
-# See if NFS is working as expected for the current project
-ddev debug nfsmount
-```
-
-### `debug rebuild`
-
-*Alias: `debug refresh`.*
-
-Rebuilds the project’s Docker cache with verbose output and restarts the project or the specified service.
-
-Flags:
-
-* `--all`, `-a`: Rebuild all services and restart the project.
-* `--cache`: Keep Docker cache.
-* `--service`, `-s`: Rebuild the specified service and restart it. (default `web`)
-
-Example:
-
-```shell
-# Rebuild the current project’s web service without cache
-ddev debug rebuild
-
-# Rebuild the current project’s web service with cache
-ddev debug rebuild --cache
-
-# Rebuild the current project’s db service without cache
-ddev debug rebuild --service db
-
-# Rebuild the current project’s all services without cache
-ddev debug rebuild --all
-```
-
-### `debug test`
-
-Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/scripts/test_ddev.sh).
-
-Example:
-
-```shell
-# Run DDEV’s diagnostic suite
-ddev debug test
-```
-
-### `debug testcleanup`
-
-Removes all diagnostic projects created with `ddev debug test`.
-
-Example:
-
-```shell
-# Remove all DDEV's diagnostic projects
-ddev debug testcleanup
 ```
 
 ### `debug gob-decode`
@@ -660,15 +557,98 @@ ddev debug gob-decode ~/.ddev/.amplitude.cache
 ddev debug gob-decode ~/path/to/file.gob
 ```
 
+### `debug match-constraint`
+
+Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+
+Example:
+
+```shell
+# This is only supported with DDEV versions above v1.24.0
+if ddev debug match-constraint "< 1.25" >/dev/null 2>&1; then
+  # do something for ddev versions below 1.25
+  ...
+else
+  # do something for ddev versions 1.25+
+  ...
+fi
+```
+
+!!!tip
+    You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
+
 ### `debug message-conditions`
 
 Show message conditions of this version of DDEV.
+
+*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
 
 Example:
 
 ```shell
 # Show message conditions for the current DDEV version
 ddev debug message-conditions
+```
+
+### `debug migrate-database`
+
+Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
+
+Example:
+
+```shell
+# Migrate the current project's database to MariaDB 10.7
+ddev debug migrate-database mariadb:10.7
+```
+
+### `debug mutagen`
+
+Allows access to any [Mutagen command](https://mutagen.io/documentation/introduction).
+
+Example:
+
+```shell
+# Run Mutagen's `sync list` command
+ddev debug mutagen sync list
+```
+
+### `debug nfsmount`
+
+Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
+
+Example:
+
+```shell
+# See if NFS is working as expected for the current project
+ddev debug nfsmount
+```
+
+### `debug rebuild`
+
+*Alias: `debug refresh`.*
+
+Rebuilds the project's Docker cache with verbose output and restarts the project or the specified service.
+
+Flags:
+
+* `--all`, `-a`: Rebuild all services and restart the project.
+* `--cache`: Keep Docker cache.
+* `--service`, `-s`: Rebuild the specified service and restart it. (default `web`)
+
+Example:
+
+```shell
+# Rebuild the current project's web service without cache
+ddev debug rebuild
+
+# Rebuild the current project's web service with cache
+ddev debug rebuild --cache
+
+# Rebuild the current project's db service without cache
+ddev debug rebuild --service db
+
+# Rebuild the current project's all services without cache
+ddev debug rebuild --all
 ```
 
 ### `debug remote-data`
@@ -692,6 +672,28 @@ ddev debug remote-data
 
 # Download sponsorship data without updating local storage
 ddev debug remote-data --type=sponsorship-data --update-storage=false
+```
+
+### `debug test`
+
+Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/scripts/test_ddev.sh).
+
+Example:
+
+```shell
+# Run DDEV's diagnostic suite
+ddev debug test
+```
+
+### `debug testcleanup`
+
+Removes all diagnostic projects created with `ddev debug test`.
+
+Example:
+
+```shell
+# Remove all DDEV's diagnostic projects
+ddev debug testcleanup
 ```
 
 ## `delete`
