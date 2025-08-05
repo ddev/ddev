@@ -1,20 +1,27 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
-	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerMount "github.com/docker/docker/api/types/mount"
+	dockerStrslice "github.com/docker/docker/api/types/strslice"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
-	"slices"
-	"strings"
+	"golang.org/x/term"
 )
 
 var sshKeyFiles, sshKeyDirs []string
@@ -80,7 +87,8 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
 
-		var mounts []string
+		// Prepare mounts for Docker API
+		var mounts []dockerMount.Mount
 		// Map to track already added keys
 		addedKeys := make(map[string]struct{})
 		for i, keyPath := range keys {
@@ -91,18 +99,24 @@ var AuthSSHCommand = &cobra.Command{
 				filename = fmt.Sprintf("%s_%d", filename, i)
 			}
 			addedKeys[filename] = struct{}{}
-			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
+			mounts = append(mounts, dockerMount.Mount{
+				Type:     dockerMount.TypeBind,
+				Source:   keyPath,
+				Target:   "/tmp/sshtmp/" + filename,
+				ReadOnly: true,
+			})
 			// Mount optional OpenSSH certificate
 			if certPath, certName := getCertificateForPrivateKey(keyPath, filename); certPath != "" && certName != "" {
-				mounts = append(mounts, "--mount=type=bind,src="+certPath+",dst=/tmp/sshtmp/"+certName)
+				mounts = append(mounts, dockerMount.Mount{
+					Type:     dockerMount.TypeBind,
+					Source:   certPath,
+					Target:   "/tmp/sshtmp/" + certName,
+					ReadOnly: true,
+				})
 			}
 		}
 
-		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint="}
-		dockerCmd = append(dockerCmd, mounts...)
-		dockerCmd = append(dockerCmd, docker.GetSSHAuthImage()+"-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`)
-
-		err = exec.RunInteractiveCommand("docker", dockerCmd)
+		err = runSSHAuthContainer(uidStr, mounts)
 
 		if err != nil {
 			helpMessage := ""
@@ -111,7 +125,7 @@ var AuthSSHCommand = &cobra.Command{
 			if strings.Contains(err.Error(), "bind source path does not exist") {
 				helpMessage = "\n\nThe specified SSH private key path is not shared with your Docker provider."
 			}
-			util.Failed("Docker command 'docker %v' failed: %v %v", prettyCmd(dockerCmd), err, helpMessage)
+			util.Failed("Failed to run SSH auth container: %v %v", err, helpMessage)
 		}
 	},
 }
@@ -195,6 +209,143 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 	}
 	certName := name + "-cert.pub"
 	return certPath, certName
+}
+
+// runSSHAuthContainer runs the SSH auth container using Docker client API
+func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
+	ctx, client := dockerutil.GetDockerClient()
+	if client == nil {
+		return fmt.Errorf("failed to get Docker client")
+	}
+
+	// Container configuration
+	config := &dockerContainer.Config{
+		Image:        docker.GetSSHAuthImage() + "-built",
+		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `set -e && cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && keys=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' * || { echo "No SSH private keys found" >&2; exit 1; }) && for key in $keys; do ssh-add "$key" || exit $?; done`},
+		Entrypoint:   dockerStrslice.StrSlice{},
+		Tty:          true,
+		OpenStdin:    true,
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		User:         uidStr,
+	}
+
+	// Host configuration with volume mounts
+	hostConfig := &dockerContainer.HostConfig{
+		AutoRemove:  true,
+		Mounts:      mounts,
+		VolumesFrom: []string{ddevapp.SSHAuthName},
+	}
+
+	// Create container
+	resp, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
+	if err != nil {
+		return fmt.Errorf("failed to create SSH auth container: %v", err)
+	}
+	containerID := resp.ID
+
+	// Start container
+	err = client.ContainerStart(ctx, containerID, dockerContainer.StartOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to start SSH auth container: %v", err)
+	}
+
+	// Attach to container for interactive session
+	attachOptions := dockerContainer.AttachOptions{
+		Stream: true,
+		Stdin:  true,
+		Stdout: true,
+		Stderr: true,
+	}
+
+	hijackedResp, err := client.ContainerAttach(ctx, containerID, attachOptions)
+	if err != nil {
+		return fmt.Errorf("failed to attach to SSH auth container: %v", err)
+	}
+	defer hijackedResp.Close()
+
+	isInteractive := term.IsTerminal(int(os.Stdin.Fd()))
+
+	// Disable terminal echo if running on a terminal
+	// to hide passphrase input
+	var oldState *term.State
+	if isInteractive {
+		oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			return fmt.Errorf("failed to set terminal to raw mode: %v", err)
+		}
+		defer func() {
+			if oldState != nil {
+				_ = term.Restore(int(os.Stdin.Fd()), oldState)
+			}
+		}()
+	}
+
+	if isInteractive {
+		// Interactive mode - use simple I/O copying
+		go func() {
+			_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
+		}()
+		go func() {
+			_, _ = io.Copy(hijackedResp.Conn, os.Stdin)
+		}()
+	} else {
+		// Non-interactive mode - wait for prompts before sending input
+		inputCh := make(chan string, 10)
+
+		// Read all input lines into channel
+		go func() {
+			defer close(inputCh)
+			stdinReader := bufio.NewReader(os.Stdin)
+			for {
+				if line, err := stdinReader.ReadString('\n'); err == nil {
+					inputCh <- line
+				} else {
+					break
+				}
+			}
+		}()
+
+		// Handle container output and send input when prompted
+		go func() {
+			buffer := make([]byte, 1024)
+			for {
+				n, err := hijackedResp.Reader.Read(buffer)
+				if err != nil {
+					break
+				}
+
+				output := string(buffer[:n])
+				fmt.Print(output)
+
+				// Send next input when we see a prompt
+				if strings.Contains(output, "Enter passphrase for") {
+					select {
+					case line := <-inputCh:
+						_, _ = hijackedResp.Conn.Write([]byte(line))
+					default:
+						// No more input available
+					}
+				}
+			}
+		}()
+	}
+
+	// Wait for container to finish
+	statusCh, errCh := client.ContainerWait(ctx, containerID, dockerContainer.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("error waiting for SSH auth container: %v", err)
+		}
+	case status := <-statusCh:
+		if status.StatusCode != 0 {
+			return fmt.Errorf("SSH auth container exited with non-zero status: %d", status.StatusCode)
+		}
+	}
+
+	return nil
 }
 
 func init() {
