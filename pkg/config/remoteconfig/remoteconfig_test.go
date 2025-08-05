@@ -12,7 +12,6 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
@@ -34,12 +33,7 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 
 	// Test 1: Test generic JSONC downloader directly
 	t.Run("GenericJSONCDownloader", func(t *testing.T) {
-		downloader := downloader.NewGitHubJSONCDownloader(
-			"ddev",
-			"remote-config",
-			"remote-config.jsonc",
-			github.RepositoryContentGetOptions{Ref: "main"},
-		)
+		downloader := downloader.NewURLJSONCDownloader("https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc")
 
 		var remoteConfig types.RemoteConfigData
 		ctx := context.Background()
@@ -228,12 +222,7 @@ func TestRemoteConfigStructure(t *testing.T) {
 	require := require.New(t)
 
 	// Test the actual structure matches our expectations
-	downloader := downloader.NewGitHubJSONCDownloader(
-		"ddev",
-		"remote-config",
-		"remote-config.jsonc",
-		github.RepositoryContentGetOptions{Ref: "main"},
-	)
+	downloader := downloader.NewURLJSONCDownloader("https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc")
 
 	var remoteConfig types.RemoteConfigData
 	ctx := context.Background()

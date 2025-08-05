@@ -113,7 +113,7 @@ func (c *remoteConfig) updateFromRemote() {
 		err = c.urlDownloader.Download(ctx, &c.remoteConfig)
 
 		if err != nil {
-			util.Debug("Error while downloading remote config: %v", err)
+			util.Debug("Error while downloading remote config from %s: %v", c.urlDownloader.GetURL(), err)
 
 			return
 		}

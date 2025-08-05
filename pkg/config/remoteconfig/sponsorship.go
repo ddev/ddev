@@ -122,7 +122,7 @@ func (m *sponsorshipManager) updateFromRemote() {
 
 	err := m.downloader.Download(ctx, &newData)
 	if err != nil {
-		util.Debug("Error downloading sponsorship data from remote source: %v", err)
+		util.Debug("Error downloading sponsorship data from remote source %s: %v", m.downloader.GetURL(), err)
 		// Don't update data if download fails, keep existing data
 		return
 	}
