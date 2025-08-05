@@ -304,6 +304,14 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.ProjectTldGlobal = nodeps.DdevDefaultTLD
 	}
 
+	// Set default remote config URLs if empty
+	if DdevGlobalConfig.RemoteConfig.RemoteConfigURL == "" {
+		DdevGlobalConfig.RemoteConfig.RemoteConfigURL = DefaultRemoteConfigURL
+	}
+	if DdevGlobalConfig.RemoteConfig.SponsorshipDataURL == "" {
+		DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = DefaultSponsorshipDataURL
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
@@ -332,6 +340,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 	if cfgCopy.XHProfMode == configTypes.XHProfModeEmpty {
 		cfgCopy.XHProfMode = nodeps.XHProfModeDefault
+	}
+
+	// Clear remote config URLs if they match defaults so they don't appear in config file
+	if cfgCopy.RemoteConfig.RemoteConfigURL == DefaultRemoteConfigURL {
+		cfgCopy.RemoteConfig.RemoteConfigURL = ""
+	}
+	if cfgCopy.RemoteConfig.SponsorshipDataURL == DefaultSponsorshipDataURL {
+		cfgCopy.RemoteConfig.SponsorshipDataURL = ""
 	}
 
 	// We only have one router, so this field is old, and when writing we can omitempty

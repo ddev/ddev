@@ -60,7 +60,7 @@ func TestDebugRemoteDataCmd(t *testing.T) {
 	// Test sponsorship data download (without updating storage)
 	t.Run("SponsorshipDataDownload", func(t *testing.T) {
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=sponsorship-data", "--update-storage=false")
-		require.NoError(t, err, "Should successfully download sponsorship data")
+		require.NoError(t, err, "Should successfully download sponsorship data, output='%v'", out)
 
 		// Parse the JSON output
 		var sponsorshipData types.SponsorshipData
@@ -79,7 +79,7 @@ func TestDebugRemoteDataCmd(t *testing.T) {
 	// Test default behavior (should default to remote-config)
 	t.Run("DefaultBehavior", func(t *testing.T) {
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--update-storage=false")
-		require.NoError(t, err, "Should successfully download with default type")
+		require.NoError(t, err, "Should successfully download with default type, output='%v'", out)
 
 		// Should parse as remote config since that's the default
 		var remoteConfig types.RemoteConfigData
@@ -110,7 +110,7 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 	t.Run("StorageUpdateEnabled", func(t *testing.T) {
 		// Test with storage update enabled (default)
 		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=remote-config")
-		require.NoError(t, err, "Should successfully download and update storage")
+		require.NoError(t, err, "Should successfully download and update storage, output='%v'", out)
 		require.Contains(t, out, "Local remote config storage updated successfully")
 
 		// Verify that the storage file was created
@@ -125,7 +125,7 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 
 		// Test with storage update disabled
 		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")
-		require.NoError(t, err, "Should successfully download without updating storage")
+		require.NoError(t, err, "Should successfully download without updating storage, output='%v'", out)
 		require.NotContains(t, out, "Local remote config storage updated successfully")
 
 		// Verify that no storage file was created
@@ -138,7 +138,7 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 func TestJSONValidation(t *testing.T) {
 	t.Run("RemoteConfigValidJSON", func(t *testing.T) {
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")
-		require.NoError(t, err)
+		require.NoError(t, err, "Should successfully download remote config, output='%v'", out)
 
 		// Test that it's valid JSON by unmarshaling to interface{}
 		var jsonData interface{}
@@ -152,7 +152,7 @@ func TestJSONValidation(t *testing.T) {
 
 	t.Run("SponsorshipDataValidJSON", func(t *testing.T) {
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "remote-data", "--type=sponsorship-data", "--update-storage=false")
-		require.NoError(t, err)
+		require.NoError(t, err, "Should successfully download sponsorship data, output='%v'", out)
 
 		// Test that it's valid JSON
 		var jsonData interface{}
