@@ -75,12 +75,7 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 			Local: remoteconfig.Local{
 				Path: tmpDir,
 			},
-			Remote: remoteconfig.Remote{
-				Owner:    "ddev",
-				Repo:     "remote-config",
-				Ref:      "main",
-				Filepath: "remote-config.jsonc",
-			},
+			URL:            "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc",
 			UpdateInterval: 1, // 1 hour for testing
 			TickerInterval: 1, // 1 hour for testing
 		}
@@ -145,12 +140,7 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 			Local: remoteconfig.Local{
 				Path: cacheDir,
 			},
-			Remote: remoteconfig.Remote{
-				Owner:    "ddev",
-				Repo:     "remote-config",
-				Ref:      "main",
-				Filepath: "remote-config.jsonc",
-			},
+			URL:            "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc",
 			UpdateInterval: 1, // 1 hour - will trigger update since state is fresh
 		}
 
@@ -188,7 +178,7 @@ func TestSponsorshipDataEndToEnd(t *testing.T) {
 
 	t.Run("SponsorshipManager", func(t *testing.T) {
 		// Create sponsorship manager
-		mgr := remoteconfig.NewSponsorshipManager(tmpDir, stateManager, alwaysInternetActive, 24, "ddev", "sponsorship-data", "data/all-sponsorships.json", "main")
+		mgr := remoteconfig.NewSponsorshipManager(tmpDir, stateManager, alwaysInternetActive, 24, "https://ddev.com/s/sponsorship-data.json")
 		require.NotNil(mgr, "Sponsorship manager should not be nil")
 
 		// Test getting sponsorship data
@@ -219,7 +209,7 @@ func TestSponsorshipDataEndToEnd(t *testing.T) {
 
 	t.Run("GlobalSponsorshipManager", func(t *testing.T) {
 		// Test global sponsorship manager
-		globalMgr := remoteconfig.InitGlobalSponsorship(tmpDir, stateManager, alwaysInternetActive, 24, "ddev", "sponsorship-data", "data/all-sponsorships.json", "main")
+		globalMgr := remoteconfig.InitGlobalSponsorship(tmpDir, stateManager, alwaysInternetActive, 24, "https://ddev.com/s/sponsorship-data.json")
 		require.NotNil(globalMgr, "Global sponsorship manager should not be nil")
 
 		// Test retrieval

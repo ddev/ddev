@@ -163,7 +163,6 @@ func emitReachProjectMessage(project *ddevapp.DdevApp) {
 	}
 }
 
-
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")

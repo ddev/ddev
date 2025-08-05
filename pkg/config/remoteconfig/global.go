@@ -32,7 +32,6 @@ func GetGlobal() types.RemoteConfig {
 	return globalRemoteConfig
 }
 
-
 // InitGlobalSponsorship initializes the global sponsorship manager using a direct URL. This is done once,
 // subsequent calls do not have any effect.
 func InitGlobalSponsorship(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, url string) types.SponsorshipManager {

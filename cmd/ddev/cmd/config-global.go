@@ -282,7 +282,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 			keys = append(keys, tagWithDashes)
 		}
 	}
-	
+
 	// Add remote config URLs to the display
 	valMap["remote-config-url"] = globalconfig.DdevGlobalConfig.RemoteConfig.RemoteConfigURL
 	keys = append(keys, "remote-config-url")
@@ -290,7 +290,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	keys = append(keys, "sponsorship-data-url")
 	valMap["remote-config-update-interval"] = fmt.Sprintf("%d", globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval)
 	keys = append(keys, "remote-config-update-interval")
-	
+
 	sort.Strings(keys)
 	if !output.JSONOutput {
 		for _, label := range keys {

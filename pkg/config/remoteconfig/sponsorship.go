@@ -28,7 +28,6 @@ type sponsorshipManager struct {
 	mu               sync.Mutex
 }
 
-
 // NewSponsorshipManager creates a new sponsorship data manager using a direct URL
 func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, url string) types.SponsorshipManager {
 	mgr := &sponsorshipManager{
