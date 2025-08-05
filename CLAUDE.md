@@ -39,6 +39,13 @@ For comprehensive developer documentation, see:
 - `make markdownlint` - Lint markdown files
 - `make pyspelling` - Check spelling
 
+### Whitespace and Formatting
+
+- **Never add trailing whitespace** - Blank lines must be completely empty (no spaces or tabs)
+- Match existing indentation style exactly (spaces vs tabs, indentation depth)
+- Preserve the file's existing line ending style
+- Run linting tools to catch whitespace issues before committing
+
 ### Documentation
 
 - `make mkdocs` - Build documentation
