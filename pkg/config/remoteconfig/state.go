@@ -13,7 +13,7 @@ func newState(stateManager statetypes.State) *state {
 	}
 
 	if err := state.load(); err != nil {
-		util.Debug("Error while loading state: %s", err)
+		util.Debug("Error while loading state: %v", err)
 	}
 
 	return state

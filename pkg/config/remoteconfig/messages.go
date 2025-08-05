@@ -105,7 +105,7 @@ func (c *remoteConfig) ShowNotifications() {
 
 	c.state.LastNotificationAt = time.Now()
 	if err := c.state.save(); err != nil {
-		util.Debug("Error while saving state: %s", err)
+		util.Debug("Error while saving state: %v", err)
 	}
 }
 
@@ -157,7 +157,7 @@ func (c *remoteConfig) ShowTicker() {
 			c.state.LastTickerMessage = messageOffset
 			c.state.LastTickerAt = time.Now()
 			if err := c.state.save(); err != nil {
-				util.Debug("Error while saving state: %s", err)
+				util.Debug("Error while saving state: %v", err)
 			}
 
 			break
@@ -257,7 +257,7 @@ func (c *remoteConfig) checkVersions(versions string) bool {
 	if versions != "" {
 		match, err := util.SemverValidate(versions, versionconstants.DdevVersion)
 		if err != nil {
-			util.Debug("Failed to validate DDEV version `%s` against constraint `%s`: %s", versionconstants.DdevVersion, versions, err)
+			util.Debug("Failed to validate DDEV version `%s` against constraint `%s`: %v", versionconstants.DdevVersion, versions, err)
 			return true
 		}
 
@@ -282,7 +282,7 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 
 	sponsorshipData, err := sponsorshipMgr.GetSponsorshipData()
 	if err != nil {
-		util.Debug("Error getting sponsorship data: %s", err)
+		util.Debug("Error getting sponsorship data: %v", err)
 		return
 	}
 
@@ -309,7 +309,7 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 	// Update state so we don't show this message again today
 	c.state.LastSponsorshipAt = time.Now()
 	if err := c.state.save(); err != nil {
-		util.Debug("Error while saving sponsorship display state: %s", err)
+		util.Debug("Error while saving sponsorship display state: %v", err)
 	}
 }
 

@@ -65,7 +65,7 @@ func (c *remoteConfig) write() {
 	err := c.fileStorage.Write(c.remoteConfig)
 
 	if err != nil {
-		util.Debug("Error while writing remote config to local storage: %s", err)
+		util.Debug("Error while writing remote config to local storage: %v", err)
 		// Don't fail the operation, just log the error since local caching is optional
 	}
 }
@@ -83,7 +83,7 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	c.remoteConfig, err = c.fileStorage.Read()
 
 	if err != nil {
-		util.Debug("Error while loading remote config from local storage: %s", err)
+		util.Debug("Error while loading remote config from local storage: %v", err)
 		// Initialize with empty config as fallback
 		c.remoteConfig = types.RemoteConfigData{}
 	}
@@ -113,7 +113,7 @@ func (c *remoteConfig) updateFromRemote() {
 		err = c.urlDownloader.Download(ctx, &c.remoteConfig)
 
 		if err != nil {
-			util.Debug("Error while downloading remote config: %s", err)
+			util.Debug("Error while downloading remote config: %v", err)
 
 			return
 		}
@@ -123,7 +123,7 @@ func (c *remoteConfig) updateFromRemote() {
 		// Update state.
 		c.state.UpdatedAt = time.Now()
 		if err = c.state.save(); err != nil {
-			util.Debug("Error while saving state: %s", err)
+			util.Debug("Error while saving state: %v", err)
 		}
 	}
 }

@@ -92,7 +92,7 @@ func (m *sponsorshipManager) loadFromLocalStorage() {
 
 	data, err := m.fileStorage.Read()
 	if err != nil {
-		util.Debug("Error loading sponsorship data from local storage: %s", err)
+		util.Debug("Error loading sponsorship data from local storage: %v", err)
 		// Initialize with empty data as fallback
 		m.data = &types.SponsorshipData{}
 	} else {
@@ -122,7 +122,7 @@ func (m *sponsorshipManager) updateFromRemote() {
 
 	err := m.downloader.Download(ctx, &newData)
 	if err != nil {
-		util.Debug("Error downloading sponsorship data from remote source: %s", err)
+		util.Debug("Error downloading sponsorship data from remote source: %v", err)
 		// Don't update data if download fails, keep existing data
 		return
 	}
@@ -131,12 +131,12 @@ func (m *sponsorshipManager) updateFromRemote() {
 
 	// Save to local storage
 	if err := m.fileStorage.Write(&newData); err != nil {
-		util.Debug("Error saving sponsorship data to local storage: %s", err)
+		util.Debug("Error saving sponsorship data to local storage: %v", err)
 	}
 
 	// Update state
 	m.state.UpdatedAt = time.Now()
 	if err = m.state.save(); err != nil {
-		util.Debug("Error saving sponsorship state: %s", err)
+		util.Debug("Error saving sponsorship state: %v", err)
 	}
 }
