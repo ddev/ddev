@@ -77,6 +77,8 @@ func downloadRemoteConfig(url string, updateLocalStorage bool) error {
 	config := globalconfig.DdevGlobalConfig.RemoteConfig
 	d := downloader.NewURLJSONCDownloader(config.RemoteConfigURL)
 
+	fmt.Fprintf(os.Stderr, "Downloading remote config from: %s\n", config.RemoteConfigURL)
+
 	ctx := context.Background()
 	var remoteConfigData types.RemoteConfigData
 	err := d.Download(ctx, &remoteConfigData)
@@ -114,6 +116,8 @@ func downloadSponsorshipData(url string, updateLocalStorage bool) error {
 	// Use configured sponsorship data source from global config
 	config := globalconfig.DdevGlobalConfig.RemoteConfig
 	d := downloader.NewURLJSONCDownloader(config.SponsorshipDataURL)
+
+	fmt.Fprintf(os.Stderr, "Downloading sponsorship data from: %s\n", config.SponsorshipDataURL)
 
 	ctx := context.Background()
 	var sponsorshipData types.SponsorshipData

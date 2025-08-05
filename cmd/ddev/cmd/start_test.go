@@ -146,7 +146,7 @@ func TestCmdStartShowsMessages(t *testing.T) {
 	globalconfig.DdevGlobalConfig.Messages.TickerInterval = 1     // 1 hour for testing
 	globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval = 1 // 1 hour for testing
 	globalconfig.DdevGlobalConfig.RemoteConfig.RemoteConfigURL = "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
-	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
+	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://ddev.com/s/sponsorship-data.json"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
@@ -239,7 +239,7 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 	// Create a global config with custom sponsorship settings
 	globalconfig.EnsureGlobalConfig()
 	globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval = 1 // 1 hour for testing
-	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
+	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://ddev.com/s/sponsorship-data.json"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
@@ -311,7 +311,7 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 
 	// Verify global config contains sponsorship configuration
 	globalconfig.EnsureGlobalConfig()
-	assert.Equal("https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json", globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL)
+	assert.Equal("https://ddev.com/s/sponsorship-data.json", globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL)
 
 	t.Logf("Sponsorship configuration verified in global config")
 }

@@ -98,7 +98,7 @@ func New() GlobalConfig {
 		RemoteConfig: RemoteConfig{
 			UpdateInterval:     24, // Default update interval in hours
 			RemoteConfigURL:    "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc",
-			SponsorshipDataURL: "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json",
+			SponsorshipDataURL: "https://ddev.com/s/sponsorship-data.json",
 		},
 	}
 
@@ -483,7 +483,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #remote_config:
 #  update_interval: 24 # Interval in hours to download the remote config and sponsorship data
 #  remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
-#  sponsorship_data_url: "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
+#  sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

@@ -60,7 +60,7 @@ ddev start --all`,
 		)
 
 		// Initialize sponsorship manager
-		initSponsorshipManager(state)
+		initGlobalSponsorshipManager(state)
 
 		remoteconfig.GetGlobal().ShowTicker()
 		remoteconfig.GetGlobal().ShowNotifications()
@@ -158,8 +158,8 @@ func emitReachProjectMessage(project *ddevapp.DdevApp) {
 	}
 }
 
-// initSponsorshipManager initializes the sponsorship manager with proper config priority
-func initSponsorshipManager(state statetypes.State) {
+// initGlobalSponsorshipManager initializes the global sponsorship manager with proper config priority
+func initGlobalSponsorshipManager(state statetypes.State) {
 	config := globalconfig.DdevGlobalConfig.RemoteConfig
 
 	// Priority hierarchy for update interval:

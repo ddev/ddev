@@ -103,7 +103,7 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 	// Set up global config with remote config settings
 	globalconfig.EnsureGlobalConfig()
 	globalconfig.DdevGlobalConfig.RemoteConfig.RemoteConfigURL = "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
-	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
+	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://ddev.com/s/sponsorship-data.json"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
