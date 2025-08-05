@@ -2,8 +2,9 @@
 # an Ubuntu WSL2 instance for use with DDEV and docker-ce installed inside WSL2.
 # These days it's very unusual to do this because DDEV v1.24.7+ ships with a GUI installer for Windows/WSL2
 # So use that instead.
-# It requires that an Ubuntu wsl2 distro be installed already, preferably with `wsl --install`, but it can also be
-# done manually.
+# This requires that an Ubuntu-based WSL2 distro be installed already, preferably with `wsl --install`, but it can also be
+# done manually. The distro you want to act on must be set to the default WSL2 distro.
+#
 # You can download, inspect, and run this, or run it directly with
 # Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
 # iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1'))
@@ -42,11 +43,14 @@ wsl -u root -e bash -c "apt-get update && apt-get install -y docker-ce docker-ce
 wsl -u root -e bash -c "apt-get install -y --no-install-recommends ddev ddev-wsl2"
 wsl bash -c 'sudo usermod -aG docker $USER'
 
-& wsl mkcert.exe -install
+wsl mkcert.exe -install
 $env:CAROOT = & wsl mkcert.exe -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
-# TODO: We may need restart of distro here to pick up CAROOT
+$defaultDistro = (wsl --list --quiet | Select-Object -First 1) -replace '[\r\n\x00-\x1F\x7F-\x9F]', '' -replace '^\s+|\s+$', ''
+Write-Host "Terminating default WSL2 distro: $defaultDistro"
+wsl --terminate $defaultDistro
+
 wsl bash -c 'echo CAROOT=$CAROOT'
 wsl mkcert -install
 if (-not(wsl -e docker ps)) {
