@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication Style
+
+- Use direct, concise language without unnecessary adjectives or adverbs
+- Avoid flowery or marketing-style language ("tremendous", "dramatically", "revolutionary", etc.)
+- Don't include flattery or excessive praise ("excellent!", "perfect!", "great job!")
+- State facts and findings directly without embellishment
+- Skip introductory phrases like "I'm excited to", "I'd be happy to", "Let me dive into"
+- Avoid concluding with summary statements unless specifically requested
+- When presenting options or analysis, lead with the core information, not commentary about it
+
 ## Project Overview
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
