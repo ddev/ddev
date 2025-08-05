@@ -49,7 +49,7 @@ Write-Host "Terminating default WSL2 distro: $defaultDistro"
 wsl --terminate $defaultDistro
 
 wsl bash -c 'echo CAROOT=$CAROOT'
-wsl -u root mkcert -install
+wsl mkcert -install
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }

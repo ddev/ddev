@@ -26,7 +26,7 @@ if (-not(Compare-Object "root" (wsl -e whoami)) ) {
 }
 
 if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
-    throw "Docker Desktop integration is enabled with the default distro and it must but turned off."
+    throw "Docker Desktop integration is enabled with the default distro and it must be turned off."
 }
 $ErrorActionPreference = "Stop"
 
@@ -45,8 +45,7 @@ wsl bash -c 'sudo usermod -aG docker $USER'
 
 wsl mkcert.exe -install
 $env:CAROOT = & wsl mkcert.exe -CAROOT
-setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
-
+setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV
 $defaultDistro = (wsl --list --quiet | Select-Object -First 1) -replace '[\r\n\x00-\x1F\x7F-\x9F]', '' -replace '^\s+|\s+$', ''
 Write-Host "Terminating default WSL2 distro: $defaultDistro"
 wsl --terminate $defaultDistro
