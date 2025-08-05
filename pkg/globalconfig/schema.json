@@ -163,6 +163,28 @@
         "prepend",
         "xhgui"
       ]
+    },
+    "remote_config": {
+      "description": "Configuration for remote config and sponsorship data sources.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "update_interval": {
+          "description": "Update interval in hours for remote config and sponsorship data.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "remote_config_url": {
+          "description": "URL for downloading remote configuration data.",
+          "type": "string",
+          "format": "uri"
+        },
+        "sponsorship_data_url": {
+          "description": "URL for downloading sponsorship data.",
+          "type": "string",
+          "format": "uri"
+        }
+      }
     }
   }
 }
