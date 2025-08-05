@@ -145,14 +145,8 @@ func TestCmdStartShowsMessages(t *testing.T) {
 	globalconfig.EnsureGlobalConfig()
 	globalconfig.DdevGlobalConfig.Messages.TickerInterval = 1     // 1 hour for testing
 	globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval = 1 // 1 hour for testing
-	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner = "ddev"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo = "remote-config"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref = "main"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath = "remote-config.jsonc"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Owner = "ddev"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Repo = "sponsorship-data"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Ref = "main"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Filepath = "data/all-sponsorships.json"
+	globalconfig.DdevGlobalConfig.RemoteConfig.RemoteConfigURL = "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
+	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
@@ -245,10 +239,7 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 	// Create a global config with custom sponsorship settings
 	globalconfig.EnsureGlobalConfig()
 	globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval = 1 // 1 hour for testing
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Owner = "ddev"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Repo = "sponsorship-data"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Ref = "main"
-	globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Filepath = "data/all-sponsorships.json"
+	globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
@@ -320,9 +311,7 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 
 	// Verify global config contains sponsorship configuration
 	globalconfig.EnsureGlobalConfig()
-	assert.Equal("ddev", globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Owner)
-	assert.Equal("sponsorship-data", globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Repo)
-	assert.Equal("data/all-sponsorships.json", globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship.Filepath)
+	assert.Equal("https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json", globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL)
 
 	t.Logf("Sponsorship configuration verified in global config")
 }

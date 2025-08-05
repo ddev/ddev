@@ -1,9 +1,11 @@
 package remoteconfig
 
 import (
+	"context"
 	"sync"
 	"time"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	statetypes "github.com/ddev/ddev/pkg/config/state/types"
@@ -27,13 +29,8 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 	cfg.loadFromLocalStorage()
 
 	// Configure remote and initiate update.
-	cfg.githubStorage = storage.NewGithubStorage(
-		config.getRemoteSourceOwner(&cfg.remoteConfig),
-		config.getRemoteSourceRepo(&cfg.remoteConfig),
-		config.getRemoteSourceFilepath(&cfg.remoteConfig),
-		storage.Options{Ref: config.getRemoteSourceRef(&cfg.remoteConfig)},
-	)
-	cfg.updateFromGithub()
+	cfg.urlDownloader = downloader.NewURLJSONCDownloader(config.URL)
+	cfg.updateFromRemote()
 
 	return cfg
 }
@@ -52,7 +49,7 @@ type remoteConfig struct {
 	remoteConfig types.RemoteConfigData
 
 	fileStorage   types.RemoteConfigStorage
-	githubStorage types.RemoteConfigStorage
+	urlDownloader downloader.JSONCDownloader
 
 	updateInterval   int
 	tickerInterval   int
@@ -92,8 +89,8 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	}
 }
 
-// updateFromGithub downloads the remote config from GitHub.
-func (c *remoteConfig) updateFromGithub() {
+// updateFromRemote downloads the remote config from the configured source.
+func (c *remoteConfig) updateFromRemote() {
 	// defer util.TimeTrack()()
 
 	if !c.isInternetActive() {
@@ -111,8 +108,9 @@ func (c *remoteConfig) updateFromGithub() {
 
 		var err error
 
-		// Download the remote config.
-		c.remoteConfig, err = c.githubStorage.Read()
+		// Download using URL-based downloader
+		ctx := context.Background()
+		err = c.urlDownloader.Download(ctx, &c.remoteConfig)
 
 		if err != nil {
 			util.Debug("Error while downloading remote config: %s", err)

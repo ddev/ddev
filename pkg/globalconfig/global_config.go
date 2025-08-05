@@ -96,19 +96,9 @@ func New() GlobalConfig {
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
 		RemoteConfig: RemoteConfig{
-			UpdateInterval: 24, // Default update interval in hours
-			Remote: RemoteConfigRemote{
-				Owner:    "ddev",
-				Repo:     "remote-config",
-				Ref:      "main",
-				Filepath: "remote-config.jsonc",
-			},
-			Sponsorship: RemoteConfigRemote{
-				Owner:    "ddev",
-				Repo:     "sponsorship-data",
-				Ref:      "main",
-				Filepath: "data/all-sponsorships.json",
-			},
+			UpdateInterval:     24, // Default update interval in hours
+			RemoteConfigURL:    "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc",
+			SponsorshipDataURL: "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json",
 		},
 	}
 
@@ -491,17 +481,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # remote_config - Intended for debugging only, should not be changed.
 # Controls the download of the remote config and sponsorship data. Please do not change.
 #remote_config:
-#  update_interval: 10 #Interval in hours to download the remote config and sponsorship data
-#  remote:
-#    owner: ddev
-#    repo: remote-config
-#    ref: main
-#    filepath: remote-config.jsonc
-#  sponsorship:
-#    owner: ddev
-#    repo: sponsorship-data
-#    ref: main
-#    filepath: data/all-sponsorships.json
+#  update_interval: 24 # Interval in hours to download the remote config and sponsorship data
+#  remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
+#  sponsorship_data_url: "https://raw.githubusercontent.com/ddev/sponsorship-data/main/data/all-sponsorships.json"
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

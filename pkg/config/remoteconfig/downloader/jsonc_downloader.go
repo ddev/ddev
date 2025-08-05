@@ -3,6 +3,7 @@ package downloader
 import (
 	"context"
 	"io"
+	"net/http"
 
 	"github.com/ddev/ddev/pkg/github"
 	"muzzammil.xyz/jsonc"
@@ -42,6 +43,39 @@ func (d *GitHubJSONCDownloader) Download(ctx context.Context, target interface{}
 	defer reader.Close()
 
 	b, err := io.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	return jsonc.Unmarshal(b, target)
+}
+
+// URLJSONCDownloader implements JSONCDownloader for direct URL downloads
+type URLJSONCDownloader struct {
+	URL string
+}
+
+// NewURLJSONCDownloader creates a new URL JSONC downloader
+func NewURLJSONCDownloader(url string) JSONCDownloader {
+	return &URLJSONCDownloader{
+		URL: url,
+	}
+}
+
+// Download downloads and unmarshals a JSONC file from a URL into the target interface
+func (d *URLJSONCDownloader) Download(ctx context.Context, target interface{}) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", d.URL, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
@@ -75,23 +74,18 @@ func downloadRemoteConfig(url string, updateLocalStorage bool) error {
 	}
 
 	// Use configured remote config source from global config
-	config := globalconfig.DdevGlobalConfig.RemoteConfig.Remote
-	d := downloader.NewGitHubJSONCDownloader(
-		config.Owner,
-		config.Repo,
-		config.Filepath,
-		github.RepositoryContentGetOptions{Ref: config.Ref},
-	)
+	config := globalconfig.DdevGlobalConfig.RemoteConfig
+	d := downloader.NewURLJSONCDownloader(config.RemoteConfigURL)
 
 	ctx := context.Background()
-	var remoteConfig types.RemoteConfigData
-	err := d.Download(ctx, &remoteConfig)
+	var remoteConfigData types.RemoteConfigData
+	err := d.Download(ctx, &remoteConfigData)
 	if err != nil {
 		return fmt.Errorf("downloading remote config: %w", err)
 	}
 
 	// Display as JSON
-	jsonData, err := json.MarshalIndent(remoteConfig, "", "  ")
+	jsonData, err := json.MarshalIndent(remoteConfigData, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling to JSON: %w", err)
 	}
@@ -100,7 +94,7 @@ func downloadRemoteConfig(url string, updateLocalStorage bool) error {
 
 	// Update local storage if requested
 	if updateLocalStorage {
-		err = updateRemoteConfigStorage(remoteConfig)
+		err = updateRemoteConfigStorage(remoteConfigData)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Failed to update local storage: %v\n", err)
 		} else {
@@ -118,14 +112,8 @@ func downloadSponsorshipData(url string, updateLocalStorage bool) error {
 	}
 
 	// Use configured sponsorship data source from global config
-	config := globalconfig.DdevGlobalConfig.RemoteConfig.Sponsorship
-
-	d := downloader.NewGitHubJSONCDownloader(
-		config.Owner,
-		config.Repo,
-		config.Filepath,
-		github.RepositoryContentGetOptions{Ref: config.Ref},
-	)
+	config := globalconfig.DdevGlobalConfig.RemoteConfig
+	d := downloader.NewURLJSONCDownloader(config.SponsorshipDataURL)
 
 	ctx := context.Background()
 	var sponsorshipData types.SponsorshipData

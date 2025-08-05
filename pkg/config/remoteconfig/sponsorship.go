@@ -9,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	statetypes "github.com/ddev/ddev/pkg/config/state/types"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -29,15 +28,11 @@ type sponsorshipManager struct {
 	mu               sync.Mutex
 }
 
-// NewSponsorshipManager creates a new sponsorship data manager
-func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, owner, repo, filepath, ref string) types.SponsorshipManager {
+
+// NewSponsorshipManager creates a new sponsorship data manager using a direct URL
+func NewSponsorshipManager(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, url string) types.SponsorshipManager {
 	mgr := &sponsorshipManager{
-		downloader: downloader.NewGitHubJSONCDownloader(
-			owner,
-			repo,
-			filepath,
-			github.RepositoryContentGetOptions{Ref: ref},
-		),
+		downloader:       downloader.NewURLJSONCDownloader(url),
 		fileStorage:      storage.NewSponsorshipFileStorage(localPath + "/" + sponsorshipLocalFileName),
 		state:            newState(stateManager),
 		updateInterval:   time.Duration(updateInterval) * time.Hour,
@@ -45,7 +40,7 @@ func NewSponsorshipManager(localPath string, stateManager statetypes.State, isIn
 	}
 
 	mgr.loadFromLocalStorage()
-	mgr.updateFromGithub()
+	mgr.updateFromRemote()
 
 	return mgr
 }
@@ -106,8 +101,8 @@ func (m *sponsorshipManager) loadFromLocalStorage() {
 	}
 }
 
-// updateFromGithub downloads fresh sponsorship data from GitHub
-func (m *sponsorshipManager) updateFromGithub() {
+// updateFromRemote downloads fresh sponsorship data from the remote source
+func (m *sponsorshipManager) updateFromRemote() {
 	if !m.isInternetActive() {
 		util.Debug("No internet connection for sponsorship data update.")
 		return
@@ -118,7 +113,7 @@ func (m *sponsorshipManager) updateFromGithub() {
 		return
 	}
 
-	util.Debug("Downloading sponsorship data from GitHub.")
+	util.Debug("Downloading sponsorship data from remote source.")
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -128,7 +123,7 @@ func (m *sponsorshipManager) updateFromGithub() {
 
 	err := m.downloader.Download(ctx, &newData)
 	if err != nil {
-		util.Debug("Error downloading sponsorship data from GitHub: %s", err)
+		util.Debug("Error downloading sponsorship data from remote source: %s", err)
 		// Don't update data if download fails, keep existing data
 		return
 	}

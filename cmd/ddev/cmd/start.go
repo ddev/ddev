@@ -51,12 +51,7 @@ ddev start --all`,
 				Local: remoteconfig.Local{
 					Path: globalconfig.GetGlobalDdevDir(),
 				},
-				Remote: remoteconfig.Remote{
-					Owner:    globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner,
-					Repo:     globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo,
-					Ref:      globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref,
-					Filepath: globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath,
-				},
+				URL:            globalconfig.DdevGlobalConfig.RemoteConfig.RemoteConfigURL,
 				UpdateInterval: globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
 				TickerInterval: globalconfig.DdevGlobalConfig.Messages.TickerInterval,
 			},
@@ -175,34 +170,13 @@ func initSponsorshipManager(state statetypes.State) {
 		updateInterval = 24 // Default sponsorship update interval in hours
 	}
 
-	// Set defaults for sponsorship source if not configured
-	sponsorship := config.Sponsorship
-	owner := sponsorship.Owner
-	if owner == "" {
-		owner = "ddev"
-	}
-	repo := sponsorship.Repo
-	if repo == "" {
-		repo = "sponsorship-data"
-	}
-	filepath := sponsorship.Filepath
-	if filepath == "" {
-		filepath = "data/all-sponsorships.json"
-	}
-	ref := sponsorship.Ref
-	if ref == "" {
-		ref = "main"
-	}
-
+	// Use URL-based configuration
 	remoteconfig.InitGlobalSponsorship(
 		globalconfig.GetGlobalDdevDir(),
 		state,
 		globalconfig.IsInternetActive,
 		updateInterval,
-		owner,
-		repo,
-		filepath,
-		ref,
+		config.SponsorshipDataURL,
 	)
 }
 
