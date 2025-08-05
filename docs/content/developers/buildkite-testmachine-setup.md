@@ -37,7 +37,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 23. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get the latest kernel.
 24. Turn off the settings that cause the "windows experience" prompts after new upgrades:
 ![disable_windows_experience](../images/disable_windows_experience.png)
-25. In PowerShell: `wsl.exe --update`. Watch for the escalation to complete, it may require escalation.
+25. In PowerShell: `wsl.exe --update`. Watch for the elevation to complete, it may require elevation.
 
 ## Both Docker Desktop/WSL2 and Docker-ce/WSL2
 

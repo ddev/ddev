@@ -15,7 +15,7 @@ import (
 )
 
 // AddHostsEntriesIfNeeded will run sudo ddev hostname to the site URL to the host's /etc/hosts.
-// This should be run without admin privs; the DDEV hostname command will handle escalation.
+// This should be run without admin privs; the DDEV hostname command will handle elevation.
 func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	var err error
 	dockerIP, err := dockerutil.GetDockerIP()
@@ -72,7 +72,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 }
 
 // RemoveHostsEntriesIfNeeded will remove the site URL from the host's /etc/hosts.
-// This should be run without administrative privileges and will escalate
+// This should be run without administrative privileges and will elevate
 // where needed.
 func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
