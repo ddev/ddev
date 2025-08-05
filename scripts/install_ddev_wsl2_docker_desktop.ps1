@@ -2,8 +2,8 @@
 # an Ubuntu WSL2 instance for use with DDEV and Docker Desktop.
 # These days it's very unusual to do this because DDEV v1.24.7+ ships with a GUI installer for Windows/WSL2
 # So use that instead.
-# This requires that an Ubuntu wsl2 distro be installed already, preferably with `wsl --install`, but it can also be
-# done manually.
+# This requires that an Ubuntu-based WSL2 distro be installed already, preferably with `wsl --install`, but it can also be
+# done manually. The distro you want to act on must be set to the default WSL2 distro.
 # It requires that Docker Desktop is installed and running, and that it has integration enabled with the Ubuntu
 # distro, which is the default behavior.
 # You can download, inspect, and run this, or run it directly with
@@ -40,17 +40,18 @@ wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://
 wsl -u root -e bash -c "apt-get update && apt-get install -y wslu"
 wsl -u root -e bash -c "apt-get install -y --no-install-recommends ddev ddev-wsl2"
 
-& wsl mkcert.exe -install
+wsl mkcert.exe -install
 $env:CAROOT = & wsl mkcert.exe -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
-# TODO: We may need restart of distro here to pick up CAROOT
-wsl bash -c 'echo $CAROOT'
+$defaultDistro = (wsl --list --quiet | Select-Object -First 1) -replace '[\r\n\x00-\x1F\x7F-\x9F]', '' -replace '^\s+|\s+$', ''
+Write-Host "Terminating default WSL2 distro: $defaultDistro"
+wsl --terminate $defaultDistro
+
+wsl bash -c 'echo CAROOT=$CAROOT'
 wsl -u root mkcert -install
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }
 
 wsl ddev version
-
-# TODO: restart may be required to pick up CAROOT in distro
