@@ -165,24 +165,7 @@ DDEV enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0
 
 ### Commit Messages
 
-**First Commit in a PR Series:** The initial commit that starts a new feature or fix should follow the structure from `.github/PULL_REQUEST_TEMPLATE.md` to provide comprehensive context:
-
-```
-<conventional-commit-title>
-
-## The Issue
-- Brief description of the problem being solved
-
-## How This Commit Solves The Issue
-- Explanation of the approach taken
-
-## Implementation Details
-- Key changes made
-- Files modified and why
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
+**First Commit in a PR Series:** The initial commit that starts a new feature or fix should follow the structure from `.github/PULL_REQUEST_TEMPLATE.md` to provide comprehensive context. Use sections like "The Issue", "How This Commit Solves The Issue", and "Implementation Details" in the commit body, similar to the PR template format.
 
 **Follow-up Commits:** After key Claude-initiated code changes, make commits that mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
 
