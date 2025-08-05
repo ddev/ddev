@@ -22,13 +22,9 @@ func InitGlobal(config Config, stateManager statetypes.State, isInternetActive f
 	return globalRemoteConfig
 }
 
-// GetGlobal returns the global remote config. InitGlobal must be
-// called in advance or the function will panic.
+// GetGlobal returns the global remote config. Returns nil if InitGlobal
+// was not called in advance.
 func GetGlobal() types.RemoteConfig {
-	if globalRemoteConfig == nil {
-		panic("error remoteconfig.InitGlobal was not called before accessing remote config")
-	}
-
 	return globalRemoteConfig
 }
 
@@ -42,12 +38,8 @@ func InitGlobalSponsorship(localPath string, stateManager statetypes.State, isIn
 	return globalSponsorshipManager
 }
 
-// GetGlobalSponsorship returns the global sponsorship manager. InitGlobalSponsorship must be
-// called in advance or the function will panic.
+// GetGlobalSponsorship returns the global sponsorship manager. Returns nil if
+// InitGlobalSponsorship was not called in advance.
 func GetGlobalSponsorship() types.SponsorshipManager {
-	if globalSponsorshipManager == nil {
-		panic("error remoteconfig.InitGlobalSponsorship was not called before accessing sponsorship manager")
-	}
-
 	return globalSponsorshipManager
 }

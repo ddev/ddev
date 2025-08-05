@@ -67,9 +67,11 @@ ddev start --all`,
 			globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL,
 		)
 
-		remoteconfig.GetGlobal().ShowTicker()
-		remoteconfig.GetGlobal().ShowNotifications()
-		remoteconfig.GetGlobal().ShowSponsorshipAppreciation()
+		if rc := remoteconfig.GetGlobal(); rc != nil {
+			rc.ShowTicker()
+			rc.ShowNotifications()
+			rc.ShowSponsorshipAppreciation()
+		}
 
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {

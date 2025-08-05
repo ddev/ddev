@@ -95,11 +95,7 @@ func New() GlobalConfig {
 		MkcertCARoot:                 readCAROOT(),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
-		RemoteConfig: RemoteConfig{
-			UpdateInterval:     24, // Default update interval in hours
-			RemoteConfigURL:    "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc",
-			SponsorshipDataURL: "https://ddev.com/s/sponsorship-data.json",
-		},
+		// RemoteConfig left empty by default, will use defaults when needed but won't show in config file
 	}
 
 	return cfg
