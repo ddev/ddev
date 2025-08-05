@@ -30,6 +30,12 @@ if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
 }
 $ErrorActionPreference = "Stop"
 
+# Remove old Windows ddev.exe if it exists using uninstaller
+if (Test-Path "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe") {
+    Write-Host "Removing old Windows ddev.exe installation"
+    Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+}
+
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
