@@ -15,7 +15,7 @@ func elevateIfNeeded() {
 		return
 	}
 	// Prepend our own path to the args
-	args := append([]string{os.Args[0]}, os.Args[1:]...)
+	args := append([]string{"--preserve-env=PATH"}, os.Args[0:]...)
 	cmd := exec.Command("sudo", args...)
 	// Pass through the terminal’s stdin/stdout/stderr
 	cmd.Stdin = os.Stdin
