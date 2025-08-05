@@ -190,12 +190,7 @@ The remote configuration system consists of several Go packages:
 
 To test changes to remote configuration:
 
-1. **Format the configuration**:
-
-   ```bash
-   prettier -c remote-config.jsonc
-   prettier -w remote-config.jsonc  # Auto-fix formatting
-   ```
+1. **Change the upstream configuration** in [ddev/remote-config](https://github.com/ddev/remote-config) or use a fork/branch.
 
 2. **Set up test configuration** in `~/.ddev/global_config.yaml`:
 
@@ -206,7 +201,7 @@ To test changes to remote configuration:
      sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"  # Or your test URL
    ```
 
-3. **Clear cached data**:
+3. **Clear or edit cached data**:
 
    ```bash
    rm ~/.ddev/.state.yaml ~/.ddev/.remote-config
@@ -232,18 +227,3 @@ ddev debug gob-decode ~/.ddev/.remote-config
 # Verify message conditions work
 ddev debug message-conditions
 ```
-
-### Development Workflow
-
-1. **Make changes** to the remote-config.jsonc file
-2. **Test locally** using debug commands
-3. **Validate JSON structure** with prettier
-4. **Test with different DDEV versions** if using version constraints
-5. **Create pull request** with clear description of changes
-
-### Common Issues
-
-- **JSON Parsing Errors**: Use `prettier` to validate JSON syntax
-- **Version Constraints**: Test with multiple DDEV versions
-- **Condition Logic**: Verify conditions using `ddev debug message-conditions`
-- **Network Issues**: Debug with `DDEV_VERBOSE=true` to see download attempts
