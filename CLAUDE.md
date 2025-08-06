@@ -25,29 +25,17 @@ For comprehensive developer documentation, see:
 
 ### Building
 
-- `make build` - Build for current platform
-- `make darwin_amd64` - Build for macOS Intel
-- `make darwin_arm64` - Build for macOS Apple Silicon  
-- `make linux_amd64` - Build for Linux x64
-- `make windows_amd64` - Build for Windows x64
-- `make completions` - Generate shell completions
+- `make` - Build for current platform
 
 ### Testing
 
 - `make test` - Run all tests (combines testpkg and testcmd)
-- `make testpkg` - Run package tests
+- `make testpkg` or `make testpkg TESTARGS="-run TestName"` - Run package tests or named test
 - `make testcmd` - Run command tests  
-- `make testddevapp` - Run ddevapp package tests specifically
-- `make testnotddevapp` - Run all package tests except ddevapp
-- `make testfullsitesetup` - Run full site setup tests
-- `make quickstart-test` - Run quickstart documentation tests using bats
 
 ### Linting and Code Quality
 
-- `make golangci-lint` - Run Go linter (requires golangci-lint to be installed)
 - `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, mkdocs, pyspelling)
-- `make markdownlint` - Lint markdown files
-- `make pyspelling` - Check spelling
 
 ### Whitespace and Formatting
 
@@ -58,13 +46,7 @@ For comprehensive developer documentation, see:
 
 ### Documentation
 
-- `make mkdocs` - Build documentation
-- `make mkdocs-serve` - Serve docs locally for development
-- See [Testing Documentation](https://ddev.readthedocs.io/en/stable/developers/testing-docs/) for docs setup
-
-### Cleanup
-
-- `make clean` or `make bin-clean` - Remove build artifacts
+- `make staticrequired` - after changing docs
 
 ## Architecture
 
@@ -117,7 +99,7 @@ DDEV uses YAML configuration files:
 
 - Uses Go modules (go.mod)
 - Requires Go 1.23.0+
-- Uses vendored dependencies
+- Uses vendored, checked-in dependencies
 - CGO is disabled by default
 
 ### Testing Philosophy
@@ -270,12 +252,6 @@ The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
 
 1. **Run appropriate tests:**
 
-   ```bash
-   make test           # Run all tests (standard)
-   make testpkg        # Run package tests only
-   make testcmd        # Run command tests only
-   ```
-
    For targeted testing:
 
    ```bash
@@ -289,13 +265,6 @@ The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
    ```bash
    make staticrequired
    ```
-
-   This runs all required checks:
-
-   - golangci-lint (Go code quality)
-   - markdownlint (Markdown formatting)
-   - mkdocs (Documentation build)
-   - pyspelling (Spell checking)
 
 **Complete Pre-Commit Checklist:**
 
