@@ -182,15 +182,13 @@ This method:
 - Doesn't require syncing local main branch
 - Uses --no-track to avoid tracking upstream/main
 
-### Commit Messages
+### Pull Request Titles
 
-After key Claude-initiated code changes, make a commit, and the commit message should mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+DDEV enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format for PR titles. The format is:
 
-**Follow DDEV PR Title Guidelines:**
+`<type>[optional scope][optional !]: <description>[, fixes #<issue>][, for #<issue>]`
 
-Format: `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`
-
-Types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
+**Types:** `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
 
 - Use imperative, present tense ("change" not "changed")
 - Don't capitalize first letter
@@ -198,7 +196,7 @@ Types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style
 - Add `, fixes #<issue>` if applicable
 - Breaking changes require `!` after type
 
-Examples:
+**Examples:**
 
 - `feat: add Vite documentation section - Claude assisted with migrating blog content`
 - `fix: resolve networking issues in containers - Claude helped debug connection problems`
@@ -207,6 +205,16 @@ Examples:
 - `fix: resolve container networking issues, fixes #1234`
 - `docs: update CLAUDE.md with PR title guidelines`
 - `refactor(auth): simplify user authentication flow`
+- `chore(deps): bump mutagen to 0.18.1`
+- `ci(pr): enforce commit message convention, fixes #5037`
+
+### Commit Messages
+
+**First Commit in a PR Series:** The initial commit that starts a new feature or fix should follow the structure from `.github/PULL_REQUEST_TEMPLATE.md` to provide comprehensive context. Use sections like "The Issue", "How This Commit Solves The Issue", and "Implementation Details" in the commit body, similar to the PR template format.
+
+**Follow-up Commits:** After key Claude-initiated code changes, make commits that mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+
+Examples for commit messages (without description) are provided in the "Pull Request Titles" section above.
 
 ### GitHub Issue Creation
 
