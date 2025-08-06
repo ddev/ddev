@@ -71,8 +71,8 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
 	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), cmd.DdevBin, sshDir, "testkey"})
-	assert.NoError(err)
-	assert.Contains(string(out), "Identity added:")
+	require.NoError(t, err)
+	require.Contains(t, out, "Identity added:")
 
 	// And at this point we should be able to ssh into the test-cmd-ssh-server
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -81,4 +81,17 @@ func TestCmdAuthSSH(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Contains(out, "/root")
+
+	// And try to add the same key, but this time provide the passphrase from stdin
+	stdin := strings.NewReader("testkey\n")
+	out, err = exec.RunHostCommandWithOptions(cmd.DdevBin, []exec.CmdOption{exec.WithStdin(stdin)}, "auth", "ssh", "-d", sshDir)
+	require.NoError(t, err, `expected no error for 'printf "testkey\n" | ddev auth ssh -d %s'`, sshDir)
+	require.Contains(t, out, "Identity added:")
+
+	// Check for bad passphrase
+	stdin = strings.NewReader("foobar\ntestkey\n")
+	out, err = exec.RunHostCommandWithOptions(cmd.DdevBin, []exec.CmdOption{exec.WithStdin(stdin)}, "auth", "ssh", "-d", sshDir)
+	require.NoError(t, err, `expected no error for 'printf "foobar\ntestkey\n" | ddev auth ssh -d %s'`, sshDir)
+	require.Contains(t, out, "Bad passphrase")
+	require.Contains(t, out, "Identity added:")
 }
