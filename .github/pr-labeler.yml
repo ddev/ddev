@@ -4,42 +4,27 @@ labels:
   - label: 'maintenance'
     sync: true
     matcher:
-      title: '^build(|!): .+'
-
-  - label: 'maintenance'
-    sync: true
-    matcher:
-      title: '^ci(|!): .+'
+      title: '^(build|chore|ci|refactor|style|test)(\([a-z][a-z0-9-]*\))?!?: .+'
 
   - label: 'documentation'
     sync: true
     matcher:
-      title: '^docs(|!): .+'
+      title: '^(docs)(\([a-z][a-z0-9-]*\))?!?: .+'
 
   - label: 'enhancement'
     sync: true
     matcher:
-      title: '^feat(|!): .+'
+      title: '^(feat|perf)(\([a-z][a-z0-9-]*\))?!?: .+'
 
   - label: 'bugfix'
     sync: true
     matcher:
-      title: '^fix(|!): .+'
-
-  - label: 'maintenance'
-    sync: true
-    matcher:
-      title: '^refactor(|!): .+'
-
-  - label: 'maintenance'
-    sync: true
-    matcher:
-      title: '^test(|!): .+'
+      title: '^(fix)(\([a-z][a-z0-9-]*\))?!?: .+'
 
   - label: 'breaking'
     sync: true
     matcher:
-      title: '^[a-z]+!: .+'
+      title: '^[a-z]+!(\([a-z][a-z0-9-]*\))?!?: .+'
 
   - label: 'dependencies'
     sync: true
