@@ -148,26 +148,9 @@ Examples:
 - `20250719_username_fix_networking`
 - `20250719_contributor_update_tests`
 
-### Pull Request Titles
-
-DDEV enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format for PR titles. The format is:
-
-`<type>[optional scope][optional !]: <description>[, fixes #<issue>]`
-
-**Types:** `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
-
-**Examples:**
-
-- `feat(pantheon): use environment variables`
-- `fix: resolve container networking issues, fixes #1234`
-- `docs: update CLAUDE.md with PR title guidelines`
-- `refactor(auth): simplify user authentication flow`
-
 ### Commit Messages
 
-**First Commit in a PR Series:** The initial commit that starts a new feature or fix should follow the structure from `.github/PULL_REQUEST_TEMPLATE.md` to provide comprehensive context. Use sections like "The Issue", "How This Commit Solves The Issue", and "Implementation Details" in the commit body, similar to the PR template format.
-
-**Follow-up Commits:** After key Claude-initiated code changes, make commits that mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+After key Claude-initiated code changes, make a commit, and the commit message should mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
 
 Examples:
 
