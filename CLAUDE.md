@@ -188,9 +188,9 @@ After key Claude-initiated code changes, make a commit, and the commit message s
 
 **Follow DDEV PR Title Guidelines:**
 
-Format: `<type>[optional !]: <description>[, fixes #<issue>]`
+Format: `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`
 
-Types: `build`, `ci`, `docs`, `feat`, `fix`, `refactor`, `test`
+Types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
 
 - Use imperative, present tense ("change" not "changed")
 - Don't capitalize first letter
@@ -203,6 +203,10 @@ Examples:
 - `feat: add Vite documentation section - Claude assisted with migrating blog content`
 - `fix: resolve networking issues in containers - Claude helped debug connection problems`
 - `docs: update CLAUDE.md with workflow guidelines - Claude suggested development improvements`
+- `feat(pantheon): use environment variables`
+- `fix: resolve container networking issues, fixes #1234`
+- `docs: update CLAUDE.md with PR title guidelines`
+- `refactor(auth): simplify user authentication flow`
 
 ### GitHub Issue Creation
 
