@@ -326,16 +326,21 @@ We have very precise rules over how our PR titles (and thus main-branch commits)
 
 The pull request title must follow this convention which is based on the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification:
 
-`<type>[optional !]: <description>[, fixes #<issue>]`
+`<type>[optional scope][optional !]: <description>[, fixes #<issue>][, for #<issue>]`
 
 #### Examples
 
-* `build: bump mutagen to 0.17.2`
-* `ci: enforce commit message convention, fixes #5037`
+* `build: update Makefile logic`
+* `chore(deps): bump mutagen to 0.18.1`
+* `ci(pr): enforce commit message convention, fixes #5037`
 * `docs: change code refs of Mac M1 to Apple Silicon`
 * `feat: allow multiple upload dirs, fixes #4190, fixes #4796`
+* `feat(pantheon): use environment variables`
 * `fix: create upload_dir if it doesn't exist in ddev composer create-project, fixes #5031`
+* `fix(auth): resolve password reset bug, for #1234`
 * `refactor: add new Amplitude Property DDEV-Environment`
+* `perf(image-pull): use docker-compose for parallel downloads`
+* `style(readme): improve formatting`
 * `test: optimize caching of downloaded assets`
 
 #### Type
@@ -343,18 +348,21 @@ The pull request title must follow this convention which is based on the [Conven
 Must be one of the following:
 
 * **build**: Changes that affect the build or external dependencies
+* **chore**: Maintenance tasks, dependency updates, or other changes that don't modify src or test files
 * **ci**: Changes to our CI configuration files and scripts
 * **docs**: Documentation only changes
 * **feat**: A new feature
 * **fix**: A bugfix
+* **perf**: A code change that improves performance
 * **refactor**: A code change that neither fixes a bug nor adds a feature
+* **style**: Changes that do not affect the meaning of the code (whitespace, formatting, missing semi-colons, etc)
 * **test**: Adding missing tests or correcting existing tests
 
 Regarding SemVer, all types above except `feat` increase the patch version, `feat` increases the minor version.
 
 #### Scope
 
-No scope must be used.
+An optional scope may be provided to add contextual information and is contained within parentheses, e.g., `feat(pantheon): add file uploads`. The scope should be a noun describing a section of the codebase surrounded by parentheses.
 
 #### Breaking Changes
 
