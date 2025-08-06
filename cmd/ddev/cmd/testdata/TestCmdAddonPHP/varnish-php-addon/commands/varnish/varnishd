@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+## #ddev-generated
+## Description: Varnish-cli
+## Usage: varnishd [flags] [args]
+## Example: "ddev varnishd -d" for CLI in foreground.
+## Example: "ddev varnishd -T" to connect with varnishadm or telnet.
+## Example: "ddev varnishd -M" to connect back to a listening service pushing the CLI to that service.
+
+# This example runs inside the varnish container.
+# Note that this requires that /mnt/ddev_config be mounted
+# into the varnish container.
+
+varnishd "$@"

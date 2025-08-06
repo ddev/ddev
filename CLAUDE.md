@@ -108,6 +108,7 @@ DDEV uses YAML configuration files:
 - Integration tests in `pkg/ddevapp/` test full workflows
 - Container tests validate Docker functionality
 - Documentation tests use bats framework
+- **Prefer `require` over `assert` in tests** - Use `require.NoError(t, err)`, `require.Contains(t, ...)`, etc. instead of `assert` equivalents. This ensures tests fail fast when preconditions aren't met, making debugging easier.
 
 ### Docker Integration
 
@@ -275,3 +276,15 @@ The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
 5. Stage changes with `git add`
 6. Commit with proper message format
 7. Push branch and create PR
+
+## Important Instruction Reminders
+
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+## Task Master AI Instructions
+
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md

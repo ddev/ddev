@@ -12,17 +12,51 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/ddev/ddev/pkg/docker"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	github2 "github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/google/go-github/v72/github"
 	"go.yaml.in/yaml/v3"
 )
 
 const AddonMetadataDir = "addon-metadata"
+
+// GetProcessedProjectConfigYAML returns the processed project configuration as YAML
+// This is equivalent to what 'ddev debug configyaml' shows - the project configuration
+// after all config.*.yaml files have been merged and processed
+func (app *DdevApp) GetProcessedProjectConfigYAML() ([]byte, error) {
+	// Ensure we have the latest processed configuration
+	_, err := app.ReadConfig(true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read project configuration: %v", err)
+	}
+
+	// Marshal the fully processed DdevApp struct to YAML
+	configYAML, err := yaml.Marshal(app)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal project configuration to YAML: %v", err)
+	}
+
+	return configYAML, nil
+}
+
+// GetGlobalConfigYAML returns the global DDEV configuration as YAML
+// This provides access to global settings that affect all DDEV projects
+func GetGlobalConfigYAML() ([]byte, error) {
+	// Marshal the global configuration to YAML
+	globalConfigYAML, err := yaml.Marshal(&globalconfig.DdevGlobalConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal global configuration to YAML: %v", err)
+	}
+
+	return globalConfigYAML, nil
+}
 
 // Format of install.yaml
 type InstallDesc struct {
@@ -36,6 +70,7 @@ type InstallDesc struct {
 	PostInstallActions    []string          `yaml:"post_install_actions,omitempty"`
 	RemovalActions        []string          `yaml:"removal_actions,omitempty"`
 	YamlReadFiles         map[string]string `yaml:"yaml_read_files"`
+	Image                 string            `yaml:"image,omitempty"`
 }
 
 // format of the add-on manifest file
@@ -116,6 +151,20 @@ func GetInstalledAddonProjectFiles(app *DdevApp) []string {
 
 // ProcessAddonAction takes a stanza from yaml exec section and executes it.
 func ProcessAddonAction(action string, dict map[string]interface{}, bashPath string, verbose bool) error {
+	return ProcessAddonActionWithImage(action, dict, bashPath, verbose, "", nil)
+}
+
+// ProcessAddonActionWithImage takes a stanza from yaml exec section and executes it, optionally in a container.
+func ProcessAddonActionWithImage(action string, dict map[string]interface{}, bashPath string, verbose bool, image string, app *DdevApp) error {
+	// Check if the action starts with <?php
+	if strings.HasPrefix(strings.TrimSpace(action), "<?php") {
+		if app == nil {
+			return fmt.Errorf("app is required for PHP actions")
+		}
+		return processPHPAction(action, dict, image, verbose, app)
+	}
+
+	// Default behavior for bash actions
 	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("ProcessAddonAction").Funcs(getTemplateFuncMap()).Parse(action)
 	if err != nil {
@@ -164,6 +213,323 @@ func ProcessAddonAction(action string, dict map[string]interface{}, bashPath str
 		util.Warning(out)
 	}
 	return err
+}
+
+// processPHPAction executes a PHP action in a container
+func processPHPAction(action string, dict map[string]interface{}, image string, verbose bool, app *DdevApp) error {
+	// Extract description before processing
+	desc := GetAddonDdevDescription(action)
+
+	// Store the original action for validation
+	originalAction := action
+
+	// Validate included/required files on the host (since we need to read from filesystem)
+	err := validatePHPIncludesAndRequires(action, app, image)
+	if err != nil {
+		return fmt.Errorf("PHP include/require validation error: %v", err)
+	}
+
+	// Add PHP strict error handling equivalent to bash 'set -eu -o pipefail'
+	phpStrictMode := `<?php
+// PHP strict error handling equivalent to bash 'set -eu -o pipefail'
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+?>`
+
+	// Add strict mode - prepend complete PHP block or replace existing <?php with enhanced version
+	if !strings.HasPrefix(strings.TrimSpace(action), "<?php") {
+		action = phpStrictMode + "\n" + action
+	} else {
+		// If it already starts with <?php, replace the opening with strict mode and continue with original content
+		lines := strings.Split(action, "\n")
+		if len(lines) > 0 {
+			firstLine := strings.TrimSpace(lines[0])
+			if firstLine == "<?php" {
+				// Replace the <?php line with complete strict mode block, but without the closing ?>
+				strictModeLines := strings.Split(phpStrictMode, "\n")
+				// Remove the closing ?> from strict mode so it continues seamlessly
+				strictModeWithoutClose := strings.Join(strictModeLines[:len(strictModeLines)-1], "\n")
+				// Combine strict mode with the rest of the original action (skipping the original <?php line)
+				action = strictModeWithoutClose + "\n" + strings.Join(lines[1:], "\n")
+			}
+		}
+	}
+	// Use the default ddev-webserver as the image if none is specified
+	if image == "" {
+		image = docker.GetWebImage()
+	}
+
+	// Create configuration files for PHP action access (optional for tests and removal actions)
+	err = createConfigurationFiles(app)
+	if err != nil {
+		util.Warning("Could not create configuration files for PHP action: %v", err)
+		// Don't fail completely - tests and removal actions may not have full app configuration
+	}
+
+	// Prepare container run arguments
+	containerName := "ddev-addon-php-" + util.RandString(6)
+
+	// Create a shell script that validates original PHP syntax first, then executes with strict mode
+	shellScript := fmt.Sprintf(`
+# First create and validate the original PHP action (before strict mode)
+cat > /tmp/original-script.php << 'DDEV_PHP_ORIGINAL_EOF'
+%s
+DDEV_PHP_ORIGINAL_EOF
+
+# Validate original PHP syntax - exit early if invalid
+php -l /tmp/original-script.php
+original_syntax_check_exit_code=$?
+if [ $original_syntax_check_exit_code -ne 0 ]; then
+    echo "PHP syntax validation failed on original action"
+    exit $original_syntax_check_exit_code
+fi
+
+# If original syntax is valid, create the script with strict mode and execute
+cat > /tmp/addon-script.php << 'DDEV_PHP_EOF'
+%s
+DDEV_PHP_EOF
+
+# Execute the script with strict mode
+cd /var/www/html/.ddev
+php /tmp/addon-script.php
+`, originalAction, action)
+
+	cmd := []string{"sh", "-c", shellScript}
+
+	// Bind mount the .ddev directory and the project root into the container
+	var binds []string
+	binds = append(binds, fmt.Sprintf("%s:/mnt/ddev_config", app.AppConfDir()))
+	binds = append(binds, fmt.Sprintf("%s:/var/www/html", app.AppRoot))
+
+	// Build environment variables array with standard DDEV variables
+	// Database family for connection URLs
+	dbFamily := "mysql"
+	if app.Database.Type == "postgres" {
+		dbFamily = "postgres"
+	}
+
+	env := []string{
+		fmt.Sprintf("DDEV_APPROOT=%s", "/var/www/html"),
+		fmt.Sprintf("DDEV_DOCROOT=%s", app.GetDocroot()),
+		fmt.Sprintf("DDEV_PROJECT_TYPE=%s", app.Type),
+		fmt.Sprintf("DDEV_SITENAME=%s", app.Name),
+		fmt.Sprintf("DDEV_PROJECT=%s", app.Name),
+		fmt.Sprintf("DDEV_PHP_VERSION=%s", app.PHPVersion),
+		fmt.Sprintf("DDEV_WEBSERVER_TYPE=%s", app.WebserverType),
+		fmt.Sprintf("DDEV_DATABASE=%s:%s", app.Database.Type, app.Database.Version),
+		fmt.Sprintf("DDEV_DATABASE_FAMILY=%s", dbFamily),
+		fmt.Sprintf("DDEV_FILES_DIRS=%s", strings.Join(app.GetUploadDirs(), ",")),
+		fmt.Sprintf("DDEV_MUTAGEN_ENABLED=%t", app.IsMutagenEnabled()),
+		fmt.Sprintf("DDEV_VERSION=%s", versionconstants.DdevVersion),
+		fmt.Sprintf("DDEV_TLD=%s", app.ProjectTLD),
+		"IS_DDEV_PROJECT=true",
+	}
+
+	if verbose {
+		env = append(env, "DDEV_VERBOSE=true")
+	}
+
+	// Run the container
+	_, output, err := dockerutil.RunSimpleContainer(
+		image,
+		containerName,
+		cmd,
+		nil, // entrypoint
+		env,
+		binds,
+		"",    // uid
+		true,  // removeContainerAfterRun
+		false, // detach
+		nil,   // labels
+		nil,   // portBindings
+		nil,   // healthConfig
+	)
+
+	if err != nil {
+		if desc != "" {
+			util.Warning("%c %s", '\U0001F44E', desc) // 👎 error emoji
+		}
+		// Include the container output in the error message for better debugging
+		if len(output) > 0 {
+			return fmt.Errorf("PHP script failed: %v - Output: %s", err, output)
+		}
+		return fmt.Errorf("PHP script failed: %v", err)
+	}
+
+	// Show description on success
+	if desc != "" {
+		util.Success("%c %s", '\U0001F44D', desc) // 👍 success emoji
+	}
+
+	if len(output) > 0 {
+		util.Success(output)
+	}
+
+	return nil
+}
+
+// createConfigurationFiles creates temporary YAML configuration files for PHP actions
+func createConfigurationFiles(app *DdevApp) error {
+	configDir := filepath.Join(app.AppConfDir(), ".ddev-config")
+
+	// Create the .ddev-config directory
+	err := os.MkdirAll(configDir, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create config directory %s: %v", configDir, err)
+	}
+
+	// Generate project configuration YAML
+	projectConfigYAML, err := app.GetProcessedProjectConfigYAML()
+	if err != nil {
+		return fmt.Errorf("failed to generate project configuration: %v", err)
+	}
+
+	// Write project configuration file
+	projectConfigPath := filepath.Join(configDir, "project_config.yaml")
+	err = os.WriteFile(projectConfigPath, projectConfigYAML, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write project config file %s: %v", projectConfigPath, err)
+	}
+
+	// Generate global configuration YAML
+	globalConfigYAML, err := GetGlobalConfigYAML()
+	if err != nil {
+		return fmt.Errorf("failed to generate global configuration: %v", err)
+	}
+
+	// Write global configuration file
+	globalConfigPath := filepath.Join(configDir, "global_config.yaml")
+	err = os.WriteFile(globalConfigPath, globalConfigYAML, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write global config file %s: %v", globalConfigPath, err)
+	}
+
+	return nil
+}
+
+// CleanupConfigurationFiles removes temporary configuration files created for PHP actions
+func (app *DdevApp) CleanupConfigurationFiles() error {
+	configDir := filepath.Join(app.AppConfDir(), ".ddev-config")
+	if fileutil.FileExists(configDir) {
+		return os.RemoveAll(configDir)
+	}
+	return nil
+}
+
+// validatePHPSyntax validates PHP syntax by running php -l in a container
+// This is used only for validating included/required files
+func validatePHPSyntax(phpCode string, app *DdevApp, image string) error {
+	// Use the provided image or default
+	if image == "" {
+		image = docker.GetWebImage()
+	}
+	containerName := "ddev-addon-php-validate-" + util.RandString(6)
+
+	// Create a shell script that writes the PHP code and validates it
+	// Exit with error code if syntax check fails
+	shellScript := fmt.Sprintf(`
+cat > /tmp/validate-script.php << 'DDEV_PHP_VALIDATE_EOF'
+%s
+DDEV_PHP_VALIDATE_EOF
+
+# Run PHP syntax check - this will output error details and return non-zero exit code on failure
+php -l /tmp/validate-script.php
+exit_code=$?
+if [ $exit_code -ne 0 ]; then
+    echo "PHP syntax validation failed"
+    exit $exit_code
+fi
+`, phpCode)
+
+	cmd := []string{"sh", "-c", shellScript}
+
+	// Run the container with syntax check
+	_, output, err := dockerutil.RunSimpleContainer(
+		image,
+		containerName,
+		cmd,
+		nil,   // entrypoint
+		nil,   // env
+		nil,   // binds
+		"",    // uid
+		true,  // removeContainerAfterRun
+		false, // detach
+		nil,   // labels
+		nil,   // portBindings
+		nil,   // healthConfig
+	)
+
+	if err != nil {
+		return fmt.Errorf("PHP syntax validation failed: %s", output)
+	}
+
+	return nil
+}
+
+// validatePHPIncludesAndRequires validates PHP syntax of included/required files
+func validatePHPIncludesAndRequires(phpCode string, app *DdevApp, image string) error {
+	// Extract include/require statements using a simpler regex compatible with POSIX
+	includePattern := `include\|require.*\.php\|\.inc`
+	matches := nodeps.GrepStringInBuffer(phpCode, includePattern)
+
+	if len(matches) == 0 {
+		return nil // No includes/requires found
+	}
+
+	for _, match := range matches {
+		// Extract the file path from the include/require statement
+		// This is a simplified approach - real PHP parsing would be more complex
+		parts := strings.Fields(match)
+		if len(parts) < 2 {
+			continue
+		}
+
+		// Try to extract filename from various formats
+		filePath := ""
+		for i, part := range parts {
+			if i == 0 {
+				continue // Skip the include/require keyword
+			}
+			// Remove common characters and get potential filepath
+			cleaned := strings.Trim(part, "();\"'")
+			if strings.Contains(cleaned, ".php") || strings.Contains(cleaned, ".inc") {
+				filePath = cleaned
+				break
+			}
+		}
+
+		if filePath == "" {
+			continue
+		}
+
+		// Try to read the file relative to the .ddev directory
+		fullPath := filepath.Join(app.AppConfDir(), filePath)
+		if !fileutil.FileExists(fullPath) {
+			// Try relative to project root
+			fullPath = filepath.Join(app.AppRoot, filePath)
+			if !fileutil.FileExists(fullPath) {
+				util.Warning("Include/require file not found for validation: %s", filePath)
+				continue
+			}
+		}
+
+		// Read and validate the included file
+		includedContent, err := os.ReadFile(fullPath)
+		if err != nil {
+			return fmt.Errorf("failed to read included file %s: %v", filePath, err)
+		}
+
+		// Validate syntax of the included file
+		err = validatePHPSyntax(string(includedContent), app, image)
+		if err != nil {
+			return fmt.Errorf("PHP syntax error in included file %s: %v", filePath, err)
+		}
+	}
+
+	return nil
 }
 
 // GetAddonDdevDescription returns what follows #ddev-description: in any line in action
@@ -257,7 +623,13 @@ func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, ba
 	// Execute any removal actions
 	if !skipRemovalActions {
 		for i, action := range manifestData.RemovalActions {
-			err = ProcessAddonAction(action, dict, bash, verbose)
+			// For PHP actions, we need to pass the app, but it's okay if the project isn't running
+			trimmedAction := strings.TrimSpace(action)
+			if strings.HasPrefix(trimmedAction, "<?php") {
+				err = ProcessAddonActionWithImage(action, dict, bash, verbose, "", app)
+			} else {
+				err = ProcessAddonAction(action, dict, bash, verbose)
+			}
 			desc := GetAddonDdevDescription(action)
 			if err != nil {
 				util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)

@@ -1,0 +1,31 @@
+#ddev-generated
+services:
+  varnish:
+    container_name: ddev-${DDEV_SITENAME}-varnish
+    image: ${VARNISH_DOCKER_IMAGE:-varnish:6.0}
+    # These labels ensure this service is discoverable by ddev.
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+      # This defines the host name the service should be accessible from. This
+      # will be sitename.ddev.site.
+      # This is the first half of the trick that puts varnish "in front of" the
+      # web container, just by switching the names.
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      # This defines the ports the service should be accessible from at
+      # sitename.ddev.site.
+      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILPIT_HTTPS_PORT}:8025
+      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILPIT_PORT}:8025
+    volumes:
+      # This exposes a mount to the host system `.ddev/varnish` directory where
+      # your default.vcl should be.
+      - "./varnish:/etc/varnish"
+      - ".:/mnt/ddev_config"
+    depends_on:
+      - web
+    # Add mailpit support
+    expose:
+      - "8025"
+    entrypoint:
+      /usr/local/bin/docker-varnish-entrypoint -a 0.0.0.0:8025 ${VARNISH_VARNISHD_PARAMS:--p http_max_hdr=1000 -p http_resp_hdr_len=1M -p http_resp_size=2M -p workspace_backend=3M -p workspace_client=3M}

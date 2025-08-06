@@ -1,0 +1,14 @@
+database:
+  version: "8.0"
+  charset: utf8mb4
+
+services:
+  redis:
+    enabled: true
+    version: "7.0"
+  memcached:
+    enabled: false
+
+features:
+  - caching
+  - sessions
