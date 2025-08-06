@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication Style
+
+- Use direct, concise language without unnecessary adjectives or adverbs
+- Avoid flowery or marketing-style language ("tremendous", "dramatically", "revolutionary", etc.)
+- Don't include flattery or excessive praise ("excellent!", "perfect!", "great job!")
+- State facts and findings directly without embellishment
+- Skip introductory phrases like "I'm excited to", "I'd be happy to", "Let me dive into"
+- Avoid concluding with summary statements unless specifically requested
+- When presenting options or analysis, lead with the core information, not commentary about it
+
 ## Project Overview
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
@@ -15,39 +25,28 @@ For comprehensive developer documentation, see:
 
 ### Building
 
-- `make build` - Build for current platform
-- `make darwin_amd64` - Build for macOS Intel
-- `make darwin_arm64` - Build for macOS Apple Silicon  
-- `make linux_amd64` - Build for Linux x64
-- `make windows_amd64` - Build for Windows x64
-- `make completions` - Generate shell completions
+- `make` - Build for current platform
 
 ### Testing
 
 - `make test` - Run all tests (combines testpkg and testcmd)
-- `make testpkg` - Run package tests
+- `make testpkg` or `make testpkg TESTARGS="-run TestName"` - Run package tests or named test
 - `make testcmd` - Run command tests  
-- `make testddevapp` - Run ddevapp package tests specifically
-- `make testnotddevapp` - Run all package tests except ddevapp
-- `make testfullsitesetup` - Run full site setup tests
-- `make quickstart-test` - Run quickstart documentation tests using bats
 
 ### Linting and Code Quality
 
-- `make golangci-lint` - Run Go linter (requires golangci-lint to be installed)
 - `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, mkdocs, pyspelling)
-- `make markdownlint` - Lint markdown files
-- `make pyspelling` - Check spelling
+
+### Whitespace and Formatting
+
+- **Never add trailing whitespace** - Blank lines must be completely empty (no spaces or tabs)
+- Match existing indentation style exactly (spaces vs tabs, indentation depth)
+- Preserve the file's existing line ending style
+- Run linting tools to catch whitespace issues before committing
 
 ### Documentation
 
-- `make mkdocs` - Build documentation
-- `make mkdocs-serve` - Serve docs locally for development
-- See [Testing Documentation](https://ddev.readthedocs.io/en/stable/developers/testing-docs/) for docs setup
-
-### Cleanup
-
-- `make clean` or `make bin-clean` - Remove build artifacts
+- `make staticrequired` - after changing docs
 
 ## Architecture
 
@@ -100,7 +99,7 @@ DDEV uses YAML configuration files:
 
 - Uses Go modules (go.mod)
 - Requires Go 1.23.0+
-- Uses vendored dependencies
+- Uses vendored, checked-in dependencies
 - CGO is disabled by default
 
 ### Testing Philosophy
@@ -142,18 +141,137 @@ Use descriptive branch names that include:
 - Your GitHub username
 - Brief description of the work
 
+Format: `YYYYMMDD_<username>_<short_description>`
+
 Examples:
 
 - `20250719_rfay_vite_docs`
 - `20250719_username_fix_networking`
 - `20250719_contributor_update_tests`
 
-### Commit Messages
+**Branch Creation Strategy:**
 
-After key Claude-initiated code changes, make a commit, and the commit message should mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+The recommended approach for creating branches is:
 
-Examples:
+```bash
+git fetch upstream && git checkout -b <branch_name> upstream/main --no-track
+```
+
+This method:
+
+- Fetches latest upstream changes
+- Creates branch directly from upstream/main
+- Doesn't require syncing local main branch
+- Uses --no-track to avoid tracking upstream/main
+
+### Pull Request Titles
+
+DDEV enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format for PR titles. The format is:
+
+`<type>[optional scope][optional !]: <description>[, fixes #<issue>][, for #<issue>]`
+
+**Types:** `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
+
+- Use imperative, present tense ("change" not "changed")
+- Don't capitalize first letter
+- No period at end
+- Add `, fixes #<issue>` if applicable
+- Breaking changes require `!` after type
+
+**Examples:**
 
 - `feat: add Vite documentation section - Claude assisted with migrating blog content`
 - `fix: resolve networking issues in containers - Claude helped debug connection problems`
 - `docs: update CLAUDE.md with workflow guidelines - Claude suggested development improvements`
+- `feat(pantheon): use environment variables`
+- `fix: resolve container networking issues, fixes #1234`
+- `docs: update CLAUDE.md with PR title guidelines`
+- `refactor(auth): simplify user authentication flow`
+- `chore(deps): bump mutagen to 0.18.1`
+- `ci(pr): enforce commit message convention, fixes #5037`
+
+### Commit Messages
+
+**First Commit in a PR Series:** The initial commit that starts a new feature or fix should follow the structure from `.github/PULL_REQUEST_TEMPLATE.md` to provide comprehensive context. Use sections like "The Issue", "How This Commit Solves The Issue", and "Implementation Details" in the commit body, similar to the PR template format.
+
+**Follow-up Commits:** After key Claude-initiated code changes, make commits that mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
+
+Examples for commit messages (without description) are provided in the "Pull Request Titles" section above.
+
+### GitHub Issue Creation
+
+When creating GitHub issues, always use the proper issue template format:
+
+1. **Use the issue template structure:**
+   - Preliminary checklist (with checkboxes)
+   - Output of `ddev debug test` (in collapsible `<details>` section)
+   - Expected Behavior
+   - Actual Behavior  
+   - Steps To Reproduce
+   - Anything else?
+
+2. **Include `ddev debug test` output:**
+
+   ```bash
+   ddev debug test
+   ```
+
+   Copy the **entire output** (not just the file path) into the collapsible section using this format:
+
+   ```text
+   <details><summary>Expand `ddev debug test` diagnostic information</summary>
+   [triple backticks]
+   [PASTE COMPLETE OUTPUT HERE]
+   [triple backticks]
+   </details>
+   ```
+
+3. **Create issues with gh CLI:**
+
+   ```bash
+   gh issue create --title "Title" --body-file issue.md
+   ```
+
+### Pull Request Creation
+
+**PR Template Requirements:**
+
+The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
+
+- **The Issue:** Reference issue number with `#<issue>`
+- **How This PR Solves The Issue:** Technical explanation
+- **Manual Testing Instructions:** Step-by-step testing guide
+- **Automated Testing Overview:** Test strategy explanation
+- **Release/Deployment Notes:** Impact and considerations
+
+**Important:** For DDEV development, commit messages should include the complete PR template content. This ensures that when the PR is created on GitHub, it will be pre-populated and won't require additional editing. Use the full template format from `.github/PULL_REQUEST_TEMPLATE.md` in your commit message body.
+
+### Pre-Commit Workflow
+
+**Critical Requirements Before Committing:**
+
+1. **Run appropriate tests:**
+
+   For targeted testing:
+
+   ```bash
+   go test -v -run TestSpecificTestName ./pkg/...
+   ```
+
+   See [Testing Documentation](https://ddev.readthedocs.io/en/stable/developers/building-contributing/#testing) for detailed testing guidance.
+
+2. **Run static analysis:**
+
+   ```bash
+   make staticrequired
+   ```
+
+**Complete Pre-Commit Checklist:**
+
+1. Make your changes
+2. Run appropriate tests (`make test` or targeted tests)
+3. Run `make staticrequired`
+4. Fix any issues reported
+5. Stage changes with `git add`
+6. Commit with proper message format
+7. Push branch and create PR
