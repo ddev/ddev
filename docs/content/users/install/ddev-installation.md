@@ -186,13 +186,15 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     wsl --install
     # Reboot is often required after this command.
+    wsl --update
+    # Keeping WSL updated helps to ensure that DDEV installs successfully.
     wsl --install Ubuntu --name DDEV # the name DDEV is just a suggestion.
     # You'll be required to set up a default username and password for the distro.
     ```
 
     ### Windows Installer
 
-    You must have WSL2 installed before you can install DDEV on Windows.  If you're using DDEV's WSL2 options (recommended) then you also must have created a distro (like suggested "DDEV" distro above) before you can install DDEV.
+    You must have WSL2 installed before you can install DDEV on Windows. If you're using DDEV's WSL2 options (recommended) then you also must have created a distro (like suggested "DDEV" distro above) before you can install DDEV.
 
     The easiest way to install DDEV on Windows is to use the DDEV Windows installer, which can handle different installation scenarios:
 
@@ -230,16 +232,17 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     1. In PowerShell, run `mkcert.exe -install` and follow the prompt to install the Certificate Authority.
     2. In PowerShell, run `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side, so your Windows-side browser can trust it.
-    3. In PowerShell, run `wsl --install <distro-type> --name DDEV`, for example `wsl --install Debian --name DDEV`. This will install the WSL2 distro for you. (The name "DDEV" is just a suggestion; you can use any name you like.)
-    4. **Docker CE:** Follow the instructions in the [Linux install section here](docker-installation.md#linux) to install Docker CE and DDEV. In addition, `sudo apt-get install -y docker-ce ddev ddev-wsl2` (or the equivalent `dnf` or other package manager commands).
-    5. **Docker Desktop for Windows (if used, this is not preferred):**
+    3. In PowerShell, run `wsl --update` to make sure you have a current WSL version.
+    4. In PowerShell, run `wsl --install <distro-type> --name DDEV`, for example `wsl --install Debian --name DDEV`. This will install the WSL2 distro for you. (The name "DDEV" is just a suggestion; you can use any name you like.)
+    5. **Docker CE:** Follow the instructions in the [Linux install section here](docker-installation.md#linux) to install Docker CE and DDEV. In addition, `sudo apt-get install -y docker-ce ddev ddev-wsl2` (or the equivalent `dnf` or other package manager commands).
+    6. **Docker Desktop for Windows (if used, this is not preferred):**
         * Download and install the installer from [docker.com](https://www.docker.com/products/docker-desktop/). Choose the WSL2-based configuration. Start Docker Desktop. It may prompt you to log out and log in again, or reboot.
         * Go to Docker Desktop’s *Settings* → *Resources* → *WSL integration* → *enable integration for your distro*. Now `docker` commands will be available from within your WSL2 distro.
-    6. Double-check your distro: `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
-    7. Check that Docker is working inside Ubuntu (or your distro) by running `docker ps` in the distro.
-    8. Open the WSL2 terminal, for example `Debian` from the Windows start menu.
-    9. In WSL2, run `mkcert -install`.
-    10. Note that the older manual [PowerShell script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev_wsl2_docker_inside.ps1) may be instructional if you're setting up a non-Ubuntu distro. It has been replaced by the Windows installer, but could be adapted for other distros.
+    7. Double-check your distro: `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
+    8. Check that Docker is working inside Ubuntu (or your distro) by running `docker ps` in the distro.
+    9. Open the WSL2 terminal, for example `Debian` from the Windows start menu.
+    10. In WSL2, run `mkcert -install`.
+    11. Note that the older manual [PowerShell script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev_wsl2_docker_inside.ps1) may be instructional if you're setting up a non-Ubuntu distro. It has been replaced by the Windows installer, but could be adapted for other distros.
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
