@@ -235,6 +235,7 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 		AttachStdout: true,
 		AttachStderr: true,
 		User:         uidStr,
+		Labels:       map[string]string{"com.ddev.site-name": ""},
 	}
 
 	// Host configuration with volume mounts
