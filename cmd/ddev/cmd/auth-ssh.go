@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -36,7 +35,7 @@ var AuthSSHCommand = &cobra.Command{
 		ddev auth ssh -d ~/custom/path/to/ssh
 		ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
 	`),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		if len(args) > 0 {
 			util.Failed("This command takes no arguments.")
@@ -125,7 +124,7 @@ var AuthSSHCommand = &cobra.Command{
 			if strings.Contains(err.Error(), "bind source path does not exist") {
 				helpMessage = "\n\nThe specified SSH private key path is not shared with your Docker provider."
 			}
-			util.Failed("Failed to run SSH auth container: %v %v", err, helpMessage)
+			util.Failed("Failed to execute command `%s`: %v %s", cmd.CommandPath(), err, helpMessage)
 		}
 	},
 }
@@ -223,7 +222,7 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 		Image:        docker.GetSSHAuthImage() + "-built",
 		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `set -e && cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && keys=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' * || { echo "No SSH private keys found" >&2; exit 1; }) && for key in $keys; do ssh-add "$key" || exit $?; done`},
 		Entrypoint:   dockerStrslice.StrSlice{},
-		Tty:          true,
+		Tty:          term.IsTerminal(int(os.Stdin.Fd())),
 		OpenStdin:    true,
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -251,7 +250,7 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 		return fmt.Errorf("failed to start SSH auth container: %v", err)
 	}
 
-	// Attach to container for interactive session
+	// Attach to container for stdin/stdout/stderr forwarding
 	attachOptions := dockerContainer.AttachOptions{
 		Stream: true,
 		Stdin:  true,
@@ -265,12 +264,9 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 	}
 	defer hijackedResp.Close()
 
-	isInteractive := term.IsTerminal(int(os.Stdin.Fd()))
-
-	// Disable terminal echo if running on a terminal
-	// to hide passphrase input
+	// Handle terminal mode for password input
 	var oldState *term.State
-	if isInteractive {
+	if term.IsTerminal(int(os.Stdin.Fd())) {
 		oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
 		if err != nil {
 			return fmt.Errorf("failed to set terminal to raw mode: %v", err)
@@ -282,55 +278,13 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 		}()
 	}
 
-	if isInteractive {
-		// Interactive mode - use simple I/O copying
-		go func() {
-			_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
-		}()
-		go func() {
-			_, _ = io.Copy(hijackedResp.Conn, os.Stdin)
-		}()
-	} else {
-		// Non-interactive mode - wait for prompts before sending input
-		inputCh := make(chan string, 10)
-
-		// Read all input lines into channel
-		go func() {
-			defer close(inputCh)
-			stdinReader := bufio.NewReader(os.Stdin)
-			for {
-				if line, err := stdinReader.ReadString('\n'); err == nil {
-					inputCh <- line
-				} else {
-					break
-				}
-			}
-		}()
-
-		// Handle container output and send input when prompted
-		go func() {
-			buffer := make([]byte, 1024)
-			for {
-				n, err := hijackedResp.Reader.Read(buffer)
-				if err != nil {
-					break
-				}
-
-				output := string(buffer[:n])
-				fmt.Print(output)
-
-				// Send next input when we see a prompt
-				if strings.Contains(output, "Enter passphrase for") {
-					select {
-					case line := <-inputCh:
-						_, _ = hijackedResp.Conn.Write([]byte(line))
-					default:
-						// No more input available
-					}
-				}
-			}
-		}()
-	}
+	// Forward I/O
+	go func() {
+		_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
+	}()
+	go func() {
+		_, _ = io.Copy(hijackedResp.Conn, os.Stdin)
+	}()
 
 	// Wait for container to finish
 	statusCh, errCh := client.ContainerWait(ctx, containerID, dockerContainer.WaitConditionNotRunning)
@@ -341,7 +295,7 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 		}
 	case status := <-statusCh:
 		if status.StatusCode != 0 {
-			return fmt.Errorf("SSH auth container exited with non-zero status: %d", status.StatusCode)
+			return fmt.Errorf("exit status %d", status.StatusCode)
 		}
 	}
 
