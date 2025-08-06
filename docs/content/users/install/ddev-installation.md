@@ -232,7 +232,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     1. In PowerShell, run `mkcert.exe -install` and follow the prompt to install the Certificate Authority.
     2. In PowerShell, run `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side, so your Windows-side browser can trust it.
-    3. In PowerShell, run `wsl --update`. This will update the WSL and ensure smoother installation process.
+    3. In PowerShell, run `wsl --update` to make sure you have a current WSL version.
     4. In PowerShell, run `wsl --install <distro-type> --name DDEV`, for example `wsl --install Debian --name DDEV`. This will install the WSL2 distro for you. (The name "DDEV" is just a suggestion; you can use any name you like.)
     5. **Docker CE:** Follow the instructions in the [Linux install section here](docker-installation.md#linux) to install Docker CE and DDEV. In addition, `sudo apt-get install -y docker-ce ddev ddev-wsl2` (or the equivalent `dnf` or other package manager commands).
     6. **Docker Desktop for Windows (if used, this is not preferred):**
