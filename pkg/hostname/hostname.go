@@ -3,6 +3,7 @@ package hostname
 import (
 	"fmt"
 	"os"
+	exec2 "os/exec"
 	"runtime"
 	"strings"
 
@@ -39,8 +40,13 @@ func GetDdevHostnameBinary() string {
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
 		binary = ddevHostnameWindowsBinary
 	}
-	util.Debug("ddevHostnameBinary=%s", binary)
-	return binary
+	path, err := exec2.LookPath(binary)
+	if err != nil {
+		util.Debug("ddevHostnameBinary not found in PATH: %v", err)
+		return binary
+	}
+	util.Debug("ddevHostnameBinary=%s", path)
+	return path
 }
 
 // elevateHostsManipulation uses elevation (sudo or runas) to manipulate the hosts file.
