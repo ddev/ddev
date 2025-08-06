@@ -227,7 +227,7 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 	// Container configuration
 	config := &dockerContainer.Config{
 		Image:        docker.GetSSHAuthImage() + "-built",
-		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && keys=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' * || { echo "No SSH private keys found" >&2; exit 1; }) && for key in $keys; do ssh-add "$key" || exit $?; done`},
+		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found" >&2; exit 1; } && for key in "${keys[@]}"; do ssh-add "$key" || exit $?; done`},
 		Entrypoint:   dockerStrslice.StrSlice{},
 		Tty:          term.IsTerminal(int(os.Stdin.Fd())),
 		OpenStdin:    true,
