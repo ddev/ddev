@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+## #ddev-generated
+## Description: Reload the varnish config to apply changes
+## Usage: varnish-config-reload [--verbose]
+## Example: "ddev varnish-config-reload"
+
+# Store the new config with a date stamp.
+new_config="reload_$(date +%FT%H_%M_%S)"
+
+VARNISHADM="varnishadm"
+VARNISHD_CONFIG_VCL="/etc/varnish/default.vcl"
+VERBOSE=false
+for arg in "$@"; do
+  if [ "$arg" == "--verbose" ]; then
+    VERBOSE=true
+  fi
+done
+
+# Check if we are able to connect at all
+if $VARNISHADM vcl.list > /dev/null; then
+    $VERBOSE && echo vcl.list succeeded
+else
+  echo "Unable to run $VARNISHADM vcl.list"
+  exit 1
+fi
+
+# Double check possible collision on rapid-fire code call.
+if $VARNISHADM vcl.list | awk ' { print $5 } ' | grep -q $new_config; then
+  echo "Trying to use new config $new_config, but that is already in use"
+  exit 2
+fi
+
+$VERBOSE && echo "Discarding outdated configs."
+$VARNISHADM vcl.list | awk ' /^available / { print $4 } ' | awk ' /reload_/ { print $1 } ' | xargs -I{} $VARNISHADM vcl.discard {}
+
+current_config=$( $VARNISHADM vcl.list | awk ' /^active/ { print $5 } ' )
+
+echo "Loading vcl from $VARNISHD_CONFIG_VCL"
+$VERBOSE && echo "Current running config name is $current_config"
+echo "Using new config name $new_config"
+
+if $VARNISHADM vcl.load $new_config $VARNISHD_CONFIG_VCL; then
+    $VERBOSE && echo "$VARNISHADM vcl.load succeeded"
+else
+  echo "$VARNISHADM vcl.load failed"
+  exit 1
+fi
+
+if $VARNISHADM vcl.use $new_config; then
+    $VERBOSE && echo "$VARNISHADM vcl.use succeeded"
+else
+  echo "$VARNISHADM vcl.use failed"
+  exit 1
+fi
+$VERBOSE && echo -e "\nCurrent config list:"
+$VERBOSE && $VARNISHADM vcl.list
+
+echo "Reload completed"

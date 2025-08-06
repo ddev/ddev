@@ -1,0 +1,72 @@
+name: env-vars-test
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Test environment variables in PHP actions
+    
+    // Test all the standard DDEV environment variables
+    $expectedVars = [
+        'DDEV_APPROOT',
+        'DDEV_DOCROOT', 
+        'DDEV_PROJECT_TYPE',
+        'DDEV_SITENAME',
+        'DDEV_PROJECT',
+        'DDEV_PHP_VERSION',
+        'DDEV_WEBSERVER_TYPE',
+        'DDEV_DATABASE',
+        'DDEV_DATABASE_FAMILY',
+        'DDEV_FILES_DIRS',
+        'DDEV_MUTAGEN_ENABLED',
+        'DDEV_VERSION',
+        'DDEV_TLD',
+        'IS_DDEV_PROJECT'
+    ];
+    
+    echo "PHP: Testing environment variables...\n";
+    
+    $missing = [];
+    $found = [];
+    
+    foreach ($expectedVars as $var) {
+        $value = $_ENV[$var] ?? null;
+        if ($value === null) {
+            $missing[] = $var;
+        } else {
+            $found[] = "$var=$value";
+            echo "PHP: Found $var=$value\n";
+        }
+    }
+    
+    if (!empty($missing)) {
+        echo "PHP: ERROR - Missing environment variables: " . implode(', ', $missing) . "\n";
+        exit(1);
+    }
+    
+    echo "PHP: SUCCESS - All " . count($expectedVars) . " environment variables found\n";
+    
+    // Test specific variable values
+    if ($_ENV['IS_DDEV_PROJECT'] !== 'true') {
+        echo "PHP: ERROR - IS_DDEV_PROJECT should be 'true', got: " . $_ENV['IS_DDEV_PROJECT'] . "\n";
+        exit(1);
+    }
+    
+    if ($_ENV['DDEV_SITENAME'] !== $_ENV['DDEV_PROJECT']) {
+        echo "PHP: ERROR - DDEV_SITENAME and DDEV_PROJECT should match\n";
+        exit(1);
+    }
+    
+    // Test database family is valid
+    $validFamilies = ['mysql', 'postgres'];
+    if (!in_array($_ENV['DDEV_DATABASE_FAMILY'], $validFamilies)) {
+        echo "PHP: ERROR - DDEV_DATABASE_FAMILY should be mysql or postgres, got: " . $_ENV['DDEV_DATABASE_FAMILY'] . "\n";
+        exit(1);
+    }
+    
+    // Test DDEV_DATABASE format (type:version)
+    if (!preg_match('/^[a-z]+:[0-9.]+$/', $_ENV['DDEV_DATABASE'])) {
+        echo "PHP: ERROR - DDEV_DATABASE should be in format type:version, got: " . $_ENV['DDEV_DATABASE'] . "\n";
+        exit(1);
+    }
+    
+    echo "PHP: Environment variable validation completed successfully\n";

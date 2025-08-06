@@ -1,0 +1,48 @@
+name: basic-php-test
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Initialize basic PHP addon
+    // Access config.yaml directly from the .ddev directory (relative path)
+    $configPath = 'config.yaml';
+    if (file_exists($configPath)) {
+        $configContent = file_get_contents($configPath);
+        // Simple parsing to get project name
+        if (preg_match('/^name:\s*(.+)$/m', $configContent, $matches)) {
+            $projectName = trim($matches[1]);
+            echo "PHP: Setting up project: $projectName\n";
+        }
+    }
+    
+    // Check if we can access the .ddev directory
+    if (file_exists('.')) {
+        echo "PHP: Config directory accessible\n";
+    }
+    
+    file_put_contents('php-test-created.txt', "Created by PHP at " . date('Y-m-d H:i:s') . "\n");
+    echo "PHP: Created test file\n";
+
+post_install_actions:
+  - |
+    #ddev-description: Execute bash validation step
+    echo 'Bash: This is a regular bash action after PHP'
+  - |
+    <?php
+    #ddev-description: Finalize basic PHP addon setup
+    echo "PHP: Post-install PHP action executed\n";
+
+removal_actions:
+  - |
+    <?php
+    #ddev-description: Clean up PHP test files during removal
+    // Remove any test files created by this addon
+    $testFile = 'php-test-created.txt';
+    if (file_exists($testFile)) {
+        unlink($testFile);
+        echo "PHP: Removed test file during addon removal\n";
+    }
+    
+    // Create a removal confirmation file to verify removal actions work
+    file_put_contents('php-removal-executed.txt', "PHP removal action executed at " . date('Y-m-d H:i:s') . "\n");
+    echo "PHP: Removal action executed successfully\n";

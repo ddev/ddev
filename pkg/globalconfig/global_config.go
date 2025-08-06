@@ -916,3 +916,15 @@ func GetRouterURL() string {
 
 	return routerURL
 }
+
+// GetGlobalConfigYAML returns the global DDEV configuration as YAML
+// This provides access to global settings that affect all DDEV projects
+func GetGlobalConfigYAML() ([]byte, error) {
+	// Marshal the global configuration to YAML
+	globalConfigYAML, err := yaml.Marshal(&DdevGlobalConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal global configuration to YAML: %v", err)
+	}
+
+	return globalConfigYAML, nil
+}

@@ -1,0 +1,5 @@
+#ddev-generated
+# Config for varnish PHP addon - ensures YAML extension is available
+
+webimage_extra_packages:
+  - php${DDEV_PHP_VERSION}-yaml

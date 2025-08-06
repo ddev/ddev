@@ -10,12 +10,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var fullYAMLOutput bool
+var omitKeys string
+
 // DebugConfigYamlCmd implements the ddev debug configyaml command
 var DebugConfigYamlCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "configyaml [project]",
 	Short:             "Prints the project config.*.yaml usage",
-	Example:           "ddev debug configyaml, ddev debug configyaml <projectname>",
+	Example:           "ddev debug configyaml, ddev debug configyaml <projectname>, ddev debug configyaml --full-yaml, ddev debug configyaml --omit-keys=web_environment",
 	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 
@@ -41,22 +44,41 @@ var DebugConfigYamlCmd = &cobra.Command{
 		if err != nil {
 			util.Error("failed reading config for project %s: %v", app.Name, err)
 		}
-		output.UserOut.Printf("These config files were loaded for project %s: %v", app.Name, configFiles)
+		output.UserErr.Printf("These config files were loaded for project %s: %v", app.Name, configFiles)
 
-		// strategy from https://stackoverflow.com/a/47457022/215713
-		fields := reflect.TypeOf(*app)
-		values := reflect.ValueOf(*app)
+		// Parse omit keys
+		var omitKeyList []string
+		omitKeyMap := make(map[string]bool)
+		if omitKeys != "" {
+			omitKeyList = strings.Split(omitKeys, ",")
+			for _, key := range omitKeyList {
+				omitKeyMap[strings.TrimSpace(key)] = true
+			}
+		}
 
-		num := fields.NumField()
+		if fullYAMLOutput {
+			// Output complete processed YAML configuration
+			configYAML, err := app.GetProcessedProjectConfigYAML(omitKeyList...)
+			if err != nil {
+				util.Failed("Failed to get processed project configuration YAML: %v", err)
+			}
+			output.UserOut.Printf("# Complete processed project configuration:\n%s", string(configYAML))
+		} else {
+			// strategy from https://stackoverflow.com/a/47457022/215713
+			fields := reflect.TypeOf(*app)
+			values := reflect.ValueOf(*app)
 
-		for i := 0; i < num; i++ {
-			field := fields.Field(i)
-			v := values.Field(i)
+			num := fields.NumField()
 
-			yaml := field.Tag.Get("yaml")
-			key := strings.Split(yaml, ",")
-			if v.CanInterface() && key[0] != "-" && !isZero(v) {
-				output.UserOut.Printf("%s: %v", key[0], v)
+			for i := 0; i < num; i++ {
+				field := fields.Field(i)
+				v := values.Field(i)
+
+				yaml := field.Tag.Get("yaml")
+				key := strings.Split(yaml, ",")
+				if v.CanInterface() && key[0] != "-" && !isZero(v) && !omitKeyMap[key[0]] {
+					output.UserOut.Printf("%s: %v", key[0], v)
+				}
 			}
 		}
 
@@ -91,5 +113,7 @@ func isZero(v reflect.Value) bool {
 }
 
 func init() {
+	DebugConfigYamlCmd.Flags().BoolVar(&fullYAMLOutput, "full-yaml", false, "Output complete processed YAML configuration instead of individual fields")
+	DebugConfigYamlCmd.Flags().StringVar(&omitKeys, "omit-keys", "", "Comma-separated list of keys to omit from output (e.g., web_environment)")
 	DebugCmd.AddCommand(DebugConfigYamlCmd)
 }

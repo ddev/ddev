@@ -232,5 +232,10 @@ nav:
     - developers/network-test-environments.md
     - developers/http-proxy-test-environments.md
     - developers/secret-management.md
+    # TODO: Remove when PHP add-ons move from experimental to stable
+    - 'PHP Add-ons (Experimental)': developers/tmp/PHP_ADDON_GUIDE.md
+    - 'PHP Add-on Translation Strategy': developers/tmp/PHP_ADDON_TRANSLATION_STRATEGY.md
+    - 'PHP Add-on Translation Guide': developers/tmp/PHP_ADDON_TRANSLATION_GUIDE.md
+    - 'PHP Add-on Finish Work PRD': developers/tmp/PHP_ADDON_FINISH_WORK_PRD.md
   - 'Blog': https://ddev.com
   - 'Add-on Registry': https://addons.ddev.com

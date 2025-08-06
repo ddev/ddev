@@ -569,6 +569,7 @@ restore
 resv
 retrans
 rfay
+roadmap
 rmi
 rsync
 running
@@ -624,6 +625,7 @@ subdirectory
 subdirectories
 subfield
 sudo
+superglobal
 supervisord
 sur
 susi
@@ -661,6 +663,7 @@ to
 toc
 transactional
 true
+TTY
 txt
 ubuntu
 ufw
@@ -684,6 +687,7 @@ user
 using
 usr
 v
+valkey
 variables
 vers
 version

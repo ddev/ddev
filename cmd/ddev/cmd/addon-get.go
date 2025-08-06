@@ -214,7 +214,13 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
+			// For PHP actions, don't prepend bash environment setup
+			trimmedAction := strings.TrimSpace(action)
+			if strings.HasPrefix(trimmedAction, "<?php") {
+				err = ddevapp.ProcessAddonActionWithImage(action, dict, bash, verbose, s.Image, app)
+			} else {
+				err = ddevapp.ProcessAddonActionWithImage(injectedEnv+"; "+action, dict, bash, verbose, s.Image, app)
+			}
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
@@ -290,7 +296,13 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
+			// For PHP actions, don't prepend bash environment setup
+			trimmedAction := strings.TrimSpace(action)
+			if strings.HasPrefix(trimmedAction, "<?php") {
+				err = ddevapp.ProcessAddonActionWithImage(action, dict, bash, verbose, s.Image, app)
+			} else {
+				err = ddevapp.ProcessAddonActionWithImage(injectedEnv+"; "+action, dict, bash, verbose, s.Image, app)
+			}
 			desc := ddevapp.GetAddonDdevDescription(action)
 			if err != nil {
 				if !verbose {
@@ -315,7 +327,12 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to create manifest file: %v", err)
 		}
 
-		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		// Clean up temporary configuration files created for PHP actions
+		err = app.CleanupConfigurationFiles()
+		if err != nil {
+			util.Warning("Unable to clean up temporary configuration files: %v", err)
+		}
+
 		if argType == "github" {
 			util.Success("Please read instructions for this add-on at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
