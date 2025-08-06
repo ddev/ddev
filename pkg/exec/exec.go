@@ -15,6 +15,29 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 )
 
+// CmdOption is a function type for configuring exec.Cmd
+type CmdOption func(*exec.Cmd)
+
+// WithStdin sets the stdin for the command
+func WithStdin(stdin io.Reader) CmdOption {
+	return func(cmd *exec.Cmd) {
+		if globalconfig.DdevVerbose {
+			output.UserOut.Printf("WithStdin: setting custom stdin")
+		}
+		cmd.Stdin = stdin
+	}
+}
+
+// WithEnv sets the environment variables for the command
+func WithEnv(env []string) CmdOption {
+	return func(cmd *exec.Cmd) {
+		if globalconfig.DdevVerbose {
+			output.UserOut.Printf("WithEnv: setting env vars %v", env)
+		}
+		cmd.Env = env
+	}
+}
+
 // HostCommand wraps RunCommand() to inject environment variables.
 // especially DDEV_EXECUTABLE, the full path to running DDEV instance.
 func HostCommand(name string, args ...string) *exec.Cmd {
@@ -122,22 +145,26 @@ func RunHostCommand(command string, args ...string) (string, error) {
 	return string(o), err
 }
 
-// RunHostCommandWithEnv executes a command on the host with optional
-// environment variables and returns the
-// combined stdout/stderr results and error
-// If all of the existing environment is required, it must be
-// passed in `env`, as it is not set by default
-func RunHostCommandWithEnv(command string, env []string, args ...string) (string, error) {
+// RunHostCommandWithOptions executes a command on the host with configurable options
+// and returns the combined stdout/stderr results and error
+func RunHostCommandWithOptions(command string, options []CmdOption, args ...string) (string, error) {
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommandWithEnv(%v): %s %s", env, command, strings.Join(args, " "))
+		output.UserOut.Printf("RunHostCommandWithOptions: %s %s", command, strings.Join(args, " "))
+	}
+	c := HostCommand(command, args...)
+
+	// Apply all options
+	for _, option := range options {
+		option(c)
+	}
+	// Default to os.Stdin if no stdin was set
+	if c.Stdin == nil {
+		c.Stdin = os.Stdin
 	}
 
-	c := exec.Command(command, args...)
-	c.Env = env
-	c.Stdin = os.Stdin
 	o, err := c.CombinedOutput()
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommandWithEnv returned. output=%v err=%v", string(o), err)
+		output.UserOut.Printf("RunHostCommandWithOptions returned output=%v err=%v", string(o), err)
 	}
 
 	return string(o), err
@@ -153,7 +180,7 @@ func RunHostCommandSeparateStreams(command string, args ...string) (string, erro
 	c.Stdin = os.Stdin
 	o, err := c.Output()
 	if globalconfig.DdevVerbose {
-		output.UserOut.Printf("RunHostCommandSeparateStreams returned. stdout=%v, err=%v", string(o), err)
+		output.UserOut.Printf("RunHostCommandSeparateStreams returned output=%v, err=%v", string(o), err)
 	}
 
 	return string(o), err
