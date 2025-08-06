@@ -42,6 +42,7 @@ var AuthSSHCommand = &cobra.Command{
 		}
 
 		uidStr, _, _ := util.GetContainerUIDGid()
+		util.Debug("Using container UID: %s", uidStr)
 
 		// Use ~/.ssh if nothing is provided
 		if sshKeyFiles == nil && sshKeyDirs == nil {
@@ -54,6 +55,7 @@ var AuthSSHCommand = &cobra.Command{
 
 		files := getSSHKeyPaths(sshKeyDirs, true, false)
 		files = append(files, getSSHKeyPaths(sshKeyFiles, false, true)...)
+		util.Debug("Found %d file paths to process", len(files))
 
 		var keys []string
 		// Get real paths to key files in case they are symlinks
@@ -65,11 +67,13 @@ var AuthSSHCommand = &cobra.Command{
 			}
 			if !slices.Contains(keys, key) && fileIsPrivateKey(key) {
 				keys = append(keys, key)
+				util.Debug("Added SSH private key: %s", key)
 			}
 		}
 		if len(keys) == 0 {
 			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
+		util.Debug("Processing %d SSH private keys", len(keys))
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil || app == nil {
@@ -85,6 +89,7 @@ var AuthSSHCommand = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
+		util.Debug("SSH agent container is running")
 
 		// Prepare mounts for Docker API
 		var mounts []dockerMount.Mount
@@ -104,6 +109,7 @@ var AuthSSHCommand = &cobra.Command{
 				Target:   "/tmp/sshtmp/" + filename,
 				ReadOnly: true,
 			})
+			util.Debug("Binding SSH private key %s into container as /tmp/sshtmp/%s", keyPath, filename)
 			// Mount optional OpenSSH certificate
 			if certPath, certName := getCertificateForPrivateKey(keyPath, filename); certPath != "" && certName != "" {
 				mounts = append(mounts, dockerMount.Mount{
@@ -112,6 +118,7 @@ var AuthSSHCommand = &cobra.Command{
 					Target:   "/tmp/sshtmp/" + certName,
 					ReadOnly: true,
 				})
+				util.Debug("Binding SSH certificate %s into container as /tmp/sshtmp/%s", certPath, certName)
 			}
 		}
 
@@ -220,7 +227,7 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 	// Container configuration
 	config := &dockerContainer.Config{
 		Image:        docker.GetSSHAuthImage() + "-built",
-		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `set -e && cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && keys=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' * || { echo "No SSH private keys found" >&2; exit 1; }) && for key in $keys; do ssh-add "$key" || exit $?; done`},
+		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && keys=$(grep -l '^-----BEGIN .* PRIVATE KEY-----' * || { echo "No SSH private keys found" >&2; exit 1; }) && for key in $keys; do ssh-add "$key" || exit $?; done`},
 		Entrypoint:   dockerStrslice.StrSlice{},
 		Tty:          term.IsTerminal(int(os.Stdin.Fd())),
 		OpenStdin:    true,
@@ -237,18 +244,25 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 		VolumesFrom: []string{ddevapp.SSHAuthName},
 	}
 
-	// Create container
-	resp, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
+	// Create container with descriptive name
+	containerName := "ddev-ssh-auth-" + util.RandString(6)
+	resp, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
 	if err != nil {
 		return fmt.Errorf("failed to create SSH auth container: %v", err)
 	}
 	containerID := resp.ID
+	defer func() {
+		_ = dockerutil.RemoveContainer(containerID)
+	}()
+	util.Debug("Created SSH auth container: %s (%s)", containerName, dockerutil.TruncateID(containerID))
 
 	// Start container
 	err = client.ContainerStart(ctx, containerID, dockerContainer.StartOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to start SSH auth container: %v", err)
 	}
+	util.Debug("Started SSH auth container: %s (%s)", containerName, dockerutil.TruncateID(containerID))
+	util.Debug("Running %v", prettyCmd(config.Cmd))
 
 	// Attach to container for stdin/stdout/stderr forwarding
 	attachOptions := dockerContainer.AttachOptions{
@@ -266,7 +280,9 @@ func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
 
 	// Handle terminal mode for password input
 	var oldState *term.State
-	if term.IsTerminal(int(os.Stdin.Fd())) {
+	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
+	util.Debug("Terminal detected: %t", isTerminal)
+	if isTerminal {
 		oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
 		if err != nil {
 			return fmt.Errorf("failed to set terminal to raw mode: %v", err)
