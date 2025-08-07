@@ -95,6 +95,7 @@ func New() GlobalConfig {
 		MkcertCARoot:                 readCAROOT(),
 		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
 		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
+		// RemoteConfig left empty by default, will use defaults when needed but won't show in config file
 	}
 
 	return cfg
@@ -303,6 +304,14 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.ProjectTldGlobal = nodeps.DdevDefaultTLD
 	}
 
+	// Set default remote config URLs if empty
+	if DdevGlobalConfig.RemoteConfig.RemoteConfigURL == "" {
+		DdevGlobalConfig.RemoteConfig.RemoteConfigURL = DefaultRemoteConfigURL
+	}
+	if DdevGlobalConfig.RemoteConfig.SponsorshipDataURL == "" {
+		DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = DefaultSponsorshipDataURL
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
@@ -331,6 +340,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 	if cfgCopy.XHProfMode == configTypes.XHProfModeEmpty {
 		cfgCopy.XHProfMode = nodeps.XHProfModeDefault
+	}
+
+	// Clear remote config URLs if they match defaults so they don't appear in config file
+	if cfgCopy.RemoteConfig.RemoteConfigURL == DefaultRemoteConfigURL {
+		cfgCopy.RemoteConfig.RemoteConfigURL = ""
+	}
+	if cfgCopy.RemoteConfig.SponsorshipDataURL == DefaultSponsorshipDataURL {
+		cfgCopy.RemoteConfig.SponsorshipDataURL = ""
 	}
 
 	// We only have one router, so this field is old, and when writing we can omitempty
@@ -473,14 +490,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
 # Controls the display of the ticker messages.
 
-# remote_config: # Intended for debugging only, should not be changed.
-#   update_interval: 10 // Interval in hours to download the remote config
-#   remote:
-#     owner: ddev
-#     repo: remote-config
-#     ref: main
-#     filepath: remote-config.jsonc
-# Controls the download of the remote config. Please do not change.
+# remote_config - Intended for debugging only, should not be changed.
+# Controls the download of the remote config and sponsorship data. Please do not change.
+#remote_config:
+#  update_interval: 24 # Interval in hours to download the remote config and sponsorship data
+#  remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
+#  sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

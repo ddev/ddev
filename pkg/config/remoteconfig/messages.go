@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -19,7 +18,7 @@ import (
 
 type messageTypes struct {
 	messageType types.MessageType
-	messages    []internal.Message
+	messages    []types.Message
 }
 
 type conditionDefinition struct {
@@ -106,7 +105,7 @@ func (c *remoteConfig) ShowNotifications() {
 
 	c.state.LastNotificationAt = time.Now()
 	if err := c.state.save(); err != nil {
-		util.Debug("Error while saving state: %s", err)
+		util.Debug("Error while saving state: %v", err)
 	}
 }
 
@@ -114,12 +113,13 @@ func (c *remoteConfig) ShowNotifications() {
 func (c *remoteConfig) ShowTicker() {
 	// defer util.TimeTrack()()
 
-	if !c.showTickerMessage() || len(c.remoteConfig.Messages.Ticker.Messages) == 0 {
+	tickerData := c.getTicker()
+	if !c.showTickerMessage() || len(tickerData.Messages) == 0 {
 		return
 	}
 
 	messageOffset := c.state.LastTickerMessage
-	messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+	messageCount := len(tickerData.Messages)
 
 	if messageOffset == 0 {
 		// As long as no message was shown, start with a random message. This
@@ -129,13 +129,13 @@ func (c *remoteConfig) ShowTicker() {
 		messageOffset = rand.Intn(messageCount)
 	}
 
-	for i := range c.remoteConfig.Messages.Ticker.Messages {
+	for i := range tickerData.Messages {
 		messageOffset++
 		if messageOffset > messageCount {
 			messageOffset = 1
 		}
 
-		message := &c.remoteConfig.Messages.Ticker.Messages[i+messageOffset-1]
+		message := &tickerData.Messages[i+messageOffset-1]
 
 		if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
 			t := table.NewWriter()
@@ -157,7 +157,7 @@ func (c *remoteConfig) ShowTicker() {
 			c.state.LastTickerMessage = messageOffset
 			c.state.LastTickerAt = time.Now()
 			if err := c.state.save(); err != nil {
-				util.Debug("Error while saving state: %s", err)
+				util.Debug("Error while saving state: %v", err)
 			}
 
 			break
@@ -208,8 +208,9 @@ func (c *remoteConfig) getTickerInterval() time.Duration {
 		return time.Duration(c.tickerInterval) * time.Hour
 	}
 
-	if c.remoteConfig.Messages.Ticker.Interval != 0 {
-		return time.Duration(c.remoteConfig.Messages.Ticker.Interval) * time.Hour
+	tickerData := c.getTicker()
+	if tickerData.Interval != 0 {
+		return time.Duration(tickerData.Interval) * time.Hour
 	}
 
 	return time.Duration(tickerInterval) * time.Hour
@@ -221,6 +222,15 @@ func (c *remoteConfig) showTickerMessage() bool {
 	return !output.JSONOutput &&
 		!c.isTickerDisabled() &&
 		c.state.LastTickerAt.Add(c.getTickerInterval()).Before(time.Now())
+}
+
+// showSponsorshipMessage returns true if sponsorship message should be shown
+// Uses same logic as ticker - once per day
+func (c *remoteConfig) showSponsorshipMessage() bool {
+	// Use the same interval as ticker for consistency (once per day)
+	sponsorshipInterval := c.getTickerInterval()
+	return !output.JSONOutput &&
+		c.state.LastSponsorshipAt.Add(sponsorshipInterval).Before(time.Now())
 }
 
 func (c *remoteConfig) checkConditions(conditions []string) bool {
@@ -247,7 +257,7 @@ func (c *remoteConfig) checkVersions(versions string) bool {
 	if versions != "" {
 		match, err := util.SemverValidate(versions, versionconstants.DdevVersion)
 		if err != nil {
-			util.Debug("Failed to validate DDEV version `%s` against constraint `%s`: %s", versionconstants.DdevVersion, versions, err)
+			util.Debug("Failed to validate DDEV version `%s` against constraint `%s`: %v", versionconstants.DdevVersion, versions, err)
 			return true
 		}
 
@@ -257,12 +267,64 @@ func (c *remoteConfig) checkVersions(versions string) bool {
 	return true
 }
 
+// ShowSponsorshipAppreciation shows a sponsorship appreciation message if data is available
+func (c *remoteConfig) ShowSponsorshipAppreciation() {
+	// Get sponsorship manager
+	sponsorshipMgr := GetGlobalSponsorship()
+	if sponsorshipMgr == nil {
+		return
+	}
+
+	// Check if we should show sponsorship message (same logic as MOTD - once a day)
+	if !c.showSponsorshipMessage() {
+		return
+	}
+
+	sponsorshipData, err := sponsorshipMgr.GetSponsorshipData()
+	if err != nil {
+		util.Debug("Error getting sponsorship data: %v", err)
+		return
+	}
+
+	// Only show if we have meaningful data
+	if sponsorshipData == nil || sponsorshipData.TotalMonthlyAverageIncome == 0 {
+		return
+	}
+
+	// Use the AppreciationMessage from the data
+	message := sponsorshipData.AppreciationMessage
+	if message == "" {
+		// Fallback if not present
+		message = "💚 DDEV's community sponsorship makes it go! Consider becoming a sponsor at github.com/sponsors/ddev 🤝"
+	}
+
+	t := table.NewWriter()
+	applyTableStyle(sponsorship, t)
+	title := "❤️  DDEV Sponsorship Status"
+	t.AppendHeader(table.Row{title})
+	t.AppendRow(table.Row{message})
+
+	output.UserOut.Print("\n", t.Render(), "\n")
+
+	// Update state so we don't show this message again today
+	c.state.LastSponsorshipAt = time.Now()
+	if err := c.state.save(); err != nil {
+		util.Debug("Error while saving sponsorship display state: %v", err)
+	}
+}
+
+// getTicker returns ticker data from the messages structure
+func (c *remoteConfig) getTicker() types.Ticker {
+	return c.remoteConfig.Messages.Ticker
+}
+
 type preset int
 
 const (
 	information preset = iota
 	warning
 	ticker
+	sponsorship
 )
 
 func applyTableStyle(preset preset, writer table.Writer) {
@@ -302,6 +364,11 @@ func applyTableStyle(preset preset, writer table.Writer) {
 		style.Color = table.ColorOptions{
 			Header: text.Colors{text.BgHiWhite, text.FgBlack},
 			Row:    text.Colors{text.BgHiWhite, text.FgBlack},
+		}
+	case sponsorship:
+		style.Color = table.ColorOptions{
+			Header: text.Colors{text.BgHiGreen, text.FgBlack},
+			Row:    text.Colors{text.BgHiGreen, text.FgBlack},
 		}
 	}
 }

@@ -532,8 +532,29 @@ Get the database type and version found in the `ddev-dbserver` database volume, 
 Example:
 
 ```shell
-# Print the database volume’s engine and version
+# Print the database volume's engine and version
 ddev debug get-volume-db-version
+```
+
+### `debug gob-decode`
+
+Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), and sponsorship data files.
+
+The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
+
+*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+
+Example:
+
+```shell
+# Decode a remote config file
+ddev debug gob-decode ~/.ddev/.remote-config
+
+# Decode an amplitude cache file
+ddev debug gob-decode ~/.ddev/.amplitude.cache
+
+# Decode any gob file with path expansion
+ddev debug gob-decode ~/path/to/file.gob
 ```
 
 ### `debug match-constraint`
@@ -556,6 +577,19 @@ fi
 !!!tip
     You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
 
+### `debug message-conditions`
+
+Show message conditions of this version of DDEV.
+
+*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+
+Example:
+
+```shell
+# Show message conditions for the current DDEV version
+ddev debug message-conditions
+```
+
 ### `debug migrate-database`
 
 Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
@@ -563,7 +597,7 @@ Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works onl
 Example:
 
 ```shell
-# Migrate the current project’s database to MariaDB 10.7
+# Migrate the current project's database to MariaDB 10.7
 ddev debug migrate-database mariadb:10.7
 ```
 
@@ -574,7 +608,7 @@ Allows access to any [Mutagen command](https://mutagen.io/documentation/introduc
 Example:
 
 ```shell
-# Run Mutagen’s `sync list` command
+# Run Mutagen's `sync list` command
 ddev debug mutagen sync list
 ```
 
@@ -593,7 +627,7 @@ ddev debug nfsmount
 
 *Alias: `debug refresh`.*
 
-Rebuilds the project’s Docker cache with verbose output and restarts the project or the specified service.
+Rebuilds the project's Docker cache with verbose output and restarts the project or the specified service.
 
 Flags:
 
@@ -604,17 +638,40 @@ Flags:
 Example:
 
 ```shell
-# Rebuild the current project’s web service without cache
+# Rebuild the current project's web service without cache
 ddev debug rebuild
 
-# Rebuild the current project’s web service with cache
+# Rebuild the current project's web service with cache
 ddev debug rebuild --cache
 
-# Rebuild the current project’s db service without cache
+# Rebuild the current project's db service without cache
 ddev debug rebuild --service db
 
-# Rebuild the current project’s all services without cache
+# Rebuild the current project's all services without cache
 ddev debug rebuild --all
+```
+
+### `debug remote-data`
+
+Download and display remote configuration and sponsorship data used by DDEV from GitHub repositories.
+
+The downloaded content is displayed as formatted JSON to stdout. Optionally updates the local cached storage file (enabled by default).
+
+*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+
+Flags:
+
+* `--type`, `-t`: Type of data to download: `remote-config` (default) or `sponsorship-data`.  
+* `--update-storage`: Update local cached storage file (default `true`).
+
+Examples:
+
+```shell
+# Download remote config (default type)
+ddev debug remote-data
+
+# Download sponsorship data without updating local storage
+ddev debug remote-data --type=sponsorship-data --update-storage=false
 ```
 
 ### `debug test`
@@ -624,7 +681,7 @@ Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/bl
 Example:
 
 ```shell
-# Run DDEV’s diagnostic suite
+# Run DDEV's diagnostic suite
 ddev debug test
 ```
 
@@ -635,7 +692,7 @@ Removes all diagnostic projects created with `ddev debug test`.
 Example:
 
 ```shell
-# Remove all DDEV’s diagnostic projects
+# Remove all DDEV's diagnostic projects
 ddev debug testcleanup
 ```
 

@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"os"
 
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 )
 
@@ -23,10 +22,10 @@ type fileStorage struct {
 
 // fileStorageData is the structure used for the file.
 type fileStorageData struct {
-	RemoteConfig internal.RemoteConfig
+	RemoteConfig types.RemoteConfigData
 }
 
-func (s *fileStorage) Read() (remoteConfig internal.RemoteConfig, err error) {
+func (s *fileStorage) Read() (remoteConfig types.RemoteConfigData, err error) {
 	err = s.loadData()
 	if err != nil {
 		return
@@ -35,7 +34,7 @@ func (s *fileStorage) Read() (remoteConfig internal.RemoteConfig, err error) {
 	return s.data.RemoteConfig, nil
 }
 
-func (s *fileStorage) Write(remoteConfig internal.RemoteConfig) (err error) {
+func (s *fileStorage) Write(remoteConfig types.RemoteConfigData) (err error) {
 	s.data.RemoteConfig = remoteConfig
 
 	err = s.saveData()

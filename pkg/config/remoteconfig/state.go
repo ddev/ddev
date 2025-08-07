@@ -13,7 +13,7 @@ func newState(stateManager statetypes.State) *state {
 	}
 
 	if err := state.load(); err != nil {
-		util.Debug("Error while loading state: %s", err)
+		util.Debug("Error while loading state: %v", err)
 	}
 
 	return state
@@ -29,6 +29,7 @@ type stateEntry struct {
 	LastNotificationAt time.Time `yaml:"last_notification_at"`
 	LastTickerAt       time.Time `yaml:"last_ticker_at"`
 	LastTickerMessage  int       `yaml:"last_ticker_message"`
+	LastSponsorshipAt  time.Time `yaml:"last_sponsorship_at"`
 }
 
 const stateKey = "remote_config"

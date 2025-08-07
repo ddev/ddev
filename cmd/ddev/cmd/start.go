@@ -50,12 +50,7 @@ ddev start --all`,
 				Local: remoteconfig.Local{
 					Path: globalconfig.GetGlobalDdevDir(),
 				},
-				Remote: remoteconfig.Remote{
-					Owner:    globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner,
-					Repo:     globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo,
-					Ref:      globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref,
-					Filepath: globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath,
-				},
+				URL:            globalconfig.DdevGlobalConfig.RemoteConfig.RemoteConfigURL,
 				UpdateInterval: globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
 				TickerInterval: globalconfig.DdevGlobalConfig.Messages.TickerInterval,
 			},
@@ -63,8 +58,20 @@ ddev start --all`,
 			globalconfig.IsInternetActive,
 		)
 
-		remoteconfig.GetGlobal().ShowTicker()
-		remoteconfig.GetGlobal().ShowNotifications()
+		// Initialize sponsorship manager
+		remoteconfig.InitGlobalSponsorship(
+			globalconfig.GetGlobalDdevDir(),
+			state,
+			globalconfig.IsInternetActive,
+			globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
+			globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL,
+		)
+
+		if rc := remoteconfig.GetGlobal(); rc != nil {
+			rc.ShowTicker()
+			rc.ShowNotifications()
+			rc.ShowSponsorshipAppreciation()
+		}
 
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {

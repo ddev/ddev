@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	globalRemoteConfig types.RemoteConfig
+	globalRemoteConfig       types.RemoteConfig
+	globalSponsorshipManager types.SponsorshipManager
 )
 
 // InitGlobal initializes the global remote config. This is done once,
@@ -21,12 +22,24 @@ func InitGlobal(config Config, stateManager statetypes.State, isInternetActive f
 	return globalRemoteConfig
 }
 
-// GetGlobal returns the global remote config. InitGlobal must be
-// called in advance or the function will panic.
+// GetGlobal returns the global remote config. Returns nil if InitGlobal
+// was not called in advance.
 func GetGlobal() types.RemoteConfig {
-	if globalRemoteConfig == nil {
-		panic("error remoteconfig.InitGlobal was not called before accessing remote config")
+	return globalRemoteConfig
+}
+
+// InitGlobalSponsorship initializes the global sponsorship manager using a direct URL. This is done once,
+// subsequent calls do not have any effect.
+func InitGlobalSponsorship(localPath string, stateManager statetypes.State, isInternetActive func() bool, updateInterval int, url string) types.SponsorshipManager {
+	if globalSponsorshipManager == nil {
+		globalSponsorshipManager = NewSponsorshipManager(localPath, stateManager, isInternetActive, updateInterval, url)
 	}
 
-	return globalRemoteConfig
+	return globalSponsorshipManager
+}
+
+// GetGlobalSponsorship returns the global sponsorship manager. Returns nil if
+// InitGlobalSponsorship was not called in advance.
+func GetGlobalSponsorship() types.SponsorshipManager {
+	return globalSponsorshipManager
 }

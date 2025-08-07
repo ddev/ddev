@@ -405,6 +405,7 @@ jetbrains
 jq
 js
 json
+jsonc
 kcachegrind
 kbox
 keychain

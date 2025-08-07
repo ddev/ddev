@@ -1,10 +1,11 @@
 package remoteconfig
 
 import (
+	"context"
 	"sync"
 	"time"
 
-	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	statetypes "github.com/ddev/ddev/pkg/config/state/types"
@@ -28,13 +29,8 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 	cfg.loadFromLocalStorage()
 
 	// Configure remote and initiate update.
-	cfg.githubStorage = storage.NewGithubStorage(
-		config.getRemoteSourceOwner(&cfg.remoteConfig),
-		config.getRemoteSourceRepo(&cfg.remoteConfig),
-		config.getRemoteSourceFilepath(&cfg.remoteConfig),
-		storage.Options{Ref: config.getRemoteSourceRef(&cfg.remoteConfig)},
-	)
-	cfg.updateFromGithub()
+	cfg.urlDownloader = downloader.NewURLJSONCDownloader(config.URL)
+	cfg.updateFromRemote()
 
 	return cfg
 }
@@ -50,10 +46,10 @@ const (
 // remoteConfig is a in memory representation of the DDEV RemoteConfig.
 type remoteConfig struct {
 	state        *state
-	remoteConfig internal.RemoteConfig
+	remoteConfig types.RemoteConfigData
 
 	fileStorage   types.RemoteConfigStorage
-	githubStorage types.RemoteConfigStorage
+	urlDownloader downloader.JSONCDownloader
 
 	updateInterval   int
 	tickerInterval   int
@@ -69,7 +65,8 @@ func (c *remoteConfig) write() {
 	err := c.fileStorage.Write(c.remoteConfig)
 
 	if err != nil {
-		util.Debug("Error while writing remote config: %s", err)
+		util.Debug("Error while writing remote config to local storage: %v", err)
+		// Don't fail the operation, just log the error since local caching is optional
 	}
 }
 
@@ -86,12 +83,14 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	c.remoteConfig, err = c.fileStorage.Read()
 
 	if err != nil {
-		util.Debug("Error while loading remote config: %s", err)
+		util.Debug("Error while loading remote config from local storage: %v", err)
+		// Initialize with empty config as fallback
+		c.remoteConfig = types.RemoteConfigData{}
 	}
 }
 
-// updateFromGithub downloads the remote config from GitHub.
-func (c *remoteConfig) updateFromGithub() {
+// updateFromRemote downloads the remote config from the configured source.
+func (c *remoteConfig) updateFromRemote() {
 	// defer util.TimeTrack()()
 
 	if !c.isInternetActive() {
@@ -109,11 +108,12 @@ func (c *remoteConfig) updateFromGithub() {
 
 		var err error
 
-		// Download the remote config.
-		c.remoteConfig, err = c.githubStorage.Read()
+		// Download using URL-based downloader
+		ctx := context.Background()
+		err = c.urlDownloader.Download(ctx, &c.remoteConfig)
 
 		if err != nil {
-			util.Debug("Error while downloading remote config: %s", err)
+			util.Debug("Error while downloading remote config from %s: %v", c.urlDownloader.GetURL(), err)
 
 			return
 		}
@@ -123,7 +123,7 @@ func (c *remoteConfig) updateFromGithub() {
 		// Update state.
 		c.state.UpdatedAt = time.Now()
 		if err = c.state.save(); err != nil {
-			util.Debug("Error while saving state: %s", err)
+			util.Debug("Error while saving state: %v", err)
 		}
 	}
 }
