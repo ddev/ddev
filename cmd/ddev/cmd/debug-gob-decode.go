@@ -135,7 +135,7 @@ func tryDecodeGeneric(filename string) error {
 		return fmt.Errorf("marshaling to JSON: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Generic gob file contents:\n")
+	output.UserErr.Printf("Generic gob file contents:\n")
 	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }
@@ -161,7 +161,7 @@ func tryDecodeRemoteConfig(filename string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Remote config file contents:\n")
+	output.UserErr.Printf("Remote config file contents:\n")
 	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }
@@ -187,7 +187,7 @@ func tryDecodeSponsorshipData(filename string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Sponsorship data file contents:\n")
+	output.UserErr.Printf("Sponsorship data file contents:\n")
 	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }
@@ -213,7 +213,7 @@ func tryDecodeAmplitudeCache(filename string) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Amplitude event cache contents:\n")
+	output.UserErr.Printf("Amplitude event cache contents:\n")
 	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }

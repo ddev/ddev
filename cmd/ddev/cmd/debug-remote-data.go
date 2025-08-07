@@ -77,7 +77,7 @@ func downloadRemoteConfig(url string, updateLocalStorage bool) error {
 	config := globalconfig.DdevGlobalConfig.RemoteConfig
 	d := downloader.NewURLJSONCDownloader(config.RemoteConfigURL)
 
-	fmt.Fprintf(os.Stderr, "Downloading remote config from: %s\n", config.RemoteConfigURL)
+	output.UserErr.Printf("Downloading remote config from: %s\n", config.RemoteConfigURL)
 
 	ctx := context.Background()
 	var remoteConfigData types.RemoteConfigData
@@ -98,9 +98,9 @@ func downloadRemoteConfig(url string, updateLocalStorage bool) error {
 	if updateLocalStorage {
 		err = updateRemoteConfigStorage(remoteConfigData)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to update local storage: %v\n", err)
+			output.UserErr.Printf("Warning: Failed to update local storage: %v\n", err)
 		} else {
-			fmt.Fprintf(os.Stderr, "Local remote config storage updated successfully\n")
+			output.UserErr.Printf("Local remote config storage updated successfully\n")
 		}
 	}
 
@@ -117,7 +117,7 @@ func downloadSponsorshipData(url string, updateLocalStorage bool) error {
 	config := globalconfig.DdevGlobalConfig.RemoteConfig
 	d := downloader.NewURLJSONCDownloader(config.SponsorshipDataURL)
 
-	fmt.Fprintf(os.Stderr, "Downloading sponsorship data from: %s\n", config.SponsorshipDataURL)
+	output.UserErr.Printf("Downloading sponsorship data from: %s\n", config.SponsorshipDataURL)
 
 	ctx := context.Background()
 	var sponsorshipData types.SponsorshipData
@@ -138,9 +138,9 @@ func downloadSponsorshipData(url string, updateLocalStorage bool) error {
 	if updateLocalStorage {
 		err = updateSponsorshipDataStorage(sponsorshipData)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to update local storage: %v\n", err)
+			output.UserErr.Printf("Warning: Failed to update local storage: %v\n", err)
 		} else {
-			fmt.Fprintf(os.Stderr, "Local sponsorship data storage updated successfully\n")
+			output.UserErr.Printf("Local sponsorship data storage updated successfully\n")
 		}
 	}
 
@@ -171,6 +171,8 @@ func updateSponsorshipDataStorage(data types.SponsorshipData) error {
 
 func init() {
 	DebugRemoteDataCmd.Flags().StringVarP(&dataType, "type", "t", "remote-config", "Type of data to download (remote-config|sponsorship-data)")
+	_ = DebugRemoteDataCmd.RegisterFlagCompletionFunc("type", configCompletionFunc([]string{"remote-config", "sponsorship-data"}))
 	DebugRemoteDataCmd.Flags().BoolVar(&updateStorage, "update-storage", true, "Update local cached storage file")
+	_ = DebugRemoteDataCmd.RegisterFlagCompletionFunc("update-storage", configCompletionFunc([]string{"true", "false"}))
 	DebugCmd.AddCommand(DebugRemoteDataCmd)
 }
