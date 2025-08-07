@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	dockerTypes "github.com/docker/docker/api/types"
+	dockerContainer "github.com/docker/docker/api/types/container"
 )
 
 // RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
@@ -345,14 +345,36 @@ func GetRouterStatus() (string, string) {
 // starting ddev-router (so that we can bind the port mappings needed
 func determineRouterPorts() []string {
 	var routerPorts []string
-	containers, err := dockerutil.FindContainersWithLabel("com.ddev.site-name")
-	if err != nil {
-		util.Failed("Failed to retrieve containers for determining port mappings: %v", err)
-	}
 
 	// Add ports from configuration files of all active projects
+	routerPorts = append(routerPorts, getConfigBasedRouterPorts()...)
+
+	// Add ports from running containers
+	routerPorts = append(routerPorts, getContainerBasedRouterPorts()...)
+
+	// Remove duplicates
+	seen := make(map[string]bool)
+	var uniquePorts []string
+	for _, port := range routerPorts {
+		if !seen[port] {
+			seen[port] = true
+			uniquePorts = append(uniquePorts, port)
+		}
+	}
+
+	sort.Slice(uniquePorts, func(i, j int) bool {
+		return uniquePorts[i] < uniquePorts[j]
+	})
+
+	return uniquePorts
+}
+
+// getConfigBasedRouterPorts collects port mappings from configuration files of all active projects
+func getConfigBasedRouterPorts() []string {
+	var routerPorts []string
+
 	for _, app := range GetActiveProjects() {
-		err = app.ReadDockerComposeYAML()
+		err := app.ReadDockerComposeYAML()
 		if err != nil {
 			util.Warning("Unable to read '%s' project config for determining port mappings: %v", app.Name, err)
 			continue
@@ -386,7 +408,18 @@ func determineRouterPorts() []string {
 		}
 	}
 
-	// Loop through all containers with site-name label
+	return routerPorts
+}
+
+// getContainerBasedRouterPorts collects port mappings from running site containers
+func getContainerBasedRouterPorts() []string {
+	var routerPorts []string
+
+	containers, err := dockerutil.FindContainersWithLabel("com.ddev.site-name")
+	if err != nil {
+		util.Failed("Failed to retrieve containers for determining port mappings: %v", err)
+	}
+
 	for _, container := range containers {
 		if _, ok := container.Labels["com.ddev.site-name"]; ok {
 			if container.State != "running" {
@@ -409,10 +442,6 @@ func determineRouterPorts() []string {
 			routerPorts = processExposePorts(exposePorts, routerPorts)
 		}
 	}
-
-	sort.Slice(routerPorts, func(i, j int) bool {
-		return routerPorts[i] < routerPorts[j]
-	})
 
 	return routerPorts
 }
