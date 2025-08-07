@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -74,6 +76,8 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
+	err := os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
@@ -82,6 +86,8 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		require.NoError(t, err)
 		_ = app.Stop(true, false)
 		// Remove the added docker-compose.busybox.yaml
 		_ = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.busybox.yaml")))
@@ -94,6 +100,15 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 
 	out, err := exec.RunCommand(DdevBin, []string{"start", site.Name})
 	require.NoError(t, err, "failed to start %s, output='%s'", site.Name, out)
+
+	// Make sure that "optional" busybox1 service has Traefik entrypoint even when it's not started
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-http@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	require.NoError(t, err, "failed to check for http router for %s, output='%s'", site.Name, out)
+	validateEntrypointForTraefikRouter(t, out, "http-18125", "http")
+
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-https@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	require.NoError(t, err, "failed to check for https router for %s, output='%s'", site.Name, out)
+	validateEntrypointForTraefikRouter(t, out, "http-18126", "https")
 
 	// Make sure the busybox service didn't get started
 	container, err := ddevapp.GetContainer(app, "busybox")
@@ -109,6 +124,29 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, container)
 	}
+
+	// Make sure that "optional" busybox1 service has Traefik entrypoint when it's started
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-http@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	require.NoError(t, err, "failed to check for http router for %s, output='%s'", site.Name, out)
+	validateEntrypointForTraefikRouter(t, out, "http-18125", "http")
+
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-https@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	require.NoError(t, err, "failed to check for https router for %s, output='%s'", site.Name, out)
+	validateEntrypointForTraefikRouter(t, out, "http-18126", "https")
+}
+
+// validateEntrypointForTraefikRouter validates a JSON response from ddev-router:10999/api/http/routers/routerName
+func validateEntrypointForTraefikRouter(t *testing.T, jsonResponse string, expectedEntryPoint string, routerType string) {
+	var router map[string]interface{}
+	err := json.Unmarshal([]byte(jsonResponse), &router)
+	require.NoError(t, err, "failed to parse JSON response for %s router: %s", routerType, jsonResponse)
+	require.Equal(t, "enabled", router["status"], "%s router status should be enabled: %s", routerType, jsonResponse)
+	_, hasError := router["error"]
+	require.False(t, hasError, "%s router should not have error field: %s", routerType, jsonResponse)
+	entryPoints, ok := router["entryPoints"].([]interface{})
+	require.True(t, ok, "entryPoints should be an array: %s", jsonResponse)
+	require.Len(t, entryPoints, 1, "should have exactly one entryPoint: %s", jsonResponse)
+	require.Equal(t, expectedEntryPoint, entryPoints[0], "%s router should use entryPoint %s: %s", routerType, expectedEntryPoint, jsonResponse)
 }
 
 // TestCmdStartShowsMessages tests that `ddev start` displays tip-of-the-day messages and sponsorship appreciation
