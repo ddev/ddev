@@ -71,6 +71,11 @@ func TestMain(m *testing.M) {
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	} else {
+		binPath, err := osexec.LookPath(DdevBin)
+		if err == nil {
+			DdevBin = binPath
+		}
 	}
 	output.UserOut.Println("Running DDEV with ddev=", DdevBin)
 
