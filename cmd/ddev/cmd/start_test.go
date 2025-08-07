@@ -74,6 +74,10 @@ func TestCmdStart(t *testing.T) {
 func TestCmdStartOptionalProfiles(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
+	// When DDEV_GOROUTINES is set as it is in CI, its output is added to the
+	// json in our curl tests below.
+	t.Setenv("DDEV_GOROUTINES", "")
+
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 	err := os.Chdir(TestSites[0].Dir)
