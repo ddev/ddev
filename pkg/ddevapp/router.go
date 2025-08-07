@@ -404,7 +404,7 @@ func getConfigBasedRouterPorts() []string {
 				}
 			}
 
-			routerPorts = processExposePorts(exposePorts, routerPorts)
+			routerPorts = ProcessExposePorts(exposePorts, routerPorts)
 		}
 	}
 
@@ -439,17 +439,17 @@ func getContainerBasedRouterPorts() []string {
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			routerPorts = processExposePorts(exposePorts, routerPorts)
+			routerPorts = ProcessExposePorts(exposePorts, routerPorts)
 		}
 	}
 
 	return routerPorts
 }
 
-// processExposePorts processes HTTP_EXPOSE and HTTPS_EXPOSE port strings and returns
+// ProcessExposePorts processes HTTP_EXPOSE and HTTPS_EXPOSE port strings and returns
 // a list of external ports that need to be bound by the router.
 // It handles port pair formats like "8080:80" or "8080" and validates the format.
-func processExposePorts(exposePorts []string, routerPorts []string) []string {
+func ProcessExposePorts(exposePorts []string, routerPorts []string) []string {
 	for _, exposePortPair := range exposePorts {
 		// Ports defined as hostPort:containerPort allow for router to configure upstreams
 		// for containerPort, with server listening on hostPort.
