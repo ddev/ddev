@@ -10,7 +10,6 @@
 /.cache
 /.ddev
 /artifacts
-/.claude
 *.DS_Store
 nbproject/
 .idea
@@ -23,3 +22,45 @@ nbproject/
 # Output of the go coverage tool
 *.out
 cover.html
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+.DS_Store
+/.env
+
+# Task files
+# tasks.json
+# tasks/ 
+
+# ignore everything in .claude…
+.claude/*
+
+# …but keep your config, prompts, commands, etc.
+!.claude/config.yaml
+!.claude/prompts/
+!.claude/commands/
+
+# and still ignore all secrets, caches and logs
+.claude/api_key*
+.claude/history/
+.claude/cache/
+.claude/tmp/
+.claude/logs/
+.claude/*.db
