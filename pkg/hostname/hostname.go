@@ -3,6 +3,7 @@ package hostname
 import (
 	"fmt"
 	"os"
+	exec2 "os/exec"
 	"runtime"
 	"strings"
 
@@ -39,13 +40,18 @@ func GetDdevHostnameBinary() string {
 	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
 		binary = ddevHostnameWindowsBinary
 	}
-	util.Debug("ddevHostnameBinary=%s", binary)
-	return binary
+	path, err := exec2.LookPath(binary)
+	if err != nil {
+		util.Debug("ddevHostnameBinary not found in PATH: %v", err)
+		return binary
+	}
+	util.Debug("ddevHostnameBinary=%s", path)
+	return path
 }
 
-// elevateHostsManipulation uses escalation (sudo or runas) to manipulate the hosts file.
+// elevateHostsManipulation uses elevation (sudo or runas) to manipulate the hosts file.
 func elevateHostsManipulation(args []string) (out string, err error) {
-	// We can't escalate in tests, and they know how to deal with it.
+	// We can't elevate in tests, and they know how to deal with it.
 	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
 		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
 		return "", nil
@@ -56,7 +62,7 @@ func elevateHostsManipulation(args []string) (out string, err error) {
 	}
 
 	c := args
-	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow escalation.", GetDdevHostnameBinary())
+	output.UserOut.Printf("%s needs to run with administrative privileges.\nThis is required to add unresolvable hostnames to the hosts file.\nYou may need to enter your password for sudo or allow elevation.", GetDdevHostnameBinary())
 	output.UserOut.Printf("DDEV will issue the command:\n  %s\n", strings.Join(c, ` `))
 
 	out, err = exec.RunHostCommand(c[0], c[1:]...)
