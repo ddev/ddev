@@ -1,11 +1,13 @@
 package ddevapp
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -16,12 +18,6 @@ import (
 // marshaling the canonical version to YAML and then unmarshaling it back into a canonical version.
 func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
-
-	f, err := os.Create(app.DockerComposeYAMLPath())
-	if err != nil {
-		return err
-	}
-	defer util.CheckClose(f)
 
 	// Create a host working_dir for the web service beforehand.
 	// Otherwise, Docker will create it as root user (when Mutagen is disabled).
@@ -36,9 +32,29 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	_, err = f.WriteString(rendered)
-	if err != nil {
-		return err
+
+	baseYAMLPath := app.DockerComposeYAMLPath()
+	baseContentBytes := []byte(rendered)
+
+	// If the file already exists and has the same content, don't overwrite it.
+	skipBaseWrite := false
+	if existingContent, err := os.ReadFile(baseYAMLPath); err == nil {
+		if bytes.Equal(baseContentBytes, existingContent) {
+			skipBaseWrite = true
+		}
+	}
+
+	if !skipBaseWrite {
+		f, err := os.Create(baseYAMLPath)
+		if err != nil {
+			return err
+		}
+		defer util.CheckClose(f)
+
+		_, err = f.Write(baseContentBytes)
+		if err != nil {
+			return err
+		}
 	}
 
 	files, err := app.ComposeFiles()
@@ -66,27 +82,52 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err = fullHandle.Close()
-		if err != nil {
-			util.Warning("Error closing %s: %v", fullHandle.Name(), err)
-		}
-	}()
 	fullContentsBytes, err := app.ComposeYaml.MarshalYAML()
 	if err != nil {
 		return err
 	}
 	fullContentsBytes = util.EscapeDollarSign(fullContentsBytes)
+	fullPath := app.DockerComposeFullRenderedYAMLPath()
 
-	_, err = fullHandle.Write(fullContentsBytes)
+	// If the file already exists and has the same content, don't overwrite it.
+	skipFullWrite := false
+	if existingContent, err := os.ReadFile(fullPath); err == nil {
+		if bytes.Equal(fullContentsBytes, existingContent) {
+			skipFullWrite = true
+		}
+	}
+
+	if !skipFullWrite {
+		f, err := os.Create(fullPath)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			err = f.Close()
+			if err != nil {
+				util.Warning("Error closing %s: %v", f.Name(), err)
+			}
+		}()
+
+		_, err = f.Write(fullContentsBytes)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ReadDockerComposeYAML reads the rendered Docker Compose YAML file and assigns it to app.ComposeYaml
+func (app *DdevApp) ReadDockerComposeYAML() error {
+	content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
 	if err != nil {
 		return err
 	}
-
+	app.ComposeYaml, err = dockerutil.CreateComposeProject(content)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

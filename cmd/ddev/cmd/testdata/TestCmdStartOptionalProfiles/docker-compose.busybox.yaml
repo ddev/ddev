@@ -8,6 +8,12 @@ services:
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
+    # ports from optional profiles should be exposed for Traefik
+    # and used as entryPoints, if it doesn't work, router fails
+    environment:
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=18125:80
+      - HTTPS_EXPOSE=18126:80
   busybox2:
     image: busybox:stable
     command: tail -f /dev/null

@@ -1,6 +1,7 @@
 package fileutil
 
 import (
+	"bytes"
 	"embed"
 	"os"
 	"path"
@@ -42,8 +43,10 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string, excluded
 				}
 				if sigFound {
 					// If the file already exists and has the same content, don't overwrite it.
-					if existingContent, err := os.ReadFile(localPath); err == nil && string(existingContent) == string(content) {
-						continue
+					if existingContent, err := os.ReadFile(localPath); err == nil {
+						if bytes.Equal(content, existingContent) {
+							continue
+						}
 					}
 					// If the file already exists and is excluded, don't overwrite it.
 					if excludedFiles != nil && slices.Contains(excludedFiles, localPath) {

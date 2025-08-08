@@ -278,6 +278,98 @@ func TestUseEphemeralPort(t *testing.T) {
 	}
 }
 
+// TestProcessExposePorts tests the ProcessExposePorts function for various input scenarios
+func TestProcessExposePorts(t *testing.T) {
+	type testCase struct {
+		name          string
+		exposePorts   []string
+		initialPorts  []string
+		expectedPorts []string
+	}
+
+	tests := []testCase{
+		{
+			name:          "Empty expose ports",
+			exposePorts:   []string{},
+			initialPorts:  []string{},
+			expectedPorts: []string{},
+		},
+		{
+			name:          "Single port format",
+			exposePorts:   []string{"8080"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080"},
+		},
+		{
+			name:          "Port pair format",
+			exposePorts:   []string{"8080:80"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080"},
+		},
+		{
+			name:          "Multiple ports",
+			exposePorts:   []string{"8080", "9090:90", "3000"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080", "9090", "3000"},
+		},
+		{
+			name:          "Duplicate ports are not added",
+			exposePorts:   []string{"8080", "8080:80"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080"},
+		},
+		{
+			name:          "Existing ports are preserved",
+			exposePorts:   []string{"9090"},
+			initialPorts:  []string{"8080"},
+			expectedPorts: []string{"8080", "9090"},
+		},
+		{
+			name:          "Port already exists in initial list",
+			exposePorts:   []string{"8080"},
+			initialPorts:  []string{"8080", "9090"},
+			expectedPorts: []string{"8080", "9090"},
+		},
+		{
+			name:          "Invalid port format is ignored",
+			exposePorts:   []string{"invalid", "8080", "abc:def"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080"},
+		},
+		{
+			name:          "Port with letters is ignored",
+			exposePorts:   []string{"80a0", "8080"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080"},
+		},
+		{
+			name:          "Port pair with invalid numbers is ignored",
+			exposePorts:   []string{"80a0:80", "8080:8b0", "9090:90"},
+			initialPorts:  []string{},
+			expectedPorts: []string{"9090"},
+		},
+		{
+			name:          "Empty strings are ignored",
+			exposePorts:   []string{"", "8080", ""},
+			initialPorts:  []string{},
+			expectedPorts: []string{"8080"},
+		},
+		{
+			name:          "Complex scenario with mixed formats",
+			exposePorts:   []string{"8080", "9090:90", "invalid", "3000:3000", "8080:80"},
+			initialPorts:  []string{"7070", "8080"},
+			expectedPorts: []string{"7070", "8080", "9090", "3000"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ddevapp.ProcessExposePorts(tc.exposePorts, tc.initialPorts)
+			require.Equal(t, tc.expectedPorts, result)
+		})
+	}
+}
+
 // TestAssignRouterPortsToGenericWebserverPorts ensures that RouterHTTPPort and RouterHTTPSPort
 // are assigned correctly based on WebExtraExposedPorts for Generic webservers.
 func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
