@@ -566,7 +566,7 @@ func StopMutagenDaemon(mutagenDataDirectory string) {
 	}
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
 		env := []string{"MUTAGEN_DATA_DIRECTORY=" + mutagenDataDirectory, "HOME=" + os.Getenv(`HOME`), "PWD=" + os.Getenv(`PWD`)}
-		out, err := exec.RunHostCommandWithEnv(globalconfig.GetMutagenPath(), env, "daemon", "stop")
+		out, err := exec.RunHostCommandWithOptions(globalconfig.GetMutagenPath(), []exec.CmdOption{exec.WithEnv(env)}, "daemon", "stop")
 		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
 			util.Debug("Unable to stop Mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
 		}

@@ -2,19 +2,25 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
-	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/heredoc"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerMount "github.com/docker/docker/api/types/mount"
+	dockerStrslice "github.com/docker/docker/api/types/strslice"
 	"github.com/spf13/cobra"
-	"os"
-	"path/filepath"
-	"slices"
-	"strings"
+	"golang.org/x/term"
 )
 
 var sshKeyFiles, sshKeyDirs []string
@@ -29,13 +35,14 @@ var AuthSSHCommand = &cobra.Command{
 		ddev auth ssh -d ~/custom/path/to/ssh
 		ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
 	`),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		if len(args) > 0 {
 			util.Failed("This command takes no arguments.")
 		}
 
 		uidStr, _, _ := util.GetContainerUIDGid()
+		util.Debug("Using container UID: %s", uidStr)
 
 		// Use ~/.ssh if nothing is provided
 		if sshKeyFiles == nil && sshKeyDirs == nil {
@@ -48,6 +55,7 @@ var AuthSSHCommand = &cobra.Command{
 
 		files := getSSHKeyPaths(sshKeyDirs, true, false)
 		files = append(files, getSSHKeyPaths(sshKeyFiles, false, true)...)
+		util.Debug("Found %d file paths to process", len(files))
 
 		var keys []string
 		// Get real paths to key files in case they are symlinks
@@ -59,11 +67,13 @@ var AuthSSHCommand = &cobra.Command{
 			}
 			if !slices.Contains(keys, key) && fileIsPrivateKey(key) {
 				keys = append(keys, key)
+				util.Debug("Added SSH private key: %s", key)
 			}
 		}
 		if len(keys) == 0 {
 			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
+		util.Debug("Processing %d SSH private keys", len(keys))
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil || app == nil {
@@ -79,8 +89,10 @@ var AuthSSHCommand = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
+		util.Debug("SSH agent container is running")
 
-		var mounts []string
+		// Prepare mounts for Docker API
+		var mounts []dockerMount.Mount
 		// Map to track already added keys
 		addedKeys := make(map[string]struct{})
 		for i, keyPath := range keys {
@@ -91,18 +103,26 @@ var AuthSSHCommand = &cobra.Command{
 				filename = fmt.Sprintf("%s_%d", filename, i)
 			}
 			addedKeys[filename] = struct{}{}
-			mounts = append(mounts, "--mount=type=bind,src="+keyPath+",dst=/tmp/sshtmp/"+filename)
+			mounts = append(mounts, dockerMount.Mount{
+				Type:     dockerMount.TypeBind,
+				Source:   keyPath,
+				Target:   "/tmp/sshtmp/" + filename,
+				ReadOnly: true,
+			})
+			util.Debug("Binding SSH private key %s into container as /tmp/sshtmp/%s", keyPath, filename)
 			// Mount optional OpenSSH certificate
 			if certPath, certName := getCertificateForPrivateKey(keyPath, filename); certPath != "" && certName != "" {
-				mounts = append(mounts, "--mount=type=bind,src="+certPath+",dst=/tmp/sshtmp/"+certName)
+				mounts = append(mounts, dockerMount.Mount{
+					Type:     dockerMount.TypeBind,
+					Source:   certPath,
+					Target:   "/tmp/sshtmp/" + certName,
+					ReadOnly: true,
+				})
+				util.Debug("Binding SSH certificate %s into container as /tmp/sshtmp/%s", certPath, certName)
 			}
 		}
 
-		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--entrypoint="}
-		dockerCmd = append(dockerCmd, mounts...)
-		dockerCmd = append(dockerCmd, docker.GetSSHAuthImage()+"-built", "bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && grep -l '^-----BEGIN .* PRIVATE KEY-----' * | xargs -d '\n' ssh-add`)
-
-		err = exec.RunInteractiveCommand("docker", dockerCmd)
+		err = runSSHAuthContainer(uidStr, mounts)
 
 		if err != nil {
 			helpMessage := ""
@@ -111,7 +131,7 @@ var AuthSSHCommand = &cobra.Command{
 			if strings.Contains(err.Error(), "bind source path does not exist") {
 				helpMessage = "\n\nThe specified SSH private key path is not shared with your Docker provider."
 			}
-			util.Failed("Docker command 'docker %v' failed: %v %v", prettyCmd(dockerCmd), err, helpMessage)
+			util.Failed("Failed to execute command `%s`: %v %s", cmd.CommandPath(), err, helpMessage)
 		}
 	},
 }
@@ -195,6 +215,108 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 	}
 	certName := name + "-cert.pub"
 	return certPath, certName
+}
+
+// runSSHAuthContainer runs the SSH auth container using Docker client API
+func runSSHAuthContainer(uidStr string, mounts []dockerMount.Mount) error {
+	ctx, client := dockerutil.GetDockerClient()
+	if client == nil {
+		return fmt.Errorf("failed to get Docker client")
+	}
+
+	// Container configuration
+	config := &dockerContainer.Config{
+		Image:        docker.GetSSHAuthImage() + "-built",
+		Cmd:          dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found" >&2; exit 1; } && for key in "${keys[@]}"; do ssh-add "$key" || exit $?; done`},
+		Entrypoint:   dockerStrslice.StrSlice{},
+		Tty:          term.IsTerminal(int(os.Stdin.Fd())),
+		OpenStdin:    true,
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		User:         uidStr,
+		Labels:       map[string]string{"com.ddev.site-name": ""},
+	}
+
+	// Host configuration with volume mounts
+	hostConfig := &dockerContainer.HostConfig{
+		AutoRemove:  true,
+		Mounts:      mounts,
+		VolumesFrom: []string{ddevapp.SSHAuthName},
+	}
+
+	// Create container with descriptive name
+	containerName := "ddev-ssh-auth-" + util.RandString(6)
+	resp, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
+	if err != nil {
+		return fmt.Errorf("failed to create SSH auth container: %v", err)
+	}
+	containerID := resp.ID
+	defer func() {
+		_ = dockerutil.RemoveContainer(containerID)
+	}()
+	util.Debug("Created SSH auth container: %s (%s)", containerName, dockerutil.TruncateID(containerID))
+
+	// Start container
+	err = client.ContainerStart(ctx, containerID, dockerContainer.StartOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to start SSH auth container: %v", err)
+	}
+	util.Debug("Started SSH auth container: %s (%s)", containerName, dockerutil.TruncateID(containerID))
+	util.Debug("Running %v", prettyCmd(config.Cmd))
+
+	// Attach to container for stdin/stdout/stderr forwarding
+	attachOptions := dockerContainer.AttachOptions{
+		Stream: true,
+		Stdin:  true,
+		Stdout: true,
+		Stderr: true,
+	}
+
+	hijackedResp, err := client.ContainerAttach(ctx, containerID, attachOptions)
+	if err != nil {
+		return fmt.Errorf("failed to attach to SSH auth container: %v", err)
+	}
+	defer hijackedResp.Close()
+
+	// Handle terminal mode for password input
+	var oldState *term.State
+	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
+	util.Debug("Terminal detected: %t", isTerminal)
+	if isTerminal {
+		oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			return fmt.Errorf("failed to set terminal to raw mode: %v", err)
+		}
+		defer func() {
+			if oldState != nil {
+				_ = term.Restore(int(os.Stdin.Fd()), oldState)
+			}
+		}()
+	}
+
+	// Forward I/O
+	go func() {
+		_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
+	}()
+	go func() {
+		_, _ = io.Copy(hijackedResp.Conn, os.Stdin)
+	}()
+
+	// Wait for container to finish
+	statusCh, errCh := client.ContainerWait(ctx, containerID, dockerContainer.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("error waiting for SSH auth container: %v", err)
+		}
+	case status := <-statusCh:
+		if status.StatusCode != 0 {
+			return fmt.Errorf("exit status %d", status.StatusCode)
+		}
+	}
+
+	return nil
 }
 
 func init() {
