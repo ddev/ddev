@@ -604,6 +604,9 @@ func getSuggestedCommandForContainerLog(container *dockerContainer.Summary) (str
 
 // ContainerName returns the container's human-readable name.
 func ContainerName(container dockerContainer.Summary) string {
+	if len(container.Names) == 0 {
+		return container.ID
+	}
 	return container.Names[0][1:]
 }
 
