@@ -1252,8 +1252,7 @@ func (app *DdevApp) Start() error {
 	dockerutil.EnsureDdevNetwork()
 	// The project network may have duplicates, we can remove them here.
 	// See https://github.com/ddev/ddev/pull/5508
-	ctx, client := dockerutil.GetDockerClient()
-	dockerutil.RemoveNetworkDuplicates(ctx, client, app.GetDefaultNetworkName())
+	dockerutil.RemoveNetworkDuplicates(app.GetDefaultNetworkName())
 
 	if err = dockerutil.CheckDockerCompose(); err != nil {
 		if os.IsTimeout(err) || strings.Contains(err.Error(), "timeout") {

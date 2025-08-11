@@ -41,17 +41,20 @@ var DebugDockercheckCmd = &cobra.Command{
 		case "docker desktop":
 			dockerutil.IsDockerDesktop()
 		}
-		util.Success("Using Docker context: %s (%s)", dockerutil.DockerContext, dockerutil.DockerHost)
-		util.Success("docker-compose: %s", versionInfo["docker-compose"])
 
-		dockerHost := os.Getenv("DOCKER_HOST")
-		if dockerHost != "" {
-			util.Success("Using DOCKER_HOST=%s", dockerHost)
-		}
+		util.Success("Using Docker context: %s", dockerutil.DockerContext)
 		dockerContext := os.Getenv("DOCKER_CONTEXT")
 		if dockerContext != "" {
-			util.Success("Using DOCKER_CONTEXT=%s", dockerContext)
+			util.Success("From DOCKER_CONTEXT=%s", dockerContext)
 		}
+
+		util.Success("Using Docker host: %s", dockerutil.DockerHost)
+		dockerHost := os.Getenv("DOCKER_HOST")
+		if dockerHost != "" {
+			util.Success("From DOCKER_HOST=%s", dockerHost)
+		}
+
+		util.Success("docker-compose: %s", versionInfo["docker-compose"])
 
 		dockerVersion, err := dockerutil.GetDockerVersion()
 		if err != nil {

@@ -3856,20 +3856,20 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// Set an invalid DOCKER_HOST to force GetDockerIP to return an error
-	// Save original DOCKER_HOST to restore it later
-	origDockerHost := os.Getenv("DOCKER_HOST")
+	// Save original DockerHost to restore it later
+	origDockerHost := dockerutil.DockerHost
 	t.Cleanup(func() {
-		os.Setenv("DOCKER_HOST", origDockerHost)
+		dockerutil.DockerHost = origDockerHost
 		// Reset the cached DockerIP value
 		dockerutil.DockerIP = ""
 	})
 
-	os.Setenv("DOCKER_HOST", "unix:///nonexistent/docker.sock")
+	// Set an invalid DockerHost to force GetDockerIP to return an error
+	dockerutil.DockerHost = "unix:///nonexistent/docker.sock"
 	// Reset the cached DockerIP value
 	dockerutil.DockerIP = ""
 
-	// Even with an invalid DOCKER_HOST, the functions should still work
+	// Even with an invalid DockerHost, the functions should still work
 	// because they handle the error internally by using the default IP (127.0.0.1)
 	httpURL := app.GetWebContainerDirectHTTPURL()
 	httpsURL := app.GetWebContainerDirectHTTPSURL()
