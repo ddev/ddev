@@ -206,7 +206,6 @@ func GetDockerClient() (context.Context, *dockerClient.Client) {
 			// Use os.Exit instead of util.Failed() to avoid import cycle with util.
 			os.Exit(100)
 		}
-		defer DockerClient.Close()
 	}
 	return DockerCtx, DockerClient
 }
