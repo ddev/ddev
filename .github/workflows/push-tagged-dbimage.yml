@@ -43,7 +43,7 @@ jobs:
         OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
         DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3

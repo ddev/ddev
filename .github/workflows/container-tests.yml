@@ -54,7 +54,7 @@ jobs:
         containers: [dbserver, webserver, others]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Homebrew
         id: set-up-homebrew
