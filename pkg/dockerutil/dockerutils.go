@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -173,11 +174,17 @@ func RemoveNetworkDuplicates(netName string) {
 	}
 }
 
-var DockerHost string
-var DockerContext string
-var DockerCtx context.Context
-var DockerClient dockerClient.APIClient
-var DockerCli *dockerCliCommand.DockerCli
+var (
+	DockerCtx     context.Context
+	DockerClient  dockerClient.APIClient
+	DockerCli     *dockerCliCommand.DockerCli
+	DockerContext string
+	DockerHost    string
+	DockerIP      string
+
+	initOnce sync.Once
+	initErr  error
+)
 
 // GetDockerClient returns a Docker client respecting the current Docker context and host
 func GetDockerClient() (context.Context, dockerClient.APIClient) {
@@ -185,16 +192,22 @@ func GetDockerClient() (context.Context, dockerClient.APIClient) {
 	if CanRunWithoutDocker() {
 		return DockerCtx, DockerClient
 	}
-	if DockerCli == nil {
-		if err := initDockerCli(); err != nil {
-			util.Failed("Unable to get Docker CLI: %v", err)
+
+	initOnce.Do(func() {
+		initErr = initDockerCli()
+		if initErr != nil {
+			return
 		}
 		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
-	}
-	if DockerClient == nil {
+
 		DockerCtx = context.Background()
 		DockerClient = DockerCli.Client()
+	})
+
+	if initErr != nil {
+		util.Failed("Unable to get Docker CLI: %v", initErr)
 	}
+
 	return DockerCtx, DockerClient
 }
 
@@ -218,10 +231,8 @@ func initDockerCli() error {
 // GetDockerHostID returns DockerHost but with all special characters removed
 // It stands in for Docker context, but Docker context name is not a reliable indicator
 func GetDockerHostID() string {
-	err := initDockerCli()
-	if err != nil {
-		util.Warning("Unable to initDockerCli: %v", err)
-	}
+	// Use the same synchronized initialization as GetDockerClient
+	_, _ = GetDockerClient()
 	dockerHost := DockerHost
 	// Make it shorter so we don't hit Mutagen 63-char limit
 	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
@@ -936,8 +947,6 @@ func CheckForHTTPS(container dockerContainer.Summary) bool {
 	return false
 }
 
-var DockerIP string
-
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
 // or the value as configured by DockerHost (if it is a tcp:// URL)
 func GetDockerIP() (string, error) {
@@ -945,13 +954,10 @@ func GetDockerIP() (string, error) {
 		return DockerIP, nil
 	}
 	DockerIP = "127.0.0.1"
-	var err error
-	// If DockerHost is empty, then the Docker CLI hasn't been initialized
+	// Use the same synchronized initialization as GetDockerClient
+	_, _ = GetDockerClient()
 	if DockerHost == "" {
-		err = initDockerCli()
-	}
-	if DockerHost == "" {
-		return DockerIP, err
+		return DockerIP, nil
 	}
 	dockerHostURL, err := url.Parse(DockerHost)
 	if err != nil {
