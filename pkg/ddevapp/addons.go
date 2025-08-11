@@ -8,10 +8,12 @@ import (
 	"os"
 	goexec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 
+	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -269,9 +271,6 @@ set_error_handler(function($severity, $message, $file, $line) {
 		// Don't fail completely - tests and removal actions may not have full app configuration
 	}
 
-	// Prepare container run arguments
-	containerName := "ddev-addon-php-" + util.RandString(6)
-
 	// Create a shell script that validates original PHP syntax first, then executes with strict mode
 	shellScript := fmt.Sprintf(`
 # First create and validate the original PHP action (before strict mode)
@@ -332,40 +331,89 @@ php /tmp/addon-script.php
 		env = append(env, "DDEV_VERBOSE=true")
 	}
 
-	// Run the container
-	_, output, err := dockerutil.RunSimpleContainer(
-		image,
-		containerName,
-		cmd,
-		nil, // entrypoint
-		env,
-		binds,
-		"",    // uid
-		true,  // removeContainerAfterRun
-		false, // detach
-		nil,   // labels
-		nil,   // portBindings
-		nil,   // healthConfig
-	)
+	// Create in-memory docker-compose project for PHP action execution
+	phpProject, err := dockerutil.CreateComposeProject("name: ddev-php-action")
+	if err != nil {
+		return fmt.Errorf("failed to create compose project: %v", err)
+	}
+
+	// Create service configuration for PHP action
+	serviceName := "php-runner"
+	serviceConfig := composeTypes.ServiceConfig{
+		Name:        serviceName,
+		Image:       image,
+		Command:     cmd,
+		WorkingDir:  "/var/www/html/.ddev",
+		Environment: buildEnvironmentMap(env),
+		Volumes:     buildVolumeConfigs(binds),
+		Labels: composeTypes.Labels{
+			"com.ddev.site-name": app.Name,
+			"com.ddev.approot":   app.AppRoot,
+		},
+		// Network access not needed for PHP actions - they work with mounted files
+	}
+
+	// Add host.docker.internal setup using DDEV's standard logic
+	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
+	if err != nil {
+		util.Warning("Could not determine host.docker.internal IP address: %v", err)
+	}
+
+	// Set up host.docker.internal based on DDEV's standard approach
+	if hostDockerInternalIP != "" {
+		// Use specific IP address for host.docker.internal
+		extraHosts, err := composeTypes.NewHostsList([]string{
+			"host.docker.internal:" + hostDockerInternalIP,
+		})
+		if err == nil {
+			serviceConfig.ExtraHosts = extraHosts
+		}
+	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) ||
+		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
+		// Use host-gateway for modern Docker on Linux
+		extraHosts, err := composeTypes.NewHostsList([]string{
+			"host.docker.internal:host-gateway",
+		})
+		if err == nil {
+			serviceConfig.ExtraHosts = extraHosts
+		}
+	}
+
+	phpProject.Services[serviceName] = serviceConfig
+
+	// Execute PHP action using docker-compose run
+	// Use ComposeCmd to capture output for error reporting, ComposeWithStreams for streaming
+	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeYaml: phpProject,
+		Action:      []string{"run", "--rm", "--no-deps", serviceName},
+	})
 
 	if err != nil {
 		if desc != "" {
 			util.Warning("%c %s", '\U0001F44E', desc) // 👎 error emoji
 		}
-		// Include the container output in the error message for better debugging
-		if len(output) > 0 {
-			return fmt.Errorf("PHP script failed: %v - Output: %s", err, output)
+		// Include output in error message for debugging, similar to original implementation
+		combinedOutput := stdout
+		if stderr != "" {
+			if combinedOutput != "" {
+				combinedOutput += "\n"
+			}
+			combinedOutput += stderr
+		}
+		if combinedOutput != "" {
+			return fmt.Errorf("PHP script failed: %v - Output: %s", err, combinedOutput)
 		}
 		return fmt.Errorf("PHP script failed: %v", err)
+	}
+
+	// Display captured output
+	if stdout != "" {
+		util.Success(stdout)
 	}
 
 	// Show description on success
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc) // 👍 success emoji
-	}
-
-	if len(output) > 0 {
-		util.Success(output)
 	}
 
 	return nil
@@ -419,6 +467,34 @@ func (app *DdevApp) CleanupConfigurationFiles() error {
 	return nil
 }
 
+// buildEnvironmentMap converts environment variable slice to compose environment format
+func buildEnvironmentMap(envSlice []string) composeTypes.MappingWithEquals {
+	envMap := composeTypes.MappingWithEquals{}
+	for _, envVar := range envSlice {
+		parts := strings.SplitN(envVar, "=", 2)
+		if len(parts) == 2 {
+			envMap[parts[0]] = &parts[1]
+		}
+	}
+	return envMap
+}
+
+// buildVolumeConfigs converts bind mount slice to compose volume format
+func buildVolumeConfigs(binds []string) []composeTypes.ServiceVolumeConfig {
+	var volumes []composeTypes.ServiceVolumeConfig
+	for _, bind := range binds {
+		parts := strings.Split(bind, ":")
+		if len(parts) >= 2 {
+			volumes = append(volumes, composeTypes.ServiceVolumeConfig{
+				Type:   "bind",
+				Source: parts[0],
+				Target: parts[1],
+			})
+		}
+	}
+	return volumes
+}
+
 // validatePHPSyntax validates PHP syntax by running php -l in a container
 // This is used only for validating included/required files
 func validatePHPSyntax(phpCode string, app *DdevApp, image string) error {
@@ -426,7 +502,6 @@ func validatePHPSyntax(phpCode string, app *DdevApp, image string) error {
 	if image == "" {
 		image = docker.GetWebImage()
 	}
-	containerName := "ddev-addon-php-validate-" + util.RandString(6)
 
 	// Create a shell script that writes the PHP code and validates it
 	// Exit with error code if syntax check fails
@@ -446,24 +521,39 @@ fi
 
 	cmd := []string{"sh", "-c", shellScript}
 
-	// Run the container with syntax check
-	_, output, err := dockerutil.RunSimpleContainer(
-		image,
-		containerName,
-		cmd,
-		nil,   // entrypoint
-		nil,   // env
-		nil,   // binds
-		"",    // uid
-		true,  // removeContainerAfterRun
-		false, // detach
-		nil,   // labels
-		nil,   // portBindings
-		nil,   // healthConfig
-	)
+	// Create in-memory docker-compose project for PHP validation
+	phpProject, err := dockerutil.CreateComposeProject("name: ddev-php-validate")
+	if err != nil {
+		return fmt.Errorf("failed to create validation compose project: %v", err)
+	}
+
+	// Create service configuration for PHP validation
+	serviceName := "php-validator"
+	phpProject.Services[serviceName] = composeTypes.ServiceConfig{
+		Name:    serviceName,
+		Image:   image,
+		Command: cmd,
+	}
+
+	// Execute PHP validation using docker-compose run
+	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeYaml: phpProject,
+		Action:      []string{"run", "--rm", "--no-deps", serviceName},
+	})
 
 	if err != nil {
-		return fmt.Errorf("PHP syntax validation failed: %s", output)
+		// Include validation output in error message for debugging
+		combinedOutput := stdout
+		if stderr != "" {
+			if combinedOutput != "" {
+				combinedOutput += "\n"
+			}
+			combinedOutput += stderr
+		}
+		if combinedOutput != "" {
+			return fmt.Errorf("PHP syntax validation failed: %s", combinedOutput)
+		}
+		return fmt.Errorf("PHP syntax validation failed: %v", err)
 	}
 
 	return nil

@@ -14,7 +14,7 @@ PHP-based add-ons allow you to write installation and configuration logic in PHP
 
 ## How PHP Actions Work
 
-DDEV automatically detects PHP actions by looking for scripts that start with `<?php`. When found, these actions are executed in a PHP container with access to:
+DDEV automatically detects PHP actions by looking for scripts that start with `<?php`. When found, these actions are executed in a PHP container using docker-compose with access to:
 
 - **Working directory:** `/var/www/html/.ddev` (your project's .ddev directory)
 - **Environment variables:** All standard DDEV environment variables (identical to bash actions)
@@ -22,6 +22,7 @@ DDEV automatically detects PHP actions by looking for scripts that start with `<
 - **Full project access:** Complete read/write access to your project repository
 - **php-yaml extension:** For robust YAML parsing and generation
 - **Standard PHP functionality:** File manipulation, string processing, etc.
+- **DDEV Integration:** Proper container labels and host.docker.internal setup for debugging support
 
 ## Basic Syntax Comparison
 
@@ -155,10 +156,11 @@ $globalConfig = yaml_parse_file('.ddev-config/global_config.yaml');
 
 **PHP Actions:**
 
-- Run inside a PHP container
+- Run inside a PHP container using docker-compose
 - Limited to PHP and basic container tools
 - Working directory is `/var/www/html/.ddev` (the project's .ddev directory)
 - **Full project repository mounted at `/var/www/html/`** (read/write access)
+- Proper DDEV container labels and host.docker.internal setup for debugging
 
 ### 2. File Access
 
