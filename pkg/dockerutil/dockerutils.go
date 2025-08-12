@@ -248,12 +248,8 @@ func GetDockerHostID() string {
 
 // InspectContainer returns the full result of inspection
 func InspectContainer(name string) (dockerContainer.InspectResponse, error) {
-	ctx := context.Background()
-	client, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
+	ctx, client := GetDockerClient()
 
-	if err != nil {
-		return dockerContainer.InspectResponse{}, err
-	}
 	container, err := FindContainerByName(name)
 	if err != nil || container == nil {
 		return dockerContainer.InspectResponse{}, err
