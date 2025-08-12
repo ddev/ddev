@@ -6,6 +6,3 @@ services:
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
-  web:
-    links:
-      - "test:test"

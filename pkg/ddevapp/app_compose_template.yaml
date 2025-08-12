@@ -306,8 +306,6 @@ services:
       - XHGUI_PDO_USER=db
       - XHGUI_PDO_PASS=db
       - TZ={{ .Timezone }}
-    links:
-      - db
     depends_on:
       - db
   {{- end }}
