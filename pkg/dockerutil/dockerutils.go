@@ -32,8 +32,10 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerCliCommand "github.com/docker/cli/cli/command"
 	dockerCliFlags "github.com/docker/cli/cli/flags"
+	dockerCliVersion "github.com/docker/cli/cli/version"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
@@ -195,6 +197,8 @@ func GetDockerClient() (context.Context, dockerClient.APIClient) {
 		}
 		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
 		DockerCtx = context.Background()
+		// Set the Docker CLI version for User-Agent header
+		dockerCliVersion.Version = "ddev-" + versionconstants.DdevVersion
 		DockerClient, initErr = dockerCliCommand.NewAPIClientFromFlags(dockerCliFlags.NewClientOptions(), DockerCli.ConfigFile())
 		if initErr != nil {
 			return
