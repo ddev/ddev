@@ -96,6 +96,23 @@ After you’re done testing, you can delete your downloaded executable, restart 
 rm ~/bin/ddev
 ```
 
+## Helpers for `mkdocs`, `linkspector`, `markdownlint`
+
+When testing the documentation for various problems, tools like `mkdocs` and `markdownlint` are required, and these may be installed differently on different systems. (This helps with `make staticrequired`, `make mkdocs-serve`, `make markdownlint`.)
+
+DDEV provides a project-level `.envrc` which with `direnv` can install these for the project.
+
+1. Install `direnv` with `brew install direnv` or `sudo apt-get update && sudo apt-get install -y direnv` or whatever technique is appropriate for your system.
+2. Hook `direnv` into your shell, see [docs](https://direnv.net/docs/hook.html).
+3. Create global configuration for `direnv` in `~/.config/direnv/direnv.toml` allowing it to be loaded without the `direnv allow` command, see  [docs](https://github.com/direnv/direnv/blob/master/man/direnv.toml.1.md), adjusting for your project path:
+
+```
+[global]
+strict_env = true
+[whitelist]
+exact = ["~/workspace/ddev/.envrc"]
+```
+
 ## Making Changes to DDEV Images
 
 If you need to make a change to one of the DDEV images, it will need to be built with a specific tag that’s updated in `pkg/versionconstants/versionconstants.go`.
