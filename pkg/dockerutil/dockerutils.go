@@ -188,34 +188,33 @@ var (
 
 // GetDockerClient returns a Docker client respecting the current Docker context and host
 func GetDockerClient() (context.Context, dockerClient.APIClient) {
-	// Some commands can run without Docker, so we check for that first
-	if CanRunWithoutDocker() {
-		return DockerCtx, DockerClient
-	}
-
 	initOnce.Do(func() {
 		initErr = initDockerCli()
 		if initErr != nil {
 			return
 		}
 		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
-
 		DockerCtx = context.Background()
-		DockerClient = DockerCli.Client()
+		DockerClient, initErr = dockerCliCommand.NewAPIClientFromFlags(dockerCliFlags.NewClientOptions(), DockerCli.ConfigFile())
+		if initErr != nil {
+			return
+		}
 	})
 
-	if initErr != nil {
-		util.Failed("Unable to get Docker CLI: %v", initErr)
-	}
-
 	return DockerCtx, DockerClient
+}
+
+// GetDockerClientErr returns the error from GetDockerClient initialization
+func GetDockerClientErr() error {
+	return initErr
 }
 
 // initDockerCli sets up the Docker CLI client and initializes it
 // And sets DockerContext and DockerHost variables
 func initDockerCli() error {
 	var err error
-	DockerCli, err = dockerCliCommand.NewDockerCli()
+	// io.Discard is used to suppress stream output from DockerCli.DockerEndpoint().Host on error
+	DockerCli, err = dockerCliCommand.NewDockerCli(dockerCliCommand.WithErrorStream(io.Discard))
 	if err != nil {
 		return fmt.Errorf("unable to get Docker CLI client: %v", err)
 	}
@@ -1858,12 +1857,12 @@ func GetDockerVersion() (string, error) {
 	}
 	ctx, client := GetDockerClient()
 	if client == nil {
-		return "", fmt.Errorf("unable to get Docker provider engine version: Docker client is nil")
+		return "", GetDockerClientErr()
 	}
 
 	serverVersion, err := client.ServerVersion(ctx)
 	if err != nil {
-		return "", fmt.Errorf("unable to get Docker provider engine version: %v", err)
+		return "", err
 	}
 
 	DockerVersion = serverVersion.Version
@@ -1972,6 +1971,9 @@ func CanRunWithoutDocker() bool {
 		return false
 	}
 	if output.ParseBoolFlag("version", "v") || output.ParseBoolFlag("help", "h") {
+		return true
+	}
+	if len(os.Args) == 2 && output.ParseBoolFlag("json-output", "j") {
 		return true
 	}
 	// help and hostname should not require docker

@@ -139,7 +139,7 @@ func init() {
 	_, err := dockerutil.GetDockerVersion()
 
 	if err != nil && !dockerutil.CanRunWithoutDocker() {
-		util.Failed("Could not connect to a Docker provider. Please start or install a Docker provider.\nError: %v\nFor install help go to: https://ddev.readthedocs.io/en/stable/users/install/docker-installation/", err)
+		util.Failed("Could not connect to a Docker provider. Please start or install a Docker provider.\nDetails: %v\nFor install help go to: https://ddev.readthedocs.io/en/stable/users/install/docker-installation/", err)
 	}
 
 	// Populate custom/script commands so they're visible.
