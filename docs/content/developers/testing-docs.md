@@ -34,6 +34,23 @@ Now that you’ve got a local copy, you can make your changes.
 | MkDocs configuration | `./mkdocs.yml`                                                          |
 | Front end            | `./docs/content/assets/extra.css` <br> `./docs/content/assets/extra.js` |
 
+## Helpers for `mkdocs`, `linkspector`, `markdownlint`
+
+The docs below give helpful instructions about installing `mkdocs` and `markdownlint`, but these can be done using `direnv` as well.
+
+DDEV provides a project-level `.envrc` which with `direnv` can install these for the project.
+
+1. Install `direnv` with `brew install direnv` or `sudo apt-get update && sudo apt-get install -y direnv` or whatever technique is appropriate for your system.
+2. Hook `direnv` into your shell, see [docs](https://direnv.net/docs/hook.html).
+3. Create global configuration for `direnv` in `~/.config/direnv/direnv.toml` allowing it to be loaded without the `direnv allow` command, see  [docs](https://github.com/direnv/direnv/blob/master/man/direnv.toml.1.md), adjusting for your project path:
+
+```
+[global]
+strict_env = true
+[whitelist]
+exact = ["~/workspace/ddev/.envrc"]
+```
+
 ## Preview Changes
 
 Preview your changes locally by running `make mkdocs-serve`.
@@ -41,7 +58,7 @@ Preview your changes locally by running `make mkdocs-serve`.
 This will launch a web server on port 8000 and automatically refresh pages as they’re edited.
 
 !!!tip "Installing mkdocs locally on macOS"
-    On macOS with recent versions of Homebrew use this technique to install mkdocs:
+    On macOS with recent versions of Homebrew use this technique (or `direnv` above) to install `mkdocs`:
 
     ```bash
     brew install pipx
@@ -52,6 +69,7 @@ This will launch a web server on port 8000 and automatically refresh pages as th
     ```
 
 !!!tip "Installing mkdocs locally on Debian/Ubuntu Linux or WSL2 with Ubuntu"
+    On Debian/Ubuntu Linux or WSL2 with Ubuntu, use this technique (or `direnv` above) to install `mkdocs`:
 
     ```bash
     sudo apt-get update && sudo apt-get install python3-full python-is-python3 pipx
@@ -65,7 +83,7 @@ This will launch a web server on port 8000 and automatically refresh pages as th
 Run `make markdownlint` before you publish changes to quickly check your files for errors or inconsistencies.
 
 !!!warning "`markdownlint-cli` required!"
-    The `make markdownlint` command requires you to have `markdownlint-cli` installed, which you can do by executing `npm install -g markdownlint-cli`
+    The `make markdownlint` command requires you to have `markdownlint-cli` installed, which you can do by executing `npm install -g markdownlint-cli` or by using the `direnv` method above.
 
 ## Check for Spelling Errors
 
