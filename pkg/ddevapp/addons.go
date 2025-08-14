@@ -29,6 +29,41 @@ import (
 
 const AddonMetadataDir = "addon-metadata"
 
+// PHP strict mode template - equivalent to bash 'set -eu -o pipefail'
+const phpStrictModeTemplate = `<?php
+// PHP strict error handling equivalent to bash 'set -eu -o pipefail'
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+?>`
+
+// Shell script template for PHP action execution
+const phpActionShellScriptTemplate = `
+# First create and validate the original PHP action (before strict mode)
+cat > /tmp/original-script.php << 'DDEV_PHP_ORIGINAL_EOF'
+%s
+DDEV_PHP_ORIGINAL_EOF
+
+# Validate original PHP syntax - exit early if invalid
+php -l /tmp/original-script.php
+original_syntax_check_exit_code=$?
+if [ $original_syntax_check_exit_code -ne 0 ]; then
+    echo "PHP syntax validation failed on original action"
+    exit $original_syntax_check_exit_code
+fi
+
+# If original syntax is valid, create the script with strict mode and execute
+cat > /tmp/addon-script.php << 'DDEV_PHP_EOF'
+%s
+DDEV_PHP_EOF
+
+# Execute the script with strict mode
+cd /var/www/html/.ddev
+php /tmp/addon-script.php
+`
+
 // GetProcessedProjectConfigYAML returns the processed project configuration as YAML
 // This is equivalent to what 'ddev debug configyaml' shows - the project configuration
 // after all config.*.yaml files have been merged and processed
@@ -231,34 +266,8 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 		return fmt.Errorf("PHP include/require validation error: %v", err)
 	}
 
-	// Add PHP strict error handling equivalent to bash 'set -eu -o pipefail'
-	phpStrictMode := `<?php
-// PHP strict error handling equivalent to bash 'set -eu -o pipefail'
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-set_error_handler(function($severity, $message, $file, $line) {
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
-?>`
-
-	// Add strict mode - prepend complete PHP block or replace existing <?php with enhanced version
-	if !strings.HasPrefix(strings.TrimSpace(action), "<?php") {
-		action = phpStrictMode + "\n" + action
-	} else {
-		// If it already starts with <?php, replace the opening with strict mode and continue with original content
-		lines := strings.Split(action, "\n")
-		if len(lines) > 0 {
-			firstLine := strings.TrimSpace(lines[0])
-			if firstLine == "<?php" {
-				// Replace the <?php line with complete strict mode block, but without the closing ?>
-				strictModeLines := strings.Split(phpStrictMode, "\n")
-				// Remove the closing ?> from strict mode so it continues seamlessly
-				strictModeWithoutClose := strings.Join(strictModeLines[:len(strictModeLines)-1], "\n")
-				// Combine strict mode with the rest of the original action (skipping the original <?php line)
-				action = strictModeWithoutClose + "\n" + strings.Join(lines[1:], "\n")
-			}
-		}
-	}
+	// Inject PHP strict error handling
+	action = injectPHPStrictMode(action)
 	// Use the default ddev-webserver as the image if none is specified
 	if image == "" {
 		image = docker.GetWebImage()
@@ -271,63 +280,15 @@ set_error_handler(function($severity, $message, $file, $line) {
 	}
 
 	// Create a shell script that validates original PHP syntax first, then executes with strict mode
-	shellScript := fmt.Sprintf(`
-# First create and validate the original PHP action (before strict mode)
-cat > /tmp/original-script.php << 'DDEV_PHP_ORIGINAL_EOF'
-%s
-DDEV_PHP_ORIGINAL_EOF
-
-# Validate original PHP syntax - exit early if invalid
-php -l /tmp/original-script.php
-original_syntax_check_exit_code=$?
-if [ $original_syntax_check_exit_code -ne 0 ]; then
-    echo "PHP syntax validation failed on original action"
-    exit $original_syntax_check_exit_code
-fi
-
-# If original syntax is valid, create the script with strict mode and execute
-cat > /tmp/addon-script.php << 'DDEV_PHP_EOF'
-%s
-DDEV_PHP_EOF
-
-# Execute the script with strict mode
-cd /var/www/html/.ddev
-php /tmp/addon-script.php
-`, originalAction, action)
+	shellScript := fmt.Sprintf(phpActionShellScriptTemplate, originalAction, action)
 
 	cmd := []string{"sh", "-c", shellScript}
 
 	// Bind mount the .ddev directory and the project root into the container
-	var binds []string
-	binds = append(binds, fmt.Sprintf("%s:/var/www/html", app.AppRoot))
+	binds := []string{fmt.Sprintf("%s:/var/www/html", app.AppRoot)}
 
 	// Build environment variables array with standard DDEV variables
-	// Database family for connection URLs
-	dbFamily := "mysql"
-	if app.Database.Type == "postgres" {
-		dbFamily = "postgres"
-	}
-
-	env := []string{
-		fmt.Sprintf("DDEV_APPROOT=%s", "/var/www/html"),
-		fmt.Sprintf("DDEV_DOCROOT=%s", app.GetDocroot()),
-		fmt.Sprintf("DDEV_PROJECT_TYPE=%s", app.Type),
-		fmt.Sprintf("DDEV_SITENAME=%s", app.Name),
-		fmt.Sprintf("DDEV_PROJECT=%s", app.Name),
-		fmt.Sprintf("DDEV_PHP_VERSION=%s", app.PHPVersion),
-		fmt.Sprintf("DDEV_WEBSERVER_TYPE=%s", app.WebserverType),
-		fmt.Sprintf("DDEV_DATABASE=%s:%s", app.Database.Type, app.Database.Version),
-		fmt.Sprintf("DDEV_DATABASE_FAMILY=%s", dbFamily),
-		fmt.Sprintf("DDEV_FILES_DIRS=%s", strings.Join(app.GetUploadDirs(), ",")),
-		fmt.Sprintf("DDEV_MUTAGEN_ENABLED=%t", app.IsMutagenEnabled()),
-		fmt.Sprintf("DDEV_VERSION=%s", versionconstants.DdevVersion),
-		fmt.Sprintf("DDEV_TLD=%s", app.ProjectTLD),
-		"IS_DDEV_PROJECT=true",
-	}
-
-	if verbose {
-		env = append(env, "DDEV_VERBOSE=true")
-	}
+	env := buildPHPActionEnvironment(app, verbose)
 
 	// Create in-memory docker-compose project for PHP action execution
 	phpProject, err := dockerutil.CreateComposeProject("name: ddev-php-action")
@@ -506,6 +467,62 @@ func buildVolumeConfigs(binds []string) []composeTypes.ServiceVolumeConfig {
 		}
 	}
 	return volumes
+}
+
+// buildPHPActionEnvironment creates the environment variables for PHP actions
+func buildPHPActionEnvironment(app *DdevApp, verbose bool) []string {
+	// Database family for connection URLs
+	dbFamily := "mysql"
+	if app.Database.Type == "postgres" {
+		dbFamily = "postgres"
+	}
+
+	env := []string{
+		"DDEV_APPROOT=/var/www/html",
+		"DDEV_DOCROOT=" + app.GetDocroot(),
+		"DDEV_PROJECT_TYPE=" + app.Type,
+		"DDEV_SITENAME=" + app.Name,
+		"DDEV_PROJECT=" + app.Name,
+		"DDEV_PHP_VERSION=" + app.PHPVersion,
+		"DDEV_WEBSERVER_TYPE=" + app.WebserverType,
+		"DDEV_DATABASE=" + app.Database.Type + ":" + app.Database.Version,
+		"DDEV_DATABASE_FAMILY=" + dbFamily,
+		"DDEV_FILES_DIRS=" + strings.Join(app.GetUploadDirs(), ","),
+		"DDEV_MUTAGEN_ENABLED=" + strconv.FormatBool(app.IsMutagenEnabled()),
+		"DDEV_VERSION=" + versionconstants.DdevVersion,
+		"DDEV_TLD=" + app.ProjectTLD,
+		"IS_DDEV_PROJECT=true",
+	}
+
+	if verbose {
+		env = append(env, "DDEV_VERBOSE=true")
+	}
+
+	return env
+}
+
+// injectPHPStrictMode adds PHP strict error handling to the action
+func injectPHPStrictMode(action string) string {
+	// Add strict mode - prepend complete PHP block or replace existing <?php with enhanced version
+	if !strings.HasPrefix(strings.TrimSpace(action), "<?php") {
+		return phpStrictModeTemplate + "\n" + action
+	}
+
+	// If it already starts with <?php, replace the opening with strict mode and continue with original content
+	lines := strings.Split(action, "\n")
+	if len(lines) > 0 {
+		firstLine := strings.TrimSpace(lines[0])
+		if firstLine == "<?php" {
+			// Replace the <?php line with complete strict mode block, but without the closing ?>
+			strictModeLines := strings.Split(phpStrictModeTemplate, "\n")
+			// Remove the closing ?> from strict mode so it continues seamlessly
+			strictModeWithoutClose := strings.Join(strictModeLines[:len(strictModeLines)-1], "\n")
+			// Combine strict mode with the rest of the original action (skipping the original <?php line)
+			return strictModeWithoutClose + "\n" + strings.Join(lines[1:], "\n")
+		}
+	}
+
+	return action
 }
 
 // validatePHPSyntax validates PHP syntax by running php -l in a container
