@@ -248,7 +248,7 @@ func TestCmdAddonPHP(t *testing.T) {
 
 	// Test basic PHP addon
 	t.Run("BasicPHPAddon", func(t *testing.T) {
-		basicAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "basic-php-addon")
+		basicAddonDir := filepath.Join(origDir, "testdata", t.Name())
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", basicAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install basic PHP addon: %v, output: %s", err, out)
 
@@ -270,7 +270,7 @@ func TestCmdAddonPHP(t *testing.T) {
 
 	// Test complex PHP addon with yaml_read_files
 	t.Run("ComplexPHPAddon", func(t *testing.T) {
-		complexAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "complex-php-addon")
+		complexAddonDir := filepath.Join(origDir, "testdata", t.Name())
 
 		// First create the test config file
 		testConfigContent := `database:
@@ -308,7 +308,7 @@ services:
 
 	// Test mixed bash/PHP addon
 	t.Run("MixedAddon", func(t *testing.T) {
-		mixedAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "mixed-addon")
+		mixedAddonDir := filepath.Join(origDir, "testdata", t.Name())
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", mixedAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install mixed addon: %v, output: %s", err, out)
 
@@ -329,7 +329,7 @@ services:
 
 	// Test custom PHP image
 	t.Run("CustomImageAddon", func(t *testing.T) {
-		customImageAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "custom-image-addon")
+		customImageAddonDir := filepath.Join(origDir, "testdata", t.Name())
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", customImageAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install custom image addon: %v, output: %s", err, out)
 
@@ -344,7 +344,7 @@ services:
 
 	// Test Varnish PHP addon - demonstrates real-world addon conversion
 	t.Run("VarnishPHPAddon", func(t *testing.T) {
-		varnishAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "varnish-php-addon")
+		varnishAddonDir := filepath.Join(origDir, "testdata", t.Name())
 
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", varnishAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install varnish PHP addon: %v, output: %s", err, out)
@@ -402,7 +402,7 @@ services:
 
 	// Test repository access addon - demonstrates full project access
 	t.Run("RepoAccessAddon", func(t *testing.T) {
-		repoAccessAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "repo-access-addon")
+		repoAccessAddonDir := filepath.Join(origDir, "testdata", t.Name())
 
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", repoAccessAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install repo access addon: %v, output: %s", err, out)
@@ -446,7 +446,7 @@ services:
 
 	// Test environment variables addon - validates all DDEV environment variables are available
 	t.Run("EnvironmentVariablesAddon", func(t *testing.T) {
-		envVarsAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "env-vars-addon")
+		envVarsAddonDir := filepath.Join(origDir, "testdata", t.Name())
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", envVarsAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install environment variables addon: %v, output: %s", err, out)
 
@@ -493,7 +493,7 @@ services:
 
 	// Test configuration access addon - validates PHP actions can access processed configuration
 	t.Run("ConfigurationAccessAddon", func(t *testing.T) {
-		configAccessAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "config-access-addon")
+		configAccessAddonDir := filepath.Join(origDir, "testdata", t.Name())
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", configAccessAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install configuration access addon: %v, output: %s", err, out)
 
@@ -517,7 +517,7 @@ services:
 	// Test PHP removal actions - install an addon with PHP removal actions and then remove it
 	t.Run("PHPRemovalActions", func(t *testing.T) {
 		// Use the varnish-php-addon which has PHP removal actions
-		varnishAddonDir := filepath.Join(origDir, "testdata", "TestCmdAddonPHP", "varnish-php-addon")
+		varnishAddonDir := filepath.Join(origDir, "testdata", t.Name())
 
 		// Install the addon first
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", varnishAddonDir)
