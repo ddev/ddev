@@ -326,7 +326,7 @@ echo "Drupal settings configured successfully\n";
 
 ### Benefits of This Approach
 
-1. **Clean install.yaml**: Easy to read and understand the addon workflow
+1. **Clean install.yaml**: Easy to read and understand the add-on workflow
 2. **Modular logic**: Each script has a focused responsibility  
 3. **Reusable components**: Scripts can be shared between different actions
 4. **Better error handling**: Individual script failures don't affect other operations
@@ -702,7 +702,7 @@ $siteName = $_ENV['DDEV_SITENAME'];
 
 The DDEV repository includes several test add-ons demonstrating PHP functionality:
 
-### Basic PHP Addon
+### Basic PHP add-on
 
 **Location:** `cmd/ddev/cmd/testdata/TestCmdAddonPHP/basic-php-addon/`
 
@@ -712,7 +712,7 @@ Shows fundamental PHP action usage:
 - File creation and manipulation
 - Mixed PHP and bash actions
 
-### Complex PHP Addon
+### Complex PHP add-on
 
 **Location:** `cmd/ddev/cmd/testdata/TestCmdAddonPHP/complex-php-addon/`
 
@@ -722,7 +722,7 @@ Demonstrates advanced features:
 - Complex data structure manipulation
 - Docker compose generation
 
-### Mixed Actions Addon
+### Mixed Actions add-on
 
 **Location:** `cmd/ddev/cmd/testdata/TestCmdAddonPHP/mixed-addon/`
 
@@ -732,17 +732,17 @@ Shows best practices for combining bash and PHP:
 - Proper description usage
 - Action coordination
 
-### Varnish PHP Addon
+### Varnish PHP add-on
 
 **Location:** `cmd/ddev/cmd/testdata/TestCmdAddonPHP/varnish-php-addon/`
 
-Real-world example converting a bash addon to PHP:
+Real-world example converting a bash add-on to PHP:
 
 - Configuration file processing
 - HEREDOC usage for clean YAML generation
 - Error handling and validation
 
-### Custom Image Addon
+### Custom Image add-on
 
 **Location:** `cmd/ddev/cmd/testdata/TestCmdAddonPHP/custom-image-addon/`
 
@@ -751,7 +751,7 @@ Demonstrates using custom PHP images:
 - Specifying alternative PHP versions
 - Image compatibility testing
 
-### Repository Access Addon
+### Repository Access add-on
 
 **Location:** `cmd/ddev/cmd/testdata/TestCmdAddonPHP/repo-access-addon/`
 

@@ -392,7 +392,7 @@ php /tmp/addon-script.php
 
 **Challenge**: Development and testing of PHP add-ons is complicated by version constraints.
 
-**Issue**: When testing PHP add-ons with development builds (like `v1.23.5-477-gd1efc5064`), version constraints in `install.yaml` (e.g., `ddev_version_constraint: '>= v1.24.3'`) prevent installation, even when the development build contains the required PHP addon functionality.
+**Issue**: When testing PHP add-ons with development builds (like `v1.23.5-477-gd1efc5064`), version constraints in `install.yaml` (e.g., `ddev_version_constraint: '>= v1.24.3'`) prevent installation, even when the development build contains the required PHP add-on functionality.
 
 **Impact on Development**:
 
@@ -412,7 +412,7 @@ php /tmp/addon-script.php
 
 **Current Solution**: We implemented a custom build step in `.github/workflows/tests.yml` that:
 
-1. **Dynamically fetches artifacts** from the PHP addon development branch
+1. **Dynamically fetches artifacts** from the PHP add-on development branch
 2. **Downloads the correct binary** using GitHub's nightly.link service
 3. **Replaces the standard DDEV** installed by `ddev/github-action-add-on-test@v2`
 4. **Handles API failures** with fallback to known working artifact IDs
@@ -448,7 +448,7 @@ php /tmp/addon-script.php
 **Why This Approach**:
 
 - `github-action-add-on-test@v2` only supports `"stable"` or `"HEAD"` versions, not custom builds
-- PHP addon functionality requires specific development build with container runtime support
+- PHP add-on functionality requires specific development build with container runtime support
 - Dynamic artifact fetching ensures tests use latest compatible build
 - Fallback mechanism prevents failures due to GitHub API issues
 
@@ -470,7 +470,7 @@ php /tmp/addon-script.php
    - Enable seamless testing of experimental features
 
 4. **Docker-based Testing**: Containerize the entire test environment:
-   - Build custom DDEV container images with PHP addon support
+   - Build custom DDEV container images with PHP add-on support
    - Test add-ons within controlled container environment
    - Eliminate host-level binary installation complexity
 
@@ -686,7 +686,7 @@ file_put_contents($extraDockerFile, $yamlContent);
 
 ### Container Execution Evolution
 
-**Previous Implementation (RunSimpleContainer)**:
+**Previous Implementation (`RunSimpleContainer`)**:
 
 - Direct Docker API container creation
 - Manual container lifecycle management  
