@@ -739,7 +739,7 @@ Shows best practices for combining bash and PHP:
 Real-world example converting a bash add-on to PHP:
 
 - Configuration file processing
-- HEREDOC usage for clean YAML generation
+- `HEREDOC` usage for clean YAML generation
 - Error handling and validation
 
 ### Custom Image add-on
@@ -791,7 +791,7 @@ However, an `image` may be specified in `install.yaml`; the specified image must
 
 ## Getting Started
 
-1. Start with the [ddev-addon-template](https://github.com/ddev/ddev-addon-template)
+1. Start with the [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template)
 2. Replace bash actions with PHP equivalents where beneficial
 3. Test thoroughly with the test add-ons as references
 4. Follow the [Add-on Maintenance Guide](https://ddev.com/blog/ddev-add-on-maintenance-guide/) for ongoing updates
