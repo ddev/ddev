@@ -346,8 +346,8 @@ php /tmp/addon-script.php
 		Environment: buildEnvironmentMap(env),
 		Volumes:     buildVolumeConfigs(binds),
 		Networks: map[string]*composeTypes.ServiceNetworkConfig{
-			"default":                       {},
-			dockerutil.NetName:              {},
+			"default":          {},
+			dockerutil.NetName: {},
 		},
 		Labels: composeTypes.Labels{
 			"com.ddev.site-name": app.Name,
@@ -575,8 +575,14 @@ fi
 
 // validatePHPIncludesAndRequires validates PHP syntax of included/required files
 func validatePHPIncludesAndRequires(phpCode string, app *DdevApp, image string) error {
-	// Extract include/require statements using a simpler regex compatible with POSIX
-	includePattern := `include\|require.*\.php\|\.inc`
+	// First check if this is actually PHP code by looking for standard PHP opening tags
+	if !strings.Contains(phpCode, "<?php") {
+		return nil // Not PHP code, no validation needed
+	}
+
+	// Extract include/require statements with proper regex
+	// Matches: include, include_once, require, require_once followed by file references
+	includePattern := `(include|include_once|require|require_once)\s+.*?\.(php|inc)`
 	matches := nodeps.GrepStringInBuffer(phpCode, includePattern)
 
 	if len(matches) == 0 {
@@ -584,52 +590,110 @@ func validatePHPIncludesAndRequires(phpCode string, app *DdevApp, image string) 
 	}
 
 	for _, match := range matches {
-		// Extract the file path from the include/require statement
-		// This is a simplified approach - real PHP parsing would be more complex
-		parts := strings.Fields(match)
-		if len(parts) < 2 {
-			continue
-		}
+		// Extract potential file paths from the include/require statement
+		// Handle common PHP include patterns:
+		// - include 'file.php';
+		// - require_once("config.inc");
+		// - include __DIR__ . '/helper.php';
+		filePaths := extractPHPFilePaths(match)
 
-		// Try to extract filename from various formats
-		filePath := ""
-		for i, part := range parts {
-			if i == 0 {
-				continue // Skip the include/require keyword
-			}
-			// Remove common characters and get potential filepath
-			cleaned := strings.Trim(part, "();\"'")
-			if strings.Contains(cleaned, ".php") || strings.Contains(cleaned, ".inc") {
-				filePath = cleaned
-				break
-			}
-		}
-
-		if filePath == "" {
-			continue
-		}
-
-		// Try to read the file relative to the .ddev directory
-		fullPath := filepath.Join(app.AppConfDir(), filePath)
-		if !fileutil.FileExists(fullPath) {
-			// Try relative to project root
-			fullPath = filepath.Join(app.AppRoot, filePath)
-			if !fileutil.FileExists(fullPath) {
-				util.Warning("Include/require file not found for validation: %s", filePath)
+		for _, filePath := range filePaths {
+			if filePath == "" {
 				continue
 			}
-		}
 
-		// Read and validate the included file
-		includedContent, err := os.ReadFile(fullPath)
-		if err != nil {
-			return fmt.Errorf("failed to read included file %s: %v", filePath, err)
-		}
+			// Skip dynamic includes (variables, function calls, etc.)
+			if containsDynamicContent(filePath) {
+				util.Warning("Skipping validation of dynamic include: %s", filePath)
+				continue
+			}
 
-		// Validate syntax of the included file
-		err = validatePHPSyntax(string(includedContent), app, image)
+			// Try to locate and validate the file
+			err := validateIncludedFile(filePath, app, image)
+			if err != nil {
+				return fmt.Errorf("validation failed for included file %s: %w", filePath, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// extractPHPFilePaths extracts potential PHP file paths from an include/require statement
+func extractPHPFilePaths(statement string) []string {
+	var paths []string
+
+	// Look for quoted strings that end with .php or .inc
+	quotedPattern := `['"]([^'"]*\.(php|inc))['"]`
+	matches := nodeps.GrepStringInBuffer(statement, quotedPattern)
+
+	for _, match := range matches {
+		// Extract the path from within quotes
+		if start := strings.IndexAny(match, `'"`); start != -1 {
+			quote := match[start]
+			if end := strings.IndexByte(match[start+1:], byte(quote)); end != -1 {
+				path := match[start+1 : start+1+end]
+				if path != "" {
+					paths = append(paths, path)
+				}
+			}
+		}
+	}
+
+	return paths
+}
+
+// containsDynamicContent checks if a file path contains dynamic elements
+func containsDynamicContent(filePath string) bool {
+	// Skip paths with variables, function calls, or concatenation
+	dynamicPatterns := []string{"$", "__DIR__", "__FILE__", "dirname", "realpath", "getcwd", "."}
+
+	for _, pattern := range dynamicPatterns {
+		if strings.Contains(filePath, pattern) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// validateIncludedFile locates and validates a PHP file referenced by include/require
+func validateIncludedFile(filePath string, app *DdevApp, image string) error {
+	// Try multiple potential locations for the file
+	searchPaths := []string{
+		filepath.Join(app.AppConfDir(), filePath),       // Relative to .ddev/
+		filepath.Join(app.AppRoot, filePath),            // Relative to project root
+		filepath.Join(app.AppConfDir(), "..", filePath), // Relative to .ddev parent
+	}
+
+	var fullPath string
+	var found bool
+
+	for _, searchPath := range searchPaths {
+		if fileutil.FileExists(searchPath) {
+			fullPath = searchPath
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		util.Warning("Include/require file not found for validation: %s", filePath)
+		return nil // Don't fail validation for missing files - they might be created dynamically
+	}
+
+	// Read and validate the included file
+	includedContent, err := os.ReadFile(fullPath)
+	if err != nil {
+		return fmt.Errorf("failed to read included file: %w", err)
+	}
+
+	// Only validate files that appear to contain PHP code
+	content := string(includedContent)
+	if strings.Contains(content, "<?php") || filepath.Ext(fullPath) == ".php" {
+		err = validatePHPSyntax(content, app, image)
 		if err != nil {
-			return fmt.Errorf("PHP syntax error in included file %s: %v", filePath, err)
+			return fmt.Errorf("PHP syntax error in included file: %w", err)
 		}
 	}
 
