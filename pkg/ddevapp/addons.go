@@ -582,7 +582,7 @@ func validatePHPIncludesAndRequires(phpCode string, app *DdevApp, image string) 
 
 	// Extract include/require statements with proper regex
 	// Matches: include, include_once, require, require_once followed by file references
-	includePattern := `(include|include_once|require|require_once)\s+.*?\.(php|inc)`
+	includePattern := `(include|include_once|require|require_once)[[:space:]]+.*\.(php|inc)`
 	matches := nodeps.GrepStringInBuffer(phpCode, includePattern)
 
 	if len(matches) == 0 {
