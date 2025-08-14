@@ -203,7 +203,7 @@ For DDEV to work properly, Docker needs to:
 - Mount your project code directory (typically under your home folder) from host to container
 - Access TCP ports on the host for HTTP/HTTPS (default ports 80 and 443, configurable per project)
 
-Run this command in your project directory to verify Docker configuration:
+Run this command in your *project directory* to verify Docker configuration (use Git Bash if you're on Windows!):
 
 ```bash
 docker run --rm -t -p 80:80 -p 443:443 -v "//$PWD:/tmp/projdir" ddev/ddev-utilities sh -c "echo ---- Project Directory && ls /tmp/projdir"
