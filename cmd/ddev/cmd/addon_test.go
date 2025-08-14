@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -234,17 +234,16 @@ func TestCmdAddonPHP(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		// Clean up all test addons
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "basic-php-test")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "complex-php-test")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mixed-test")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "custom-image-test")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "repo-access-test")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "env-vars-test")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "varnish-php-test")
-
-		err = os.Chdir(origDir)
+		addonList, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf("%s add-on list --installed -j | jq -r .raw.[].Name", DdevBin))
 		require.NoError(t, err)
+		addonList = strings.TrimSpace(addonList)
+		addons := strings.Split(addonList, "\n")
+		for _, item := range addons {
+			_, err = exec.RunHostCommand(DdevBin, "add-on", "remove", item)
+			require.NoError(t, err)
+		}
+
+		_ = os.Chdir(origDir)
 	})
 
 	// Test basic PHP addon
@@ -279,7 +278,7 @@ func TestCmdAddonPHP(t *testing.T) {
 services:
   redis:
     enabled: true`
-		err := fileutil.TemplateStringToFile(testConfigContent, nil, app.GetConfigPath("test-config.yaml"))
+		err := os.WriteFile(app.GetConfigPath("test-config.yaml"), []byte(testConfigContent), 0644)
 		require.NoError(t, err)
 
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", complexAddonDir, "--verbose")
@@ -519,27 +518,6 @@ services:
 	t.Run("PHPRemovalActions", func(t *testing.T) {
 		// Use the test add-on which has PHP removal actions
 		addonDir := filepath.Join(origDir, "testdata", t.Name())
-
-		tmpDir := testcommon.CreateTmpDir("removal-test-proj")
-
-		// Create the project directory
-		projectDir := filepath.Join(tmpDir, t.Name())
-		err := os.MkdirAll(projectDir, 0755)
-		require.NoError(t, err)
-
-		app, err := ddevapp.NewApp(projectDir, true)
-		require.NoError(t, err)
-
-		t.Cleanup(func() {
-			_ = os.Chdir(origDir)
-			_ = app.Stop(true, false)
-			_ = os.RemoveAll(tmpDir)
-		})
-
-		err = app.WriteConfig()
-		require.NoError(t, err)
-
-		_ = os.Chdir(projectDir)
 
 		// Install the addon first
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", addonDir)
