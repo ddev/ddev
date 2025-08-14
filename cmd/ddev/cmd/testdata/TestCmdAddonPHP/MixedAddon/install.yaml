@@ -17,7 +17,7 @@ pre_install_actions:
   - |
     <?php
     #ddev-description: Read project configuration
-    $configPath = '/mnt/ddev_config/config.yaml';
+    $configPath = 'config.yaml';
     $projectName = 'unknown';
     if (file_exists($configPath)) {
         $configContent = file_get_contents($configPath);

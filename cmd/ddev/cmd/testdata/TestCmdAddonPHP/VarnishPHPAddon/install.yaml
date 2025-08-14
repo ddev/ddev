@@ -10,7 +10,7 @@ pre_install_actions:
     #ddev-description: Initialize Varnish addon installation
     
     // Read DDEV project configuration
-    $configPath = '/mnt/ddev_config/config.yaml';
+    $configPath = 'config.yaml';
     $projectName = 'unknown';
     $hostname = 'unknown';
     
@@ -45,7 +45,7 @@ post_install_actions:
     #ddev-description: Complete Varnish configuration
     
     // Check if varnish_extras exists and handle it
-    $extrasFile = '/mnt/ddev_config/docker-compose.varnish_extras.yaml';
+    $extrasFile = 'docker-compose.varnish_extras.yaml';
     if (file_exists($extrasFile)) {
         $content = file_get_contents($extrasFile);
         if (strpos($content, '#ddev-generated') === false) {
@@ -55,7 +55,7 @@ post_install_actions:
     }
     
     // Generate the varnish_extras.yaml file that modifies web container hostnames
-    $configPath = '/mnt/ddev_config/config.yaml';
+    $configPath = 'config.yaml';
     if (file_exists($configPath)) {
         $config = yaml_parse_file($configPath);
     }

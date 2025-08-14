@@ -10,7 +10,7 @@ pre_install_actions:
     echo "PHP: OS info: " . php_uname('s') . " " . php_uname('r') . "\n";
     
     // Test that custom image is working
-    $configPath = '/mnt/ddev_config/config.yaml';
+    $configPath = 'config.yaml';
     $projectName = 'unknown';
     if (file_exists($configPath)) {
         $configContent = file_get_contents($configPath);

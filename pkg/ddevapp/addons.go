@@ -299,7 +299,6 @@ php /tmp/addon-script.php
 
 	// Bind mount the .ddev directory and the project root into the container
 	var binds []string
-	binds = append(binds, fmt.Sprintf("%s:/mnt/ddev_config", app.AppConfDir()))
 	binds = append(binds, fmt.Sprintf("%s:/var/www/html", app.AppRoot))
 
 	// Build environment variables array with standard DDEV variables

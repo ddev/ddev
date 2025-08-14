@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -516,11 +517,32 @@ services:
 
 	// Test PHP removal actions - install an addon with PHP removal actions and then remove it
 	t.Run("PHPRemovalActions", func(t *testing.T) {
-		// Use the varnish-php-addon which has PHP removal actions
-		varnishAddonDir := filepath.Join(origDir, "testdata", t.Name())
+		// Use the test add-on which has PHP removal actions
+		addonDir := filepath.Join(origDir, "testdata", t.Name())
+
+		tmpDir := testcommon.CreateTmpDir("removal-test-proj")
+
+		// Create the project directory
+		projectDir := filepath.Join(tmpDir, t.Name())
+		err := os.MkdirAll(projectDir, 0755)
+		require.NoError(t, err)
+
+		app, err := ddevapp.NewApp(projectDir, true)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			_ = os.Chdir(origDir)
+			_ = app.Stop(true, false)
+			_ = os.RemoveAll(tmpDir)
+		})
+
+		err = app.WriteConfig()
+		require.NoError(t, err)
+
+		_ = os.Chdir(projectDir)
 
 		// Install the addon first
-		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", varnishAddonDir)
+		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", addonDir)
 		require.NoError(t, err, "failed to install varnish PHP addon: %v, output: %s", err, out)
 
 		// Verify the addon was installed - should generate varnish_extras file
@@ -532,7 +554,7 @@ services:
 		require.NoError(t, err, "failed to stop project for removal test")
 
 		// Remove the addon - this should execute the PHP removal action
-		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "varnish-php-test")
+		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "php-removal-actions")
 		require.NoError(t, err, "failed to remove varnish PHP addon: %v, output: %s", err, out)
 
 		// Verify the PHP removal action was executed
