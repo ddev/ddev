@@ -549,4 +549,20 @@ services:
 		// Verify the varnish extras file was removed by the PHP action
 		require.NoFileExists(t, extrasFile, "Varnish extras file should be removed by PHP removal action")
 	})
+
+	// Test explicit image without php-yaml (e.g., php:8.3)
+	t.Run("ExplicitImageNoPHPYaml", func(t *testing.T) {
+		noYamlAddonDir := filepath.Join(origDir, "testdata", t.Name())
+		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", noYamlAddonDir, "--verbose")
+		require.Error(t, err, "expected error when using image without php-yaml")
+		require.Contains(t, out, "undefined function yaml_parse_file", "Should show PHP fatal error due to missing php-yaml")
+	})
+
+	// Test explicit image that does not have PHP at all (e.g., alpine:latest)
+	t.Run("ExplicitImageNoPHP", func(t *testing.T) {
+		noPHPAddonDir := filepath.Join(origDir, "testdata", t.Name())
+		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", noPHPAddonDir, "--verbose")
+		require.Error(t, err, "expected error when using image without PHP")
+		require.Contains(t, out, "php: not found", "Should show error about PHP not found")
+	})
 }
