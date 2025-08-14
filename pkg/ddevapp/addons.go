@@ -267,8 +267,7 @@ set_error_handler(function($severity, $message, $file, $line) {
 	// Create configuration files for PHP action access (optional for tests and removal actions)
 	err = createConfigurationFiles(app)
 	if err != nil {
-		util.Warning("Could not create configuration files for PHP action: %v", err)
-		// Don't fail completely - tests and removal actions may not have full app configuration
+		return fmt.Errorf("failed to create configuration files for PHP action: %w", err)
 	}
 
 	// Create a shell script that validates original PHP syntax first, then executes with strict mode
@@ -346,11 +345,14 @@ php /tmp/addon-script.php
 		WorkingDir:  "/var/www/html/.ddev",
 		Environment: buildEnvironmentMap(env),
 		Volumes:     buildVolumeConfigs(binds),
+		Networks: map[string]*composeTypes.ServiceNetworkConfig{
+			"default":                       {},
+			dockerutil.NetName:              {},
+		},
 		Labels: composeTypes.Labels{
 			"com.ddev.site-name": app.Name,
 			"com.ddev.approot":   app.AppRoot,
 		},
-		// Network access not needed for PHP actions - they work with mounted files
 	}
 
 	// Add host.docker.internal setup using DDEV's standard logic
@@ -380,6 +382,18 @@ php /tmp/addon-script.php
 	}
 
 	phpProject.Services[serviceName] = serviceConfig
+
+	// Add network definitions matching DDEV's standard networking
+	if phpProject.Networks == nil {
+		phpProject.Networks = composeTypes.Networks{}
+	}
+	phpProject.Networks[dockerutil.NetName] = composeTypes.NetworkConfig{
+		Name:     dockerutil.NetName,
+		External: true,
+	}
+	phpProject.Networks["default"] = composeTypes.NetworkConfig{
+		Name: app.GetDefaultNetworkName(),
+	}
 
 	// Execute PHP action using docker-compose run
 	// Use ComposeCmd to capture output for error reporting, ComposeWithStreams for streaming
