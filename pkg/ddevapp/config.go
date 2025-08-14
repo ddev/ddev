@@ -188,6 +188,48 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 	return filepath.Join(app.AppRoot, ".ddev", filename)
 }
 
+// GetProcessedProjectConfigYAML returns the processed project configuration as YAML
+// This is equivalent to what 'ddev debug configyaml' shows - the project configuration
+// after all config.*.yaml files have been merged and processed
+func (app *DdevApp) GetProcessedProjectConfigYAML(omitKeys ...string) ([]byte, error) {
+	// Ensure we have the latest processed configuration
+	_, err := app.ReadConfig(true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read project configuration: %v", err)
+	}
+
+	// Marshal the fully processed DdevApp struct to YAML
+	configYAML, err := yaml.Marshal(app)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal project configuration to YAML: %v", err)
+	}
+
+	// If no keys to omit, return as-is
+	if len(omitKeys) == 0 {
+		return configYAML, nil
+	}
+
+	// Parse YAML into a map to filter keys
+	var configMap map[string]interface{}
+	err = yaml.Unmarshal(configYAML, &configMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse YAML for filtering: %v", err)
+	}
+
+	// Remove specified keys
+	for _, key := range omitKeys {
+		delete(configMap, strings.TrimSpace(key))
+	}
+
+	// Marshal back to YAML
+	filteredYAML, err := yaml.Marshal(configMap)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal filtered YAML: %v", err)
+	}
+
+	return filteredYAML, nil
+}
+
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
 	// Work against a copy of the DdevApp, since we don't want to actually change it.

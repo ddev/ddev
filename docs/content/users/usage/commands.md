@@ -478,7 +478,14 @@ ddev debug compose-config my-project
 
 Prints the project [`config.*.yaml`](../configuration/config.md) usage.
 
-Example:
+**Arguments:** `[project_name]`
+
+**Flags:**
+
+* `--full-yaml`: Output complete processed YAML configuration instead of individual fields
+* `--omit-keys=<keys>`: Comma-separated list of keys to omit from output (e.g., `web_environment`)
+
+**Examples:**
 
 ```shell
 # Print config for the current project
@@ -486,6 +493,15 @@ ddev debug configyaml
 
 # Print config specifically for `my-project`
 ddev debug configyaml my-project
+
+# Print complete YAML configuration
+ddev debug configyaml --full-yaml
+
+# Hide sensitive environment variables
+ddev debug configyaml --omit-keys=web_environment
+
+# Combine flags: full YAML output without sensitive keys
+ddev debug configyaml --full-yaml --omit-keys=web_environment
 ```
 
 ### `debug dockercheck`

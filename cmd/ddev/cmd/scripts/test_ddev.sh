@@ -44,11 +44,12 @@ if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an e
 
 header "Existing project config"
 
-echo "ddev installation alternate locations:"
+header "ddev installation alternate locations:"
 which -a ddev
 echo
 
-ddev debug configyaml | grep -v web_environment
+header "project configuration via ddev debug configyaml"
+ddev debug configyaml --full-yaml --omit-keys=web_environment
 
 header "existing project customizations"
 grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres .ddev/traefik/config .ddev/.env .ddev/.env.* 2>/dev/null | grep -v '\.example$' 2>/dev/null
@@ -62,30 +63,29 @@ header "installed DDEV add-ons"
 
 ddev add-on list --installed
 
-header "WSL2 information"
+if grep -qEi "(microsoft|wsl)" /proc/version; then
+  header "WSL2 information"
 
-if command -v wslinfo >/dev/null ; then
-  echo "WSL version=$(wsl.exe --version | tr -d '\0')";
-  echo "WSL2 networking mode=$(wslinfo --networking-mode)"
+  if command -v wslinfo >/dev/null ; then
+    echo "WSL version=$(wsl.exe --version | tr -d '\0')";
+    echo "WSL2 networking mode=$(wslinfo --networking-mode)"
+  fi
 fi
 
-header "mutagen situation"
-
-echo "looking for #ddev-generated in mutagen.yml in project ${PWD}"
-echo
 if [ -f .ddev/mutagen/mutagen.yml ]; then
+  header "mutagen situation"
+  echo "looking for #ddev-generated in mutagen.yml in project ${PWD}"
+  echo
   if grep -q '#ddev-generated' .ddev/mutagen/mutagen.yml; then
     echo "unmodified #ddev-generated found in .ddev/mutagen/mutagen.yml"
   else
     echo "MODIFIED .ddev/mutagen/mutagen.yml found"
   fi
-else
-  echo ".ddev/mutagen/mutagen.yml not found"
 fi
 
 PROJECT_DIR=../${PROJECT_NAME}
 header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
-
+fi
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3

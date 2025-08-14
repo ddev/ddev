@@ -64,37 +64,6 @@ cd /var/www/html/.ddev
 php /tmp/addon-script.php
 `
 
-// GetProcessedProjectConfigYAML returns the processed project configuration as YAML
-// This is equivalent to what 'ddev debug configyaml' shows - the project configuration
-// after all config.*.yaml files have been merged and processed
-func (app *DdevApp) GetProcessedProjectConfigYAML() ([]byte, error) {
-	// Ensure we have the latest processed configuration
-	_, err := app.ReadConfig(true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read project configuration: %v", err)
-	}
-
-	// Marshal the fully processed DdevApp struct to YAML
-	configYAML, err := yaml.Marshal(app)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal project configuration to YAML: %v", err)
-	}
-
-	return configYAML, nil
-}
-
-// GetGlobalConfigYAML returns the global DDEV configuration as YAML
-// This provides access to global settings that affect all DDEV projects
-func GetGlobalConfigYAML() ([]byte, error) {
-	// Marshal the global configuration to YAML
-	globalConfigYAML, err := yaml.Marshal(&globalconfig.DdevGlobalConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal global configuration to YAML: %v", err)
-	}
-
-	return globalConfigYAML, nil
-}
-
 // Format of install.yaml
 type InstallDesc struct {
 	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
@@ -417,7 +386,7 @@ func createConfigurationFiles(app *DdevApp) error {
 	}
 
 	// Generate global configuration YAML
-	globalConfigYAML, err := GetGlobalConfigYAML()
+	globalConfigYAML, err := globalconfig.GetGlobalConfigYAML()
 	if err != nil {
 		return fmt.Errorf("failed to generate global configuration: %v", err)
 	}
