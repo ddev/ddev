@@ -167,27 +167,77 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
 <a name="troubleshooting"></a>
 
-## Testing and Troubleshooting Your Docker Installation
+## Troubleshooting Docker
 
-Docker needs to be able to do a few things for DDEV to work:
+### Common Connection Errors
 
-* Mount the project code directory, typically a subdirectory of your home folder, from the host into the container.
-* Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
+> `Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?`
 
-We can use a single Docker command to make sure Docker is set up to do what we want:
+This error indicates that either Docker is not installed or the Docker daemon is not running:
 
-In your *project directory* run the following (using Git Bash if you’re on Windows!):
+- **macOS/Traditional Windows:** Start your Docker provider (e.g., OrbStack, Docker Desktop, Rancher Desktop) from your applications menu
+- **Linux/WSL2:** Run `sudo systemctl enable --now docker` to start and enable it to start automatically on boot
 
-```
+> `error during connect: Get "http://host:2375/v1.51/version": dial tcp: lookup host on 127.0.0.53:53: server misbehaving`
+
+or
+
+> `unable to resolve docker endpoint: context "docker-desktop": context not found`
+
+These errors indicate Docker context issues:
+
+- List available contexts: `docker context ls`
+- Switch to default (or different) context: `docker context use default`
+- Validate the current context: `docker ps`
+
+!!!warning "Environment variables override Docker context"
+    If you have set `DOCKER_HOST` and/or `DOCKER_CONTEXT` environment variables, they will override the `docker context` settings. This can lead to connection issues if the host is unreachable or the specified context is incorrect. Check your shell profile (`~/.bashrc`, `~/.zshrc`) for these variables.
+
+!!!tip "Creating a Docker context"
+    You can create a new Docker context using the `docker context create` command. See [Remote Docker Environments](../topics/remote-docker.md) for examples.
+
+### Testing Docker Setup
+
+For DDEV to work properly, Docker needs to:
+
+- Mount your project code directory (typically under your home folder) from host to container
+- Access TCP ports on the host for HTTP/HTTPS (default ports 80 and 443, configurable per project)
+
+Run this command in your *project directory* to verify Docker configuration (use Git Bash if you're on Windows!):
+
+```bash
 docker run --rm -t -p 80:80 -p 443:443 -v "//$PWD:/tmp/projdir" ddev/ddev-utilities sh -c "echo ---- Project Directory && ls /tmp/projdir"
 ```
 
-The result should be a list of the files in your project directory.
+**Expected result:** A list of files in the current directory.
 
-If you get an error or don’t see the contents of your project directory, you’ll need to troubleshoot further:
+Common test command issues:
 
-* For a “port is already allocated” error, see the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page.
-* “invalid mount config for type "bind": bind mount source path does not exist: [some path]” means the filesystem isn’t successfully shared into the Docker container.
-* If you’re seeing “The path (...) is not shared and is not known to Docker”, find *File sharing* in your Docker settings make sure the appropriate path or drive is included.
-* “Error response from daemon: Get registry-1.docker.io/v2/” may mean Docker isn’t running or you don’t have internet access. Try starting or restarting Docker, and confirm you have a working internet connection.
-* If you’re seeing “403 authentication required” trying to [`ddev start`](../usage/commands.md#start), run `docker logout` and try again. Docker authentication is *not* required for any normal DDEV action.
+> `port is already allocated`
+
+Another service is using ports 80 or 443. See the [Web Server Ports Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) section.
+
+> `invalid mount config for type "bind": bind mount source path does not exist`
+
+The filesystem path isn't properly shared with Docker:
+
+- **Docker Desktop:** Go to Settings → Resources → File Sharing and add your project directory or drive
+- **Linux:** Ensure proper permissions on the project directory
+
+> `The path (...) is not shared and is not known to Docker`
+
+**Docker Desktop:** Add the path in Settings → Resources → File Sharing and restart Docker Desktop after making changes.
+
+> `Error response from daemon: Get registry-1.docker.io/v2/`
+
+Docker daemon isn't running, or no internet connection:
+
+- Start/restart Docker and verify internet connectivity
+- Check if corporate firewall blocks Docker Hub access
+
+> `403 authentication required` during `ddev start`
+
+Stale Docker Hub authentication interfering with public image pulls:
+
+- **Solution:** Run `docker logout` and try again
+- **Note:** Docker authentication is *not* required for normal DDEV operations

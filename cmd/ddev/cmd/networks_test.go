@@ -53,7 +53,7 @@ func TestNetworkDuplicates(t *testing.T) {
 	assert.Error(errDuplicate)
 
 	// Check if the network is created
-	err = dockerutil.EnsureNetwork(ctx, client, networkName, netOptions)
+	err = dockerutil.EnsureNetwork(networkName, netOptions)
 	assert.NoError(err)
 
 	// This check would fail if there is a network duplicate

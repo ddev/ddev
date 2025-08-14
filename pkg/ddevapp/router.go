@@ -16,7 +16,6 @@ import (
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -85,8 +84,14 @@ func StopRouterIfNoContainers() error {
 		// https://github.com/abiosoft/colima/issues/644
 		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
 			if globalconfig.DdevDebug {
-				out, err := exec.RunHostCommand("docker", "ps", "-a")
-				util.Debug("Lima/Colima stopping router, output of docker ps -a: '%v', err=%v", out, err)
+				util.Debug("Lima/Colima/Rancher stopping router")
+				dockerContainers, _ := dockerutil.GetDockerContainers(true)
+				containerInfo := make([]string, len(dockerContainers))
+				for i, container := range dockerContainers {
+					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(container.ID), dockerutil.ContainerName(container), container.State, container.Image)
+				}
+				containerList, _ := util.ArrayToReadableOutput(containerInfo)
+				util.Debug("All docker containers: %s", containerList)
 			}
 			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
 			waitForPortsToBeReleased(routerPorts, time.Second*5)

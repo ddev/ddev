@@ -666,7 +666,7 @@ subdir1.txt
 	require.NoError(t, err)
 }
 
-// TestDockerIP tries out a number of DOCKER_HOST permutations
+// TestDockerIP tries out a number of DockerHost permutations
 // to verify that GetDockerIP does them right
 func TestGetDockerIP(t *testing.T) {
 	assert := asrt.New(t)
@@ -679,8 +679,16 @@ func TestGetDockerIP(t *testing.T) {
 		"tcp://185.199.110.153:2375":                 "185.199.110.153",
 	}
 
+	// Save original DockerHost to restore it later
+	origDockerHost := dockerutil.DockerHost
+	t.Cleanup(func() {
+		dockerutil.DockerHost = origDockerHost
+		// Reset the cached DockerIP value
+		dockerutil.DockerIP = ""
+	})
+
 	for k, v := range expectations {
-		t.Setenv("DOCKER_HOST", k)
+		dockerutil.DockerHost = k
 		// DockerIP is cached, so we have to reset it to check
 		dockerutil.DockerIP = ""
 		result, err := dockerutil.GetDockerIP()

@@ -18,10 +18,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/ddev/ddev/pkg/archive"
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	ddevexec "github.com/ddev/ddev/pkg/exec"
@@ -30,6 +32,10 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	dockerCliCommand "github.com/docker/cli/cli/command"
+	dockerCliFlags "github.com/docker/cli/cli/flags"
+	dockerCliVersion "github.com/docker/cli/cli/version"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
@@ -84,11 +90,12 @@ var NoHealthCheck = dockerContainer.HealthConfig{
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
-func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string, netOptions dockerNetwork.CreateOptions) error {
+func EnsureNetwork(name string, netOptions dockerNetwork.CreateOptions) error {
 	// Pre-check for network duplicates
-	RemoveNetworkDuplicates(ctx, client, name)
+	RemoveNetworkDuplicates(name)
 
-	if !NetExists(ctx, client, name) {
+	if !NetExists(name) {
+		ctx, client := GetDockerClient()
 		_, err := client.NetworkCreate(ctx, name, netOptions)
 		if err != nil {
 			return err
@@ -102,13 +109,12 @@ func EnsureNetwork(ctx context.Context, client *dockerClient.Client, name string
 // exits with fatal.
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
-	ctx, client := GetDockerClient()
 	netOptions := dockerNetwork.CreateOptions{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   map[string]string{"com.ddev.platform": "ddev"},
 	}
-	err := EnsureNetwork(ctx, client, NetName, netOptions)
+	err := EnsureNetwork(NetName, netOptions)
 	if err != nil {
 		output.UserErr.Fatalf("Failed to ensure Docker network %s: %v", NetName, err)
 	}
@@ -117,9 +123,7 @@ func EnsureDdevNetwork() {
 // NetworkExists returns true if the named network exists
 // Mostly intended for tests
 func NetworkExists(netName string) bool {
-	// Ensure we have Docker network
-	ctx, client := GetDockerClient()
-	return NetExists(ctx, client, strings.ToLower(netName))
+	return NetExists(strings.ToLower(netName))
 }
 
 // RemoveNetwork removes the named Docker network
@@ -153,7 +157,8 @@ func RemoveNetworkWithWarningOnError(netName string) {
 // RemoveNetworkDuplicates removes the duplicates for the named Docker network
 // This means that if there is only one network with this name - no action,
 // and if there are several such networks, then we leave the first one, and delete the others
-func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, netName string) {
+func RemoveNetworkDuplicates(netName string) {
+	ctx, client := GetDockerClient()
 	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	networkMatchFound := false
 	for _, network := range networks {
@@ -171,75 +176,67 @@ func RemoveNetworkDuplicates(ctx context.Context, client *dockerClient.Client, n
 	}
 }
 
-var DockerHost string
-var DockerContext string
-var DockerCtx context.Context
-var DockerClient *dockerClient.Client
+var (
+	DockerCtx     context.Context
+	DockerClient  dockerClient.APIClient
+	DockerCli     *dockerCliCommand.DockerCli
+	DockerContext string
+	DockerHost    string
+	DockerIP      string
 
-// GetDockerClient returns a Docker client respecting the current Docker context
-// but DOCKER_HOST gets priority
-func GetDockerClient() (context.Context, *dockerClient.Client) {
-	var err error
+	initOnce sync.Once
+	initErr  error
+)
 
-	// This section is skipped if $DOCKER_HOST is set
-	if DockerHost == "" {
-		DockerContext, DockerHost, err = GetDockerContext()
-		// ddev --version may be called without Docker client or context available, ignore err
-		if err != nil && !CanRunWithoutDocker() {
-			util.Failed("Unable to get Docker context: %v", err)
+// GetDockerClient returns a Docker client respecting the current Docker context and host
+func GetDockerClient() (context.Context, dockerClient.APIClient) {
+	initOnce.Do(func() {
+		initErr = initDockerCli()
+		if initErr != nil {
+			return
 		}
 		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
-	}
-	// Respect DOCKER_HOST in case it's set, otherwise use host we got from context
-	if os.Getenv("DOCKER_HOST") == "" {
-		util.Verbose("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
-		_ = os.Setenv("DOCKER_HOST", DockerHost)
-	}
-	if DockerClient == nil {
 		DockerCtx = context.Background()
-		DockerClient, err = dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
-		if err != nil {
-			output.UserOut.Warnf("Could not get Docker client. Is Docker running? Error: %v", err)
-			// Use os.Exit instead of util.Failed() to avoid import cycle with util.
-			os.Exit(100)
+		// Set the Docker CLI version for User-Agent header
+		dockerCliVersion.Version = "ddev-" + versionconstants.DdevVersion
+		DockerClient, initErr = dockerCliCommand.NewAPIClientFromFlags(dockerCliFlags.NewClientOptions(), DockerCli.ConfigFile())
+		if initErr != nil {
+			return
 		}
-		defer DockerClient.Close()
-	}
+	})
+
 	return DockerCtx, DockerClient
 }
 
-// GetDockerContext returns the currently set Docker context, host, and error
-func GetDockerContext() (string, string, error) {
-	dockerContext := ""
-	dockerHost := ""
-
-	// This is a cheap way of using Docker contexts by running `docker context inspect`
-	// I would wish for something far better, but trying to transplant the code from
-	// docker/cli did not succeed. rfay 2021-12-16
-	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
-	contextInfo, err := ddevexec.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
-	if err != nil {
-		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure Docker client is in path and up-to-date: %v", err)
-	}
-	contextInfo = strings.Trim(contextInfo, " \r\n")
-	util.Verbose("GetDockerContext: contextInfo='%s'", contextInfo)
-	parts := strings.SplitN(contextInfo, " ", 2)
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("unable to run split Docker context info %s: %v", contextInfo, err)
-	}
-	dockerContext = parts[0]
-	dockerHost = parts[1]
-	util.Verbose("Using Docker context %s (%v)", dockerContext, dockerHost)
-	return dockerContext, dockerHost, nil
+// GetDockerClientErr returns the error from GetDockerClient initialization
+func GetDockerClientErr() error {
+	return initErr
 }
 
-// GetDockerHostID returns DOCKER_HOST but with all special characters removed
+// initDockerCli sets up the Docker CLI client and initializes it
+// And sets DockerContext and DockerHost variables
+func initDockerCli() error {
+	var err error
+	// io.Discard is used to suppress stream output from DockerCli.DockerEndpoint().Host on error
+	DockerCli, err = dockerCliCommand.NewDockerCli(dockerCliCommand.WithErrorStream(io.Discard))
+	if err != nil {
+		return fmt.Errorf("newDockerCli() failed: %v", err)
+	}
+	opts := dockerCliFlags.NewClientOptions()
+	if err := DockerCli.Initialize(opts); err != nil {
+		return fmt.Errorf("unable to DockerCli.Initialize(): %v", err)
+	}
+	DockerContext = DockerCli.CurrentContext()
+	DockerHost = DockerCli.DockerEndpoint().Host
+	return nil
+}
+
+// GetDockerHostID returns DockerHost but with all special characters removed
 // It stands in for Docker context, but Docker context name is not a reliable indicator
 func GetDockerHostID() string {
-	_, dockerHost, err := GetDockerContext()
-	if err != nil {
-		util.Warning("Unable to GetDockerContext: %v", err)
-	}
+	// Use the same synchronized initialization as GetDockerClient
+	_, _ = GetDockerClient()
+	dockerHost := DockerHost
 	// Make it shorter so we don't hit Mutagen 63-char limit
 	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
 	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
@@ -255,12 +252,8 @@ func GetDockerHostID() string {
 
 // InspectContainer returns the full result of inspection
 func InspectContainer(name string) (dockerContainer.InspectResponse, error) {
-	ctx := context.Background()
-	client, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
+	ctx, client := GetDockerClient()
 
-	if err != nil {
-		return dockerContainer.InspectResponse{}, err
-	}
 	container, err := FindContainerByName(name)
 	if err != nil || container == nil {
 		return dockerContainer.InspectResponse{}, err
@@ -402,7 +395,8 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]dockerIm
 }
 
 // NetExists checks to see if the Docker network for DDEV exists.
-func NetExists(ctx context.Context, client *dockerClient.Client, name string) bool {
+func NetExists(name string) bool {
+	ctx, client := GetDockerClient()
 	nets, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	for _, n := range nets {
 		if n.Name == name {
@@ -620,6 +614,9 @@ func getSuggestedCommandForContainerLog(container *dockerContainer.Summary) (str
 
 // ContainerName returns the container's human-readable name.
 func ContainerName(container dockerContainer.Summary) string {
+	if len(container.Names) == 0 {
+		return container.ID
+	}
 	return container.Names[0][1:]
 }
 
@@ -949,42 +946,36 @@ func CheckForHTTPS(container dockerContainer.Summary) bool {
 	return false
 }
 
-var dockerHostRawURL string
-var DockerIP string
-
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
-// or the value as configured by $DOCKER_HOST (if DOCKER_HOST is an tcp:// URL)
+// or the value as configured by DockerHost (if it is a tcp:// URL)
 func GetDockerIP() (string, error) {
-	if DockerIP == "" {
-		DockerIP = "127.0.0.1"
-		dockerHostRawURL = os.Getenv("DOCKER_HOST")
-		// If DOCKER_HOST is empty, then the client hasn't been initialized
-		// from the Docker context
-		if dockerHostRawURL == "" {
-			_, _ = GetDockerClient()
-			dockerHostRawURL = os.Getenv("DOCKER_HOST")
-		}
-		if dockerHostRawURL != "" {
-			dockerHostURL, err := url.Parse(dockerHostRawURL)
-			if err != nil {
-				return "", fmt.Errorf("failed to parse $DOCKER_HOST=%s: %v", dockerHostRawURL, err)
-			}
-			hostPart := dockerHostURL.Hostname()
-			if hostPart != "" {
-				// Check to see if the hostname we found is an IP address
-				addr := net.ParseIP(hostPart)
-				if addr == nil {
-					// If it wasn't an IP address, look it up to get IP address
-					ip, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", hostPart)
-					if err == nil && len(ip) > 0 {
-						hostPart = ip[0].String()
-					} else {
-						return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
-					}
-				}
-				DockerIP = hostPart
+	if DockerIP != "" {
+		return DockerIP, nil
+	}
+	DockerIP = "127.0.0.1"
+	// Use the same synchronized initialization as GetDockerClient
+	_, _ = GetDockerClient()
+	if DockerHost == "" {
+		return DockerIP, nil
+	}
+	dockerHostURL, err := url.Parse(DockerHost)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse DockerHost=%s: %v", DockerHost, err)
+	}
+	hostPart := dockerHostURL.Hostname()
+	if hostPart != "" {
+		// Check to see if the hostname we found is an IP address
+		addr := net.ParseIP(hostPart)
+		if addr == nil {
+			// If it wasn't an IP address, look it up to get IP address
+			ip, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", hostPart)
+			if err == nil && len(ip) > 0 {
+				hostPart = ip[0].String()
+			} else {
+				return "", fmt.Errorf("failed to look up IP address for DockerHost=%s, hostname=%s: %v", DockerHost, hostPart, err)
 			}
 		}
+		DockerIP = hostPart
 	}
 	return DockerIP, nil
 }
@@ -1866,12 +1857,12 @@ func GetDockerVersion() (string, error) {
 	}
 	ctx, client := GetDockerClient()
 	if client == nil {
-		return "", fmt.Errorf("unable to get Docker provider engine version: Docker client is nil")
+		return "", GetDockerClientErr()
 	}
 
 	serverVersion, err := client.ServerVersion(ctx)
 	if err != nil {
-		return "", fmt.Errorf("unable to get Docker provider engine version: %v", err)
+		return "", err
 	}
 
 	DockerVersion = serverVersion.Version
@@ -1964,10 +1955,10 @@ func GetContainerNames(containers []dockerContainer.Summary, excludeContainerNam
 }
 
 // IsErrNotFound returns true if the error is a NotFound error, which is returned
-// by the API when some object is not found. It is an alias for [errdefs.IsNotFound].
+// by the API when some object is not found. It is an alias for [cerrdefs.IsNotFound].
 // Used as a wrapper to avoid direct import for docker client.
 func IsErrNotFound(err error) bool {
-	return dockerClient.IsErrNotFound(err)
+	return cerrdefs.IsNotFound(err)
 }
 
 // CanRunWithoutDocker returns true if the command or flag can run without Docker.
@@ -1980,6 +1971,9 @@ func CanRunWithoutDocker() bool {
 		return false
 	}
 	if output.ParseBoolFlag("version", "v") || output.ParseBoolFlag("help", "h") {
+		return true
+	}
+	if len(os.Args) == 2 && output.ParseBoolFlag("json-output", "j") {
 		return true
 	}
 	// help and hostname should not require docker
