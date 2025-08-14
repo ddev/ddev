@@ -220,11 +220,11 @@ func initDockerCli() error {
 	// io.Discard is used to suppress stream output from DockerCli.DockerEndpoint().Host on error
 	DockerCli, err = dockerCliCommand.NewDockerCli(dockerCliCommand.WithErrorStream(io.Discard))
 	if err != nil {
-		return fmt.Errorf("unable to get Docker CLI client: %v", err)
+		return fmt.Errorf("newDockerCli() failed: %v", err)
 	}
 	opts := dockerCliFlags.NewClientOptions()
 	if err := DockerCli.Initialize(opts); err != nil {
-		return fmt.Errorf("unable to initialize Docker CLI client: %v", err)
+		return fmt.Errorf("unable to DockerCli.Initialize(): %v", err)
 	}
 	DockerContext = DockerCli.CurrentContext()
 	DockerHost = DockerCli.DockerEndpoint().Host
