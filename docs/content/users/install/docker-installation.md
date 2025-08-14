@@ -180,6 +180,8 @@ This error indicates that either Docker is not installed or the Docker daemon is
 
 > `error during connect: Get "http://host:2375/v1.51/version": dial tcp: lookup host on 127.0.0.53:53: server misbehaving`
 
+or
+
 > `unable to resolve docker endpoint: context "docker-desktop": context not found`
 
 These errors indicate Docker context issues:
