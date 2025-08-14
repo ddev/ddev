@@ -1866,7 +1866,7 @@ func TestDdevExportDB(t *testing.T) {
 		f, err := os.Stat("tmp/users1.sql")
 		assert.NoError(err)
 		assert.Greater(f.Size(), int64(2000))
-		l, err := readLastLine("tmp/users1.sql")
+		l, err := readFileTail("tmp/users1.sql", 120)
 		assert.NoError(err)
 		assert.Contains(l, "ump complete")
 
@@ -2225,20 +2225,27 @@ func TestWebserverPostgresDBClient(t *testing.T) {
 }
 
 // readLastLine opens the fileName listed and returns the last
-// 80 bytes of the file
-func readLastLine(fileName string) (string, error) {
+// maxBytes bytes of the file
+func readFileTail(fileName string, maxBytes int64) (string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	buf := make([]byte, 80)
 	stat, err := os.Stat(fileName)
 	if err != nil {
 		return "", err
 	}
-	start := stat.Size() - 80
+
+	// Read the last maxBytes or the entire file if it's smaller
+	bytesToRead := maxBytes
+	if stat.Size() < maxBytes {
+		bytesToRead = stat.Size()
+	}
+
+	buf := make([]byte, bytesToRead)
+	start := stat.Size() - bytesToRead
 	_, err = file.ReadAt(buf, start)
 	if err != nil {
 		return "", err
