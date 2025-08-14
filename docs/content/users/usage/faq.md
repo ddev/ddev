@@ -157,11 +157,11 @@ Docker’s normal mounting can be slow, especially on macOS. See the [Performanc
 
 ### How can I troubleshoot what’s going wrong?
 
-See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation), [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
+See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#troubleshooting-docker), [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
 
 ### How can I check that Docker is working?
 
-See the [troubleshooting section](../install/docker-installation.md#troubleshooting) on the Docker Installation page.
+See the [troubleshooting section](../install/docker-installation.md#troubleshooting-docker) on the Docker Installation page.
 
 ### Why do I get a 403 or 404 on my project after `ddev launch`?
 
