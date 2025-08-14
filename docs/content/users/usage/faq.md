@@ -153,11 +153,17 @@ For example, if you use Lando for one project, do a `lando poweroff` before usin
 
 ### How can I get the best performance?
 
-Docker’s normal mounting can be slow, especially on macOS. See the [Performance](../install/performance.md) section for speed-up options including Mutagen and NFS mounting.
+Docker’s normal mounting can be slow on macOS and traditional Windows. DDEV provides its Mutagen feature to work around this, giving fantastic webserving performance. See the [Performance](../install/performance.md) section for how Mutagen works. It's enabled by default on macOS and Windows.
 
 ### How can I troubleshoot what’s going wrong?
 
-See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#troubleshooting-docker), [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
+See the these sections:
+
+* [General troubleshooting](troubleshooting.md)
+* [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
+* [Docker troubleshooting](../install/docker-installation.md#troubleshooting-docker)
+* [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing)
+* [Mutagen troubleshooting](../install/performance.md)
 
 ### How can I check that Docker is working?
 
