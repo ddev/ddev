@@ -98,6 +98,7 @@ function cleanup {
 
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 
+mkdir -p .ddev/web-build
 printf "RUN timeout 30 apt-get update || true\nRUN curl --connect-timeout 10 --max-time 20 --fail -I https://www.google.com || true\n" > .ddev/web-build/Dockerfile.test
 
 set +eu
