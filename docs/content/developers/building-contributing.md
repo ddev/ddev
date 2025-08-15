@@ -269,6 +269,27 @@ make clean
 make staticrequired
 ```
 
+### Development Tools Setup
+
+For documentation development and testing, install the required tools once using:
+
+```bash
+scripts/install-dev-tools.sh
+```
+
+This installs `mkdocs`, `pyspelling`, `markdownlint`, `textlint`, `linkspector`, and `aspell` to `~/.ddev-dev-tools/`.
+
+The project's `.envrc` automatically adds these tools to your PATH when you're in the DDEV directory. If you want the tools available globally, add this to your shell profile (`.bashrc`, `.bash_profile`, or `.zshrc`):
+
+```bash
+export PATH="$HOME/.ddev-dev-tools/python/bin:$HOME/.ddev-dev-tools/node/bin:$PATH"
+```
+
+**Link Checking**: For faster local link checking, use:
+
+* `make linkspector-changed` - Check only files modified since main branch
+* `make linkspector-dir DIR=docs/content/users/` - Check specific directory
+
 ## Testing
 
 Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name. This is also easy to do in Visual Studio Code.

@@ -34,11 +34,23 @@ Now that you’ve got a local copy, you can make your changes.
 | MkDocs configuration | `./mkdocs.yml`                                                          |
 | Front end            | `./docs/content/assets/extra.css` <br> `./docs/content/assets/extra.js` |
 
-## Helpers for `mkdocs`, `linkspector`, `markdownlint`
+## Development Tools Installation
 
-The docs below give helpful instructions about installing `mkdocs` and `markdownlint`, but these can be done using `direnv` as well.
+For documentation development and testing, install the required tools once using:
 
-DDEV provides a project-level `.envrc` which with `direnv` can install these for the project.
+```bash
+scripts/install-dev-tools.sh
+```
+
+This installs `mkdocs`, `pyspelling`, `markdownlint`, `textlint`, `linkspector`, and `aspell` to `~/.ddev-dev-tools/`.
+
+The project's `.envrc` automatically adds these tools to your PATH when you're in the DDEV directory. If you want the tools available globally, add this to your shell profile (`.bashrc`, `.bash_profile`, or `.zshrc`):
+
+```bash
+export PATH="$HOME/.ddev-dev-tools/python/bin:$HOME/.ddev-dev-tools/node/bin:$PATH"
+```
+
+Alternatively, you can use the project-level `.envrc` installation method:
 
 1. Install `direnv` with `brew install direnv` or `sudo apt-get update && sudo apt-get install -y direnv` or whatever technique is appropriate for your system.
 2. Hook `direnv` into your shell, see [docs](https://direnv.net/docs/hook.html).
@@ -50,6 +62,8 @@ strict_env = true
 [whitelist]
 exact = ["~/workspace/ddev/.envrc"]
 ```
+
+**Recommended**: Use the unified installation script for better performance and fewer per-project installations.
 
 ## Preview Changes
 
@@ -98,12 +112,22 @@ Spelling check passed :)
 If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/ddev/ddev/blob/main/.spellcheckwordlist.txt).
 
 !!!warning "`pyspelling` and `aspell` required!"
-    It’s probably best to install packages locally before attempting to run `make pyspelling`:
+    It's probably best to install packages locally before attempting to run `make pyspelling`:
 
     ```
     sudo -H pip3 install pyspelling pymdown-extensions
     sudo apt-get install aspell
     ```
+
+## Check for Link Errors
+
+Check external links using linkspector. For faster local checking, use targeted options:
+
+- **Check changed files only**: `make linkspector-changed` (only files modified since main branch)
+- **Check specific directory**: `make linkspector-dir DIR=docs/content/users/`
+- **Check everything**: `make linkspector` (slower, matches CI behavior)
+
+These focused options make link checking practical for local development workflows.
 
 ## Publish Changes
 
