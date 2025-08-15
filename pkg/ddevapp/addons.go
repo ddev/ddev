@@ -229,6 +229,9 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 	// Store the original action for validation
 	originalAction := action
 
+	// Make sure the standard ddev_default network is available
+	dockerutil.EnsureDdevNetwork()
+
 	// Validate included/required files on the host (since we need to read from filesystem)
 	err := validatePHPIncludesAndRequires(action, app, image)
 	if err != nil {
