@@ -1015,12 +1015,8 @@ func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hos
 	ctx, client := GetDockerClient()
 
 	image := config.Image
-
 	if image == "" {
 		return "", "", fmt.Errorf("RunSimpleContainerExtended requires config.Image to be set")
-	}
-	if config.Cmd == nil {
-		return "", "", fmt.Errorf("RunSimpleContainerExtended requires config.Cmd to be set")
 	}
 
 	// Ensure image string includes a tag
