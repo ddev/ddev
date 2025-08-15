@@ -333,7 +333,6 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Warning("Unable to clean up temporary configuration files: %v", err)
 		}
 
-		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this add-on at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
