@@ -63,7 +63,7 @@ header "installed DDEV add-ons"
 
 ddev add-on list --installed
 
-if grep -qEi "(microsoft|wsl)" /proc/version; then
+if [ -f /proc/version ] && grep -qEi "(microsoft|wsl)" /proc/version; then
   header "WSL2 information"
 
   if command -v wslinfo >/dev/null ; then
@@ -85,7 +85,7 @@ fi
 
 PROJECT_DIR=../${PROJECT_NAME}
 header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
-fi
+
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
