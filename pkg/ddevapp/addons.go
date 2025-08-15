@@ -282,7 +282,7 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 			dockerutil.NetName: {},
 		},
 		Labels: composeTypes.Labels{
-			"com.ddev.site-name": app.Name,
+			"com.ddev.site-name": app.Name + "-php-action",
 			"com.ddev.approot":   app.AppRoot,
 		},
 	}
@@ -324,7 +324,7 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 		External: true,
 	}
 	phpProject.Networks["default"] = composeTypes.NetworkConfig{
-		Name: app.GetDefaultNetworkName(),
+		Name: "ddev-php-action-" + app.Name + "_default",
 	}
 
 	// Execute PHP action using docker-compose run
@@ -332,6 +332,7 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeYaml: phpProject,
 		Action:      []string{"run", "--rm", "--no-deps", serviceName},
+		ProjectName: "ddev-php-action-" + app.Name,
 	})
 
 	if err != nil {
@@ -536,6 +537,7 @@ fi
 	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeYaml: phpProject,
 		Action:      []string{"run", "--rm", "--no-deps", serviceName},
+		ProjectName: "ddev-php-validate-" + app.Name,
 	})
 
 	if err != nil {
