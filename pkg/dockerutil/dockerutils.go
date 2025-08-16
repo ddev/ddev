@@ -36,6 +36,7 @@ import (
 	dockerCliCommand "github.com/docker/cli/cli/command"
 	dockerCliFlags "github.com/docker/cli/cli/flags"
 	dockerCliVersion "github.com/docker/cli/cli/version"
+	dockerTypes "github.com/docker/docker/api/types"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
@@ -46,6 +47,7 @@ import (
 	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
+	"golang.org/x/term"
 )
 
 // NetName provides the default network name for ddev.
@@ -991,7 +993,31 @@ func GetDockerIP() (string, error) {
 // https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 // Returns containerID, output, error
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings nat.PortMap, healthConfig *dockerContainer.HealthConfig) (containerID string, output string, returnErr error) {
+	config := &dockerContainer.Config{
+		Image:       image,
+		Cmd:         cmd,
+		Env:         env,
+		User:        uid,
+		Labels:      labels,
+		Entrypoint:  entrypoint,
+		Healthcheck: healthConfig,
+	}
+	hostConfig := &dockerContainer.HostConfig{
+		Binds:        binds,
+		PortBindings: portBindings,
+	}
+	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, detach)
+}
+
+// RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
+// Accepts any config and hostConfig. If stdin is provided, enables interactive mode with stdin forwarding.
+func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hostConfig *dockerContainer.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
 	ctx, client := GetDockerClient()
+
+	image := config.Image
+	if image == "" {
+		return "", "", fmt.Errorf("RunSimpleContainerExtended requires config.Image to be set")
+	}
 
 	// Ensure image string includes a tag
 	imageChunks := strings.Split(image, ":")
@@ -1017,30 +1043,30 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		}
 	}
 
-	containerConfig := &dockerContainer.Config{
-		Image:        image,
-		Cmd:          cmd,
-		Env:          env,
-		User:         uid,
-		Labels:       labels,
-		Entrypoint:   entrypoint,
-		AttachStderr: true,
-		AttachStdout: true,
-		Healthcheck:  healthConfig,
+	config.AttachStderr = true
+	config.AttachStdout = true
+
+	if config.AttachStdin {
+		config.AttachStdin = true
+		config.OpenStdin = true
+		config.Tty = term.IsTerminal(int(os.Stdin.Fd()))
 	}
 
-	containerHostConfig := &dockerContainer.HostConfig{
-		Binds:        binds,
-		PortBindings: portBindings,
+	if config.Labels == nil {
+		config.Labels = make(map[string]string)
+	}
+	// Assign a default label so this container can be removed with 'ddev poweroff'
+	if _, exists := config.Labels["com.ddev.site-name"]; !exists {
+		config.Labels["com.ddev.site-name"] = ""
 	}
 
-	if runtime.GOOS == "linux" && !IsDockerDesktop() {
-		containerHostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
+	if runtime.GOOS == "linux" && !IsDockerDesktop() && !slices.Contains(hostConfig.ExtraHosts, "host.docker.internal:host-gateway") {
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:host-gateway")
 	}
 
-	container, err := client.ContainerCreate(ctx, containerConfig, containerHostConfig, nil, nil, name)
+	container, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create/start Docker container %v (%v, %v): %v", name, containerConfig, containerHostConfig, err)
+		return "", "", fmt.Errorf("failed to create/start Docker container %v (%v, %v): %v", name, config, hostConfig, err)
 	}
 
 	if removeContainerAfterRun {
@@ -1053,19 +1079,77 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		return container.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 
+	var hijackedResp *dockerTypes.HijackedResponse
+	var outputDone chan struct{}
+
+	if config.AttachStdin {
+		// Interactive mode with stdin - use attach for real-time I/O
+		attachOptions := dockerContainer.AttachOptions{
+			Stream: true,
+			Stdin:  true,
+			Stdout: true,
+			Stderr: true,
+		}
+
+		resp, err := client.ContainerAttach(ctx, container.ID, attachOptions)
+		if err != nil {
+			return container.ID, "", fmt.Errorf("failed to attach to container: %v", err)
+		}
+		hijackedResp = &resp
+		defer hijackedResp.Close()
+
+		// Initialize synchronization channel for output completion
+		outputDone = make(chan struct{})
+
+		// Forward output from container to stdout
+		go func() {
+			_, _ = io.Copy(os.Stdout, resp.Reader)
+			if outputDone != nil {
+				close(outputDone)
+			}
+		}()
+
+		// Forward input from stdin to container
+		go func() {
+			_, _ = io.Copy(resp.Conn, os.Stdin)
+		}()
+	}
+
 	exitCode := 0
+
 	if !detach {
-		waitChan, errChan := client.ContainerWait(ctx, container.ID, "")
+		waitChan, errChan := client.ContainerWait(ctx, container.ID, dockerContainer.WaitConditionNotRunning)
 		select {
 		case status := <-waitChan:
 			exitCode = int(status.StatusCode)
 		case err := <-errChan:
 			return container.ID, "", fmt.Errorf("failed to ContainerWait: %v", err)
 		}
+
+		// For interactive containers, wait for I/O forwarding to complete
+		if config.AttachStdin {
+			// Close hijacked connection to signal EOF to goroutines
+			hijackedResp.Close()
+
+			// Wait for output forwarding to complete (input may still be running)
+			if outputDone != nil {
+				<-outputDone
+			}
+		}
 	}
 
-	// Get logs so we can report them if exitCode failed
-	var stdout bytes.Buffer
+	var exitErr error
+
+	if exitCode != 0 {
+		exitErr = fmt.Errorf("container run failed with exit code %d", exitCode)
+	}
+
+	// Don't capture logs if we're attaching stdin, as it will block stdout
+	if config.AttachStdin {
+		return container.ID, "", exitErr
+	}
+
+	// Get logs so we can report them
 	options := dockerContainer.LogsOptions{ShowStdout: true, ShowStderr: true}
 	rc, err := client.ContainerLogs(ctx, container.ID, options)
 	if err != nil {
@@ -1073,17 +1157,13 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	}
 	defer rc.Close()
 
+	var stdout bytes.Buffer
 	_, err = stdcopy.StdCopy(&stdout, &stdout, rc)
 	if err != nil {
-		util.Warning("failed to copy container logs: %v", err)
+		return container.ID, "", fmt.Errorf("failed to copy container logs: %v", err)
 	}
 
-	// This is the exitCode from the cli.ContainerWait()
-	if exitCode != 0 {
-		return container.ID, stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
-	}
-
-	return container.ID, stdout.String(), nil
+	return container.ID, stdout.String(), exitErr
 }
 
 // RemoveContainer stops and removes a container
