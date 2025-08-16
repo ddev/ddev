@@ -144,6 +144,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     * `ddev mutagen reset` and `ddev start` to get the new configuration.
 
+    <a name="mutagen-troubleshooting"></a>
     ### Troubleshooting Mutagen Sync Issues
 
     * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --performance-mode=none && ddev restart`.
