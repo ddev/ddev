@@ -82,6 +82,7 @@ type ComposeCmdOpts struct {
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
 	Timeout      time.Duration
+	ProjectName  string // Optional project name to set via -p flag
 }
 
 // NoHealthCheck is a HealthConfig that disables any existing healthcheck when
@@ -679,6 +680,10 @@ func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, 
 		return err
 	}
 
+	if cmd.ProjectName != "" {
+		arg = append(arg, "-p", cmd.ProjectName)
+	}
+
 	if cmd.ComposeYaml != nil {
 		// Read from stdin
 		arg = append(arg, "-f", "-")
@@ -722,6 +727,10 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
 		return "", "", err
+	}
+
+	if cmd.ProjectName != "" {
+		arg = append(arg, "-p", cmd.ProjectName)
 	}
 
 	if cmd.ComposeYaml != nil {

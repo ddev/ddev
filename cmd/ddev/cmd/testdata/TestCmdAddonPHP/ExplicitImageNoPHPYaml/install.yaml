@@ -1,0 +1,98 @@
+name: explicit-image-no-php-yaml
+image: php:8.3
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Test configuration file access and data validation
+    
+    // Test project configuration access
+    $projectConfigPath = '.ddev-config/project_config.yaml';
+    if (!file_exists($projectConfigPath)) {
+        echo "PHP: ERROR - Project config file not found at $projectConfigPath\n";
+        exit(1);
+    }
+    
+    // Test global configuration access
+    $globalConfigPath = '.ddev-config/global_config.yaml';
+    if (!file_exists($globalConfigPath)) {
+        echo "PHP: ERROR - Global config file not found at $globalConfigPath\n";
+        exit(1);
+    }
+    
+    // Parse and validate project configuration
+    $projectConfig = yaml_parse_file($projectConfigPath);
+    $globalConfig = yaml_parse_file($globalConfigPath);
+    
+    if (!is_array($projectConfig)) {
+        echo "PHP: ERROR - Project config is not valid YAML\n";
+        exit(1);
+    }
+    
+    if (!is_array($globalConfig)) {
+        echo "PHP: ERROR - Global config is not valid YAML\n";
+        exit(1);
+    }
+    
+    // Extract and validate key configuration values
+    $validations = [];
+    
+    // Project name should match environment variable
+    if (isset($projectConfig['name'])) {
+        $envProjectName = $_ENV['DDEV_PROJECT'] ?? '';
+        if ($projectConfig['name'] === $envProjectName) {
+            $validations[] = "project_name_matches_env";
+            echo "PHP: ✓ Project name matches environment: " . $projectConfig['name'] . "\n";
+        } else {
+            echo "PHP: ERROR - Project name mismatch: config='" . $projectConfig['name'] . "' env='" . $envProjectName . "'\n";
+            exit(1);
+        }
+    }
+    
+    // Project type should match environment variable  
+    if (isset($projectConfig['type'])) {
+        $envProjectType = $_ENV['DDEV_PROJECT_TYPE'] ?? '';
+        if ($projectConfig['type'] === $envProjectType) {
+            $validations[] = "project_type_matches_env";
+            echo "PHP: ✓ Project type matches environment: " . $projectConfig['type'] . "\n";
+        } else {
+            echo "PHP: ERROR - Project type mismatch: config='" . $projectConfig['type'] . "' env='" . $envProjectType . "'\n";
+            exit(1);
+        }
+    }
+    
+    // PHP version should match environment variable
+    if (isset($projectConfig['phpversion'])) {
+        $envPHPVersion = $_ENV['DDEV_PHP_VERSION'] ?? '';
+        if ($projectConfig['phpversion'] === $envPHPVersion) {
+            $validations[] = "php_version_matches_env";
+            echo "PHP: ✓ PHP version matches environment: " . $projectConfig['phpversion'] . "\n";
+        } else {
+            echo "PHP: ERROR - PHP version mismatch: config='" . $projectConfig['phpversion'] . "' env='" . $envPHPVersion . "'\n";
+            exit(1);
+        }
+    }
+    
+    // Webserver type should match environment variable
+    if (isset($projectConfig['webservertype'])) {
+        $envWebserverType = $_ENV['DDEV_WEBSERVER_TYPE'] ?? '';
+        if ($projectConfig['webservertype'] === $envWebserverType) {
+            $validations[] = "webserver_type_matches_env";
+            echo "PHP: ✓ Webserver type matches environment: " . $projectConfig['webservertype'] . "\n";
+        } else {
+            echo "PHP: ERROR - Webserver type mismatch: config='" . $projectConfig['webservertype'] . "' env='" . $envWebserverType . "'\n";
+            exit(1);
+        }
+    }
+    
+    // Validate global configuration has expected structure
+    if (isset($globalConfig['instrumentation_opt_in']) !== false) {
+        $validations[] = "global_config_has_instrumentation";
+        echo "PHP: ✓ Global config contains instrumentation setting\n";
+    }
+    
+    // Output validation summary
+    $validationCount = count($validations);
+    echo "PHP: Successfully validated $validationCount configuration properties\n";
+    echo "PHP: Validations: " . implode(', ', $validations) . "\n";
+    echo "PHP: Configuration data validation PASSED\n";

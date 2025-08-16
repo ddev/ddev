@@ -1,0 +1,34 @@
+#ddev-generated
+name: mixed-test
+
+
+pre_install_actions:
+  - |
+    #ddev-description: Start mixed addon installation
+    echo 'Bash: Starting mixed addon installation'
+  - |
+    <?php
+    #ddev-description: Execute first PHP action
+    echo "PHP: Mixed addon PHP action\n";
+    ?>
+  - |
+    #ddev-description: Continue with bash processing
+    echo 'Bash: Continuing after PHP'
+  - |
+    <?php
+    #ddev-description: Read project configuration
+    $configPath = 'config.yaml';
+    $projectName = 'unknown';
+    if (file_exists($configPath)) {
+        $configContent = file_get_contents($configPath);
+        if (preg_match('/^name:\s*(.+)$/m', $configContent, $matches)) {
+            $projectName = trim($matches[1]);
+        }
+    }
+    echo "PHP: Project name is $projectName\n";
+    ?>
+  - |
+    #ddev-description: Complete mixed addon installation
+    echo 'Bash: Final bash action'
+
+project_files: []

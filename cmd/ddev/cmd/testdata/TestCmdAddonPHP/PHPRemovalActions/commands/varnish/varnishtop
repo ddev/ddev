@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+## #ddev-generated
+## Description: Display Varnish log entry ranking
+## Usage: varnishtop [flags] [args]
+## Example: "ddev varnishtop"
+
+# This example runs inside the varnish container.
+# Note that this requires that /mnt/ddev_config be mounted
+# into the varnish container.
+
+varnishtop "$@"

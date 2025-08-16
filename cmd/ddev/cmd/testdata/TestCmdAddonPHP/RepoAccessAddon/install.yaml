@@ -1,0 +1,66 @@
+name: repo-access-test
+
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Test repository access capabilities
+    
+    // Test reading project root
+    $projectFiles = scandir('/var/www/html');
+    $foundFiles = array_filter($projectFiles, function($file) {
+        return !in_array($file, ['.', '..']) && is_file('/var/www/html/' . $file);
+    });
+    
+    echo "PHP: Found " . count($foundFiles) . " files in project root\n";
+    
+    // Create a test file in project root
+    $testContent = "# Test file created by PHP addon\nCreated at: " . date('Y-m-d H:i:s') . "\n";
+    file_put_contents('/var/www/html/php-addon-test.txt', $testContent);
+    echo "PHP: Created test file in project root\n";
+    
+    // Test creating a directory and file (like ddev-redis does)
+    $settingsDir = '/var/www/html/web/sites/default';
+    if (!is_dir($settingsDir)) {
+        mkdir($settingsDir, 0755, true);
+        echo "PHP: Created settings directory\n";
+    }
+    
+    $settingsFile = $settingsDir . '/addon-settings.php';
+    $settingsContent = "<?php\n// Settings file created by PHP addon\n\$addon_config = [\n    'created_at' => '" . date('c') . "',\n    'type' => 'repo-access-test'\n];\n";
+    file_put_contents($settingsFile, $settingsContent);
+    echo "PHP: Created settings file in web/sites/default/\n";
+    ?>
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description: Verify repository file access
+    
+    // Verify files were created and are accessible
+    $testFile = '/var/www/html/php-addon-test.txt';
+    $settingsFile = '/var/www/html/web/sites/default/addon-settings.php';
+    
+    if (file_exists($testFile)) {
+        echo "PHP: Test file exists and contains: " . strlen(file_get_contents($testFile)) . " bytes\n";
+    } else {
+        echo "PHP: Error - test file not found!\n";
+        exit(1);
+    }
+    
+    if (file_exists($settingsFile)) {
+        echo "PHP: Settings file exists and is readable\n";
+        // Verify it's valid PHP by including it
+        include $settingsFile;
+        if (isset($addon_config) && is_array($addon_config)) {
+            echo "PHP: Settings file contains valid configuration\n";
+        }
+    } else {
+        echo "PHP: Error - settings file not found!\n";
+        exit(1);
+    }
+    
+    echo "PHP: Repository access test completed successfully\n";
+    ?>
+
+project_files: []

@@ -1,0 +1,24 @@
+#ddev-generated
+name: custom-image-test
+image: php:8.1-cli-alpine
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Testing custom PHP image
+    echo "PHP: Running on " . PHP_VERSION . "\n";
+    echo "PHP: OS info: " . php_uname('s') . " " . php_uname('r') . "\n";
+    
+    // Test that custom image is working
+    $configPath = 'config.yaml';
+    $projectName = 'unknown';
+    if (file_exists($configPath)) {
+        $configContent = file_get_contents($configPath);
+        if (preg_match('/^name:\s*(.+)$/m', $configContent, $matches)) {
+            $projectName = trim($matches[1]);
+        }
+    }
+    echo "PHP: Custom image working for project: $projectName\n";
+    ?>
+
+project_files:

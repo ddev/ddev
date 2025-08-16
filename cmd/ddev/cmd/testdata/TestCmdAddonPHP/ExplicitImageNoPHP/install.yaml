@@ -1,0 +1,9 @@
+name: explicit-image-no-php
+image: ddev/ddev-utilities:latest
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Initialize basic PHP addon
+    // Access config.yaml directly from the .ddev directory (relative path)
+    phpinfo();
+
