@@ -329,12 +329,19 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 		var exposedPrivatePorts []int
 		exposedPublicPorts := make(map[int]int)
+
+		// Get all exposed ports from container config (works regardless of Docker Desktop changes)
+		for portSpec := range c.Config.ExposedPorts {
+			port := portSpec.Int()
+			if !slices.Contains(exposedPrivatePorts, port) {
+				exposedPrivatePorts = append(exposedPrivatePorts, port)
+			}
+		}
+
+		// Get public port mappings from container summary
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
 				exposedPublicPorts[int(pv.PublicPort)] = int(pv.PrivatePort)
-			}
-			if !slices.Contains(exposedPrivatePorts, int(pv.PrivatePort)) {
-				exposedPrivatePorts = append(exposedPrivatePorts, int(pv.PrivatePort))
 			}
 		}
 
