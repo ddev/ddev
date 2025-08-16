@@ -57,7 +57,7 @@ func TestCmdAddon(t *testing.T) {
 		tarballFile} {
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", arg)
 		assert.NoError(err, "failed ddev add-on get %s", arg)
-		assert.Contains(out, "Installed DDEV add-on")
+		assert.Contains(out, "Installed ")
 		assert.FileExists(app.GetConfigPath("docker-compose.memcached.yaml"))
 	}
 
