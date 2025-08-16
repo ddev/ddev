@@ -28,6 +28,8 @@ import (
 
 const upsunTestSiteID = "5dxxbe2vazzdo"
 const upsunPullTestSiteEnvironment = "pull"
+const upsunPrimaryRelationship = "mariadb"
+const upsunAPP = "d10simple"
 const upsunPushTestSiteEnvironment = "push"
 
 const upsunPullSiteURL = "https://pull-yx2voha-5dxxbe2vazzdo.ca-1.platformsh.site/"
@@ -86,9 +88,7 @@ func TestUpsunPull(t *testing.T) {
 	provider, err := app.GetProvider("upsun")
 	require.NoError(t, err)
 
-	provider.EnvironmentVariables["PLATFORM_PROJECT"] = upsunTestSiteID
-	provider.EnvironmentVariables["PLATFORM_ENVIRONMENT"] = upsunPullTestSiteEnvironment
-	provider.EnvironmentVariables["UPSUN_CLI_TOKEN"] = token
+	app.WebEnvironment = append(app.WebEnvironment, "PLATFORM_PROJECT="+upsunTestSiteID, "PLATFORM_ENVIRONMENT="+upsunPullTestSiteEnvironment, "PLATFORM_PRIMARY_RELATIONSHIP="+upsunPrimaryRelationship, "PLATFORM_APP="+upsunAPP, "UPSUN_CLI_TOKEN="+token)
 
 	err = app.Start()
 	require.NoError(t, err)
@@ -148,9 +148,7 @@ func TestUpsunPush(t *testing.T) {
 	provider, err := app.GetProvider("upsun")
 	require.NoError(t, err)
 
-	provider.EnvironmentVariables["PLATFORM_PROJECT"] = upsunTestSiteID
-	provider.EnvironmentVariables["PLATFORM_ENVIRONMENT"] = upsunPushTestSiteEnvironment
-	provider.EnvironmentVariables["UPSUN_CLI_TOKEN"] = token
+	app.WebEnvironment = append(app.WebEnvironment, "PLATFORM_PROJECT="+upsunTestSiteID, "PLATFORM_ENVIRONMENT="+upsunPushTestSiteEnvironment, "PLATFORM_PRIMARY_RELATIONSHIP="+upsunPrimaryRelationship, "PLATFORM_APP="+upsunAPP, "UPSUN_CLI_TOKEN="+token)
 
 	err = app.Start()
 	require.NoError(t, err)
@@ -171,17 +169,17 @@ func TestUpsunPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | UPSUN_CLI_TOKEN=%s upsun db:sql --project="%s" --environment="%s"`, t.Name(), tval, token, upsunTestSiteID, upsunPushTestSiteEnvironment),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | UPSUN_CLI_TOKEN=%s upsun db:sql --project="%s" --environment="%s" --app="%s" --relationship="%s"`, t.Name(), tval, token, upsunTestSiteID, upsunPushTestSiteEnvironment, upsunAPP, upsunPrimaryRelationship),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
 	tmpRsyncDir := filepath.Join("/tmp", t.Name()+util.RandString(5))
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`UPSUN_CLI_TOKEN=%s upsun mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, token, upsunTestSiteID, upsunPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
+	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf(`UPSUN_CLI_TOKEN=%s upsun mount:download --yes --quiet --project="%s" --environment="%s" --app=%s --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, token, upsunTestSiteID, upsunPushTestSiteEnvironment, upsunAPP, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "output='%s', stderr='%s'", out, stderr)
 	assert.Contains(out, tval)
 
 	err = app.MutagenSyncFlush()
