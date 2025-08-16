@@ -256,7 +256,7 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 
 	cmd := []string{"sh", "-c", shellScript}
 
-	// Bind mount the project root into the container
+	// Bind mount the .ddev directory and the project root into the container
 	binds := []string{fmt.Sprintf("%s:/var/www/html", app.AppRoot)}
 
 	// Build environment variables array with standard DDEV variables
@@ -351,6 +351,11 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 			return fmt.Errorf("PHP script failed: %v - Output: %s", err, combinedOutput)
 		}
 		return fmt.Errorf("PHP script failed: %v", err)
+	}
+
+	// Display captured output
+	if stdout != "" {
+		util.Success(stdout)
 	}
 
 	// Show description on success
