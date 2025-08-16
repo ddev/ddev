@@ -47,9 +47,12 @@ cat > /tmp/original-script.php << 'DDEV_PHP_ORIGINAL_EOF'
 DDEV_PHP_ORIGINAL_EOF
 
 # Validate original PHP syntax - exit early if invalid
-php -l /tmp/original-script.php
+# Suppress success output but preserve error output
+php -l /tmp/original-script.php > /dev/null
 original_syntax_check_exit_code=$?
 if [ $original_syntax_check_exit_code -ne 0 ]; then
+    # Re-run to show error output to user
+    php -l /tmp/original-script.php
     echo "PHP syntax validation failed on original action"
     exit $original_syntax_check_exit_code
 fi
@@ -513,10 +516,12 @@ cat > /tmp/validate-script.php << 'DDEV_PHP_VALIDATE_EOF'
 %s
 DDEV_PHP_VALIDATE_EOF
 
-# Run PHP syntax check - this will output error details and return non-zero exit code on failure
-php -l /tmp/validate-script.php
+# Run PHP syntax check - suppress success output but preserve error output
+php -l /tmp/validate-script.php > /dev/null
 exit_code=$?
 if [ $exit_code -ne 0 ]; then
+    # Re-run to show error output to user
+    php -l /tmp/validate-script.php
     echo "PHP syntax validation failed"
     exit $exit_code
 fi
