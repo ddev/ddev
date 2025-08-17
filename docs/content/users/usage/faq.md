@@ -163,7 +163,7 @@ See the these sections:
 * [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
 * [Docker troubleshooting](../install/docker-installation.md#troubleshooting-docker)
 * [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing)
-* [Mutagen troubleshooting](../install/performance.md)
+* [Mutagen troubleshooting](../install/performance.md#mutagen-troubleshooting)
 
 ### How can I check that Docker is working?
 
