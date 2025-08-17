@@ -166,7 +166,6 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 
 - [Adding Self-signed Registry Certs to Docker & Docker for Mac](https://blog.container-solutions.com/adding-self-signed-registry-certs-docker-mac)
 - [Docker Docs: How Do I Add TLS Certificates](https://docs.docker.com/desktop/troubleshoot-and-support/faqs/macfaqs/#how-do-i-add-tls-certificates)
-- [Darren Oh: Using Colima with an SSL Inspector](https://darren.oh.name/node/81)
 
 ### VPN Trust Summary by Provider
 

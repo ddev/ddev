@@ -121,13 +121,7 @@ If you’ve added a correctly-spelled word that gets flagged, like “Symfony”
 
 ## Check for Link Errors
 
-Check external links using linkspector. For faster local checking, use targeted options:
-
-- **Check changed files only**: `make linkspector-changed` (only files modified since main branch)
-- **Check specific directory**: `make linkspector-dir DIR=docs/content/users/`
-- **Check everything**: `make linkspector` (slower, matches CI behavior)
-
-These focused options make link checking practical for local development workflows.
+Check external links using `make linkspector`.
 
 ## Publish Changes
 

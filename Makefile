@@ -207,34 +207,6 @@ linkspector:
 		echo "Not running linkspector because it's not installed (see .envrc file)"; \
 	fi
 
-# Check links only in files changed since main branch (faster for local development)
-linkspector-changed:
-	@echo "linkspector (changed files only): "
-	@if command -v linkspector >/dev/null 2>&1; then \
-		CHANGED_FILES=$$(git diff --name-only main...HEAD -- '*.md' | tr '\n' ' '); \
-		if [ -n "$$CHANGED_FILES" ]; then \
-			echo "Checking: $$CHANGED_FILES"; \
-			linkspector check $$CHANGED_FILES; \
-		else \
-			echo "No markdown files changed since main branch"; \
-		fi; \
-	else \
-		echo "Not running linkspector because it's not installed (see scripts/install-dev-tools.sh)"; \
-	fi
-
-# Check links in a specific directory (usage: make linkspector-dir DIR=docs/content/users/)
-linkspector-dir:
-	@echo "linkspector (directory): "
-	@if [ -z "$(DIR)" ]; then \
-		echo "Usage: make linkspector-dir DIR=docs/content/users/"; \
-		exit 1; \
-	fi
-	@if command -v linkspector >/dev/null 2>&1; then \
-		echo "Checking directory: $(DIR)"; \
-		linkspector check $(DIR); \
-	else \
-		echo "Not running linkspector because it's not installed (see scripts/install-dev-tools.sh)"; \
-	fi
 
 # Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requires aspell, `sudo apt-get install aspell"
 pyspelling:
