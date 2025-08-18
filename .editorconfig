@@ -21,6 +21,10 @@ indent_style = tab
 [Makefile]
 indent_style = tab
 
+# Script files
+[*.sh]
+indent_size = 2
+
 # NSIS files
 [*.{nsi,nsh}]
 end_of_line = crlf

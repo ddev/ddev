@@ -117,7 +117,9 @@ More exotic template-based replacements can be seen in an advanced test [example
 Go templating resources:
 
 * [Official Go template docs](https://pkg.go.dev/text/template)
+<!-- textlint-disable terminology -->
 * [Lots of intro to Golang templates](https://www.google.com/search?q=golang+templates+intro&oq=golang+templates+intro&aqs=chrome..69i57j0i546l4.3161j0j4&sourceid=chrome&ie=UTF-8)
+<!-- textlint-enable terminology -->
 * [masterminds/sprig](http://masterminds.github.io/sprig/) extra functions.
 
 ## Additional services in ddev-contrib

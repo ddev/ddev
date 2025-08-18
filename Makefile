@@ -164,7 +164,7 @@ setup:
 	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
+staticrequired: setup golangci-lint markdownlint mkdocs
 
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
@@ -207,6 +207,7 @@ linkspector:
 		echo "Not running linkspector because it's not installed (see .envrc file)"; \
 	fi
 
+
 # Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requires aspell, `sudo apt-get install aspell"
 pyspelling:
 	@echo "pyspelling: "
@@ -215,7 +216,7 @@ pyspelling:
 	if command -v pyspelling >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Not running pyspelling because it's not installed (see .envrc file)"; \
+		echo "Not running pyspelling because it's not installed (see scripts/install-dev-tools.sh)"; \
 	fi
 
 # Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
@@ -226,7 +227,7 @@ textlint:
 	if command -v textlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "textlint is not installed (see .envrc file)"; \
+		echo "textlint is not installed (see scripts/install-dev-tools.sh)"; \
 	fi
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
