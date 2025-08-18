@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Things might go wrong! In addition to this page, consider checking [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the DDEV issue queue](https://github.com/ddev/ddev/issues) and [other support options](../support.md), as well as [Docker troubleshooting suggestions](../install/docker-installation.md#troubleshooting-docker).
+Things might go wrong! In addition to this page, consider checking [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the DDEV issue queue](https://github.com/ddev/ddev/issues) and [other support options](../support.md), as well as [Docker troubleshooting suggestions](../install/docker-installation.md#troubleshooting-docker) and [Mutagen troubleshooting suggestions](../install/performance.md#mutagen-troubleshooting).
 
 ## General Troubleshooting Strategies
 
