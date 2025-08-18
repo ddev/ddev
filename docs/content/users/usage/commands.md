@@ -872,13 +872,24 @@ ddev export-db my-project --gzip=false --file=/tmp/my-project.sql
 
 ## `heidisql`
 
-Open [HeidiSQL](https://www.heidisql.com/) with the current project’s database (global shell host container command). This command is only available if `Heidisql.exe` is installed as `C:\Program Files\HeidiSQL\Heidisql.exe`.
+Open [HeidiSQL](https://www.heidisql.com/) with the current project's database (global shell host container command). This command is available on Windows, WSL2, and Linux with native or Wine-based HeidiSQL installations.
+
+Requirements by platform:
+
+* **Windows**: HeidiSQL installed at `C:\Program Files\HeidiSQL\Heidisql.exe`  
+* **WSL2**: HeidiSQL accessible via `/mnt/c/Program Files/HeidiSQL/heidisql.exe`
+* **Linux**: HeidiSQL available at `/usr/bin/heidisql`
+    * For PostgreSQL: requires `libpq5` package
+    * For MySQL/MariaDB: requires `libmariadb3` package
 
 Example:
 
 ```shell
-# Open the current project’s database in HeidiSQL
+# Open the current project's database in HeidiSQL
 ddev heidisql
+
+# Connect to specific database with custom parameters
+ddev heidisql mydb myuser mypass
 ```
 
 ## `help`
