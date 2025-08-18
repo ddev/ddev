@@ -22,17 +22,25 @@
 #        - UPSUN_CLI_TOKEN=abcdeyourtoken
 #    ```
 #
-# 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT variables to your project `.ddev/config.yaml` or a `.ddev/config.upsun.yaml`
+# 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT and optional PLATFORM_APP (only if your environment contains more than one app) variables to your project `.ddev/config.yaml` or a `.ddev/config.upsun.yaml`
 #    ```yaml
 #    web_environment:
 #        - PLATFORM_PROJECT=nf4amudfn23biyourproject
 #        - PLATFORM_ENVIRONMENT=main
+#        - PLATFORM_APP=app
 #    ```
-#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23biyourproject,PLATFORM_ENVIRONMENT=main"`.
+#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23biyourproject,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app"`.
 #
 # 4. `ddev restart`
 # 5. Run `ddev pull upsun`. After you agree to the prompt, the current upstream database and files will be downloaded.
 # 6. Optionally use `ddev push upsun` to push local files and database to Upsun. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+# If you have more than one database on your Upsun project,
+# you will likely to choose which one you want to use
+# as the primary database ('db').
+# Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example, `ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
+# or run `ddev pull upsun` with the environment variable, for example
+# `ddev pull upsun -y --environment=PLATFORM_PRIMARY_RELATIONSHIP=main`
 
 # Debugging: Use `ddev exec upsun` to see what Upsun knows about
 # your configuration and whether it's working correctly.
@@ -53,7 +61,28 @@ db_pull_command:
     export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
     export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
-    upsun db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+    # /tmp/db_relationships.yaml is the full yaml output of the database relationships
+    db_relationships_file=/tmp/db_relationships.yaml
+    PLATFORM_RELATIONSHIPS="" upsun relationships -y  -e "${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} | yq 'with_entries(select(.[][].type == "mariadb:*" or .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
+    db_relationships=($(yq ' keys | .[] ' ${db_relationships_file}))
+    db_names=($(yq '.[][].path' ${db_relationships_file}))
+    db_count=${#db_relationships[@]}
+    # echo "db_relationships=${db_relationships} sizeof db_relationships=${#db_relationships[@]} db_names=${db_names} db_count=${db_count} PLATFORM_PRIMARY_RELATIONSHIP=${PLATFORM_PRIMARY_RELATIONSHIP}"
+    # If we have only one database, import it into local database named 'db'
+    if [ ${#db_names[@]} -eq 1 ]; then db_names[0]="db"; fi
+
+    for (( i=0; i<${#db_relationships[@]}; i++ )); do
+      db_name=${db_names[$i]}
+      rel=${db_relationships[$i]}
+      # if PLATFORM_PRIMARY_RELATIONSHIP is set, then when doing that one, import it into local database 'db'
+      if [ "${rel}" = "${PLATFORM_PRIMARY_RELATIONSHIP:-notset}" ] ; then
+        echo "PLATFORM_PRIMARY_RELATIONSHIP=${PLATFORM_PRIMARY_RELATIONSHIP:-} so using it as database 'db' instead of the upstream '${db_name}'"
+        db_name="db"
+      fi
+
+      upsun db:dump --yes ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} --relationship=${rel} --gzip --file=/var/www/html/.ddev/.downloads/${db_name}.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+    done
+    echo "Downloaded db dumps for databases '${db_names[@]}'"
 
 files_import_command:
   command: |
@@ -62,7 +91,7 @@ files_import_command:
     export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
     export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
-    upsun mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"  --target=/var/www/html
+    upsun mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} --target=/var/www/html
 
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
@@ -74,7 +103,10 @@ db_push_command:
     export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    gzip -dc db.sql.gz | upsun db:sql --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+    if [ "${PLATFORM_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
+      rel="--relationship ${PLATFORM_PRIMARY_RELATIONSHIP}"
+    fi
+    gzip -dc db.sql.gz | upsun db:sql --project="${PLATFORM_PROJECT}" ${rel:-} --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"}
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 # TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
@@ -85,4 +117,4 @@ files_push_command:
     export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
     export PLATFORM_ENVIRONMENT="${PLATFORM_ENVIRONMENT:-${UPSUN_ENVIRONMENT:-}}"
     export UPSUN_CLI_NO_INTERACTION=1
-    upsun mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
+    upsun mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
