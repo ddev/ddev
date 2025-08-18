@@ -72,7 +72,7 @@ setup_python_env() {
 
   # Activate and upgrade pip
   source "$PYTHON_ENV/bin/activate"
-  python -m pip install --upgrade pip setuptools wheel >/dev/null 2>&1
+  python3 -m pip install --upgrade pip setuptools wheel >/dev/null 2>&1
 }
 
 # Install Python tools
@@ -105,7 +105,7 @@ EOF
   cat "$INSTALL_DIR/mkdocs-requirements.txt" >>"$INSTALL_DIR/python-requirements.txt"
 
   log_info "Installing Python packages (this may take a moment)..."
-  python -m pip install -q -r "$INSTALL_DIR/python-requirements.txt"
+  python3 -m pip install -q -r "$INSTALL_DIR/python-requirements.txt"
 }
 
 # Setup Node environment
