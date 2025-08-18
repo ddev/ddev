@@ -230,6 +230,7 @@ nav:
     - developers/remote-config.md
     - developers/maintainers.md
     - developers/network-test-environments.md
+    - developers/http-proxy-test-environments.md
     - developers/secret-management.md
   - 'Blog': https://ddev.com
   - 'Add-on Registry': https://addons.ddev.com
