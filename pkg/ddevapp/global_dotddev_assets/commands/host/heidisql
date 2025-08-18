@@ -21,7 +21,6 @@ arguments=(
   "--port=${DDEV_HOST_DB_PORT}"
   "--user=root"
   "--password=root"
-  "--database=db"
   "--description=ddev-${DDEV_PROJECT}"
 )
 
