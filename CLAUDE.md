@@ -124,6 +124,12 @@ DDEV uses YAML configuration files:
 - Spell checking on documentation
 - **Always run `make staticrequired` before committing changes** to ensure code quality standards
 
+### Code Formatting Rules for Claude Code
+
+- **After editing markdown files**: Run `markdownlint --fix $FILE && make markdownlint` to auto-fix and validate markdown formatting
+- **After editing Go files**: Run `gofmt -w $FILE` to format Go code according to standard conventions
+- **Before committing**: Run `make staticrequired` when user mentions "commit" to ensure all quality checks pass
+
 ### Release Process
 
 - Cross-platform builds for macOS, Linux, Windows (x64 and ARM64)
@@ -164,89 +170,23 @@ This method:
 - Doesn't require syncing local main branch
 - Uses --no-track to avoid tracking upstream/main
 
-### Pull Request Titles
-
-DDEV enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format for PR titles. The format is:
-
-`<type>[optional scope][optional !]: <description>[, fixes #<issue>][, for #<issue>]`
-
-**Types:** `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `style`, `test`
-
-- Use imperative, present tense ("change" not "changed")
-- Don't capitalize first letter
-- No period at end
-- Add `, fixes #<issue>` if applicable
-- Breaking changes require `!` after type
-
-**Examples:**
-
-- `feat: add Vite documentation section - Claude assisted with migrating blog content`
-- `fix: resolve networking issues in containers - Claude helped debug connection problems`
-- `docs: update CLAUDE.md with workflow guidelines - Claude suggested development improvements`
-- `feat(pantheon): use environment variables`
-- `fix: resolve container networking issues, fixes #1234`
-- `docs: update CLAUDE.md with PR title guidelines`
-- `refactor(auth): simplify user authentication flow`
-- `chore(deps): bump mutagen to 0.18.1`
-- `ci(pr): enforce commit message convention, fixes #5037`
-
-### Commit Messages
-
-**First Commit in a PR Series:** The initial commit that starts a new feature or fix should follow the structure from `.github/PULL_REQUEST_TEMPLATE.md` to provide comprehensive context. Use sections like "The Issue", "How This Commit Solves The Issue", and "Implementation Details" in the commit body, similar to the PR template format.
-
-**Follow-up Commits:** After key Claude-initiated code changes, make commits that mention Claude and the prompt involved. This helps maintain clear attribution and context for AI-assisted development.
-
-Examples for commit messages (without description) are provided in the "Pull Request Titles" section above.
-
-### GitHub Issue Creation
-
-When creating GitHub issues, always use the proper issue template format:
-
-1. **Use the issue template structure:**
-   - Preliminary checklist (with checkboxes)
-   - Output of `ddev debug test` (in collapsible `<details>` section)
-   - Expected Behavior
-   - Actual Behavior  
-   - Steps To Reproduce
-   - Anything else?
-
-2. **Include `ddev debug test` output:**
-
-   ```bash
-   ddev debug test
-   ```
-
-   Copy the **entire output** (not just the file path) into the collapsible section using this format:
-
-   ```text
-   <details><summary>Expand `ddev debug test` diagnostic information</summary>
-   [triple backticks]
-   [PASTE COMPLETE OUTPUT HERE]
-   [triple backticks]
-   </details>
-   ```
-
-3. **Create issues with gh CLI:**
-
-   ```bash
-   gh issue create --title "Title" --body-file issue.md
-   ```
-
 ### Pull Request Creation
 
-**PR Template Requirements:**
+When creating pull requests for DDEV, follow the PR template structure from `.github/PULL_REQUEST_TEMPLATE.md`:
 
-The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
+**Required Sections:**
 
-- **The Issue:** Reference issue number with `#<issue>`
-- **How This PR Solves The Issue:** Technical explanation
-- **Manual Testing Instructions:** Step-by-step testing guide
-- **Automated Testing Overview:** Test strategy explanation
-- **Release/Deployment Notes:** Impact and considerations
+- **The Issue:** Reference issue number with `#<issue>` and brief description
+- **How This PR Solves The Issue:** Technical explanation of the solution
+- **Manual Testing Instructions:** Step-by-step guide for testing changes
+- **Automated Testing Overview:** Description of tests or explanation why none needed
+- **Release/Deployment Notes:** Impact assessment and deployment considerations
 
-**Important:** For DDEV development, commit messages should include the complete PR template content. This ensures that when the PR is created on GitHub, it will be pre-populated and won't require additional editing. Use the full template format from `.github/PULL_REQUEST_TEMPLATE.md` in your commit message body.
+**For commits that will become PRs:** Include the complete PR template content in commit messages. This ensures GitHub PRs are pre-populated and don't require additional editing.
 
 ### Pre-Commit Workflow
+
+**MANDATORY: Always run `make staticrequired` before any commit**
 
 **Critical Requirements Before Committing:**
 
@@ -260,11 +200,13 @@ The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) requires these sections:
 
    See [Testing Documentation](https://ddev.readthedocs.io/en/stable/developers/building-contributing/#testing) for detailed testing guidance.
 
-2. **Run static analysis:**
+2. **Run static analysis (REQUIRED):**
 
    ```bash
    make staticrequired
    ```
+
+   This command runs golangci-lint, markdownlint, mkdocs, and pyspelling. All must pass before committing.
 
 **Complete Pre-Commit Checklist:**
 
