@@ -207,7 +207,7 @@ When creating pull requests for DDEV, follow the PR template structure from `.gi
    make staticrequired
    ```
 
-   This command runs golangci-lint, markdownlint, mkdocs, and pyspelling. All must pass before committing.
+   This command runs golangci-lint, markdownlint, and mkdocs. All must pass before committing.
 
 **Complete Pre-Commit Checklist:**
 
