@@ -201,6 +201,8 @@ func GetDockerClient() (context.Context, dockerClient.APIClient) {
 		DockerCtx = context.Background()
 		// Set the Docker CLI version for User-Agent header
 		dockerCliVersion.Version = "ddev-" + versionconstants.DdevVersion
+		// We can't use DockerCli.Client(), see https://github.com/docker/cli/issues/4489
+		// That's why we create a new client from flags to catch errors
 		DockerClient, initErr = dockerCliCommand.NewAPIClientFromFlags(dockerCliFlags.NewClientOptions(), DockerCli.ConfigFile())
 		if initErr != nil {
 			return
@@ -219,8 +221,11 @@ func GetDockerClientErr() error {
 // And sets DockerContext and DockerHost variables
 func initDockerCli() error {
 	var err error
-	// io.Discard is used to suppress stream output from DockerCli.DockerEndpoint().Host on error
-	DockerCli, err = dockerCliCommand.NewDockerCli(dockerCliCommand.WithErrorStream(io.Discard))
+	// Suppress any output (stdout, stderr) from docker/cli
+	// All errors are handled by GetDockerClient()
+	DockerCli, err = dockerCliCommand.NewDockerCli(
+		dockerCliCommand.WithCombinedStreams(io.Discard),
+	)
 	if err != nil {
 		return fmt.Errorf("newDockerCli() failed: %v", err)
 	}
