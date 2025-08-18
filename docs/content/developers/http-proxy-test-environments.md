@@ -5,6 +5,9 @@ search:
 
 # HTTP Proxy Test Environments
 
+!!!tip "Advanced: SSL Interception Testing"
+    For testing SSL interception scenarios (like corporate VPN/firewall environments), see [Network Test Environments: Packet-Inspection VPN Simulation](network-test-environments.md). This complements the basic HTTP proxy testing covered here.
+
 This guide demonstrates how to set up HTTP proxy environments for testing DDEV behavior with proxy servers. This is useful for testing corporate environments that route traffic through HTTP proxies, simulating real-world network configurations where all traffic must pass through proxy servers.
 
 ## Setup Overview

@@ -4,6 +4,9 @@ search:
 ---
 # Network Test Environments: Packet-Inspection VPN Simulation
 
+!!!tip "Basic HTTP Proxy Testing"
+    For simpler HTTP proxy testing without SSL interception, see [HTTP Proxy Test Environments](http-proxy-test-environments.md). Start there for basic proxy scenarios before moving to SSL interception testing.
+
 ## Simulating SSL Interception with Squid (Simplified via `HTTPS_PROXY`)
 
 A straightforward way to simulate a packet-inspecting VPN is by using **Squid** with SSL bumping and configuring your environment to use it via `HTTPS_PROXY`. While it's less transparent than a full MITM router setup, it closely replicates the behavior of Zscaler and similar tools from the perspective of apps like Docker and `curl`.
