@@ -157,10 +157,10 @@ Docker’s normal mounting can be slow on macOS and traditional Windows. DDEV pr
 
 ### How can I troubleshoot what’s going wrong?
 
-See the these sections:
+See these sections:
 
 * [General troubleshooting](troubleshooting.md)
-* [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections.
+* [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug)
 * [Docker troubleshooting](../install/docker-installation.md#troubleshooting-docker)
 * [Traefik troubleshooting](../extend/traefik-router.md#troubleshooting-traefik-routing)
 * [Mutagen troubleshooting](../install/performance.md#mutagen-troubleshooting)
