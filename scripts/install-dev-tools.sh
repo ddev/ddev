@@ -40,24 +40,20 @@ check_prerequisites() {
 install_system_deps() {
   log_info "Installing system dependencies..."
 
-  if command -v brew >/dev/null 2>&1; then
-    if ! command -v aspell >/dev/null 2>&1; then
+  if command -v aspell >/dev/null 2>&1; then
+    log_info "Installing aspell via Homebrew..."
+  else
+    if command -v brew >/dev/null 2>&1; then
       log_info "Installing aspell via Homebrew..."
       brew install aspell
-    else
-      log_info "✓ aspell already installed"
-    fi
-  elif command -v apt-get >/dev/null 2>&1; then
-    if ! command -v aspell >/dev/null 2>&1; then
+    elif command -v apt-get >/dev/null 2>&1; then
       log_info "Installing aspell via apt..."
       sudo apt-get update >/dev/null
       sudo apt-get install -y aspell
     else
-      log_info "✓ aspell already installed"
+      log_error "Neither brew nor apt-get found. Please install aspell manually."
+      exit 1
     fi
-  else
-    log_error "Neither brew nor apt-get found. Please install aspell manually."
-    exit 1
   fi
 }
 
