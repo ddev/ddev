@@ -3439,11 +3439,7 @@ func TestHttpsRedirection(t *testing.T) {
 	types := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		if os.Getenv("GOTEST_SHORT") == "4" {
-			types = []string{nodeps.AppTypeBackdrop}
-		} else {
-			types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
-		}
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range types {
