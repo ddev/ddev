@@ -8,7 +8,6 @@ import (
 	"os"
 	goexec "os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
@@ -23,6 +22,9 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	dockerMount "github.com/docker/docker/api/types/mount"
+	dockerStrslice "github.com/docker/docker/api/types/strslice"
 	"github.com/google/go-github/v72/github"
 	"go.yaml.in/yaml/v3"
 )
@@ -232,9 +234,6 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 	// Store the original action for validation
 	originalAction := action
 
-	// Make sure the standard ddev_default network is available
-	dockerutil.EnsureDdevNetwork()
-
 	// Validate included/required files on the host (since we need to read from filesystem)
 	err := validatePHPIncludesAndRequires(action, app, image)
 	if err != nil {
@@ -259,117 +258,50 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 
 	cmd := []string{"sh", "-c", shellScript}
 
-	// Bind mount the .ddev directory and the project root into the container
-	binds := []string{fmt.Sprintf("%s:/var/www/html", app.AppRoot)}
-
 	// Build environment variables array with standard DDEV variables
 	env := buildPHPActionEnvironment(app, verbose)
 
-	// Create in-memory docker-compose project for PHP action execution
-	phpProject, err := dockerutil.CreateComposeProject("name: ddev-php-action")
-	if err != nil {
-		return fmt.Errorf("failed to create compose project: %v", err)
+	config := &dockerContainer.Config{
+		Image:      image,
+		Cmd:        dockerStrslice.StrSlice(cmd),
+		WorkingDir: "/var/www/html/.ddev",
+		Env:        env,
 	}
 
-	// Create service configuration for PHP action
-	serviceName := "php-runner"
-	serviceConfig := composeTypes.ServiceConfig{
-		Name:        serviceName,
-		Image:       image,
-		Command:     cmd,
-		WorkingDir:  "/var/www/html/.ddev",
-		Environment: buildEnvironmentMap(env),
-		Volumes:     buildVolumeConfigs(binds),
-		Networks: map[string]*composeTypes.ServiceNetworkConfig{
-			"default":          {},
-			dockerutil.NetName: {},
-		},
-		Labels: composeTypes.Labels{
-			"com.ddev.site-name": app.Name + "-php-action",
-			"com.ddev.approot":   app.AppRoot,
+	hostConfig := &dockerContainer.HostConfig{
+		Mounts: []dockerMount.Mount{
+			{
+				Type:   dockerMount.TypeBind,
+				Source: app.AppRoot,
+				Target: "/var/www/html",
+			},
 		},
 	}
 
-	// Add host.docker.internal setup using DDEV's standard logic
-	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
-	if err != nil {
-		util.Warning("Could not determine host.docker.internal IP address: %v", err)
-	}
-
-	// Set up host.docker.internal based on DDEV's standard approach
-	if hostDockerInternalIP != "" {
-		// Use specific IP address for host.docker.internal
-		extraHosts, err := composeTypes.NewHostsList([]string{
-			"host.docker.internal:" + hostDockerInternalIP,
-		})
-		if err == nil {
-			serviceConfig.ExtraHosts = extraHosts
-		}
-	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) ||
-		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
-		// Use host-gateway for modern Docker on Linux
-		extraHosts, err := composeTypes.NewHostsList([]string{
-			"host.docker.internal:host-gateway",
-		})
-		if err == nil {
-			serviceConfig.ExtraHosts = extraHosts
-		}
-	}
-
-	phpProject.Services[serviceName] = serviceConfig
-
-	// Add network definitions matching DDEV's standard networking
-	if phpProject.Networks == nil {
-		phpProject.Networks = composeTypes.Networks{}
-	}
-	phpProject.Networks[dockerutil.NetName] = composeTypes.NetworkConfig{
-		Name:     dockerutil.NetName,
-		External: true,
-	}
-	phpProject.Networks["default"] = composeTypes.NetworkConfig{
-		Name:   "php-action-" + app.GetComposeProjectName() + "_default",
-		Labels: composeTypes.Labels{"com.ddev.platform": "ddev"},
-	}
-	defer func() {
-		dockerutil.RemoveNetworkWithWarningOnError(phpProject.Networks["default"].Name)
-	}()
-
-	// Execute PHP action using docker-compose run
-	// Use ComposeCmd to capture output for error reporting, ComposeWithStreams for streaming
-	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeYaml: phpProject,
-		Action:      []string{"run", "--rm", "--no-deps", serviceName},
-		ProjectName: "php-action-" + app.GetComposeProjectName(),
-	})
+	// Execute PHP action using RunSimpleContainerExtended
+	containerName := "ddev-php-action-" + util.RandString(6)
+	_, out, err := dockerutil.RunSimpleContainerExtended(containerName, config, hostConfig, true, false)
+	out = strings.TrimSpace(out)
 
 	if err != nil {
 		if desc != "" {
 			util.Warning("%c %s", '\U0001F44E', desc) // 👎 error emoji
 		}
-		// Include output in error message for debugging, similar to original implementation
-		combinedOutput := stdout
-		if stderr != "" {
-			if combinedOutput != "" {
-				combinedOutput += "\n"
-			}
-			combinedOutput += stderr
-		}
-		if combinedOutput != "" {
-			return fmt.Errorf("PHP script failed: %v - Output: %s", err, combinedOutput)
+		// Include output in error message for debugging
+		if out != "" {
+			return fmt.Errorf("PHP script failed: %v - Output: %s", err, out)
 		}
 		return fmt.Errorf("PHP script failed: %v", err)
-	}
-
-	// Display captured output
-	if stdout != "" {
-		util.Success(stdout)
 	}
 
 	// Show description on success
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc) // 👍 success emoji
 	}
-
+	// Display captured output
+	if out != "" {
+		util.Warning(out + "\n")
+	}
 	return nil
 }
 
@@ -419,34 +351,6 @@ func (app *DdevApp) CleanupConfigurationFiles() error {
 		return os.RemoveAll(configDir)
 	}
 	return nil
-}
-
-// buildEnvironmentMap converts environment variable slice to compose environment format
-func buildEnvironmentMap(envSlice []string) composeTypes.MappingWithEquals {
-	envMap := composeTypes.MappingWithEquals{}
-	for _, envVar := range envSlice {
-		parts := strings.SplitN(envVar, "=", 2)
-		if len(parts) == 2 {
-			envMap[parts[0]] = &parts[1]
-		}
-	}
-	return envMap
-}
-
-// buildVolumeConfigs converts bind mount slice to compose volume format
-func buildVolumeConfigs(binds []string) []composeTypes.ServiceVolumeConfig {
-	var volumes []composeTypes.ServiceVolumeConfig
-	for _, bind := range binds {
-		parts := strings.Split(bind, ":")
-		if len(parts) >= 2 {
-			volumes = append(volumes, composeTypes.ServiceVolumeConfig{
-				Type:   "bind",
-				Source: parts[0],
-				Target: parts[1],
-			})
-		}
-	}
-	return volumes
 }
 
 // buildPHPActionEnvironment creates the environment variables for PHP actions
@@ -630,7 +534,7 @@ func extractPHPFilePaths(statement string) []string {
 		// Extract the path from within quotes
 		if start := strings.IndexAny(match, `'"`); start != -1 {
 			quote := match[start]
-			if end := strings.IndexByte(match[start+1:], byte(quote)); end != -1 {
+			if end := strings.IndexByte(match[start+1:], quote); end != -1 {
 				path := match[start+1 : start+1+end]
 				if path != "" {
 					paths = append(paths, path)

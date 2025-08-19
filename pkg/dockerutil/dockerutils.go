@@ -1074,8 +1074,20 @@ func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hos
 		config.Labels["com.ddev.site-name"] = ""
 	}
 
-	if runtime.GOOS == "linux" && !IsDockerDesktop() && !slices.Contains(hostConfig.ExtraHosts, "host.docker.internal:host-gateway") {
-		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:host-gateway")
+	// Set up host.docker.internal based on DDEV's standard approach
+	hostDockerInternalIP, _ := GetHostDockerInternalIP()
+	extraHost := ""
+	if hostDockerInternalIP != "" {
+		// Use specific IP address for host.docker.internal
+		extraHost = "host.docker.internal:" + hostDockerInternalIP
+	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !IsColima()) ||
+		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
+		// Use host-gateway for modern Docker on Linux
+		extraHost = "host.docker.internal:host-gateway"
+	}
+
+	if extraHost != "" && !slices.Contains(hostConfig.ExtraHosts, extraHost) {
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, extraHost)
 	}
 
 	container, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
