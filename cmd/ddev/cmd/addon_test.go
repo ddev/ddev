@@ -447,7 +447,12 @@ services:
 	// Test environment variables addon - validates all DDEV environment variables are available
 	t.Run("EnvironmentVariablesAddon", func(t *testing.T) {
 		envVarsAddonDir := filepath.Join(origDir, "testdata", t.Name())
-		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", envVarsAddonDir, "--verbose")
+
+		// Set some custom environment variables to test
+		out, err := exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.env-vars-test", "--custom-variable", "show $ sign", "--extra-var", "One more extra variable")
+		require.NoError(t, err, "failed to set custom variable in .ddev/.env.env-vars-test file: %v, output: %s", err, out)
+
+		out, err = exec.RunHostCommand(DdevBin, "add-on", "get", envVarsAddonDir, "--verbose")
 		require.NoError(t, err, "failed to install environment variables addon: %v, output: %s", err, out)
 
 		// Check that PHP received and validated all environment variables
@@ -469,6 +474,8 @@ services:
 			"DDEV_VERSION":         "", // Value varies, just check presence
 			"DDEV_TLD":             "", // Value varies, just check presence
 			"IS_DDEV_PROJECT":      "true",
+			"CUSTOM_VARIABLE":      "show $ sign",
+			"EXTRA_VAR":            "One more extra variable",
 		}
 
 		// Verify each environment variable is present in the output

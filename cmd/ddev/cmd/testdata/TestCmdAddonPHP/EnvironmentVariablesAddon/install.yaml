@@ -20,7 +20,9 @@ pre_install_actions:
         'DDEV_MUTAGEN_ENABLED',
         'DDEV_VERSION',
         'DDEV_TLD',
-        'IS_DDEV_PROJECT'
+        'IS_DDEV_PROJECT',
+        'CUSTOM_VARIABLE',
+        'EXTRA_VAR',
     ];
     
     echo "PHP: Testing environment variables...\n";

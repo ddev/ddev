@@ -38,15 +38,7 @@ func TestProcessPHPAction(t *testing.T) {
 echo "Hello from PHP test\n";
 echo "This is working\n";
 ?>`
-
-		dict := map[string]interface{}{
-			"DdevProjectConfig": map[string]interface{}{
-				"name": t.Name(),
-				"type": "php",
-			},
-		}
-
-		err := ddevapp.ProcessAddonActionWithImage(action, dict, "", true, "", app)
+		err := ddevapp.ProcessAddonAction(action, ddevapp.InstallDesc{}, app, true)
 		require.NoError(t, err, "PHP action should execute without error")
 	})
 }

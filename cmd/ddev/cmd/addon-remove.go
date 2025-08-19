@@ -40,7 +40,7 @@ ddev add-on remove ddev-someaddonname --project my-project
 
 		app.DockerEnv()
 
-		err = ddevapp.RemoveAddon(app, args[0], nil, util.FindBashPath(), cmd.Flags().Changed("verbose"), false)
+		err = ddevapp.RemoveAddon(app, args[0], cmd.Flags().Changed("verbose"), false)
 		if err != nil {
 			util.Failed("Unable to remove add-on: %v", err)
 		}

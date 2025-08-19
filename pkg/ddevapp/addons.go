@@ -160,26 +160,60 @@ func GetInstalledAddonProjectFiles(app *DdevApp) []string {
 	return uniqueFiles
 }
 
-// ProcessAddonAction takes a stanza from yaml exec section and executes it.
-func ProcessAddonAction(action string, dict map[string]interface{}, bashPath string, verbose bool) error {
-	return ProcessAddonActionWithImage(action, dict, bashPath, verbose, "", nil)
-}
-
-// ProcessAddonActionWithImage takes a stanza from yaml exec section and executes it, optionally in a container.
-func ProcessAddonActionWithImage(action string, dict map[string]interface{}, bashPath string, verbose bool, image string, app *DdevApp) error {
+// ProcessAddonAction takes a stanza from yaml exec section and executes it, optionally in a container.
+func ProcessAddonAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
+	if app == nil {
+		return fmt.Errorf("app is required to ProcessAddonAction")
+	}
 	// Check if the action starts with <?php
 	if strings.HasPrefix(strings.TrimSpace(action), "<?php") {
-		if app == nil {
-			return fmt.Errorf("app is required for PHP actions")
-		}
-		return processPHPAction(action, dict, image, verbose, app)
+		return processPHPAction(action, installDesc, app, verbose)
 	}
+	return processBashHostAction(action, installDesc, app, verbose)
+}
 
+// processBashHostAction executes a bash action on the host system
+func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
+	env, err := getInjectedEnvForBash(app, installDesc)
+	if err != nil {
+		return fmt.Errorf("unable to get injected env for bash: %v", err)
+	}
+	if env != "" {
+		action = env + "\n" + action
+	}
 	// Default behavior for bash actions
 	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("ProcessAddonAction").Funcs(getTemplateFuncMap()).Parse(action)
 	if err != nil {
 		return fmt.Errorf("could not parse action '%s': %v", action, err)
+	}
+
+	yamlMap := make(map[string]interface{})
+	yamlMap["DdevGlobalConfig"], err = util.YamlFileToMap(globalconfig.GetGlobalConfigPath())
+	if err != nil {
+		util.Warning("Unable to read file %s: %v", globalconfig.GetGlobalConfigPath(), err)
+	}
+
+	for name, f := range installDesc.YamlReadFiles {
+		fullPath := filepath.Join(app.GetAppRoot(), os.ExpandEnv(f))
+		yamlMap[name], err = util.YamlFileToMap(fullPath)
+		if err != nil {
+			util.Warning("Unable to import yaml file %s: %v", fullPath, err)
+		}
+	}
+	// Get project config with overrides
+	var projectConfigMap map[string]interface{}
+	if b, err := yaml.Marshal(app); err != nil {
+		util.Warning("Unable to marshal app: %v", err)
+	} else if err = yaml.Unmarshal(b, &projectConfigMap); err != nil {
+		util.Warning("Unable to unmarshal app: %v", err)
+	} else {
+		yamlMap["DdevProjectConfig"] = projectConfigMap
+	}
+
+	dict, err := util.YamlToDict(yamlMap)
+	if err != nil {
+		return fmt.Errorf("unable to YamlToDict: %v", err)
 	}
 
 	var doc bytes.Buffer
@@ -193,7 +227,7 @@ func ProcessAddonActionWithImage(action string, dict map[string]interface{}, bas
 	if verbose {
 		action = "set -x; " + action
 	}
-	out, err := exec.RunHostCommand(bashPath, "-c", action)
+	out, err := exec.RunHostCommand(util.FindBashPath(), "-c", action)
 	if err != nil {
 		warningCode := GetAddonDdevWarningExitCode(action)
 		if warningCode > 0 {
@@ -226,13 +260,42 @@ func ProcessAddonActionWithImage(action string, dict map[string]interface{}, bas
 	return err
 }
 
+// getInjectedEnvForBash returns bash export string for env variables
+// that will be used in PreInstallActions and PostInstallActions
+func getInjectedEnvForBash(app *DdevApp, installDesc InstallDesc) (string, error) {
+	if app == nil {
+		return "", nil
+	}
+	envFile := app.GetConfigPath(".env." + installDesc.Name)
+	envMap, _, err := ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		return "", fmt.Errorf("unable to read %s file: %v", envFile, err)
+	}
+	if len(envMap) == 0 {
+		return "", nil
+	}
+	injectedEnv := "export"
+	for k, v := range envMap {
+		// Escape all spaces and dollar signs
+		v = strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), ` `, `\ `)
+		injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
+	}
+	return injectedEnv, nil
+}
+
 // processPHPAction executes a PHP action in a container
-func processPHPAction(action string, dict map[string]interface{}, image string, verbose bool, app *DdevApp) error {
+func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
 	// Extract description before processing
 	desc := GetAddonDdevDescription(action)
 
 	// Store the original action for validation
 	originalAction := action
+
+	image := installDesc.Image
+	// Use the default ddev-webserver as the image if none is specified
+	if image == "" {
+		image = docker.GetWebImage()
+	}
 
 	// Validate included/required files on the host (since we need to read from filesystem)
 	err := validatePHPIncludesAndRequires(action, app, image)
@@ -242,10 +305,6 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 
 	// Inject PHP strict error handling
 	action = injectPHPStrictMode(action)
-	// Use the default ddev-webserver as the image if none is specified
-	if image == "" {
-		image = docker.GetWebImage()
-	}
 
 	// Create configuration files for PHP action access (optional for tests and removal actions)
 	err = createConfigurationFiles(app)
@@ -259,7 +318,10 @@ func processPHPAction(action string, dict map[string]interface{}, image string, 
 	cmd := []string{"sh", "-c", shellScript}
 
 	// Build environment variables array with standard DDEV variables
-	env := buildPHPActionEnvironment(app, verbose)
+	env, err := buildPHPActionEnvironment(app, installDesc, verbose)
+	if err != nil {
+		return fmt.Errorf("failed to build PHP action environment: %v", err)
+	}
 
 	config := &dockerContainer.Config{
 		Image:      image,
@@ -354,7 +416,7 @@ func (app *DdevApp) CleanupConfigurationFiles() error {
 }
 
 // buildPHPActionEnvironment creates the environment variables for PHP actions
-func buildPHPActionEnvironment(app *DdevApp, verbose bool) []string {
+func buildPHPActionEnvironment(app *DdevApp, installDesc InstallDesc, verbose bool) ([]string, error) {
 	// Database family for connection URLs
 	dbFamily := "mysql"
 	if app.Database.Type == "postgres" {
@@ -382,7 +444,17 @@ func buildPHPActionEnvironment(app *DdevApp, verbose bool) []string {
 		env = append(env, "DDEV_VERBOSE=true")
 	}
 
-	return env
+	// Add all environment variables from the .ddev/.env.<addon-name>
+	envFile := app.GetConfigPath(".env." + installDesc.Name)
+	envMap, _, err := ReadProjectEnvFile(envFile)
+	if err != nil && !os.IsNotExist(err) {
+		return env, fmt.Errorf("unable to read %s file: %v", envFile, err)
+	}
+	for k, v := range envMap {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	return env, nil
 }
 
 // injectPHPStrictMode adds PHP strict error handling to the action
@@ -674,7 +746,7 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 // RemoveAddon removes an addon, taking care to respect #ddev-generated
 // addonName can be the "Name", or the full "Repository" like ddev/ddev-redis, or
 // the final par of the repository name like ddev-redis
-func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool, skipRemovalActions bool) error {
+func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalActions bool) error {
 	if addonName == "" {
 		return fmt.Errorf("no add-on name specified for removal")
 	}
@@ -694,15 +766,9 @@ func RemoveAddon(app *DdevApp, addonName string, dict map[string]interface{}, ba
 	// Execute any removal actions
 	if !skipRemovalActions {
 		for i, action := range manifestData.RemovalActions {
-			// For PHP actions, we need to pass the app, but it's okay if the project isn't running
-			trimmedAction := strings.TrimSpace(action)
-			if strings.HasPrefix(trimmedAction, "<?php") {
-				err = ProcessAddonActionWithImage(action, dict, bash, verbose, "", app)
-			} else {
-				err = ProcessAddonAction(action, dict, bash, verbose)
-			}
-			desc := GetAddonDdevDescription(action)
+			err = ProcessAddonAction(action, InstallDesc{}, app, verbose)
 			if err != nil {
+				desc := GetAddonDdevDescription(action)
 				util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
 			}
 		}
