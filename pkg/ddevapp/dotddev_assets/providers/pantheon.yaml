@@ -1,7 +1,5 @@
 #ddev-generated
 # Pantheon.io provider configuration.
-# This example is Drupal/drush oriented,
-# but can be adapted for other CMSs supported by Pantheon
 
 # To use this configuration:
 #
@@ -70,9 +68,13 @@ db_pull_command:
     set -eu -o pipefail
     echo "Using PANTHEON_SITE=${PANTHEON_SITE} PANTHEON_ENVIRONMENT=${PANTHEON_ENVIRONMENT}"
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
-    FRESH_DB_DUMP_STRING=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
-    eval "$FRESH_DB_DUMP_STRING | gzip > db.sql.gz" > /dev/null 2>&1
+    echo "Waking up Pantheon environment..."
+    terminus env:wake
+    echo "Generating and streaming fresh database dump (this may take several minutes)..."
+    FRESH_DB_DUMP_STRING=$(terminus connection:info --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
+    #echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
+    eval "$FRESH_DB_DUMP_STRING | gzip" | dd bs=1M status=progress of=db.sql.gz
+    echo "Database download complete"
 
 files_pull_command:
   command: |
@@ -89,8 +91,17 @@ db_push_command:
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     set -eu -o pipefail
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    terminus remote:drush ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} -- sql-drop -y
-    gzip -dc db.sql.gz | terminus remote:drush ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} -- sql-cli
+    echo "Waking up Pantheon environment..."
+    terminus env:wake
+    echo "Dropping existing database on Pantheon..."
+    MYSQL_CMD=$(terminus connection:info --field=mysql_command)
+    eval "$MYSQL_CMD -e 'DROP DATABASE pantheon; CREATE DATABASE pantheon;'"
+    echo "Uploading database to Pantheon (streaming compressed data)..."
+    # Stream compressed data and decompress on remote side via SSH pipe
+    SFTP_HOST=$(terminus connection:info --field=sftp_host)
+    SFTP_USER=$(terminus connection:info --field=sftp_username)
+    cat db.sql.gz | ssh -o StrictHostKeyChecking=no -p 2222 "${SFTP_USER}@${SFTP_HOST}" "gzip -dc | ${MYSQL_CMD#mysql }"
+    echo "Database push complete"
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 # terminus rsync plugin for CMS agnostic file push
