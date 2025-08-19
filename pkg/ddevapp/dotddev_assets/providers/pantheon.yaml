@@ -54,7 +54,6 @@
 auth_command:
   command: |
     set -eu -o pipefail
-    if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
     if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     if [ -z "${PANTHEON_SITE:-}" ]; then echo "Please make sure you have set PANTHEON_SITE via config.yaml or with '--environment=PANTHEON_SITE=xxx'" && exit 1; fi
     if [ -z "${PANTHEON_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PANTHEON_ENVIRONMENT via config.yaml or with '--environment=PANTHEON_ENVIRONMENT=xxx'" && exit 1; fi
@@ -69,10 +68,12 @@ db_pull_command:
     echo "Using PANTHEON_SITE=${PANTHEON_SITE} PANTHEON_ENVIRONMENT=${PANTHEON_ENVIRONMENT}"
     pushd /var/www/html/.ddev/.downloads >/dev/null
     echo "Waking up Pantheon environment..."
-    terminus env:wake
+    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
     echo "Generating and streaming fresh database dump (this may take several minutes)..."
-    FRESH_DB_DUMP_STRING=$(terminus connection:info --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
-    #echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
+    FRESH_DB_DUMP_STRING=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
+    if [ "${DDEV_DEBUG:-}" = "true" ]; then
+      echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
+    fi
     eval "$FRESH_DB_DUMP_STRING | gzip" | dd bs=1M status=progress of=db.sql.gz
     echo "Database download complete"
 
@@ -92,15 +93,12 @@ db_push_command:
     set -eu -o pipefail
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     echo "Waking up Pantheon environment..."
-    terminus env:wake
+    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
     echo "Dropping existing database on Pantheon..."
-    MYSQL_CMD=$(terminus connection:info --field=mysql_command)
+    MYSQL_CMD=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command)
     eval "$MYSQL_CMD -e 'DROP DATABASE pantheon; CREATE DATABASE pantheon;'"
-    echo "Uploading database to Pantheon (streaming compressed data)..."
-    # Stream compressed data and decompress on remote side via SSH pipe
-    SFTP_HOST=$(terminus connection:info --field=sftp_host)
-    SFTP_USER=$(terminus connection:info --field=sftp_username)
-    cat db.sql.gz | ssh -o StrictHostKeyChecking=no -p 2222 "${SFTP_USER}@${SFTP_HOST}" "gzip -dc | ${MYSQL_CMD#mysql }"
+    echo "Uploading database to Pantheon..."
+    gzip -dc db.sql.gz | eval "$MYSQL_CMD"
     echo "Database push complete"
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
