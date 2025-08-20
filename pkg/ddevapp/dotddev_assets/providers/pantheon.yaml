@@ -1,7 +1,5 @@
 #ddev-generated
 # Pantheon.io provider configuration.
-# This example is Drupal/drush oriented,
-# but can be adapted for other CMSs supported by Pantheon
 
 # To use this configuration:
 #
@@ -34,21 +32,17 @@
 #    <https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/>, 
 #    the site ID is 009a2cda-2c22-4eee-8f9d-96f017321555.
 #
-# 3. On the pantheon dashboard, make sure that at least one backup has been created. (When you need to refresh what you pull, do a new backup.)
+# 3. For `ddev push pantheon` make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
 #
-# 4. For `ddev push pantheon` make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
+# 4. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
 #
-# 5. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
+# 5. Configure the local checkout for ddev using `ddev config`
 #
-# 6. Configure the local checkout for ddev using `ddev config`
+# 6. `ddev restart`
 #
-# 7. Verify that drush is installed in your project, `ddev composer require drush/drush`
+# 7. Run `ddev pull pantheon`. The ddev environment will download the Pantheon database and files using terminus and will import the database and files into the ddev environment. You should now be able to access the project locally.
 #
-# 8. `ddev restart`
-#
-# 9. Run `ddev pull pantheon`. The ddev environment will download the Pantheon database and files using terminus and will import the database and files into the ddev environment. You should now be able to access the project locally.
-#
-# 10. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+# 8. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 #
 
 # Instead of setting the environment variables in configuration files, you can use
@@ -60,20 +54,28 @@
 auth_command:
   command: |
     set -eu -o pipefail
-    if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
     if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     if [ -z "${PANTHEON_SITE:-}" ]; then echo "Please make sure you have set PANTHEON_SITE via config.yaml or with '--environment=PANTHEON_SITE=xxx'" && exit 1; fi
     if [ -z "${PANTHEON_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PANTHEON_ENVIRONMENT via config.yaml or with '--environment=PANTHEON_ENVIRONMENT=xxx'" && exit 1; fi
     terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" || ( echo "terminus auth login failed, check your TERMINUS_MACHINE_TOKEN" && exit 1 )
     terminus aliases 2>/dev/null
 
+#make sure env is awake, and grab a fresh DB export
 db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     echo "Using PANTHEON_SITE=${PANTHEON_SITE} PANTHEON_ENVIRONMENT=${PANTHEON_ENVIRONMENT}"
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    terminus backup:get ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} --element=db --to=db.sql.gz
+    echo "Waking up Pantheon environment..."
+    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
+    echo "Generating and streaming fresh database dump (this may take several minutes)..."
+    FRESH_DB_DUMP_STRING=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
+    if [ "${DDEV_DEBUG:-}" = "true" ]; then
+      echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
+    fi
+    eval "$FRESH_DB_DUMP_STRING | gzip" | dd bs=1M status=progress of=db.sql.gz
+    echo "Database download complete"
 
 files_pull_command:
   command: |
@@ -90,14 +92,23 @@ db_push_command:
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     set -eu -o pipefail
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    terminus remote:drush ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} -- sql-drop -y
-    gzip -dc db.sql.gz | terminus remote:drush ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} -- sql-cli
+    echo "Waking up Pantheon environment..."
+    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
+    echo "Dropping existing database on Pantheon..."
+    MYSQL_CMD=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command)
+    eval "$MYSQL_CMD -e 'DROP DATABASE pantheon; CREATE DATABASE pantheon;'"
+    echo "Uploading database to Pantheon..."
+    gzip -dc db.sql.gz | eval "$MYSQL_CMD"
+    echo "Database push complete"
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# terminus rsync plugin for CMS agnostic file push
+# this will push the files directory to Pantheon
 files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     set -eu -o pipefail
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
-    drush rsync -y @self:%files @${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}:%files
+    terminus self:plugin:install terminus-rsync-plugin
+    terminus rsync -y ${DDEV_FILES_DIR}/ ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}:files
