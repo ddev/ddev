@@ -807,6 +807,12 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 		}
 	}
 
+	// Clean up temporary configuration files created for PHP actions
+	err = app.CleanupConfigurationFiles()
+	if err != nil {
+		util.Warning("Unable to clean up temporary configuration files: %v", err)
+	}
+
 	err = os.RemoveAll(app.GetConfigPath(filepath.Join(AddonMetadataDir, manifestData.Name)))
 	if err != nil {
 		return fmt.Errorf("error removing addon metadata directory %s: %v", manifestData.Name, err)

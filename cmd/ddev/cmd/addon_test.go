@@ -518,7 +518,7 @@ services:
 
 		// Verify that .ddev-config directory was cleaned up after installation
 		configDir := app.GetConfigPath(".ddev-config")
-		require.NoFileExists(t, configDir, "Configuration directory should be cleaned up after installation")
+		require.NoDirExists(t, configDir, "Configuration directory should be cleaned up after installation")
 	})
 
 	// Test PHP removal actions - install an addon with PHP removal actions and then remove it
@@ -555,6 +555,10 @@ services:
 
 		// Verify the varnish extras file was removed by the PHP action
 		require.NoFileExists(t, extrasFile, "Varnish extras file should be removed by PHP removal action")
+
+		// Verify that .ddev-config directory was cleaned up after removal
+		configDir := app.GetConfigPath(".ddev-config")
+		require.NoDirExists(t, configDir, "Configuration directory should be cleaned up after removal")
 	})
 
 	// Test explicit image without php-yaml (e.g., php:8.3)
