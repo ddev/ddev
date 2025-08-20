@@ -12,7 +12,6 @@ import (
 	"strings"
 	"text/template"
 
-	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -343,9 +342,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 		},
 	}
 
-	// Execute PHP action using RunSimpleContainerExtended
-	containerName := "ddev-php-action-" + util.RandString(6)
-	_, out, err := dockerutil.RunSimpleContainerExtended(containerName, config, hostConfig, true, false)
+	_, out, err := dockerutil.RunSimpleContainerExtended("php-action-"+util.RandString(6), config, hostConfig, true, false)
 	out = strings.TrimSpace(out)
 
 	if err != nil {
@@ -486,7 +483,7 @@ func injectPHPStrictMode(action string) string {
 
 // validatePHPSyntax validates PHP syntax by running php -l in a container
 // This is used only for validating included/required files
-func validatePHPSyntax(phpCode string, app *DdevApp, image string) error {
+func validatePHPSyntax(phpCode string, image string) error {
 	// Use the provided image or default
 	if image == "" {
 		image = docker.GetWebImage()
@@ -510,40 +507,13 @@ if [ $exit_code -ne 0 ]; then
 fi
 `, phpCode)
 
-	cmd := []string{"sh", "-c", shellScript}
-
-	// Create in-memory docker-compose project for PHP validation
-	phpProject, err := dockerutil.CreateComposeProject("name: ddev-php-validate")
-	if err != nil {
-		return fmt.Errorf("failed to create validation compose project: %v", err)
-	}
-
-	// Create service configuration for PHP validation
-	serviceName := "php-validator"
-	phpProject.Services[serviceName] = composeTypes.ServiceConfig{
-		Name:    serviceName,
-		Image:   image,
-		Command: cmd,
-	}
-
-	// Execute PHP validation using docker-compose run
-	stdout, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeYaml: phpProject,
-		Action:      []string{"run", "--rm", "--no-deps", serviceName},
-		ProjectName: "php-validate-" + app.GetComposeProjectName(),
-	})
+	_, out, err := dockerutil.RunSimpleContainer(image, "php-validate-"+util.RandString(6), []string{"sh", "-c", shellScript}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	out = strings.TrimSpace(out)
 
 	if err != nil {
 		// Include validation output in error message for debugging
-		combinedOutput := stdout
-		if stderr != "" {
-			if combinedOutput != "" {
-				combinedOutput += "\n"
-			}
-			combinedOutput += stderr
-		}
-		if combinedOutput != "" {
-			return fmt.Errorf("PHP syntax validation failed: %s", combinedOutput)
+		if out != "" {
+			return fmt.Errorf("PHP syntax validation failed: %s", out)
 		}
 		return fmt.Errorf("PHP syntax validation failed: %v", err)
 	}
@@ -669,7 +639,7 @@ func validateIncludedFile(filePath string, app *DdevApp, image string) error {
 	// Only validate files that appear to contain PHP code
 	content := string(includedContent)
 	if strings.Contains(content, "<?php") || filepath.Ext(fullPath) == ".php" {
-		err = validatePHPSyntax(content, app, image)
+		err = validatePHPSyntax(content, image)
 		if err != nil {
 			return fmt.Errorf("PHP syntax error in included file: %w", err)
 		}
