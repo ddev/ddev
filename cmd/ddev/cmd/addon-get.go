@@ -186,7 +186,7 @@ ddev add-on get /path/to/tarball.tar.gz
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
 					if !verbose {
-						util.Failed("Could not process pre-install action (%d) '%s'. For more detail use ddev add-on get --verbose", i, desc)
+						util.Failed("Could not process pre-install action (%d) '%s'.\nFor more detail, run `%s --verbose`", i, desc, prettyCmd(os.Args))
 					} else {
 						util.Failed("Could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
 					}
@@ -261,7 +261,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if !verbose {
-					util.Failed("Could not process post-install action (%d) '%s'", i, desc)
+					util.Failed("Could not process post-install action (%d) '%s'.\nFor more detail, run `%s --verbose`", i, desc, prettyCmd(os.Args))
 				} else {
 					util.Failed("Could not process post-install action (%d) '%s': %v", i, desc, err)
 				}
