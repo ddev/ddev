@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
+	"github.com/ddev/ddev/pkg/versionconstants"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -103,7 +104,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		router = "disabled"
 	}
 
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router))
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\n ddev Version: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router, versionconstants.DdevVersion))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
