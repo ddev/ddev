@@ -2177,6 +2177,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		}
 	}
 
+	baseComposeExecCmd = append(baseComposeExecCmd, "-e", "DDEV_EXEC=true")
 	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)
 
 	// Cases to handle

@@ -460,6 +460,8 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) 
 			_ = os.Setenv("DDEV_PROJECT_STATUS", "")
 		}
 
+		os.Setenv("DDEV_COMMAND", name)
+
 		osArgs := []string{}
 		if len(os.Args) > 2 {
 			osArgs = os.Args[2:]
@@ -519,6 +521,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			Dir:       app.GetWorkingDir(s, ""),
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 			NoCapture: true,
+			Env:       []string{"DDEV_COMMAND=" + name},
 		}
 		if relative {
 			opts.Dir = path.Join(opts.Dir, app.GetRelativeWorkingDirectory())
