@@ -104,7 +104,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		router = "disabled"
 	}
 
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\n ddev Version: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router, versionconstants.DdevVersion))
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\nDDEV version: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router, versionconstants.DdevVersion))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
