@@ -19,7 +19,7 @@ if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
 fi
 FULLURL=${DDEV_PRIMARY_URL}
 HTTPS=""
-if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
+if [ "${DDEV_PRIMARY_URL%://*}" = "https" ]; then HTTPS=true; fi
 IN_CLOUD=""
 if [[ -n "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then IN_CLOUD=true; fi
 
