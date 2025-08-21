@@ -8,7 +8,7 @@ require (
 	github.com/amplitude/analytics-go v1.2.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cheggaaa/pb v1.0.29
-	github.com/compose-spec/compose-go/v2 v2.7.1
+	github.com/compose-spec/compose-go/v2 v2.8.1
 	github.com/containerd/errdefs v1.0.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/cli v28.3.3+incompatible
@@ -31,7 +31,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/ulikunitz/xz v0.5.12
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
-	go.yaml.in/yaml/v3 v3.0.3
+	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/mod v0.24.0
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0
