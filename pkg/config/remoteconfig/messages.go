@@ -300,7 +300,7 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 
 	t := table.NewWriter()
 	applyTableStyle(sponsorship, t)
-	title := "❤️  DDEV Sponsorship Status"
+	title := "❤️ DDEV Sponsorship Status"
 	t.AppendHeader(table.Row{title})
 	t.AppendRow(table.Row{message})
 
