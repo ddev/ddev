@@ -7,22 +7,20 @@ search:
 
 DDEV add-ons are pre-packaged extensions that add functionality to your development environment with a single command. They handle installation, configuration, and integration automatically.
 
-## Add-ons vs. Manual Services
+## Add-ons vs. Custom Docker Compose Services
 
 **Use add-ons when:**
 
-- You want a standard, tested service (Redis, Elasticsearch, Solr)
-- You need cross-platform compatibility
+- A standard, tested service is available as an add-on (Redis, Elasticsearch, Solr)
 - You want automatic configuration and setup
-- You plan to share the setup with your team
 
-**Use manual Docker services when:**
+**Use custom Docker Compose services when:**
 
 - You need a custom or highly specialized service
 - You require deep customization of the service configuration
 - You're prototyping or experimenting with service configurations
 
-See [Defining Additional Services with Docker Compose](custom-compose-files.md) for manual service setup.
+See [Defining Additional Services with Docker Compose](custom-compose-files.md) for custom Docker Compose service setup.
 
 ## Discovering Add-ons
 
@@ -183,12 +181,16 @@ This approach:
 ### Check Add-on Status
 
 ```bash
-ddev logs
+ddev describe
 ```
 
-This shows logs from all services, including add-on services.
+```bash
+ddev logs -s <service>
+```
 
-### Verify Add-on Files
+This shows logs from an add-on's service.
+
+### Explore Add-on Files
 
 ```bash
 ls -la .ddev/
@@ -218,9 +220,7 @@ This shows the final Docker Compose configuration including add-on services.
 
 ### Common Issues
 
-**Port conflicts**: If multiple projects use the same add-on, ports may conflict. Add-ons typically handle this automatically, but check the add-on documentation.
-
-**Service not starting**: Check `ddev logs` for error messages from the add-on service.
+**Service not starting**: Check `ddev logs -s <service>` for error messages from the add-on service.
 
 **Configuration not applied**: Ensure you've run `ddev restart` after making configuration changes.
 
