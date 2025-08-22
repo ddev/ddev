@@ -36,6 +36,11 @@ func XHGuiSetup(app *DdevApp) error {
 		return err
 	}
 
+	// Sync after enabling xhprof to ensure code files are available
+	if err = app.MutagenSyncFlush(); err != nil {
+		return err
+	}
+
 	if !IsXHGuiContainerRunning(app) {
 		err = app.StartOptionalProfiles([]string{"xhgui"})
 		if err != nil {
