@@ -31,6 +31,19 @@ post_install_actions:
     <?php
     #ddev-description: Finalize basic PHP addon setup
     echo "PHP: Post-install PHP action executed\n";
+  - |
+    <?php
+    #ddev-description: Show host.docker.internal IP address using PHP
+    echo "PHP: host.docker.internal: " . gethostbyname('host.docker.internal') . "\n";
+  - |
+    <?php
+    #ddev-description: Show all environment variables using PHP
+    echo "PHP: All available environment variables:\n";
+    $env = $_ENV;
+    ksort($env);
+    foreach ($env as $key => $value) {
+        echo "$key=$value\n";
+    }
 
 removal_actions:
   - |
