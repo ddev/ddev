@@ -19,6 +19,7 @@ import (
 	github2 "github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
@@ -362,7 +363,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 	}
 	// Display captured output
 	if out != "" {
-		util.Warning(out + "\n")
+		output.UserOut.Println(out)
 	}
 	return nil
 }
