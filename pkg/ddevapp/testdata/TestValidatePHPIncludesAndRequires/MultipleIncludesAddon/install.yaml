@@ -1,0 +1,16 @@
+#ddev-generated
+name: multiple-includes-test
+
+project_files:
+  - valid1.php
+  - valid2.inc
+  - valid3.php
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:Test multiple include/require statements validation
+    require 'valid1.php';
+    include_once 'valid2.inc';
+    require_once("valid3.php");
+    echo "All files included successfully\n";

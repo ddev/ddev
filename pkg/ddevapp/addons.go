@@ -530,7 +530,10 @@ func validatePHPIncludesAndRequires(phpCode string, app *DdevApp, image string) 
 
 	// Extract include/require statements with proper regex
 	// Matches: include, include_once, require, require_once followed by file references
-	includePattern := `(include|include_once|require|require_once)[[:space:]]+.*\.(php|inc)`
+	// Fixed: OLD pattern `.*\.(php|inc)` would truncate at first .php, missing closing quotes
+	// Example: "require 'redis/scripts/setup-drupal-settings.php';" would only match up to ".php"
+	// NEW pattern captures complete statements including semicolons and closing quotes
+	includePattern := `(include|include_once|require|require_once)[[:space:]]+.*\.(php|inc)[^;]*;?`
 	matches := nodeps.GrepStringInBuffer(phpCode, includePattern)
 
 	if len(matches) == 0 {
@@ -594,7 +597,14 @@ func extractPHPFilePaths(statement string) []string {
 // containsDynamicContent checks if a file path contains dynamic elements
 func containsDynamicContent(filePath string) bool {
 	// Skip paths with variables, function calls, or concatenation
-	dynamicPatterns := []string{"$", "__DIR__", "__FILE__", "dirname", "realpath", "getcwd", "."}
+	dynamicPatterns := []string{"$", "__DIR__", "__FILE__", "dirname", "realpath", "getcwd"}
+
+	// Fixed: OLD code had "." in dynamicPatterns, incorrectly flagging normal file extensions
+	// Example: "setup-drupal-settings.php" was flagged as dynamic due to the ".php" extension
+	// NEW code only flags concatenation patterns with spaces around the dot operator
+	if strings.Contains(filePath, " . ") || strings.Contains(filePath, ". ") || strings.Contains(filePath, " .") {
+		return true
+	}
 
 	for _, pattern := range dynamicPatterns {
 		if strings.Contains(filePath, pattern) {

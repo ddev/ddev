@@ -1,0 +1,12 @@
+#ddev-generated
+name: syntax-error-test
+
+project_files:
+  - broken.php
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:Test syntax error detection in included files
+    require 'broken.php';
+    echo "This should not run\n";

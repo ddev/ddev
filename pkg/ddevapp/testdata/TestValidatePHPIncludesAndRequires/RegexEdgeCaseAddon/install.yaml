@@ -1,0 +1,14 @@
+#ddev-generated
+name: regex-edge-case-test
+
+project_files:
+  - valid-file.php
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:Test various include/require syntax patterns
+    require 'valid-file.php';
+    include_once "valid-file.php";
+    require_once('valid-file.php');
+    echo "Testing regex patterns\n";
