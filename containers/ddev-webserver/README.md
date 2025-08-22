@@ -22,11 +22,11 @@ This container image is part of DDEV, and is not typically used stand-alone.
 
 ## Instructions
 
-Use [DDEV](https://ddev.readthedocs.io)
+Use [DDEV](https://docs.ddev.com)
 
 ### Building and pushing to Docker Hub
 
-See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
+See [DDEV docs](https://docs.ddev.com/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
 
 ### Running
 
@@ -55,7 +55,7 @@ https://github.com/ddev/ddev/issues
 
 ## Documentation:
 
-* https://ddev.readthedocs.io/
+* https://docs.ddev.com/
 * https://ddev.com/
 
 ## What is DDEV?

@@ -55,7 +55,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			continue
 		}
 		if !govalidator.IsDNSName(name) {
-			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://ddev.readthedocs.io/en/stable/users/configuration/config/#additional_hostnames", name)
+			util.Warning("DDEV cannot add unresolvable hostnames like `%s` to your hosts file.\nSee docs for more info, https://docs.ddev.com/en/stable/users/configuration/config/#additional_hostnames", name)
 			continue
 		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)

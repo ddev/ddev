@@ -162,7 +162,7 @@ path: public
 
 By default, [`wp_get_environment_type()`](https://developer.wordpress.org/reference/functions/wp_get_environment_type/) returns `production`. However, you can override it in one of two ways:
 
-1. Setting an environment variable, such as with the following [ddev command](https://ddev.readthedocs.io/en/stable/users/usage/commands/#config):
+1. Setting an environment variable, such as with the following [ddev command](commands.md#config):
 
     ```bash
     ddev config --web-environment-add="WP_ENVIRONMENT_TYPE=local"

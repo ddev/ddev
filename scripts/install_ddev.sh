@@ -119,7 +119,7 @@ fi
 FILEBASE="${FILEBASE}-${ARCH}"
 
 if ! docker --version >/dev/null 2>&1; then
-    printf "${YELLOW}A docker provider is required for ddev. Please see https://ddev.readthedocs.io/en/stable/users/install/docker-installation/.${RESET}\n"
+    printf "${YELLOW}A docker provider is required for ddev. Please see https://docs.ddev.com/en/stable/users/install/docker-installation/.${RESET}\n"
 fi
 
 TARBALL="$FILEBASE.$VERSION.tar.gz"

@@ -14,7 +14,7 @@
     <projectUrl>https://github.com/ddev/ddev</projectUrl>
     <licenseUrl>https://github.com/ddev/ddev/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
+    <docsUrl>https://docs.ddev.com/en/stable/</docsUrl>
     <bugTrackerUrl>https://github.com/ddev/ddev/issues</bugTrackerUrl>
     <tags>ddev drupal TYPO3 backdrop php</tags>
     <summary>DDEV is a local web development tool optimized for PHP projects and CMSs.</summary>

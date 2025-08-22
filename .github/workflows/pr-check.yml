@@ -22,7 +22,7 @@ jobs:
           pattern: '^(build|chore|ci|docs|feat|fix|perf|refactor|style|test)(\([a-z][a-z0-9-]*\))?!?:\s(?!.*  )[A-Za-z''"`].*[A-Za-z0-9\]\)''"`](?:, (?:fixes|for) #\d+)*$'
           flags: ''
           excludeDescription: true
-          error: 'Title does not follow our conventions see https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines'
+          error: 'Title does not follow our conventions see https://docs.ddev.com/en/latest/developers/building-contributing/#pull-request-title-guidelines'
 
   assign_labels:
     name: Assign Labels

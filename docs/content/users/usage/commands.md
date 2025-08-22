@@ -7,8 +7,8 @@ Run DDEV without any commands or flags to see this list in your terminal:
 ```
 →  ddev
 Create and maintain a local web development environment.
-Docs: https://ddev.readthedocs.io
-Support: https://ddev.readthedocs.io/en/stable/users/support
+Docs: https://docs.ddev.com
+Support: https://docs.ddev.com/en/stable/users/support
 
 Usage:
   ddev [command]

@@ -34,7 +34,7 @@ cd ${TMPDIR} && git clone https://github.com/${HOMEBREW_REPO} && cd "$(basename 
 cat >Formula/${PROJECT_NAME}.rb <<END
 class Ddev < Formula
   desc "Local web development system"
-  homepage "https://ddev.readthedocs.io/"
+  homepage "https://docs.ddev.com/"
   url "${SOURCE_URL}"
   sha256 "${SOURCE_SHA}"
   license "apache-2.0"
@@ -77,7 +77,7 @@ class Ddev < Formula
             Make sure to do a 'mkcert -install' if you haven't done it before, it may require your sudo password.
       #{"      "}
             ddev requires docker or colima.
-            See https://ddev.readthedocs.io/en/stable/users/install/docker-installation/
+            See https://docs.ddev.com/en/stable/users/install/docker-installation/
     EOS
   end
 

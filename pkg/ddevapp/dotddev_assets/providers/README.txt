@@ -41,9 +41,9 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 - `db_push_command`: A script that determines how DDEV should push a database. Its job is to take a gzipped database dump from `/var/www/html/.ddev/.downloads/db.sql.gz` and load it on the hosting provider.
 - `files_push_command`: A script that determines how DDEV push user-generated files to upstream. Its job is to copy the files from the project’s user-files directories (`$DDEV_FILES_DIRS`) to the correct places on the upstream provider.
 
-The environment variables provided to custom commands (see https://ddev.readthedocs.io/en/stable/users/extend/custom-commands/#environment-variables-provided) are also available for use in these recipes.
+The environment variables provided to custom commands (see https://docs.ddev.com/en/stable/users/extend/custom-commands/#environment-variables-provided) are also available for use in these recipes.
 
-There are hooks (see https://ddev.readthedocs.io/en/stable/users/configuration/hooks/) available to execute commands before and after each pull or push: `pre-pull`, `post-pull`, `pre-push`, `post-push`. These could be for example a `ddev snapshot` to backup the database before a pull or a specific task to clear/warm-up caches of your application.
+There are hooks (see https://docs.ddev.com/en/stable/users/configuration/hooks/) available to execute commands before and after each pull or push: `pre-pull`, `post-pull`, `pre-push`, `post-push`. These could be for example a `ddev snapshot` to backup the database before a pull or a specific task to clear/warm-up caches of your application.
 
 ## Example Integrations and Hints
 

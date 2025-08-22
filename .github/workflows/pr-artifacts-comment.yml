@@ -146,7 +146,7 @@ jobs:
               return acc;
             }, 'Download the artifacts for this pull request:\n');
 
-            body += `\n\nSee [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr).`;
+            body += `\n\nSee [Testing a PR](https://docs.ddev.com/en/latest/developers/building-contributing/#testing-a-pr).`;
             const codespacesLink = prRef && prRepoId
               ? `https://github.com/codespaces/new?ref=${prRef}&repo=${prRepoId}`
               : `https://github.com/codespaces/new/${context.repo.owner}/${context.repo.repo}`;

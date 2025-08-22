@@ -4,7 +4,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
 ## General Troubleshooting Strategies
 
-* Please use the [current stable version of DDEV](https://ddev.readthedocs.io/en/stable/users/install/ddev-upgrade/) and of your Docker provider before going too far or asking for support.
+* Please use the [current stable version of DDEV](../install/ddev-upgrade.md) and of your Docker provider before going too far or asking for support.
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.

@@ -16,11 +16,11 @@ DDEV is an open-source tool for running local web development environments for P
 
 ## Documentation
 
-To check out live examples, docs, contributor live training, guides and more visit [ddev.com](https://ddev.com) and [ddev.readthedocs.io](https://ddev.readthedocs.io/en/stable/users/support)
+To check out live examples, docs, contributor live training, guides and more visit [ddev.com](https://ddev.com) and [docs.ddev.com](https://docs.ddev.com/en/stable/users/support)
 
 ## Questions
 
-If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/stable/users/support/).
+If you need help, our friendly community provides [great support](https://docs.ddev.com/en/stable/users/support/).
 
 ## Wonderful Sponsors
 
@@ -33,15 +33,15 @@ DDEV is an Apache License 2.0 open-source project with its ongoing development m
 
 ## Contributing
 
-See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io/en/stable/users/usage/faq/), and the [Contributing](CONTRIBUTING.md) page.
+See “How can I contribute to DDEV?” in the [FAQ](https://docs.ddev.com/en/stable/users/usage/faq/), and the [Contributing](CONTRIBUTING.md) page.
 
 ![Overview of GitHub contributions](https://repobeats.axiom.co/api/embed/941b040a17921e974655fc01d7735aa350a53603.svg "Repobeats analytics image")
 
 ## Get Started
 
-1. **Check [System Requirements](https://ddev.readthedocs.io/):** macOS (Intel and Apple Silicon), Windows 10/11, WSL2, Linux, and [GitHub Codespaces](https://github.com/codespaces).
-2. **Install a [Docker provider and DDEV](https://ddev.readthedocs.io/en/stable/users/install/)**.
-3. **Try a [CMS Quick Start Guide](https://ddev.readthedocs.io/en/stable/users/quickstart/)**.
+1. **Check [System Requirements](https://docs.ddev.com/):** macOS (Intel and Apple Silicon), Windows 10/11, WSL2, Linux, and [GitHub Codespaces](https://github.com/codespaces).
+2. **Install a [Docker provider and DDEV](https://docs.ddev.com/en/stable/users/install/)**.
+3. **Try a [CMS Quick Start Guide](https://docs.ddev.com/en/stable/users/quickstart/)**.
 
 Additionally, [https://ddev.com/get-started/](https://ddev.com/get-started/) provides an up-to-date getting-started guide.
 
@@ -61,4 +61,4 @@ Additionally, [https://ddev.com/get-started/](https://ddev.com/get-started/) pro
 * Enjoy effortless, trusted HTTPS support.
 * Extend and customize environments as much (or as little!) as you need to.
 
-Run `ddev` to see all the [commands](https://ddev.readthedocs.io/en/stable/users/usage/cli/).
+Run `ddev` to see all the [commands](https://docs.ddev.com/en/stable/users/usage/cli/).

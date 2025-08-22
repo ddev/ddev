@@ -10,7 +10,7 @@ const ConfigInstructions = `
 # which is useful if you want to have a copy of the project side by side with this one.
 
 # type: <projecttype>  # backdrop, cakephp, craftcms, drupal, drupal6, drupal7, drupal8, drupal9, drupal10, drupal11, generic, laravel, magento, magento2, php, shopware6, silverstripe, symfony, typo3, wordpress
-# See https://ddev.readthedocs.io/en/stable/users/quickstart/ for more
+# See https://docs.ddev.com/en/stable/users/quickstart/ for more
 # information on the different project types
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
@@ -88,7 +88,7 @@ const ConfigInstructions = `
 
 # nodejs_version: "22"
 # change from the default system Node.js version to any other version.
-# See https://ddev.readthedocs.io/en/stable/users/configuration/config/#nodejs_version for more information
+# See https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version for more information
 # and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
 # Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
 # can specify any version, and is more robust than using 'nvm'.
@@ -153,8 +153,8 @@ const ConfigInstructions = `
 #   - "mutagen": enables Mutagen for this project.
 #   - "nfs":     enables NFS for this project.
 #
-# See https://ddev.readthedocs.io/en/stable/users/install/performance/#nfs
-# See https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen
+# See https://docs.ddev.com/en/stable/users/install/performance/#nfs
+# See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
@@ -281,7 +281,7 @@ const ConfigInstructions = `
 # Many DDEV commands can be extended to run tasks before or after the
 # DDEV command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"
-# See https://ddev.readthedocs.io/en/stable/users/extend/custom-commands/ for more
+# See https://docs.ddev.com/en/stable/users/extend/custom-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:
 #hooks:

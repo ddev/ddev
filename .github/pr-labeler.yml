@@ -37,7 +37,7 @@ labels:
 
 checks:
   - context: "Semantic Pull Request"
-    url: "https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines"
+    url: "https://docs.ddev.com/en/latest/developers/building-contributing/#pull-request-title-guidelines"
     description:
       success: Ready for review.
       failure: Missing semantic label.
