@@ -2566,17 +2566,6 @@ func (app *DdevApp) DockerEnv() {
 		"IS_GITPOD":                     strconv.FormatBool(nodeps.IsGitpod()),
 		"IS_CODESPACES":                 strconv.FormatBool(nodeps.IsCodespaces()),
 		"IS_WSL2":                       isWSL2,
-		// TODO: Disable bake builder (default since compose v2.37.0) to restore image label
-		// com.docker.compose.project used by `ddev delete` to detect DDEV-created images
-		// See: https://github.com/docker/compose/releases/tag/v2.37.0
-		//
-		// Label can be added via build.labels:
-		// services:
-		//  web:
-		//    build:
-		//      labels:
-		//        com.docker.compose.project: "project-name"
-		"COMPOSE_BAKE": "false",
 	}
 
 	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.

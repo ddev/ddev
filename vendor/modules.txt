@@ -47,7 +47,7 @@ github.com/cheggaaa/pb
 # github.com/chzyer/readline v1.5.1
 ## explicit; go 1.15
 github.com/chzyer/readline
-# github.com/compose-spec/compose-go/v2 v2.7.1
+# github.com/compose-spec/compose-go/v2 v2.8.1
 ## explicit; go 1.23
 github.com/compose-spec/compose-go/v2/consts
 github.com/compose-spec/compose-go/v2/dotenv
@@ -408,8 +408,8 @@ go.opentelemetry.io/proto/otlp/common/v1
 go.opentelemetry.io/proto/otlp/metrics/v1
 go.opentelemetry.io/proto/otlp/resource/v1
 go.opentelemetry.io/proto/otlp/trace/v1
-# go.yaml.in/yaml/v3 v3.0.3
-## explicit; go 1.22
+# go.yaml.in/yaml/v3 v3.0.4
+## explicit; go 1.16
 go.yaml.in/yaml/v3
 # golang.org/x/crypto v0.36.0
 ## explicit; go 1.23.0
