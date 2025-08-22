@@ -236,7 +236,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 				exitCode := exitErr.ExitCode()
 				if exitCode == warningCode {
 					if desc != "" {
-						util.Warning("%s %s", "\U000026A0\U0000FE0F", desc)
+						util.Warning("%s %s (bash)", "\U000026A0\U0000FE0F", desc)
 					}
 					err = nil
 				}
@@ -244,13 +244,13 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 		}
 		if err != nil {
 			if desc != "" {
-				util.Warning("%c %s", '\U0001F44E', desc)
+				util.Warning("%c %s (bash)", '\U0001F44E', desc)
 			}
-			err = fmt.Errorf("unable to run action %v: %v, output=%s", action, err, out)
+			err = fmt.Errorf("unable to run bash action %v: %v, output=%s", action, err, out)
 		}
 	} else {
 		if desc != "" {
-			util.Success("%c %s", '\U0001F44D', desc)
+			util.Success("%c %s (bash)", '\U0001F44D', desc)
 		}
 	}
 	if len(out) > 0 {
@@ -347,7 +347,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 
 	if err != nil {
 		if desc != "" {
-			util.Warning("%c %s", '\U0001F44E', desc) // 👎 error emoji
+			util.Warning("%c %s (PHP)", '\U0001F44E', desc) // 👎 error emoji
 		}
 		// Include output in error message for debugging
 		if out != "" {
@@ -358,7 +358,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 
 	// Show description on success
 	if desc != "" {
-		util.Success("%c %s", '\U0001F44D', desc) // 👍 success emoji
+		util.Success("%c %s (PHP)", '\U0001F44D', desc) // 👍 success emoji
 	}
 	// Display captured output
 	if out != "" {
