@@ -1,0 +1,263 @@
+<style>
+  .ddev-sponsor-banner {
+    /*background: #1e2127;*/
+    color: #ffffff;
+    /*padding: 0.5rem 1rem;*/
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .ddev-sponsor-banner *,
+  .ddev-sponsor-banner *::before,
+  .ddev-sponsor-banner *::after {
+    box-sizing: border-box;
+  }
+
+  .ddev-sponsor-banner__container {
+    max-width: 62rem;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .ddev-sponsor-banner__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ddev-sponsor-banner__desktop-view {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .ddev-sponsor-banner__mobile-view {
+    display: none;
+  }
+
+  .ddev-sponsor-banner__amount {
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .ddev-sponsor-banner__progress-section {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .ddev-sponsor-banner__progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .ddev-sponsor-banner__progress-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.2);
+    overflow: hidden;
+    margin: 4px 0;
+  }
+
+  .ddev-sponsor-banner__progress-fill {
+    height: 100%;
+    background: #02a8e2;
+    transition: width 0.5s ease;
+  }
+
+  .ddev-sponsor-banner__amounts-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+
+  .ddev-sponsor-banner__meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-top: 0.25rem;
+  }
+
+  .ddev-sponsor-banner__button {
+    background: #027ba7 !important;
+    color: #ffffff !important;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .ddev-sponsor-banner__button:hover {
+    background: #015471 !important;
+    text-decoration: none;
+  }
+
+  .ddev-sponsor-banner__cta {
+    font-weight: bold;
+  }
+
+  @media (max-width: 700px) {
+    .ddev-sponsor-banner__desktop-view { display: none; }
+    .ddev-sponsor-banner__mobile-view { display: block; }
+    .ddev-sponsor-banner__progress-bar { margin: 2px 0; }
+  }
+
+  @media (max-width: 480px) {
+    .ddev-sponsor-banner__container {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+    .ddev-sponsor-banner__button { width: 100%; }
+  }
+
+  @media (max-width: 320px) {
+    .ddev-sponsor-banner__meta-row {
+      flex-direction: column;
+      gap: 0.25rem;
+      text-align: center;
+    }
+  }
+</style>
+
+<div class="ddev-sponsor-banner">
+  <div class="ddev-sponsor-banner__container">
+    <div class="ddev-sponsor-banner__content">
+      <!-- Desktop Layout -->
+      <div class="ddev-sponsor-banner__desktop-view">
+        <span class="ddev-sponsor-banner__amount" id="raised-desktop">Raised: $0</span>
+        <div class="ddev-sponsor-banner__progress-section">
+          <div class="ddev-sponsor-banner__progress-header">
+            <span id="percent-desktop">0% of monthly goal</span>
+            <span class="ddev-sponsor-banner__cta">Help us cross the finish line!</span>
+          </div>
+          <div class="ddev-sponsor-banner__progress-bar">
+            <div class="ddev-sponsor-banner__progress-fill" id="progress-desktop" style="width: 0%"></div>
+          </div>
+        </div>
+        <span class="ddev-sponsor-banner__amount" id="goal-desktop">Goal: $12,000</span>
+      </div>
+
+      <!-- Mobile Layout -->
+      <div class="ddev-sponsor-banner__mobile-view">
+        <div class="ddev-sponsor-banner__amounts-row">
+          <span class="ddev-sponsor-banner__amount" id="raised-mobile">Raised: $0</span>
+          <span class="ddev-sponsor-banner__amount" id="goal-mobile">Goal: $12,000</span>
+        </div>
+        <div class="ddev-sponsor-banner__progress-bar">
+          <div class="ddev-sponsor-banner__progress-fill" id="progress-mobile" style="width: 0%"></div>
+        </div>
+        <div class="ddev-sponsor-banner__meta-row">
+          <span id="percent-mobile">0% of monthly goal</span>
+          <span class="ddev-sponsor-banner__cta">Help us cross the finish line!</span>
+        </div>
+      </div>
+    </div>
+
+    <a class="ddev-sponsor-banner__button" href="https://github.com/sponsors/ddev" target="_blank">
+      Sponsor DDEV
+    </a>
+  </div>
+</div>
+
+<script>
+  // This runs immediately during HTML parsing, before any CSS transitions
+  (function() {
+    const CACHE_KEY = 'ddevSponsorshipData';
+    const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
+    const API_URL = 'https://ddev.com/s/sponsorship-data.json';
+    const FALLBACK_URL = 'https://ddev.github.io/sponsorship-data/data/all-sponsorships.json';
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(value);
+    }
+
+    function updateBannerElements(data) {
+      const income = data.total_monthly_average_income || 0;
+      const goal = data.current_goal?.target_amount || 12000;
+      const percentage = Math.min((income / goal) * 100, 100).toFixed(0);
+
+      // Update text elements
+      const elements = {
+        'raised-desktop': `Raised: ${formatCurrency(income)}`,
+        'raised-mobile': `Raised: ${formatCurrency(income)}`,
+        'goal-desktop': `Goal: ${formatCurrency(goal)}`,
+        'goal-mobile': `Goal: ${formatCurrency(goal)}`,
+        'percent-desktop': `${percentage}% of monthly goal`,
+        'percent-mobile': `${percentage}% of monthly goal`
+      };
+
+      for (const [id, text] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      }
+
+      // Update progress bars
+      const progressDesktop = document.getElementById('progress-desktop');
+      const progressMobile = document.getElementById('progress-mobile');
+      if (progressDesktop) progressDesktop.style.width = `${percentage}%`;
+      if (progressMobile) progressMobile.style.width = `${percentage}%`;
+    }
+
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          // Fresh cache found - update immediately before any rendering
+          updateBannerElements(data);
+          return; // Exit - don't fetch new data
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cached data:', error);
+    }
+
+    // No fresh cache - fetch new data
+    const fetchWithFallback = async () => {
+      try {
+        // Try primary API first
+        const response = await fetch(API_URL);
+        if (response.ok) {
+          return await response.json();
+        }
+        throw new Error(`Primary API failed: ${response.status}`);
+      } catch (error) {
+        console.warn('Primary API unavailable, trying fallback:', error.message);
+        // Try fallback URL
+        const fallbackResponse = await fetch(FALLBACK_URL);
+        if (fallbackResponse.ok) {
+          return await fallbackResponse.json();
+        }
+        throw new Error(`Both APIs failed. Fallback: ${fallbackResponse.status}`);
+      }
+    };
+
+    fetchWithFallback()
+      .then(data => {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          timestamp: Date.now(),
+          data
+        }));
+
+        updateBannerElements(data);
+      })
+      .catch(error => console.error('Failed to fetch sponsorship data from both APIs:', error));
+  })();
+</script>
