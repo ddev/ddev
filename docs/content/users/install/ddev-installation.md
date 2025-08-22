@@ -65,6 +65,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     sudo sh -c 'echo ""'
     sudo apt-get update && sudo apt-get install -y ddev
 
+    # Install mkcert and the certutil
+    sudo apt-get install libnss3-tools
+    sudo apt-get install mkcert
+
     # One-time initialization of mkcert
     mkcert -install
     ```
