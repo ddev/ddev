@@ -22,12 +22,10 @@ When you need services that aren't available as DDEV add-ons, or require deep cu
 
 **Use add-ons when:**
 
-- You want a standard, tested service (Redis, Elasticsearch, Solr)
-- You need cross-platform compatibility
+- An add-on is already available that provides a standard, tested service (Redis, Elasticsearch, Solr)
 - You want automatic configuration and setup
-- You plan to share the setup with your team
 
-See [Using Add-ons](using-add-ons.md) for pre-built solutions.
+See [Using Add-ons](using-add-ons.md) for pre-built add-ons.
 
 ## Creating Custom Services
 
@@ -113,7 +111,7 @@ volumes:
   - ".:/mnt/ddev_config"
 ```
 
-Mount project files:
+Mount project files if needed:
 
 ```yaml
 volumes:
@@ -122,34 +120,45 @@ volumes:
 
 ## Advanced Service Examples
 
-### Database Service with Persistent Storage
+### SQL Server Database Service
+
+This example shows a custom SQL Server database service, useful when you need a database not natively supported by DDEV.
+
+Create `.ddev/docker-compose.sqlsrv.yaml`:
 
 ```yaml
 services:
-  mydb:
-    container_name: "ddev-${DDEV_SITENAME}-mydb"
-    image: postgres:15
+  sqlsrv:
+    container_name: "ddev-${DDEV_SITENAME}-sqlsrv"
+    image: mcr.microsoft.com/mssql/server:2022-latest
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
     ports:
-      - "5432"
+      - "1433:1433"  # Direct port binding for SQL Server protocol
     environment:
-      - POSTGRES_DB=myproject
-      - POSTGRES_USER=db
-      - POSTGRES_PASSWORD=db
+      - SA_PASSWORD=Password123!
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
     volumes:
-      - "mydb-data:/var/lib/postgresql/data"
+      - "sqlsrv-data:/var/opt/mssql"
       - ".:/mnt/ddev_config"
+    # Platform specification for ARM64 compatibility
+    platform: linux/amd64
 
 volumes:
-  mydb-data:
+  sqlsrv-data:
     external: true
-    name: "${DDEV_SITENAME}-mydb-data"
+    name: "${DDEV_SITENAME}-sqlsrv-data"
 ```
 
+!!!note "Non-HTTP Services Require Direct Port Binding"
+    SQL Server uses a proprietary protocol that cannot be routed through the DDEV router, so it requires direct `ports` binding. This means only one project can use SQL Server at a time unless you change the port.
+
 ### Service with Custom Configuration
+
+Create `.ddev/docker-compose.elasticsearch.yaml`:
 
 ```yaml
 services:
@@ -179,6 +188,8 @@ volumes:
 ```
 
 ### Multi-Service Setup
+
+Create `.ddev/docker-compose.cache.yaml`:
 
 ```yaml
 services:
@@ -278,7 +289,7 @@ ddev exec "curl -s http://myservice:8080/health"
 
 ### Database Integration
 
-Add database connection info to web container:
+Add database connection info to web container in `.ddev/docker-compose.web-env.yaml`:
 
 ```yaml
 services:
@@ -293,7 +304,7 @@ services:
 
 ### Configuration File Mounting
 
-Mount configuration from your project:
+Mount configuration from your project in `.ddev/docker-compose.config.yaml`:
 
 ```yaml
 services:
@@ -304,7 +315,7 @@ services:
 
 ### Init Scripts
 
-Run initialization scripts:
+Run initialization scripts in `.ddev/docker-compose.init.yaml`:
 
 ```yaml
 services:

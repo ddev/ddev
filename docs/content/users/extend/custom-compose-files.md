@@ -18,16 +18,7 @@ To add custom configuration or additional services to your project, create `dock
 
 ## `docker-compose.*.yaml` Examples
 
-* Expose an additional port 9999 to host port 9999, in a file perhaps called `docker-compose.ports.yaml`:
-
-```yaml
-services:
-  dummy-service:
-    ports:
-    - "9999:9999"
-```
-
-That approach usually isn’t sustainable because two projects might want to use the same port, so we *expose* the additional port to the Docker network and then use `ddev-router` to bind it to the host. This works only for services with an HTTP API, but results in having both HTTP and HTTPS ports (9998 and 9999).
+For most HTTP-based services, use `expose` with `HTTP_EXPOSE` and `HTTPS_EXPOSE` environment variables. This approach allows multiple projects to run simultaneously without port conflicts:
 
 ```yaml
 services:
@@ -42,6 +33,45 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - HTTP_EXPOSE=9998:9999
       - HTTPS_EXPOSE=9999:9999
+```
+
+!!!warning "Avoid using `ports` - it prevents multiple projects from running"
+
+    Direct port binding with `ports` should be avoided for most services because it prevents multiple projects with the same service from running simultaneously. Only use `ports` for non-HTTP services that cannot work through the DDEV router.
+
+**Only use `ports` for non-HTTP services** that must bind directly to localhost, such as database connections or other protocols that cannot be routed through HTTP/HTTPS:
+
+```yaml
+services:
+  special-service:
+    ports:
+    - "9999:9999"  # Use only when HTTP routing is not possible
+```
+
+### Customizing Existing Services
+
+You can also modify existing DDEV services like the `web` container without adding new services. This is useful for adding environment variables, volumes, or build customizations:
+
+```yaml
+services:
+  web:
+    environment:
+      - CUSTOM_ENV_VAR=value
+    volumes:
+      - ./custom-config:/etc/custom-config:ro
+```
+
+For more complex customizations, you can add a custom build stage to an existing service:
+
+```yaml
+services:
+  web:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM ddev-webserver
+        RUN apt-get update && apt-get install -y custom-package
+        COPY custom-script.sh /usr/local/bin/
 ```
 
 ## Confirming docker-compose Configurations
