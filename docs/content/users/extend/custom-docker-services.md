@@ -8,7 +8,7 @@ search:
 When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files.
 
 !!!tip "From Custom Services to Add-ons"
-    Many successful custom services eventually become DDEV add-ons so they can be shared with teams, between projects, or with the broader community. If you find your custom service useful and stable, consider converting it to an add-on using the [ddev-addon-template](https://github.com/ddev/ddev-addon-template).
+    Many successful custom services eventually become DDEV add-ons so they can be shared with teams, between projects, or with the broader community. If you find your custom service useful and stable, consider converting it to an add-on using the [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template).
 
 ## When to Use Custom Services
 
@@ -313,7 +313,7 @@ services:
       - "./config/myservice.conf:/etc/myservice/myservice.conf:ro"
 ```
 
-### Init Scripts
+### Initialization Scripts
 
 Run initialization scripts in `.ddev/docker-compose.init.yaml`:
 
@@ -365,8 +365,6 @@ Many services previously documented in [ddev-contrib](https://github.com/ddev/dd
 
 - Don't expose unnecessary ports to the host
 - Use non-root users when possible
-- Keep images updated
-- Avoid hardcoded secrets
 
 ### Maintainability
 
@@ -393,7 +391,7 @@ If your custom service becomes stable and useful for multiple projects, consider
 
 **Steps to convert:**
 
-1. Create an add-on repository from [ddev-addon-template](https://github.com/ddev/ddev-addon-template)
+1. Create an add-on repository from [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template)
 2. Move your service configuration to the add-on
 3. Add installation actions and configuration options
 4. Create tests and documentation

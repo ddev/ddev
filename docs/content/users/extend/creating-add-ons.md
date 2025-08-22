@@ -226,7 +226,7 @@ post_install_actions:
     require 'myservice/scripts/configure.php';
 ```
 
-**myservice/scripts/setup.php:**
+**`myservice/scripts/setup.php`:**
 
 ```php
 <?php

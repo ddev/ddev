@@ -141,40 +141,40 @@ This approach:
 
 ### Database and Caching
 
-- **[ddev/ddev-redis](https://github.com/ddev/ddev-redis)** - Redis cache and data store service
-- **[ddev/ddev-memcached](https://github.com/ddev/ddev-memcached)** - High-performance Memcached caching service
-- **[ddev/ddev-mongo](https://github.com/ddev/ddev-mongo)** - MongoDB NoSQL database support
+- **[`ddev/ddev-redis`](https://github.com/ddev/ddev-redis)** - Redis cache and data store service
+- **[`ddev/ddev-memcached`](https://github.com/ddev/ddev-memcached)** - High-performance Memcached caching service
+- **[`ddev/ddev-mongo`](https://github.com/ddev/ddev-mongo)** - MongoDB database support
 
 ### Search and Analytics
 
-- **[ddev/ddev-elasticsearch](https://github.com/ddev/ddev-elasticsearch)** - Elasticsearch full-text search and analytics engine
-- **[ddev/ddev-opensearch](https://github.com/ddev/ddev-opensearch)** - OpenSearch analytics, logging, and full-text search
-- **[ddev/ddev-solr](https://github.com/ddev/ddev-solr)** - Apache Solr server setup for search indexing
-- **[ddev/ddev-drupal-solr](https://github.com/ddev/ddev-drupal-solr)** - Apache Solr search engine integration for Drupal
+- **[`ddev/ddev-elasticsearch`](https://github.com/ddev/ddev-elasticsearch)** - Elasticsearch full-text search and analytics engine
+- **[`ddev/ddev-opensearch`](https://github.com/ddev/ddev-opensearch)** - OpenSearch analytics, logging, and full-text search
+- **[`ddev/ddev-solr`](https://github.com/ddev/ddev-solr)** - Apache Solr server setup for search indexing
+- **[`ddev/ddev-drupal-solr`](https://github.com/ddev/ddev-drupal-solr)** - Apache Solr search engine integration for Drupal
 
 ### Development Tools
 
-- **[ddev/ddev-adminer](https://github.com/ddev/ddev-adminer)** - Adminer web-based MySQL, MariaDB, PostgreSQL database browser
-- **[ddev/ddev-phpmyadmin](https://github.com/ddev/ddev-phpmyadmin)** - Web-based phpMyAdmin interface for MySQL, MariaDB
-- **[ddev/ddev-redis-commander](https://github.com/ddev/ddev-redis-commander)** - Redis Commander Web UI for use with Redis service
-- **[ddev/ddev-browsersync](https://github.com/ddev/ddev-browsersync)** - Live-reload and HTTPS auto-refresh on file changes
+- **[`ddev/ddev-adminer`](https://github.com/ddev/ddev-adminer)** - Adminer web-based MySQL, MariaDB, PostgreSQL database browser
+- **[`ddev/ddev-phpmyadmin`](https://github.com/ddev/ddev-phpmyadmin)** - Web-based phpMyAdmin interface for MySQL, MariaDB
+- **[`ddev/ddev-redis-commander`](https://github.com/ddev/ddev-redis-commander)** - Redis Commander Web UI for use with Redis service
+- **[`ddev/ddev-browsersync`](https://github.com/ddev/ddev-browsersync)** - Live-reload and HTTPS auto-refresh on file changes
 
 ### Platform and Cloud Integration
 
-- **[ddev/ddev-platformsh](https://github.com/ddev/ddev-platformsh)** - Platform.sh integration for project syncing and workflows
-- **[ddev/ddev-ibexa-cloud](https://github.com/ddev/ddev-ibexa-cloud)** - Pull projects and data from Ibexa Cloud
-- **[ddev/ddev-minio](https://github.com/ddev/ddev-minio)** - MinIO S3-compatible object storage solution
+- **[`ddev/ddev-platformsh`](https://github.com/ddev/ddev-platformsh)** - Platform.sh integration for project syncing and workflows
+- **[`ddev/ddev-ibexa-cloud`](https://github.com/ddev/ddev-ibexa-cloud)** - Pull projects and data from Ibexa Cloud
+- **[`ddev/ddev-minio`](https://github.com/ddev/ddev-minio)** - MinIO S3-compatible object storage solution
 
 ### Specialized Services
 
-- **[ddev/ddev-rabbitmq](https://github.com/ddev/ddev-rabbitmq)** - RabbitMQ message broker, queue manager
-- **[ddev/ddev-cron](https://github.com/ddev/ddev-cron)** - Run scheduled tasks and cron jobs inside web container
-- **[ddev/ddev-ioncube](https://github.com/ddev/ddev-ioncube)** - Enable ionCube PHP loaders for encoded files
-- **[ddev/ddev-selenium-standalone-chrome](https://github.com/ddev/ddev-selenium-standalone-chrome)** - Headless Chrome browser testing with Selenium
+- **[`ddev/ddev-rabbitmq`](https://github.com/ddev/ddev-rabbitmq)** - RabbitMQ message broker, queue manager
+- **[`ddev/ddev-cron`](https://github.com/ddev/ddev-cron)** - Run scheduled tasks and cron jobs inside web container
+- **[`ddev/ddev-ioncube`](https://github.com/ddev/ddev-ioncube)** - Enable ionCube PHP loaders for encoded files
+- **[`ddev/ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome)** - Headless Chrome browser testing with Selenium
 
 ### Development Environment
 
-- **[ddev/ddev-drupal-contrib](https://github.com/ddev/ddev-drupal-contrib)** - Contrib module development environment for Drupal projects
+- **[`ddev/ddev-drupal-contrib`](https://github.com/ddev/ddev-drupal-contrib)** - Contrib module development environment for Drupal projects
 
 ## Troubleshooting Add-ons
 

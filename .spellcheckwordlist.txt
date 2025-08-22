@@ -106,6 +106,7 @@ Magerun
 Manage
 MariaDB
 Matthias
+MinIO
 Misconfigured
 MUTAGEN_DATA_DIRECTORY
 MyDevSite
@@ -117,6 +118,7 @@ Netbeans
 Nginx
 OSs
 OpenMage
+OpenSearch
 OrbStack
 PECL
 PEM
@@ -399,6 +401,7 @@ integrations
 internet
 into
 io
+ionCube
 iterm
 j
 jetbrains
@@ -477,6 +480,8 @@ mysqldump
 mysqlworkbench
 n98-magerun
 n98-magerun2
+namespace
+namespaced
 namlen
 natively
 netstat
@@ -498,6 +503,7 @@ nvm
 of
 on
 ons
+on's
 one
 oneshot
 or

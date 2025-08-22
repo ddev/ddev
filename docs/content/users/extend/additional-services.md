@@ -36,4 +36,4 @@ For specialized needs or deep customization, you can create custom services usin
 ## Resources
 
 - **[DDEV Add-on Registry](https://addons.ddev.com/)** - Browse and discover add-ons
-- **[ddev-addon-template](https://github.com/ddev/ddev-addon-template)** - Template for creating add-ons
+- **[DDEV Add-on Template](https://github.com/ddev/ddev-addon-template)** - Template for creating add-ons
