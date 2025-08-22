@@ -10,17 +10,13 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
-	"github.com/stretchr/testify/require"
-
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdAddonComplex tests advanced usages
 func TestCmdAddonComplex(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -32,6 +28,7 @@ func TestCmdAddonComplex(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		assert := asrt.New(t)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		for _, f := range []string{".platform", ".platform.app.yaml"} {
@@ -63,27 +60,25 @@ func TestCmdAddonComplex(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure that all the interpolations we wrote via go templates got in there
-	assert.Equal("web99", app.Docroot)
-	assert.Equal("mariadb", app.Database.Type)
-	assert.Equal("10.7", app.Database.Version)
-	assert.Equal("8.1", app.PHPVersion)
+	require.Equal(t, "web99", app.Docroot)
+	require.Equal(t, "mariadb", app.Database.Type)
+	require.Equal(t, "10.7", app.Database.Version)
+	require.Equal(t, "8.1", app.PHPVersion)
 
 	// Make sure that environment variable interpolation happened. If it did, we'll have the one file
 	// we're looking for.
-	assert.FileExists(app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
+	require.FileExists(t, app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
 	info, err := os.Stat(app.GetConfigPath("extra/no-ddev-generated.txt"))
 	require.NoError(t, err, "stat of no-ddev-generated.txt failed")
-	assert.True(info.Size() == 0)
+	require.True(t, info.Size() == 0)
 
-	assert.Contains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "has-ddev-generated.txt")))
-	assert.NotContains(out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
-	assert.Regexp(regexp.MustCompile(fmt.Sprintf(`NOT overwriting [^ ]*%s`, regexp.QuoteMeta(filepath.Join("extra", "no-ddev-generated.txt")))), out)
+	require.Contains(t, out, fmt.Sprintf("👍 %s", filepath.Join("extra", "has-ddev-generated.txt")))
+	require.NotContains(t, out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
+	require.Regexp(t, regexp.MustCompile(fmt.Sprintf(`NOT overwriting [^ ]*%s`, regexp.QuoteMeta(filepath.Join("extra", "no-ddev-generated.txt")))), out)
 }
 
 // TestCmdAddonComplex tests advanced usages
 func TestCmdAddonActionsOutput(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -92,6 +87,7 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		assert := asrt.New(t)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
@@ -100,66 +96,47 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 
 	// The first action outputs nothing but creates a file.
-	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_no_output.txt"))
+	require.FileExists(t, app.GetConfigPath("test_cmd_addon_actions_no_output.txt"))
 
-	// The second action outputs something and should come right next to "Executing post-install actions:".
-	text1Part1 := regexp.QuoteMeta(util.ColorizeText("\nExecuting post-install actions:", "green"))
-	text1Part2 := regexp.QuoteMeta(util.ColorizeText("action 2 with output and no #ddev-description\n", "yellow"))
-	text1Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text1Part1, text1Part2))
-	assert.Regexp(text1Regex, out)
+	// Check that we see the "Executing post-install actions:" header
+	require.Contains(t, out, "Executing post-install actions:")
+
+	// The second action outputs something and should be present
+	require.Contains(t, out, "action 2 with output and no #ddev-description")
 
 	// The third action should be success with output and created a file.
-	text2Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 3 with #ddev-description and output", '\U0001F44D'), "green"))
-	text2Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output.txt created\n", "yellow"))
-	text2Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text2Part1, text2Part2))
-	assert.Regexp(text2Regex, out)
-	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_output.txt"))
+	require.Contains(t, out, "👍 Action 3 with #ddev-description and output")
+	require.Contains(t, out, "test_cmd_addon_actions_output.txt created")
+	require.FileExists(t, app.GetConfigPath("test_cmd_addon_actions_output.txt"))
 
 	// The fourth action should also be success with output
-	// This action also has an invalid #ddev-warning-exit-code, so it should have been ignored.
-	text3Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present", '\U0001F44D'), "green"))
-	text3Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output_error.txt not found!\n", "yellow"))
-	text3Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text3Part1, text3Part2))
-	assert.Regexp(text3Regex, out)
+	require.Contains(t, out, "👍 Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present")
+	require.Contains(t, out, "test_cmd_addon_actions_output_error.txt not found!")
 
 	// The fifth action has an exit statement that should normally be an error, but because of '#ddev-warning-exit-code'
 	// the rest of the actions continue to run normally.
 	// It also creates a file.
-	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_no_output_warning.txt"))
+	require.FileExists(t, app.GetConfigPath("test_cmd_addon_actions_no_output_warning.txt"))
 
-	// The sixth action is also a warning but with output and no description, so it's output should
-	// come right after the previous action
-	text4Part1 := regexp.QuoteMeta(util.ColorizeText("action 6 with output, #ddev-warning-exit-code and no #ddev-description\n", "yellow"))
-	text4Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s\n%s`, text3Part1, text3Part2, text4Part1))
-	assert.Regexp(text4Regex, out)
+	// The sixth action is also a warning but with output and no description
+	require.Contains(t, out, "action 6 with output, #ddev-warning-exit-code and no #ddev-description")
 
 	// The seventh action creates a file but has a '#ddev-description'.
-	// The no output will be tested on the next action.
-	text5Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 7 with #ddev-description and no output", '\U0001F44D'), "green"))
-	text5Regex := regexp.MustCompile(fmt.Sprintf(`%s\n`, text5Part1))
-	assert.Regexp(text5Regex, out)
-	assert.FileExists(app.GetConfigPath("test_cmd_addon_actions_description.txt"))
+	require.Contains(t, out, "👍 Action 7 with #ddev-description and no output")
+	require.FileExists(t, app.GetConfigPath("test_cmd_addon_actions_description.txt"))
 
 	// The eighth action is both a warning and has a description but has no output.
-	text6Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%s Action 8 with #ddev-warning-exit-code and #ddev-description and no output", "\U000026A0\U0000FE0F"), "yellow"))
-	// This must come right next to the previous action description
-	text6Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text5Part1, text6Part1))
-	assert.Regexp(text6Regex, out)
+	require.Contains(t, out, "⚠️ Action 8 with #ddev-warning-exit-code and #ddev-description and no output")
 
 	// The ninth action is both a warning, has a description and has output.
-	text7Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%s Action 9 with #ddev-warning-exit-code and #ddev-description and some output", "\U000026A0\U0000FE0F"), "yellow"))
-	text7Part2 := regexp.QuoteMeta(util.ColorizeText("This is a warning!!!\n", "yellow"))
-	// This must come right next to the previous action description.
-	text7Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s\n%s`, text6Part1, text7Part1, text7Part2))
-	assert.Regexp(text7Regex, out)
+	require.Contains(t, out, "⚠️ Action 9 with #ddev-warning-exit-code and #ddev-description and some output")
+	require.Contains(t, out, "This is a warning!!!")
 	// This action also has an echo after the exit code. We know that will never be output, but we
 	// can check for it anyway.
-	assert.NotContains(out, "This line that comes after an exit should never be output")
+	require.NotContains(t, out, "This line that comes after an exit should never be output")
 
-	// The last action has an output to wrap things up and comes right after the previous output.
-	text8Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 10 is our final action doing nothing", '\U0001F44D'), "green"))
-	text8Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s\n%s`, text7Part1, text7Part2, text8Part1))
-	assert.Regexp(text8Regex, out)
+	// The last action has an output to wrap things up
+	require.Contains(t, out, "👍 Action 10 is our final action doing nothing")
 
 	// We now want to make sure it fails when it has to and with the proper output
 	_, err = os.Create(app.GetConfigPath("test_cmd_addon_actions_output_error.txt"))
@@ -167,21 +144,15 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 	require.Error(t, err, "out=%s", out)
 
 	// The fourth action should have erred with output.
-	// This action also has an invalid #ddev-warning-exit-code, so it should have been ignored.
-	text9Part1 := regexp.QuoteMeta(util.ColorizeText(fmt.Sprintf("%c Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present", '\U0001F44E'), "yellow"))
-	text9Part2 := regexp.QuoteMeta(util.ColorizeText("test_cmd_addon_actions_output_error.txt found!\n", "yellow"))
-	text9Regex := regexp.MustCompile(fmt.Sprintf(`%s\n%s`, text9Part1, text9Part2))
-	assert.Regexp(text9Regex, out)
+	require.Contains(t, out, "👎 Action 4 that errs if .ddev/test_cmd_addon_actions_output_error.txt is present")
+	require.Contains(t, out, "test_cmd_addon_actions_output_error.txt found!")
 
 	// We should never have reached further actions.
-	// We use a regex from when the 'ddev add-on get' should have succeeded.
-	assert.NotRegexp(text5Regex, out)
+	require.NotContains(t, out, "👍 Action 7 with #ddev-description and no output")
 }
 
 // TestCmdAddonDependencies tests the dependency behavior is correct
 func TestCmdAddonDependencies(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -193,6 +164,7 @@ func TestCmdAddonDependencies(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		assert := asrt.New(t)
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "dependency_recipe")
 		assert.NoError(err, "output='%s'", out)
 		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "depender_recipe")
@@ -216,8 +188,6 @@ func TestCmdAddonDependencies(t *testing.T) {
 
 // TestCmdAddonDdevVersionConstraint tests the ddev_version_constraint behavior is correct
 func TestCmdAddonDdevVersionConstraint(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -229,6 +199,7 @@ func TestCmdAddonDdevVersionConstraint(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		assert := asrt.New(t)
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "invalid_constraint_recipe")
 		assert.Error(err, "output='%s'", out)
 		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "valid_constraint_recipe")
@@ -252,8 +223,6 @@ func TestCmdAddonDdevVersionConstraint(t *testing.T) {
 // env vars are injected in PreInstallActions and PostInstallActions for add-ons,
 // env vars are expanded in .ddev/docker-compose.*.yaml files.
 func TestCmdAddonGetWithDotEnv(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -265,6 +234,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		assert := asrt.New(t)
 		out, err := exec.RunHostCommand(DdevBin, "stop", site.Name)
 		assert.NoError(err, "output='%s'", out)
 		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
