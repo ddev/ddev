@@ -19,8 +19,8 @@ log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" mariadb_repo_setup --maria
 rm -f /etc/apt/sources.list.d/mariadb.list.old_*
 # --skip-key-import flag doesn't download the existing key again and omits "apt-get update",
 # so we can run "apt-get update" manually only for mariadb and debian repos to make it faster
-timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
-timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
+log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
+log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" apt-get update -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
 # Install the mariadb-client
 export DEBIAN_FRONTEND=noninteractive
 if apt-cache search mariadb-client-compat 2>/dev/null | grep -q mariadb-client-compat; then

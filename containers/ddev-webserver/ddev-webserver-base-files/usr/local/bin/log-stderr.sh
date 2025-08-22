@@ -104,9 +104,9 @@ if [ "${timeout}" -gt 0 ] && [ "${exit_code}" -eq 124 ]; then
   echo | tee -a "${tmp_error_file}" >&2
   echo "Command '${command[*]}' timed out after ${timeout} seconds" | tee -a "${tmp_error_file}" >&2
   # START_SCRIPT_TIMEOUT default is 60 seconds (or default_container_timeout / 4)
-  # 30 * 4 * 2 = 240 seconds (double the default timeout), which gives 240 / 4 = 60 seconds suggestion instead of the default 30
+  # 60 * 2 * 2 = 240 seconds container timeout, which gives 240 / 4 = 60 seconds script timeout
   echo "If your internet connection is slow, consider increasing the timeout by running this:" | tee -a "${tmp_error_file}" >&2
-  echo "\`ddev config --default-container-timeout=$(( ${START_SCRIPT_TIMEOUT:-30} * 4 * 2 )) && ddev restart\`" | tee -a "${tmp_error_file}" >&2
+  echo "\`ddev config --default-container-timeout=$(( ${START_SCRIPT_TIMEOUT:-60} * 2 * 2 )) && ddev restart\`" | tee -a "${tmp_error_file}" >&2
   echo | tee -a "${tmp_error_file}" >&2
 fi
 
