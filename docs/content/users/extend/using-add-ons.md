@@ -42,6 +42,19 @@ See all possible add-ons (including community add-ons):
 ddev add-on list --all
 ```
 
+Search for specific add-ons by name or description:
+
+```bash
+# Search for Redis-related add-ons
+ddev add-on search redis
+
+# Search with multiple terms (all must be present)
+ddev add-on search redis web
+
+# Search with multiple terms using quotes (currently same behavior)
+ddev add-on search "redis commander"
+```
+
 ## Installing Add-ons
 
 ### Public Add-ons

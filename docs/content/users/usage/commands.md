@@ -159,7 +159,7 @@ ddev add-on remove ddev/ddev-redis --project my-project
 
 ### `add-on list`
 
-Download an add-on (service, provider, etc.).
+List available or installed DDEV add-ons.
 
 Flags:
 
@@ -181,6 +181,26 @@ ddev add-on list --installed
 
 # List installed add-ons for a specific project
 ddev add-on list --installed --project my-project
+```
+
+### `add-on search`
+
+Search available DDEV add-ons by name or description.
+
+Example:
+
+```shell
+# Search for Redis-related add-ons
+ddev add-on search redis
+
+# Search for database-related add-ons
+ddev add-on search database
+
+# Search with multiple terms (all must be present)
+ddev add-on search redis web
+
+# Search with multiple terms using quotes (currently same behavior)
+ddev add-on search "redis commander"
 ```
 
 ## `aliases`
