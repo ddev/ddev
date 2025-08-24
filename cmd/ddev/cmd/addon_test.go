@@ -577,3 +577,32 @@ services:
 		require.Contains(t, out, "php: not found", "Should show error about PHP not found")
 	})
 }
+
+func TestCmdAddonSearch(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+	assert := asrt.New(t)
+
+	// Test search for redis
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "search", "redis")
+	assert.NoError(err, "failed ddev add-on search redis: %v (%s)", err, out)
+	assert.Contains(out, "ddev/ddev-redis")
+	assert.Contains(out, "repositories found matching 'redis'")
+
+	// Test search with multiple keywords
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis cache")
+	assert.NoError(err, "failed ddev add-on search 'redis cache': %v (%s)", err, out)
+	assert.Contains(out, "ddev/ddev-redis")
+	assert.Contains(out, "repositories found matching 'redis cache'")
+
+	// Test search with no results
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "nonexistentservice")
+	assert.NoError(err, "failed ddev add-on search nonexistentservice: %v (%s)", err, out)
+	assert.Contains(out, "No add-ons found matching 'nonexistentservice'")
+
+	// Test search with --all flag
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis", "--all")
+	assert.NoError(err, "failed ddev add-on search redis --all: %v (%s)", err, out)
+	assert.Contains(out, "repositories found matching 'redis'")
+}
