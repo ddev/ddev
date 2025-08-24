@@ -11,7 +11,7 @@ set -o nounset
 if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
 
 GITHUB_OWNER=${GITHUB_OWNER:-ddev}
-ARTIFACTS="ddev ddev-hostname mkcert"
+ARTIFACTS="ddev ddev-hostname"
 
 TMPDIR=/tmp
 
@@ -184,11 +184,6 @@ if command -v brew >/dev/null ; then
 fi
 
 rm -f ${TMPDIR}$TARBALL ${TMPDIR}/$SHAFILE
-
-if command -v mkcert >/dev/null; then
-  printf "${YELLOW}Running mkcert -install, which may request your sudo password.'.${RESET}\n"
-  mkcert -install
-fi
 
 hash -r
 

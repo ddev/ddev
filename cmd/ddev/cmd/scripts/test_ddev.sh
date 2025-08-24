@@ -226,15 +226,6 @@ echo "
     \`\`\`
     (DDEV images will be downloaded again on 'ddev start')"
 
-if command -v mkcert >/dev/null; then
-  header "mkcert information"
-  which -a mkcert
-  mkcert -version
-  echo "CAROOT=${CAROOT:-} WSLENV=${WSLENV:-} JAVA_HOME=${JAVA_HOME:-}"
-  mkcert -CAROOT
-  ls -l "$(mkcert -CAROOT)"
-fi
-
 if command -v ping >/dev/null; then
   header "ping attempt on ddev.site"
   ping -c 1 dkdkd.ddev.site || printf "\n  Unable to reach *.ddev.site, troubleshoot with:\n  %s\n\n" "https://docs.ddev.com/en/stable/users/usage/networking/#restrictive-dns-servers-especially-fritzbox-routers"

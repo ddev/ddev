@@ -40,7 +40,6 @@ class Ddev < Formula
   license "apache-2.0"
   head "https://github.com/ddev/ddev.git", branch: "main"
 
-  depends_on "mkcert" => :run
   depends_on "nss" => :run
   depends_on "go" => :build
   depends_on "make" => :build
@@ -74,8 +73,7 @@ class Ddev < Formula
 
   def caveats
     <<~EOS
-            Make sure to do a 'mkcert -install' if you haven't done it before, it may require your sudo password.
-      #{"      "}
+´     #{"      "}
             ddev requires docker or colima.
             See https://docs.ddev.com/en/stable/users/install/docker-installation/
     EOS

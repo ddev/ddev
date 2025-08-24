@@ -5,7 +5,7 @@
 
 # Requires bats-assert and bats-support
 # brew tap bats-core/bats-core &&
-# brew install bats-core bats-assert bats-support jq mkcert yq
+# brew install bats-core bats-assert bats-support jq yq
 setup() {
   load setup.sh
 }

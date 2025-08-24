@@ -16,8 +16,8 @@ brew install homebrew/cask/ngrok >/dev/null
 brew install ddev/ddev/ddev >/dev/null
 brew unlink python@2 >/dev/null || true
 
-brew install mysql-client zip makensis jq expect coreutils golang ddev/ddev/ddev mkcert gnu-getopt libgsf glib pcre >/dev/null || true
-brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert gnu-getopt libgsf glib pcre >/dev/null
+brew install mysql-client zip makensis jq expect coreutils golang ddev/ddev/ddev gnu-getopt libgsf glib pcre >/dev/null || true
+brew link mysql-client zip makensis jq expect coreutils golang ddev gnu-getopt libgsf glib pcre >/dev/null
 
 brew link --force mysql-client >/dev/null
 
@@ -26,8 +26,6 @@ brew link --force mysql-client >/dev/null
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p "$(brew --prefix)/etc/my.cnf.d"
-
-mkcert -install
 
 sudo bash -c "cat <<EOF >/etc/exports
 ${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost

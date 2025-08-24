@@ -28,10 +28,6 @@ curl -sSL https://golang.org/dl/go${GO_VERSION}.linux-arm64.tar.gz -o /tmp/go.tg
 
 git clone --branch v1.11.0 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
-# Install mkcert
-sudo curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/arm64" && sudo chmod +x /usr/local/bin/mkcert
-mkcert -install
-
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 
 sudo bash -c "cat <<EOF >/etc/exports

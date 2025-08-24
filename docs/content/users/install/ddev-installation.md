@@ -13,9 +13,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV
     brew install ddev/ddev/ddev
-
-    # One-time initialization of mkcert
-    mkcert -install
     ```
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).

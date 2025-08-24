@@ -6,7 +6,6 @@ tasks:
       make
       ddev config global --omit-containers=ddev-router
       ddev debug download-images
-      mkcert -install
     command: |
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/ddev/d10simple}

@@ -43,8 +43,6 @@ pip3 install -q mkdocs==0.17.5
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
 pwd && ./.ci-scripts/nsis_setup.sh /usr/local/share/nsis
 
-mkcert -install
-
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 
 sudo bash -c "cat <<EOF >/etc/exports
