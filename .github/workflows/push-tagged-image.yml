@@ -38,56 +38,94 @@ permissions:
   contents: read
 
 jobs:
-  push-tagged-image:
-    name: "push tagged image"
-    runs-on: ubuntu-24.04
-
+  build-and-push:
+    name: build ${{ matrix.arch }} ${{ github.event.inputs.image }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      ARCH: ${{ matrix.arch }}
     steps:
-    - name: Load 1password secret(s)
-      uses: 1password/load-secrets-action@v3
-      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
-      with:
-        export-env: true
-      env:
-        OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-        DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
-
-    - uses: actions/checkout@v5
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        # special qemu version used due to many
-        # failures with "Cannot allocate memory" in
-        # apt-get install of arm64
-        image: tonistiigi/binfmt:qemu-v7.0.0-28
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ vars.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_TOKEN }}
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        limit-access-to-actor: true
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-    - name: Push ${{  github.event.inputs.image }} image
-      if: github.event.inputs.image != 'ddev-dbserver' && github.event.inputs.image != 'all'
-      run: |
-        cd "containers/${{ github.event.inputs.image }}"
-        make push VERSION="${{ github.event.inputs.tag }}"
-    - name: Push all images (not in use)
-      if: github.event.inputs.image == 'all'
-      run: |
-        cd "containers"
-        VERSION="${{ github.event.inputs.tag }}" ./push-all.sh
-    - name: Push ${{  github.event.inputs.image }} ddev-dbserver image
-      if: github.event.inputs.image == 'ddev-dbserver'
-      run: |
-        cd "containers/${{ github.event.inputs.image }}"
-        make PUSH=true VERSION="${{ github.event.inputs.tag }}" DOCKER_ORG=${DOCKER_ORG}
-
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v3
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - name: Build and push non-db image (single-arch)
+        if: github.event.inputs.image != 'ddev-dbserver' && github.event.inputs.image != 'all'
+        run: |
+          set -eu
+          cd containers/${{ github.event.inputs.image }}
+          export BUILD_ARCHS=linux/${ARCH}
+          make push VERSION="${{ github.event.inputs.tag }}-${ARCH}"
+      - name: Record image digest
+        id: digest
+        if: github.event.inputs.image != 'all' && github.event.inputs.image != 'ddev-dbserver'
+        run: |
+          set -eu
+          IMG=${DOCKER_ORG}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}-${ARCH}
+          docker buildx imagetools inspect "$IMG" >/dev/null
+          DG=$(docker buildx imagetools inspect "$IMG" | awk -F: '/Digest/ {print $2; exit}')
+          echo "digest=$DG" >> $GITHUB_OUTPUT
+          echo "$DG" > digest.txt
+      - name: Upload digest artifact
+        if: github.event.inputs.image != 'all' && github.event.inputs.image != 'ddev-dbserver'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ github.event.inputs.image }}-${{ matrix.arch }}
+          path: digest.txt
+          retention-days: 1
+  manifest:
+    name: create multi-arch manifest
+    needs: build-and-push
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.inputs.image != 'all' && github.event.inputs.image != 'ddev-dbserver' }}
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Create and push manifest (non-db)
+        if: github.event.inputs.image != 'ddev-dbserver'
+        run: |
+          set -eu
+          IMAGE=${DOCKER_ORG}/${{ github.event.inputs.image }}
+          TAG=${{ github.event.inputs.tag }}
+          docker buildx imagetools create -t ${IMAGE}:${TAG} ${IMAGE}:${TAG}-amd64 ${IMAGE}:${TAG}-arm64
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            docker buildx imagetools create -t ${IMAGE}:latest ${IMAGE}:${TAG}-amd64 ${IMAGE}:${TAG}-arm64
+          fi
+          # Clean up intermediary single-arch tags from remote registry
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${DOCKER_ORG}/${{ github.event.inputs.image }}/tags/${TAG}-amd64/" >/dev/null || true
+          curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${DOCKER_ORG}/${{ github.event.inputs.image }}/tags/${TAG}-arm64/" >/dev/null || true

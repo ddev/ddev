@@ -25,48 +25,109 @@ permissions:
   contents: read
 
 jobs:
-  push-tagged-dbimage:
-    name: "push tagged dbimage"
-    runs-on: ubuntu-24.04
+  build-db-arch:
+    name: build ${{ matrix.arch }} ${{ matrix.dbtype }}
     strategy:
-      matrix:
-        dbtype: [mariadb_5.5, mariadb_10.0, mariadb_10.1, mariadb_10.2, mariadb_10.3, mariadb_10.4, mariadb_10.5, mariadb_10.6, mariadb_10.7, mariadb_10.8, mariadb_10.11, mariadb_11.4, mariadb_11.8, mysql_5.5, mysql_5.6, mysql_5.7, mysql_8.0, mysql_8.4]
       fail-fast: false
-
+      matrix:
+        arch: [amd64, arm64]
+        dbtype: [mariadb_5.5, mariadb_10.0, mariadb_10.1, mariadb_10.2, mariadb_10.3, mariadb_10.4, mariadb_10.5, mariadb_10.6, mariadb_10.7, mariadb_10.8, mariadb_10.11, mariadb_11.4, mariadb_11.8, mysql_5.5, mysql_5.6, mysql_5.7, mysql_8.0, mysql_8.4]
+        exclude:
+          - arch: arm64
+            dbtype: mariadb_5.5
+          - arch: arm64
+            dbtype: mariadb_10.0
+          - arch: arm64
+            dbtype: mysql_5.5
+          - arch: arm64
+            dbtype: mysql_5.6
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
-    - name: Load 1password secret(s)
-      uses: 1password/load-secrets-action@v3
-      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
-      with:
-        export-env: true
-      env:
-        OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-        DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
-
-    - uses: actions/checkout@v5
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        # special qemu version used due to many
-        # failures with "Cannot allocate memory" in
-        # apt-get install of arm64
-        image: tonistiigi/binfmt:qemu-v7.0.0-28
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ vars.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_TOKEN }}
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        limit-access-to-actor: true
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-    - name: Push ${{  matrix.dbtype }}:${{ github.event.inputs.tag }}
-      run: |
-        cd "containers/ddev-dbserver"
-        make ${{ matrix.dbtype }} PUSH=true VERSION="${TAG}" DOCKER_ORG=${DOCKER_ORG}
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v3
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - name: Build and push single-arch db image
+        run: |
+          set -eu
+          cd containers/ddev-dbserver
+          base=${{ matrix.dbtype }}
+          target="${base}_${{ matrix.arch }}"
+          echo "Building target $target for arch ${{ matrix.arch }}"
+          # For single-platform images, push with final tag; for multi-platform, use arch suffix
+          case "$base" in
+            mariadb_5.5|mariadb_10.0|mariadb_10.1|mariadb_10.2|mysql_5.5|mysql_5.6)
+              if [ "${{ matrix.arch }}" = "amd64" ]; then
+                make $target PUSH=true VERSION="${TAG}"
+              fi
+              ;;
+            *)
+              make $target PUSH=true VERSION="${TAG}-${{ matrix.arch }}"
+              ;;
+          esac
+      - name: Record digest
+        id: digest
+        run: |
+          # Attempt to record one digest for confirmation
+          img_name=${{ matrix.dbtype }}
+          dbtype=$(echo $img_name | cut -d_ -f1)
+          major=$(echo $img_name | cut -d_ -f2)
+          IMAGE=${DOCKER_ORG}/ddev-dbserver-${dbtype}-${major}:${TAG}-${{ matrix.arch }}
+          if docker buildx imagetools inspect $IMAGE >/dev/null 2>&1; then
+            dg=$(docker buildx imagetools inspect $IMAGE | awk -F: '/Digest/ {print $2; exit}')
+            echo "digest=$dg" >> $GITHUB_OUTPUT
+          fi
+  create-manifests:
+    name: create multi-arch db manifests
+    needs: build-db-arch
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Create manifests
+        run: |
+          set -eu
+          TAG=${{ github.event.inputs.tag }}
+          # Get Docker Hub token for cleanup
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          variants="mariadb-10.3 mariadb-10.4 mariadb-10.5 mariadb-10.6 mariadb-10.7 mariadb-10.8 mariadb-10.11 mariadb-11.4 mariadb-11.8 mysql-5.7 mysql-8.0 mysql-8.4"
+          for v in $variants; do
+            img=${DOCKER_ORG}/ddev-dbserver-$v
+            if docker buildx imagetools inspect ${img}:${TAG}-amd64 >/dev/null 2>&1 && docker buildx imagetools inspect ${img}:${TAG}-arm64 >/dev/null 2>&1; then
+              docker buildx imagetools create -t ${img}:${TAG} ${img}:${TAG}-amd64 ${img}:${TAG}-arm64
+              if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                docker buildx imagetools create -t ${img}:latest ${img}:${TAG}-amd64 ${img}:${TAG}-arm64
+              fi
+              # Clean up intermediary single-arch tags from remote registry
+              curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${DOCKER_ORG}/ddev-dbserver-$v/tags/${TAG}-amd64/" >/dev/null || true
+              curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${DOCKER_ORG}/ddev-dbserver-$v/tags/${TAG}-arm64/" >/dev/null || true
+            fi
+          done

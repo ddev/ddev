@@ -6,7 +6,7 @@ include ../containers_shared.mk
 SHELL=/bin/bash
 
 DEFAULT_IMAGES = ddev-php-base ddev-php-prod
-BUILD_ARCHS=linux/amd64,linux/arm64
+BUILD_ARCHS?=linux/amd64,linux/arm64
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-php-base
 
 .PHONY: images
