@@ -5,7 +5,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 DOCKER_BUILDKIT=1
 
-BUILD_ARCHS=linux/amd64,linux/arm64
+BUILD_ARCHS?=linux/amd64,linux/arm64
 
 build: images
 
