@@ -1,0 +1,9 @@
+#ddev-generated
+name: basic-php-test
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:Basic PHP action test
+    echo "Hello from PHP test\n";
+    echo "This is working\n";

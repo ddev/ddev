@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+## #ddev-generated
+## Description: Display Varnish Cache statistics
+## Usage: varnishstat [flags] [args]
+## Example: "ddev varnishstat"
+
+# This example runs inside the varnish container.
+# Note that this requires that /mnt/ddev_config be mounted
+# into the varnish container.
+
+varnishstat "$@"

@@ -106,6 +106,7 @@ Magerun
 Manage
 MariaDB
 Matthias
+MinIO
 Misconfigured
 MUTAGEN_DATA_DIRECTORY
 MyDevSite
@@ -117,6 +118,7 @@ Netbeans
 Nginx
 OSs
 OpenMage
+OpenSearch
 OrbStack
 PECL
 PEM
@@ -399,6 +401,7 @@ integrations
 internet
 into
 io
+ionCube
 iterm
 j
 jetbrains
@@ -477,6 +480,8 @@ mysqldump
 mysqlworkbench
 n98-magerun
 n98-magerun2
+namespace
+namespaced
 namlen
 natively
 netstat
@@ -498,6 +503,7 @@ nvm
 of
 on
 ons
+on's
 one
 oneshot
 or
@@ -569,6 +575,7 @@ restore
 resv
 retrans
 rfay
+roadmap
 rmi
 rsync
 running
@@ -624,6 +631,7 @@ subdirectory
 subdirectories
 subfield
 sudo
+superglobal
 supervisord
 sur
 susi
@@ -661,6 +669,7 @@ to
 toc
 transactional
 true
+TTY
 txt
 ubuntu
 ufw
@@ -684,6 +693,7 @@ user
 using
 usr
 v
+valkey
 variables
 vers
 version

@@ -22,8 +22,7 @@ func TestCmdDebugTest(t *testing.T) {
 	_ = os.Setenv("DDEV_DEBUG", "true")
 
 	out, err := exec.RunHostCommand(DdevBin, "debug", "test")
-	require.NoError(t, err)
-	// This is just a casual look at the output, not intended to look for all details.
+	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "OS Information")
 	require.Contains(t, out, "webserver_type:")
 	if runtime.GOOS != "windows" {

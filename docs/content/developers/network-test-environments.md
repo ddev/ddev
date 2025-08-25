@@ -29,7 +29,7 @@ These instructions are for Debian/Ubuntu but can be adapted for container-based 
     ```
 
 2. **Generate a Root CA for Signing**
-  This `mitm.crt` is the CA certificate used by Squid to re-sign intercepted traffic, and it must be trusted by any client interacting through the proxy (e.g., Docker, curl, system-wide tools).
+  This `mitm.crt` is the CA certificate used by Squid to re-sign intercepted traffic, and it must be trusted by any client interacting through the proxy (e.g., Docker, cURL, system-wide tools).
 
     ```bash
     sudo openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \

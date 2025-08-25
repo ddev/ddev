@@ -1,0 +1,67 @@
+#ddev-generated
+name: complex-php-test
+
+
+yaml_read_files:
+  test_config: "test-config.yaml"
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description: Process complex PHP addon configuration
+    
+    // Read project config from .ddev directory (using relative path)
+    $configPath = 'config.yaml';
+    $projectName = 'unknown';
+    $projectType = 'unknown';
+    
+    if (file_exists($configPath)) {
+        $configContent = file_get_contents($configPath);
+        if (preg_match('/^name:\s*(.+)$/m', $configContent, $matches)) {
+            $projectName = trim($matches[1]);
+        }
+        if (preg_match('/^type:\s*(.+)$/m', $configContent, $matches)) {
+            $projectType = trim($matches[1]);
+        }
+    }
+    
+    // Test yaml_read_files functionality - read test-config.yaml with YAML parsing
+    $testConfigPath = 'test-config.yaml';
+    if (file_exists($testConfigPath)) {
+        $testConfig = yaml_parse_file($testConfigPath);
+        
+        if (!is_array($testConfig)) {
+            echo "PHP: ERROR - test-config.yaml is not valid YAML\n";
+            exit(1);
+        }
+        
+        // Access database version directly from parsed YAML
+        if (isset($testConfig['database']['version'])) {
+            $dbVersion = $testConfig['database']['version'];
+            echo "PHP: Database version from config: $dbVersion\n";
+        }
+        
+        // Access services directly from parsed YAML
+        if (isset($testConfig['services'])) {
+            foreach ($testConfig['services'] as $serviceName => $serviceConfig) {
+                echo "PHP: Service $serviceName configured\n";
+            }
+        }
+    }
+    
+    // Generate a docker-compose snippet based on config
+    $yamlContent = "#ddev-generated\n";
+    $yamlContent .= "services:\n";
+    $yamlContent .= "  complex-php-addon:\n";
+    $yamlContent .= "    image: ddev/ddev-utilities\n";
+    $yamlContent .= "    environment:\n";
+    $yamlContent .= "      PROJECT_NAME: \"$projectName\"\n";
+    $yamlContent .= "      PROJECT_TYPE: \"$projectType\"\n";
+    
+    file_put_contents('docker-compose.complex-php-addon.yaml', $yamlContent);
+    
+    echo "PHP: Generated docker-compose.complex-php-addon.yaml\n";
+    ?>
+
+project_files:
+  - config.complex-php-addon.yaml

@@ -1,0 +1,9 @@
+#ddev-generated
+name: missing-includes-test
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:Test missing include files (should only warn, not fail)
+    require 'non-existent-file.php';
+    echo "This should still run\n";

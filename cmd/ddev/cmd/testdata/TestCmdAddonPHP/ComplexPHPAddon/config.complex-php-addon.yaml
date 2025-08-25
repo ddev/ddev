@@ -1,0 +1,5 @@
+#ddev-generated
+# Config for complex PHP addon - adds YAML extension
+
+webimage_extra_packages:
+  - php${DDEV_PHP_VERSION}-yaml

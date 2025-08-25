@@ -271,7 +271,7 @@ make staticrequired
 
 ## Testing
 
-Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name. This is also easy to do in Visual Studio Code.
+Normal test invocation is `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make test TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent Go IDE [GoLand](https://www.jetbrains.com/go/). Click the arrowhead to the left of the test name. This is also easy to do in Visual Studio Code.
 
 To test with race detection, `make test TESTARGS="-race"` for example.
 

@@ -10,7 +10,7 @@ It’s common to have a requirement for the `web` or `db` images which isn’t b
 You can add extra Debian packages with lines like this in `.ddev/config.yaml`:
 
 ```yaml
-webimage_extra_packages: ["php${DDEV_PHP_VERSION}-yaml", "php${DDEV_PHP_VERSION}-tidy"]
+webimage_extra_packages: ["php${DDEV_PHP_VERSION}-tidy", "php${DDEV_PHP_VERSION}-yac"]
 dbimage_extra_packages: [telnet, netcat, sudo]
 ```
 

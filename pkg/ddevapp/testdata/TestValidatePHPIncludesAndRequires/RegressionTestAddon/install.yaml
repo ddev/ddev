@@ -1,0 +1,12 @@
+#ddev-generated
+name: regression-test
+
+project_files:
+  - script-with-error.php
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:This would silently pass with the old broken regex
+    require 'script-with-error.php';
+    echo "Should not reach here\n";

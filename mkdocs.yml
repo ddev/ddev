@@ -191,6 +191,9 @@ nav:
     - users/extend/additional-hostnames.md
   - 'Extending':
     - users/extend/customization-extendibility.md
+    - users/extend/using-add-ons.md
+    - users/extend/creating-add-ons.md
+    - users/extend/custom-docker-services.md
     - users/extend/additional-services.md
     - users/extend/custom-compose-files.md
     - users/extend/customizing-images.md

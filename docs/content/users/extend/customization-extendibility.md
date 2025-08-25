@@ -7,6 +7,46 @@ search:
 
 DDEV provides several ways to customize and extend project environments.
 
+## Choosing the Right Approach
+
+Different customization needs require different approaches. Use this decision tree to find the best solution:
+
+### 🎯 **Need a service like Redis, Elasticsearch, or Solr?**
+
+→ **Use [DDEV Add-ons](using-add-ons.md)**
+
+- Pre-built, tested, and maintained
+- Automatic installation and configuration
+- Easy updates and management
+- Cross-platform compatibility
+
+### 🔧 **Need a highly customized or specialized service?**
+
+→ **Use [Custom Docker Compose Services](custom-docker-services.md)**
+
+- Full control over service configuration
+- Custom images and complex setups
+- Project-specific requirements
+- Can evolve into add-ons later
+
+### ⚙️ **Need to modify existing container behavior?**
+
+→ **Use configuration approaches below:**
+
+- Environment variables
+- Custom configuration files (PHP, nginx, Apache)
+- Hooks for automation
+- Image customization
+
+### 👨‍💻 **Want to create reusable extensions?**
+
+→ **Create [DDEV Add-ons](creating-add-ons.md)**
+
+- Share with teams and community
+- PHP or bash-based actions
+- Version management and updates
+- Automatic installation flows
+
 ## Environment Variables for Containers and Services
 
 You can set custom environment variables in several places:
@@ -70,8 +110,8 @@ Sometimes it’s easiest to put the command you need into the existing `$PATH` u
 
 Examples:
 
-* On Craft CMS, the `craft` script is often in the project root, which is not in the `$PATH`. But if you `mkdir bin && ln -s craft bin/craft` you should be able to run `ddev exec craft`. (Note however that `ddev craft` takes care of this for you.)
-* On projects where the `vendor` directory is not in the project root (Acquia projects, for example, have `composer.json` and `vendor` in the `docroot` directory), you can `mkdir bin && ln -s docroot/vendor/bin/drush bin/drush` to put `drush` in your `$PATH`. (With projects like this, make sure to set `composer_root: docroot` so that `ddev composer` works properly.)
+- On Craft CMS, the `craft` script is often in the project root, which is not in the `$PATH`. But if you `mkdir bin && ln -s craft bin/craft` you should be able to run `ddev exec craft`. (Note however that `ddev craft` takes care of this for you.)
+- On projects where the `vendor` directory is not in the project root (Acquia projects, for example, have `composer.json` and `vendor` in the `docroot` directory), you can `mkdir bin && ln -s docroot/vendor/bin/drush bin/drush` to put `drush` in your `$PATH`. (With projects like this, make sure to set `composer_root: docroot` so that `ddev composer` works properly.)
 
 You can also modify the `PATH` environment variable by adding a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/`. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh`:
 
@@ -97,7 +137,7 @@ DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-f
 
 DDEV provides everything you need to build a modern PHP application on your local machine. More complex web applications, however, often require integration with services beyond the usual requirements of a web and database server—maybe Apache Solr, Redis, Varnish, or many others. While DDEV likely won’t ever provide all of these additional services out of the box, it’s designed to provide simple ways to customize the environment and meet your project’s needs without reinventing the wheel.
 
-A collection of vetted service configurations is available in the [Additional Services Documentation](additional-services.md).
+A collection of vetted service configurations is available in the [Additional Services Documentation](additional-services.md). For pre-built solutions, see [Using Add-ons](using-add-ons.md).
 
 If you need to create a service configuration for your project, see [Defining Additional Services with Docker Compose](custom-compose-files.md).
 
@@ -105,15 +145,15 @@ If you need to create a service configuration for your project, see [Defining Ad
 
 There are many ways to deploy Node.js in any project, so DDEV tries to let you set up any possibility you can come up with.
 
-* You can choose any Node.js version you want (including minor and older versions) in `.ddev/config.yaml` with [`nodejs_version`](../configuration/config.md#nodejs_version).
-* [`ddev nvm`](../usage/commands.md#nvm) gives you the full capabilities of [Node Version Manager](https://github.com/nvm-sh/nvm).
-* [`ddev npm`](../usage/commands.md#npm) and [`ddev yarn`](../usage/commands.md#yarn) provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
-* You can run Node.js daemons using [`web_extra_daemons`](#running-extra-daemons-in-the-web-container).
-* You can expose Node.js ports via `ddev-router` by using [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router).
-* You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec node <script>`.
+- You can choose any Node.js version you want (including minor and older versions) in `.ddev/config.yaml` with [`nodejs_version`](../configuration/config.md#nodejs_version).
+- [`ddev nvm`](../usage/commands.md#nvm) gives you the full capabilities of [Node Version Manager](https://github.com/nvm-sh/nvm).
+- [`ddev npm`](../usage/commands.md#npm) and [`ddev yarn`](../usage/commands.md#yarn) provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
+- You can run Node.js daemons using [`web_extra_daemons`](#running-extra-daemons-in-the-web-container).
+- You can expose Node.js ports via `ddev-router` by using [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router).
+- You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec node <script>`.
 
 !!!tip "Please share your techniques!"
-    There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md) and [Stack Overflow](https://stackoverflow.com/tags/ddev).
+    There are several ways to share your favorite Node.js tips and techniques. Best are [DDEV add-ons](using-add-ons.md) and [Stack Overflow](https://stackoverflow.com/tags/ddev).
 
 ### Using Node.js as DDEV's primary web server
 
@@ -175,12 +215,12 @@ web_extra_daemons:
 !!!tip "How to view the results of a daemon start attempt?"
     See [`ddev logs`](../usage/commands.md#logs) or `docker logs ddev-<project>-web`.
 
-* `directory` should be the absolute path inside the container to the directory where the daemon should run.
-* `command` is best as a simple binary with its arguments, but Bash features like `cd` or `&&` work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
-* `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
-* Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
-* To debug and/or get your daemon running to begin with, experiment with running it manually inside `ddev ssh`. Then when it works perfectly implement auto-start with `web_extra_daemons`.
-* You can manually restart all daemons with `ddev exec supervisorctl restart webextradaemons:*` or `ddev exec supervisorctl restart webextradaemons:<yourdaemon>`. (`supervisorctl stop` and `supervisorctl start` are available as you would expect.)
+- `directory` should be the absolute path inside the container to the directory where the daemon should run.
+- `command` is best as a simple binary with its arguments, but Bash features like `cd` or `&&` work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
+- `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
+- Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
+- To debug and/or get your daemon running to begin with, experiment with running it manually inside `ddev ssh`. Then when it works perfectly implement auto-start with `web_extra_daemons`.
+- You can manually restart all daemons with `ddev exec supervisorctl restart webextradaemons:*` or `ddev exec supervisorctl restart webextradaemons:<yourdaemon>`. (`supervisorctl stop` and `supervisorctl start` are available as you would expect.)
 
 ## Exposing Extra Ports via `ddev-router`
 
@@ -234,11 +274,11 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 
 ### Troubleshooting nginx Configuration
 
-* Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
-* The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
-* You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
-* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
-* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
+- Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
+- The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
+- You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
+- You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
+- The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
 ### Multiple Docroots in nginx (Advanced)
 
@@ -266,13 +306,13 @@ If you’re using [`webserver_type: apache-fpm`](../configuration/config.md#webs
 
 When you run [`ddev restart`](../usage/commands.md#restart) using `apache-fpm`, DDEV creates a configuration customized to your project type in `.ddev/apache/apache-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`.
 
-* Edit the `.ddev/apache/apache-site.conf`.
-* Remove the `#ddev-generated` to signal to DDEV that you're taking control of the file.
-* Add your configuration changes.
-* Save your configuration file and run [`ddev restart`](../usage/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../usage/commands.md#logs) to inspect the logs for possible Apache configuration errors.
-* Use `ddev exec apachectl -t` to do a general Apache syntax check.
-* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
-* Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
+- Edit the `.ddev/apache/apache-site.conf`.
+- Remove the `#ddev-generated` to signal to DDEV that you're taking control of the file.
+- Add your configuration changes.
+- Save your configuration file and run [`ddev restart`](../usage/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../usage/commands.md#logs) to inspect the logs for possible Apache configuration errors.
+- Use `ddev exec apachectl -t` to do a general Apache syntax check.
+- The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
+- Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
 
 !!!warning "Important!"
     Changes to `.ddev/apache/apache-site.conf` take place on a [`ddev restart`](../usage/commands.md#restart). You can also `ddev exec apachectl -k graceful` to reload the Apache configuration.

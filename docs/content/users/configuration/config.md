@@ -675,7 +675,7 @@ Extra Debian packages for the project’s web container.
 | -- | -- | --
 | :octicons-file-directory-16: project | `[]` | &zwnj;
 
-Example: `webimage_extra_packages: [php-yaml, php-bcmath]` will add the `php-yaml` and `php-bcmath` packages when the web container is built.
+Example: `webimage_extra_packages: [php${DDEV_PHP_VERSION}-yac, php${DDEV_PHP_VERSION}-bcmath]` will add the `php-yac` and `php-bcmath` packages when the web container is built.
 
 ## `webserver_type`
 

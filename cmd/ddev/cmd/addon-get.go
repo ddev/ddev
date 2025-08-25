@@ -38,7 +38,6 @@ ddev add-on get /path/to/tarball.tar.gz
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := false
-		bash := util.FindBashPath()
 		requestedVersion := ""
 
 		if cmd.Flags().Changed("version") {
@@ -157,38 +156,6 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
-		injectedEnv := getInjectedEnv(app.GetConfigPath(".env."+s.Name), verbose)
-
-		yamlMap := make(map[string]interface{})
-		for name, f := range s.YamlReadFiles {
-			f := os.ExpandEnv(string(f))
-			fullpath := filepath.Join(app.GetAppRoot(), f)
-
-			yamlMap[name], err = util.YamlFileToMap(fullpath)
-			if err != nil {
-				util.Warning("Unable to import yaml file %s: %v", fullpath, err)
-			}
-		}
-
-		yamlMap["DdevGlobalConfig"], err = util.YamlFileToMap(globalconfig.GetGlobalConfigPath())
-		if err != nil {
-			util.Warning("Unable to read file %s: %v", globalconfig.GetGlobalConfigPath(), err)
-		}
-
-		// Get project config with overrides
-		var projectConfigMap map[string]interface{}
-		if b, err := yaml.Marshal(app); err != nil {
-			util.Warning("Unable to marshal app: %v", err)
-		} else if err = yaml.Unmarshal(b, &projectConfigMap); err != nil {
-			util.Warning("Unable to unmarshal app: %v", err)
-		} else {
-			yamlMap["DdevProjectConfig"] = projectConfigMap
-		}
-
-		dict, err := util.YamlToDict(yamlMap)
-		if err != nil {
-			util.Failed("Unable to YamlToDict: %v", err)
-		}
 		// Check to see if any dependencies are missing
 		if len(s.Dependencies) > 0 {
 			// Read in full existing registered config
@@ -214,12 +181,12 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
+			err = ddevapp.ProcessAddonAction(action, s, app, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
 					if !verbose {
-						util.Failed("Could not process pre-install action (%d) '%s'. For more detail use ddev add-on get --verbose", i, desc)
+						util.Failed("Could not process pre-install action (%d) '%s'.\nFor more detail, run `%s --verbose`", i, desc, prettyCmd(os.Args))
 					} else {
 						util.Failed("Could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
 					}
@@ -290,11 +257,11 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(injectedEnv+"; "+action, dict, bash, verbose)
-			desc := ddevapp.GetAddonDdevDescription(action)
+			err = ddevapp.ProcessAddonAction(action, s, app, verbose)
 			if err != nil {
+				desc := ddevapp.GetAddonDdevDescription(action)
 				if !verbose {
-					util.Failed("Could not process post-install action (%d) '%s'", i, desc)
+					util.Failed("Could not process post-install action (%d) '%s'.\nFor more detail, run `%s --verbose`", i, desc, prettyCmd(os.Args))
 				} else {
 					util.Failed("Could not process post-install action (%d) '%s': %v", i, desc, err)
 				}
@@ -315,7 +282,12 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to create manifest file: %v", err)
 		}
 
-		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		// Clean up temporary configuration files created for PHP actions
+		err = app.CleanupConfigurationFiles()
+		if err != nil {
+			util.Warning("Unable to clean up temporary configuration files: %v", err)
+		}
+
 		if argType == "github" {
 			util.Success("Please read instructions for this add-on at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}

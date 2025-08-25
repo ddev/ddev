@@ -135,7 +135,10 @@ func IsIPAddress(ip string) bool {
 // GrepStringInBuffer finds strings that match needle
 func GrepStringInBuffer(buffer string, needle string) []string {
 	re := regexp.MustCompilePOSIX(needle)
-	matches := re.FindStringSubmatch(buffer)
+	// Fixed: OLD code used FindStringSubmatch() which only returned first match
+	// Example: ddev-redis-php has multiple "require" statements but only first was found
+	// NEW code uses FindAllString() to return all matches for proper validation
+	matches := re.FindAllString(buffer, -1)
 	return matches
 }
 
