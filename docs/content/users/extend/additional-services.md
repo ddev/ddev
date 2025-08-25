@@ -20,7 +20,7 @@ Add-ons are pre-packaged extensions that provide services with automatic install
 **See [Creating Add-ons](creating-add-ons.md) for:**
 
 - Building your own add-ons
-- Using PHP or bash actions
+- Using PHP or Bash actions
 - Publishing and sharing add-ons
 
 ## Custom Docker Compose Services
