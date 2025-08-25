@@ -41,7 +41,7 @@ echo "
 | If you do use it, this script sets of very restrictive /etc/exports that
 | you will probably need to modify to suit your needs, especially if you're
 | using DHCP and your IP address changes periodically.
-| Please see https://ddev.readthedocs.io/en/stable/users/performance/#debianubuntu-linux-nfs-setup
+| Please see https://docs.ddev.com/en/stable/users/performance/#debianubuntu-linux-nfs-setup
 | for more information.
 +-------------------------------------------------------------------------+
 "
@@ -61,7 +61,7 @@ echo "== Setting up nfs..."
 # You may need to adapt it to be less restrictive in your environment,
 # or of course just use the firewall to restrict access.
 # You are welcome to edit and limit it to the addresses you prefer.
-# Please see https://ddev.readthedocs.io/en/stable/users/install/performance/
+# Please see https://docs.ddev.com/en/stable/users/install/performance/
 # for more information.
 FILE=/etc/exports
 LINE="${HOME} ${primary_ip}(rw,sync,no_subtree_check)"

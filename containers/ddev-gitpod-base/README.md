@@ -4,7 +4,7 @@
 
 ddev/ddev-gitpod-base is a base image for Gitpod integration with [DDEV](https://github.com/ddev/ddev).
 
-Details about how it is used are in https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#gitpod
+Details about how it is used are in https://docs.ddev.com/en/stable/users/install/ddev-installation/#gitpod
 
 ### Features
 
@@ -12,11 +12,11 @@ All the packages you expect to find to use DDEV on gitpod.
 
 ## Instructions
 
-Use [DDEV on Gitpod](https://ddev.readthedocs.io/en/stable/users/install/ddev-installation/#gitpod)
+Use [DDEV on Gitpod](https://docs.ddev.com/en/stable/users/install/ddev-installation/#gitpod)
 
 ### Building and pushing to Docker Hub
 
-See [DDEV docs](https://ddev.readthedocs.io/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
+See [DDEV docs](https://docs.ddev.com/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
 
 ### Running
 
@@ -45,7 +45,7 @@ https://github.com/ddev/ddev/issues
 
 ## Documentation:
 
-* https://ddev.readthedocs.io/
+* https://docs.ddev.com/
 * https://ddev.com/
 
 ## What is DDEV?

@@ -18,7 +18,7 @@ DDEV is an open-source tool for running local web development environments for P
 
 For comprehensive developer documentation, see:
 
-- [Developer Documentation](https://ddev.readthedocs.io/en/stable/developers/) - Complete developer guide
+- [Developer Documentation](https://docs.ddev.com/en/stable/developers/) - Complete developer guide
 - [Building and Contributing](docs/content/developers/building-contributing.md) - Local build setup and contribution workflow
 
 ## Key Development Commands
@@ -199,7 +199,7 @@ When creating pull requests for DDEV, follow the PR template structure from `.gi
    go test -v -run TestSpecificTestName ./pkg/...
    ```
 
-   See [Testing Documentation](https://ddev.readthedocs.io/en/stable/developers/building-contributing/#testing) for detailed testing guidance.
+   See [Testing Documentation](https://docs.ddev.com/en/stable/developers/building-contributing/#testing) for detailed testing guidance.
 
 2. **Run static analysis (REQUIRED):**
 

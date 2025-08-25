@@ -20,7 +20,7 @@ import (
 var (
 	updateInterval     = time.Hour * 4 // Four-hour interval between updates
 	serviceType        string
-	updateDocURL       = "https://ddev.readthedocs.io/en/stable/users/install/ddev-upgrade/"
+	updateDocURL       = "https://docs.ddev.com/en/stable/users/install/ddev-upgrade/"
 	instrumentationApp *ddevapp.DdevApp
 )
 
@@ -29,8 +29,8 @@ var RootCmd = &cobra.Command{
 	Use:   "ddev",
 	Short: "DDEV local development environment",
 	Long: `Create and maintain a local web development environment.
-Docs: https://ddev.readthedocs.io
-Support: https://ddev.readthedocs.io/en/stable/users/support/`,
+Docs: https://docs.ddev.com
+Support: https://docs.ddev.com/en/stable/users/support/`,
 	Version: versionconstants.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		command := os.Args[1]
@@ -139,7 +139,7 @@ func init() {
 	_, err := dockerutil.GetDockerVersion()
 
 	if err != nil && !dockerutil.CanRunWithoutDocker() {
-		util.Failed("Docker error: %v\nFor help go to: https://ddev.readthedocs.io/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
+		util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
 	}
 
 	// Populate custom/script commands so they're visible.
@@ -164,7 +164,7 @@ func init() {
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
-		allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
+		allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}

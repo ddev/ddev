@@ -4,7 +4,7 @@
 # probably want to check it in.
 # Please do `ddev mutagen reset` after changing the file.
 # See DDEV Mutagen docs at
-# https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen
+# https://docs.ddev.com/en/stable/users/install/performance/#mutagen
 # For detailed information about mutagen configuration options, see
 # https://mutagen.io/documentation/introduction/configuration
 sync:

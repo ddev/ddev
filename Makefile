@@ -178,7 +178,7 @@ markdownlint:
 	fi
 
 # Install mkdocs locally using
-# https://ddev.readthedocs.io/en/stable/developers/testing-docs/
+# https://docs.ddev.com/en/stable/developers/testing-docs/
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs build -d /tmp/mkdocsbuild"; \
@@ -190,7 +190,7 @@ mkdocs:
 
 # To see what the docs will look like, you can use `make mkdocs-serve`
 # It does require installing mkdocs and its requirements
-# See https://ddev.readthedocs.io/en/stable/developers/testing-docs/
+# See https://docs.ddev.com/en/stable/developers/testing-docs/
 mkdocs-serve:
 	@if command -v mkdocs >/dev/null ; then \
 		mkdocs serve; \
