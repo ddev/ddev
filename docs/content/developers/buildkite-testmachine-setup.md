@@ -25,7 +25,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * Under "Resources" uncheck "Resource Saver"
 12. After starting Docker Desktop or Rancher Desktop, set the correct Docker context in the Git Bash window with `docker context use desktop-linux` (Docker Desktop) or `docker context use default` (Rancher Desktop).
 13. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
-14. (Traditional Windows test runner only): Enable gd, fileinfo, and curl extensions in `/c/tools/php*/php.ini`.
+14. (Traditional Windows test runner only): Enable `gd`, `fileinfo`, and `curl` extensions in `/c/tools/php*/php.ini`.
 15. Set the “Sleep after time” setting in settings to never.
 16. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
 17. (Traditional Windows test runner only): Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).

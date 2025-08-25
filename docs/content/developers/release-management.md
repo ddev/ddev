@@ -191,7 +191,7 @@ The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and
 * The name of the organization in GemFury is `drud`, managed at `https://manage.fury.io/dashboard/drud`.
 * [Randy Fay](https://github.com/rfay), [Matt Stein](https://github.com/mattstein), and [Simon Gillis](https://github.com/gilbertsoft) are authorized as owners on this dashboard.
 * The `pkg.ddev.com` domain name is set up as a custom alias for our package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
-* The `pkg.ddev.com` `CNAME` is managed in CloudFlare because `ddev.com` is managed there.
+* The `pkg.ddev.com` `CNAME` is managed in Cloudflare because `ddev.com` is managed there.
 * The fury.io tokens are in DDEV’s shared 1Password account.
 
 ## Testing Release Creation

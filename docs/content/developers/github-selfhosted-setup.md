@@ -12,7 +12,7 @@ We are using GitHub Self-Hosted Agents for Windows and macOS testing. The build 
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`.
-3. In admin Powershell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
+3. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
 4. After restart, in administrative Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1`.
 5. Now download and run [windows_github_agent_setup.sh](scripts/windows_github_agent_setup.sh).
 6. Launch Docker. It may require you to take further actions.
