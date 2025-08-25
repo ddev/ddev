@@ -226,7 +226,7 @@ Use these variables in your service definitions:
 - `${DDEV_DOCROOT}` - Document root (relative to project root)
 - `${DDEV_PHP_VERSION}` - PHP version
 - `${DDEV_WEBSERVER_TYPE}` - Web server type
-- `${DDEV_DATABASE_FAMILY}` - Database family (mysql, postgres)
+- `${DDEV_DATABASE_FAMILY}` - Database family (`mysql`, `postgres`)
 
 ### Custom Environment Variables
 
@@ -375,7 +375,7 @@ Many services previously documented in [ddev-contrib](https://github.com/ddev/dd
 
 ### Team Sharing
 
-- Include service documentation in your project README
+- Include service documentation in your project readme
 - Use environment variables for customizable values
 - Provide setup and testing instructions
 - Consider creating an add-on for reusable services

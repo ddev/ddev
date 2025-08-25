@@ -5,7 +5,7 @@ search:
 
 # Creating DDEV Add-ons
 
-DDEV add-ons provide a powerful way to extend development environments. You can create add-ons using traditional bash actions or the new PHP-based actions for complex configuration processing.
+DDEV add-ons provide a powerful way to extend development environments. You can create add-ons using traditional Bash actions or the new PHP-based actions for complex configuration processing.
 
 ## Quick Start
 
@@ -147,7 +147,7 @@ $_ENV['DDEV_MUTAGEN_ENABLED'] // 'true' or 'false'
 
 - **Working directory**: `/var/www/html/.ddev` (your project's .ddev directory)
 - **Project access**: Full read/write access to project repository at `/var/www/html/`
-- **Error handling**: Automatic strict error handling (equivalent to bash `set -eu`)
+- **Error handling**: Automatic strict error handling (equivalent to Bash `set -eu`)
 - **Extensions**: php-yaml extension for robust YAML processing
 
 #### Advanced PHP Example: Conditional Configuration
@@ -304,7 +304,7 @@ dependencies:
 
 ### Template Replacements
 
-Use environment variables in file names and content:
+Use environment variables in filenames and content:
 
 ```yaml
 project_files:
@@ -420,7 +420,7 @@ bats tests.bats
 1. **Test thoroughly** using the test framework
 2. **Create proper releases** with semantic versioning
 3. **Add the `ddev-get` label** to your GitHub repository
-4. **Write clear documentation** in your README
+4. **Write clear documentation** in your readme
 5. **Include examples** and configuration options
 
 ### Making it Official
@@ -455,4 +455,4 @@ To become an officially supported add-on:
 - **GitHub Discussions**: Use [DDEV Discussions](https://github.com/ddev/ddev/discussions) for questions
 - **Stack Overflow**: Tag questions with [ddev](https://stackoverflow.com/tags/ddev)
 
-Creating DDEV add-ons is a powerful way to contribute to the DDEV ecosystem. Whether you use traditional bash actions or the new PHP-based actions, you can create sophisticated extensions that help developers worldwide.
+Creating DDEV add-ons is a powerful way to contribute to the DDEV ecosystem. Whether you use traditional Bash actions or the new PHP-based actions, you can create sophisticated extensions that help developers worldwide.
