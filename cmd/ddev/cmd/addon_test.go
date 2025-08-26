@@ -234,7 +234,7 @@ func TestCmdAddonPHP(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		addonList, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf("%s add-on list --installed -j | jq -r .raw.[].Name", DdevBin))
+		addonList, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf("%s add-on list --installed -j | docker run -i ddev/ddev-utilities jq -r .raw.[].Name", DdevBin))
 		require.NoError(t, err)
 		addonList = strings.TrimSpace(addonList)
 		addons := strings.Split(addonList, "\n")
