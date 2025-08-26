@@ -98,14 +98,19 @@ if [ "${os:-}" = "darwin" ]; then
   esac
 fi
 
-export TIMEOUT_CMD="timeout -v"
-if [ ${OSTYPE%%-*} = "linux" ]; then
-  TIMEOUT_CMD="timeout"
+# Find a suitable timeout command for reliability and readability
+if command -v gtimeout >/dev/null 2>&1; then
+  TIMEOUT="gtimeout"
+elif command -v timeout >/dev/null 2>&1; then
+  TIMEOUT="timeout"
+else
+  echo "Error: Neither 'gtimeout' nor 'timeout' found in PATH." >&2
+  exit 1
 fi
 
 # Make sure docker is working
 echo "Waiting for docker provider to come up: $(date)"
-date && ${TIMEOUT_CMD} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
+date && ${TIMEOUT} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
   echo "Waiting: $(date)"
 done'
@@ -184,15 +189,11 @@ fi
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
 
-# Output of `command -v` is the name of the command.
-# Prefer gtimeout (macOS). Do 60s timeout.
-# Continue anyway if trouble.
-"$(command -v gtimeout || command -v timeout)" 60s \
-  bash "$(dirname "$0")/testbot_maintenance.sh" || true
+${TIMEOUT} 60s bash "$(dirname "$0")/testbot_maintenance.sh"
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
-"$(command -v gtimeout || command -v timeout)" 60s ./.buildkite/sanetestbot.sh
+${TIMEOUT} 60s ./.buildkite/sanetestbot.sh
 
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
