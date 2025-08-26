@@ -46,19 +46,20 @@ docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null
 docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&1 || true
 
 # Clean the docker build cache
-docker buildx prune -f -a >/dev/null || true
+docker buildx prune -f -a >/dev/null
 # Remove any images with name '-built'
 docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null 2>&1 || true
 
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
-ddev poweroff || true
+ddev poweroff
 if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
+	docker rm -f $(docker ps -aq) >/dev/null 2>&1
 fi
-docker system prune --volumes --force || true
-docker volume prune -a -f || true
+
+docker system prune --volumes --force
+docker volume prune -a -f
 
 # Update all images that could have changed
 ( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
