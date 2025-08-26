@@ -8,7 +8,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Install one of the supported Docker providers:
 
-    * [OrbStack](#orbstack): Recommended, easiest to install, most performant, commercial, not open-source.
+    * [OrbStack](#orbstack): Recommended. PROS: easiest to install, most performant. CONS: not open-source,**the free version is personal-use only**.
     * [Lima](#lima): Free, open-source.
     * [Docker Desktop](#docker-desktop-for-mac): Familiar, popular, not open-source, may require license, may be unstable.
     * [Rancher Desktop](#rancher-desktop): Free, open-source, simple installation, slower startup.
