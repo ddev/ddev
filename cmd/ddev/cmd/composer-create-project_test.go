@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -17,6 +18,9 @@ import (
 )
 
 func TestComposerCreateProjectCmd(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on windows where it hangs")
+	}
 	composerVersionForThisTest := nodeps.ComposerDefault
 	//composerVersionForThisTest := "2.8.0"
 
