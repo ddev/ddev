@@ -44,7 +44,7 @@ jobs:
 
     steps:
     - name: Load 1password secret(s)
-      uses: 1password/load-secrets-action@v2
+      uses: 1password/load-secrets-action@v3
       if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
       with:
         export-env: true
