@@ -235,5 +235,5 @@ nav:
     - developers/network-test-environments.md
     - developers/http-proxy-test-environments.md
     - developers/secret-management.md
-  - 'Blog': https://ddev.com
+  - 'Blog': https://ddev.com/blog
   - 'Add-on Registry': https://addons.ddev.com
