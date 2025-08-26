@@ -193,7 +193,7 @@ ${TIMEOUT} 60s bash "$(dirname "$0")/testbot_maintenance.sh"
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
-${TIMEOUT} 60s ./.buildkite/sanetestbot.sh
+${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
 
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
