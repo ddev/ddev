@@ -69,7 +69,8 @@ theme:
 # Plugins
 plugins:
 - search
-- privacy
+- privacy:
+    enabled: !ENV [READTHEDOCS, false]
 - redirects:
     redirect_maps:
 - minify:
