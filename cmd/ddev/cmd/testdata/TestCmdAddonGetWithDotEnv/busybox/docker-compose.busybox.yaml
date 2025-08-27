@@ -5,10 +5,6 @@ services:
     image: busybox:${BUSYBOX_TAG:-stable}
     command: tail -f /dev/null
     restart: "no"
-    # These labels ensure this service is discoverable by ddev.
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: $DDEV_APPROOT
     environment:
       # This variable can be overridden with .env.busybox file
       - THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV=true

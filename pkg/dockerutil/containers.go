@@ -685,9 +685,11 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	if config.Labels == nil {
 		config.Labels = make(map[string]string)
 	}
-	// Assign a default label so this container can be removed with 'ddev poweroff'
-	if _, exists := config.Labels["com.ddev.site-name"]; !exists {
-		config.Labels["com.ddev.site-name"] = ""
+	// Ensure all global DDEV labels are present; caller-provided values take precedence.
+	for k, v := range GlobalDdevLabels() {
+		if _, exists := config.Labels[k]; !exists {
+			config.Labels[k] = v
+		}
 	}
 
 	// Set up host.docker.internal based on DDEV's standard approach

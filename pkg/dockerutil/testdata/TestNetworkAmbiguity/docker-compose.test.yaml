@@ -3,6 +3,3 @@ services:
     container_name: ddev-${DDEV_SITENAME}-test
     image: "busybox:stable"
     command: "tail -f /dev/null"
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: $DDEV_APPROOT

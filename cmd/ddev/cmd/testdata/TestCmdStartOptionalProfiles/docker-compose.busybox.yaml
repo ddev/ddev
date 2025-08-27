@@ -5,9 +5,6 @@ services:
     profiles:
       - busybox1
     container_name: ddev-${DDEV_SITENAME}-busybox1
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: ${DDEV_APPROOT}
     # ports from optional profiles should be exposed for Traefik
     # and used as entryPoints, if it doesn't work, router fails
     environment:
@@ -20,6 +17,3 @@ services:
     profiles:
       - busybox2
     container_name: ddev-${DDEV_SITENAME}-busybox2
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: ${DDEV_APPROOT}

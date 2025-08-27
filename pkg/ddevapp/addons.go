@@ -516,7 +516,7 @@ if [ $exit_code -ne 0 ]; then
 fi
 `, phpCode)
 
-	_, out, err := dockerutil.RunSimpleContainer(image, "php-validate-"+util.RandString(6), []string{"sh", "-c", shellScript}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(image, "php-validate-"+util.RandString(6), []string{"sh", "-c", shellScript}, []string{}, []string{}, []string{}, "", true, false, nil, nil, nil)
 	out = strings.TrimSpace(out)
 
 	if err != nil {

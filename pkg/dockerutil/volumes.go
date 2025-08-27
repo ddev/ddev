@@ -116,7 +116,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	}
 	c = c + "mkdir -p " + targetSubdirFullPath + " && sleep infinity "
 
-	labels := map[string]string{"com.ddev.site-name": ""}
+	labels := map[string]string{}
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
@@ -228,7 +228,7 @@ func PurgeDirectoryContentsInVolume(volumeName string, subdirs []string, uid str
 	}
 	c := fmt.Sprintf("mkdir -p %s && rm -rf %s", strings.Join(mkdirs, " "), strings.Join(rmPaths, " "))
 
-	labels := map[string]string{"com.ddev.site-name": ""}
+	labels := map[string]string{}
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
@@ -257,7 +257,7 @@ func ListFilesInVolume(volumeName string, subdir string) ([]string, error) {
 	// List files, suppress errors if directory doesn't exist
 	c := fmt.Sprintf(`ls -1 "%s" 2>/dev/null || true`, fullPath)
 
-	labels := map[string]string{"com.ddev.site-name": ""}
+	labels := map[string]string{}
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
@@ -302,7 +302,7 @@ func RemoveFilesFromVolume(volumeName string, subdir string, files []string) err
 	}
 	c := fmt.Sprintf("rm -f %s", strings.Join(rmPaths, " "))
 
-	labels := map[string]string{"com.ddev.site-name": ""}
+	labels := map[string]string{}
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}

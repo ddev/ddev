@@ -37,6 +37,7 @@ func FullRenderedSSHAuthComposeYAMLPath() string {
 
 // EnsureSSHAgentContainer ensures the ssh-auth container is running.
 func (app *DdevApp) EnsureSSHAgentContainer() error {
+	util.Debug("Ensuring ddev-ssh-agent container is running with the current image")
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
@@ -167,7 +168,16 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = fullHandle.WriteString(fullContents)
+	project, err := dockerutil.CreateComposeProject(fullContents)
+	if err != nil {
+		return "", err
+	}
+	injectDdevLabels(project, nil)
+	fullContentsBytes, err := project.MarshalYAML()
+	if err != nil {
+		return "", err
+	}
+	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
 		return "", err
 	}

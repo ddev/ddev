@@ -7,5 +7,3 @@ services:
     # Port is published for debugging reasons only. ssh -p 3333 root@localhost
     - published: 3333
       target: 22
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}

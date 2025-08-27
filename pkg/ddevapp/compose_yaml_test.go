@@ -9,6 +9,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -227,7 +228,7 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.NotEmpty(t, app.ComposeYaml)
 	require.NotEmpty(t, app.ComposeYaml.Services)
 
-	expectedServices := []string{"web", "db", "dummy1"}
+	expectedServices := []string{"web", "db", "dummy1", "dummy2"}
 	for _, serviceName := range expectedServices {
 		_, ok := app.ComposeYaml.Services[serviceName]
 		require.True(t, ok, "%s service not found in app.ComposeYaml.Services", serviceName)
@@ -242,6 +243,8 @@ func TestFixupComposeYaml(t *testing.T) {
 
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
+	totalPortsChecked := 0
+	buildServicesChecked := 0
 	for serviceName, service := range app.ComposeYaml.Services {
 		t.Run("service_"+serviceName, func(t *testing.T) {
 			require.Contains(t, service.Networks, "ddev_default", "service %s missing ddev_default network", serviceName)
@@ -257,10 +260,26 @@ func TestFixupComposeYaml(t *testing.T) {
 			}
 
 			for portIndex, port := range service.Ports {
+				totalPortsChecked++
 				require.Equal(t, "127.0.0.1", port.HostIP, "service %s port %d should have HostIP set to 127.0.0.1", serviceName, portIndex)
+			}
+
+			for k, v := range ddevapp.GetDdevLabels(app) {
+				require.Contains(t, service.Labels, k, "service %s missing label %s", serviceName, k)
+				require.Equal(t, v, service.Labels[k], "service %s label %s value incorrect", serviceName, k)
+			}
+
+			if service.Build != nil {
+				buildServicesChecked++
+				for k, v := range ddevapp.GetDdevLabels(app) {
+					require.Contains(t, service.Build.Labels, k, "service %s build missing label %s", serviceName, k)
+					require.Equal(t, v, service.Build.Labels[k], "service %s build label %s value incorrect", serviceName, k)
+				}
 			}
 		})
 	}
+	require.Positive(t, buildServicesChecked, "build label check never ran")
+	require.Positive(t, totalPortsChecked, "port HostIP check never ran")
 
 	hasPort12345 := false
 	for _, port := range webService.Ports {
@@ -299,4 +318,33 @@ func TestFixupComposeYaml(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestGetDdevLabels verifies that GetDdevLabels returns the correct labels
+// for both global (nil app) and project-specific contexts.
+func TestGetDdevLabels(t *testing.T) {
+	// nil app: only global labels, no project-specific keys
+	labels := ddevapp.GetDdevLabels(nil)
+	require.Contains(t, labels, "com.ddev.platform")
+	require.Equal(t, "ddev", labels["com.ddev.platform"])
+	require.Contains(t, labels, "com.ddev.site-name")
+	require.Equal(t, "", labels["com.ddev.site-name"])
+	require.Contains(t, labels, "com.ddev.webtag")
+	require.Equal(t, versionconstants.WebTag, labels["com.ddev.webtag"])
+	require.NotContains(t, labels, "com.ddev.app-type")
+	require.NotContains(t, labels, "com.ddev.approot")
+
+	// with app: project-specific labels are added/overridden
+	app := &ddevapp.DdevApp{Name: "mysite", Type: "php", AppRoot: "/tmp/mysite"}
+	labels = ddevapp.GetDdevLabels(app)
+	require.Contains(t, labels, "com.ddev.platform")
+	require.Equal(t, "ddev", labels["com.ddev.platform"])
+	require.Contains(t, labels, "com.ddev.site-name")
+	require.Equal(t, "mysite", labels["com.ddev.site-name"])
+	require.Contains(t, labels, "com.ddev.app-type")
+	require.Equal(t, "php", labels["com.ddev.app-type"])
+	require.Contains(t, labels, "com.ddev.approot")
+	require.Equal(t, "/tmp/mysite", labels["com.ddev.approot"])
+	require.Contains(t, labels, "com.ddev.webtag")
+	require.Equal(t, versionconstants.WebTag, labels["com.ddev.webtag"])
 }

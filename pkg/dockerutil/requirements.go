@@ -143,7 +143,7 @@ func CanRunWithoutDocker() bool {
 
 // CheckAvailableSpace outputs a warning if Docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(versionconstants.UtilitiesImage, "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	_, out, _ := RunSimpleContainer(versionconstants.UtilitiesImage, "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil, nil, nil)
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {

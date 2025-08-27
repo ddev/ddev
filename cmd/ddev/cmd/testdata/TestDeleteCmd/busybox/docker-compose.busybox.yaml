@@ -6,10 +6,6 @@ services:
       context: busybox
     command: tail -f /dev/null
     restart: "no"
-    # These labels ensure this service is discoverable by ddev.
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: $DDEV_APPROOT
     volumes:
       - ".:/mnt/ddev_config"
       - "ddev-global-cache:/mnt/ddev-global-cache"

@@ -3,7 +3,7 @@ name: ${COMPOSE_PROJECT_NAME}
 services:
   {{ if not .OmitDB }}
   db:
-    container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
+    container_name: ddev-${DDEV_SITENAME}-db
     build:
       context: '{{ .DBBuildContext }}'
       args:
@@ -37,11 +37,6 @@ services:
     hostname: {{ .Name }}-db
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:{{ .DBPort }}"
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: {{ .Plugin }}
-      com.ddev.app-type: {{ .AppType }}
-      com.ddev.approot: $DDEV_APPROOT
     environment:
       - COLUMNS
       - BITNAMI_VOLUME_DIR={{ .BitnamiVolumeDir }}
@@ -94,7 +89,7 @@ services:
   {{ end }} {{/* end if not .OmitDB */}}
 
   web:
-    container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
+    container_name: ddev-${DDEV_SITENAME}-web
     build:
       context: '{{ .WebBuildContext }}'
       args:
@@ -254,11 +249,6 @@ services:
     - START_SCRIPT_TIMEOUT={{ sub .DefaultContainerTimeout 5 }}
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: {{ .Plugin }}
-      com.ddev.app-type: {{ .AppType }}
-      com.ddev.approot: $DDEV_APPROOT
 
     healthcheck:
       test: "/healthcheck.sh"
@@ -273,9 +263,6 @@ services:
   xhgui:
     image: {{ .XhguiImage }}
     container_name: ddev-${DDEV_SITENAME}-xhgui
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: $DDEV_APPROOT
     profiles:
       - xhgui
     restart: "no"
@@ -313,8 +300,6 @@ networks:
     external: true
   default:
     name: ${COMPOSE_PROJECT_NAME}_default
-    labels:
-      com.ddev.platform: ddev
 
 volumes:
   {{ if not .OmitDB }}

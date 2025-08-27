@@ -24,6 +24,7 @@ For most HTTP-based services, use `expose` with `HTTP_EXPOSE` and `HTTPS_EXPOSE`
 services:
   dummy-service:
     container_name: "ddev-${DDEV_SITENAME}-dummy-service"
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -89,6 +90,7 @@ When defining additional services for your project, we recommend following these
     services:
       dummy-service:
         image: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+        # These two labels are added automatically since DDEV v1.25.2+
         labels:
           com.ddev.site-name: ${DDEV_SITENAME}
           com.ddev.approot: ${DDEV_APPROOT}
@@ -184,6 +186,7 @@ services:
     # Tip: external_links are not needed anymore in DDEV v1.24.10+
     external_links:
       - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -236,6 +239,7 @@ services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
     image: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -266,6 +270,7 @@ services:
         username: ${DDEV_USER}
         uid: ${DDEV_UID}
         gid: ${DDEV_GID}
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -317,6 +322,7 @@ services:
     profiles:
       - busybox
     container_name: ddev-${DDEV_SITENAME}-busybox
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}

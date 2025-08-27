@@ -3,9 +3,6 @@ services:
   nginx:
     image: nginx
     container_name: ddev-${DDEV_SITENAME}-nginx
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: ${DDEV_APPROOT}
     ports:
       - 80
     environment:

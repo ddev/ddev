@@ -781,7 +781,6 @@ func (app *DdevApp) FixObsolete() {
 
 type composeYAMLVars struct {
 	Name                      string
-	Plugin                    string
 	AppType                   string
 	WebserverType             string
 	MailpitPort               string
@@ -882,7 +881,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
-		Plugin:                    "ddev",
 		AppType:                   app.Type,
 		WebserverType:             app.WebserverType,
 		MailpitPort:               GetInternalPort(app, "mailpit"),

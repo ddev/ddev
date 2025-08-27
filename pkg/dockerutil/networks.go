@@ -39,7 +39,7 @@ func EnsureDdevNetwork() {
 	netOptions := client.NetworkCreateOptions{
 		Driver:   "bridge",
 		Internal: false,
-		Labels:   map[string]string{"com.ddev.platform": "ddev"},
+		Labels:   GlobalDdevLabels(),
 	}
 	err := EnsureNetwork(NetName, netOptions)
 	if err != nil {

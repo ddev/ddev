@@ -3,10 +3,6 @@ services:
   varnish:
     container_name: ddev-${DDEV_SITENAME}-varnish
     image: ${VARNISH_DOCKER_IMAGE:-varnish:6.0}
-    # These labels ensure this service is discoverable by ddev.
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: $DDEV_APPROOT
     environment:
       # This defines the host name the service should be accessible from. This
       # will be sitename.ddev.site.

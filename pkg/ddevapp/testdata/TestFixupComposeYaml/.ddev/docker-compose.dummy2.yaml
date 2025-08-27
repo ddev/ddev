@@ -1,0 +1,8 @@
+services:
+  dummy2:
+    build:
+      context: .
+    environment:
+      - HTTP_EXPOSE=9103
+      - HTTPS_EXPOSE=9104
+      - VIRTUAL_HOST=$DDEV_HOSTNAME

@@ -40,6 +40,7 @@ services:
   myservice:
     container_name: "ddev-${DDEV_SITENAME}-myservice"
     image: nginx:alpine
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -61,6 +62,7 @@ services:
 Always include these labels for proper DDEV integration:
 
 ```yaml
+# These two labels are added automatically since DDEV v1.25.2+
 labels:
   com.ddev.site-name: ${DDEV_SITENAME}
   com.ddev.approot: ${DDEV_APPROOT}
@@ -129,6 +131,7 @@ services:
   rabbitmq:
     container_name: "ddev-${DDEV_SITENAME}-rabbitmq"
     image: rabbitmq:3-management-alpine
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -169,6 +172,7 @@ services:
   sqlsrv:
     container_name: "ddev-${DDEV_SITENAME}-sqlsrv"
     image: mcr.microsoft.com/mssql/server:2022-latest
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -203,6 +207,7 @@ services:
   elasticsearch:
     container_name: "ddev-${DDEV_SITENAME}-elasticsearch"
     image: elasticsearch:8.11.0
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -234,6 +239,7 @@ services:
   redis:
     container_name: "ddev-${DDEV_SITENAME}-redis"
     image: redis:7-alpine
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -244,6 +250,7 @@ services:
   memcached:
     container_name: "ddev-${DDEV_SITENAME}-memcached"
     image: memcached:alpine
+    # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}

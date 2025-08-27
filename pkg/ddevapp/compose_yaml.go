@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -176,6 +177,52 @@ func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 	return xDdev
 }
 
+// GetDdevLabels returns labels for DDEV resources. If app is nil, only global
+// labels are returned. If app is provided, project-specific labels are added.
+func GetDdevLabels(app *DdevApp) map[string]string {
+	labels := dockerutil.GlobalDdevLabels()
+	if app != nil {
+		// Overrides the empty global value; used by poweroff, router, and db
+		// to find containers belonging to this project.
+		labels["com.ddev.site-name"] = app.GetName()
+		// Used by GetActiveProjects to restore app.Type when NewApp() fails.
+		labels["com.ddev.app-type"] = app.GetType()
+		// Used to verify the running container matches the current project root
+		// and to recover the project directory from a container's labels.
+		labels["com.ddev.approot"] = app.GetAppRoot()
+	}
+	return labels
+}
+
+// injectDdevLabels stamps DDEV labels onto all services, build sections, and
+// non-external networks in the project. If app is nil, global labels are used.
+func injectDdevLabels(project *composeTypes.Project, app *DdevApp) {
+	labels := GetDdevLabels(app)
+	for name, service := range project.Services {
+		if service.Labels == nil {
+			service.Labels = composeTypes.Labels{}
+		}
+		maps.Copy(service.Labels, labels)
+		if service.Build != nil {
+			if service.Build.Labels == nil {
+				service.Build.Labels = composeTypes.Labels{}
+			}
+			maps.Copy(service.Build.Labels, labels)
+		}
+		project.Services[name] = service
+	}
+	for name, network := range project.Networks {
+		if network.External {
+			continue
+		}
+		if network.Labels == nil {
+			network.Labels = composeTypes.Labels{}
+		}
+		maps.Copy(network.Labels, labels)
+		project.Networks[name] = network
+	}
+}
+
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
 func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, error) {
@@ -204,14 +251,10 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			network.Name = app.GetDefaultNetworkName()
 			network.External = false
 		}
-		if !network.External {
-			if network.Labels == nil {
-				network.Labels = composeTypes.Labels{}
-			}
-			network.Labels["com.ddev.platform"] = "ddev"
-		}
 		project.Networks[name] = network
 	}
+
+	injectDdevLabels(project, app)
 
 	bindIP, err := dockerutil.GetDockerIP()
 	if err != nil {

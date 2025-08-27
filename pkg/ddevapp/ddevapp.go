@@ -1736,7 +1736,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Build list of volume mounts and their target paths for chown
 	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
 	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
-	labels := map[string]string{"com.ddev.site-name": ""}
+	labels := map[string]string{}
 	if dockerutil.IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
@@ -1826,7 +1826,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	_, logStderrOutput, err := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	_, logStderrOutput, err := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
 		_, err = app.composeBuild("web", "--no-cache")
