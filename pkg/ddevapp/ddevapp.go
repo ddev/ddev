@@ -1576,7 +1576,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()
 		if caRoot == "" {
-			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+			util.Warning("certificate authority not available for trusted https support.")
 		}
 		router, _ := FindDdevRouter()
 

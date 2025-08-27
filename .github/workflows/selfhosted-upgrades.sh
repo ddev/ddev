@@ -27,7 +27,7 @@ darwin)
     done
     ;;
 windows)
-    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
+    choco upgrade -y golang nodejs markdownlint-cli mkdocs || true
     if ! command -v golangci-lint >/dev/null 2>&1 ; then
       (curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0) || true
     fi

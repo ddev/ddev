@@ -12,6 +12,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/mkcert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -121,9 +122,10 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			systemWslenvReg, systemWslenvRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "/v", "WSLENV")
 			t.Logf("Registry HKLM\\System\\Environment WSLENV: %s (err: %v)", strings.TrimSpace(systemWslenvReg), systemWslenvRegErr)
 
-			// Check mkcert -CAROOT on Windows side
-			mkcertOut, mkcertErr := exec.RunHostCommand("mkcert.exe", "-CAROOT")
-			t.Logf("Windows mkcert -CAROOT: %s (err: %v)", strings.TrimSpace(mkcertOut), mkcertErr)
+			// Check DDEV integrated mkcert CAROOT
+			ca := mkcert.NewCA()
+			mkcertOut := ca.GetCAROOT()
+			t.Logf("DDEV integrated mkcert CAROOT: %s", strings.TrimSpace(mkcertOut))
 
 			// Check WSLENV inside the distro
 			out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "echo $WSLENV")
@@ -268,18 +270,6 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		// Makes test run much faster than completely deleting the distro.
 		out, _ := exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "(ddev poweroff 2>/dev/null || true) && (ddev stop --unlist -a 2>/dev/null) && rm -rf ~/tp")
 		t.Logf("ddev poweroff/stop/unlist: err=%v, output: %s", err, out)
-
-		// Temp allow all sudo to let mkcert -uninstall work as normal user
-		out, err := exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", `echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install`)
-		require.NoError(t, err)
-
-		// Now do mkcert -uninstall as normal user if mkcert is installed
-		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -uninstall; fi")
-		require.NoError(t, err)
-
-		// Now take away temp sudo
-		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "rm", "/etc/sudoers.d/temp-mkcert-install")
-		require.NoError(t, err)
 
 		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null)")
 		t.Logf("distro cleanup: err=%v, output: %s", err, out)

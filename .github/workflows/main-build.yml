@@ -64,7 +64,7 @@ jobs:
           check-latest: true
 
       - name: Build DDEV executables
-        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions
 
       - name: "Verify that instrumentation is working (Linux amd64)"
         run: |

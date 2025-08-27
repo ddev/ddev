@@ -24,6 +24,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/mkcert"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -4544,7 +4545,7 @@ func TestCustomCerts(t *testing.T) {
 	// mkcert --cert-file d9.crt --key-file d9.key d9.ddev.site
 	baseCertName := app.Name
 
-	stdout, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
+	stdout, err = mkcert.RunHostCommand("--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
 	require.NoError(t, err, "mkcert command failed, stdout=%s", stdout)
 
 	err = app.Start()

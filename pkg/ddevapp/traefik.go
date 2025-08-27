@@ -9,9 +9,9 @@ import (
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/mkcert"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -157,7 +157,7 @@ func PushGlobalTraefikConfig() error {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 		}
 
-		out, err := exec.RunHostCommand("mkcert", c...)
+		out, err := mkcert.RunHostCommand(c...)
 		if err != nil {
 			util.Failed("failed to create global mkcert certificate, check mkcert operation: %v", out)
 		}
@@ -331,7 +331,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		if app.ProjectTLD != nodeps.DdevDefaultTLD {
 			c = append(c, "*."+app.ProjectTLD)
 		}
-		out, err := exec.RunHostCommand("mkcert", c...)
+		out, err := mkcert.RunHostCommand(c...)
 		if err != nil {
 			util.Failed("Failed to create certificates for project, check mkcert operation: %v; err=%v", out, err)
 		}

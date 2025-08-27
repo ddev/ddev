@@ -9,7 +9,7 @@ builds:
 - id: ddev
   main: ./cmd/ddev
 
-  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
+  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64
   builder: prebuilt
   goos:
   - linux
@@ -27,7 +27,7 @@ builds:
 - id: ddev-hostname
   main: ./cmd/ddev-hostname
 
-  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64 mkcert
+  # Requires make darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 windows_arm64
   builder: prebuilt
   goos:
     - linux
@@ -41,23 +41,6 @@ builds:
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev-hostname{{.Ext}}
   binary: ddev-hostname
-
-
-- id: mkcert
-  # requires make completions
-  builder: prebuilt
-  goos:
-  - linux
-  - darwin
-  - windows
-  goarch:
-  - arm64
-  - amd64
-  goamd64:
-  - v1
-  prebuilt:
-    path: .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert{{.Ext}}
-  binary: mkcert
 
 - id: completions-tarball
   # requires make completions
@@ -163,33 +146,12 @@ builds:
     path: .gotmp/bin/wsl_arm64/ddev-hostname.exe
   binary: ddev-hostname.exe
 
-- id: ddev-wsl2-mkcert-amd64
-  builder: prebuilt
-  goos:
-  - linux
-  goarch:
-  - amd64
-  prebuilt:
-    path: .gotmp/bin/wsl_amd64/mkcert.exe
-  binary: mkcert.exe
-
-- id: ddev-wsl2-mkcert-arm64
-  builder: prebuilt
-  goos:
-  - linux
-  goarch:
-  - arm64
-  prebuilt:
-    path: .gotmp/bin/wsl_arm64/mkcert.exe
-  binary: mkcert.exe
-
 ###### Archives ######
 archives:
 - id: ddev
   ids:
     - ddev
     - ddev-hostname
-    - mkcert
     - ddev_bash_completion.sh
     - ddev_zsh_completion.sh
     - ddev_fish_completion.sh
@@ -252,8 +214,6 @@ brews:
   license: "Apache 2"
   # ddev brew will only be uploaded on non-prerelease
   skip_upload: auto
-  dependencies:
-    - name: mkcert
 
   custom_block: |
     head do
@@ -312,8 +272,6 @@ brews:
   license: "Apache 2"
   # ddev-edge brew will always be uploaded
   skip_upload: "false"
-  dependencies:
-    - name: mkcert
   custom_block: |
     head do
       url "https://github.com/{{ .Env.REPOSITORY_OWNER }}/ddev.git", branch: "main"
@@ -368,7 +326,6 @@ nfpms:
   ids:
   - ddev
   - ddev-hostname
-  - mkcert
   formats:
   - deb
   - rpm
@@ -397,19 +354,17 @@ nfpms:
     deb:
       dependencies:
       - libnss3-tools
-      replaces:
-      - mkcert
     rpm:
       dependencies:
       - nss-tools
 
-# WSL2 package containing Windows binaries (ddev-hostname.exe and mkcert.exe)
+# WSL2 package containing Windows binaries (ddev-hostname.exe)
 - id: ddev-wsl2
   maintainer: DDEV Maintainers
   license: "Apache 2"
   homepage: https://github.com/ddev/ddev
   description: |
-    WSL2 components for DDEV (Windows-side ddev-hostname.exe and mkcert.exe)
+    WSL2 components for DDEV (Windows-side ddev-hostname.exe)
   package_name: ddev-wsl2
   formats:
     - deb
@@ -417,8 +372,6 @@ nfpms:
   builds:
     - ddev-wsl2-hostname-amd64
     - ddev-wsl2-hostname-arm64
-    - ddev-wsl2-mkcert-amd64
-    - ddev-wsl2-mkcert-arm64
   dependencies:
     - ddev
   scripts:
@@ -445,7 +398,6 @@ aurs:
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
   depends:
   - docker
-  - mkcert
   optdepends:
   - 'bash-completion: subcommand completion support'
 
@@ -486,7 +438,6 @@ aurs:
   git_url: '{{ .Env.AUR_EDGE_GIT_URL }}'
   depends:
   - docker
-  - mkcert
   optdepends:
   - 'bash-completion: subcommand completion support'
 

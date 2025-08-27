@@ -8,8 +8,6 @@ if [ -z ${BUILDKITE_AGENT_TOKEN:-""} ]; then
   exit 101
 fi
 
-mkcert -install
-
 # Set *global* line endings (not user) because the buildkite-agent may not be running as testbot user
 perl -pi -e 's/autocrlf = true/autocrlf = false\n\teol = lf/' "/c/Program Files/Git/etc/gitconfig"
 

@@ -14,6 +14,7 @@ import (
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/globalconfig/types"
+	"github.com/ddev/ddev/pkg/mkcert"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -803,21 +804,14 @@ func GetCAROOT() string {
 // 3. If not, see if mkcert is even available, return empty
 
 func readCAROOT() string {
-	_, err := exec.LookPath("mkcert")
-	if err != nil {
+	ca := mkcert.NewCA()
+
+	// Check if CA is installed and accessible
+	if !ca.IsCAInstalled() {
 		return ""
 	}
 
-	out, err := exec.Command("mkcert", "-CAROOT").Output()
-	if err != nil {
-		return ""
-	}
-	root := strings.Trim(string(out), "\r\n")
-	if !fileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileExists(filepath.Join(root, "rootCA.pem")) {
-		return ""
-	}
-
-	return root
+	return ca.GetCAROOT()
 }
 
 // fileIsReadable checks to make sure a file exists and is readable
