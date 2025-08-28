@@ -52,7 +52,7 @@ jobs:
       # 1password secrets are not available on forked PRs and some other PRs
       - name: Load 1password secret(s) magento2 etc if available
         if: ${{ env.OP_SERVICE_ACCOUNT_TOKEN != '' }}
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:
