@@ -133,6 +133,9 @@ func startTestContainer() (string, error) {
 func TestGetContainerHealth(t *testing.T) {
 	assert := asrt.New(t)
 	ctx, client := dockerutil.GetDockerClient()
+	if dockerutil.GetDockerClientErr() != nil {
+		t.Fatalf("Could not get docker client: %v", dockerutil.GetDockerClientErr())
+	}
 
 	labels := map[string]string{
 		"com.ddev.site-name":        testContainerName,
@@ -531,6 +534,9 @@ func TestGetBoundHostPorts(t *testing.T) {
 func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
 	ctx, client := dockerutil.GetDockerClient()
+	if dockerutil.GetDockerClientErr() != nil {
+		t.Fatalf("Could not get docker client: %v", dockerutil.GetDockerClientErr())
+	}
 
 	id, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil, nil, nil)
 	assert.NoError(err)
@@ -568,6 +574,9 @@ func TestCreateVolume(t *testing.T) {
 func TestRemoveVolume(t *testing.T) {
 	assert := asrt.New(t)
 	ctx, client := dockerutil.GetDockerClient()
+	if dockerutil.GetDockerClientErr() != nil {
+		t.Fatalf("Could not get docker client: %v", dockerutil.GetDockerClientErr())
+	}
 
 	testVolume := "junker999"
 	spareVolume := "someVolumeThatCanNeverExit"

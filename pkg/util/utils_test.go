@@ -279,33 +279,33 @@ func compareSlices(a, b []string) bool {
 // TestWarningOnce tests that WarningOnce only shows each unique message once
 func TestWarningOnce(t *testing.T) {
 	assert := asrt.New(t)
-	
+
 	// Capture output to test warning messages (warnings go to UserErr)
 	restoreOutput := util.CaptureUserErr()
-	
+
 	// Test that same message is only shown once
 	util.WarningOnce("test warning message")
 	util.WarningOnce("test warning message")
 	util.WarningOnce("test warning message")
-	
+
 	// Test that different messages are both shown
 	util.WarningOnce("different warning message")
-	
+
 	out := restoreOutput()
-	
+
 	// Should contain each unique message only once
 	assert.Equal(1, strings.Count(out, "test warning message"))
 	assert.Equal(1, strings.Count(out, "different warning message"))
-	
+
 	// Test with format arguments
 	restoreOutput = util.CaptureUserErr()
-	
+
 	util.WarningOnce("warning with %s", "arg1")
 	util.WarningOnce("warning with %s", "arg1")
 	util.WarningOnce("warning with %s", "arg2")
-	
+
 	out = restoreOutput()
-	
+
 	// Should show each formatted message once
 	assert.Equal(1, strings.Count(out, "warning with arg1"))
 	assert.Equal(1, strings.Count(out, "warning with arg2"))

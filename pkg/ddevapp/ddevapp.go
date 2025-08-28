@@ -1009,7 +1009,6 @@ func (app *DdevApp) SiteStatus() (string, string) {
 	for service := range statuses {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
-			util.Error("app.FindContainerByType(%v) failed", service)
 			return "", ""
 		}
 		if container == nil {
@@ -2325,6 +2324,9 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
 	ctx, client := dockerutil.GetDockerClient()
+	if dockerutil.GetDockerClientErr() != nil {
+		return dockerutil.GetDockerClientErr()
+	}
 
 	var container *dockerContainer.Summary
 	var err error
@@ -2375,6 +2377,9 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	ctx, client := dockerutil.GetDockerClient()
+	if dockerutil.GetDockerClientErr() != nil {
+		return "", dockerutil.GetDockerClientErr()
+	}
 
 	var container *dockerContainer.Summary
 	var err error

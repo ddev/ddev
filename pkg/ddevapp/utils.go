@@ -90,6 +90,9 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 // has been deleted.
 func Cleanup(app *DdevApp) error {
 	ctx, client := dockerutil.GetDockerClient()
+	if dockerutil.GetDockerClientErr() != nil {
+		return dockerutil.GetDockerClientErr()
+	}
 
 	// Find all containers which match the current site name.
 	labels := map[string]string{
