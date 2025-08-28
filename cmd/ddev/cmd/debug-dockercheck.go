@@ -79,11 +79,6 @@ var DebugDockercheckCmd = &cobra.Command{
 		}
 		util.Success("Docker API version: %s", dockerAPIVersion)
 
-		_, client := dockerutil.GetDockerClient()
-		if client == nil {
-			util.Failed("Unable to get Docker client")
-		}
-
 		uid, _, _ := util.GetContainerUIDGid()
 		_, out, err := dockerutil.RunSimpleContainer(docker.GetWebImage(), "dockercheck-runcontainer--"+util.RandString(6), []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 		if err != nil {
