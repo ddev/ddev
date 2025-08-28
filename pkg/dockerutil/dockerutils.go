@@ -1345,7 +1345,30 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 // Inside WSL2, the way to access an app like PhpStorm running on the Windows side is described
 // in https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 // and it involves parsing /etc/resolv.conf.
+// Cache for GetHostDockerInternalIP result
+var (
+	hostDockerInternalOnce   sync.Once
+	cachedHostDockerInternal string
+)
+
 func GetHostDockerInternalIP() string {
+	hostDockerInternalOnce.Do(func() {
+		cachedHostDockerInternal = getHostDockerInternalIPImpl()
+	})
+	return cachedHostDockerInternal
+}
+
+// ResetHostDockerInternalIPCache resets the cached host.docker.internal IP value
+// This is primarily used for testing purposes
+func ResetHostDockerInternalIPCache() {
+	hostDockerInternalOnce = sync.Once{}
+	cachedHostDockerInternal = ""
+	hostDockerInternalValueOnce = sync.Once{}
+	cachedHostDockerInternalValue = ""
+}
+
+// getHostDockerInternalIPImpl contains the actual implementation logic
+func getHostDockerInternalIPImpl() string {
 	hostDockerInternal := ""
 
 	switch {
@@ -1413,22 +1436,37 @@ func GetHostDockerInternalIP() string {
 	return hostDockerInternal
 }
 
+// Cache for GetHostDockerInternalValue result
+var (
+	hostDockerInternalValueOnce   sync.Once
+	cachedHostDockerInternalValue string
+)
+
 // GetHostDockerInternalValue returns the appropriate extra_hosts entry for host.docker.internal
 func GetHostDockerInternalValue(withPrefix bool) string {
-	extraHost := ""
-	hostDockerInternal := GetHostDockerInternalIP()
-	if hostDockerInternal != "" {
-		// Use specific IP address for host.docker.internal
-		extraHost = hostDockerInternal
-	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !IsColima()) ||
-		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
-		// Use host-gateway for modern Docker on Linux
-		extraHost = "host-gateway"
-	}
+	hostDockerInternalValueOnce.Do(func() {
+		cachedHostDockerInternalValue = getHostDockerInternalValueImpl()
+	})
+
+	extraHost := cachedHostDockerInternalValue
 	if extraHost != "" && withPrefix {
 		extraHost = "host.docker.internal:" + extraHost
 	}
 	return extraHost
+}
+
+// getHostDockerInternalValueImpl contains the actual implementation logic
+func getHostDockerInternalValueImpl() string {
+	hostDockerInternal := GetHostDockerInternalIP()
+	if hostDockerInternal != "" {
+		// Use specific IP address for host.docker.internal
+		return hostDockerInternal
+	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !IsColima()) ||
+		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
+		// Use host-gateway for modern Docker on Linux
+		return "host-gateway"
+	}
+	return ""
 }
 
 // getWindowsReachableIP() uses PowerShell to find a windows-side IP
