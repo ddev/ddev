@@ -151,7 +151,7 @@ func RemoveNetworkWithWarningOnError(netName string) {
 	err := RemoveNetwork(netName)
 	// If it's a "no such network" there's no reason to report error
 	if err != nil && !IsErrNotFound(err) {
-		util.Warning("Unable to remove network %s: %v", netName, err)
+		util.WarningOnce("Unable to remove network %s: %v", netName, err)
 	} else if err == nil {
 		output.UserOut.Println("Network", netName, "removed")
 	}
@@ -170,7 +170,7 @@ func RemoveNetworkDuplicates(netName string) {
 				err := client.NetworkRemove(ctx, network.ID)
 				// If it's a "no such network" there's no reason to report error
 				if err != nil && !IsErrNotFound(err) {
-					util.Warning("Unable to remove network %s: %v", netName, err)
+					util.WarningOnce("Unable to remove network %s: %v", netName, err)
 				}
 			} else {
 				networkMatchFound = true

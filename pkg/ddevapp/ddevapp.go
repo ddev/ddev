@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
@@ -159,7 +160,7 @@ func (app *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (app *DdevApp) Init(basePath string) error {
-	defer util.TimeTrackC(fmt.Sprintf("app.Init(%s)", basePath))()
+	defer util.TimeTrackC(fmt.Sprintf("app.Init(%s), RunValidateConfig=%t", basePath, RunValidateConfig))()
 
 	newApp, err := NewApp(basePath, true)
 	if err != nil {
@@ -3277,6 +3278,11 @@ func GetActiveAppRoot(siteName string) (string, error) {
 	return appRoot, nil
 }
 
+var (
+	getActiveAppMutex sync.RWMutex
+	getActiveAppCache = make(map[string]*DdevApp)
+)
+
 // GetActiveApp returns the active App based on the current working directory or running siteName provided.
 // To use the current working directory, siteName should be ""
 func GetActiveApp(siteName string) (*DdevApp, error) {
@@ -3285,6 +3291,17 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	if err != nil {
 		return app, err
 	}
+
+	// Create cache key that includes both activeAppRoot and RunValidateConfig state
+	cacheKey := util.HashSalt(fmt.Sprintf("%s:validate=%t", activeAppRoot, RunValidateConfig))
+
+	// Check cache first using cache key
+	getActiveAppMutex.RLock()
+	if cachedApp, exists := getActiveAppCache[cacheKey]; exists {
+		getActiveAppMutex.RUnlock()
+		return cachedApp, nil
+	}
+	getActiveAppMutex.RUnlock()
 
 	// Mostly ignore app.Init() error, since app.Init() fails if no directory found. Some errors should be handled though.
 	// We already were successful with *finding* the app, and if we get an
@@ -3302,6 +3319,12 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 			return app, err
 		}
 	}
+
+	// Cache the result using cache key that includes validation state
+	// It is not used for errors, only successful app loads
+	getActiveAppMutex.Lock()
+	getActiveAppCache[cacheKey] = app
+	getActiveAppMutex.Unlock()
 
 	return app, nil
 }
@@ -3414,16 +3437,6 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	}
 
 	return err
-}
-
-// UpdateComposeYaml updates app.ComposeYaml from available content
-func (app *DdevApp) UpdateComposeYaml(content string) error {
-	var err error
-	app.ComposeYaml, err = fixupComposeYaml(content, app)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // GetContainerName returns the contructed container name of the

@@ -228,7 +228,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 		// If we sigFound the file and did not find the signature in .ddev/.gitignore, warn about it.
 		if !sigFound {
-			util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
+			util.WarningOnce("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
 			return nil
 		}
 		// Read the existing content for future comparison.

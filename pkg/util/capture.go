@@ -3,15 +3,16 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"github.com/ddev/ddev/pkg/output"
 	"io"
 	"os"
+
+	"github.com/ddev/ddev/pkg/output"
 )
 
 // CaptureUserOut captures output written to UserOut to a string.
 // Capturing starts when it is called. It returns an anonymous function that
 // when called, will return a string containing the output during capture, and
-// revert once again to the original value of os.StdOut.
+// revert once again to the original value of UserOut.Out.
 func CaptureUserOut() func() string {
 	old := output.UserOut.Out // keep backup of the real stdout
 	r, w, _ := os.Pipe()
@@ -30,6 +31,34 @@ func CaptureUserOut() func() string {
 		// back to normal state
 		CheckClose(w)
 		output.UserOut.Out = old // restoring the real stdout
+
+		out := <-outC
+		return out
+	}
+}
+
+// CaptureUserErr captures output written to UserErr to a string.
+// Capturing starts when it is called. It returns an anonymous function that
+// when called, will return a string containing the output during capture, and
+// revert once again to the original value of UserErr.Out.
+func CaptureUserErr() func() string {
+	old := output.UserErr.Out // keep backup of the real stderr
+	r, w, _ := os.Pipe()
+	output.UserErr.Out = w
+
+	return func() string {
+		outC := make(chan string)
+		// copy the output in a separate goroutine so printing can't block indefinitely
+		go func() {
+			var buf bytes.Buffer
+			_, err := io.Copy(&buf, r)
+			CheckErr(err)
+			outC <- buf.String()
+		}()
+
+		// back to normal state
+		CheckClose(w)
+		output.UserErr.Out = old // restoring the real stderr
 
 		out := <-outC
 		return out
