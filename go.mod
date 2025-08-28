@@ -14,7 +14,7 @@ require (
 	github.com/docker/cli v28.3.3+incompatible
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/go-viper/mapstructure/v2 v2.3.0
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v72 v72.0.0
 	github.com/google/uuid v1.6.0
