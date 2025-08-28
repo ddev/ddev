@@ -69,11 +69,7 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 }
 
 func init() {
-	activeAppRoot, err := ddevapp.GetActiveAppRoot("")
-	if err != nil {
-		return
-	}
-	app, err := ddevapp.NewApp(activeAppRoot, true)
+	app, err := ddevapp.GetActiveApp("")
 	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
 		DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreLatest, "latest", "", false, "use latest snapshot")
 		DdevSnapshotCommand.AddCommand(DdevSnapshotRestoreCommand)
