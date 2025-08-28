@@ -1075,19 +1075,9 @@ func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hos
 	}
 
 	// Set up host.docker.internal based on DDEV's standard approach
-	hostDockerInternalIP, _ := GetHostDockerInternalIP()
-	extraHost := ""
-	if hostDockerInternalIP != "" {
-		// Use specific IP address for host.docker.internal
-		extraHost = "host.docker.internal:" + hostDockerInternalIP
-	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !IsColima()) ||
-		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
-		// Use host-gateway for modern Docker on Linux
-		extraHost = "host.docker.internal:host-gateway"
-	}
-
-	if extraHost != "" && !slices.Contains(hostConfig.ExtraHosts, extraHost) {
-		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, extraHost)
+	hostDockerInternalValue := GetHostDockerInternalValue(true)
+	if hostDockerInternalValue != "" && !slices.Contains(hostConfig.ExtraHosts, hostDockerInternalValue) {
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, hostDockerInternalValue)
 	}
 
 	container, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
@@ -1355,25 +1345,25 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 // Inside WSL2, the way to access an app like PhpStorm running on the Windows side is described
 // in https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 // and it involves parsing /etc/resolv.conf.
-func GetHostDockerInternalIP() (string, error) {
+func GetHostDockerInternalIP() string {
 	hostDockerInternal := ""
 
 	switch {
 	case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 		hostDockerInternal = globalconfig.DdevGlobalConfig.XdebugIDELocation
-		util.Debug("host.docker.internal=%s derived from globalconfig.DdevGlobalConfig.XdebugIDELocation", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' derived from globalconfig.DdevGlobalConfig.XdebugIDELocation", hostDockerInternal)
 
 	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 		hostDockerInternal = "127.0.0.1"
-		util.Debug("host.docker.internal=%s because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationContainer)
+		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationContainer)
 
 	case IsColima():
 		// Lima specifies this as a named explicit IP address at this time
-		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		// see https://lima-vm.io/docs/config/network/user/#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
-		util.Debug("host.docker.internal=%s because running on Colima", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because running on Colima", hostDockerInternal)
 
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
@@ -1412,7 +1402,7 @@ func GetHostDockerInternalIP() (string, error) {
 	// so we need to go get the bridge IP address.
 	case runtime.GOOS == "linux":
 		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
-		util.Debug("host.docker.internal='%s' runtime.GOOS==linux (or WSL2 mirrored mode) and docker 20.10+", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because runtime.GOOS==linux uses 'host-gateway' in extra_hosts", hostDockerInternal)
 		break
 
 	default:
@@ -1420,7 +1410,25 @@ func GetHostDockerInternalIP() (string, error) {
 		break
 	}
 
-	return hostDockerInternal, nil
+	return hostDockerInternal
+}
+
+// GetHostDockerInternalValue returns the appropriate extra_hosts entry for host.docker.internal
+func GetHostDockerInternalValue(withPrefix bool) string {
+	extraHost := ""
+	hostDockerInternal := GetHostDockerInternalIP()
+	if hostDockerInternal != "" {
+		// Use specific IP address for host.docker.internal
+		extraHost = hostDockerInternal
+	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !IsColima()) ||
+		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
+		// Use host-gateway for modern Docker on Linux
+		extraHost = "host-gateway"
+	}
+	if extraHost != "" && withPrefix {
+		extraHost = "host.docker.internal:" + extraHost
+	}
+	return extraHost
 }
 
 // getWindowsReachableIP() uses PowerShell to find a windows-side IP
@@ -1453,7 +1461,7 @@ func GetNFSServerAddr() (string, error) {
 	switch {
 	case IsColima():
 		// Lima specifies this as a named explicit IP address at this time
-		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		// see https://lima-vm.io/docs/config/network/user/#host-ip-19216852
 		nfsAddr = "192.168.5.2"
 
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
@@ -1473,7 +1481,7 @@ func GetNFSServerAddr() (string, error) {
 
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
-	// Docker Desktop) defines host.docker.internal itself.
+	// Docker Desktop defines host.docker.internal itself.
 	case runtime.GOOS == "linux":
 		// Look up info from the bridge network
 		// We can't use the Docker host because that's for inside the container,
