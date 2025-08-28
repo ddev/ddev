@@ -2,11 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"strings"
 )
 
 // XHGuiSetup does prerequisite work to make XHGui work
@@ -149,7 +150,7 @@ func (app *DdevApp) GetXHProfMode() types.XHProfMode {
 // If not, use the global or project XHGuiHTTPPort
 func (app *DdevApp) GetXHGuiHTTPPort() string {
 	if httpExpose := app.GetXHGuiEnvVar("HTTP_EXPOSE"); httpExpose != "" {
-		httpPort := app.TargetPortFromExposeVariable(httpExpose, nodeps.DdevDefaultXHGuiHTTPPort)
+		httpPort := app.TargetPortFromExposeVariable(httpExpose, "80")
 		if httpPort != "" {
 			return httpPort
 		}
@@ -170,7 +171,7 @@ func (app *DdevApp) GetXHGuiHTTPPort() string {
 // If not, use the global or project XHGuiHTTPSPort
 func (app *DdevApp) GetXHGuiHTTPSPort() string {
 	if httpsExpose := app.GetXHGuiEnvVar("HTTPS_EXPOSE"); httpsExpose != "" {
-		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, nodeps.DdevDefaultXHGuiHTTPSPort)
+		httpsPort := app.TargetPortFromExposeVariable(httpsExpose, "80")
 		if httpsPort != "" {
 			return httpsPort
 		}

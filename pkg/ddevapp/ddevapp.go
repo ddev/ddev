@@ -1247,10 +1247,12 @@ func (app *DdevApp) Start() error {
 	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
 	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
 	app.MailpitHTTPSPort = app.GetMailpitHTTPSPort()
+	app.XHGuiHTTPPort = app.GetXHGuiHTTPPort()
+	app.XHGuiHTTPSPort = app.GetXHGuiHTTPSPort()
 
 	AssignRouterPortsToGenericWebserverPorts(app)
 
-	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort}
+	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort, &app.XHGuiHTTPPort, &app.XHGuiHTTPSPort}
 	GetEphemeralPortsIfNeeded(portsToCheck, true)
 
 	SyncGenericWebserverPortsWithRouterPorts(app)
