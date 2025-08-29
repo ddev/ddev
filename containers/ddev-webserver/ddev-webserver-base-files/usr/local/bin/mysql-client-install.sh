@@ -23,7 +23,10 @@ TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBA
 
 # Install the related mysql client if available
 set -x
-cd /tmp && log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" curl -L -o /tmp/mysql.tgz --fail ${TARBALL_URL}
+cd /tmp
+timeout "${START_SCRIPT_TIMEOUT:-30}" curl -L -o /tmp/mysql.tgz --fail ${TARBALL_URL} \
+  || log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" curl -L -o /tmp/mysql.tgz --fail ${TARBALL_URL} \
+  || exit $?
 tar -zxf /tmp/mysql.tgz -C /usr/local/bin && rm -f /tmp/mysql.tgz
 
 # Remove any existing mariadb installs
