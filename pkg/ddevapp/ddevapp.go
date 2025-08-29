@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
@@ -3283,11 +3282,6 @@ func GetActiveAppRoot(siteName string) (string, error) {
 	return appRoot, nil
 }
 
-var (
-	getActiveAppMutex sync.RWMutex
-	getActiveAppCache = make(map[string]*DdevApp)
-)
-
 // GetActiveApp returns the active App based on the current working directory or running siteName provided.
 // To use the current working directory, siteName should be ""
 func GetActiveApp(siteName string) (*DdevApp, error) {
@@ -3296,17 +3290,6 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	if err != nil {
 		return app, err
 	}
-
-	// Create cache key that includes both activeAppRoot and RunValidateConfig state
-	cacheKey := util.HashSalt(fmt.Sprintf("%s:validate=%t", activeAppRoot, RunValidateConfig))
-
-	// Check cache first using cache key
-	getActiveAppMutex.RLock()
-	if cachedApp, exists := getActiveAppCache[cacheKey]; exists {
-		getActiveAppMutex.RUnlock()
-		return cachedApp, nil
-	}
-	getActiveAppMutex.RUnlock()
 
 	// Mostly ignore app.Init() error, since app.Init() fails if no directory found. Some errors should be handled though.
 	// We already were successful with *finding* the app, and if we get an
@@ -3324,12 +3307,6 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 			return app, err
 		}
 	}
-
-	// Cache the result using cache key that includes validation state
-	// It is not used for errors, only successful app loads
-	getActiveAppMutex.Lock()
-	getActiveAppCache[cacheKey] = app
-	getActiveAppMutex.Unlock()
 
 	return app, nil
 }
