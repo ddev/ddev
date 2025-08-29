@@ -49,7 +49,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	// Keep a map so we don't add multiple commands with the same name.
 	commandsAdded := map[string]int{}
 
-	app, err := ddevapp.GetActiveApp("")
+	activeAppRoot, err := ddevapp.GetActiveAppRoot("")
 	// If we're not running ddev inside a project directory, we should still add any host commands that can run without one.
 	if err != nil {
 		globalHostCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands", "host")
@@ -64,6 +64,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		return nil
 	}
 
+	app, err := ddevapp.NewApp(activeAppRoot, true)
+	if err != nil {
+		return err
+	}
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
 	globalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")

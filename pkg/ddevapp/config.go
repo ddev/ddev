@@ -64,7 +64,7 @@ func init() {
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
 func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
-	defer util.TimeTrackC(fmt.Sprintf("ddevapp.NewApp(%s, %t)", appRoot, includeOverrides))()
+	defer util.TimeTrackC(fmt.Sprintf("ddevapp.NewApp(%s, includeOverrides=%t)", appRoot, includeOverrides))()
 
 	app := &DdevApp{}
 
@@ -356,6 +356,9 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 // It does not attempt to set default values; that's NewApp's job.
 // returns the list of config files read
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
+	if app.ConfigPath == "" {
+		app.ConfigPath = app.GetConfigPath("config.yaml")
+	}
 	// Load base .ddev/config.yaml - original config
 	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {
