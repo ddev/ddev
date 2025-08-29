@@ -2,8 +2,10 @@ package ddevapp
 
 import (
 	"bufio"
+	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	osexec "os/exec"
@@ -544,6 +546,14 @@ func DownloadMutagen() error {
 	if err != nil {
 		_ = fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
 		_ = os.Remove(destFile)
+		// Try again if there was a context deadline timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			err = util.DownloadFile(destFile, mutagenURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumFileURL)
+			if err != nil {
+				_ = fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
+				_ = os.Remove(destFile)
+			}
+		}
 		return err
 	}
 	output.UserOut.Printf("Download complete.")

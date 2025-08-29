@@ -1809,6 +1809,13 @@ func DownloadDockerCompose() error {
 	err = util.DownloadFile(destFile, composeURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumURL)
 	if err != nil {
 		_ = os.Remove(destFile)
+		// Try again if there was a context deadline timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			err = util.DownloadFile(destFile, composeURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumURL)
+			if err != nil {
+				_ = os.Remove(destFile)
+			}
+		}
 		return err
 	}
 	output.UserOut.Printf("Download complete.")

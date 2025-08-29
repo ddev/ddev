@@ -1,8 +1,10 @@
 package testcommon
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -408,6 +410,12 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 		err := util.DownloadFile(archiveFullPath, sourceURL, false, "")
 		if err != nil {
 			_ = os.RemoveAll(archiveFullPath)
+			if errors.Is(err, context.DeadlineExceeded) {
+				err = util.DownloadFile(archiveFullPath, sourceURL, false, "")
+				if err != nil {
+					_ = os.RemoveAll(archiveFullPath)
+				}
+			}
 			return extractPath, archiveFullPath, fmt.Errorf("failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
 		}
 

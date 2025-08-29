@@ -1,11 +1,9 @@
 package util
 
 import (
-	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"golang.org/x/term"
 	"io"
 	"net/http"
 	"os"
@@ -15,7 +13,8 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/ddev/ddev/pkg/output"
-	retryablehttp "github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/go-retryablehttp"
+	"golang.org/x/term"
 )
 
 // DownloadFile retrieves a file with retry logic, optional progress bar, and SHA256 verification.
@@ -29,20 +28,18 @@ func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL s
 	client.RetryMax = 4
 	client.RetryWaitMin = 500 * time.Millisecond
 	client.RetryWaitMax = 5 * time.Second
-	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
-		// Default retry policy only retries on
-		// - connection reset
-		// - connection refused
-		// - No Response
-		// - net.Error with Temporary() == true
-		if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
-			return true, nil
-		}
-		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
-	}
+	// Default retry policy retries on:
+	// - connection reset
+	// - connection refused
+	// - No Response
+	// - net.Error with Temporary() == true
+	// "context deadline exceeded" cannot be retried until you run the request again
+	// See https://github.com/hashicorp/go-retryablehttp/issues/167
+	client.CheckRetry = retryablehttp.DefaultRetryPolicy
 	client.Backoff = retryablehttp.DefaultBackoff
 	client.Logger = nil
-	client.HTTPClient.Timeout = 5 * time.Minute
+	// Timeout for the entire request
+	client.HTTPClient.Timeout = 30 * time.Minute
 	client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
 		if attempt > 0 {
 			// attempt==1 is the first retry, 2 the second, etc

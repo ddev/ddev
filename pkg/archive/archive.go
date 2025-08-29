@@ -6,6 +6,8 @@ import (
 	"bufio"
 	"compress/bzip2"
 	"compress/gzip"
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -488,6 +490,10 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 
 	err = util.DownloadFile(tarball, url, true, "")
 	if err != nil {
+		// Try again if there was a context deadline timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			err = util.DownloadFile(tarball, url, true, "")
+		}
 		return "", nil, fmt.Errorf("unable to download %v: %v", url, err)
 	}
 	extractedDir, cleanup, err := ExtractTarballWithCleanup(tarball, removeTopLevel)
