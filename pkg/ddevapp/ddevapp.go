@@ -3469,9 +3469,9 @@ func (app *DdevApp) GetStartScriptTimeout() string {
 	}
 	// Use 1/4 of the default container timeout for scripts on start
 	timeoutForScriptsOnStart := strconv.Itoa(containerTimeout / 4)
-	// With 60 seconds minimum
-	if containerTimeout/4 <= 60 {
-		timeoutForScriptsOnStart = "60"
+	// With 30 seconds minimum
+	if containerTimeout/4 <= 30 {
+		timeoutForScriptsOnStart = "30"
 	}
 	return timeoutForScriptsOnStart
 }
