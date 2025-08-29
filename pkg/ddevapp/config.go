@@ -1202,12 +1202,12 @@ stopasgroup=true
 	}
 	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
 	if app.Database.Type == nodeps.MySQL {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mysql-client-install.sh || true\n", app.GetStartScriptTimeout())
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN timeout %s mysql-client-install.sh || true\n", app.GetMinimalContainerTimeout())
 	}
 	// Some MariaDB versions may have their own client in the ddev-webserver
 	// Search for CHANGE_MARIADB_CLIENT to update related code
 	if app.Database.Type == nodeps.MariaDB && slices.Contains([]string{nodeps.MariaDB114, nodeps.MariaDB118}, app.Database.Version) {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mariadb-client-install.sh || true\n", app.GetStartScriptTimeout())
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN timeout %s mariadb-client-install.sh || true\n", app.GetMinimalContainerTimeout())
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -1398,8 +1398,8 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
 			contents = contents + fmt.Sprintf(`
 ### DDEV-injected addition of not-preinstalled PHP version
-RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
-`, app.GetStartScriptTimeout(), app.PHPVersion)
+RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
+`, app.PHPVersion)
 		}
 	}
 
@@ -1470,14 +1470,11 @@ RUN <<EOF
 set -eu -o pipefail
 EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }' || true)
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then
-  (timeout %s apt-get update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" \
-    || log-stderr.sh --timeout %s apt-get update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0") \
-    && log-stderr.sh apt-get install -y postgresql-client-%s \
-    && apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} \
-    || true
+  log-stderr.sh apt-get update -o APT::Acquire::Retries=3 -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  log-stderr.sh apt-get install -y postgresql-client-%s && apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} || true
 fi
 EOF
-`, app.Database.Version, app.GetStartScriptTimeout(), app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
+`, app.Database.Version, psqlVersion) + "\n\n"
 		}
 	}
 
