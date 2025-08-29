@@ -23,7 +23,7 @@ TARBALL_URL=https://github.com/ddev/mysql-client-build/releases/download/${TARBA
 
 # Install the related mysql client if available
 set -x
-cd /tmp && log-stderr.sh curl -L -o /tmp/mysql.tgz --fail --retry 3 --retry-delay 2 --retry-connrefused ${TARBALL_URL}
+cd /tmp && log-stderr.sh curl -L -o /tmp/mysql.tgz --fail --retry 5 --retry-delay 2 --retry-connrefused ${TARBALL_URL}
 tar -zxf /tmp/mysql.tgz -C /usr/local/bin && rm -f /tmp/mysql.tgz
 
 # Remove any existing mariadb installs
