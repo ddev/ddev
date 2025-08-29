@@ -2076,7 +2076,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
 			// Or "mysql  Ver 14.14 Distrib 5.7.44, for Linux (aarch64) using  EditLine wrapper"
-			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' string='%s' dbType='%s' dbVersion='%s', parts=%v; should have dbVersion(%s) as prefix instead has '%s", tool, stdout, dbType, dbVersion, parts, dbVersion, parts[4])
+			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' dbType='%s' dbVersion='%s' should have dbVersion='%s' as prefix but received stdout='%s'", tool, dbType, dbVersion, expectedClientVersion, strings.TrimSpace(stdout))
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
@@ -2193,7 +2193,7 @@ func TestWebserverPostgresDBClient(t *testing.T) {
 
 			// Output might be "pg_restore (PostgreSQL) 16.3 (Debian 16.3-1.pgdg120+1)"
 			// Or for postgres 9: "pg_dump (PostgreSQL) 9.6.24"
-			require.True(t, strings.HasPrefix(parts[2], expectedClientVersion), "string=%s dbType=%s dbVersion=%s; should have dbVersion as prefix", stdout, dbType, dbVersion)
+			require.True(t, strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' dbType='%s' dbVersion='%s' should have dbVersion='%s' as prefix but received stdout='%s'", tool, dbType, dbVersion, expectedClientVersion, strings.TrimSpace(stdout))
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
