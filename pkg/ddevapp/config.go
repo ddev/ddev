@@ -1202,12 +1202,12 @@ stopasgroup=true
 	}
 	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
 	if app.Database.Type == nodeps.MySQL {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN timeout %s mysql-client-install.sh || true\n", app.GetMinimalContainerTimeout())
+		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
 	}
 	// Some MariaDB versions may have their own client in the ddev-webserver
 	// Search for CHANGE_MARIADB_CLIENT to update related code
 	if app.Database.Type == nodeps.MariaDB && slices.Contains([]string{nodeps.MariaDB114, nodeps.MariaDB118}, app.Database.Version) {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN timeout %s mariadb-client-install.sh || true\n", app.GetMinimalContainerTimeout())
+		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -1470,7 +1470,7 @@ RUN <<EOF
 set -eu -o pipefail
 EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }' || true)
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then
-  log-stderr.sh apt-get update -o APT::Acquire::Retries=3 -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
   log-stderr.sh apt-get install -y postgresql-client-%s && apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} || true
 fi
 EOF

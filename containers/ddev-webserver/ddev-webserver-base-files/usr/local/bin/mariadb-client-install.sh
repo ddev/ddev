@@ -22,8 +22,8 @@ rm -f /etc/apt/sources.list.d/mariadb.list.old_*
 
 # --skip-key-import flag doesn't download the existing key again and omits "apt-get update",
 # so we can run "apt-get update" manually only for mariadb and debian repos to make it faster
-log-stderr.sh apt-get update -o APT::Acquire::Retries=3 -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
-log-stderr.sh apt-get update -o APT::Acquire::Retries=3 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
+log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
+log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
 
 # Install the mariadb-client
 export DEBIAN_FRONTEND=noninteractive

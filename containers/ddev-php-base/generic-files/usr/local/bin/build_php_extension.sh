@@ -28,8 +28,8 @@ CONFIGURE_OPTIONS="${6:-}"
 # install pecl
 if ! command -v pecl >/dev/null 2>&1 || [ "$(dpkg -l | grep "php${PHP_VERSION}-dev")" = "" ] || [ "${BUILD_PACKAGES}" != "" ]; then
   echo "Installing pecl to build php${PHP_VERSION}-${EXTENSION_NAME}"
-  apt-get update -o APT::Acquire::Retries=3 -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
-  apt-get update -o APT::Acquire::Retries=3 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
   DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y build-essential php-pear "php${PHP_VERSION}-dev" ${BUILD_PACKAGES} || exit $?
 fi
 
