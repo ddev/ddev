@@ -14,7 +14,7 @@ require (
 	github.com/docker/cli v28.3.3+incompatible
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/go-viper/mapstructure/v2 v2.3.0
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/goodhosts/hostsfile v0.1.6
 	github.com/google/go-github/v72 v72.0.0
 	github.com/google/uuid v1.6.0
@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/otiai10/copy v1.14.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.9.2-0.20250531123604-6dec1ae26659
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/cobra v1.10.1
+	github.com/spf13/pflag v1.0.9
 	github.com/stretchr/testify v1.10.0
-	github.com/ulikunitz/xz v0.5.12
+	github.com/ulikunitz/xz v0.5.15
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/mod v0.24.0
