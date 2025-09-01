@@ -94,7 +94,9 @@ files_import_command:
     platform mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} --target=/var/www/html
 
 
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
 db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
@@ -106,7 +108,9 @@ db_push_command:
     fi
     gzip -dc db.sql.gz | platform db:sql --project="${PLATFORM_PROJECT}" ${rel:-} --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"}
 
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
 # TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
 files_push_command:
   command: |

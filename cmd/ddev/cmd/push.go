@@ -17,7 +17,8 @@ var PushCmd = &cobra.Command{
 	Short: "push files and database using a configured provider plugin.",
 	Long: `push files and database using a configured provider plugin.
 	Running push will connect to the configured provider and export and upload the
-	database and/or files. It is not recommended for most workflows since it is extremely dangerous to your production hosting.`,
+	database and/or files. It is very useful for pushing to non-production
+	environments, but should rarely be used to push to production.`,
 	Example: `ddev push pantheon
 ddev push platform
 ddev push pantheon -y
