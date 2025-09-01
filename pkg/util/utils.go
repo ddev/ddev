@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
@@ -27,10 +26,8 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-var (
-	outputOnceMutex sync.Mutex
-	outputOnceCache = make(map[string]map[string]bool)
-)
+// outputOnceCache is a cache to keep track of messages that have already been shown
+var outputOnceCache = map[string]map[string]bool{}
 
 // outputOnce executes a function only once per unique message and function type.
 // It uses a SHA256 hash of the formatted message to detect duplicates.
@@ -47,12 +44,9 @@ func outputOnce(format string, a []interface{}, fn func(string, ...interface{}))
 	msgKey := HashSalt(message)
 	fnKey := fmt.Sprintf("%p", fn) // Use function pointer as key
 
-	outputOnceMutex.Lock()
-	defer outputOnceMutex.Unlock()
-
 	// Initialize the function type cache if it doesn't exist
 	if outputOnceCache[fnKey] == nil {
-		outputOnceCache[fnKey] = make(map[string]bool)
+		outputOnceCache[fnKey] = map[string]bool{}
 	}
 
 	// Check if we've already executed this message for this function type
