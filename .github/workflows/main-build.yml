@@ -150,7 +150,7 @@ jobs:
     needs: build-most
     steps:
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:
@@ -216,7 +216,7 @@ jobs:
     needs: [build-most, sign-windows, notarize-macos]
     steps:
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:
@@ -374,7 +374,7 @@ jobs:
     needs: artifacts
     steps:
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:
@@ -406,7 +406,7 @@ jobs:
 
     steps:
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:

@@ -170,7 +170,7 @@ jobs:
 
       - name: Load 1password secret(s) for push-pull-test-platforms
         if: ${{ matrix.pull-push-test-platforms && env.OP_SERVICE_ACCOUNT_TOKEN != '' }}
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:
