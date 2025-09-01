@@ -114,7 +114,7 @@ if [ ${DB_TYPE} = "mysql" ]; then
     if [ ${DB_MAJOR_VERSION} = "5.7" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
       BASE_IMAGE=ddev/mysql
     elif [ "${DB_MAJOR_VERSION:-}" = "8.0" ] || [ "${DB_MAJOR_VERSION}" = "8.4" ]; then
-      BASE_IMAGE=bitnami/mysql
+      BASE_IMAGE=bitnamilegacy/mysql
     fi
 fi
 printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
