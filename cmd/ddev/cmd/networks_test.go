@@ -17,8 +17,8 @@ func TestNetworkDuplicates(t *testing.T) {
 	assert := asrt.New(t)
 
 	ctx, client := dockerutil.GetDockerClient()
-	if dockerutil.GetDockerClientErr() != nil {
-		t.Fatalf("Could not get docker client: %v", dockerutil.GetDockerClientErr())
+	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
+		t.Fatalf("Could not get docker client: %v", cErr)
 	}
 
 	// Create two networks with the same name

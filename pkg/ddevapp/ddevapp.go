@@ -2323,8 +2323,8 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
 	ctx, client := dockerutil.GetDockerClient()
-	if dockerutil.GetDockerClientErr() != nil {
-		return dockerutil.GetDockerClientErr()
+	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
+		return cErr
 	}
 
 	var container *dockerContainer.Summary
@@ -2376,8 +2376,8 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	ctx, client := dockerutil.GetDockerClient()
-	if dockerutil.GetDockerClientErr() != nil {
-		return "", dockerutil.GetDockerClientErr()
+	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
+		return "", cErr
 	}
 
 	var container *dockerContainer.Summary

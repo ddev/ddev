@@ -702,8 +702,8 @@ func (app *DdevApp) GenerateMutagenYml() error {
 // IsMutagenVolumeMounted checks to see if the Mutagen volume is mounted
 func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 	ctx, client := dockerutil.GetDockerClient()
-	if dockerutil.GetDockerClientErr() != nil {
-		return false, dockerutil.GetDockerClientErr()
+	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
+		return false, cErr
 	}
 	container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
 	// If there is no web container found, the volume is not mounted
