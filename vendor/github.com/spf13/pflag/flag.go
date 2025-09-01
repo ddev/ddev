@@ -143,6 +143,10 @@ type ParseErrorsAllowlist struct {
 	UnknownFlags bool
 }
 
+// DEPRECATED: please use ParseErrorsAllowlist instead
+// This type will be removed in a future release
+type ParseErrorsWhitelist = ParseErrorsAllowlist
+
 // NormalizedName is a flag name that has been normalized according to rules
 // for the FlagSet (e.g. making '-' and '_' equivalent).
 type NormalizedName string
@@ -160,6 +164,10 @@ type FlagSet struct {
 
 	// ParseErrorsAllowlist is used to configure an allowlist of errors
 	ParseErrorsAllowlist ParseErrorsAllowlist
+
+	// DEPRECATED: please use ParseErrorsAllowlist instead
+	// This field will be removed in a future release
+	ParseErrorsWhitelist ParseErrorsAllowlist
 
 	name              string
 	parsed            bool
@@ -984,6 +992,8 @@ func (f *FlagSet) parseLongArg(s string, args []string, fn parseFunc) (a []strin
 		case name == "help":
 			f.usage()
 			return a, ErrHelp
+		case f.ParseErrorsWhitelist.UnknownFlags:
+			fallthrough
 		case f.ParseErrorsAllowlist.UnknownFlags:
 			// --unknown=unknownval arg ...
 			// we do not want to lose arg in this case
@@ -1042,6 +1052,8 @@ func (f *FlagSet) parseSingleShortArg(shorthands string, args []string, fn parse
 			f.usage()
 			err = ErrHelp
 			return
+		case f.ParseErrorsWhitelist.UnknownFlags:
+			fallthrough
 		case f.ParseErrorsAllowlist.UnknownFlags:
 			// '-f=arg arg ...'
 			// we do not want to lose arg in this case
