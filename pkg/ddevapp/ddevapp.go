@@ -2322,13 +2322,12 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
-	ctx, client := dockerutil.GetDockerClient()
-	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
-		return cErr
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return err
 	}
 
 	var container *dockerContainer.Summary
-	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
 		container, err = dockerutil.FindContainerByLabels(map[string]string{
@@ -2375,13 +2374,12 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
-	ctx, client := dockerutil.GetDockerClient()
-	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
-		return "", cErr
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return "", err
 	}
 
 	var container *dockerContainer.Summary
-	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
 		container, err = dockerutil.FindContainerByLabels(map[string]string{

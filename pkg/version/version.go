@@ -55,9 +55,9 @@ func GetVersionInfo() map[string]string {
 
 // GetDockerPlatform gets the platform used for Docker engine
 func GetDockerPlatform() (string, error) {
-	ctx, client := dockerutil.GetDockerClient()
-	if dockerutil.GetDockerClientErr() != nil {
-		return "", dockerutil.GetDockerClientErr()
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return "", err
 	}
 
 	info, err := client.Info(ctx)

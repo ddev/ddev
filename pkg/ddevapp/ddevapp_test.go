@@ -3075,9 +3075,9 @@ func TestDdevExec(t *testing.T) {
 	assert.Contains(stderr, "this: not found")
 
 	// Now kill the busybox service and make sure that responses to app.Exec are correct
-	ctx, client := dockerutil.GetDockerClient()
-	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
-		t.Fatalf("Could not get docker client: %v", cErr)
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		t.Fatalf("Could not get docker client: %v", err)
 	}
 	bbc, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, "busybox"))
 	require.NoError(t, err)
@@ -3279,9 +3279,9 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	}
 
 	// Ensure there are no volumes associated with this project
-	ctx, client := dockerutil.GetDockerClient()
-	if cErr := dockerutil.GetDockerClientErr(); cErr != nil {
-		t.Fatalf("Could not get docker client: %v", cErr)
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		t.Fatalf("Could not get docker client: %v", err)
 	}
 	volumes, err := client.VolumeList(ctx, dockerVolume.ListOptions{})
 	assert.NoError(err)

@@ -98,11 +98,11 @@ func EnsureNetwork(name string, netOptions dockerNetwork.CreateOptions) error {
 	RemoveNetworkDuplicates(name)
 
 	if !NetExists(name) {
-		ctx, client := GetDockerClient()
-		if initErr != nil {
-			return initErr
+		ctx, client, err := GetDockerClient()
+		if err != nil {
+			return err
 		}
-		_, err := client.NetworkCreate(ctx, name, netOptions)
+		_, err = client.NetworkCreate(ctx, name, netOptions)
 		if err != nil {
 			return err
 		}
@@ -135,13 +135,16 @@ func NetworkExists(netName string) bool {
 // RemoveNetwork removes the named Docker network
 // netName can also be network's ID
 func RemoveNetwork(netName string) error {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
-	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
+	networks, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
+	if err != nil {
+		return err
+	}
 	// the loop below may not contain such a network
-	var err = errdefs.NotFound(errors.New("not found"))
+	err = errdefs.NotFound(errors.New("not found"))
 	// loop through all networks because there may be duplicates
 	// and delete only by ID - it's unique, but the name isn't
 	for _, network := range networks {
@@ -167,11 +170,14 @@ func RemoveNetworkWithWarningOnError(netName string) {
 // This means that if there is only one network with this name - no action,
 // and if there are several such networks, then we leave the first one, and delete the others
 func RemoveNetworkDuplicates(netName string) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return
 	}
-	networks, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
+	networks, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
+	if err != nil {
+		return
+	}
 	networkMatchFound := false
 	for _, network := range networks {
 		if network.Name == netName || network.ID == netName {
@@ -201,7 +207,7 @@ var (
 )
 
 // GetDockerClient returns a Docker client respecting the current Docker context and host
-func GetDockerClient() (context.Context, dockerClient.APIClient) {
+func GetDockerClient() (context.Context, dockerClient.APIClient, error) {
 	initOnce.Do(func() {
 		initErr = initDockerCli()
 		if initErr != nil {
@@ -219,12 +225,7 @@ func GetDockerClient() (context.Context, dockerClient.APIClient) {
 		}
 	})
 
-	return DockerCtx, DockerClient
-}
-
-// GetDockerClientErr returns the error from GetDockerClient initialization
-func GetDockerClientErr() error {
-	return initErr
+	return DockerCtx, DockerClient, initErr
 }
 
 // initDockerCli sets up the Docker CLI client and initializes it
@@ -252,9 +253,9 @@ func initDockerCli() error {
 // It stands in for Docker context, but Docker context name is not a reliable indicator
 func GetDockerHostID() string {
 	// Use the same synchronized initialization as GetDockerClient
-	_, _ = GetDockerClient()
-	if initErr != nil {
-		output.UserErr.Fatal(initErr)
+	_, _, err := GetDockerClient()
+	if err != nil {
+		output.UserErr.Fatal(err)
 	}
 	dockerHost := DockerHost
 	// Make it shorter so we don't hit Mutagen 63-char limit
@@ -272,9 +273,9 @@ func GetDockerHostID() string {
 
 // InspectContainer returns the full result of inspection
 func InspectContainer(name string) (dockerContainer.InspectResponse, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return dockerContainer.InspectResponse{}, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return dockerContainer.InspectResponse{}, err
 	}
 
 	container, err := FindContainerByName(name)
@@ -288,9 +289,9 @@ func InspectContainer(name string) (dockerContainer.InspectResponse, error) {
 // FindContainerByName takes a container name and returns the container
 // If container is not found, returns nil with no error
 func FindContainerByName(name string) (*dockerContainer.Summary, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
@@ -340,9 +341,9 @@ func FindContainerByLabels(labels map[string]string) (*dockerContainer.Summary, 
 
 // GetDockerContainers returns a slice of all Docker containers on the host system.
 func GetDockerContainers(allContainers bool) ([]dockerContainer.Summary, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{All: allContainers})
 	return containers, err
@@ -366,9 +367,9 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 		filterList.Add("label", label)
 	}
 
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
 		All:     true,
@@ -383,9 +384,9 @@ func FindContainersByLabels(labels map[string]string) ([]dockerContainer.Summary
 // FindContainersWithLabel returns all containers with the given label
 // It ignores the value of the label, is only interested that the label exists.
 func FindContainersWithLabel(label string) ([]dockerContainer.Summary, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	containers, err := client.ContainerList(ctx, dockerContainer.ListOptions{
 		All:     true,
@@ -418,9 +419,9 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]dockerIm
 		filterList.Add("dangling", "true")
 	}
 
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	images, err := client.ImageList(ctx, dockerImage.ListOptions{
 		All:     true,
@@ -434,11 +435,14 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]dockerIm
 
 // NetExists checks to see if the Docker network for DDEV exists.
 func NetExists(name string) bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
-	nets, _ := client.NetworkList(ctx, dockerNetwork.ListOptions{})
+	nets, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
+	if err != nil {
+		return false
+	}
 	for _, n := range nets {
 		if n.Name == name {
 			return true
@@ -450,9 +454,9 @@ func NetExists(name string) bool {
 // FindNetworksWithLabel returns all networks with the given label
 // It ignores the value of the label, is only interested that the label exists.
 func FindNetworksWithLabel(label string) ([]dockerNetwork.Inspect, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	networks, err := client.NetworkList(ctx, dockerNetwork.ListOptions{})
 	if err != nil {
@@ -677,8 +681,8 @@ func GetContainerHealth(container *dockerContainer.Summary) (string, string) {
 		return container.State, ""
 	}
 
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return "", ""
 	}
 	inspect, err := client.ContainerInspect(ctx, container.ID)
@@ -885,8 +889,8 @@ func GetAppContainers(sitename string) ([]dockerContainer.Summary, error) {
 
 // GetContainerEnv returns the value of a given environment variable from a given container.
 func GetContainerEnv(key string, container dockerContainer.Summary) string {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return ""
 	}
 	inspect, err := client.ContainerInspect(ctx, container.ID)
@@ -930,9 +934,9 @@ func CheckDockerProvider() error {
 
 	// See if they're using Docker Desktop for Linux
 	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
-		ctx, client := GetDockerClient()
-		if initErr != nil {
-			return initErr
+		ctx, client, err := GetDockerClient()
+		if err != nil {
+			return err
 		}
 		info, err := client.Info(ctx)
 		if err != nil {
@@ -1015,9 +1019,9 @@ func GetDockerIP() (string, error) {
 	}
 	DockerIP = "127.0.0.1"
 	// Use the same synchronized initialization as GetDockerClient
-	_, _ = GetDockerClient()
-	if initErr != nil {
-		return DockerIP, initErr
+	_, _, err := GetDockerClient()
+	if err != nil {
+		return DockerIP, err
 	}
 	dockerHostURL, err := url.Parse(DockerHost)
 	if err != nil {
@@ -1071,9 +1075,9 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 // RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
 // Accepts any config and hostConfig. If stdin is provided, enables interactive mode with stdin forwarding.
 func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hostConfig *dockerContainer.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return "", "", initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return "", "", err
 	}
 
 	image := config.Image
@@ -1242,31 +1246,31 @@ func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hos
 
 // RemoveContainer stops and removes a container
 func RemoveContainer(id string) error {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
 
-	err := client.ContainerRemove(ctx, id, dockerContainer.RemoveOptions{Force: true})
+	err = client.ContainerRemove(ctx, id, dockerContainer.RemoveOptions{Force: true})
 	return err
 }
 
 // RestartContainer stops and removes a container
 func RestartContainer(id string, timeout *int) error {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
 
-	err := client.ContainerRestart(ctx, id, dockerContainer.StopOptions{Timeout: timeout})
+	err = client.ContainerRestart(ctx, id, dockerContainer.StopOptions{Timeout: timeout})
 	return err
 }
 
 // RemoveContainersByLabels removes all containers that match a set of labels
 func RemoveContainersByLabels(labels map[string]string) error {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
 	containers, err := FindContainersByLabels(labels)
 	if err != nil {
@@ -1286,13 +1290,13 @@ func RemoveContainersByLabels(labels map[string]string) error {
 
 // ImageExistsLocally determines if an image is available locally.
 func ImageExistsLocally(imageName string) (bool, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return false, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return false, err
 	}
 
 	// If inspect succeeds, we have an image.
-	_, err := client.ImageInspect(ctx, imageName)
+	_, err = client.ImageInspect(ctx, imageName)
 	if err == nil {
 		return true, nil
 	}
@@ -1302,9 +1306,9 @@ func ImageExistsLocally(imageName string) (bool, error) {
 // GetBoundHostPorts takes a container pointer and returns an array
 // of exposed ports (and error)
 func GetBoundHostPorts(containerID string) ([]string, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	inspectInfo, err := client.ContainerInspect(ctx, containerID)
 
@@ -1350,9 +1354,9 @@ func MassageWindowsNFSMount(mountPoint string) string {
 
 // RemoveVolume removes named volume. Does not throw error if the volume did not exist.
 func RemoveVolume(volumeName string) error {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
 	if _, err := client.VolumeInspect(ctx, volumeName); err == nil {
 		err := client.VolumeRemove(ctx, volumeName, true)
@@ -1382,11 +1386,11 @@ func RemoveVolume(volumeName string) error {
 
 // VolumeExists checks to see if the named volume exists.
 func VolumeExists(volumeName string) bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
-	_, err := client.VolumeInspect(ctx, volumeName)
+	_, err = client.VolumeInspect(ctx, volumeName)
 	if err != nil {
 		return false
 	}
@@ -1395,9 +1399,9 @@ func VolumeExists(volumeName string) bool {
 
 // VolumeLabels returns map of labels found on volume.
 func VolumeLabels(volumeName string) (map[string]string, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return nil, initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return nil, err
 	}
 	v, err := client.VolumeInspect(ctx, volumeName)
 	if err != nil {
@@ -1407,12 +1411,12 @@ func VolumeLabels(volumeName string) (map[string]string, error) {
 }
 
 // CreateVolume creates a Docker volume
-func CreateVolume(volumeName string, driver string, driverOpts map[string]string, labels map[string]string) (vol dockerVolume.Volume, err error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return dockerVolume.Volume{}, initErr
+func CreateVolume(volumeName string, driver string, driverOpts map[string]string, labels map[string]string) (dockerVolume.Volume, error) {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return dockerVolume.Volume{}, err
 	}
-	vol, err = client.VolumeCreate(ctx, dockerVolume.CreateOptions{Name: volumeName, Labels: labels, Driver: driver, DriverOpts: driverOpts})
+	vol, err := client.VolumeCreate(ctx, dockerVolume.CreateOptions{Name: volumeName, Labels: labels, Driver: driver, DriverOpts: driverOpts})
 
 	return vol, err
 }
@@ -1553,9 +1557,9 @@ func GetNFSServerAddr() (string, error) {
 		// Look up info from the bridge network
 		// We can't use the Docker host because that's for inside the container,
 		// and this is for setting up the network interface
-		ctx, client := GetDockerClient()
-		if initErr != nil {
-			return "", initErr
+		ctx, client, err := GetDockerClient()
+		if err != nil {
+			return "", err
 		}
 		n, err := client.NetworkInspect(ctx, "bridge", dockerNetwork.InspectOptions{})
 		if err != nil {
@@ -1630,11 +1634,11 @@ func wsl2GetWindowsHostIP() string {
 
 // RemoveImage removes an image with force
 func RemoveImage(tag string) error {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
-	_, err := client.ImageInspect(ctx, tag)
+	_, err = client.ImageInspect(ctx, tag)
 	if err == nil {
 		_, err = client.ImageRemove(ctx, tag, dockerImage.RemoveOptions{Force: true})
 
@@ -1709,9 +1713,9 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 // with the specified uid (or defaults to root=0 if empty uid)
 // Returns stdout, stderr, error
 func Exec(containerID string, command string, uid string) (string, string, error) {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return "", "", initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return "", "", err
 	}
 
 	if uid == "" {
@@ -1847,8 +1851,8 @@ func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error
 
 // IsDockerDesktop detects if running on Docker Desktop
 func IsDockerDesktop() bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
 	info, err := client.Info(ctx)
@@ -1864,8 +1868,8 @@ func IsDockerDesktop() bool {
 
 // IsColima detects if running on Colima
 func IsColima() bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
 	info, err := client.Info(ctx)
@@ -1881,8 +1885,8 @@ func IsColima() bool {
 
 // IsLima detects if running on lima
 func IsLima() bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
 	info, err := client.Info(ctx)
@@ -1898,8 +1902,8 @@ func IsLima() bool {
 
 // IsRancherDesktop detects if running on Rancher Desktop
 func IsRancherDesktop() bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
 	info, err := client.Info(ctx)
@@ -1915,8 +1919,8 @@ func IsRancherDesktop() bool {
 
 // IsOrbstack detects if running on Orbstack
 func IsOrbstack() bool {
-	ctx, client := GetDockerClient()
-	if initErr != nil {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
 		return false
 	}
 	info, err := client.Info(ctx)
@@ -1951,9 +1955,9 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		srcPath = dirName
 	}
 
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
 	cid, err := FindContainerByName(containerName)
 	if err != nil {
@@ -2010,9 +2014,9 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 		return err
 	}
 
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return err
 	}
 	cid, err := FindContainerByName(containerName)
 	if err != nil {
@@ -2066,9 +2070,9 @@ func GetDockerVersion() (string, error) {
 	if DockerVersion != "" {
 		return DockerVersion, nil
 	}
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return "", initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return "", err
 	}
 
 	serverVersion, err := client.ServerVersion(ctx)
@@ -2090,9 +2094,9 @@ func GetDockerAPIVersion() (string, error) {
 	if DockerAPIVersion != "" {
 		return DockerAPIVersion, nil
 	}
-	ctx, client := GetDockerClient()
-	if initErr != nil {
-		return "", initErr
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return "", err
 	}
 
 	serverVersion, err := client.ServerVersion(ctx)
