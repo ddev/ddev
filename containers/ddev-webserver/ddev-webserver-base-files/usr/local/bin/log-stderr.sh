@@ -9,14 +9,12 @@ usage() {
   echo "  -d, --debug          Enables debug mode"
   echo "  -s, --show           Shows stderr log (no command required)"
   echo "  -t, --timeout <int>  Timeout in seconds (default: no timeout)"
-  echo "  -r, --remove         Removes stderr log for specified command"
   exit 1
 }
 
 # Defaults
 debug=false
 show=false
-remove=false
 timeout=0
 
 # Parse command line options
@@ -24,10 +22,6 @@ while [[ "$#" -gt 0 ]]; do
   case "$1" in
     -d|--debug)
       debug=true
-      shift
-      ;;
-    -r|--remove)
-      remove=true
       shift
       ;;
     -s|--show)
@@ -58,7 +52,12 @@ if [ "${show}" = "true" ]; then
   # awk '{print $2}': Extracts the file paths from the sorted output.
   # xargs cat --squeeze-blank: Concatenates content by collapsing multiple blank lines into a single blank line.
   find /tmp -maxdepth 1 -name 'ddev-log-stderr-*.txt' -printf "%C@ %p\n" | sort -n | awk '{print $2}' | xargs --no-run-if-empty cat --squeeze-blank
-  exit $?
+  exit_code=$?
+  # Logs are used to check if we want to run `docker-compose build` without cache in `ddev start`.
+  # But if these are timeout related logs, we don't want them to trigger build without cache,
+  # because timeout is only used in /start.sh, which happens AFTER the web container is built.
+  rm -f /tmp/ddev-log-stderr-timeout-*.txt || true
+  exit "${exit_code}"
 fi
 
 # If no command is provided, show usage
@@ -77,9 +76,9 @@ identifier="$(echo -n "${whoami}-${command[*]}" | md5sum | awk '{print $1}')"
 
 error_file="/tmp/ddev-log-stderr-${identifier}.txt"
 
-if [ "${remove}" = "true" ]; then
-  rm -f "${error_file}"
-  exit $?
+# Timeout is used only in /start.sh, we want to log to a different file
+if [ "${timeout}" = "true" ]; then
+  error_file="/tmp/ddev-log-stderr-timeout-${identifier}-$(date +%s).txt"
 fi
 
 tmp_error_file="/tmp/tmp-ddev-log-stderr-${identifier}-$(date +%s).txt"
@@ -100,13 +99,13 @@ if [ "${exit_code}" -eq 0 ]; then
 fi
 
 # If it is a timeout error (see 'timeout --help')
+# Timeout should only be used for commands in /start.sh that might take a long time due to network issues
 if [ "${timeout}" -gt 0 ] && [ "${exit_code}" -eq 124 ]; then
   echo | tee -a "${tmp_error_file}" >&2
   echo "Command '${command[*]}' timed out after ${timeout} seconds" | tee -a "${tmp_error_file}" >&2
-  # START_SCRIPT_TIMEOUT default is 30 seconds (or default_container_timeout / 4)
-  # 30 * 4 * 2 = 240 seconds (double the default timeout), which gives 240 / 4 = 60 seconds suggestion instead of the default 30
-  echo "If your internet connection is slow, consider increasing the timeout by running this:" | tee -a "${tmp_error_file}" >&2
-  echo "\`ddev config --default-container-timeout=$(( ${START_SCRIPT_TIMEOUT:-30} * 4 * 2 )) && ddev restart\`" | tee -a "${tmp_error_file}" >&2
+  echo "This may be due to a slow internet connection" | tee -a "${tmp_error_file}" >&2
+  echo "You can rerun it inside the web container with:" | tee -a "${tmp_error_file}" >&2
+  echo "  - ddev exec ${command[*]}" | tee -a "${tmp_error_file}" >&2
   echo | tee -a "${tmp_error_file}" >&2
 fi
 

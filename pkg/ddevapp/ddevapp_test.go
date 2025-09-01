@@ -3322,7 +3322,7 @@ func TestRouterNotRunning(t *testing.T) {
 	assert.NoError(err)
 
 	for _, container := range containers {
-		assert.NotEqual("ddev-router", dockerutil.ContainerName(container), "ddev-router was not supposed to be running but it was")
+		assert.NotEqual("ddev-router", dockerutil.ContainerName(&container), "ddev-router was not supposed to be running but it was")
 	}
 }
 
@@ -4791,7 +4791,7 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 	if container == nil {
 		return "", fmt.Errorf("no container exists for containerType=%s app=%v", containerType, app)
 	}
-	name := dockerutil.ContainerName(*container)
+	name := dockerutil.ContainerName(container)
 	return name, nil
 }
 

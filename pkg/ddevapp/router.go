@@ -88,7 +88,7 @@ func StopRouterIfNoContainers() error {
 				dockerContainers, _ := dockerutil.GetDockerContainers(true)
 				containerInfo := make([]string, len(dockerContainers))
 				for i, container := range dockerContainers {
-					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(container.ID), dockerutil.ContainerName(container), container.State, container.Image)
+					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(container.ID), dockerutil.ContainerName(&container), container.State, container.Image)
 				}
 				containerList, _ := util.ArrayToReadableOutput(containerInfo)
 				util.Debug("All docker containers: %s", containerList)

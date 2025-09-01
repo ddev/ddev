@@ -953,7 +953,6 @@ type composeYAMLVars struct {
 	IsGitpod                        bool
 	IsCodespaces                    bool
 	DefaultContainerTimeout         string
-	StartScriptTimeout              string
 	UseHostDockerInternalExtraHosts bool
 	WebExtraContainerPorts          []int
 	WebExtraHTTPPorts               string
@@ -1061,7 +1060,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsCodespaces:       nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
-		StartScriptTimeout:      app.GetStartScriptTimeout(),
 		XHGuiHTTPPort:           app.GetXHGuiHTTPPort(),
 		XHGuiHTTPSPort:          app.GetXHGuiHTTPSPort(),
 		XHGuiPort:               GetInternalPort(app, "xhgui"),
@@ -1234,7 +1232,7 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
     echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    timeout %s apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+    timeout %d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
         -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
         debian-archive-keyring apt-transport-https ca-certificates
@@ -1262,13 +1260,13 @@ host  replication all 0.0.0.0/0 trust
 local replication all trust
 local replication all peer" >/etc/postgresql/pg_hba.conf
 
-timeout %s apt-get update || true
+timeout %d apt-get update || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
     apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 EOF
-`, app.GetMinimalContainerTimeout(), app.GetMinimalContainerTimeout())
+`, app.GetMaxContainerWaitTime(), app.GetMaxContainerWaitTime())
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
@@ -1413,8 +1411,8 @@ RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
 	if extraPackages != nil {
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
-RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests %v
-`, app.GetMinimalContainerTimeout(), strings.Join(extraPackages, " "))
+RUN (timeout %d apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests %v
+`, app.GetMaxContainerWaitTime(), strings.Join(extraPackages, " "))
 	}
 
 	// webimage only things
