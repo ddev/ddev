@@ -38,17 +38,16 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		client.RetryMax = retries
 		client.RetryWaitMin = 500 * time.Millisecond
 		client.RetryWaitMax = 5 * time.Second
-		// Default retry policy retries on:
-		// - connection reset
-		// - connection refused
-		// - No Response
-		// - net.Error with Temporary() == true
-		// "context deadline exceeded" cannot be retried until you run the request again
+		// "context deadline exceeded" error during file copying cannot be retried with retryablehttp
 		// See https://github.com/hashicorp/go-retryablehttp/issues/167
+		// We use manual retry logic (for loop) around the entire Get+Copy operation instead
 		client.CheckRetry = retryablehttp.DefaultRetryPolicy
 		client.Backoff = retryablehttp.DefaultBackoff
 		client.Logger = nil
-		// 2^attempt multiplier
+		// Double the timeout for each retry attempt, up to timeoutMax
+		// 1st attempt = clientTimeout * 2^0
+		// 2nd attempt = clientTimeout * 2^1
+		// 3rd attempt = clientTimeout * 2^2
 		clientTimeout = clientTimeout * time.Duration(1<<attempt)
 		if clientTimeout > timeoutMax {
 			clientTimeout = timeoutMax
@@ -81,10 +80,6 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 			Debug("Attempting to download SHASUM URL=%s (attempt %d/%d) with timeout %v", shaSumURL, attempt+1, retries+1, currentTimeout)
 			resp, getErr := client.Get(shaSumURL)
 			if getErr != nil {
-				//if errors.Is(getErr, context.DeadlineExceeded) && attempt < retries {
-				//	Debug("SHASUM download attempt %d failed, retrying...", attempt+1)
-				//	continue
-				//}
 				err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
 				return
 			}
@@ -123,10 +118,6 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		resp, getErr := client.Get(fileURL)
 		if getErr != nil {
 			_ = outFile.Close()
-			//if errors.Is(getErr, context.DeadlineExceeded) && attempt < retries {
-			//	Debug("File download attempt %d failed, retrying...", attempt+1)
-			//	continue
-			//}
 			err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
 			return
 		}
