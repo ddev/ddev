@@ -36,7 +36,7 @@ n_install_result=true
 log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" n install "${N_INSTALL_VERSION}" || n_install_result=false
 
 # try offline install on fail
-if [ "${n_install_result}" = "false" ] && timeout "${START_SCRIPT_TIMEOUT:-30}" n install "${N_INSTALL_VERSION}" --offline; then
+if [ "${n_install_result}" = "false" ] && n install "${N_INSTALL_VERSION}" --offline; then
   n_install_result=true
   # remove stderr log from the previous command
   log-stderr.sh --remove n install "${N_INSTALL_VERSION}" || true

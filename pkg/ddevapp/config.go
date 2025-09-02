@@ -953,7 +953,6 @@ type composeYAMLVars struct {
 	IsGitpod                        bool
 	IsCodespaces                    bool
 	DefaultContainerTimeout         string
-	StartScriptTimeout              string
 	UseHostDockerInternalExtraHosts bool
 	WebExtraContainerPorts          []int
 	WebExtraHTTPPorts               string
@@ -1061,7 +1060,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsCodespaces:       nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
-		StartScriptTimeout:      app.GetStartScriptTimeout(),
 		XHGuiHTTPPort:           app.GetXHGuiHTTPPort(),
 		XHGuiHTTPSPort:          app.GetXHGuiHTTPSPort(),
 		XHGuiPort:               GetInternalPort(app, "xhgui"),
@@ -1202,12 +1200,12 @@ stopasgroup=true
 	}
 	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
 	if app.Database.Type == nodeps.MySQL {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mysql-client-install.sh || true\n", app.GetStartScriptTimeout())
+		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
 	}
 	// Some MariaDB versions may have their own client in the ddev-webserver
 	// Search for CHANGE_MARIADB_CLIENT to update related code
 	if app.Database.Type == nodeps.MariaDB && slices.Contains([]string{nodeps.MariaDB114, nodeps.MariaDB118}, app.Database.Version) {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN START_SCRIPT_TIMEOUT=%s mariadb-client-install.sh || true\n", app.GetStartScriptTimeout())
+		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -1234,7 +1232,7 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
     echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    timeout %s apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+    timeout %d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
         -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
         debian-archive-keyring apt-transport-https ca-certificates
@@ -1262,13 +1260,13 @@ host  replication all 0.0.0.0/0 trust
 local replication all trust
 local replication all peer" >/etc/postgresql/pg_hba.conf
 
-timeout %s apt-get update || true
+timeout %d apt-get update || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
     apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 EOF
-`, app.GetMinimalContainerTimeout(), app.GetMinimalContainerTimeout())
+`, app.GetMaxContainerWaitTime(), app.GetMaxContainerWaitTime())
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
@@ -1398,8 +1396,8 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		if _, ok := nodeps.PreinstalledPHPVersions[app.PHPVersion]; !ok {
 			contents = contents + fmt.Sprintf(`
 ### DDEV-injected addition of not-preinstalled PHP version
-RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
-`, app.GetStartScriptTimeout(), app.PHPVersion)
+RUN /usr/local/bin/install_php_extensions.sh "php%s" "${TARGETARCH}"
+`, app.PHPVersion)
 		}
 	}
 
@@ -1413,8 +1411,8 @@ RUN START_SCRIPT_TIMEOUT=%s /usr/local/bin/install_php_extensions.sh "php%s" "${
 	if extraPackages != nil {
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
-RUN (timeout %s apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests %v
-`, app.GetMinimalContainerTimeout(), strings.Join(extraPackages, " "))
+RUN (timeout %d apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests %v
+`, app.GetMaxContainerWaitTime(), strings.Join(extraPackages, " "))
 	}
 
 	// webimage only things
@@ -1466,12 +1464,15 @@ RUN phpdismod blackfire xdebug xhprof
 			}
 			contents = contents + fmt.Sprintf(`
 ### DDEV-injected postgresql-client setup
-RUN EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }'); \
-if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then \
-  log-stderr.sh --timeout %s bash -c "apt-get update -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" && \
-  apt-get install -y postgresql-client-%s && \
-  apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION}" || true; \
-fi`, app.Database.Version, app.GetStartScriptTimeout(), psqlVersion) + "\n\n"
+RUN <<EOF
+set -eu -o pipefail
+EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }' || true)
+if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then
+  log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
+  log-stderr.sh apt-get install -y postgresql-client-%s && apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} || true
+fi
+EOF
+`, app.Database.Version, psqlVersion) + "\n\n"
 		}
 	}
 

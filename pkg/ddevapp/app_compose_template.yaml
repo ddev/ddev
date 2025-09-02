@@ -253,7 +253,12 @@ services:
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
-    - START_SCRIPT_TIMEOUT={{ .StartScriptTimeout }}
+    # This timeout is used for the web container's /start.sh,
+    # it should be divided by the number of times it's going to be used.
+    # The total timeout must be less than the default_container_timeout,
+    # that's why we subtract 5 seconds to make sure we didn't hit exactly.
+    # Currently used in 2 places: n-install.sh, install_nvm.sh
+    - START_SCRIPT_TIMEOUT={{ div (sub .DefaultContainerTimeout 5) 2 }}
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
     labels:

@@ -1938,7 +1938,7 @@ func FindNotOmittedImages(app *DdevApp) []string {
 }
 
 // GetMaxContainerWaitTime looks through all services and returns the max time we expect
-// to wait for all containers to become `healthy`. Mostly this is healtcheck.start_period.
+// to wait for all containers to become `healthy`. Mostly this is healthcheck.start_period.
 // Defaults to DefaultContainerTimeout (usually 120 unless overridden)
 func (app *DdevApp) GetMaxContainerWaitTime() int {
 	defaultContainerTimeout, _ := strconv.Atoi(app.DefaultContainerTimeout)
@@ -3266,7 +3266,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 
 		siteDir, ok = webContainer.Labels["com.ddev.approot"]
 		if !ok {
-			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(*webContainer))
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
 		}
 	}
 	appRoot, err := CheckForConf(siteDir)
@@ -3458,37 +3458,6 @@ func FormatSiteStatus(status string) string {
 		formattedStatus = util.ColorizeText(formattedStatus, "green")
 	}
 	return formattedStatus
-}
-
-// GetStartScriptTimeout returns the timeout for scripts on start
-// Used for START_SCRIPT_TIMEOUT
-func (app *DdevApp) GetStartScriptTimeout() string {
-	containerTimeout, err := strconv.Atoi(app.DefaultContainerTimeout)
-	if err != nil {
-		containerTimeout, _ = strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
-	}
-	// Use 1/4 of the default container timeout for scripts on start
-	timeoutForScriptsOnStart := strconv.Itoa(containerTimeout / 4)
-	// With 30 seconds minimum
-	if containerTimeout/4 <= 30 {
-		timeoutForScriptsOnStart = "30"
-	}
-	return timeoutForScriptsOnStart
-}
-
-// GetMinimalContainerTimeout returns the timeout depending on the container timeout.
-// It returns the default timeout if the container's specified timeout is less than the default.
-func (app *DdevApp) GetMinimalContainerTimeout() string {
-	containerTimeout, err := strconv.Atoi(app.DefaultContainerTimeout)
-	defaultTimeout, _ := strconv.Atoi(nodeps.DefaultDefaultContainerTimeout)
-	if err != nil {
-		containerTimeout = defaultTimeout
-	}
-	minimalTimeout := strconv.Itoa(containerTimeout)
-	if containerTimeout <= defaultTimeout {
-		minimalTimeout = nodeps.DefaultDefaultContainerTimeout
-	}
-	return minimalTimeout
 }
 
 // HasConfigNameOverride checks if the app name should be different,
