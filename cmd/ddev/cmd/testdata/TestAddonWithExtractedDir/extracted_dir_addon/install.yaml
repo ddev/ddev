@@ -1,0 +1,28 @@
+name: extracted-dir-addon
+description: Test addon that uses extractedDir to access additional files
+
+project_files:
+  - main-config.yaml
+
+pre_install_actions:
+  - |
+    #ddev-description:Copy additional files from extracted directory
+    if [ -f "additional-script.sh" ]; then
+      cp additional-script.sh .ddev/commands/host/additional-script
+      chmod +x .ddev/commands/host/additional-script
+      echo "Copied additional script from extracted directory"
+    else
+      echo "Warning: additional-script.sh not found in extracted directory"
+    fi
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:PHP action accessing extracted directory files
+    $configFile = 'runtime-config.json';
+    if (file_exists($configFile)) {
+        $config = json_decode(file_get_contents($configFile), true);
+        echo "Loaded runtime config: " . json_encode($config) . "\n";
+    } else {
+        echo "Warning: runtime-config.json not found in extracted directory\n";
+    }

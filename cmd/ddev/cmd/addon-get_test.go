@@ -388,3 +388,86 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	// Variables from .env are passed to all containers
 	require.Contains(t, out, "GLOBAL_TEST_VARIABLE=global_test_variable")
 }
+
+// TestAddonGetWithDependencies tests static dependency installation
+func TestAddonGetWithDependencies(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis-commander")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that installing an addon with dependencies automatically installs the dependency
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	require.NoError(t, err, "Should successfully install addon with dependencies, out=%s", out)
+
+	// Verify both addons are installed
+	require.Contains(t, out, "Successfully installed mock-redis from directory")
+	require.Contains(t, out, "Redis service configured successfully") // This should be in the pre-install output
+	require.Contains(t, out, "Redis Commander service configured successfully")
+
+	// Verify files were created
+	require.FileExists(t, app.GetConfigPath("docker-compose.redis.yaml"))
+	require.FileExists(t, app.GetConfigPath("docker-compose.redis-commander.yaml"))
+}
+
+// TestAddonGetCircularDependencies tests circular dependency detection
+func TestAddonGetCircularDependencies(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "addon-x")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "addon-y")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "addon-z")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that circular dependencies are detected and rejected
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestAddonCircular", "addon_x"))
+	require.Error(t, err, "Should fail due to circular dependency, out=%s", out)
+	require.Contains(t, out, "circular dependency detected", "Should mention circular dependency")
+}
+
+// TestAddonGetNoDependenciesFlag tests the --no-dependencies flag
+func TestAddonGetNoDependenciesFlag(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis-commander")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --no-dependencies flag prevents automatic installation
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--no-dependencies", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	require.Error(t, err, "Should fail when --no-dependencies is used without dependency installed, out=%s", out)
+	require.Contains(t, out, "declares a dependency on '../mock_redis'", "Should mention missing dependency")
+
+	// Install dependency first
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis"))
+	require.NoError(t, err, "Should install dependency successfully, out=%s", out)
+
+	// Now --no-dependencies should work
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "--no-dependencies", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	require.NoError(t, err, "Should install with --no-dependencies when dependency exists, out=%s", out)
+	require.NotContains(t, out, "Installing missing dependency", "Should not automatically install dependencies")
+}

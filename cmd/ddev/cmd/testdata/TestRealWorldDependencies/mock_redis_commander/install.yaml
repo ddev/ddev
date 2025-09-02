@@ -1,0 +1,21 @@
+name: mock-redis-commander
+dependencies:
+  - ../mock_redis
+description: Mock Redis Commander addon (simulates ddev/ddev-redis-commander)
+
+project_files:
+  - docker-compose.redis-commander.yaml
+
+pre_install_actions:
+  - |
+    #ddev-description:Verify Redis dependency is available
+    if [ ! -f ".ddev/docker-compose.redis.yaml" ]; then
+      echo "Redis service not found - dependency will be auto-installed"
+    else
+      echo "Redis dependency verified"
+    fi
+
+post_install_actions:
+  - |
+    #ddev-description:Configure Redis Commander service
+    echo "Redis Commander service configured successfully"

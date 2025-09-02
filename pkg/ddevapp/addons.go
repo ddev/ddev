@@ -905,13 +905,53 @@ func installAddonRecursive(app *DdevApp, addonName string, verbose bool) error {
 		delete(installStackMap, addonName)
 	}()
 
-	// For testing purposes, check if this is a test directory format
-	if strings.Contains(addonName, "/") {
+	// Handle different dependency formats (same as ddev add-on get)
+	parts := strings.Split(addonName, "/")
+	extractedDir := ""
+	tarballURL := ""
+	var cleanup func()
+
+	switch {
+	// Local directory path (check this first before GitHub parsing)
+	case fileutil.IsDirectory(addonName):
+		extractedDir = addonName
+		if verbose {
+			util.Success("Installing from local directory: %s", addonName)
+		}
+
+	// Local tarball file
+	case fileutil.FileExists(addonName) && (strings.HasSuffix(filepath.Base(addonName), "tar.gz") || strings.HasSuffix(filepath.Base(addonName), "tar") || strings.HasSuffix(filepath.Base(addonName), "tgz")):
+		var err error
+		extractedDir, cleanup, err = archive.ExtractTarballWithCleanup(addonName, true)
+		if err != nil {
+			return fmt.Errorf("unable to extract %s: %v", addonName, err)
+		}
+		defer cleanup()
+
+	// URL to tarball (including GitHub tarball URLs)
+	case strings.HasPrefix(addonName, "http://") || strings.HasPrefix(addonName, "https://"):
+		tarballURL = addonName
+		var err error
+		extractedDir, cleanup, err = archive.DownloadAndExtractTarball(tarballURL, true)
+		if err != nil {
+			return fmt.Errorf("unable to download %v: %v", addonName, err)
+		}
+		defer cleanup()
+
+	// GitHub owner/repo format (check this last, and exclude paths)
+	case len(parts) == 2 && !strings.Contains(addonName, ".") && !strings.HasPrefix(addonName, "."):
 		return InstallAddonFromGitHub(app, addonName, "", verbose)
-	} else {
-		// This is a simple name, likely a test addon - try to install from testdata
-		return fmt.Errorf("invalid addon name format, expected 'owner/repo': %s", addonName)
+
+	default:
+		return fmt.Errorf("unsupported dependency format: %s (must be owner/repo, /path/to/addon, or https://...)", addonName)
 	}
+
+	// If we have a local extraction, handle it directly
+	if extractedDir != "" {
+		return InstallAddonFromDirectory(app, extractedDir, verbose)
+	}
+
+	return fmt.Errorf("no extraction directory available for addon: %s", addonName)
 }
 
 // InstallAddonFromGitHub handles GitHub-based addon installation
@@ -933,6 +973,93 @@ func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, ve
 
 	// Download and install
 	return InstallAddonFromTarball(app, tarballURL, downloadedRelease, verbose)
+}
+
+// InstallAddonFromDirectory handles installation from a local directory
+func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) error {
+	// Parse install.yaml
+	yamlFile := filepath.Join(extractedDir, "install.yaml")
+	yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
+	if err != nil {
+		return fmt.Errorf("unable to read %v: %v", yamlFile, err)
+	}
+	var s InstallDesc
+	err = yaml.Unmarshal([]byte(yamlContent), &s)
+	if err != nil {
+		return fmt.Errorf("unable to parse %v: %v", yamlFile, err)
+	}
+
+	// Install dependencies recursively, resolving relative paths
+	if len(s.Dependencies) > 0 {
+		resolvedDeps := make([]string, len(s.Dependencies))
+		for i, dep := range s.Dependencies {
+			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+				// Resolve relative path relative to extractedDir
+				resolvedPath := filepath.Join(extractedDir, dep)
+				// Clean the path to resolve .. and . components
+				resolvedDeps[i] = filepath.Clean(resolvedPath)
+				if verbose {
+					util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
+				}
+			} else {
+				resolvedDeps[i] = dep
+			}
+		}
+		err = InstallDependencies(app, resolvedDeps, verbose)
+		if err != nil {
+			return fmt.Errorf("unable to install dependencies for '%s': %v", s.Name, err)
+		}
+	}
+
+	// Run pre-install actions
+	if len(s.PreInstallActions) > 0 {
+		util.Success("\nExecuting pre-install actions:")
+	}
+	for i, action := range s.PreInstallActions {
+		err = ProcessAddonAction(action, s, app, extractedDir, verbose)
+		if err != nil {
+			desc := GetAddonDdevDescription(action)
+			if !verbose {
+				return fmt.Errorf("could not process pre-install action (%d) '%s'", i, desc)
+			} else {
+				return fmt.Errorf("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+			}
+		}
+	}
+
+	// Copy project files
+	if len(s.ProjectFiles) > 0 {
+		util.Success("\nInstalling project-level components:")
+	}
+	for _, file := range s.ProjectFiles {
+		src := filepath.Join(extractedDir, file)
+		dest := app.GetConfigPath(file)
+
+		err = fileutil.CopyFile(src, dest)
+		if err != nil {
+			return fmt.Errorf("unable to copy file %s to %s: %v", src, dest, err)
+		}
+		util.Success("👍 %s", file)
+	}
+
+	// Run post-install actions
+	if len(s.PostInstallActions) > 0 {
+		util.Success("\nExecuting post-install actions:")
+	}
+	for i, action := range s.PostInstallActions {
+		err = ProcessAddonAction(action, s, app, extractedDir, verbose)
+		if err != nil {
+			desc := GetAddonDdevDescription(action)
+			if !verbose {
+				return fmt.Errorf("could not process post-install action (%d) '%s'", i, desc)
+			} else {
+				return fmt.Errorf("could not process post-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+			}
+		}
+	}
+
+	util.Success("Successfully installed %s from directory", s.Name)
+	return nil
 }
 
 // InstallAddonFromTarball handles the actual installation process
