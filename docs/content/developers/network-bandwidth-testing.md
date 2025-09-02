@@ -46,7 +46,7 @@ Common interface naming patterns:
 
 ## Install Bandwidth Limiting Tools
 
-### Wondershaper
+### Wondershaper Installation
 
 [Wondershaper](https://github.com/magnific0/wondershaper) is a simple bandwidth limiting tool that's easy to use on Linux:
 
@@ -64,7 +64,7 @@ yay -S wondershaper-git
 
 ## Apply Bandwidth Limitations
 
-### Wondershaper
+### Wondershaper Limits
 
 Apply download and upload limits (values in kilobits per second):
 
