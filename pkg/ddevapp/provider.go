@@ -105,7 +105,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDBArg bool, skipFilesArg bool, 
 			if err != nil {
 				return err
 			}
-			output.UserOut.Printf("Importing databases %v\n", fileLocation)
+			output.UserOut.Printf("Importing databases %v", fileLocation)
 			err = provider.importDatabaseBackup(fileLocation, importPath)
 			if err != nil {
 				return err
@@ -244,6 +244,7 @@ func (p *Provider) UploadDB() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPushCommand.Command == "" {
+		util.Warning("No db_push_command provided, so skipping database push")
 		return nil
 	}
 
@@ -273,6 +274,7 @@ func (p *Provider) UploadFiles() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.FilesPushCommand.Command == "" {
+		util.Warning("No files_push_command provided, so skipping files push")
 		return nil
 	}
 
@@ -307,6 +309,7 @@ func (p *Provider) doFilesPullCommand() ([]string, error) {
 	_ = os.MkdirAll(destDir, 0755)
 
 	if p.FilesPullCommand.Command == "" {
+		util.Warning("No files_pull_command provided, so skipping files pull")
 		return nil, nil
 	}
 	s := p.FilesPullCommand.Service
@@ -340,6 +343,7 @@ func (p *Provider) getDatabaseBackups() ([]string, error) {
 	}
 
 	if p.DBPullCommand.Command == "" {
+		util.Warning("No db_pull_command provided, so skipping database pull")
 		return nil, nil
 	}
 
@@ -400,6 +404,9 @@ func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []stri
 func (p *Provider) doFilesImport(fileLocation string, importPath string) error {
 	var err error
 	if p.FilesImportCommand.Command == "" {
+		if fileLocation == "" {
+			return nil
+		}
 		err = p.app.ImportFiles("", fileLocation, importPath)
 	} else {
 		s := p.FilesImportCommand.Service
