@@ -60,7 +60,7 @@ func processTestAddon(app *ddevapp.DdevApp, testName, addonName string, verbose 
 
 	// Process post install actions
 	for _, action := range installDesc.PostInstallActions {
-		err = ddevapp.ProcessAddonAction(action, installDesc, app, verbose)
+		err = ddevapp.ProcessAddonAction(action, installDesc, app, "", verbose)
 		if err != nil {
 			return err
 		}
