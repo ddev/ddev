@@ -165,7 +165,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(action, s, app, verbose)
+			err = ddevapp.ProcessAddonAction(action, s, app, extractedDir, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
@@ -241,7 +241,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(action, s, app, verbose)
+			err = ddevapp.ProcessAddonAction(action, s, app, extractedDir, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if !verbose {
