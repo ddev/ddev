@@ -211,7 +211,7 @@ func TestDownloadFileRetryLogic(t *testing.T) {
 				default:
 					_, _ = w.Write(make([]byte, 1000)) // Write 1KB chunks
 					flusher.Flush()
-					time.Sleep(100 * time.Millisecond) // Sleep longer than client timeout
+					time.Sleep(100 * time.Millisecond) // Add delay to trigger client timeout
 				}
 			}
 		}))
