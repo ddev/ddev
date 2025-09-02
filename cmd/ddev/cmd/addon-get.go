@@ -36,6 +36,7 @@ ddev add-on get /path/to/tarball.tar.gz
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := false
 		requestedVersion := ""
+		noDependencies := false
 
 		if cmd.Flags().Changed("version") {
 			requestedVersion = cmd.Flag("version").Value.String()
@@ -43,6 +44,10 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		if cmd.Flags().Changed("verbose") {
 			verbose = true
+		}
+
+		if cmd.Flags().Changed("no-dependencies") {
+			noDependencies = true
 		}
 
 		app, err := ddevapp.GetActiveApp(cmd.Flag("project").Value.String())
@@ -127,16 +132,24 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
-		// Check to see if any dependencies are missing
+		// Handle dependencies
 		if len(s.Dependencies) > 0 {
-			// Read in full existing registered config
-			m, err := ddevapp.GatherAllManifests(app)
-			if err != nil {
-				util.Failed("Unable to gather manifests: %v", err)
-			}
-			for _, dep := range s.Dependencies {
-				if _, ok := m[dep]; !ok {
-					util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev add-on get %s first.", s.Name, dep, dep)
+			if noDependencies {
+				// Check that dependencies exist but don't install them
+				m, err := ddevapp.GatherAllManifests(app)
+				if err != nil {
+					util.Failed("Unable to gather manifests: %v", err)
+				}
+				for _, dep := range s.Dependencies {
+					if _, ok := m[dep]; !ok {
+						util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev add-on get %s first.", s.Name, dep, dep)
+					}
+				}
+			} else {
+				// Install dependencies recursively
+				err := ddevapp.InstallDependencies(app, s.Dependencies, verbose)
+				if err != nil {
+					util.Failed("Failed to install dependencies for '%s': %v", s.Name, err)
 				}
 			}
 		}
@@ -325,6 +338,7 @@ func getInjectedEnv(envFile string, verbose bool) string {
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
+	AddonGetCmd.Flags().Bool("no-dependencies", false, "Skip automatic dependency installation")
 	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 

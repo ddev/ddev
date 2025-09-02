@@ -1,0 +1,4 @@
+name: addon-a
+dependencies:
+  - addon-b
+description: Test addon A that depends on addon B

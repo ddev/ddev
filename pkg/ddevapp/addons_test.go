@@ -28,6 +28,14 @@ func processTestAddon(app *ddevapp.DdevApp, testName, addonName string, verbose 
 		return err
 	}
 
+	// Test dependency installation (matches addon-get.go logic)
+	if len(installDesc.Dependencies) > 0 {
+		err := ddevapp.InstallDependencies(app, installDesc.Dependencies, verbose)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Copy project files to the app directory
 	for _, file := range installDesc.ProjectFiles {
 		srcFile := filepath.Join(addonPath, file)
@@ -164,6 +172,43 @@ func TestValidatePHPIncludesAndRequires(t *testing.T) {
 	})
 }
 
+func TestCircularDependencyDetection(t *testing.T) {
+	// Test the circular dependency detection logic directly
+	t.Run("DetectsCircularDependency", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Simulate a circular dependency scenario
+		err1 := ddevapp.AddToInstallStack("addon-a")
+		require.NoError(t, err1)
+
+		err2 := ddevapp.AddToInstallStack("addon-b")
+		require.NoError(t, err2)
+
+		// This should detect the circular dependency
+		err3 := ddevapp.AddToInstallStack("addon-a")
+		require.Error(t, err3, "Should detect circular dependency")
+		require.Contains(t, err3.Error(), "circular dependency detected", "Error should mention circular dependency")
+		require.Contains(t, err3.Error(), "addon-a -> addon-b -> addon-a", "Error should show dependency chain")
+	})
+
+	t.Run("AllowsValidDependencyChain", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Simulate a valid dependency chain
+		err1 := ddevapp.AddToInstallStack("addon-c")
+		require.NoError(t, err1)
+
+		err2 := ddevapp.AddToInstallStack("addon-d")
+		require.NoError(t, err2)
+
+		// Should not detect circular dependency
+		err3 := ddevapp.AddToInstallStack("addon-e")
+		require.NoError(t, err3)
+	})
+}
+
 func TestGetGitHubRelease(t *testing.T) {
 	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
 		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
@@ -198,5 +243,15 @@ func TestGetGitHubRelease(t *testing.T) {
 		_, _, err := ddevapp.GetGitHubRelease("ddev", "ddev-redis", "v999.999.999")
 		require.Error(t, err, "Should fail for non-existent version")
 		require.Contains(t, err.Error(), "no release found", "Error should mention no release found")
+	})
+
+	// Test real addon with dependencies
+	t.Run("RealAddonWithDependencies", func(t *testing.T) {
+		// Test ddev-redis-commander which depends on ddev-redis
+		tarballURL, version, err := ddevapp.GetGitHubRelease("ddev", "ddev-redis-commander", "")
+		require.NoError(t, err, "Should successfully get ddev-redis-commander release")
+		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
+		require.NotEmpty(t, version, "Version should not be empty")
+		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
 	})
 }
