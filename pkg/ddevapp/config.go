@@ -168,7 +168,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	// Rendered yaml is not there until after ddev config or ddev start
 	if fileutil.FileExists(app.ConfigPath) && fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		if err := app.ReadDockerComposeYAML(); err != nil {
-			util.WarningOnce("Unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
+			util.Verbose("Unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
 		}
 	}
 
