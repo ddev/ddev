@@ -163,3 +163,40 @@ func TestValidatePHPIncludesAndRequires(t *testing.T) {
 		require.Contains(t, err.Error(), "Parse error", "Should contain PHP parse error")
 	})
 }
+
+func TestGetGitHubRelease(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+
+	// Test getting latest release
+	t.Run("GetLatestRelease", func(t *testing.T) {
+		tarballURL, version, err := ddevapp.GetGitHubRelease("ddev", "ddev-redis", "")
+		require.NoError(t, err, "Should successfully get latest release")
+		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
+		require.NotEmpty(t, version, "Version should not be empty")
+		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
+	})
+
+	// Test getting specific version
+	t.Run("GetSpecificVersion", func(t *testing.T) {
+		tarballURL, version, err := ddevapp.GetGitHubRelease("ddev", "ddev-redis", "v1.0.4")
+		require.NoError(t, err, "Should successfully get specific version")
+		require.Equal(t, "v1.0.4", version, "Should return requested version")
+		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
+	})
+
+	// Test non-existent repository
+	t.Run("NonExistentRepo", func(t *testing.T) {
+		_, _, err := ddevapp.GetGitHubRelease("ddev", "non-existent-repo", "")
+		require.Error(t, err, "Should fail for non-existent repository")
+		require.Contains(t, err.Error(), "unable to get releases", "Error should mention inability to get releases")
+	})
+
+	// Test non-existent version
+	t.Run("NonExistentVersion", func(t *testing.T) {
+		_, _, err := ddevapp.GetGitHubRelease("ddev", "ddev-redis", "v999.999.999")
+		require.Error(t, err, "Should fail for non-existent version")
+		require.Contains(t, err.Error(), "no release found", "Error should mention no release found")
+	})
+}
