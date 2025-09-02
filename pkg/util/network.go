@@ -33,6 +33,7 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		progressBar = false
 	}
 
+	// Configure retryablehttp client with backoff, retry policy, and global timeout.
 	createClient := func(clientTimeout time.Duration, attempt int) (*retryablehttp.Client, time.Duration) {
 		client := retryablehttp.NewClient()
 		client.RetryMax = retries
