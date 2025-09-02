@@ -1,0 +1,10 @@
+name: mock-redis
+description: Mock Redis addon (simulates ddev/ddev-redis)
+
+project_files:
+  - docker-compose.redis.yaml
+
+post_install_actions:
+  - |
+    #ddev-description:Configure Redis service
+    echo "Redis service configured successfully"

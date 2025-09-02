@@ -1,0 +1,12 @@
+name: addon-x
+dependencies:
+  - ../addon_y
+description: Test addon X that depends on addon Y (part of circular dependency chain)
+
+project_files:
+  - x-config.yaml
+
+post_install_actions:
+  - |
+    #ddev-description:Addon X installation complete
+    echo "Addon X installed successfully"

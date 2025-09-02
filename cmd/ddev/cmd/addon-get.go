@@ -141,13 +141,42 @@ ddev add-on get /path/to/tarball.tar.gz
 					util.Failed("Unable to gather manifests: %v", err)
 				}
 				for _, dep := range s.Dependencies {
-					if _, ok := m[dep]; !ok {
+					checkName := dep
+					// For relative paths, we need to check the actual addon name, not the path
+					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+						// Resolve relative path and get the addon name from install.yaml
+						resolvedPath := filepath.Clean(filepath.Join(extractedDir, dep))
+						if fileutil.IsDirectory(resolvedPath) {
+							yamlFile := filepath.Join(resolvedPath, "install.yaml")
+							if yamlContent, err := fileutil.ReadFileIntoString(yamlFile); err == nil {
+								var depDesc ddevapp.InstallDesc
+								if err := yaml.Unmarshal([]byte(yamlContent), &depDesc); err == nil {
+									checkName = depDesc.Name
+								}
+							}
+						}
+					}
+					if _, ok := m[checkName]; !ok {
 						util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev add-on get %s first.", s.Name, dep, dep)
 					}
 				}
 			} else {
-				// Install dependencies recursively
-				err := ddevapp.InstallDependencies(app, s.Dependencies, verbose)
+				// Install dependencies recursively, resolving relative paths
+				resolvedDeps := make([]string, len(s.Dependencies))
+				for i, dep := range s.Dependencies {
+					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+						// Resolve relative path relative to extractedDir
+						resolvedPath := filepath.Join(extractedDir, dep)
+						// Clean the path to resolve .. and . components
+						resolvedDeps[i] = filepath.Clean(resolvedPath)
+						if verbose {
+							util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
+						}
+					} else {
+						resolvedDeps[i] = dep
+					}
+				}
+				err := ddevapp.InstallDependencies(app, resolvedDeps, verbose)
 				if err != nil {
 					util.Failed("Failed to install dependencies for '%s': %v", s.Name, err)
 				}

@@ -1,0 +1,22 @@
+name: php-runtime-deps-addon
+description: Test addon that discovers runtime dependencies using PHP
+
+pre_install_actions:
+  - |
+    <?php
+    #ddev-description:PHP-based runtime dependency check
+    $manifestDir = '/var/www/html/.ddev/addon-metadata/redis-addon';
+    if (!is_dir($manifestDir)) {
+        echo "Missing dependency: redis-addon - will be auto-installed\n";
+        exit(1);
+    }
+    echo "PHP runtime dependency check passed\n";
+
+project_files:
+  - php-config.yaml
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description:Verify PHP-based dependency installation
+    echo "PHP runtime dependency check completed successfully\n";
