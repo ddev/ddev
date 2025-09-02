@@ -802,6 +802,43 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 	return nil
 }
 
+// GetGitHubRelease gets the tarball URL and version for a GitHub repository release
+func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
+	ctx := context.Background()
+	client := github2.GetGithubClient(ctx)
+
+	releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 100})
+	if err != nil {
+		var rate github.Rate
+		if resp != nil {
+			rate = resp.Rate
+		}
+		return "", "", fmt.Errorf("unable to get releases for %v: %v\nresp.Rate=%v", repo, err, rate)
+	}
+	if len(releases) == 0 {
+		return "", "", fmt.Errorf("no releases found for %v", repo)
+	}
+
+	releaseItem := 0
+	releaseFound := false
+	if requestedVersion != "" {
+		for i, release := range releases {
+			if release.GetTagName() == requestedVersion {
+				releaseItem = i
+				releaseFound = true
+				break
+			}
+		}
+		if !releaseFound {
+			return "", "", fmt.Errorf("no release found for %v with tag %v", repo, requestedVersion)
+		}
+	}
+
+	tarballURL = releases[releaseItem].GetTarballURL()
+	downloadedRelease = releases[releaseItem].GetTagName()
+	return tarballURL, downloadedRelease, nil
+}
+
 // GatherAllManifests searches for all addon manifests and presents the result
 // as a map of various names to manifest data
 func GatherAllManifests(app *DdevApp) (map[string]AddonManifest, error) {

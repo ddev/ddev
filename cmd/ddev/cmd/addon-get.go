@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,12 +10,10 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
-	ddevgh "github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/google/go-github/v72/github"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v3"
@@ -89,36 +86,10 @@ ddev add-on get /path/to/tarball.tar.gz
 			argType = "github"
 			owner = parts[0]
 			repo = parts[1]
-			ctx := context.Background()
-
-			client := ddevgh.GetGithubClient(ctx)
-			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 100})
+			tarballURL, downloadedRelease, err = ddevapp.GetGitHubRelease(owner, repo, requestedVersion)
 			if err != nil {
-				var rate github.Rate
-				if resp != nil {
-					rate = resp.Rate
-				}
-				util.Failed("Unable to get releases for %v: %v\nresp.Rate=%v", repo, err, rate)
+				util.Failed("%v", err)
 			}
-			if len(releases) == 0 {
-				util.Failed("No releases found for %v", repo)
-			}
-			releaseItem := 0
-			releaseFound := false
-			if requestedVersion != "" {
-				for i, release := range releases {
-					if release.GetTagName() == requestedVersion {
-						releaseItem = i
-						releaseFound = true
-						break
-					}
-				}
-				if !releaseFound {
-					util.Failed("No release found for %v with tag %v", repo, requestedVersion)
-				}
-			}
-			tarballURL = releases[releaseItem].GetTarballURL()
-			downloadedRelease = releases[releaseItem].GetTagName()
 			util.Success("Installing %s/%s:%s", owner, repo, downloadedRelease)
 			fallthrough
 
