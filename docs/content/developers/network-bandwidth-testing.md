@@ -13,8 +13,6 @@ search:
 This guide demonstrates how to simulate slow network connections for testing DDEV behavior under bandwidth-constrained conditions.
 This is useful for testing how DDEV performs in environments with limited internet connectivity, such as rural areas, mobile connections, or congested networks.
 
-## Setup Overview
-
 The setup involves:
 
 - Identifying your network interface
@@ -23,9 +21,7 @@ The setup involves:
 - Testing DDEV operations under constrained conditions
 - Removing bandwidth limitations when testing is complete
 
-## Step-by-Step Instructions
-
-### 1. Identify Your Network Interface
+## Identify Your Network Interface
 
 First, you need to identify which network interface you want to limit:
 
@@ -48,9 +44,9 @@ Common interface naming patterns:
 - **Wi-Fi**: `wlan0`, `wlp3s0`, `wlo1`
 - **USB/Mobile**: `usb0`, `wwan0`
 
-### 2. Install Bandwidth Limiting Tools
+## Install Bandwidth Limiting Tools
 
-#### Wondershaper
+### Wondershaper
 
 [Wondershaper](https://github.com/magnific0/wondershaper) is a simple bandwidth limiting tool that's easy to use on Linux:
 
@@ -66,9 +62,9 @@ sudo dnf install wondershaper
 yay -S wondershaper-git
 ```
 
-### 3. Apply Bandwidth Limitations
+## Apply Bandwidth Limitations
 
-#### Using Wondershaper
+### Wondershaper
 
 Apply download and upload limits (values in kilobits per second):
 
@@ -79,21 +75,21 @@ Apply download and upload limits (values in kilobits per second):
 sudo wondershaper -a enp7s0f1 -d 1024
 
 # Simulate slow broadband (5 Mbps download)
-sudo wondershaper -a enp7s0f1 -d 5120 -u 1024
+sudo wondershaper -a enp7s0f1 -d 5120
 
 # Simulate mobile connection (10 Mbps download)
-sudo wondershaper -a enp7s0f1 -d 10240 -u 2048
+sudo wondershaper -a enp7s0f1 -d 10240
 
 # Remove all limitations
-sudo wondershaper -c -a enp7s0f1
+sudo wondershaper -a enp7s0f1 -c
 ```
 
 Replace `enp7s0f1` with your actual network interface name from step 1.
 
 !!!warning "Remember to Remove Limits"
-    Remember to remove bandwidth limitations after testing with `sudo wondershaper -c -a <interface>` to restore normal network performance. Consider adding this command to your testing scripts as cleanup.
+    Remember to remove bandwidth limitations after testing with `sudo wondershaper -a <interface> -c` to restore normal network performance.
 
-### 4. Test DDEV Operations
+## Test DDEV Operations
 
 With bandwidth limitations in place, test various DDEV operations:
 
