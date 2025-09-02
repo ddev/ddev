@@ -85,7 +85,9 @@ files_pull_command:
     terminus backup:get ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} --element=files --to=files.tgz
     mkdir -p files && tar --strip-components=1 -C files -zxf files.tgz
 
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
 db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
@@ -101,9 +103,9 @@ db_push_command:
     gzip -dc db.sql.gz | eval "$MYSQL_CMD"
     echo "Database push complete"
 
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
-# terminus rsync plugin for CMS agnostic file push
-# this will push the files directory to Pantheon
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
 files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting

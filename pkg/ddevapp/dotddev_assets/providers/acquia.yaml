@@ -67,7 +67,9 @@ files_import_command:
     set -eu -o pipefail
     acli -n pull:files ${ACQUIA_ENVIRONMENT_ID} default
 
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
 db_push_command:
   command: |
     set -eu -o pipefail

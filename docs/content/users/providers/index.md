@@ -10,7 +10,7 @@ In addition, each project includes [example recipes](https://github.com/ddev/dde
 
 DDEV provides the `pull` command with whatever recipes you have configured. For example, `ddev pull platform` is available by default, and `ddev pull pantheon` is available if you have created `.ddev/providers/pantheon.yaml`.
 
-DDEV also provides the `push` command to push database and files to upstream. This is very dangerous to your upstream site and should only be used when appropriate. We don’t even recommended implementing the push stanzas in your YAML file, but it’s there if it suits your workflow.
+DDEV also provides the `push` command to push database and files to upstream. This is very useful for pushing to non-production environments, but could be very dangerous to your upstream production environment and should only be used when appropriate. If you find the `push` section dangerous, you can disable it by removing it from your provider YAML file.
 
 Each provider recipe is a YAML file that can have whatever name you want. The examples are mostly named after the hosting providers, but they could be named `upstream.yaml` or `live.yaml`, so you could `ddev pull upstream` or `ddev pull live`. If you wanted different upstream environments to pull from, you could name one “prod” and one “dev” and `ddev pull prod` and `ddev pull dev`.
 
