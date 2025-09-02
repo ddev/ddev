@@ -104,7 +104,7 @@ jobs:
     if: ${{ github.event.inputs.image != 'all' && github.event.inputs.image != 'ddev-dbserver' }}
     steps:
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v2
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
         env:
