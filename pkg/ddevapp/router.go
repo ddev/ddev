@@ -381,7 +381,7 @@ func getConfigBasedRouterPorts() []string {
 	for _, app := range GetActiveProjects() {
 		err := app.ReadDockerComposeYAML()
 		if err != nil {
-			util.Warning("Unable to read '%s' project config for determining port mappings: %v", app.Name, err)
+			util.Verbose("Unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
 			continue
 		}
 		if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {

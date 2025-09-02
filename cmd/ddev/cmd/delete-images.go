@@ -80,7 +80,10 @@ func init() {
 // or com.docker.compose.project starting with "ddev-"
 // If dryRun is true, it only prints images to be deleted without removing them.
 func deleteDdevImages(deleteAll, dryRun bool) error {
-	ctx, client := dockerutil.GetDockerClient()
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return err
+	}
 
 	allImages, err := client.ImageList(ctx, dockerImage.ListOptions{
 		All: true,

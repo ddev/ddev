@@ -89,7 +89,10 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml
 // has been deleted.
 func Cleanup(app *DdevApp) error {
-	ctx, client := dockerutil.GetDockerClient()
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return err
+	}
 
 	// Find all containers which match the current site name.
 	labels := map[string]string{
@@ -228,7 +231,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 		// If we sigFound the file and did not find the signature in .ddev/.gitignore, warn about it.
 		if !sigFound {
-			util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
+			util.WarningOnce("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
 			return nil
 		}
 		// Read the existing content for future comparison.

@@ -159,7 +159,7 @@ func (app *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (app *DdevApp) Init(basePath string) error {
-	defer util.TimeTrackC(fmt.Sprintf("app.Init(%s)", basePath))()
+	defer util.TimeTrackC(fmt.Sprintf("app.Init(%s), RunValidateConfig=%t", basePath, RunValidateConfig))()
 
 	newApp, err := NewApp(basePath, true)
 	if err != nil {
@@ -1008,7 +1008,6 @@ func (app *DdevApp) SiteStatus() (string, string) {
 	for service := range statuses {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
-			util.Error("app.FindContainerByType(%v) failed", service)
 			return "", ""
 		}
 		if container == nil {
@@ -2323,10 +2322,12 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
-	ctx, client := dockerutil.GetDockerClient()
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return err
+	}
 
 	var container *dockerContainer.Summary
-	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
 		container, err = dockerutil.FindContainerByLabels(map[string]string{
@@ -2373,10 +2374,12 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
-	ctx, client := dockerutil.GetDockerClient()
+	ctx, client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		return "", err
+	}
 
 	var container *dockerContainer.Summary
-	var err error
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
 		container, err = dockerutil.FindContainerByLabels(map[string]string{
@@ -3414,16 +3417,6 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	}
 
 	return err
-}
-
-// UpdateComposeYaml updates app.ComposeYaml from available content
-func (app *DdevApp) UpdateComposeYaml(content string) error {
-	var err error
-	app.ComposeYaml, err = fixupComposeYaml(content, app)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // GetContainerName returns the contructed container name of the

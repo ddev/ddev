@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"go.yaml.in/yaml/v3"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
+	"go.yaml.in/yaml/v3"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
@@ -64,7 +64,7 @@ func init() {
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
 func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
-	defer util.TimeTrackC(fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))()
+	defer util.TimeTrackC(fmt.Sprintf("ddevapp.NewApp(%s, includeOverrides=%t)", appRoot, includeOverrides))()
 
 	app := &DdevApp{}
 
@@ -167,13 +167,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	// Rendered yaml is not there until after ddev config or ddev start
 	if fileutil.FileExists(app.ConfigPath) && fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
-		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
-		if err != nil {
-			return app, err
-		}
-		err = app.UpdateComposeYaml(content)
-		if err != nil {
-			return app, err
+		if err := app.ReadDockerComposeYAML(); err != nil {
+			util.Verbose("Unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
 		}
 	}
 
@@ -361,6 +356,9 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 // It does not attempt to set default values; that's NewApp's job.
 // returns the list of config files read
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
+	if app.ConfigPath == "" {
+		app.ConfigPath = app.GetConfigPath("config.yaml")
+	}
 	// Load base .ddev/config.yaml - original config
 	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {

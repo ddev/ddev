@@ -26,6 +26,38 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+// outputOnceCache is a cache to keep track of messages that have already been shown
+var outputOnceCache = map[string]map[string]bool{}
+
+// outputOnce executes a function only once per unique message and function type.
+// It uses a SHA256 hash of the formatted message to detect duplicates.
+func outputOnce(format string, a []interface{}, fn func(string, ...interface{})) {
+	// Format the message first to create the cache key
+	var message string
+	if a != nil {
+		message = fmt.Sprintf(format, a...)
+	} else {
+		message = format
+	}
+
+	// Create hash of the message and function pointer to create unique cache key
+	msgKey := HashSalt(message)
+	fnKey := fmt.Sprintf("%p", fn) // Use function pointer as key
+
+	// Initialize the function type cache if it doesn't exist
+	if outputOnceCache[fnKey] == nil {
+		outputOnceCache[fnKey] = map[string]bool{}
+	}
+
+	// Check if we've already executed this message for this function type
+	if outputOnceCache[fnKey][msgKey] {
+		return
+	}
+	// Mark as shown and execute the function
+	outputOnceCache[fnKey][msgKey] = true
+	fn(format, a...)
+}
+
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
 	format = ColorizeText(format, "red")
@@ -57,6 +89,12 @@ func Warning(format string, a ...interface{}) {
 	} else {
 		output.UserErr.Warn(format)
 	}
+}
+
+// WarningOnce will present the user with warning text only once per message.
+func WarningOnce(format string, a ...interface{}) {
+	defer TimeTrackC("WarningOnce(): " + fmt.Sprintf(format, a...))()
+	outputOnce(format, a, Warning)
 }
 
 // WarningWithColor allows specifying a color for the warning to make it more visible

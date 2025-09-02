@@ -82,15 +82,12 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 func init() {
 	RootCmd.AddCommand(PushCmd)
 
-	activeAppRoot, err := ddevapp.GetActiveAppRoot("")
+	appRoot, err := ddevapp.GetActiveAppRoot("")
 	if err != nil {
 		return
 	}
 
-	app, err := ddevapp.NewApp(activeAppRoot, true)
-	if err != nil {
-		return
-	}
+	app := &ddevapp.DdevApp{AppRoot: appRoot}
 	pList, err := app.GetValidProviders()
 	if err != nil {
 		return
