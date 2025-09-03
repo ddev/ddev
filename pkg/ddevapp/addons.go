@@ -162,19 +162,19 @@ func GetInstalledAddonProjectFiles(app *DdevApp) []string {
 }
 
 // ProcessAddonAction takes a stanza from yaml exec section and executes it, optionally in a container.
-func ProcessAddonAction(action string, installDesc InstallDesc, app *DdevApp, extractedDir string, verbose bool) error {
+func ProcessAddonAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
 	if app == nil {
 		return fmt.Errorf("app is required to ProcessAddonAction")
 	}
 	// Check if the action starts with <?php
 	if strings.HasPrefix(strings.TrimSpace(action), "<?php") {
-		return processPHPAction(action, installDesc, app, extractedDir, verbose)
+		return processPHPAction(action, installDesc, app, verbose)
 	}
-	return processBashHostAction(action, installDesc, app, extractedDir, verbose)
+	return processBashHostAction(action, installDesc, app, verbose)
 }
 
 // processBashHostAction executes a bash action on the host system
-func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp, extractedDir string, verbose bool) error {
+func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
 	env, err := getInjectedEnvForBash(app, installDesc)
 	if err != nil {
 		return fmt.Errorf("unable to get injected env for bash: %v", err)
@@ -285,7 +285,7 @@ func getInjectedEnvForBash(app *DdevApp, installDesc InstallDesc) (string, error
 }
 
 // processPHPAction executes a PHP action in a container
-func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, extractedDir string, verbose bool) error {
+func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verbose bool) error {
 	// Extract description before processing
 	desc := GetAddonDdevDescription(action)
 
@@ -751,7 +751,7 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 	// Execute any removal actions
 	if !skipRemovalActions {
 		for i, action := range manifestData.RemovalActions {
-			err = ProcessAddonAction(action, InstallDesc{}, app, "", verbose)
+			err = ProcessAddonAction(action, InstallDesc{}, app, verbose)
 			if err != nil {
 				desc := GetAddonDdevDescription(action)
 				util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
@@ -1041,7 +1041,7 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		util.Success("\nExecuting pre-install actions:")
 	}
 	for i, action := range s.PreInstallActions {
-		err = ProcessAddonAction(action, s, app, extractedDir, verbose)
+		err = ProcessAddonAction(action, s, app, verbose)
 		if err != nil {
 			desc := GetAddonDdevDescription(action)
 			if !verbose {
@@ -1053,7 +1053,7 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 	}
 
 	// Check for runtime dependencies generated during pre-install actions
-	runtimeDepsFile := app.GetConfigPath(".runtime-deps")
+	runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + s.Name)
 	runtimeDeps, err := ParseRuntimeDependencies(runtimeDepsFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse runtime dependencies: %v", err)
@@ -1064,8 +1064,8 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		resolvedRuntimeDeps := make([]string, len(runtimeDeps))
 		for i, dep := range runtimeDeps {
 			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-				// Resolve relative to .ddev directory where the action ran
-				resolvedPath := filepath.Join(app.GetConfigPath(""), dep)
+				// Resolve relative to the extracted addon directory (where relative paths are based)
+				resolvedPath := filepath.Join(extractedDir, dep)
 				resolvedRuntimeDeps[i] = filepath.Clean(resolvedPath)
 				if verbose {
 					util.Success("Resolved runtime dependency '%s' to '%s'", dep, resolvedRuntimeDeps[i])
@@ -1102,7 +1102,7 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		util.Success("\nExecuting post-install actions:")
 	}
 	for i, action := range s.PostInstallActions {
-		err = ProcessAddonAction(action, s, app, extractedDir, verbose)
+		err = ProcessAddonAction(action, s, app, verbose)
 		if err != nil {
 			desc := GetAddonDdevDescription(action)
 			if !verbose {
