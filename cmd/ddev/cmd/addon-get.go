@@ -194,7 +194,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting pre-install actions:")
 		}
 		for i, action := range s.PreInstallActions {
-			err = ddevapp.ProcessAddonAction(action, s, app, extractedDir, verbose)
+			err = ddevapp.ProcessAddonAction(action, s, app, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if err != nil {
@@ -209,13 +209,22 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		// Check for runtime dependencies generated during pre-install actions
 		if !noDependencies {
-			runtimeDepsFile := app.GetConfigPath(".runtime-deps")
+			runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + s.Name)
 			if verbose {
 				util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
+				if fileutil.FileExists(runtimeDepsFile) {
+					content, _ := fileutil.ReadFileIntoString(runtimeDepsFile)
+					util.Success("Runtime dependencies file contents: %q", content)
+				} else {
+					util.Success("Runtime dependencies file does not exist")
+				}
 			}
 			runtimeDeps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
 			if err != nil {
 				util.Failed("Failed to parse runtime dependencies: %v", err)
+			}
+			if verbose {
+				util.Success("Found %d runtime dependencies: %v", len(runtimeDeps), runtimeDeps)
 			}
 			if len(runtimeDeps) > 0 {
 				util.Success("Installing runtime dependencies:")
@@ -223,8 +232,8 @@ ddev add-on get /path/to/tarball.tar.gz
 				resolvedRuntimeDeps := make([]string, len(runtimeDeps))
 				for i, dep := range runtimeDeps {
 					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-						// Resolve relative to .ddev directory where the action ran
-						resolvedPath := filepath.Join(app.GetConfigPath(""), dep)
+						// Resolve relative to the extracted addon directory (where relative paths are based)
+						resolvedPath := filepath.Join(extractedDir, dep)
 						resolvedRuntimeDeps[i] = filepath.Clean(resolvedPath)
 						if verbose {
 							util.Success("Resolved runtime dependency '%s' to '%s'", dep, resolvedRuntimeDeps[i])
@@ -305,7 +314,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Success("\nExecuting post-install actions:")
 		}
 		for i, action := range s.PostInstallActions {
-			err = ddevapp.ProcessAddonAction(action, s, app, extractedDir, verbose)
+			err = ddevapp.ProcessAddonAction(action, s, app, verbose)
 			if err != nil {
 				desc := ddevapp.GetAddonDdevDescription(action)
 				if !verbose {
