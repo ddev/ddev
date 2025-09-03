@@ -4,6 +4,11 @@ search:
 ---
 # Network Test Environments: Packet-Inspection VPN Simulation
 
+!!!tip "Related Testing"
+    For testing HTTP proxies, see [HTTP Proxy Test Environments](http-proxy-test-environments.md).
+
+    For testing network bandwidth constraints, see [Network Bandwidth Testing Environments](network-bandwidth-testing.md).
+
 !!!tip "Basic HTTP Proxy Testing"
     For simpler HTTP proxy testing without SSL interception, see [HTTP Proxy Test Environments](http-proxy-test-environments.md). Start there for basic proxy scenarios before moving to SSL interception testing.
 
