@@ -8,6 +8,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 )
@@ -254,4 +255,37 @@ func TestGetGitHubRelease(t *testing.T) {
 		require.NotEmpty(t, version, "Version should not be empty")
 		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
 	})
+}
+
+// TestParseRuntimeDependencies tests runtime dependency file parsing
+func TestParseRuntimeDependencies(t *testing.T) {
+	assert := assert.New(t)
+
+	// Create a temporary .runtime-deps file
+	tmpDir, err := os.MkdirTemp("", "test-runtime-deps")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	runtimeDepsFile := filepath.Join(tmpDir, ".runtime-deps")
+	content := `# Runtime dependencies
+ddev/ddev-redis
+
+# Another comment
+../local/addon
+https://example.com/addon.tar.gz
+
+# Empty line above should be ignored
+`
+	err = os.WriteFile(runtimeDepsFile, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Test parsing
+	deps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
+	assert.NoError(err)
+	assert.Equal([]string{"ddev/ddev-redis", "../local/addon", "https://example.com/addon.tar.gz"}, deps)
+
+	// Test non-existent file
+	deps, err = ddevapp.ParseRuntimeDependencies(filepath.Join(tmpDir, "nonexistent"))
+	assert.NoError(err)
+	assert.Nil(deps)
 }
