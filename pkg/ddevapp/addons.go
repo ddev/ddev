@@ -854,6 +854,31 @@ func ResetInstallStack() {
 	installStackMap = make(map[string]bool)
 }
 
+// ParseRuntimeDependencies reads and parses a .runtime-deps file
+func ParseRuntimeDependencies(runtimeDepsFile string) ([]string, error) {
+	if !fileutil.FileExists(runtimeDepsFile) {
+		return nil, nil // No runtime dependencies file
+	}
+
+	content, err := fileutil.ReadFileIntoString(runtimeDepsFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read runtime dependencies file %s: %v", runtimeDepsFile, err)
+	}
+
+	var dependencies []string
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		dependencies = append(dependencies, line)
+	}
+
+	return dependencies, nil
+}
+
 // AddToInstallStack adds an addon to the installation stack and checks for circular dependencies
 func AddToInstallStack(addonName string) error {
 	// Check for circular dependencies using map for O(1) lookup
@@ -1025,6 +1050,36 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 				return fmt.Errorf("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
 			}
 		}
+	}
+
+	// Check for runtime dependencies generated during pre-install actions
+	runtimeDepsFile := app.GetConfigPath(".runtime-deps")
+	runtimeDeps, err := ParseRuntimeDependencies(runtimeDepsFile)
+	if err != nil {
+		return fmt.Errorf("failed to parse runtime dependencies: %v", err)
+	}
+	if len(runtimeDeps) > 0 {
+		util.Success("Installing runtime dependencies:")
+		// Resolve relative paths for runtime dependencies too
+		resolvedRuntimeDeps := make([]string, len(runtimeDeps))
+		for i, dep := range runtimeDeps {
+			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+				// Resolve relative to .ddev directory where the action ran
+				resolvedPath := filepath.Join(app.GetConfigPath(""), dep)
+				resolvedRuntimeDeps[i] = filepath.Clean(resolvedPath)
+				if verbose {
+					util.Success("Resolved runtime dependency '%s' to '%s'", dep, resolvedRuntimeDeps[i])
+				}
+			} else {
+				resolvedRuntimeDeps[i] = dep
+			}
+		}
+		err = InstallDependencies(app, resolvedRuntimeDeps, verbose)
+		if err != nil {
+			return fmt.Errorf("failed to install runtime dependencies for '%s': %v", s.Name, err)
+		}
+		// Clean up the runtime dependencies file
+		_ = os.Remove(runtimeDepsFile)
 	}
 
 	// Copy project files

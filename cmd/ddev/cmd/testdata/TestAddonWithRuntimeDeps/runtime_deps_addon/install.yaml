@@ -3,16 +3,17 @@ description: Test addon that discovers runtime dependencies
 
 pre_install_actions:
   - |
-    #ddev-description:Check for required dependencies at runtime
-    if [ ! -d ".ddev/addon-metadata/redis-addon" ]; then
-      echo "Missing dependency: redis-addon - will be auto-installed"
-      exit 1
-    fi
+    #ddev-description:Create runtime dependencies file
+    echo "# Runtime dependencies discovered during pre-install" > .runtime-deps
+    echo "../TestRealWorldDependencies/mock_redis" >> .runtime-deps
+    echo "" >> .runtime-deps
+    echo "# This is a comment" >> .runtime-deps
+    echo "../TestRealWorldDependencies/mock_redis_commander" >> .runtime-deps
 
 project_files:
   - config.yaml
 
 post_install_actions:
   - |
-    #ddev-description:Verify dependencies were installed
-    echo "Runtime dependency check completed successfully"
+    #ddev-description:Verify runtime dependencies were installed
+    echo "Runtime dependencies addon configured successfully"

@@ -79,10 +79,11 @@ ddev add-on list --all
 
 *Alias: `add-on install`.*
 
-Download an add-on (service, provider, etc.).
+Download an add-on (service, provider, etc.). Dependencies declared in the add-on's `install.yaml` will be automatically installed unless `--no-dependencies` is used.
 
 Flags:
 
+* `--no-dependencies`: Skip automatic installation of dependencies (default `false`)
 * `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
 * `--version <version>`: Specify a version to download
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
@@ -110,7 +111,21 @@ ddev add-on get /path/to/tarball.tar.gz
 
 # Download the official Redis add-on and install it into a project named "my-project"
 ddev add-on get ddev/ddev-redis --project my-project
+
+# Install an add-on without automatically installing its dependencies
+ddev add-on get ddev/ddev-redis-commander --no-dependencies
 ```
+
+**Automatic Dependency Installation:**
+
+When an add-on declares dependencies in its `install.yaml`, DDEV will automatically install any missing dependencies before installing the add-on itself. Dependencies support the same formats as `ddev add-on get`:
+
+* GitHub repositories: `ddev/ddev-redis`
+* Local directories: `/path/to/addon`
+* Relative paths: `../other-addon`
+* Direct URLs: `https://example.com/addon.tar.gz`
+
+DDEV will detect and prevent circular dependencies with clear error messages.
 
 In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
 

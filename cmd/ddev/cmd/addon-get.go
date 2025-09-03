@@ -207,6 +207,41 @@ ddev add-on get /path/to/tarball.tar.gz
 			}
 		}
 
+		// Check for runtime dependencies generated during pre-install actions
+		if !noDependencies {
+			runtimeDepsFile := app.GetConfigPath(".runtime-deps")
+			if verbose {
+				util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
+			}
+			runtimeDeps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
+			if err != nil {
+				util.Failed("Failed to parse runtime dependencies: %v", err)
+			}
+			if len(runtimeDeps) > 0 {
+				util.Success("Installing runtime dependencies:")
+				// Resolve relative paths for runtime dependencies too
+				resolvedRuntimeDeps := make([]string, len(runtimeDeps))
+				for i, dep := range runtimeDeps {
+					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+						// Resolve relative to .ddev directory where the action ran
+						resolvedPath := filepath.Join(app.GetConfigPath(""), dep)
+						resolvedRuntimeDeps[i] = filepath.Clean(resolvedPath)
+						if verbose {
+							util.Success("Resolved runtime dependency '%s' to '%s'", dep, resolvedRuntimeDeps[i])
+						}
+					} else {
+						resolvedRuntimeDeps[i] = dep
+					}
+				}
+				err := ddevapp.InstallDependencies(app, resolvedRuntimeDeps, verbose)
+				if err != nil {
+					util.Failed("Failed to install runtime dependencies for '%s': %v", s.Name, err)
+				}
+				// Clean up the runtime dependencies file
+				_ = os.Remove(runtimeDepsFile)
+			}
+		}
+
 		if len(s.ProjectFiles) > 0 {
 			util.Success("\nInstalling project-level components:")
 		}
