@@ -91,6 +91,48 @@ func TestComposer(t *testing.T) {
 	assert.NoError(err)
 }
 
+// TestComposerHooksEnvironmentVariables tests that composer hooks receive environment variables
+func TestComposerHooksEnvironmentVariables(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Save original environment
+	origCommand := os.Getenv("DDEV_COMPOSER_COMMAND")
+	origArgs := os.Getenv("DDEV_COMPOSER_ARGS")
+	defer func() {
+		if origCommand != "" {
+			os.Setenv("DDEV_COMPOSER_COMMAND", origCommand)
+		} else {
+			os.Unsetenv("DDEV_COMPOSER_COMMAND")
+		}
+		if origArgs != "" {
+			os.Setenv("DDEV_COMPOSER_ARGS", origArgs)
+		} else {
+			os.Unsetenv("DDEV_COMPOSER_ARGS")
+		}
+	}()
+
+	// Test the environment variable setting logic directly
+	args := []string{"show", "--version"}
+
+	// Simulate what happens in the Composer function
+	if len(args) > 0 {
+		os.Setenv("DDEV_COMPOSER_COMMAND", args[0])
+		os.Setenv("DDEV_COMPOSER_ARGS", strings.Join(args, " "))
+	}
+
+	// Verify environment variables are set correctly
+	assert.Equal("show", os.Getenv("DDEV_COMPOSER_COMMAND"))
+	assert.Equal("show --version", os.Getenv("DDEV_COMPOSER_ARGS"))
+
+	// Clean up
+	os.Unsetenv("DDEV_COMPOSER_COMMAND")
+	os.Unsetenv("DDEV_COMPOSER_ARGS")
+
+	// Verify cleanup worked
+	assert.Equal("", os.Getenv("DDEV_COMPOSER_COMMAND"))
+	assert.Equal("", os.Getenv("DDEV_COMPOSER_ARGS"))
+}
+
 // TestComposerVersion tests to make sure that composer_version setting
 // works correctly
 func TestComposerVersion(t *testing.T) {

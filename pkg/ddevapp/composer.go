@@ -6,11 +6,20 @@ import (
 	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
+	"strings"
 )
 
 // Composer runs Composer commands in the web container, managing pre- and post- hooks
 // returns stdout, stderr, error
 func (app *DdevApp) Composer(args []string) (string, string, error) {
+	// Set composer command context for hooks (backward compatible - only adds env vars)
+	if len(args) > 0 {
+		os.Setenv("DDEV_COMPOSER_COMMAND", args[0])
+		os.Setenv("DDEV_COMPOSER_ARGS", strings.Join(args, " "))
+		defer os.Unsetenv("DDEV_COMPOSER_COMMAND")
+		defer os.Unsetenv("DDEV_COMPOSER_ARGS")
+	}
+
 	err := app.ProcessHooks("pre-composer")
 	if err != nil {
 		return "", "", fmt.Errorf("failed to process pre-composer hooks: %v", err)
