@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestRandomString tests if RsandomString returns the correct character length
+// TestRandomString tests if RandomString returns the correct character length
 func TestRandomString(t *testing.T) {
 	randomString := nodeps.RandomString(10)
 

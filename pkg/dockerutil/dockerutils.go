@@ -175,12 +175,12 @@ func GetDockerClient() (context.Context, dockerClient.APIClient, error) {
 }
 
 // GetDockerClientInfo returns the Docker system information from the daemon
-func GetDockerClientInfo() (*dockerTypesSystem.Info, error) {
+func GetDockerClientInfo() (dockerTypesSystem.Info, error) {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
-		return nil, err
+		return dockerTypesSystem.Info{}, err
 	}
-	return &dm.info, err
+	return dm.info, err
 }
 
 // GetDockerCurrentContextAndHost returns the current Docker context and host
@@ -1065,7 +1065,7 @@ func GetDockerIP() (string, error) {
 	dockerHostURL, err := url.Parse(dm.host)
 	if err != nil {
 		dm.hostIPErr = fmt.Errorf("failed to parse dm.host=%s: %v", dm.host, err)
-		return dm.hostIP, dm.hostIPErr
+		return "", dm.hostIPErr
 	}
 	hostPart := dockerHostURL.Hostname()
 	if hostPart == "" {
@@ -1081,7 +1081,7 @@ func GetDockerIP() (string, error) {
 			hostPart = ip[0].String()
 		} else {
 			dm.hostIPErr = fmt.Errorf("failed to look up IP address for dm.host=%s, hostname=%s: %v", dm.host, hostPart, err)
-			return dm.hostIP, dm.hostIPErr
+			return "", dm.hostIPErr
 		}
 	}
 	dm.hostIP = hostPart
@@ -1544,8 +1544,8 @@ func GetHostDockerInternal() (string, string) {
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address.
 	case nodeps.IsLinux():
-		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
-		util.Debug("host.docker.internal='%s' because IsLinux uses 'host-gateway' in extra_hosts", dm.internalIP)
+		// host.docker.internal is already taken care of by extra_hosts in docker-compose
+		util.Debug("host.docker.internal='%s' because IsLinux (or IsWSL2MirroredMode && IsDockerDesktop) uses 'host-gateway' in extra_hosts", dm.internalIP)
 		break
 
 	default:
