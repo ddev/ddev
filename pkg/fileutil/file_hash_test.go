@@ -5,12 +5,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -46,7 +46,7 @@ func TestFileHash(t *testing.T) {
 			// But we have to add the filepath to the testFile before
 			// we can use the externalComputeSha1Sum successfully
 			canonicalFileName := testFile
-			if runtime.GOOS == "windows" {
+			if nodeps.IsWindows() {
 				canonicalFileName = util.WindowsPathToCygwinPath(testFile)
 			}
 			f, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

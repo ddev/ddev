@@ -41,6 +41,7 @@ import (
 	dockerFilters "github.com/docker/docker/api/types/filters"
 	dockerImage "github.com/docker/docker/api/types/image"
 	dockerNetwork "github.com/docker/docker/api/types/network"
+	dockerTypesSystem "github.com/docker/docker/api/types/system"
 	dockerVersions "github.com/docker/docker/api/types/versions"
 	dockerVolume "github.com/docker/docker/api/types/volume"
 	dockerClient "github.com/docker/docker/client"
@@ -90,6 +91,105 @@ type ComposeCmdOpts struct {
 // See https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 var NoHealthCheck = dockerContainer.HealthConfig{
 	Test: []string{"NONE"}, // Disables any existing health check
+}
+
+// dockerManager manages Docker client configuration and connection state
+// Some of these values are set on demand when first requested
+type dockerManager struct {
+	context            context.Context             // Go context for Docker API calls
+	client             dockerClient.APIClient      // Docker API for making calls to Docker daemon
+	cli                *dockerCliCommand.DockerCli // Docker CLI for getting currentContextName and host
+	currentContextName string                      // Current Docker context name (e.g., "default", "desktop-linux")
+	host               string                      // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
+	hostID             string                      // Docker host with special characters removed
+	hostIDErr          error                       // Error from Docker host ID lookup, if any
+	hostIP             string                      // IP address of Docker daemon
+	hostIPErr          error                       // Error from Docker daemon IP lookup, if any
+	info               dockerTypesSystem.Info      // Docker system information from daemon (version, OS, etc.)
+	internalIP         string                      // Host IP for host.docker.internal, platform-specific
+	internalIPDetected bool                        // Whether host.docker.internal detection has been attempted
+	internalExtraHosts string                      // Value for Docker extra_hosts config ("host-gateway" or IP)
+	serverVersion      dockerTypes.Version         // Docker server version information
+}
+
+var (
+	// sDockerManager is the singleton instance of dockerManager
+	sDockerManager *dockerManager
+	// sDockerManagerOnce ensures sDockerManager is initialized only once
+	sDockerManagerOnce sync.Once
+	// sDockerManagerErr is any error encountered during sDockerManager initialization
+	sDockerManagerErr error
+)
+
+// getDockerManagerInstance returns the singleton instance, initializing it if needed
+func getDockerManagerInstance() (*dockerManager, error) {
+	sDockerManagerOnce.Do(func() {
+		sDockerManager = &dockerManager{}
+		// Suppress any output (stdout, stderr) from docker/cli
+		sDockerManager.cli, sDockerManagerErr = dockerCliCommand.NewDockerCli(
+			dockerCliCommand.WithCombinedStreams(io.Discard),
+		)
+		if sDockerManagerErr != nil {
+			return
+		}
+		sDockerManagerErr = sDockerManager.cli.Initialize(
+			dockerCliFlags.NewClientOptions(),
+		)
+		if sDockerManagerErr != nil {
+			return
+		}
+		sDockerManager.currentContextName = sDockerManager.cli.CurrentContext()
+		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
+		util.Verbose("getDockerManagerInstance(): currentContextName=%s, host=%s", sDockerManager.currentContextName, sDockerManager.host)
+		sDockerManager.context = context.Background()
+		// Set the Docker CLI version for User-Agent header
+		dockerCliVersion.Version = "ddev-" + versionconstants.DdevVersion
+		// We can't use sDockerManager.cli.Client(), see https://github.com/docker/cli/issues/4489
+		// That's why we create a new client from flags to catch errors
+		sDockerManager.client, sDockerManagerErr = dockerCliCommand.NewAPIClientFromFlags(
+			dockerCliFlags.NewClientOptions(),
+			sDockerManager.cli.ConfigFile(),
+		)
+		if sDockerManagerErr != nil {
+			return
+		}
+		sDockerManager.serverVersion, sDockerManagerErr = sDockerManager.client.ServerVersion(sDockerManager.context)
+		if sDockerManagerErr != nil {
+			return
+		}
+		sDockerManager.info, sDockerManagerErr = sDockerManager.client.Info(sDockerManager.context)
+		if sDockerManagerErr != nil {
+			return
+		}
+	})
+	return sDockerManager, sDockerManagerErr
+}
+
+// GetDockerClient returns a Docker client
+func GetDockerClient() (context.Context, dockerClient.APIClient, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return nil, nil, err
+	}
+	return dm.context, dm.client, err
+}
+
+// GetDockerClientInfo returns the Docker system information from the daemon
+func GetDockerClientInfo() (*dockerTypesSystem.Info, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return nil, err
+	}
+	return &dm.info, err
+}
+
+// GetDockerCurrentContextAndHost returns the current Docker context and host
+func GetDockerCurrentContextAndHost() (string, string, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return "", "", err
+	}
+	return dm.currentContextName, dm.host, err
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
@@ -194,81 +294,29 @@ func RemoveNetworkDuplicates(netName string) {
 	}
 }
 
-var (
-	DockerCtx     context.Context
-	DockerClient  dockerClient.APIClient
-	DockerCli     *dockerCliCommand.DockerCli
-	DockerContext string
-	DockerHost    string
-	DockerIP      string
-
-	initOnce sync.Once
-	initErr  error
-)
-
-// GetDockerClient returns a Docker client respecting the current Docker context and host
-func GetDockerClient() (context.Context, dockerClient.APIClient, error) {
-	initOnce.Do(func() {
-		initErr = initDockerCli()
-		if initErr != nil {
-			return
-		}
-		util.Verbose("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
-		DockerCtx = context.Background()
-		// Set the Docker CLI version for User-Agent header
-		dockerCliVersion.Version = "ddev-" + versionconstants.DdevVersion
-		// We can't use DockerCli.Client(), see https://github.com/docker/cli/issues/4489
-		// That's why we create a new client from flags to catch errors
-		DockerClient, initErr = dockerCliCommand.NewAPIClientFromFlags(dockerCliFlags.NewClientOptions(), DockerCli.ConfigFile())
-		if initErr != nil {
-			return
-		}
-	})
-
-	return DockerCtx, DockerClient, initErr
-}
-
-// initDockerCli sets up the Docker CLI client and initializes it
-// And sets DockerContext and DockerHost variables
-func initDockerCli() error {
-	var err error
-	// Suppress any output (stdout, stderr) from docker/cli
-	// All errors are handled by GetDockerClient()
-	DockerCli, err = dockerCliCommand.NewDockerCli(
-		dockerCliCommand.WithCombinedStreams(io.Discard),
-	)
-	if err != nil {
-		return fmt.Errorf("newDockerCli() failed: %v", err)
-	}
-	opts := dockerCliFlags.NewClientOptions()
-	if err := DockerCli.Initialize(opts); err != nil {
-		return fmt.Errorf("unable to DockerCli.Initialize(): %v", err)
-	}
-	DockerContext = DockerCli.CurrentContext()
-	DockerHost = DockerCli.DockerEndpoint().Host
-	return nil
-}
-
 // GetDockerHostID returns DockerHost but with all special characters removed
 // It stands in for Docker context, but Docker context name is not a reliable indicator
-func GetDockerHostID() string {
-	// Use the same synchronized initialization as GetDockerClient
-	_, _, err := GetDockerClient()
+func GetDockerHostID() (string, error) {
+	dm, err := getDockerManagerInstance()
 	if err != nil {
-		output.UserErr.Fatal(err)
+		return "", err
 	}
-	dockerHost := DockerHost
+	if dm.hostID != "" || dm.hostIDErr != nil {
+		return dm.hostID, dm.hostIDErr
+	}
 	// Make it shorter so we don't hit Mutagen 63-char limit
-	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
+	dockerHost := strings.TrimPrefix(dm.host, "unix://")
 	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
 	dockerHost = strings.Trim(dockerHost, "/.")
 	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
-		output.UserErr.Fatal(err)
+		dm.hostIDErr = err
+		return "", dm.hostIDErr
 	}
 	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
-	return alphaOnly
+	dm.hostID = alphaOnly
+	return dm.hostID, dm.hostIDErr
 }
 
 // InspectContainer returns the full result of inspection
@@ -930,14 +978,10 @@ func CheckDockerProvider() error {
 	defer util.TimeTrack()()
 
 	// See if they're using Docker Desktop for Linux
-	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
-		ctx, client, err := GetDockerClient()
+	if nodeps.IsLinux() && !nodeps.IsWSL2() {
+		info, err := GetDockerClientInfo()
 		if err != nil {
 			return err
-		}
-		info, err := client.Info(ctx)
-		if err != nil {
-			return fmt.Errorf("unable to get Docker info: %v", err)
 		}
 		if info.Name == "docker-desktop" {
 			return fmt.Errorf("provider Docker Desktop for Linux is not explicitly supported by DDEV and may cause problems")
@@ -1011,35 +1055,49 @@ func CheckForHTTPS(container dockerContainer.Summary) bool {
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
 // or the value as configured by DockerHost (if it is a tcp:// URL)
 func GetDockerIP() (string, error) {
-	if DockerIP != "" {
-		return DockerIP, nil
-	}
-	DockerIP = "127.0.0.1"
-	// Use the same synchronized initialization as GetDockerClient
-	_, _, err := GetDockerClient()
+	dm, err := getDockerManagerInstance()
 	if err != nil {
-		return DockerIP, err
+		return "", err
 	}
-	dockerHostURL, err := url.Parse(DockerHost)
+	if dm.hostIP != "" || dm.hostIPErr != nil {
+		return dm.hostIP, dm.hostIPErr
+	}
+	dockerHostURL, err := url.Parse(dm.host)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse DockerHost=%s: %v", DockerHost, err)
+		dm.hostIPErr = fmt.Errorf("failed to parse dm.host=%s: %v", dm.host, err)
+		return dm.hostIP, dm.hostIPErr
 	}
 	hostPart := dockerHostURL.Hostname()
-	if hostPart != "" {
-		// Check to see if the hostname we found is an IP address
-		addr := net.ParseIP(hostPart)
-		if addr == nil {
-			// If it wasn't an IP address, look it up to get IP address
-			ip, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", hostPart)
-			if err == nil && len(ip) > 0 {
-				hostPart = ip[0].String()
-			} else {
-				return "", fmt.Errorf("failed to look up IP address for DockerHost=%s, hostname=%s: %v", DockerHost, hostPart, err)
-			}
-		}
-		DockerIP = hostPart
+	if hostPart == "" {
+		dm.hostIP = "127.0.0.1"
+		return dm.hostIP, dm.hostIPErr
 	}
-	return DockerIP, nil
+	// Check to see if the hostname we found is an IP address
+	addr := net.ParseIP(hostPart)
+	if addr == nil {
+		// If it wasn't an IP address, look it up to get IP address
+		ip, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", hostPart)
+		if err == nil && len(ip) > 0 {
+			hostPart = ip[0].String()
+		} else {
+			dm.hostIPErr = fmt.Errorf("failed to look up IP address for dm.host=%s, hostname=%s: %v", dm.host, hostPart, err)
+			return dm.hostIP, dm.hostIPErr
+		}
+	}
+	dm.hostIP = hostPart
+	return dm.hostIP, dm.hostIPErr
+}
+
+// ResetDockerIPForDockerHost resets the cached Docker IP address for the given Docker host.
+// Used for testing only.
+func ResetDockerIPForDockerHost(host string) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return
+	}
+	dm.host = host
+	dm.hostIP = ""
+	dm.hostIPErr = nil
 }
 
 // RunSimpleContainer runs a container (non-daemonized) and captures the stdout/stderr.
@@ -1124,19 +1182,9 @@ func RunSimpleContainerExtended(name string, config *dockerContainer.Config, hos
 	}
 
 	// Set up host.docker.internal based on DDEV's standard approach
-	hostDockerInternalIP, _ := GetHostDockerInternalIP()
-	extraHost := ""
-	if hostDockerInternalIP != "" {
-		// Use specific IP address for host.docker.internal
-		extraHost = "host.docker.internal:" + hostDockerInternalIP
-	} else if (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !IsColima()) ||
-		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
-		// Use host-gateway for modern Docker on Linux
-		extraHost = "host.docker.internal:host-gateway"
-	}
-
-	if extraHost != "" && !slices.Contains(hostConfig.ExtraHosts, extraHost) {
-		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, extraHost)
+	_, extraHosts := GetHostDockerInternal()
+	if extraHosts != "" && !slices.Contains(hostConfig.ExtraHosts, "host.docker.internal:"+extraHosts) {
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:"+extraHosts)
 	}
 
 	container, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
@@ -1418,85 +1466,102 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 	return vol, err
 }
 
-// GetHostDockerInternalIP returns either "" (will use the hostname as is)
-// (for Docker Desktop on macOS and Windows with WSL2) or a usable IP address
-// But there are many cases to handle
-// Linux classic installation
-// Gitpod (the Linux technique does not work during prebuild)
-// WSL2 with Docker-ce installed inside
-// WSL2 with PhpStorm or vscode running inside WSL2
-// And it matters whether they're running IDE inside. With docker-inside-wsl2, the bridge docker0 is what we want
-// It's also possible to run vscode Language Server inside the web container, in which case host.docker.internal
-// should actually be 127.0.0.1
-// Inside WSL2, the way to access an app like PhpStorm running on the Windows side is described
-// in https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
-// and it involves parsing /etc/resolv.conf.
-func GetHostDockerInternalIP() (string, error) {
-	hostDockerInternal := ""
+// GetHostDockerInternal determines the correct host.docker.internal configuration for containers.
+// Returns two values: (internalIP, internalExtraHosts)
+// - internalIP: The IP address that containers should use to reach the host, or empty string if not needed
+// - internalExtraHosts: The value to use in Docker's extra_hosts for host.docker.internal
+//
+// The function handles platform-specific cases:
+// - Docker Desktop: Uses built-in host.docker.internal (returns "", "")
+// - Linux: Uses host-gateway (returns "", "host-gateway")
+// - WSL2 scenarios: Detects Windows host IP via routing table (returns "x.x.x.x", "x.x.x.x")
+// - Colima: Uses fixed IP 192.168.5.2 (returns "192.168.5.2", "192.168.5.2")
+// - IDE location overrides: Respects global Xdebug IDE location settings
+func GetHostDockerInternal() (string, string) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return "", ""
+	}
+
+	if dm.internalIPDetected {
+		return dm.internalIP, dm.internalExtraHosts
+	}
+
+	dm.internalIPDetected = true
+	dm.internalIP = ""
+	dm.internalExtraHosts = ""
 
 	switch {
 	case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
-		hostDockerInternal = globalconfig.DdevGlobalConfig.XdebugIDELocation
-		util.Debug("host.docker.internal=%s derived from globalconfig.DdevGlobalConfig.XdebugIDELocation", hostDockerInternal)
+		dm.internalIP = globalconfig.DdevGlobalConfig.XdebugIDELocation
+		util.Debug("host.docker.internal='%s' derived from globalconfig.DdevGlobalConfig.XdebugIDELocation", dm.internalIP)
 
 	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
-		hostDockerInternal = "127.0.0.1"
-		util.Debug("host.docker.internal=%s because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationContainer)
+		dm.internalIP = "127.0.0.1"
+		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", dm.internalIP, globalconfig.XdebugIDELocationContainer)
 
 	case IsColima():
 		// Lima specifies this as a named explicit IP address at this time
-		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
-		hostDockerInternal = "192.168.5.2"
-		util.Debug("host.docker.internal=%s because running on Colima", hostDockerInternal)
+		// see https://lima-vm.io/docs/config/network/user/#host-ip-19216852
+		dm.internalIP = "192.168.5.2"
+		util.Debug("host.docker.internal='%s' because running on Colima", dm.internalIP)
 
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
-		util.Debug("host.docker.internal='%s' because on Gitpod", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because on Gitpod", dm.internalIP)
 		break
 	case nodeps.IsCodespaces():
-		util.Debug("host.docker.internal='%s' because on Codespaces", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because on Codespaces", dm.internalIP)
 		break
 
 	case nodeps.IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
-		util.Debug("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", dm.internalIP)
 		break
 
 	case nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
 		// If IDE is inside WSL2 then the normal Linux processing should work
-		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
+		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", dm.internalIP, globalconfig.XdebugIDELocationWSL2)
 		break
 
 	case nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
 		// Microsoft instructions for finding Windows IP address at
 		// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
-		hostDockerInternal = wsl2GetWindowsHostIP()
-		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from ip -4 route show default", hostDockerInternal)
+		dm.internalIP = wsl2GetWindowsHostIP()
+		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from ip -4 route show default", dm.internalIP)
 		break
 
 	case nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
 		if ip, err := getWindowsReachableIP(); err == nil && ip != "" {
-			hostDockerInternal = ip
-			util.Debug("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; received from getWindowsReachableIP()", hostDockerInternal)
+			dm.internalIP = ip
+			util.Debug("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; received from getWindowsReachableIP()", dm.internalIP)
 		}
 		break
 
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address.
-	case runtime.GOOS == "linux":
+	case nodeps.IsLinux():
 		// In Docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
-		util.Debug("host.docker.internal='%s' runtime.GOOS==linux (or WSL2 mirrored mode) and docker 20.10+", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because IsLinux uses 'host-gateway' in extra_hosts", dm.internalIP)
 		break
 
 	default:
-		util.Debug("host.docker.internal='%s' because no other case was discovered", hostDockerInternal)
+		util.Debug("host.docker.internal='%s' because no other case was discovered", dm.internalIP)
 		break
 	}
 
-	return hostDockerInternal, nil
+	if dm.internalIP != "" {
+		dm.internalExtraHosts = dm.internalIP
+	} else if (nodeps.IsLinux() && !nodeps.IsWSL2() && !IsColima()) ||
+		(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
+		// Use "host-gateway" for Docker on Linux and for WSL2 with IDE in WSL2
+		dm.internalExtraHosts = "host-gateway"
+	}
+
+	return dm.internalIP, dm.internalExtraHosts
 }
 
 // getWindowsReachableIP() uses PowerShell to find a windows-side IP
@@ -1529,7 +1594,7 @@ func GetNFSServerAddr() (string, error) {
 	switch {
 	case IsColima():
 		// Lima specifies this as a named explicit IP address at this time
-		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		// see https://lima-vm.io/docs/config/network/user/#host-ip-19216852
 		nfsAddr = "192.168.5.2"
 
 	// Gitpod has Docker 20.10+ so the docker-compose has already gotten the host-gateway
@@ -1549,8 +1614,8 @@ func GetNFSServerAddr() (string, error) {
 
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
-	// Docker Desktop) defines host.docker.internal itself.
-	case runtime.GOOS == "linux":
+	// Docker Desktop defines host.docker.internal itself.
+	case nodeps.IsLinux():
 		// Look up info from the bridge network
 		// We can't use the Docker host because that's for inside the container,
 		// and this is for setting up the network interface
@@ -1838,7 +1903,7 @@ func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error
 	}
 	flavor := runtime.GOOS + "-" + arch
 	composerURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		composerURL = composerURL + ".exe"
 	}
 	shasumURL = fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/checksums.txt", globalconfig.GetRequiredDockerComposeVersion())
@@ -1848,16 +1913,14 @@ func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error
 
 // IsDockerDesktop detects if running on Docker Desktop
 func IsDockerDesktop() bool {
-	ctx, client, err := GetDockerClient()
+	info, err := GetDockerClientInfo()
 	if err != nil {
 		return false
 	}
-	info, err := client.Info(ctx)
-	if err != nil {
-		util.Warning("IsDockerDesktop(): Unable to get Docker info, err=%v", err)
-		return false
+	if strings.HasPrefix(info.OperatingSystem, "Docker Desktop") {
+		return true
 	}
-	if info.OperatingSystem == "Docker Desktop" {
+	if strings.Contains(info.Name, "docker-desktop") {
 		return true
 	}
 	return false
@@ -1865,13 +1928,8 @@ func IsDockerDesktop() bool {
 
 // IsColima detects if running on Colima
 func IsColima() bool {
-	ctx, client, err := GetDockerClient()
+	info, err := GetDockerClientInfo()
 	if err != nil {
-		return false
-	}
-	info, err := client.Info(ctx)
-	if err != nil {
-		util.Warning("IsColima(): Unable to get Docker info, err=%v", err)
 		return false
 	}
 	if strings.HasPrefix(info.Name, "colima") {
@@ -1882,50 +1940,44 @@ func IsColima() bool {
 
 // IsLima detects if running on lima
 func IsLima() bool {
-	ctx, client, err := GetDockerClient()
+	info, err := GetDockerClientInfo()
 	if err != nil {
 		return false
 	}
-	info, err := client.Info(ctx)
-	if err != nil {
-		util.Warning("IsLima(): Unable to get Docker info, err=%v", err)
-		return false
-	}
-	if info.Name != "lima-rancher-desktop" && strings.HasPrefix(info.Name, "lima") {
-		return true
+	if strings.HasPrefix(info.Name, "lima") {
+		// Rancher Desktop can use "lima-rancher-desktop" as the name
+		if !strings.Contains(info.Name, "rancher-desktop") {
+			return true
+		}
 	}
 	return false
 }
 
 // IsRancherDesktop detects if running on Rancher Desktop
 func IsRancherDesktop() bool {
-	ctx, client, err := GetDockerClient()
+	info, err := GetDockerClientInfo()
 	if err != nil {
 		return false
 	}
-	info, err := client.Info(ctx)
-	if err != nil {
-		util.Warning("IsRancherDesktop(): Unable to get Docker info, err=%v", err)
-		return false
+	if strings.HasPrefix(info.OperatingSystem, "Rancher Desktop") {
+		return true
 	}
-	if strings.HasPrefix(info.Name, "lima-rancher-desktop") || strings.Contains(info.OperatingSystem, "Rancher Desktop") {
+	if strings.Contains(info.Name, "rancher-desktop") {
 		return true
 	}
 	return false
 }
 
-// IsOrbstack detects if running on Orbstack
-func IsOrbstack() bool {
-	ctx, client, err := GetDockerClient()
+// IsOrbStack detects if running on OrbStack
+func IsOrbStack() bool {
+	info, err := GetDockerClientInfo()
 	if err != nil {
 		return false
 	}
-	info, err := client.Info(ctx)
-	if err != nil {
-		util.Warning("IsOrbstack(): Unable to get Docker info, err=%v", err)
-		return false
+	if strings.HasPrefix(info.OperatingSystem, "OrbStack") {
+		return true
 	}
-	if strings.HasPrefix(info.Name, "orbstack") {
+	if strings.Contains(info.Name, "orbstack") {
 		return true
 	}
 	return false
@@ -2059,51 +2111,23 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	return nil
 }
 
-// DockerVersion is cached version of Docker provider engine
-var DockerVersion = ""
-
-// GetDockerVersion gets the cached or API-sourced version of Docker provider engine
+// GetDockerVersion gets the cached version of Docker provider engine
 func GetDockerVersion() (string, error) {
-	if DockerVersion != "" {
-		return DockerVersion, nil
-	}
-	ctx, client, err := GetDockerClient()
+	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return "", err
 	}
-
-	serverVersion, err := client.ServerVersion(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	DockerVersion = serverVersion.Version
-
-	return DockerVersion, nil
+	return dm.serverVersion.Version, nil
 }
 
-// DockerAPIVersion is cached API version of Docker provider engine
+// GetDockerAPIVersion gets the cached API version of Docker provider engine
 // See https://docs.docker.com/engine/api/#api-version-matrix
-var DockerAPIVersion = ""
-
-// GetDockerAPIVersion gets the cached or API-sourced API version of Docker provider engine
 func GetDockerAPIVersion() (string, error) {
-	if DockerAPIVersion != "" {
-		return DockerAPIVersion, nil
-	}
-	ctx, client, err := GetDockerClient()
+	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return "", err
 	}
-
-	serverVersion, err := client.ServerVersion(ctx)
-	if err != nil {
-		return "", fmt.Errorf("unable to get Docker provider engine API version: %v", err)
-	}
-
-	DockerAPIVersion = serverVersion.APIVersion
-
-	return DockerAPIVersion, nil
+	return dm.serverVersion.APIVersion, nil
 }
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version

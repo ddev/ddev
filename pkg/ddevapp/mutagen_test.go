@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ import (
 
 // TestMutagenSimple tests basic Mutagen functionality
 func TestMutagenSimple(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("TestMutagenSimple takes way too long on Windows, skipping")
 	}
 	assert := asrt.New(t)
@@ -117,10 +117,10 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure we can stop the daemon
 	ddevapp.StopMutagenDaemon("")
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+	if nodeps.IsMacOS() || nodeps.IsLinux() {
 		// Verify that the Mutagen daemon stopped/died
 		sleepWait := time.Second * 1
-		if runtime.GOOS == "linux" {
+		if nodeps.IsLinux() {
 			sleepWait = time.Second * 5
 		}
 		time.Sleep(sleepWait)
@@ -131,7 +131,7 @@ func TestMutagenSimple(t *testing.T) {
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
 	assert.NoError(err, "Mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", globalconfig.GetMutagenDataDirectory(), out, err)
 	assert.Contains(out, "Started Mutagen daemon in background")
-	if !strings.Contains(out, "Started Mutagen daemon in background") && (runtime.GOOS == "darwin" || runtime.GOOS == "linux") {
+	if !strings.Contains(out, "Started Mutagen daemon in background") && (nodeps.IsMacOS() || nodeps.IsLinux()) {
 		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")
 		assert.NoError(err)
 		t.Logf("Current Mutagen processes: \n=====\n%s====\n", out)
@@ -174,10 +174,10 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure Mutagen daemon gets stopped on poweoff
 	ddevapp.PowerOff()
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+	if nodeps.IsMacOS() || nodeps.IsLinux() {
 		// Verify that the Mutagen daemon stopped/died
 		sleepWait := time.Second * 1
-		if runtime.GOOS == "linux" {
+		if nodeps.IsLinux() {
 			sleepWait = time.Second * 5
 		}
 		time.Sleep(sleepWait)
@@ -189,8 +189,8 @@ func TestMutagenSimple(t *testing.T) {
 
 // TestMutagenConfigChange tests Mutagen new session creation on mutagen.yml change
 func TestMutagenConfigChange(t *testing.T) {
-	if runtime.GOOS != "darwin" {
-		t.Skip("TestMutagenConfigChange runs only on nacOS (without Colima), skipping")
+	if !nodeps.IsMacOS() {
+		t.Skip("TestMutagenConfigChange runs only on macOS (without Colima), skipping")
 	}
 	assert := asrt.New(t)
 

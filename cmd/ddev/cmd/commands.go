@@ -38,7 +38,7 @@ func IsUserDefinedCustomCommand(cmd *cobra.Command) bool {
 // and if it finds them adds them to Cobra's commands.
 func addCustomCommands(rootCmd *cobra.Command) error {
 	// Custom commands are shell scripts - so we can't use them on windows without bash.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		windowsBashPath := util.FindBashPath()
 		if windowsBashPath == "" {
 			util.Warning("Unable to find bash.exe in PATH, not loading custom commands")
@@ -447,7 +447,7 @@ func makeContainerCompletionFunc(autocompletePathInContainer string, service str
 // makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		windowsBashPath = util.FindBashPath()
 	}
 
@@ -472,7 +472,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) 
 
 		runMutagenSync(app, mutagenSync)
 
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			// Sadly, not sure how to have a Bash interpreter without this.
 			args := []string{fullPath}
 			args = append(args, osArgs...)

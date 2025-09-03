@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -140,7 +139,7 @@ func GetMutagenPath() string {
 	// Check socket path length on first call to Mutagen
 	checkMutagenSocketPathLength()
 	mutagenBinary := "mutagen"
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		mutagenBinary = mutagenBinary + ".exe"
 	}
 	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
@@ -156,14 +155,14 @@ func checkMutagenSocketPathLength() {
 		return
 	}
 	// Skip if not Linux or macOS.
-	if runtime.GOOS != "linux" && runtime.GOOS != "darwin" {
+	if !nodeps.IsLinux() && !nodeps.IsMacOS() {
 		checkedMutagenSocketPathLength = true
 		return
 	}
 	socketPathLength := len(filepath.Join(GetMutagenDataDirectory(), "daemon", "daemon.sock"))
 	// Limit from https://unix.stackexchange.com/a/367012
 	limit := 104
-	if runtime.GOOS == "linux" {
+	if nodeps.IsLinux() {
 		limit = 108
 	}
 	if socketPathLength >= limit {
@@ -197,7 +196,7 @@ func GetDockerComposePath() (string, error) {
 		return path, nil
 	}
 	composeBinary := "docker-compose"
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		composeBinary = composeBinary + ".exe"
 	}
 	return filepath.Join(GetDDEVBinDir(), composeBinary), nil
@@ -642,7 +641,7 @@ func GetGlobalDdevDirLocation() string {
 	// we don't create this directory.
 	stat, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
 	userHomeDotDdevIsDir := userHomeDotDdevErr == nil && stat.IsDir()
-	if runtime.GOOS == "linux" && !userHomeDotDdevIsDir {
+	if nodeps.IsLinux() && !userHomeDotDdevIsDir {
 		userConfigDir, err := os.UserConfigDir()
 		if err == nil {
 			linuxDir := filepath.Join(userConfigDir, "ddev")

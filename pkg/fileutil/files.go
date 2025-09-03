@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"text/template"
 
@@ -48,7 +47,7 @@ func CopyFile(src string, dst string) error {
 	// os.Chmod fails on long path (> 256 characters) on windows.
 	// A description of this problem with golang is at https://github.com/golang/dep/issues/774#issuecomment-311560825
 	// It could end up fixed in a future version of golang.
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		si, err := os.Stat(src)
 		if err != nil {
 			return err

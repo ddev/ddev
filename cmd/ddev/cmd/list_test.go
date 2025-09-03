@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"os"
 	oexec "os/exec"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -159,7 +159,7 @@ func getTestingSitesFromList(t *testing.T, jsonOut string) []interface{} {
 
 // TestCmdListContinuous tests the --continuous flag for ddev list.
 func TestCmdListContinuous(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping TestCmdListContinuous because Windows stdout capture doesn't work.")
 	}
 

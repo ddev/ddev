@@ -1,0 +1,8 @@
+services:
+  dummy1:
+    image: busybox:stable
+    container_name: dummy1
+    environment:
+      - HTTP_EXPOSE=9101
+      - HTTPS_EXPOSE=9102
+      - VIRTUAL_HOST=$DDEV_HOSTNAME

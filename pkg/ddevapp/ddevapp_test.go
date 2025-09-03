@@ -636,7 +636,7 @@ func TestDdevStart(t *testing.T) {
 
 // TestDdevStartCustomEntrypoint tests ddev start with customizations in .ddev/web-entrypoint.d
 func TestDdevStartCustomEntrypoint(t *testing.T) {
-	if runtime.GOOS == "windows" &&
+	if nodeps.IsWindows() &&
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
 			nodeps.PerformanceModeDefault == types.PerformanceModeMutagen) {
 		t.Skip("Skipping on Windows/Mutagen, it is too slow to app.Start()")
@@ -925,7 +925,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// On macOS we want to listen on localhost port, to not trigger
 	// a firewall block. On other systems, we listen on all interfaces.
 	listenPort := ":9003"
-	if runtime.GOOS == "darwin" {
+	if nodeps.IsMacOS() {
 		listenPort = "127.0.0.1:9003"
 	}
 
@@ -1710,7 +1710,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		// Capture to stdout without gzip compression
 		// CaptureStdOut() doesn't work on Windows.
-		if runtime.GOOS != "windows" {
+		if !nodeps.IsWindows() {
 			stdout := util.CaptureStdOut()
 			err = app.ExportDB("", "", "db")
 			assert.NoError(err)
@@ -2256,7 +2256,7 @@ func readFileTail(fileName string, maxBytes int64) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (runtime.GOOS == "windows" || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
@@ -3118,7 +3118,7 @@ func TestDdevLogs(t *testing.T) {
 
 	// Skip test because on Windows because the CaptureUserOut() hangs, at least
 	// sometimes.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping test TestDdevLogs on Windows")
 	}
 
@@ -3229,7 +3229,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Skip test because we can't rename folders while they're in use if running on Windows or with Mutagen.
-	if runtime.GOOS == "windows" || nodeps.PerformanceModeDefault == types.PerformanceModeMutagen {
+	if nodeps.IsWindows() || nodeps.PerformanceModeDefault == types.PerformanceModeMutagen {
 		t.Skip("Skipping test TestCleanupWithoutCompose; doesn't work on Windows or Mutagen because of renaming of whole project directory")
 	}
 
@@ -3541,7 +3541,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
 	require.NotEmpty(t, files)
-	assert.Equal(6, len(files))
+	assert.Equal(4, len(files))
 	require.Equal(t, app.GetConfigPath(".ddev-docker-compose-base.yaml"), files[0])
 	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
 
@@ -3565,63 +3565,112 @@ func TestMultipleComposeFiles(t *testing.T) {
 	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
 	assert.Equal("override", *webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
 
-	// Verify that users can add and override network properties
+	_, err = app.ComposeFiles()
+	assert.NoError(err)
+}
+
+// TestFixupComposeYaml verifies that the fixupComposeYaml function properly applies
+// required DDEV configurations to all services in the compose project.
+func TestFixupComposeYaml(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+
+	t.Cleanup(func() {
+		testcommon.CleanupDir(testDir)
+	})
+
+	defer testcommon.Chdir(testDir)()
+
+	err := fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name(), ".ddev"), filepath.Join(testDir, ".ddev"))
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+	app.DockerEnv()
+
+	t.Cleanup(func() {
+		err := app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	_, err = app.ReadConfig(true)
+	require.NoError(t, err)
+
+	err = app.WriteDockerComposeYAML()
+	require.NoError(t, err)
+
+	app, err = ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, app.ComposeYaml)
+	require.NotEmpty(t, app.ComposeYaml.Services)
+
+	expectedServices := []string{"web", "db", "dummy1"}
+	for _, serviceName := range expectedServices {
+		_, ok := app.ComposeYaml.Services[serviceName]
+		require.True(t, ok, "%s service not found in app.ComposeYaml.Services", serviceName)
+	}
+
+	webService := app.ComposeYaml.Services["web"]
 	require.Nil(t, webService.Networks["ddev_default"])
 	require.NotNil(t, webService.Networks["default"])
 	assert.Equal(1, webService.Networks["default"].Priority)
 	require.NotNil(t, webService.Networks["dummy"])
 	assert.Equal(2, webService.Networks["dummy"].Priority)
 
-	assert.NotEmpty(webService.Ports)
+	for serviceName, service := range app.ComposeYaml.Services {
+		t.Run("service_"+serviceName, func(t *testing.T) {
+			require.Contains(t, service.Networks, "ddev_default", "service %s missing ddev_default network", serviceName)
+			require.Contains(t, service.Networks, "default", "service %s missing default network", serviceName)
+
+			for portIndex, port := range service.Ports {
+				require.Equal(t, "127.0.0.1", port.HostIP, "service %s port %d should have HostIP set to 127.0.0.1", serviceName, portIndex)
+			}
+		})
+	}
+
 	hasPort12345 := false
 	for _, port := range webService.Ports {
-		// check all ports have host_ip set to default 127.0.0.1
-		assert.Equal("127.0.0.1", port.HostIP)
-		// and another explicit port check for docker-compose.ports.yaml
 		if port.Target == 12345 {
 			hasPort12345 = true
+			break
 		}
 	}
-	assert.True(hasPort12345, "no port with Target 12345 found")
+	require.True(t, hasPort12345, "no port with Target 12345 found in web service")
 
-	// Verify that networks are properly set up
+	// Test network configurations
+	networkTests := []struct {
+		key      string
+		name     string
+		external bool
+		label    string
+	}{
+		{"ddev_default", "ddev_default", true, ""},
+		{"default", app.GetDefaultNetworkName(), false, "com.ddev.platform"},
+		{"dummy", "dummy_name", false, "com.ddev.platform"},
+	}
+
 	require.Len(t, app.ComposeYaml.Networks, 3)
 
-	expected := map[string]struct {
-		Name     string
-		External bool
-		Label    string
-	}{
-		"ddev_default": {
-			Name:     "ddev_default",
-			External: true,
-		},
-		"default": {
-			Name:     app.GetDefaultNetworkName(),
-			External: false,
-			Label:    "com.ddev.platform",
-		},
-		"dummy": {
-			Name:     "dummy_name",
-			External: false,
-			Label:    "com.ddev.platform",
-		},
-	}
+	for _, networkTest := range networkTests {
+		t.Run("network_"+networkTest.key, func(t *testing.T) {
+			network, exists := app.ComposeYaml.Networks[networkTest.key]
+			require.True(t, exists, "network %s not found", networkTest.key)
+			assert.Equal(networkTest.name, network.Name, "unexpected name for %s", networkTest.key)
+			assert.Equal(networkTest.external, bool(network.External), "unexpected external for %s", networkTest.key)
 
-	for key, exp := range expected {
-		network, ok := app.ComposeYaml.Networks[key]
-		require.True(t, ok, "network %s not found", key)
-		assert.Equal(exp.Name, network.Name, "unexpected name for %s", key)
-		assert.Equal(exp.External, bool(network.External), "unexpected external for %s", key)
-		if exp.Label != "" {
-			require.NotNil(t, network.Labels, "labels missing for %s", key)
-			_, ok := network.Labels[exp.Label]
-			assert.True(ok, "%s label missing for %s", exp.Label, key)
-		}
+			if networkTest.label != "" {
+				require.NotNil(t, network.Labels, "labels missing for %s", networkTest.key)
+				_, hasLabel := network.Labels[networkTest.label]
+				assert.True(hasLabel, "%s label missing for %s", networkTest.label, networkTest.key)
+			}
+		})
 	}
-
-	_, err = app.ComposeFiles()
-	assert.NoError(err)
 }
 
 // TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,
@@ -3870,17 +3919,14 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 	})
 
 	// Save original DockerHost to restore it later
-	origDockerHost := dockerutil.DockerHost
+	_, origDockerHost, _ := dockerutil.GetDockerCurrentContextAndHost()
 	t.Cleanup(func() {
-		dockerutil.DockerHost = origDockerHost
 		// Reset the cached DockerIP value
-		dockerutil.DockerIP = ""
+		dockerutil.ResetDockerIPForDockerHost(origDockerHost)
 	})
 
 	// Set an invalid DockerHost to force GetDockerIP to return an error
-	dockerutil.DockerHost = "unix:///nonexistent/docker.sock"
-	// Reset the cached DockerIP value
-	dockerutil.DockerIP = ""
+	dockerutil.ResetDockerIPForDockerHost("unix:///nonexistent/docker.sock")
 
 	// Even with an invalid DockerHost, the functions should still work
 	// because they handle the error internally by using the default IP (127.0.0.1)
@@ -4199,7 +4245,7 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	assert.NoError(err)
 
 	source := app.AppRoot
-	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+	if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 		source = filepath.Join("/System/Volumes/Data", app.AppRoot)
 	}
 	assert.Contains(stdout, ":"+dockerutil.MassageWindowsNFSMount(source))

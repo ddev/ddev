@@ -206,7 +206,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		}
 		// On Windows, permissions can't be inferred from what is on the host side, so force 777 for
 		// most things
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			args = append(args, []string{"--permissions-mode=manual", "--default-file-mode-beta=0777", "--default-directory-mode-beta=0777"}...)
 		}
 		util.Debug("Creating Mutagen sync: mutagen %v", args)
@@ -677,7 +677,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	// It's impossible to use posix-raw on traditional windows.
 	// But this means that there will be errors with rooted symlinks in the container on windows
 	symlinkMode := "posix-raw"
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		symlinkMode = "portable"
 	}
 	err = os.MkdirAll(filepath.Dir(mutagenYmlPath), 0755)
@@ -759,7 +759,10 @@ func GetMutagenVolumeLabel(app *DdevApp) (string, error) {
 func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bool, info string) {
 	mutagenSyncExists := MutagenSyncExists(app)
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
-	dockerHostID := dockerutil.GetDockerHostID()
+	dockerHostID, err := dockerutil.GetDockerHostID()
+	if err != nil {
+		util.Failed(err.Error())
+	}
 	mutagenLabel := ""
 	configFileHashLabel := ""
 	var mutagenSyncLabelErr error
@@ -796,7 +799,7 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 		return true, volumeExists, fmt.Sprintf("Volume and Mutagen sync session have the same label: %s", volumeLabel)
 	}
 
-	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: currentDockerContext=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerutil.DockerContext, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
+	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: dockerHostID=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerHostID, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 }
 
 // GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session
@@ -843,7 +846,11 @@ func TerminateAllMutagenSync() {
 
 // GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to Mutagen volume
 func GetDefaultMutagenVolumeSignature(_ *DdevApp) string {
-	return fmt.Sprintf("%s-%v", dockerutil.GetDockerHostID(), time.Now().Unix())
+	dockerHostID, err := dockerutil.GetDockerHostID()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+	return fmt.Sprintf("%s-%v", dockerHostID, time.Now().Unix())
 }
 
 // checkMutagenUploadDirs tells people if they are using Mutagen without upload_dir

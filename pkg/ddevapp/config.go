@@ -145,7 +145,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 		// On Windows the default timeout may be too short for mutagen to succeed.
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			app.DefaultContainerTimeout = "240"
 		}
 	}
@@ -568,7 +568,7 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// Golang on Windows is not able to time.LoadLocation unless
 	// Go is installed... so skip validation on Windows
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		_, err := time.LoadLocation(app.Timezone)
 		if err != nil {
 			// Golang on Windows is often not able to time.LoadLocation.
@@ -971,10 +971,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
 
-	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
-	if err != nil {
-		util.Warning("Could not determine host.docker.internal IP address: %v", err)
-	}
+	hostDockerInternalIP, extraHosts := dockerutil.GetHostDockerInternal()
 	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 	if err != nil {
 		util.Warning("Could not determine NFS server IP address: %v", err)
@@ -1031,7 +1028,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 		NFSMountEnabled:    app.IsNFSMountEnabled(),
 		NFSSource:          "",
-		IsWindowsFS:        runtime.GOOS == "windows",
+		IsWindowsFS:        nodeps.IsWindows(),
 		NoProjectMount:     app.NoProjectMount,
 		MountType:          "bind",
 		WebMount:           "../",
@@ -1066,8 +1063,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		XHProfMode:              app.GetXHProfMode(),
 
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
-		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
-		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
+		// If WSL2 we have to figure out other things, see GetHostDockerInternal()
+		UseHostDockerInternalExtraHosts: extraHosts == "host-gateway",
 		BitnamiVolumeDir:                "",
 		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
@@ -1107,10 +1104,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
 		// Workaround for Catalina sharing nfs as /System/Volumes/Data
-		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+		if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 			templateVars.NFSSource = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)

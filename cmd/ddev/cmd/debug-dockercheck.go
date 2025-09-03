@@ -42,14 +42,19 @@ var DebugDockercheckCmd = &cobra.Command{
 			dockerutil.IsDockerDesktop()
 		}
 
-		util.Success("Using Docker context: %s", dockerutil.DockerContext)
-		dockerContext := os.Getenv("DOCKER_CONTEXT")
-		if dockerContext != "" {
-			util.Success("From DOCKER_CONTEXT=%s", dockerContext)
+		currentDockerContext, dockerHost, err := dockerutil.GetDockerCurrentContextAndHost()
+		if err != nil {
+			util.Failed("Could not get Docker context and host: %v", err)
 		}
 
-		util.Success("Using Docker host: %s", dockerutil.DockerHost)
-		dockerHost := os.Getenv("DOCKER_HOST")
+		util.Success("Using Docker context: %s", currentDockerContext)
+		currentDockerContext = os.Getenv("DOCKER_CONTEXT")
+		if currentDockerContext != "" {
+			util.Success("From DOCKER_CONTEXT=%s", currentDockerContext)
+		}
+
+		util.Success("Using Docker host: %s", dockerHost)
+		dockerHost = os.Getenv("DOCKER_HOST")
 		if dockerHost != "" {
 			util.Success("From DOCKER_HOST=%s", dockerHost)
 		}

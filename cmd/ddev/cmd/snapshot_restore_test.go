@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"os"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 // TestCmdSnapshotRestore runs `ddev snapshot restore` on the test apps
@@ -44,7 +45,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 
 	// Try interactive command
 	// Doesn't seem to work without pty, 2021-12-14
-	//if runtime.GOOS != "windows" {
+	//if !nodeps.IsWindows() {
 	//	out, err = exec.RunCommand("bash", []string{"-c", "echo -nq '\n' | " + DdevBin + " snapshot restore"})
 	//	assert.NoError(err)
 	//	assert.Contains(out, "Restored database snapshot")

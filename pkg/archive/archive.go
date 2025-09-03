@@ -12,10 +12,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ulikunitz/xz"
 )
@@ -433,7 +433,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 		// set its mode to executable. It seems this is what utilities like git-bash
 		// and cygwin, etc. have done for years to work around the lack of mode bits on NTFS,
 		// for example, see https://stackoverflow.com/a/25730108/215713
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			buffer := make([]byte, 16)
 			_, _ = f.Read(buffer)
 			_, _ = f.Seek(0, 0)
@@ -444,7 +444,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 
 		// update the name to correctly reflect the desired destination when untarring
 		header.Name = strings.TrimPrefix(strings.ReplaceAll(file, src, ""), string(filepath.Separator))
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			header.Name = strings.ReplaceAll(header.Name, `\`, `/`)
 		}
 

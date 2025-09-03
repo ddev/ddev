@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -169,7 +169,7 @@ func TestFindSimulatedXsymSymlinks(t *testing.T) {
 func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 	testDir, _ := os.Getwd()
 	assert := asrt.New(t)
-	if runtime.GOOS == "windows" && !fileutil.CanCreateSymlinks() {
+	if nodeps.IsWindows() && !fileutil.CanCreateSymlinks() {
 		t.Skip("Skipping on Windows because test machine can't create symlnks")
 	}
 	sourceDir := filepath.Join(testDir, "testdata", "symlinks")

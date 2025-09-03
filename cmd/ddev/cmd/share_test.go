@@ -4,18 +4,19 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	exec2 "github.com/ddev/ddev/pkg/exec"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestShareCmd tests `ddev share`
@@ -23,7 +24,7 @@ func TestShareCmd(t *testing.T) {
 	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
 	}
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
@@ -130,7 +131,7 @@ func pKill(cmd *exec.Cmd) error {
 	if cmd == nil {
 		return fmt.Errorf("pKill: cmd is nill")
 	}
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		// Windows has a completely different process model, no SIGCHLD,
 		// no killing of subprocesses. I wasn't successful in finding a way
 		// to properly kill a process set using golang; rfay 20190622

@@ -66,9 +66,24 @@ func RandomString(length int) string {
 	return string(b)
 }
 
-// IsAppleSilicon returns true if running on mac M1
+// IsMacOS returns true if running on macOS
+func IsMacOS() bool {
+	return runtime.GOOS == "darwin"
+}
+
+// IsAppleSilicon returns true if running on macOS M Series
 func IsAppleSilicon() bool {
-	return runtime.GOOS == "darwin" && runtime.GOARCH == "arm64"
+	return IsMacOS() && runtime.GOARCH == "arm64"
+}
+
+// IsWindows returns true if running on Windows
+func IsWindows() bool {
+	return runtime.GOOS == "windows"
+}
+
+// IsLinux returns true if running on Linux or inside WSL2
+func IsLinux() bool {
+	return runtime.GOOS == "linux"
 }
 
 // IsGitpod returns true if running on gitpod.io
@@ -76,7 +91,7 @@ func IsGitpod() bool {
 	if os.Getenv("DDEV_PRETEND_GITPOD") == "true" {
 		return true
 	}
-	return runtime.GOOS == "linux" && os.Getenv("GITPOD_WORKSPACE_ID") != ""
+	return IsLinux() && os.Getenv("GITPOD_WORKSPACE_ID") != ""
 }
 
 // IsCodespaces returns true if running on GitHub Codespaces
@@ -84,13 +99,13 @@ func IsCodespaces() bool {
 	if os.Getenv("DDEV_PRETEND_CODESPACES") == "true" {
 		return true
 	}
-	return runtime.GOOS == "linux" && os.Getenv("CODESPACES") == "true"
+	return IsLinux() && os.Getenv("CODESPACES") == "true"
 }
 
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""
-	if runtime.GOOS == "linux" {
+	if IsLinux() {
 		wslDistro = os.Getenv("WSL_DISTRO_NAME")
 	}
 	return wslDistro

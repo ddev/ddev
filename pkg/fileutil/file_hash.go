@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -36,7 +36,7 @@ func FileHash(filePath string, optionalExtraString string) (string, error) {
 
 	// Use a canonical filename in unix-style format so that we don't
 	// get caught by differences in filename format on Windows.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		canonicalFileName = util.WindowsPathToCygwinPath(canonicalFileName)
 	}
 	if _, err := hash.Write([]byte(canonicalFileName)); err != nil {

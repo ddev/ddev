@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -586,7 +586,7 @@ func TestRemoveVolume(t *testing.T) {
 	assert.NoError(err)
 
 	source := pwd
-	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
+	if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
 		source = filepath.Join("/System/Volumes/Data", source)
 	}
 	nfsServerAddr, _ := dockerutil.GetNFSServerAddr()
@@ -689,17 +689,14 @@ func TestGetDockerIP(t *testing.T) {
 	}
 
 	// Save original DockerHost to restore it later
-	origDockerHost := dockerutil.DockerHost
+	_, origDockerHost, _ := dockerutil.GetDockerCurrentContextAndHost()
 	t.Cleanup(func() {
-		dockerutil.DockerHost = origDockerHost
-		// Reset the cached DockerIP value
-		dockerutil.DockerIP = ""
+		dockerutil.ResetDockerIPForDockerHost(origDockerHost)
 	})
 
 	for k, v := range expectations {
-		dockerutil.DockerHost = k
 		// DockerIP is cached, so we have to reset it to check
-		dockerutil.DockerIP = ""
+		dockerutil.ResetDockerIPForDockerHost(k)
 		result, err := dockerutil.GetDockerIP()
 		assert.NoError(err)
 		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)

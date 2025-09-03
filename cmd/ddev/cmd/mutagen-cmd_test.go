@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -60,16 +59,16 @@ func TestCmdMutagen(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-		require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
+		require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), globalconfig.DdevGlobalConfig.IsMutagenEnabled())
+		require.Equal(t, (nodeps.IsMacOS() || nodeps.IsWindows()) && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
-	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-	require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
+	require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), globalconfig.DdevGlobalConfig.IsMutagenEnabled())
+	require.Equal(t, (nodeps.IsMacOS() || nodeps.IsWindows()) && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 	// Turn Mutagen off globally
 	out, err := exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
