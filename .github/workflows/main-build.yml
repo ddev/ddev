@@ -36,6 +36,8 @@ env:
 
 permissions:
   packages: write
+  id-token: write
+  attestations: write
 
 jobs:
   build-most:
@@ -107,9 +109,6 @@ jobs:
           make windows_amd64_install windows_arm64_install wsl_amd64 wsl_arm64
       - name: Show github.ref
         run: echo ${{ github.ref }}
-      - name: Build chocolatey on release
-        if: startsWith( github.ref, 'refs/tags/v1')
-        run: make chocolatey
 
       - name: "Verify that instrumentation is working (Windows)"
         run: |
@@ -294,6 +293,13 @@ jobs:
         env:
           CGO_ENABLED: 0
 
+      # Attest all the files in ./dist/checksums.txt:
+      - name: Attest build provenance for binaries/archives
+        uses: actions/attest-build-provenance@v2
+        if: startsWith( github.ref, 'refs/tags/v1')
+        with:
+          subject-checksums: ./dist/checksums.txt
+
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
@@ -359,14 +365,6 @@ jobs:
 
       - name: Show github.ref
         run: echo ${{ github.ref }}
-
-      # TODO: This can be done by goreleaser these days
-      - name: Chocolatey windows release
-        if: github.repository_owner == 'ddev' && startsWith(github.ref, 'refs/tags/v1')
-        run: |
-          pushd .gotmp/bin/windows_amd64/chocolatey
-          docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
-          popd
 
   push-devcontainers:
     name: Push devcontainer feature
