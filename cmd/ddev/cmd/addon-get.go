@@ -136,46 +136,13 @@ ddev add-on get /path/to/tarball.tar.gz
 		if len(s.Dependencies) > 0 {
 			if noDependencies {
 				// Check that dependencies exist but don't install them
-				m, err := ddevapp.GatherAllManifests(app)
+				err := ddevapp.ValidateDependencies(app, s.Dependencies, extractedDir, s.Name)
 				if err != nil {
-					util.Failed("Unable to gather manifests: %v", err)
-				}
-				for _, dep := range s.Dependencies {
-					checkName := dep
-					// For relative paths, we need to check the actual addon name, not the path
-					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-						// Resolve relative path and get the addon name from install.yaml
-						resolvedPath := filepath.Clean(filepath.Join(extractedDir, dep))
-						if fileutil.IsDirectory(resolvedPath) {
-							yamlFile := filepath.Join(resolvedPath, "install.yaml")
-							if yamlContent, err := fileutil.ReadFileIntoString(yamlFile); err == nil {
-								var depDesc ddevapp.InstallDesc
-								if err := yaml.Unmarshal([]byte(yamlContent), &depDesc); err == nil {
-									checkName = depDesc.Name
-								}
-							}
-						}
-					}
-					if _, ok := m[checkName]; !ok {
-						util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev add-on get %s first.", s.Name, dep, dep)
-					}
+					util.Failed("%v", err)
 				}
 			} else {
 				// Install dependencies recursively, resolving relative paths
-				resolvedDeps := make([]string, len(s.Dependencies))
-				for i, dep := range s.Dependencies {
-					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-						// Resolve relative path relative to extractedDir
-						resolvedPath := filepath.Join(extractedDir, dep)
-						// Clean the path to resolve .. and . components
-						resolvedDeps[i] = filepath.Clean(resolvedPath)
-						if verbose {
-							util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
-						}
-					} else {
-						resolvedDeps[i] = dep
-					}
-				}
+				resolvedDeps := ddevapp.ResolveDependencyPaths(s.Dependencies, extractedDir, verbose)
 				err := ddevapp.InstallDependencies(app, resolvedDeps, verbose)
 				if err != nil {
 					util.Failed("Failed to install dependencies for '%s': %v", s.Name, err)
@@ -209,45 +176,9 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		// Check for runtime dependencies generated during pre-install actions
 		if !noDependencies {
-			runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + s.Name)
-			if verbose {
-				util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
-				if fileutil.FileExists(runtimeDepsFile) {
-					content, _ := fileutil.ReadFileIntoString(runtimeDepsFile)
-					util.Success("Runtime dependencies file contents: %q", content)
-				} else {
-					util.Success("Runtime dependencies file does not exist")
-				}
-			}
-			runtimeDeps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
+			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, extractedDir, verbose)
 			if err != nil {
-				util.Failed("Failed to parse runtime dependencies: %v", err)
-			}
-			if verbose {
-				util.Success("Found %d runtime dependencies: %v", len(runtimeDeps), runtimeDeps)
-			}
-			if len(runtimeDeps) > 0 {
-				util.Success("Installing runtime dependencies:")
-				// Resolve relative paths for runtime dependencies too
-				resolvedRuntimeDeps := make([]string, len(runtimeDeps))
-				for i, dep := range runtimeDeps {
-					if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-						// Resolve relative to the extracted addon directory (where relative paths are based)
-						resolvedPath := filepath.Join(extractedDir, dep)
-						resolvedRuntimeDeps[i] = filepath.Clean(resolvedPath)
-						if verbose {
-							util.Success("Resolved runtime dependency '%s' to '%s'", dep, resolvedRuntimeDeps[i])
-						}
-					} else {
-						resolvedRuntimeDeps[i] = dep
-					}
-				}
-				err := ddevapp.InstallDependencies(app, resolvedRuntimeDeps, verbose)
-				if err != nil {
-					util.Failed("Failed to install runtime dependencies for '%s': %v", s.Name, err)
-				}
-				// Clean up the runtime dependencies file
-				_ = os.Remove(runtimeDepsFile)
+				util.Failed("%v", err)
 			}
 		}
 
