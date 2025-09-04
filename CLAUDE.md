@@ -217,3 +217,8 @@ When creating pull requests for DDEV, follow the PR template structure from `.gi
 5. Stage changes with `git add`
 6. Commit with proper message format
 7. Push branch and create PR
+
+## Task Master AI Instructions
+
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md
