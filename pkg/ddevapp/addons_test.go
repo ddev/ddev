@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -526,4 +528,107 @@ func TestMixedDependencyScenarios(t *testing.T) {
 			})
 		}
 	})
+}
+
+// TestAddonDirectoryCreation tests that addon installation creates necessary directories
+// for file copying, particularly during dependency installation scenarios.
+func TestAddonDirectoryCreation(t *testing.T) {
+	if os.Getenv("DDEV_RUN_DIRECTORY_TESTS") == "" {
+		t.Skip("Skipping directory creation test because DDEV_RUN_DIRECTORY_TESTS is not set")
+	}
+
+	// Create a test addon structure that requires nested directories
+	testAddonDir := testcommon.CreateTmpDir(t.Name())
+	defer func() {
+		err := os.RemoveAll(testAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	// Create install.yaml with nested project files
+	installYaml := `name: test-directory-addon
+repository: test-repo
+description: Test addon for directory creation
+project_files:
+  - nested/deep/config.yaml
+  - scripts/setup.sh
+  - data/settings.conf
+global_files:
+  - global/nested/global.conf`
+
+	err := os.WriteFile(filepath.Join(testAddonDir, "install.yaml"), []byte(installYaml), 0644)
+	require.NoError(t, err)
+
+	// Create the source files in nested directory structure
+	sourceDirs := []string{
+		"nested/deep",
+		"scripts",
+		"data",
+		"global/nested",
+	}
+
+	sourceFiles := map[string]string{
+		"nested/deep/config.yaml":   "#ddev-generated\ntest: config\n",
+		"scripts/setup.sh":          "#ddev-generated\n#!/bin/bash\necho 'setup'\n",
+		"data/settings.conf":        "#ddev-generated\nsetting=value\n",
+		"global/nested/global.conf": "#ddev-generated\nglobal=setting\n",
+	}
+
+	for _, dir := range sourceDirs {
+		err = os.MkdirAll(filepath.Join(testAddonDir, dir), 0755)
+		require.NoError(t, err)
+	}
+
+	for filePath, content := range sourceFiles {
+		err = os.WriteFile(filepath.Join(testAddonDir, filePath), []byte(content), 0644)
+		require.NoError(t, err)
+	}
+
+	// Create test app with clean .ddev directory
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	// Ensure no existing directories that might mask the bug
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	// Test InstallAddonFromDirectory directly
+	err = ddevapp.InstallAddonFromDirectory(app, testAddonDir, false)
+	require.NoError(t, err, "InstallAddonFromDirectory should handle directory creation")
+
+	// Verify all files were copied to correct locations
+	expectedFiles := []string{
+		app.GetConfigPath("nested/deep/config.yaml"),
+		app.GetConfigPath("scripts/setup.sh"),
+		app.GetConfigPath("data/settings.conf"),
+	}
+
+	for _, expectedFile := range expectedFiles {
+		require.True(t, fileutil.FileExists(expectedFile), "File should exist: %s", expectedFile)
+
+		// Verify content was copied correctly
+		content, err := fileutil.ReadFileIntoString(expectedFile)
+		require.NoError(t, err)
+		require.Contains(t, content, "#ddev-generated", "File should contain ddev-generated signature")
+	}
+
+	// Verify global file was created
+	globalFile := filepath.Join(globalconfig.GetGlobalDdevDir(), "global/nested/global.conf")
+	require.True(t, fileutil.FileExists(globalFile), "Global file should exist: %s", globalFile)
+
+	// Clean up global file
+	err = os.Remove(globalFile)
+	assert.NoError(t, err)
+	// Remove empty directories
+	err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "global"))
+	assert.NoError(t, err)
 }
