@@ -26,6 +26,9 @@ func TestMutagenSimple(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("TestMutagenSimple takes way too long on Windows, skipping")
 	}
+	if nodeps.IsWSL2MirroredMode() {
+		t.Skip("Skipping TestMutagenSimple in WSL2 mirrored mode; It can fail randomly on the 'composer install' step due to network issues, unable to download random dependencies from either dist or source.")
+	}
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
