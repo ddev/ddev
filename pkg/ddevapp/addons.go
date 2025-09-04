@@ -1139,6 +1139,11 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		src := filepath.Join(extractedDir, file)
 		dest := app.GetConfigPath(file)
 		if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+			// Ensure destination directory exists
+			destDir := filepath.Dir(dest)
+			if err = os.MkdirAll(destDir, 0755); err != nil {
+				return fmt.Errorf("unable to create destination directory %v: %v", destDir, err)
+			}
 			err = fileutil.CopyFile(src, dest)
 			if err != nil {
 				return fmt.Errorf("unable to copy %v to %v: %v", src, dest, err)
@@ -1165,6 +1170,11 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 
 		// If the file existed and had #ddev-generated OR if it did not exist, copy it in.
 		if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+			// Ensure destination directory exists
+			destDir := filepath.Dir(dest)
+			if err = os.MkdirAll(destDir, 0755); err != nil {
+				return fmt.Errorf("unable to create destination directory %v: %v", destDir, err)
+			}
 			err = fileutil.CopyFile(src, dest)
 			if err != nil {
 				return fmt.Errorf("unable to copy %v to %v: %v", src, dest, err)
