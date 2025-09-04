@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -603,7 +604,7 @@ global_files:
 	require.NoError(t, err)
 
 	// Test InstallAddonFromDirectory directly
-	err = ddevapp.InstallAddonFromDirectory(app, testAddonDir, false)
+	err = ddevapp.InstallAddonFromDirectory(app, testAddonDir, "test-repo", "v1.0.0", false)
 	require.NoError(t, err, "InstallAddonFromDirectory should handle directory creation")
 
 	// Verify all files were copied to correct locations
@@ -632,4 +633,113 @@ global_files:
 	// Remove empty directories
 	err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "global"))
 	assert.NoError(t, err)
+}
+
+// TestDependencyManifestCreation tests that addon dependencies create manifests
+// and appear in the installed addon list
+func TestDependencyManifestCreation(t *testing.T) {
+	if os.Getenv("DDEV_RUN_DIRECTORY_TESTS") == "" {
+		t.Skip("Skipping dependency manifest test because DDEV_RUN_DIRECTORY_TESTS is not set")
+	}
+
+	// Create a main addon that depends on another addon
+	mainAddonDir := testcommon.CreateTmpDir(t.Name() + "_main")
+	defer func() {
+		err := os.RemoveAll(mainAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	dependencyAddonDir := testcommon.CreateTmpDir(t.Name() + "_dependency")
+	defer func() {
+		err := os.RemoveAll(dependencyAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	// Create dependency addon with install.yaml
+	dependencyYaml := `name: test-dependency
+repository: owner/dependency-repo
+description: Test dependency addon
+project_files:
+  - dependency-config.yaml`
+
+	err := os.WriteFile(filepath.Join(dependencyAddonDir, "install.yaml"), []byte(dependencyYaml), 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(filepath.Join(dependencyAddonDir, "dependency-config.yaml"), []byte("#ddev-generated\ndependency: config\n"), 0644)
+	require.NoError(t, err)
+
+	// Create main addon with dependency
+	mainYaml := fmt.Sprintf(`name: test-main
+repository: owner/main-repo
+description: Test main addon
+dependencies:
+  - %s
+project_files:
+  - main-config.yaml`, dependencyAddonDir)
+
+	err = os.WriteFile(filepath.Join(mainAddonDir, "install.yaml"), []byte(mainYaml), 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(filepath.Join(mainAddonDir, "main-config.yaml"), []byte("#ddev-generated\nmain: config\n"), 0644)
+	require.NoError(t, err)
+
+	// Create test app with clean .ddev directory
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	// Ensure clean addon-metadata directory
+	addonMetadataDir := app.GetConfigPath("addon-metadata")
+	err = os.RemoveAll(addonMetadataDir)
+	require.NoError(t, err)
+
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	// Install main addon (which should install dependency)
+	err = ddevapp.InstallAddonFromDirectory(app, mainAddonDir, "owner/main-repo", "v1.0.0", false)
+	require.NoError(t, err, "Main addon installation should succeed")
+
+	// Verify both addons have manifests created
+	mainManifestFile := filepath.Join(addonMetadataDir, "test-main", "manifest.yaml")
+	require.True(t, fileutil.FileExists(mainManifestFile), "Main addon manifest should exist")
+
+	dependencyManifestFile := filepath.Join(addonMetadataDir, "test-dependency", "manifest.yaml")
+	require.True(t, fileutil.FileExists(dependencyManifestFile), "Dependency addon manifest should exist")
+
+	// Verify manifests can be read and have correct data
+	manifests := ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 2, "Should have exactly 2 installed addons")
+
+	// Create maps for easier verification
+	manifestsByName := make(map[string]ddevapp.AddonManifest)
+	for _, manifest := range manifests {
+		manifestsByName[manifest.Name] = manifest
+	}
+
+	// Verify main addon manifest
+	mainManifest, exists := manifestsByName["test-main"]
+	require.True(t, exists, "Main addon should be in manifest list")
+	require.Equal(t, "owner/main-repo", mainManifest.Repository)
+	require.Equal(t, "v1.0.0", mainManifest.Version)
+	require.Contains(t, mainManifest.ProjectFiles, "main-config.yaml")
+
+	// Verify dependency addon manifest
+	depManifest, exists := manifestsByName["test-dependency"]
+	require.True(t, exists, "Dependency addon should be in manifest list")
+	require.Equal(t, dependencyAddonDir, depManifest.Repository) // Local path for dependency
+	require.Equal(t, "unknown", depManifest.Version)             // Unknown version for local dependency
+	require.Contains(t, depManifest.ProjectFiles, "dependency-config.yaml")
+
+	// Verify both files were actually installed
+	require.True(t, fileutil.FileExists(app.GetConfigPath("main-config.yaml")), "Main config file should be installed")
+	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should be installed")
 }

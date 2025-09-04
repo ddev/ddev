@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/docker"
@@ -1010,7 +1011,7 @@ func installAddonRecursive(app *DdevApp, addonName string, verbose bool) error {
 
 	// If we have a local extraction, handle it directly
 	if extractedDir != "" {
-		return InstallAddonFromDirectory(app, extractedDir, verbose)
+		return InstallAddonFromDirectory(app, extractedDir, addonName, "unknown", verbose)
 	}
 
 	return fmt.Errorf("no extraction directory available for addon: %s", addonName)
@@ -1034,11 +1035,11 @@ func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, ve
 	}
 
 	// Download and install
-	return InstallAddonFromTarball(app, tarballURL, downloadedRelease, verbose)
+	return InstallAddonFromTarball(app, tarballURL, downloadedRelease, addonName, verbose)
 }
 
 // InstallAddonFromDirectory handles installation from a local directory
-func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) error {
+func InstallAddonFromDirectory(app *DdevApp, extractedDir, repository, version string, verbose bool) error {
 	// Parse install.yaml
 	yamlFile := filepath.Join(extractedDir, "install.yaml")
 	yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
@@ -1212,12 +1213,50 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		util.Warning("Unable to clean up temporary configuration files: %v", err)
 	}
 
+	// Create manifest file for tracking this installation
+	err = createAddonManifest(app, s.Name, repository, version, s)
+	if err != nil {
+		return fmt.Errorf("failed to create addon manifest: %v", err)
+	}
+
 	util.Success("Successfully installed %s from directory", s.Name)
 	return nil
 }
 
+// createAddonManifest creates a manifest file for tracking addon installation
+func createAddonManifest(app *DdevApp, addonName, repository, version string, desc InstallDesc) error {
+	manifest := AddonManifest{
+		Name:           addonName,
+		Repository:     repository,
+		Version:        version,
+		Dependencies:   desc.Dependencies,
+		InstallDate:    time.Now().Format(time.RFC3339),
+		ProjectFiles:   desc.ProjectFiles,
+		GlobalFiles:    desc.GlobalFiles,
+		RemovalActions: desc.RemovalActions,
+	}
+
+	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", AddonMetadataDir, addonName))
+	manifestData, err := yaml.Marshal(manifest)
+	if err != nil {
+		return fmt.Errorf("error marshaling manifest data: %v", err)
+	}
+
+	err = os.MkdirAll(filepath.Dir(manifestFile), 0755)
+	if err != nil {
+		return fmt.Errorf("error creating manifest directory: %v", err)
+	}
+
+	err = os.WriteFile(manifestFile, manifestData, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing manifest file: %v", err)
+	}
+
+	return nil
+}
+
 // InstallAddonFromTarball handles complete installation process for tarball-based addons
-func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease string, verbose bool) error {
+func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, repository string, verbose bool) error {
 	// Extract tarball
 	extractedDir, cleanup, err := archive.DownloadAndExtractTarball(tarballURL, true)
 	if err != nil {
@@ -1226,7 +1265,7 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease string,
 	defer cleanup()
 
 	// Use the directory installation method for complete processing
-	return InstallAddonFromDirectory(app, extractedDir, verbose)
+	return InstallAddonFromDirectory(app, extractedDir, repository, downloadedRelease, verbose)
 }
 
 // ValidateDependencies checks that all declared dependencies exist without installing them
