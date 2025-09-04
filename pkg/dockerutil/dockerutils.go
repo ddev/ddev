@@ -132,9 +132,8 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		if sDockerManagerErr != nil {
 			return
 		}
-		sDockerManagerErr = sDockerManager.cli.Initialize(
-			dockerCliFlags.NewClientOptions(),
-		)
+		opts := dockerCliFlags.NewClientOptions()
+		sDockerManagerErr = sDockerManager.cli.Initialize(opts)
 		if sDockerManagerErr != nil {
 			return
 		}
@@ -147,7 +146,7 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		// We can't use sDockerManager.cli.Client(), see https://github.com/docker/cli/issues/4489
 		// That's why we create a new client from flags to catch errors
 		sDockerManager.client, sDockerManagerErr = dockerCliCommand.NewAPIClientFromFlags(
-			dockerCliFlags.NewClientOptions(),
+			opts,
 			sDockerManager.cli.ConfigFile(),
 		)
 		if sDockerManagerErr != nil {
@@ -171,7 +170,7 @@ func GetDockerClient() (context.Context, dockerClient.APIClient, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	return dm.context, dm.client, err
+	return dm.context, dm.client, nil
 }
 
 // GetDockerClientInfo returns the Docker system information from the daemon
@@ -180,7 +179,7 @@ func GetDockerClientInfo() (dockerTypesSystem.Info, error) {
 	if err != nil {
 		return dockerTypesSystem.Info{}, err
 	}
-	return dm.info, err
+	return dm.info, nil
 }
 
 // GetDockerCurrentContextAndHost returns the current Docker context and host
@@ -189,7 +188,7 @@ func GetDockerCurrentContextAndHost() (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	return dm.currentContextName, dm.host, err
+	return dm.currentContextName, dm.host, nil
 }
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
