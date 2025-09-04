@@ -1014,6 +1014,14 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		return fmt.Errorf("unable to parse %v: %v", yamlFile, err)
 	}
 
+	// Check version constraint
+	if s.DdevVersionConstraint != "" {
+		err := CheckDdevVersionConstraint(s.DdevVersionConstraint, fmt.Sprintf("Unable to install the '%s' add-on", s.Name), "")
+		if err != nil {
+			return err
+		}
+	}
+
 	// Install dependencies recursively, resolving relative paths
 	if len(s.Dependencies) > 0 {
 		resolvedDeps := make([]string, len(s.Dependencies))
@@ -1082,19 +1090,67 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		_ = os.Remove(runtimeDepsFile)
 	}
 
-	// Copy project files
+	// Install project files
 	if len(s.ProjectFiles) > 0 {
 		util.Success("\nInstalling project-level components:")
 	}
-	for _, file := range s.ProjectFiles {
+
+	projectFiles, err := fileutil.ExpandFilesAndDirectories(extractedDir, s.ProjectFiles)
+	if err != nil {
+		return fmt.Errorf("unable to expand files and directories: %v", err)
+	}
+	for _, file := range projectFiles {
 		src := filepath.Join(extractedDir, file)
 		dest := app.GetConfigPath(file)
-
-		err = fileutil.CopyFile(src, dest)
-		if err != nil {
-			return fmt.Errorf("unable to copy file %s to %s: %v", src, dest, err)
+		if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+			err = fileutil.CopyFile(src, dest)
+			if err != nil {
+				return fmt.Errorf("unable to copy %v to %v: %v", src, dest, err)
+			}
+			util.Success("%c %s", '\U0001F44D', file)
+		} else {
+			util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use ddev add-on get again if you want it to be replaced: %v", dest, err)
 		}
-		util.Success("👍 %s", file)
+	}
+
+	// Install global files
+	globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
+	if len(s.GlobalFiles) > 0 {
+		util.Success("\nInstalling global components:")
+	}
+
+	globalFiles, err := fileutil.ExpandFilesAndDirectories(extractedDir, s.GlobalFiles)
+	if err != nil {
+		return fmt.Errorf("unable to expand global files and directories: %v", err)
+	}
+	for _, file := range globalFiles {
+		src := filepath.Join(extractedDir, file)
+		dest := filepath.Join(globalDotDdev, file)
+
+		// If the file existed and had #ddev-generated OR if it did not exist, copy it in.
+		if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+			err = fileutil.CopyFile(src, dest)
+			if err != nil {
+				return fmt.Errorf("unable to copy %v to %v: %v", src, dest, err)
+			}
+			util.Success("%c %s", '\U0001F44D', file)
+		} else {
+			util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use ddev add-on get again if you want it to be replaced: %v", dest, err)
+		}
+	}
+
+	// Change to project directory for post-install actions
+	origDir, _ := os.Getwd()
+	defer func() {
+		err = os.Chdir(origDir)
+		if err != nil {
+			util.Warning("Unable to chdir back to %v: %v", origDir, err)
+		}
+	}()
+
+	err = os.Chdir(app.GetConfigPath(""))
+	if err != nil {
+		return fmt.Errorf("unable to chdir to %v: %v", app.GetConfigPath(""), err)
 	}
 
 	// Run post-install actions
@@ -1113,11 +1169,17 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir string, verbose bool) 
 		}
 	}
 
+	// Clean up temporary configuration files created for PHP actions
+	err = app.CleanupConfigurationFiles()
+	if err != nil {
+		util.Warning("Unable to clean up temporary configuration files: %v", err)
+	}
+
 	util.Success("Successfully installed %s from directory", s.Name)
 	return nil
 }
 
-// InstallAddonFromTarball handles the actual installation process
+// InstallAddonFromTarball handles complete installation process for tarball-based addons
 func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease string, verbose bool) error {
 	// Extract tarball
 	extractedDir, cleanup, err := archive.DownloadAndExtractTarball(tarballURL, true)
@@ -1126,32 +1188,8 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease string,
 	}
 	defer cleanup()
 
-	// Parse install.yaml
-	yamlFile := filepath.Join(extractedDir, "install.yaml")
-	yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
-	if err != nil {
-		return fmt.Errorf("unable to read %v: %v", yamlFile, err)
-	}
-	var s InstallDesc
-	err = yaml.Unmarshal([]byte(yamlContent), &s)
-	if err != nil {
-		return fmt.Errorf("unable to parse %v: %v", yamlFile, err)
-	}
-
-	// Install dependencies recursively
-	if len(s.Dependencies) > 0 {
-		err = InstallDependencies(app, s.Dependencies, verbose)
-		if err != nil {
-			return fmt.Errorf("unable to install dependencies for '%s': %v", s.Name, err)
-		}
-	}
-
-	// Continue with normal installation process...
-	// (This would include the full installation logic from addon-get.go)
-	// For now, return success - full integration will happen in task 10
-
-	util.Success("Successfully installed %s:%s", s.Name, downloadedRelease)
-	return nil
+	// Use the directory installation method for complete processing
+	return InstallAddonFromDirectory(app, extractedDir, verbose)
 }
 
 // ValidateDependencies checks that all declared dependencies exist without installing them
