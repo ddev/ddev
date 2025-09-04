@@ -1545,7 +1545,8 @@ func GetHostDockerInternal() (string, string) {
 	// so we need to go get the bridge IP address.
 	case nodeps.IsLinux():
 		// host.docker.internal is already taken care of by extra_hosts in docker-compose
-		util.Debug("host.docker.internal='%s' because IsLinux (or IsWSL2MirroredMode && IsDockerDesktop) uses 'host-gateway' in extra_hosts", dm.internalIP)
+		// see condition for dm.internalExtraHosts below
+		util.Debug("host.docker.internal='%s' because IsLinux uses 'host-gateway' in extra_hosts", dm.internalIP)
 		break
 
 	default:
