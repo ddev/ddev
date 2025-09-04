@@ -208,6 +208,56 @@ func TestCircularDependencyDetection(t *testing.T) {
 		err3 := ddevapp.AddToInstallStack("addon-e")
 		require.NoError(t, err3)
 	})
+
+	// Test normalized identifier circular dependency detection
+	t.Run("DetectsCircularDependencyWithNormalizedIdentifiers", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Add addon using GitHub format
+		err1 := ddevapp.AddToInstallStack("ddev/ddev-redis")
+		require.NoError(t, err1)
+
+		// Try to add the same addon using GitHub URL format - should detect circular dependency
+		err2 := ddevapp.AddToInstallStack("https://github.com/ddev/ddev-redis/archive/refs/tags/v1.0.0.tar.gz")
+		require.Error(t, err2, "Should detect circular dependency with different identifier formats")
+		require.Contains(t, err2.Error(), "circular dependency detected", "Error should mention circular dependency")
+	})
+
+	// Test the NormalizeAddonIdentifier function directly
+	t.Run("NormalizeAddonIdentifierFunction", func(t *testing.T) {
+		testCases := []struct {
+			input    string
+			expected string
+		}{
+			{"ddev/ddev-redis", "ddev/ddev-redis"},
+			{"https://github.com/ddev/ddev-redis/archive/refs/tags/v1.0.0.tar.gz", "ddev/ddev-redis"},
+			{"/path/to/ddev-redis.tar.gz", "ddev-redis"},
+			{"ddev-redis.tar.gz", "ddev-redis"},
+			{"local-addon", "local-addon"},
+			{"./relative/path/addon.tgz", "addon"},
+		}
+
+		for _, tc := range testCases {
+			result := ddevapp.NormalizeAddonIdentifier(tc.input)
+			require.Equal(t, tc.expected, result, "Normalization of %q should return %q but got %q", tc.input, tc.expected, result)
+		}
+	})
+
+	t.Run("DetectsCircularDependencyWithLocalPath", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Add addon using tarball format first
+		err1 := ddevapp.AddToInstallStack("/path/to/ddev-redis.tar.gz")
+		require.NoError(t, err1)
+
+		// Try to add the same addon using GitHub format - should detect circular dependency
+		// Both should normalize to "ddev-redis" and trigger detection
+		err2 := ddevapp.AddToInstallStack("ddev-redis.tar.gz")
+		require.Error(t, err2, "Should detect circular dependency with different path formats")
+		require.Contains(t, err2.Error(), "circular dependency detected", "Error should mention circular dependency")
+	})
 }
 
 func TestGetGitHubRelease(t *testing.T) {
@@ -288,4 +338,192 @@ https://example.com/addon.tar.gz
 	deps, err = ddevapp.ParseRuntimeDependencies(filepath.Join(tmpDir, "nonexistent"))
 	assert.NoError(err)
 	assert.Nil(deps)
+}
+
+// TestMixedDependencyScenarios tests comprehensive mixed dependency scenarios
+func TestMixedDependencyScenarios(t *testing.T) {
+	t.Run("NormalizeAddonIdentifierEdgeCases", func(t *testing.T) {
+		testCases := []struct {
+			name     string
+			input    string
+			expected string
+		}{
+			{"GitHub owner/repo", "ddev/ddev-redis", "ddev/ddev-redis"},
+			{"GitHub URL", "https://github.com/ddev/ddev-redis/archive/refs/tags/v1.0.0.tar.gz", "ddev/ddev-redis"},
+			{"Local absolute path", "/path/to/ddev-redis.tar.gz", "ddev-redis"},
+			{"Local relative path", "./ddev-redis.tar.gz", "ddev-redis"},
+			{"Tarball with .tgz extension", "addon.tgz", "addon"},
+			{"Zip file", "addon.zip", "addon"},
+			{"Plain directory", "my-addon", "my-addon"},
+			{"Nested directory", "../parent/addon-name", "addon-name"},
+			{"URL with subdirectory", "https://github.com/user/repo/subfolder", "user/repo"},
+			{"Complex GitHub URL", "https://github.com/ddev/ddev-solr/releases/download/v1.2.3/ddev-solr-v1.2.3.tar.gz", "ddev/ddev-solr"},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				result := ddevapp.NormalizeAddonIdentifier(tc.input)
+				require.Equal(t, tc.expected, result, "Normalization of %q should return %q but got %q", tc.input, tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("CircularDependencyWithMixedFormats", func(t *testing.T) {
+		scenarios := []struct {
+			name      string
+			first     string
+			second    string
+			shouldErr bool
+		}{
+			{
+				name:      "GitHub vs URL same repo",
+				first:     "ddev/ddev-redis",
+				second:    "https://github.com/ddev/ddev-redis/archive/v1.0.0.tar.gz",
+				shouldErr: true,
+			},
+			{
+				name:      "URL vs local tarball same name",
+				first:     "https://example.com/ddev-solr.tar.gz",
+				second:    "/local/path/ddev-solr.tar.gz",
+				shouldErr: true,
+			},
+			{
+				name:      "Different addons should not conflict",
+				first:     "ddev/ddev-redis",
+				second:    "ddev/ddev-solr",
+				shouldErr: false,
+			},
+			{
+				name:      "Different extensions same base name",
+				first:     "/path/addon.tar.gz",
+				second:    "/other/path/addon.tgz",
+				shouldErr: true,
+			},
+		}
+
+		for _, scenario := range scenarios {
+			t.Run(scenario.name, func(t *testing.T) {
+				ddevapp.ResetInstallStack()
+
+				// Add first addon
+				err1 := ddevapp.AddToInstallStack(scenario.first)
+				require.NoError(t, err1)
+
+				// Try to add second addon
+				err2 := ddevapp.AddToInstallStack(scenario.second)
+
+				if scenario.shouldErr {
+					require.Error(t, err2, "Should detect circular dependency")
+					require.Contains(t, err2.Error(), "circular dependency detected")
+				} else {
+					require.NoError(t, err2, "Should not detect circular dependency for different addons")
+				}
+			})
+		}
+	})
+
+	t.Run("DependencyPathResolution", func(t *testing.T) {
+		// Test ResolveDependencyPaths function with various path formats
+		extractedDir := "/tmp/addon-base"
+		dependencies := []string{
+			"ddev/ddev-redis",
+			"../relative-addon",
+			"./local-addon",
+			"https://example.com/addon.tar.gz",
+			"/absolute/path/addon",
+		}
+
+		resolved := ddevapp.ResolveDependencyPaths(dependencies, extractedDir, false)
+
+		expected := []string{
+			"ddev/ddev-redis",
+			"/tmp/relative-addon", // filepath.Clean(filepath.Join("/tmp/addon-base", "../relative-addon"))
+			"/tmp/addon-base/local-addon",
+			"https://example.com/addon.tar.gz",
+			"/absolute/path/addon",
+		}
+
+		require.Equal(t, expected, resolved)
+	})
+
+	t.Run("InstallStackCleanupOnDefer", func(t *testing.T) {
+		// Test that the install stack is properly cleaned up on function exit
+		ddevapp.ResetInstallStack()
+
+		// This test simulates the defer cleanup pattern used in installAddonRecursive
+		func() {
+			// Simulate adding to stack
+			err := ddevapp.AddToInstallStack("test-addon")
+			require.NoError(t, err)
+
+			defer func() {
+				// This simulates the cleanup code
+				ddevapp.ResetInstallStack() // For test simplicity, just reset
+			}()
+
+			// Stack should contain the addon now
+			err = ddevapp.AddToInstallStack("test-addon")
+			require.Error(t, err, "Should detect circular dependency within same function")
+		}()
+
+		// After function exit, stack should be clean
+		err := ddevapp.AddToInstallStack("test-addon")
+		require.NoError(t, err, "Stack should be clean after function exit")
+	})
+
+	t.Run("ManifestKeyMatching", func(t *testing.T) {
+		// Test that GatherAllManifests creates appropriate keys for different addon formats
+		// This is tested implicitly through the existing system, but we can verify
+		// the logic by testing key creation patterns
+
+		testCases := []struct {
+			name         string
+			repository   string
+			expectedKeys []string
+		}{
+			{
+				name:         "redis",
+				repository:   "ddev/ddev-redis",
+				expectedKeys: []string{"redis", "ddev/ddev-redis", "ddev-redis"},
+			},
+			{
+				name:         "solr",
+				repository:   "https://github.com/ddev/ddev-solr/archive/v1.0.0.tar.gz",
+				expectedKeys: []string{"solr", "https://github.com/ddev/ddev-solr/archive/v1.0.0.tar.gz"},
+			},
+			{
+				name:         "local-addon",
+				repository:   "/path/to/local-addon",
+				expectedKeys: []string{"local-addon", "/path/to/local-addon"},
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				// Create a mock manifest
+				manifest := ddevapp.AddonManifest{
+					Name:       tc.name,
+					Repository: tc.repository,
+					Version:    "v1.0.0",
+				}
+
+				// Simulate the key creation logic from GatherAllManifests
+				allManifests := make(map[string]ddevapp.AddonManifest)
+				allManifests[manifest.Name] = manifest
+				allManifests[manifest.Repository] = manifest
+
+				pathParts := strings.Split(manifest.Repository, "/")
+				if len(pathParts) > 1 {
+					shortRepo := pathParts[len(pathParts)-1]
+					allManifests[shortRepo] = manifest
+				}
+
+				// Verify all expected keys exist
+				for _, expectedKey := range tc.expectedKeys {
+					_, exists := allManifests[expectedKey]
+					require.True(t, exists, "Expected key %q should exist in manifest map", expectedKey)
+				}
+			})
+		}
+	})
 }

@@ -879,15 +879,48 @@ func ParseRuntimeDependencies(runtimeDepsFile string) ([]string, error) {
 	return dependencies, nil
 }
 
+// NormalizeAddonIdentifier converts various addon identifier formats to a canonical form
+// This helps detect circular dependencies when the same addon is referenced in different ways
+func NormalizeAddonIdentifier(addonIdentifier string) string {
+	// For GitHub URLs like https://github.com/owner/repo/archive/refs/tags/v1.0.0.tar.gz
+	if strings.HasPrefix(addonIdentifier, "https://github.com/") {
+		parts := strings.Split(addonIdentifier, "/")
+		if len(parts) >= 5 {
+			return parts[3] + "/" + parts[4] // Extract owner/repo
+		}
+	}
+
+	// For owner/repo format, use as-is
+	parts := strings.Split(addonIdentifier, "/")
+	if len(parts) == 2 && !strings.Contains(addonIdentifier, ".") && !strings.HasPrefix(addonIdentifier, ".") {
+		return addonIdentifier
+	}
+
+	// For local paths or other formats, use the basename without extension
+	base := filepath.Base(addonIdentifier)
+	// Remove common archive extensions
+	for _, ext := range []string{".tar.gz", ".tgz", ".tar", ".zip"} {
+		if strings.HasSuffix(base, ext) {
+			base = strings.TrimSuffix(base, ext)
+			break
+		}
+	}
+
+	return base
+}
+
 // AddToInstallStack adds an addon to the installation stack and checks for circular dependencies
 func AddToInstallStack(addonName string) error {
-	// Check for circular dependencies using map for O(1) lookup
-	if installStackMap[addonName] {
+	// Normalize the addon identifier for consistent circular dependency detection
+	normalizedName := NormalizeAddonIdentifier(addonName)
+
+	// Check for circular dependencies using normalized name
+	if installStackMap[normalizedName] {
 		return fmt.Errorf("circular dependency detected: %s",
 			strings.Join(append(installStack, addonName), " -> "))
 	}
 	installStack = append(installStack, addonName)
-	installStackMap[addonName] = true
+	installStackMap[normalizedName] = true
 	return nil
 }
 
@@ -916,18 +949,21 @@ func InstallDependencies(app *DdevApp, dependencies []string, verbose bool) erro
 
 // installAddonRecursive installs an addon and its dependencies recursively
 func installAddonRecursive(app *DdevApp, addonName string, verbose bool) error {
-	// Check for circular dependencies using map for O(1) lookup
-	if installStackMap[addonName] {
+	// Normalize the addon identifier for consistent circular dependency detection
+	normalizedName := NormalizeAddonIdentifier(addonName)
+
+	// Check for circular dependencies using normalized name
+	if installStackMap[normalizedName] {
 		return fmt.Errorf("circular dependency detected: %s",
 			strings.Join(append(installStack, addonName), " -> "))
 	}
 
 	installStack = append(installStack, addonName)
-	installStackMap[addonName] = true
+	installStackMap[normalizedName] = true
 	defer func() {
-		// Clean up both slice and map
+		// Clean up both slice and map using normalized name
 		installStack = installStack[:len(installStack)-1]
-		delete(installStackMap, addonName)
+		delete(installStackMap, normalizedName)
 	}()
 
 	// Handle different dependency formats (same as ddev add-on get)
