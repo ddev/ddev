@@ -1154,6 +1154,91 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease string,
 	return nil
 }
 
+// ValidateDependencies checks that all declared dependencies exist without installing them
+// Used when the --no-dependencies flag is specified
+func ValidateDependencies(app *DdevApp, dependencies []string, extractedDir, addonName string) error {
+	m, err := GatherAllManifests(app)
+	if err != nil {
+		return fmt.Errorf("unable to gather manifests: %w", err)
+	}
+	for _, dep := range dependencies {
+		checkName := dep
+		// For relative paths, we need to check the actual addon name, not the path
+		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+			// Resolve relative path and get the addon name from install.yaml
+			resolvedPath := filepath.Clean(filepath.Join(extractedDir, dep))
+			if fileutil.IsDirectory(resolvedPath) {
+				yamlFile := filepath.Join(resolvedPath, "install.yaml")
+				if yamlContent, err := fileutil.ReadFileIntoString(yamlFile); err == nil {
+					var depDesc InstallDesc
+					if err := yaml.Unmarshal([]byte(yamlContent), &depDesc); err == nil {
+						checkName = depDesc.Name
+					}
+				}
+			}
+		}
+		if _, ok := m[checkName]; !ok {
+			return fmt.Errorf("the add-on '%s' declares a dependency on '%s'; please ddev add-on get %s first", addonName, dep, dep)
+		}
+	}
+	return nil
+}
+
+// ResolveDependencyPaths resolves relative paths in dependencies relative to extractedDir
+func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
+	resolvedDeps := make([]string, len(dependencies))
+	for i, dep := range dependencies {
+		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+			// Resolve relative path relative to extractedDir
+			resolvedPath := filepath.Join(extractedDir, dep)
+			// Clean the path to resolve .. and . components
+			resolvedDeps[i] = filepath.Clean(resolvedPath)
+			if verbose {
+				util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
+			}
+		} else {
+			resolvedDeps[i] = dep
+		}
+	}
+	return resolvedDeps
+}
+
+// ProcessRuntimeDependencies handles runtime dependencies generated during pre-install actions
+func ProcessRuntimeDependencies(app *DdevApp, addonName, extractedDir string, verbose bool) error {
+	runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + addonName)
+	if verbose {
+		util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
+		if fileutil.FileExists(runtimeDepsFile) {
+			content, _ := fileutil.ReadFileIntoString(runtimeDepsFile)
+			util.Success("Runtime dependencies file contents: %q", content)
+		} else {
+			util.Success("Runtime dependencies file does not exist")
+		}
+	}
+
+	runtimeDeps, err := ParseRuntimeDependencies(runtimeDepsFile)
+	if err != nil {
+		return fmt.Errorf("failed to parse runtime dependencies: %w", err)
+	}
+
+	if verbose {
+		util.Success("Found %d runtime dependencies: %v", len(runtimeDeps), runtimeDeps)
+	}
+
+	if len(runtimeDeps) > 0 {
+		util.Success("Installing runtime dependencies:")
+		// Resolve relative paths for runtime dependencies
+		resolvedRuntimeDeps := ResolveDependencyPaths(runtimeDeps, extractedDir, verbose)
+		err := InstallDependencies(app, resolvedRuntimeDeps, verbose)
+		if err != nil {
+			return fmt.Errorf("failed to install runtime dependencies for '%s': %w", addonName, err)
+		}
+		// Clean up the runtime dependencies file
+		_ = os.Remove(runtimeDepsFile)
+	}
+	return nil
+}
+
 // GatherAllManifests searches for all addon manifests and presents the result
 // as a map of various names to manifest data
 func GatherAllManifests(app *DdevApp) (map[string]AddonManifest, error) {
