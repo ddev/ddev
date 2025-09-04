@@ -532,6 +532,7 @@ func TestMixedDependencyScenarios(t *testing.T) {
 
 // TestAddonDirectoryCreation tests that addon installation creates necessary directories
 // for file copying, particularly during dependency installation scenarios.
+// This test validates that copy.Copy properly handles nested directory creation.
 func TestAddonDirectoryCreation(t *testing.T) {
 	if os.Getenv("DDEV_RUN_DIRECTORY_TESTS") == "" {
 		t.Skip("Skipping directory creation test because DDEV_RUN_DIRECTORY_TESTS is not set")
