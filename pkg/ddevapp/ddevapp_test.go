@@ -3919,7 +3919,7 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 	})
 
 	// Save original DockerHost to restore it later
-	_, origDockerHost, _ := dockerutil.GetDockerCurrentContextAndHost()
+	_, origDockerHost, _ := dockerutil.GetDockerContextNameAndHost()
 	t.Cleanup(func() {
 		// Reset the cached DockerIP value
 		dockerutil.ResetDockerIPForDockerHost(origDockerHost)

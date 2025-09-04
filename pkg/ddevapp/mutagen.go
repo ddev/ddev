@@ -759,7 +759,7 @@ func GetMutagenVolumeLabel(app *DdevApp) (string, error) {
 func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bool, info string) {
 	mutagenSyncExists := MutagenSyncExists(app)
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
-	dockerHostID, err := dockerutil.GetDockerHostID()
+	dockerHostSanitized, err := dockerutil.GetDockerHostSanitized()
 	if err != nil {
 		util.Failed(err.Error())
 	}
@@ -792,14 +792,14 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	case mutagenSyncLabelErr != nil:
 		return false, volumeExists, "Mutagen sync session exists but does not have label"
 	// If the labels do not have the current context as first part of label, we have trouble.
-	case !strings.HasPrefix(volumeLabel, dockerHostID) || !strings.HasPrefix(mutagenLabel, dockerHostID):
-		return false, volumeExists, fmt.Sprintf("Volume label '%s' or sync label '%s' does not start with current dockerHostID (%s)", volumeLabel, mutagenLabel, dockerHostID)
-	// if we have labels for both and they match, it's all fine.
+	case !strings.HasPrefix(volumeLabel, dockerHostSanitized) || !strings.HasPrefix(mutagenLabel, dockerHostSanitized):
+		return false, volumeExists, fmt.Sprintf("Volume label '%s' or sync label '%s' does not start with current dockerHostSanitized (%s)", volumeLabel, mutagenLabel, dockerHostSanitized)
+	// if we have labels for both, and they match, it's all fine.
 	case mutagenLabel == volumeLabel:
 		return true, volumeExists, fmt.Sprintf("Volume and Mutagen sync session have the same label: %s", volumeLabel)
 	}
 
-	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: dockerHostID=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerHostID, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
+	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: dockerHostSanitized=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerHostSanitized, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 }
 
 // GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session
@@ -846,11 +846,11 @@ func TerminateAllMutagenSync() {
 
 // GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to Mutagen volume
 func GetDefaultMutagenVolumeSignature(_ *DdevApp) string {
-	dockerHostID, err := dockerutil.GetDockerHostID()
+	dockerHostSanitized, err := dockerutil.GetDockerHostSanitized()
 	if err != nil {
 		util.Failed(err.Error())
 	}
-	return fmt.Sprintf("%s-%v", dockerHostID, time.Now().Unix())
+	return fmt.Sprintf("%s-%v", dockerHostSanitized, time.Now().Unix())
 }
 
 // checkMutagenUploadDirs tells people if they are using Mutagen without upload_dir

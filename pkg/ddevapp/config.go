@@ -971,7 +971,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
 
-	hostDockerInternalIP, extraHosts := dockerutil.GetHostDockerInternal()
+	hostDockerInternalIP, hostDockerInternalExtraHost := dockerutil.GetHostDockerInternal()
 	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 	if err != nil {
 		util.Warning("Could not determine NFS server IP address: %v", err)
@@ -1064,7 +1064,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternal()
-		UseHostDockerInternalExtraHosts: extraHosts == "host-gateway",
+		UseHostDockerInternalExtraHosts: hostDockerInternalExtraHost == "host-gateway",
 		BitnamiVolumeDir:                "",
 		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
