@@ -2,10 +2,11 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -20,7 +21,10 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if nodeps.IsAppleSilicon() || nodeps.IsWSL2() || dockerutil.IsRancherDesktop() {
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		t.Skip("Skipping TestHardenedStart because NoBindMounts is true and Mutagen is incompatible with hardened images")
+	}
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsAppleSilicon() || nodeps.IsWSL2() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms, no need to test hardened on arm64")
 	}
 
