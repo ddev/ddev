@@ -750,6 +750,26 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev add-on list --installed` to see installed add-ons.\n", addonName)
 	}
 
+	// Check if any other addons depend on the one being removed
+	var dependentAddons []string
+	for name, manifest := range manifests {
+		if name != addonName { // Skip the addon being removed
+			for _, dep := range manifest.Dependencies {
+				// Check dependency by both normalized name and repository match
+				if dep == addonName || 
+				   (manifestData.Repository != "" && dep == manifestData.Repository) ||
+				   NormalizeAddonIdentifier(dep) == addonName {
+					dependentAddons = append(dependentAddons, name)
+					break
+				}
+			}
+		}
+	}
+	
+	if len(dependentAddons) > 0 {
+		return fmt.Errorf("cannot remove add-on '%s' because the following add-ons depend on it: %s", addonName, strings.Join(dependentAddons, ", "))
+	}
+
 	// Execute any removal actions
 	if !skipRemovalActions {
 		for i, action := range manifestData.RemovalActions {
