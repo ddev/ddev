@@ -109,7 +109,7 @@ func RemoveNetwork(netName string) error {
 	}
 	// the loop below may not contain such a network
 	err = errdefs.NotFound(errors.New("not found"))
-	// loop through all nets because there may be duplicates
+	// loop through all networks because there may be duplicates
 	// and delete only by ID - it's unique, but the name isn't
 	for _, net := range nets {
 		if net.Name == netName || net.ID == netName {
@@ -147,9 +147,9 @@ func RemoveNetworkDuplicates(netName string) {
 		if net.Name == netName || net.ID == netName {
 			if networkMatchFound {
 				err := client.NetworkRemove(ctx, net.ID)
-				// If it's a "no such net" there's no reason to report error
+				// If it's a "no such network" there's no reason to report error
 				if err != nil && !IsErrNotFound(err) {
-					util.WarningOnce("Unable to remove net %s: %v", netName, err)
+					util.WarningOnce("Unable to remove network %s: %v", netName, err)
 				}
 			} else {
 				networkMatchFound = true

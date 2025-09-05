@@ -35,11 +35,11 @@ func IsLima() bool {
 	if err != nil {
 		return false
 	}
+	// Rancher Desktop uses "lima-rancher-desktop" as its name
+	if strings.Contains(info.Name, "rancher-desktop") {
+		return false
+	}
 	if strings.HasPrefix(info.Name, "lima") {
-		// Rancher Desktop can use "lima-rancher-desktop" as the name
-		if !strings.Contains(info.Name, "rancher-desktop") {
-			return true
-		}
 	}
 	return false
 }

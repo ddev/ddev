@@ -84,7 +84,7 @@ func GetHostDockerInternal() *HostDockerInternal {
 				ipAddress = windowsReachableIP
 				message = fmt.Sprintf("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; received from getWindowsReachableIP()", ipAddress)
 			} else {
-				message = "host.docker.internal='' because IsWSL2MirroredMode and !IsDockerDesktop; getWindowsReachableIP() failed"
+				message = fmt.Sprintf("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; getWindowsReachableIP() failed", ipAddress)
 			}
 
 		case nodeps.IsLinux():
@@ -132,7 +132,7 @@ Get-NetIPAddress -AddressFamily IPv4 |
 	return strings.TrimSpace(string(out)), nil
 }
 
-// wsl2GetWindowsHostIP uses ip -4 route show default to get the Windows IP address
+// wsl2GetWindowsHostIP uses 'ip -4 route show default' to get the Windows IP address
 // for use in determining host.docker.internal
 func wsl2GetWindowsHostIP() string {
 	// Get default route from WSL2
