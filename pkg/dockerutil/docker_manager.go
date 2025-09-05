@@ -28,10 +28,10 @@ type dockerManager struct {
 	cli               *command.DockerCli // Docker CLI for getting dockerContextName and host
 	dockerContextName string             // Current Docker context name (e.g., "default", "desktop-linux")
 	host              string             // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
-	hostSanitized     string             // Docker host with special characters removed
-	hostSanitizedErr  error              // Error from Docker host sanitization, if any
 	hostIP            string             // IP address of Docker host
 	hostIPErr         error              // Error from Docker host IP lookup, if any
+	hostSanitized     string             // Docker host with special characters removed
+	hostSanitizedErr  error              // Error from Docker host sanitization, if any
 	info              system.Info        // Docker system information from daemon (version, OS, etc.)
 	serverVersion     types.Version      // Docker server version information
 }
@@ -195,7 +195,6 @@ func GetDockerAPIVersion() (string, error) {
 	}
 	return dm.serverVersion.APIVersion, nil
 }
-
 
 // getDockerHostSanitized returns Docker host but with all special characters removed
 func getDockerHostSanitized(host string) (string, error) {
