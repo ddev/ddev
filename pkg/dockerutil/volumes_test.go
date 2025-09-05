@@ -10,8 +10,8 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerFilters "github.com/docker/docker/api/types/filters"
-	dockerVolume "github.com/docker/docker/api/types/volume"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/volume"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,13 +22,13 @@ func TestCreateVolume(t *testing.T) {
 	// Make sure there's no existing volume.
 	//nolint: errcheck
 	dockerutil.RemoveVolume("junker99")
-	volume, err := dockerutil.CreateVolume("junker99", "local", map[string]string{}, nil)
+	vol, err := dockerutil.CreateVolume("junker99", "local", map[string]string{}, nil)
 	require.NoError(t, err)
 
 	//nolint: errcheck
 	defer dockerutil.RemoveVolume("junker99")
-	require.NotNil(t, volume)
-	assert.Equal("junker99", volume.Name)
+	require.NotNil(t, vol)
+	assert.Equal("junker99", vol.Name)
 }
 
 // TestRemoveVolume makes sure we can remove a volume successfully
@@ -51,21 +51,21 @@ func TestRemoveVolume(t *testing.T) {
 		source = filepath.Join("/System/Volumes/Data", source)
 	}
 	nfsServerAddr, _ := dockerutil.GetNFSServerAddr()
-	volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr),
+	vol, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr),
 		"device": ":" + dockerutil.MassageWindowsNFSMount(source)}, nil)
 	assert.NoError(err)
 
-	volumes, err := client.VolumeList(ctx, dockerVolume.ListOptions{Filters: dockerFilters.NewArgs(dockerFilters.KeyValuePair{Key: "name", Value: testVolume})})
+	volumes, err := client.VolumeList(ctx, volume.ListOptions{Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: testVolume})})
 	assert.NoError(err)
 	require.Len(t, volumes.Volumes, 1)
 	assert.Equal(testVolume, volumes.Volumes[0].Name)
 
-	require.NotNil(t, volume)
-	assert.Equal(testVolume, volume.Name)
+	require.NotNil(t, vol)
+	assert.Equal(testVolume, vol.Name)
 	err = dockerutil.RemoveVolume(testVolume)
 	assert.NoError(err)
 
-	volumes, err = client.VolumeList(ctx, dockerVolume.ListOptions{Filters: dockerFilters.NewArgs(dockerFilters.KeyValuePair{Key: "name", Value: testVolume})})
+	volumes, err = client.VolumeList(ctx, volume.ListOptions{Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: testVolume})})
 	assert.NoError(err)
 	assert.Empty(volumes.Volumes)
 
