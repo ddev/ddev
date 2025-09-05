@@ -342,7 +342,7 @@ func getInjectedEnv(envFile string, verbose bool) string {
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
-	AddonGetCmd.Flags().Bool("no-dependencies", false, "Skip automatic dependency installation")
+	AddonGetCmd.Flags().BoolP("no-dependencies", "D", false, "Skip automatic dependency installation")
 	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 

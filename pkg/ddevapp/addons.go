@@ -752,20 +752,26 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 
 	// Check if any other addons depend on the one being removed
 	var dependentAddons []string
+	seenDependents := make(map[string]bool) // Track seen addon names to avoid duplicates
 	for name, manifest := range manifests {
 		if name != addonName { // Skip the addon being removed
 			for _, dep := range manifest.Dependencies {
 				// Check dependency by both normalized name and repository match
-				if dep == addonName || 
-				   (manifestData.Repository != "" && dep == manifestData.Repository) ||
-				   NormalizeAddonIdentifier(dep) == addonName {
-					dependentAddons = append(dependentAddons, name)
+				if dep == addonName ||
+					(manifestData.Repository != "" && dep == manifestData.Repository) ||
+					NormalizeAddonIdentifier(dep) == addonName {
+					// Use the manifest's actual name to avoid duplicates
+					actualAddonName := manifest.Name
+					if !seenDependents[actualAddonName] {
+						dependentAddons = append(dependentAddons, actualAddonName)
+						seenDependents[actualAddonName] = true
+					}
 					break
 				}
 			}
 		}
 	}
-	
+
 	if len(dependentAddons) > 0 {
 		return fmt.Errorf("cannot remove add-on '%s' because the following add-ons depend on it: %s", addonName, strings.Join(dependentAddons, ", "))
 	}
@@ -954,7 +960,7 @@ func InstallDependencies(app *DdevApp, dependencies []string, verbose bool) erro
 	}
 
 	for _, dep := range dependencies {
-		if _, exists := m[dep]; !exists {
+		if !isDependencyInstalled(m, dep) {
 			util.Success("Installing missing dependency: %s", dep)
 			err = installAddonRecursive(app, dep, verbose)
 			if err != nil {
@@ -967,6 +973,43 @@ func InstallDependencies(app *DdevApp, dependencies []string, verbose bool) erro
 		}
 	}
 	return nil
+}
+
+// isDependencyInstalled checks if a dependency is already installed using multiple key formats
+func isDependencyInstalled(manifests map[string]AddonManifest, dependency string) bool {
+	// Try direct lookup first
+	if _, exists := manifests[dependency]; exists {
+		return true
+	}
+
+	// Try normalized identifier
+	normalized := NormalizeAddonIdentifier(dependency)
+	if _, exists := manifests[normalized]; exists {
+		return true
+	}
+
+	// For local paths, check against repository values
+	if fileutil.IsDirectory(dependency) || strings.Contains(dependency, "/") {
+		absPath, err := filepath.Abs(dependency)
+		if err == nil {
+			if _, exists := manifests[absPath]; exists {
+				return true
+			}
+		}
+	}
+
+	// Check if any manifest's repository matches this dependency
+	for _, manifest := range manifests {
+		if manifest.Repository == dependency {
+			return true
+		}
+		// Also check normalized forms
+		if NormalizeAddonIdentifier(manifest.Repository) == normalized {
+			return true
+		}
+	}
+
+	return false
 }
 
 // installAddonRecursive installs an addon and its dependencies recursively
