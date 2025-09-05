@@ -71,6 +71,7 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		sDockerManager.dockerContextName = sDockerManager.cli.CurrentContext()
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
+		sDockerManager.hostSanitized, sDockerManager.hostSanitizedErr = getDockerHostSanitized(sDockerManager.host)
 		sDockerManager.goContext = context.Background()
 		// Set the Docker CLI version for User-Agent header
 		version.Version = "ddev-" + versionconstants.DdevVersion
@@ -129,21 +130,6 @@ func GetDockerHostSanitized() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if dm.hostSanitized != "" || dm.hostSanitizedErr != nil {
-		return dm.hostSanitized, dm.hostSanitizedErr
-	}
-	// Make it shorter so we don't hit Mutagen 63-char limit
-	dockerHost := strings.TrimPrefix(dm.host, "unix://")
-	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
-	dockerHost = strings.Trim(dockerHost, "/.")
-	// Convert remaining descriptor to alphanumeric
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	if err != nil {
-		dm.hostSanitizedErr = err
-		return "", dm.hostSanitizedErr
-	}
-	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
-	dm.hostSanitized = alphaOnly
 	return dm.hostSanitized, dm.hostSanitizedErr
 }
 
@@ -191,6 +177,7 @@ func ResetDockerIPForDockerHost(host string) {
 		return
 	}
 	dm.host = host
+	dm.hostSanitized, dm.hostSanitizedErr = getDockerHostSanitized(dm.host)
 	dm.hostIP = ""
 	dm.hostIPErr = nil
 }
@@ -313,7 +300,7 @@ func GetHostDockerInternal() (string, string) {
 	return dm.hostDockerInternalIP, dm.hostDockerInternalExtraHost
 }
 
-// getWindowsReachableIP() uses PowerShell to find a windows-side IP
+// getWindowsReachableIP uses PowerShell to find a windows-side IP
 // address that can be accessed from inside a container.
 // This is needed for networkMode=mirrored in WSL2.
 func getWindowsReachableIP() (string, error) {
@@ -333,7 +320,7 @@ Get-NetIPAddress -AddressFamily IPv4 |
 	return strings.TrimSpace(string(out)), nil
 }
 
-// wsl2GetWindowsHostIP() uses ip -4 route show default to get the Windows IP address
+// wsl2GetWindowsHostIP uses ip -4 route show default to get the Windows IP address
 // for use in determining host.docker.internal
 func wsl2GetWindowsHostIP() string {
 	// Get default route from WSL2
@@ -357,4 +344,19 @@ func wsl2GetWindowsHostIP() string {
 	}
 
 	return ip
+}
+
+// getDockerHostSanitized returns Docker host but with all special characters removed
+func getDockerHostSanitized(host string) (string, error) {
+	// Make it shorter so we don't hit Mutagen 63-char limit
+	dockerHost := strings.TrimPrefix(host, "unix://")
+	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
+	dockerHost = strings.Trim(dockerHost, "/.")
+	// Convert remaining descriptor to alphanumeric
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		return "", err
+	}
+	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
+	return alphaOnly, nil
 }
