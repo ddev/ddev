@@ -40,6 +40,7 @@ func IsLima() bool {
 		return false
 	}
 	if strings.HasPrefix(info.Name, "lima") {
+		return true
 	}
 	return false
 }
