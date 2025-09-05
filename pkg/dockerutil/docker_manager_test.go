@@ -4,14 +4,12 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDockerIP tries out a number of DockerHost permutations
 // to verify that GetDockerIP does them right
 func TestGetDockerIP(t *testing.T) {
-	assert := asrt.New(t)
-
 	expectations := map[string]string{
 		"":                            "127.0.0.1",
 		"unix:///var/run/docker.sock": "127.0.0.1",
@@ -21,16 +19,19 @@ func TestGetDockerIP(t *testing.T) {
 	}
 
 	// Save original DockerHost to restore it later
-	_, origDockerHost, _ := dockerutil.GetDockerContextNameAndHost()
+	_, origDockerHost, err := dockerutil.GetDockerContextNameAndHost()
+	require.NoError(t, err)
 	t.Cleanup(func() {
-		dockerutil.ResetDockerIPForDockerHost(origDockerHost)
+		err = dockerutil.ResetDockerHost(origDockerHost)
+		require.NoError(t, err)
 	})
 
 	for k, v := range expectations {
 		// DockerIP is cached, so we have to reset it to check
-		dockerutil.ResetDockerIPForDockerHost(k)
+		err = dockerutil.ResetDockerHost(k)
+		require.NoError(t, err)
 		result, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)
+		require.NoError(t, err)
+		require.Equal(t, v, result, "for %s expected %s, got %s", k, v, result)
 	}
 }

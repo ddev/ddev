@@ -72,6 +72,7 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
 		sDockerManager.hostSanitized, sDockerManager.hostSanitizedErr = getDockerHostSanitized(sDockerManager.host)
+		sDockerManager.hostIP, sDockerManager.hostIPErr = getDockerIPFromDockerHost(sDockerManager.host)
 		sDockerManager.goContext = context.Background()
 		// Set the Docker CLI version for User-Agent header
 		version.Version = "ddev-" + versionconstants.DdevVersion
@@ -140,18 +141,20 @@ func GetDockerIP() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if dm.hostIP != "" || dm.hostIPErr != nil {
-		return dm.hostIP, dm.hostIPErr
-	}
-	dockerHostURL, err := url.Parse(dm.host)
+	return dm.hostIP, dm.hostIPErr
+}
+
+// getDockerIPFromDockerHost returns the IP address of the Docker host based on the provided Docker host string.
+func getDockerIPFromDockerHost(host string) (string, error) {
+	// Default to localhost
+	hostIP := "127.0.0.1"
+	dockerHostURL, err := url.Parse(host)
 	if err != nil {
-		dm.hostIPErr = fmt.Errorf("failed to parse dm.host=%s: %v", dm.host, err)
-		return "", dm.hostIPErr
+		return hostIP, fmt.Errorf("failed to parse host=%s: %v", host, err)
 	}
 	hostPart := dockerHostURL.Hostname()
 	if hostPart == "" {
-		dm.hostIP = "127.0.0.1"
-		return dm.hostIP, dm.hostIPErr
+		return hostIP, nil
 	}
 	// Check to see if the hostname we found is an IP address
 	addr := net.ParseIP(hostPart)
@@ -161,25 +164,24 @@ func GetDockerIP() (string, error) {
 		if err == nil && len(ip) > 0 {
 			hostPart = ip[0].String()
 		} else {
-			dm.hostIPErr = fmt.Errorf("failed to look up IP address for dm.host=%s, hostname=%s: %v", dm.host, hostPart, err)
-			return "", dm.hostIPErr
+			return hostIP, fmt.Errorf("failed to look up IP address for host=%s, hostname=%s: %v", host, hostPart, err)
 		}
 	}
-	dm.hostIP = hostPart
-	return dm.hostIP, dm.hostIPErr
+	hostIP = hostPart
+	return hostIP, nil
 }
 
-// ResetDockerIPForDockerHost resets the cached Docker IP address for the given Docker host.
+// ResetDockerHost resets cached Docker host data in singleton (it's not thread-safe).
 // Used for testing only.
-func ResetDockerIPForDockerHost(host string) {
+func ResetDockerHost(host string) error {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
-		return
+		return err
 	}
 	dm.host = host
 	dm.hostSanitized, dm.hostSanitizedErr = getDockerHostSanitized(dm.host)
-	dm.hostIP = ""
-	dm.hostIPErr = nil
+	dm.hostIP, dm.hostIPErr = getDockerIPFromDockerHost(dm.host)
+	return nil
 }
 
 // GetDockerVersion gets the cached version of Docker provider engine

@@ -3919,14 +3919,16 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 	})
 
 	// Save original DockerHost to restore it later
-	_, origDockerHost, _ := dockerutil.GetDockerContextNameAndHost()
+	_, origDockerHost, err := dockerutil.GetDockerContextNameAndHost()
+	require.NoError(t, err)
 	t.Cleanup(func() {
-		// Reset the cached DockerIP value
-		dockerutil.ResetDockerIPForDockerHost(origDockerHost)
+		err = dockerutil.ResetDockerHost(origDockerHost)
+		require.NoError(t, err)
 	})
 
 	// Set an invalid DockerHost to force GetDockerIP to return an error
-	dockerutil.ResetDockerIPForDockerHost("unix:///nonexistent/docker.sock")
+	err = dockerutil.ResetDockerHost("unix:///nonexistent/docker.sock")
+	require.NoError(t, err)
 
 	// Even with an invalid DockerHost, the functions should still work
 	// because they handle the error internally by using the default IP (127.0.0.1)
