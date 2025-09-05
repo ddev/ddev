@@ -2449,6 +2449,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	require.NoError(t, err)
 	err = f.Close()
 	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
 
 	fileCreatedInContainer := path.Join(dirPathFromRoot, "file_created_in_container.txt")
 	command := fmt.Sprintf("echo 'content created inside container' >%s", fileCreatedInContainer)
