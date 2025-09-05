@@ -371,6 +371,10 @@ func init() {
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
+	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+		globalconfig.DdevGlobalConfig.NoBindMounts = true
+	}
+
 	globalconfig.EnsureGlobalConfig()
 }
 
@@ -2895,6 +2899,9 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 // Requires a project where the docroot is in a subdirectory, as Drupal's 'web' directory.
 // It checks the DDEV_FILES_DIRS and DDEV_FILES_DIR environment variables
 func TestUploadDirs(t *testing.T) {
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		t.Skip("Skipping TestUploadDirs because running with no_bind_mounts")
+	}
 	testDir := testcommon.CreateTmpDir(t.Name())
 
 	origDir, _ := os.Getwd()
