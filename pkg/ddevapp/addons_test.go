@@ -535,10 +535,6 @@ func TestMixedDependencyScenarios(t *testing.T) {
 // for file copying, particularly during dependency installation scenarios.
 // This test validates that copy.Copy properly handles nested directory creation.
 func TestAddonDirectoryCreation(t *testing.T) {
-	if os.Getenv("DDEV_RUN_DIRECTORY_TESTS") == "" {
-		t.Skip("Skipping directory creation test because DDEV_RUN_DIRECTORY_TESTS is not set")
-	}
-
 	// Create a test addon structure that requires nested directories
 	testAddonDir := testcommon.CreateTmpDir(t.Name())
 	defer func() {
@@ -638,10 +634,6 @@ global_files:
 // TestDependencyManifestCreation tests that addon dependencies create manifests
 // and appear in the installed addon list
 func TestDependencyManifestCreation(t *testing.T) {
-	if os.Getenv("DDEV_RUN_DIRECTORY_TESTS") == "" {
-		t.Skip("Skipping dependency manifest test because DDEV_RUN_DIRECTORY_TESTS is not set")
-	}
-
 	// Create a main addon that depends on another addon
 	mainAddonDir := testcommon.CreateTmpDir(t.Name() + "_main")
 	defer func() {
@@ -742,4 +734,104 @@ project_files:
 	// Verify both files were actually installed
 	require.True(t, fileutil.FileExists(app.GetConfigPath("main-config.yaml")), "Main config file should be installed")
 	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should be installed")
+}
+
+// TestDependencyValidationDuringRemoval tests that addon removal is blocked when other addons depend on it
+func TestDependencyValidationDuringRemoval(t *testing.T) {
+	// Create test app with clean .ddev directory
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	// Create dependency addon
+	dependencyAddonDir := testcommon.CreateTmpDir("dependency-addon")
+	defer func() {
+		err := os.RemoveAll(dependencyAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	installYamlContent := `name: dependency-addon
+project_files:
+  - dependency-config.yaml
+`
+	err = fileutil.TemplateStringToFile(installYamlContent, nil, filepath.Join(dependencyAddonDir, "install.yaml"))
+	require.NoError(t, err)
+
+	dependencyConfigContent := "#ddev-generated\nThis is a dependency config file"
+	err = fileutil.TemplateStringToFile(dependencyConfigContent, nil, filepath.Join(dependencyAddonDir, "dependency-config.yaml"))
+	require.NoError(t, err)
+
+	// Create main addon that depends on the dependency addon
+	mainAddonDir := testcommon.CreateTmpDir("main-addon")
+	defer func() {
+		err := os.RemoveAll(mainAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	mainInstallYamlContent := fmt.Sprintf(`name: main-addon
+dependencies:
+  - %s
+project_files:
+  - main-config.yaml
+`, dependencyAddonDir)
+	err = fileutil.TemplateStringToFile(mainInstallYamlContent, nil, filepath.Join(mainAddonDir, "install.yaml"))
+	require.NoError(t, err)
+
+	mainConfigContent := "#ddev-generated\nThis is the main config file"
+	err = fileutil.TemplateStringToFile(mainConfigContent, nil, filepath.Join(mainAddonDir, "main-config.yaml"))
+	require.NoError(t, err)
+
+	// Clean slate - remove any existing addon metadata
+	addonMetadataDir := app.GetConfigPath("addon-metadata")
+	err = os.RemoveAll(addonMetadataDir)
+	require.NoError(t, err)
+
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	// Install main addon (which should install dependency)
+	err = ddevapp.InstallAddonFromDirectory(app, mainAddonDir, "owner/main-repo", "v1.0.0", false)
+	require.NoError(t, err, "Main addon installation should succeed")
+
+	// Verify both addons are installed
+	manifests := ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 2, "Should have exactly 2 installed addons")
+
+	// Test 1: Attempt to remove dependency addon - should fail
+	err = ddevapp.RemoveAddon(app, "dependency-addon", false, false)
+	require.Error(t, err, "Should not be able to remove dependency addon when main addon depends on it")
+	require.Contains(t, err.Error(), "cannot remove add-on 'dependency-addon' because the following add-ons depend on it")
+	require.Contains(t, err.Error(), "main-addon")
+
+	// Verify dependency addon is still installed
+	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should still exist")
+	manifests = ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 2, "Should still have both addons installed")
+
+	// Test 2: Remove main addon first - should succeed
+	err = ddevapp.RemoveAddon(app, "main-addon", false, false)
+	require.NoError(t, err, "Should be able to remove main addon")
+
+	// Verify main addon is removed but dependency remains
+	require.False(t, fileutil.FileExists(app.GetConfigPath("main-config.yaml")), "Main config file should be removed")
+	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should still exist")
+	manifests = ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 1, "Should have only dependency addon remaining")
+
+	// Test 3: Now remove dependency addon - should succeed
+	err = ddevapp.RemoveAddon(app, "dependency-addon", false, false)
+	require.NoError(t, err, "Should be able to remove dependency addon after main addon is removed")
+
+	// Verify both addons are completely removed
+	require.False(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should be removed")
+	manifests = ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 0, "Should have no addons remaining")
 }
