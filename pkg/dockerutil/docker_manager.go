@@ -31,7 +31,6 @@ type dockerManager struct {
 	hostIP            string             // IP address of Docker host
 	hostIPErr         error              // Error from Docker host IP lookup, if any
 	hostSanitized     string             // Docker host with special characters removed
-	hostSanitizedErr  error              // Error from Docker host sanitization, if any
 	info              system.Info        // Docker system information from daemon (version, OS, etc.)
 	serverVersion     types.Version      // Docker server version information
 }
@@ -64,8 +63,8 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		sDockerManager.dockerContextName = sDockerManager.cli.CurrentContext()
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
-		sDockerManager.hostSanitized, sDockerManager.hostSanitizedErr = getDockerHostSanitized(sDockerManager.host)
 		sDockerManager.hostIP, sDockerManager.hostIPErr = getDockerIPFromDockerHost(sDockerManager.host)
+		sDockerManager.hostSanitized = getDockerHostSanitized(sDockerManager.host)
 		sDockerManager.goContext = context.Background()
 		// Set the Docker CLI version for User-Agent header
 		version.Version = "ddev-" + versionconstants.DdevVersion
@@ -124,7 +123,7 @@ func GetDockerHostSanitized() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return dm.hostSanitized, dm.hostSanitizedErr
+	return dm.hostSanitized, nil
 }
 
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
@@ -172,8 +171,8 @@ func ResetDockerHost(host string) error {
 		return err
 	}
 	dm.host = host
-	dm.hostSanitized, dm.hostSanitizedErr = getDockerHostSanitized(dm.host)
 	dm.hostIP, dm.hostIPErr = getDockerIPFromDockerHost(dm.host)
+	dm.hostSanitized = getDockerHostSanitized(dm.host)
 	return nil
 }
 
@@ -197,16 +196,13 @@ func GetDockerAPIVersion() (string, error) {
 }
 
 // getDockerHostSanitized returns Docker host but with all special characters removed
-func getDockerHostSanitized(host string) (string, error) {
+func getDockerHostSanitized(host string) string {
 	// Make it shorter so we don't hit Mutagen 63-char limit
 	dockerHost := strings.TrimPrefix(host, "unix://")
 	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
 	dockerHost = strings.Trim(dockerHost, "/.")
 	// Convert remaining descriptor to alphanumeric
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	if err != nil {
-		return "", err
-	}
+	reg := regexp.MustCompile("[^a-zA-Z0-9]+")
 	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
-	return alphaOnly, nil
+	return alphaOnly
 }
