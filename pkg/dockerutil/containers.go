@@ -532,9 +532,9 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	}
 
 	// Set up host.docker.internal based on DDEV's standard approach
-	_, extraHosts := GetHostDockerInternal()
-	if extraHosts != "" && !slices.Contains(hostConfig.ExtraHosts, "host.docker.internal:"+extraHosts) {
-		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:"+extraHosts)
+	hostDockerInternal := GetHostDockerInternal()
+	if hostDockerInternal.ExtraHost != "" && !slices.Contains(hostConfig.ExtraHosts, "host.docker.internal:"+hostDockerInternal.ExtraHost) {
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:"+hostDockerInternal.ExtraHost)
 	}
 
 	c, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)

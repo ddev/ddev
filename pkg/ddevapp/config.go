@@ -971,7 +971,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
 
-	hostDockerInternalIP, hostDockerInternalExtraHost := dockerutil.GetHostDockerInternal()
+	hostDockerInternal := dockerutil.GetHostDockerInternal()
+	util.Debug(hostDockerInternal.Message)
+
 	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 	if err != nil {
 		util.Warning("Could not determine NFS server IP address: %v", err)
@@ -1017,7 +1019,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBMountDir:                "/var/lib/mysql",
 		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
-		HostDockerInternalIP:      hostDockerInternalIP,
+		HostDockerInternalIP:      hostDockerInternal.IPAddress,
 		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
@@ -1064,7 +1066,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
 		// If WSL2 we have to figure out other things, see GetHostDockerInternal()
-		UseHostDockerInternalExtraHosts: hostDockerInternalExtraHost == "host-gateway",
+		UseHostDockerInternalExtraHosts: hostDockerInternal.ExtraHost == "host-gateway",
 		BitnamiVolumeDir:                "",
 		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
