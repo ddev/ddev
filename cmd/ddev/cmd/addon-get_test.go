@@ -165,9 +165,9 @@ func TestCmdAddonDependencies(t *testing.T) {
 
 	t.Cleanup(func() {
 		assert := asrt.New(t)
-		out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "dependency_recipe")
+		out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "depender_recipe")
 		assert.NoError(err, "output='%s'", out)
-		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "depender_recipe")
+		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "dependency_recipe")
 		assert.NoError(err, "output='%s'", out)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
