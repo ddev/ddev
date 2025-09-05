@@ -389,16 +389,6 @@ func GetPublishedPort(privatePort uint16, container container.Summary) int {
 	return 0
 }
 
-// CheckForHTTPS determines if a container has the HTTPS_EXPOSE var
-// set to route 443 traffic to 80
-func CheckForHTTPS(container container.Summary) bool {
-	env := GetContainerEnv("HTTPS_EXPOSE", container)
-	if env != "" && strings.Contains(env, "443:80") {
-		return true
-	}
-	return false
-}
-
 // RunSimpleContainer runs a container (non-daemonized) and captures the stdout/stderr.
 // It will block, so not to be run on a container whose entrypoint or cmd might hang or run too long.
 // This should be the equivalent of something like
