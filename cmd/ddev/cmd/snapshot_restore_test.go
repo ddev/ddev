@@ -43,14 +43,6 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	assert.Contains(out, "Created database snapshot test-snapshot")
 	testcommon.CheckGoroutineOutput(t, out)
 
-	// Try interactive command
-	// Doesn't seem to work without pty, 2021-12-14
-	//if !nodeps.IsWindows() {
-	//	out, err = exec.RunCommand("bash", []string{"-c", "echo -nq '\n' | " + DdevBin + " snapshot restore"})
-	//	assert.NoError(err)
-	//	assert.Contains(out, "Restored database snapshot")
-	//}
-
 	// Ensure that latest snapshot can be restored
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "restore", "--latest")
 	assert.NoError(err)
