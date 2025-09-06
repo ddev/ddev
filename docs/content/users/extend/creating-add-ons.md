@@ -294,13 +294,29 @@ ddev_version_constraint: '>= v1.23.4'
 
 ### Dependencies
 
-Declare add-on dependencies:
+Declare add-on dependencies that will be automatically installed:
 
 ```yaml
 dependencies:
-  - redis
-  - elasticsearch
+  - ddev/ddev-redis        # GitHub repository
+  - /path/to/local/addon   # Local directory path
+  - ../relative/addon      # Relative path
+  - https://example.com/addon.tar.gz  # Direct tarball URL
 ```
+
+Dependencies are automatically installed when the add-on is installed. If a dependency is missing, DDEV will:
+
+1. **Automatically install it** using the same formats supported by `ddev add-on get`
+2. **Detect circular dependencies** and prevent infinite loops
+3. **Install recursively** - dependencies of dependencies are also installed
+
+To skip automatic dependency installation, use the `--no-dependencies` flag:
+
+```bash
+ddev add-on get --no-dependencies my-addon
+```
+
+This requires that all dependencies are already installed manually.
 
 ### Template Replacements
 

@@ -1,0 +1,3 @@
+#ddev-generated
+# Test configuration file for runtime deps addon
+runtime_dependency_test: true
