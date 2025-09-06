@@ -169,7 +169,7 @@ ddev aliases
 
 ## `artisan`
 
-*Alias: `art`.*
+*Aliases: `art`, `a`.*
 
 Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
 
