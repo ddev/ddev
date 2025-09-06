@@ -206,7 +206,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		}
 		// On Windows, permissions can't be inferred from what is on the host side, so force 777 for
 		// most things
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			args = append(args, []string{"--permissions-mode=manual", "--default-file-mode-beta=0777", "--default-directory-mode-beta=0777"}...)
 		}
 		util.Debug("Creating Mutagen sync: mutagen %v", args)
@@ -677,7 +677,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	// It's impossible to use posix-raw on traditional windows.
 	// But this means that there will be errors with rooted symlinks in the container on windows
 	symlinkMode := "posix-raw"
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		symlinkMode = "portable"
 	}
 	err = os.MkdirAll(filepath.Dir(mutagenYmlPath), 0755)
@@ -759,7 +759,10 @@ func GetMutagenVolumeLabel(app *DdevApp) (string, error) {
 func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bool, info string) {
 	mutagenSyncExists := MutagenSyncExists(app)
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
-	dockerHostID := dockerutil.GetDockerHostID()
+	dockerHostSanitized, err := dockerutil.GetDockerHostSanitized()
+	if err != nil {
+		util.Failed(err.Error())
+	}
 	mutagenLabel := ""
 	configFileHashLabel := ""
 	var mutagenSyncLabelErr error
@@ -789,14 +792,14 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	case mutagenSyncLabelErr != nil:
 		return false, volumeExists, "Mutagen sync session exists but does not have label"
 	// If the labels do not have the current context as first part of label, we have trouble.
-	case !strings.HasPrefix(volumeLabel, dockerHostID) || !strings.HasPrefix(mutagenLabel, dockerHostID):
-		return false, volumeExists, fmt.Sprintf("Volume label '%s' or sync label '%s' does not start with current dockerHostID (%s)", volumeLabel, mutagenLabel, dockerHostID)
-	// if we have labels for both and they match, it's all fine.
+	case !strings.HasPrefix(volumeLabel, dockerHostSanitized) || !strings.HasPrefix(mutagenLabel, dockerHostSanitized):
+		return false, volumeExists, fmt.Sprintf("Volume label '%s' or sync label '%s' does not start with current dockerHostSanitized (%s)", volumeLabel, mutagenLabel, dockerHostSanitized)
+	// if we have labels for both, and they match, it's all fine.
 	case mutagenLabel == volumeLabel:
 		return true, volumeExists, fmt.Sprintf("Volume and Mutagen sync session have the same label: %s", volumeLabel)
 	}
 
-	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: currentDockerContext=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerutil.DockerContext, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
+	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: dockerHostSanitized=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerHostSanitized, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 }
 
 // GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session
@@ -843,7 +846,11 @@ func TerminateAllMutagenSync() {
 
 // GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to Mutagen volume
 func GetDefaultMutagenVolumeSignature(_ *DdevApp) string {
-	return fmt.Sprintf("%s-%v", dockerutil.GetDockerHostID(), time.Now().Unix())
+	dockerHostSanitized, err := dockerutil.GetDockerHostSanitized()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+	return fmt.Sprintf("%s-%v", dockerHostSanitized, time.Now().Unix())
 }
 
 // checkMutagenUploadDirs tells people if they are using Mutagen without upload_dir

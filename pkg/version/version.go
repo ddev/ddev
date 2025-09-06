@@ -55,34 +55,27 @@ func GetVersionInfo() map[string]string {
 
 // GetDockerPlatform gets the platform used for Docker engine
 func GetDockerPlatform() (string, error) {
-	ctx, client, err := dockerutil.GetDockerClient()
-	if err != nil {
-		return "", err
-	}
-
-	info, err := client.Info(ctx)
+	info, err := dockerutil.GetDockerClientInfo()
 	if err != nil {
 		return "", err
 	}
 
 	platform := info.OperatingSystem
 	switch {
-	case strings.HasPrefix(platform, "Docker Desktop"):
+	case dockerutil.IsDockerDesktop():
 		platform = "docker-desktop"
-	case strings.HasPrefix(platform, "Rancher Desktop") || strings.Contains(info.Name, "rancher-desktop"):
+	case dockerutil.IsRancherDesktop():
 		platform = "rancher-desktop"
-	case strings.HasPrefix(info.Name, "colima"):
+	case dockerutil.IsColima():
 		platform = "colima"
-	case strings.HasPrefix(info.Name, "lima"):
+	case dockerutil.IsLima():
 		platform = "lima"
-	case platform == "OrbStack":
+	case dockerutil.IsOrbStack():
 		platform = "orbstack"
 	case nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "wsl2-docker-ce"
 	case !nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "linux-docker"
-	default:
-		platform = info.OperatingSystem
 	}
 
 	return platform, nil

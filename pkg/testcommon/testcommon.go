@@ -12,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -105,7 +104,7 @@ func (site *TestSite) Prepare() error {
 	util.CheckErr(err)
 
 	output.UserOut.Printf("Copying directory %s to %s\n", cachedSrcDir, site.Dir)
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		// Simple cp -r is far, far faster than our fileutil.CopyDir
 		cmd := exec.Command("bash", "-c", fmt.Sprintf(`cp -rp %s %s`, cachedSrcDir, site.Dir))
 		err = cmd.Run()
@@ -517,7 +516,7 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	// We see intermittent php-fpm SIGBUS failures, only on macOS.
 	// That results in a 502/503. If we get a 502/503 on macOS, try again.
 	// It seems to be a 502 with nginx-fpm and a 503 with apache-fpm
-	if runtime.GOOS == "darwin" && resp != nil && (resp.StatusCode >= 500) {
+	if nodeps.IsMacOS() && resp != nil && (resp.StatusCode >= 500) {
 		t.Logf("Received %d error on macOS, retrying GetLocalHTTPResponse", resp.StatusCode)
 		time.Sleep(time.Second)
 		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)

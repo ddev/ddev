@@ -7,13 +7,13 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/composer"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
@@ -148,7 +148,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 		output.UserOut.Printf("Moving install to Composer root")
 
 		rsyncArgs := "-rltgopD" // Same as -a
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			rsyncArgs = "-rlD" // on windows can't do perms, owner, group, times
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -320,7 +320,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 
 		util.Success("\nddev composer create-project was successful.")
 
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
 	},

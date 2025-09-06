@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 
@@ -172,7 +172,7 @@ func TestCmdExec(t *testing.T) {
 	defer os.Remove(f.Name()) // nolint: errcheck
 
 	bashTempName := f.Name()
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		bashTempName = util.WindowsPathToCygwinPath(bashTempName)
 	}
 	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", DdevBin, bashTempName))

@@ -3,29 +3,29 @@ package nodeps
 import (
 	"bytes"
 	"fmt"
-	"github.com/ddev/ddev/pkg/output"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/output"
 )
 
 // IsWSL2 returns true if running WSL2
 func IsWSL2() bool {
-	if runtime.GOOS == "linux" {
-		// First, try checking env variable
-		if os.Getenv(`WSL_INTEROP`) != "" {
-			return true
-		}
-		// But that doesn't always work, so check for existence of microsoft in /proc/version
-		fullFileBytes, err := os.ReadFile("/proc/version")
-		if err != nil {
-			return false
-		}
-		fullFileString := string(fullFileBytes)
-		return strings.Contains(fullFileString, "-microsoft")
+	if !IsLinux() {
+		return false
 	}
-	return false
+	// First, try checking env variable
+	if os.Getenv(`WSL_INTEROP`) != "" {
+		return true
+	}
+	// But that doesn't always work, so check for existence of microsoft in /proc/version
+	fullFileBytes, err := os.ReadFile("/proc/version")
+	if err != nil {
+		return false
+	}
+	fullFileString := string(fullFileBytes)
+	return strings.Contains(fullFileString, "-microsoft")
 }
 
 // IsWSL2MirroredMode returns true if running WSL2 in mirrored mode.

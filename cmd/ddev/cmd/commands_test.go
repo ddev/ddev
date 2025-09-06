@@ -6,7 +6,6 @@ import (
 	osexec "os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -341,7 +340,7 @@ func TestLaunchCommand(t *testing.T) {
 		":3000":                     primaryURLWithoutPort + ":3000",
 		":3000/with-default-scheme": "https://" + app.GetHostname() + ":3000/with-default-scheme",
 	}
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		// Git-Bash converts single forward slashes to a Windows path
 		// Escape it with a second slash, see https://stackoverflow.com/q/58677021
 		cases["//path-with-slash"] = app.GetPrimaryURL() + "/path-with-slash"
