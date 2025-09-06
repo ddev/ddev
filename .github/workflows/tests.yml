@@ -53,8 +53,8 @@ jobs:
             webserver: "nginx-fpm"
           - name: "mutagen"
             mutagen: true
-#          - name: "no-bind-mounts"
-#            no-bind-mounts: "true"
+          - name: "no-bind-mounts"
+            no-bind-mounts: "true"
           - name: "pull-push-test-platforms"
             pull-push-test-platforms: true
           - name: "race-detection"
