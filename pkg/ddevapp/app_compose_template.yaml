@@ -67,7 +67,6 @@ services:
       - DDEV_USER
       - DDEV_VERSION
       - DOCKER_IP={{ .DockerIP }}
-      - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
       - LINES
       - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
@@ -224,7 +223,6 @@ services:
     - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
     {{ end }}
     - DOCKER_IP={{ .DockerIP }}
-    - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
     # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
     # To expose a container port to a different host port, define the port as hostPort:containerPort
     # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
@@ -266,13 +264,6 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
-
-      {{ if .HostDockerInternalIP }}
-    extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
-      {{ else if .UseHostDockerInternalExtraHosts }}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      {{ end }}
 
       {{ if not .OmitRouter }}
     external_links:

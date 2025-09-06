@@ -3623,10 +3623,21 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.NotNil(t, webService.Networks["dummy"])
 	assert.Equal(2, webService.Networks["dummy"].Priority)
 
+	hostDockerInternal := dockerutil.GetHostDockerInternal()
+
 	for serviceName, service := range app.ComposeYaml.Services {
 		t.Run("service_"+serviceName, func(t *testing.T) {
 			require.Contains(t, service.Networks, "ddev_default", "service %s missing ddev_default network", serviceName)
 			require.Contains(t, service.Networks, "default", "service %s missing default network", serviceName)
+
+			require.NotNil(t, service.Environment["HOST_DOCKER_INTERNAL_IP"], "service %s missing HOST_DOCKER_INTERNAL_IP", serviceName)
+			require.Equal(t, hostDockerInternal.IPAddress, *service.Environment["HOST_DOCKER_INTERNAL_IP"], "service %s HOST_DOCKER_INTERNAL_IP value incorrect", serviceName)
+
+			if hostDockerInternal.ExtraHost != "" {
+				require.NotNil(t, service.ExtraHosts, "service %s missing ExtraHosts", serviceName)
+				require.Contains(t, service.ExtraHosts, "host.docker.internal", "service %s missing host.docker.internal in ExtraHosts", serviceName)
+				require.Contains(t, service.ExtraHosts["host.docker.internal"], hostDockerInternal.ExtraHost, "service %s host.docker.internal should contain %s", serviceName, hostDockerInternal.ExtraHost)
+			}
 
 			for portIndex, port := range service.Ports {
 				require.Equal(t, "127.0.0.1", port.HostIP, "service %s port %d should have HostIP set to 127.0.0.1", serviceName, portIndex)
