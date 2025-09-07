@@ -5,7 +5,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types/network"
 )
 
 // GetNFSServerAddr gets the address that can be used for the NFS server.
@@ -34,7 +33,12 @@ func GetNFSServerAddr() (string, error) {
 
 	case nodeps.IsWSL2() && !IsDockerDesktop():
 
-		nfsAddr = wsl2GetWindowsHostIP()
+		wsl2WindowsHostIP, err := getWSL2WindowsHostIP()
+		if err != nil {
+			util.Warning("Unable to determine WSL2 Windows host IP address: %v", err)
+		} else {
+			nfsAddr = wsl2WindowsHostIP
+		}
 
 	// Docker on Linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
@@ -43,20 +47,11 @@ func GetNFSServerAddr() (string, error) {
 		// Look up info from the bridge network
 		// We can't use the Docker host because that's for inside the container,
 		// and this is for setting up the network interface
-		ctx, client, err := GetDockerClient()
+		dockerBridgeIP, err := getDockerLinuxBridgeIP()
 		if err != nil {
-			return "", err
-		}
-		n, err := client.NetworkInspect(ctx, "bridge", network.InspectOptions{})
-		if err != nil {
-			return "", err
-		}
-		if len(n.IPAM.Config) > 0 {
-			if n.IPAM.Config[0].Gateway != "" {
-				nfsAddr = n.IPAM.Config[0].Gateway
-			} else {
-				util.Warning("Unable to determine Docker bridge gateway - no gateway")
-			}
+			util.Warning("Unable to determine Docker bridge gateway IP address: %v", err)
+		} else {
+			nfsAddr = dockerBridgeIP
 		}
 	}
 
