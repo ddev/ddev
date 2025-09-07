@@ -238,5 +238,6 @@ nav:
     - developers/network-test-environments.md
     - developers/network-bandwidth-testing.md
     - developers/tmp/mcp-server-prd.md
+    - developers/tmp/manual_testing.md
   - 'Blog': https://ddev.com/blog
   - 'Add-on Registry': https://addons.ddev.com
