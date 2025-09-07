@@ -17,12 +17,12 @@ type BasicSecurityManager struct {
 
 // OperationLogEntry represents a logged MCP operation
 type OperationLogEntry struct {
-	Timestamp time.Time           `json:"timestamp"`
-	ToolName  string              `json:"tool_name"`
-	Args      map[string]any      `json:"args"`
-	Result    any                 `json:"result,omitempty"`
-	Error     string              `json:"error,omitempty"`
-	Success   bool                `json:"success"`
+	Timestamp time.Time      `json:"timestamp"`
+	ToolName  string         `json:"tool_name"`
+	Args      map[string]any `json:"args"`
+	Result    any            `json:"result,omitempty"`
+	Error     string         `json:"error,omitempty"`
+	Success   bool           `json:"success"`
 }
 
 // NewSecurityManager creates a new security manager instance

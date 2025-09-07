@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	"sync"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -47,10 +48,14 @@ func (t *StdioTransport) Start() error {
 		return nil
 	}
 
-	// TODO: Implement stdio transport startup
-	// This will use os.Stdin and os.Stdout for MCP communication
+	// Start MCP server with stdio transport
+	// This blocks and handles all MCP communication over stdin/stdout
 	t.running = true
-	return nil
+	ctx := context.Background()
+	stdioTransport := &mcp.StdioTransport{}
+	err := t.server.Run(ctx, stdioTransport)
+	t.running = false
+	return err
 }
 
 // Stop terminates the stdio transport

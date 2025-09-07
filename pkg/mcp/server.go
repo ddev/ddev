@@ -54,9 +54,7 @@ func (s *DDEVMCPServer) IsRunning() bool {
 
 // registerTools registers all available DDEV MCP tools with the server
 func (s *DDEVMCPServer) registerTools() error {
-	// Tool registration will be implemented in tools.go
-	// This is a placeholder for the tool registration logic
-	return nil
+	return registerDDEVTools(s.server)
 }
 
 // createTransport creates the appropriate transport based on server settings
