@@ -68,12 +68,15 @@ Two flags are available for every command:
 
 Environment variables:
 
-* `DDEV_GITHUB_TOKEN`: A [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) may be used for `ddev add-on` requests (which result in GitHub API queries). It's unusual for casual users to need this, but if you're doing lots of `ddev add-on` requests you may run into rate limiting. The token you use requires no privileges at all. Example:
+* `DDEV_GITHUB_TOKEN`: [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) for `ddev add-on` requests to avoid rate limiting. No privileges required for public repositories, scopes are only needed for [private repositories](../extend/using-add-ons.md#private-add-ons).
 
-```bash
-export DDEV_GITHUB_TOKEN=<your github token>
-ddev add-on list --all
-```
+    ```bash
+    export DDEV_GITHUB_TOKEN=<your-github-token>
+    ddev add-on list --all
+    ```
+
+* `GH_TOKEN`: Alternative GitHub token variable (lower priority than `DDEV_GITHUB_TOKEN`).
+* `GITHUB_TOKEN`: Alternative GitHub token variable (lowest priority).
 
 ### `add-on get`
 
@@ -103,6 +106,12 @@ ddev add-on get ddev/ddev-redis --version v1.0.4
 # Download the Drupal Solr add-on from its v1.2.3 release tarball
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
 
+# Download the Drupal Contrib add-on from its main branch tarball
+ddev add-on get https://github.com/ddev/ddev-drupal-contrib/tarball/main
+
+# Download the OpenSearch add-on from a pull request #15 tarball
+ddev add-on get https://github.com/ddev/ddev-opensearch/tarball/refs/pull/15/head
+
 # Copy an add-on available in another directory
 ddev add-on get /path/to/package
 
@@ -126,6 +135,9 @@ When an add-on declares dependencies in its `install.yaml`, DDEV will automatica
 DDEV will detect and prevent circular dependencies with clear error messages.
 
 In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
+
+!!!tip "How to install add-ons from private repositories?"
+    See [Private Add-ons](../extend/using-add-ons.md#private-add-ons) for details.
 
 ### `add-on remove`
 

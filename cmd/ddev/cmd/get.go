@@ -15,6 +15,8 @@ var Get = &cobra.Command{
 	Example: `ddev get ddev/ddev-redis
 ddev get ddev/ddev-redis --version v1.0.4
 ddev get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
+ddev get https://github.com/ddev/ddev-drupal-contrib/tarball/main
+ddev get https://github.com/ddev/ddev-opensearch/tarball/refs/pull/15/head
 ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
 ddev get --list

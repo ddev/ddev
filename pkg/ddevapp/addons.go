@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -18,7 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
-	github2 "github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -27,7 +26,6 @@ import (
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerMount "github.com/docker/docker/api/types/mount"
 	dockerStrslice "github.com/docker/docker/api/types/strslice"
-	"github.com/google/go-github/v72/github"
 	"github.com/otiai10/copy"
 	"go.yaml.in/yaml/v3"
 )
@@ -695,7 +693,7 @@ func GetAddonDdevWarningExitCode(action string) int {
 
 // ListAvailableAddons lists the add-ons that are listed on github
 func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
-	client := github2.GetGithubClient(context.Background())
+	ctx, client := github.GetGitHubClient()
 	q := "topic:ddev-get fork:true"
 	if officialOnly {
 		q = q + " org:" + globalconfig.DdevGithubOrg
@@ -704,7 +702,7 @@ func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
 	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
 	var allRepos []*github.Repository
 	for {
-		repos, resp, err := client.Search.Repositories(context.Background(), q, opts)
+		repos, resp, err := client.Search.Repositories(ctx, q, opts)
 		if err != nil {
 			msg := fmt.Sprintf("Unable to get list of available services: %v", err)
 			if resp != nil {
@@ -1055,7 +1053,7 @@ func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, ve
 	repo := parts[1]
 
 	// Get GitHub release
-	tarballURL, downloadedRelease, err := github2.GetGitHubRelease(owner, repo, requestedVersion)
+	tarballURL, downloadedRelease, err := github.GetGitHubRelease(owner, repo, requestedVersion)
 	if err != nil {
 		return err
 	}
