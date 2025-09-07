@@ -30,6 +30,12 @@ func registerDDEVTools(server *mcp.Server) error {
 		Description: "List all DDEV projects with their current status and configuration",
 	}, handleListProjects)
 
+	// Register the ddev_describe_project tool
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_describe_project",
+		Description: "Describe a DDEV project by name or approot (full details)",
+	}, handleDescribeProject)
+
 	return nil
 }
 
@@ -116,10 +122,52 @@ func handleListProjects(ctx context.Context, req *mcp.CallToolRequest, input Lis
 	}, output, nil
 }
 
+// DescribeProjectInput represents input for describing a single project
+type DescribeProjectInput struct {
+	// Name: project name. If empty and AppRoot not set, uses current directory.
+	Name string `json:"name,omitempty" jsonschema:"description:Project name (uses active project if omitted)"`
+	// AppRoot: optional absolute path to project root (directory containing .ddev)
+	AppRoot string `json:"approot,omitempty" jsonschema:"description:Absolute path to project root (overrides name if set)"`
+	// Short: if true, return brief description
+	Short bool `json:"short,omitempty" jsonschema:"description:Return a short summary instead of full details"`
+}
+
+// DescribeProjectOutput represents output of the describe tool
+type DescribeProjectOutput struct {
+	Project map[string]any `json:"project" jsonschema:"description:Full project description"`
+}
+
 // handleDescribeProject handles the ddev_describe_project MCP tool
-func handleDescribeProject(ctx context.Context, args map[string]any) (any, error) {
-	// TODO: Implement in Task 4
-	return nil, fmt.Errorf("ddev_describe_project not yet implemented")
+func handleDescribeProject(ctx context.Context, _ *mcp.CallToolRequest, input DescribeProjectInput) (*mcp.CallToolResult, DescribeProjectOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err)}}}, DescribeProjectOutput{}, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Failed to find active app %s: %v", input.Name, err)}}}, DescribeProjectOutput{}, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Failed to find active app from current directory: %v", err)}}}, DescribeProjectOutput{}, nil
+		}
+	}
+
+	desc, err := app.Describe(input.Short)
+	if err != nil {
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Failed to describe project %s: %v", app.GetName(), err)}}}, DescribeProjectOutput{}, nil
+	}
+
+	result := &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Described project %s (status=%v)", desc["name"], desc["status"])}}}
+	return result, DescribeProjectOutput{Project: desc}, nil
 }
 
 // handleStartProject handles the ddev_start_project MCP tool

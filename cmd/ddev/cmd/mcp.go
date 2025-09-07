@@ -80,14 +80,15 @@ ddev mcp start --transport=stdio`,
 			permissions = "read-write"
 		}
 
-		output.UserOut.Printf("DDEV MCP server starting (%s, %s)", transportInfo, permissions)
+		// For stdio transport, write messages to stderr to avoid corrupting MCP JSON-RPC on stdout
+		output.UserErr.Printf("DDEV MCP server starting (%s, %s)", transportInfo, permissions)
 
 		// Wait for shutdown signal or server error
 		select {
 		case err := <-serverErr:
 			util.Failed("MCP server failed to start: %v", err)
 		case <-sigChan:
-			output.UserOut.Println("Shutting down DDEV MCP server...")
+			output.UserErr.Println("Shutting down DDEV MCP server...")
 			cancel()
 
 			// Graceful shutdown with timeout
@@ -102,12 +103,12 @@ ddev mcp start --transport=stdio`,
 			select {
 			case err := <-done:
 				if err != nil {
-					output.UserOut.Printf("Error during shutdown: %v", err)
+					output.UserErr.Printf("Error during shutdown: %v", err)
 				} else {
-					output.UserOut.Println("DDEV MCP server stopped")
+					output.UserErr.Println("DDEV MCP server stopped")
 				}
 			case <-shutdownCtx.Done():
-				output.UserOut.Println("Shutdown timeout exceeded, forcing exit")
+				output.UserErr.Println("Shutdown timeout exceeded, forcing exit")
 			}
 		}
 	},
