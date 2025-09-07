@@ -1680,6 +1680,20 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
 
+	// With NoBindMounts we have to symlink the copied xhprof_prepend.php into /usr/local/bin
+	// Normally it's bind-mounted into there.
+	// TODO: I don't see any reason that we shouldn't do this always;
+	// The ddev-webserver /usr/local/bin/xhprof could be a dangling symlink to
+	// /mnt/ddev_config/xhprof and we could remove the bind-mount.
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Cmd: `ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php`,
+		})
+		if err != nil {
+			util.Warning("Unable to run ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php: %v, stdout=%s, stderr=%s", err, stdout, stderr)
+		}
+	}
+
 	// Wait for web/db containers to become healthy
 	dependers := []string{"web"}
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
