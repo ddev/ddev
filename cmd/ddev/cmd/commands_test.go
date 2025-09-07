@@ -505,6 +505,7 @@ func TestNpmNpxYarnCommands(t *testing.T) {
 		out, err = exec.RunHostCommand(DdevBin, "yarn", "install")
 		assert.NoError(err)
 		assert.Contains(out, "success Saved lockfile")
+	
 		err = os.RemoveAll(packageJSONFile)
 		assert.NoError(err)
 		err = os.RemoveAll(filepath.Join(workDir, "package-lock.json"))
