@@ -499,7 +499,7 @@ func TestNpmNpxYarnCommands(t *testing.T) {
 		out, err := exec.RunHostCommand(DdevBin, "npm", "install", "--no-audit")
 		assert.NoError(err)
 		assert.Contains(out, "up to date in", "d='%s', npm install has wrong output; output='%s'", d, out)
-		out, err := exec.RunHostCommand(DdevBin, "npx", "-c", "'echo hello'")
+		out, err := exec.RunHostCommand(DdevBin, "npx", "-c", "echo hello")
 		assert.NoError(err)
 		assert.Contains(out, "hello", "d='%s', npx -c 'echo hello' has wrong output; output='%s'", d, out)
 		out, err = exec.RunHostCommand(DdevBin, "yarn", "install")
