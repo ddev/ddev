@@ -6,18 +6,18 @@ import (
 
 // DDEVMCPServer represents the DDEV MCP server instance
 type DDEVMCPServer struct {
-	server     *mcp.Server
-	transport  Transport
-	security   SecurityManager
-	settings   ServerSettings
+	server    *mcp.Server
+	transport Transport
+	security  SecurityManager
+	settings  ServerSettings
 }
 
 // ServerSettings contains configuration for the MCP server
 type ServerSettings struct {
-	Port         int
-	AllowWrites  bool
-	AutoApprove  []string // Commands that don't need approval
-	LogLevel     string
+	Port          int
+	AllowWrites   bool
+	AutoApprove   []string // Commands that don't need approval
+	LogLevel      string
 	TransportType string // "stdio", "http", "websocket"
 }
 
@@ -37,26 +37,26 @@ type SecurityManager interface {
 
 // ProjectInfo represents DDEV project information structure
 type ProjectInfo struct {
-	Name            string            `json:"name"`
-	Status          string            `json:"status"`
-	StatusDesc      string            `json:"status_desc"`
-	AppRoot         string            `json:"approot"`
-	ShortRoot       string            `json:"shortroot"`
-	Type            string            `json:"type"`
-	PrimaryURL      string            `json:"primary_url"`
-	HTTPSUrl        string            `json:"httpsurl"`
-	HTTPUrl         string            `json:"httpurl"`
-	Services        map[string]any    `json:"services,omitempty"`
-	DatabaseInfo    map[string]any    `json:"dbinfo,omitempty"`
+	Name         string         `json:"name"`
+	Status       string         `json:"status"`
+	StatusDesc   string         `json:"status_desc"`
+	AppRoot      string         `json:"approot"`
+	ShortRoot    string         `json:"shortroot"`
+	Type         string         `json:"type"`
+	PrimaryURL   string         `json:"primary_url"`
+	HTTPSUrl     string         `json:"httpsurl"`
+	HTTPUrl      string         `json:"httpurl"`
+	Services     map[string]any `json:"services,omitempty"`
+	DatabaseInfo map[string]any `json:"dbinfo,omitempty"`
 }
 
 // OperationResult represents the result of MCP operations
 type OperationResult struct {
-	Success   bool              `json:"success"`
-	Message   string            `json:"message"`
-	Data      map[string]any    `json:"data,omitempty"`
-	Errors    []string          `json:"errors,omitempty"`
-	Warnings  []string          `json:"warnings,omitempty"`
+	Success  bool           `json:"success"`
+	Message  string         `json:"message"`
+	Data     map[string]any `json:"data,omitempty"`
+	Errors   []string       `json:"errors,omitempty"`
+	Warnings []string       `json:"warnings,omitempty"`
 }
 
 // PermissionLevel defines different security levels
