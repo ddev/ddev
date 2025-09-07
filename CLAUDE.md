@@ -222,3 +222,4 @@ When creating pull requests for DDEV, follow the PR template structure from `.gi
 
 **Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
 @./.taskmaster/CLAUDE.md
+- Always use `go mod vendor` and `go mod tidy` when adding to the vendor directory
