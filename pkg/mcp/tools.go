@@ -12,14 +12,14 @@ import (
 
 // ListProjectsInput represents the input parameters for the ddev_list_projects tool
 type ListProjectsInput struct {
-	ActiveOnly bool   `json:"active_only,omitempty" jsonschema:"description=If set, only currently active projects will be returned"`
-	TypeFilter string `json:"type_filter,omitempty" jsonschema:"description=Show only projects of this type (e.g. drupal11, wordpress, php)"`
+	ActiveOnly bool   `json:"active_only,omitempty" jsonschema:"description:If set, only currently active projects will be returned"`
+	TypeFilter string `json:"type_filter,omitempty" jsonschema:"description:Show only projects of this type (e.g. drupal11, wordpress, php)"`
 }
 
 // ListProjectsOutput represents the structured output of the ddev_list_projects tool
 type ListProjectsOutput struct {
-	Projects []ProjectInfo `json:"projects" jsonschema:"description=List of DDEV projects"`
-	Count    int           `json:"count" jsonschema:"description=Number of projects returned"`
+	Projects []ProjectInfo `json:"projects" jsonschema:"description:List of DDEV projects"`
+	Count    int           `json:"count" jsonschema:"description:Number of projects returned"`
 }
 
 // registerDDEVTools registers all DDEV MCP tools with the provided server
