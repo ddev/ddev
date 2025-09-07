@@ -1681,11 +1681,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// With NoBindMounts we have to symlink the copied xhprof_prepend.php into /usr/local/bin
-	// Normally it's bind-mounted into there.
-	// TODO: I don't see any reason that we shouldn't do this always;
-	// The ddev-webserver /usr/local/bin/xhprof could be a dangling symlink to
-	// /mnt/ddev_config/xhprof and we could remove the bind-mount.
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
+	// When in prepend mode, which will soon become fairly obsolete.
+	// Normally it's bind-mounted into there in prepend mode.
+	// The default is to use the container-built xhgui version
+	// TODO: I'm pretty sure we could simplify this in general by using symlink
+	// instead of bind-mount for the /usr/local/bin/xhprof directory anyway.
+	if app.GetXHProfMode() == types.XHProfModePrepend && globalconfig.DdevGlobalConfig.NoBindMounts {
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php`,
 		})
