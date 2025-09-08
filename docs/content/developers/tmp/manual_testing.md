@@ -1,6 +1,6 @@
 # Manual Testing: DDEV MCP Server
 
-This page documents quick, reproducible ways to manually test the DDEV MCP server with various MCP clients, including IDE integrations and cloud environments. It covers a tiny Go client included in this repo, the generic MCP Inspector, Claude Code integration, GitHub Codespaces, and VS Code.
+This page documents quick, reproducible ways to manually test the DDEV MCP server with various MCP clients, including IDE integrations and cloud environments. It covers a tiny Go client included in this repository, the generic MCP Inspector, Claude Code integration, GitHub Codespaces, and VS Code.
 
 ## Prerequisites
 
