@@ -33,7 +33,11 @@ func (s *DDEVMCPServer) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// Safely set the transport
+	s.mu.Lock()
 	s.transport = transport
+	s.mu.Unlock()
 
 	// Start the transport
 	return transport.Start(ctx)
@@ -41,15 +45,23 @@ func (s *DDEVMCPServer) Start(ctx context.Context) error {
 
 // Stop gracefully shuts down the MCP server
 func (s *DDEVMCPServer) Stop() error {
-	if s.transport != nil && s.transport.IsRunning() {
-		return s.transport.Stop()
+	s.mu.RLock()
+	transport := s.transport
+	s.mu.RUnlock()
+
+	if transport != nil && transport.IsRunning() {
+		return transport.Stop()
 	}
 	return nil
 }
 
 // IsRunning returns whether the MCP server is currently running
 func (s *DDEVMCPServer) IsRunning() bool {
-	return s.transport != nil && s.transport.IsRunning()
+	s.mu.RLock()
+	transport := s.transport
+	s.mu.RUnlock()
+
+	return transport != nil && transport.IsRunning()
 }
 
 // registerTools registers all available DDEV MCP tools with the server
