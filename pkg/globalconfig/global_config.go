@@ -231,7 +231,10 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
-	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
+	// Empty router field is treated as implicit default (traefik)
+	if DdevGlobalConfig.Router == "" {
+		DdevGlobalConfig.Router = types.RouterTypeTraefik
+	} else if !types.IsValidRouterType(DdevGlobalConfig.Router) {
 		output.UserOut.Warnf("\nThe only valid router type is %s, but you have router: %s in your global configuration, using %s instead.\n", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
 		DdevGlobalConfig.Router = types.RouterTypeTraefik
 	}
