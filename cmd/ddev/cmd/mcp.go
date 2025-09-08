@@ -22,6 +22,8 @@ var mcpSettings = mcp.ServerSettings{
 	TransportType: "stdio",
 }
 
+var testMode bool
+
 // MCPCmd represents the mcp command group
 var MCPCmd = &cobra.Command{
 	Use:   "mcp",
@@ -49,7 +51,8 @@ the Model Context Protocol (MCP). By default, uses stdio transport and runs
 with read-only permissions for security.`,
 	Example: `ddev mcp start
 ddev mcp start --transport=http --port=8080 --allow-writes
-ddev mcp start --transport=stdio`,
+ddev mcp start --transport=stdio
+ddev mcp start --test --transport=stdio`,
 	Run: func(_ *cobra.Command, _ []string) {
 		// Create MCP server with current settings
 		server := mcp.NewDDEVMCPServer(mcpSettings)
@@ -60,6 +63,15 @@ ddev mcp start --transport=stdio`,
 
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+		// In test mode, add a timeout to avoid hanging indefinitely
+		if testMode && mcpSettings.TransportType == "stdio" {
+			var timeoutCancel context.CancelFunc
+			ctx, timeoutCancel = context.WithTimeout(ctx, 30*time.Second)
+			defer timeoutCancel()
+
+			output.UserErr.Println("Running in test mode with 30 second timeout")
+		}
 
 		// Start server in goroutine
 		serverErr := make(chan error, 1)
@@ -83,10 +95,19 @@ ddev mcp start --transport=stdio`,
 		// For stdio transport, write messages to stderr to avoid corrupting MCP JSON-RPC on stdout
 		output.UserErr.Printf("DDEV MCP server starting (%s, %s)", transportInfo, permissions)
 
+		// Special case: if running stdio in test mode, check for EOF immediately
+		if testMode && mcpSettings.TransportType == "stdio" {
+			output.UserErr.Println("Test mode: Send EOF (Ctrl+D) or interrupt signal (Ctrl+C) to exit")
+		}
+
 		// Wait for shutdown signal or server error
 		select {
 		case err := <-serverErr:
-			util.Failed("MCP server failed to start: %v", err)
+			if err != nil && err.Error() == "context deadline exceeded" && testMode {
+				output.UserErr.Println("Test mode timeout reached")
+			} else if err != nil {
+				util.Failed("MCP server failed to start: %v", err)
+			}
 		case <-sigChan:
 			output.UserErr.Println("Shutting down DDEV MCP server...")
 			cancel()
@@ -148,6 +169,7 @@ func init() {
 	MCPStartCmd.Flags().IntVar(&mcpSettings.Port, "port", 8080, "HTTP port (used with --transport=http)")
 	MCPStartCmd.Flags().StringVar(&mcpSettings.LogLevel, "log-level", "info", "Log level: debug, info, warn, error")
 	MCPStartCmd.Flags().StringSliceVar(&mcpSettings.AutoApprove, "auto-approve", []string{}, "Commands that don't require approval")
+	MCPStartCmd.Flags().BoolVar(&testMode, "test", false, "Enable test mode with timeout for stdio transport")
 
 	// Add subcommands to MCPCmd
 	MCPCmd.AddCommand(MCPStartCmd)

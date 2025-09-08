@@ -1,6 +1,8 @@
 package mcp
 
 import (
+	"context"
+
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -23,7 +25,7 @@ type ServerSettings struct {
 
 // Transport interface for different MCP transport methods
 type Transport interface {
-	Start() error
+	Start(ctx context.Context) error
 	Stop() error
 	IsRunning() bool
 }
