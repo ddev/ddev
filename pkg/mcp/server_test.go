@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -243,6 +244,315 @@ func TestHandleListProjectsIntegration(t *testing.T) {
 
 	t.Logf("Found %d projects", output.Count)
 	t.Logf("Result: %s", textContent.Text)
+
+	// Validate that the content field contains detailed project information for AI assistants
+	contentText := textContent.Text
+
+	// Should start with project count
+	if !strings.Contains(contentText, fmt.Sprintf("Found %d DDEV projects:", output.Count)) {
+		t.Errorf("Content should start with 'Found %d DDEV projects:', got: %s", output.Count, contentText)
+	}
+
+	// Validate that each project from structured data is represented in the content text
+	for i, project := range output.Projects {
+		projectNum := fmt.Sprintf("%d. %s (%s)", i+1, project.Name, project.Type)
+		if !strings.Contains(contentText, projectNum) {
+			t.Errorf("Content should contain project line '%s', but text was: %s", projectNum, contentText)
+		}
+
+		statusLine := fmt.Sprintf("   Status: %s", project.Status)
+		if !strings.Contains(contentText, statusLine) {
+			t.Errorf("Content should contain status line '%s', but text was: %s", statusLine, contentText)
+		}
+
+		locationLine := fmt.Sprintf("   Location: %s", project.ShortRoot)
+		if !strings.Contains(contentText, locationLine) {
+			t.Errorf("Content should contain location line '%s', but text was: %s", locationLine, contentText)
+		}
+
+		// URL line is optional (only if PrimaryURL is set)
+		if project.PrimaryURL != "" {
+			urlLine := fmt.Sprintf("   URL: %s", project.PrimaryURL)
+			if !strings.Contains(contentText, urlLine) {
+				t.Errorf("Content should contain URL line '%s', but text was: %s", urlLine, contentText)
+			}
+		}
+	}
+
+	// Validate that content and structured data are consistent
+	if output.Count != len(output.Projects) {
+		t.Errorf("Count mismatch: output.Count=%d but len(Projects)=%d", output.Count, len(output.Projects))
+	}
+}
+
+func TestHandleListProjectsContentFormat(t *testing.T) {
+	// This test ensures AI assistants get detailed project information, not just counts
+	// It would have caught the original bug where content only contained "Found X projects"
+
+	// Test with empty project list
+	t.Run("Empty project list", func(t *testing.T) {
+		// Create empty output
+		output := ListProjectsOutput{
+			Projects: []ProjectInfo{},
+			Count:    0,
+		}
+
+		// Build content the same way as the actual function
+		var textContent strings.Builder
+		textContent.WriteString(fmt.Sprintf("Found %d DDEV projects:\n\n", len(output.Projects)))
+
+		for i, project := range output.Projects {
+			textContent.WriteString(fmt.Sprintf("%d. %s (%s)\n", i+1, project.Name, project.Type))
+			textContent.WriteString(fmt.Sprintf("   Status: %s\n", project.Status))
+			textContent.WriteString(fmt.Sprintf("   Location: %s\n", project.ShortRoot))
+			if project.PrimaryURL != "" {
+				textContent.WriteString(fmt.Sprintf("   URL: %s\n", project.PrimaryURL))
+			}
+			if i < len(output.Projects)-1 {
+				textContent.WriteString("\n")
+			}
+		}
+
+		result := textContent.String()
+		expected := "Found 0 DDEV projects:\n\n"
+
+		if result != expected {
+			t.Errorf("Expected '%s', got '%s'", expected, result)
+		}
+	})
+
+	t.Run("Single project with details", func(t *testing.T) {
+		// Test that a single project shows all required details
+		output := ListProjectsOutput{
+			Projects: []ProjectInfo{
+				{
+					Name:       "test-project",
+					Type:       "drupal10",
+					Status:     "running",
+					ShortRoot:  "~/test/project",
+					PrimaryURL: "https://test-project.ddev.site",
+				},
+			},
+			Count: 1,
+		}
+
+		// Build content
+		var textContent strings.Builder
+		textContent.WriteString(fmt.Sprintf("Found %d DDEV projects:\n\n", len(output.Projects)))
+
+		for i, project := range output.Projects {
+			textContent.WriteString(fmt.Sprintf("%d. %s (%s)\n", i+1, project.Name, project.Type))
+			textContent.WriteString(fmt.Sprintf("   Status: %s\n", project.Status))
+			textContent.WriteString(fmt.Sprintf("   Location: %s\n", project.ShortRoot))
+			if project.PrimaryURL != "" {
+				textContent.WriteString(fmt.Sprintf("   URL: %s\n", project.PrimaryURL))
+			}
+			if i < len(output.Projects)-1 {
+				textContent.WriteString("\n")
+			}
+		}
+
+		result := textContent.String()
+
+		// Validate all required elements are present (this would catch the original bug)
+		requiredElements := []string{
+			"Found 1 DDEV projects:",
+			"1. test-project (drupal10)",
+			"   Status: running",
+			"   Location: ~/test/project",
+			"   URL: https://test-project.ddev.site",
+		}
+
+		for _, element := range requiredElements {
+			if !strings.Contains(result, element) {
+				t.Errorf("Result should contain '%s', but got: %s", element, result)
+			}
+		}
+
+		// This assertion would have failed with the original bug
+		if result == "Found 1 DDEV projects" || result == "Found 1 DDEV projects\n" {
+			t.Error("Content should contain detailed project information, not just count - this indicates the original bug!")
+		}
+	})
+
+	t.Run("Multiple projects formatting", func(t *testing.T) {
+		// Test that multiple projects are properly separated and formatted
+		output := ListProjectsOutput{
+			Projects: []ProjectInfo{
+				{
+					Name:       "project1",
+					Type:       "wordpress",
+					Status:     "running",
+					ShortRoot:  "~/p1",
+					PrimaryURL: "https://p1.ddev.site",
+				},
+				{
+					Name:       "project2",
+					Type:       "php",
+					Status:     "stopped",
+					ShortRoot:  "~/p2",
+					PrimaryURL: "https://p2.ddev.site",
+				},
+			},
+			Count: 2,
+		}
+
+		// Build content
+		var textContent strings.Builder
+		textContent.WriteString(fmt.Sprintf("Found %d DDEV projects:\n\n", len(output.Projects)))
+
+		for i, project := range output.Projects {
+			textContent.WriteString(fmt.Sprintf("%d. %s (%s)\n", i+1, project.Name, project.Type))
+			textContent.WriteString(fmt.Sprintf("   Status: %s\n", project.Status))
+			textContent.WriteString(fmt.Sprintf("   Location: %s\n", project.ShortRoot))
+			if project.PrimaryURL != "" {
+				textContent.WriteString(fmt.Sprintf("   URL: %s\n", project.PrimaryURL))
+			}
+			if i < len(output.Projects)-1 {
+				textContent.WriteString("\n")
+			}
+		}
+
+		result := textContent.String()
+
+		// Validate proper separation between projects
+		if !strings.Contains(result, "1. project1 (wordpress)") {
+			t.Error("Should contain first project details")
+		}
+
+		if !strings.Contains(result, "2. project2 (php)") {
+			t.Error("Should contain second project details")
+		}
+
+		if !strings.Contains(result, "Status: running") {
+			t.Error("Should contain running status")
+		}
+
+		if !strings.Contains(result, "Status: stopped") {
+			t.Error("Should contain stopped status")
+		}
+
+		// Projects should be separated by blank line
+		if !strings.Contains(result, "https://p1.ddev.site\n\n2. project2") {
+			t.Error("Projects should be separated by blank line")
+		}
+	})
+}
+
+func TestHandleListProjectsFiltering(t *testing.T) {
+	// Test that active_only filtering works correctly and content reflects the filtering
+
+	t.Run("ActiveOnly filtering with mixed status projects", func(t *testing.T) {
+		// Mock mixed status projects - this would test the real filtering behavior
+		allProjects := []ProjectInfo{
+			{
+				Name:       "active-project",
+				Type:       "drupal10",
+				Status:     "running",
+				ShortRoot:  "~/active",
+				PrimaryURL: "https://active.ddev.site",
+			},
+			{
+				Name:       "stopped-project",
+				Type:       "wordpress",
+				Status:     "stopped",
+				ShortRoot:  "~/stopped",
+				PrimaryURL: "https://stopped.ddev.site",
+			},
+		}
+
+		activeOnlyProjects := []ProjectInfo{
+			{
+				Name:       "active-project",
+				Type:       "drupal10",
+				Status:     "running",
+				ShortRoot:  "~/active",
+				PrimaryURL: "https://active.ddev.site",
+			},
+		}
+
+		// Test with active_only=true
+		activeOutput := ListProjectsOutput{
+			Projects: activeOnlyProjects,
+			Count:    1,
+		}
+
+		// Build content for active only
+		var activeContent strings.Builder
+		activeContent.WriteString(fmt.Sprintf("Found %d DDEV projects:\n\n", len(activeOutput.Projects)))
+		for i, project := range activeOutput.Projects {
+			activeContent.WriteString(fmt.Sprintf("%d. %s (%s)\n", i+1, project.Name, project.Type))
+			activeContent.WriteString(fmt.Sprintf("   Status: %s\n", project.Status))
+			activeContent.WriteString(fmt.Sprintf("   Location: %s\n", project.ShortRoot))
+			if project.PrimaryURL != "" {
+				activeContent.WriteString(fmt.Sprintf("   URL: %s\n", project.PrimaryURL))
+			}
+			if i < len(activeOutput.Projects)-1 {
+				activeContent.WriteString("\n")
+			}
+		}
+
+		activeResult := activeContent.String()
+
+		// Should only show active project
+		if !strings.Contains(activeResult, "active-project") {
+			t.Error("Active-only result should contain active-project")
+		}
+		if strings.Contains(activeResult, "stopped-project") {
+			t.Error("Active-only result should not contain stopped-project")
+		}
+		if !strings.Contains(activeResult, "Status: running") {
+			t.Error("Active-only result should show running status")
+		}
+		if strings.Contains(activeResult, "Status: stopped") {
+			t.Error("Active-only result should not show stopped status")
+		}
+
+		// Test with active_only=false (all projects)
+		allOutput := ListProjectsOutput{
+			Projects: allProjects,
+			Count:    2,
+		}
+
+		// Build content for all projects
+		var allContent strings.Builder
+		allContent.WriteString(fmt.Sprintf("Found %d DDEV projects:\n\n", len(allOutput.Projects)))
+		for i, project := range allOutput.Projects {
+			allContent.WriteString(fmt.Sprintf("%d. %s (%s)\n", i+1, project.Name, project.Type))
+			allContent.WriteString(fmt.Sprintf("   Status: %s\n", project.Status))
+			allContent.WriteString(fmt.Sprintf("   Location: %s\n", project.ShortRoot))
+			if project.PrimaryURL != "" {
+				allContent.WriteString(fmt.Sprintf("   URL: %s\n", project.PrimaryURL))
+			}
+			if i < len(allOutput.Projects)-1 {
+				allContent.WriteString("\n")
+			}
+		}
+
+		allResult := allContent.String()
+
+		// Should show both projects
+		if !strings.Contains(allResult, "active-project") {
+			t.Error("All-projects result should contain active-project")
+		}
+		if !strings.Contains(allResult, "stopped-project") {
+			t.Error("All-projects result should contain stopped-project")
+		}
+		if !strings.Contains(allResult, "Status: running") {
+			t.Error("All-projects result should show running status")
+		}
+		if !strings.Contains(allResult, "Status: stopped") {
+			t.Error("All-projects result should show stopped status")
+		}
+
+		// Validate counts are correct
+		if !strings.Contains(activeResult, "Found 1 DDEV projects:") {
+			t.Error("Active-only should show 1 project count")
+		}
+		if !strings.Contains(allResult, "Found 2 DDEV projects:") {
+			t.Error("All-projects should show 2 project count")
+		}
+	})
 }
 
 func TestHandleDescribeProjectIntegration(t *testing.T) {

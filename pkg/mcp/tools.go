@@ -251,11 +251,27 @@ func handleListProjects(ctx context.Context, req *mcp.CallToolRequest, input Lis
 		Count:    len(projectList),
 	}
 
-	// Return MCP-compatible result
+	// Build detailed text content for MCP clients
+	var textContent strings.Builder
+	textContent.WriteString(fmt.Sprintf("Found %d DDEV projects:\n\n", len(projectList)))
+
+	for i, project := range projectList {
+		textContent.WriteString(fmt.Sprintf("%d. %s (%s)\n", i+1, project.Name, project.Type))
+		textContent.WriteString(fmt.Sprintf("   Status: %s\n", project.Status))
+		textContent.WriteString(fmt.Sprintf("   Location: %s\n", project.ShortRoot))
+		if project.PrimaryURL != "" {
+			textContent.WriteString(fmt.Sprintf("   URL: %s\n", project.PrimaryURL))
+		}
+		if i < len(projectList)-1 {
+			textContent.WriteString("\n")
+		}
+	}
+
+	// Return MCP-compatible result with detailed content
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
-				Text: fmt.Sprintf("Found %d DDEV projects", len(projectList)),
+				Text: textContent.String(),
 			},
 		},
 	}, output, nil
