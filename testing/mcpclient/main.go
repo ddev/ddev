@@ -33,7 +33,7 @@ func main() {
         _ = tools
     }
 
-    // Call ddev_list_projects with active_only=true
+    // Call ddev_list_projects with active_only=true to see only running projects
     params := &mcp.CallToolParams{
         Name:      "ddev_list_projects",
         Arguments: map[string]any{"active_only": true},
