@@ -25,5 +25,5 @@ matrix:
       - open: '(?P<open>:+)'
         close: '(?P=open)'
   sources:
-  - 'docs/**/*.md|!docs/content/developers/*|!docs/content/users/topics/version-history.md'
+  - 'docs/**/*.md|!docs/content/developers/*|!docs/content/developers/tmp/*|!docs/content/users/topics/version-history.md'
   default_encoding: utf-8
