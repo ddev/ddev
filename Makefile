@@ -71,7 +71,7 @@ wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe $(GOTMP)/bin/wsl_arm64/mkcer
 
 completions: $(GOTMP)/bin/completions.tar.gz
 
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/linux_amd64/mcpclient $(GOTMP)/bin/linux_arm64/mcpclient $(GOTMP)/bin/darwin_amd64/mcpclient $(GOTMP)/bin/darwin_arm64/mcpclient $(GOTMP)/bin/windows_amd64/mcpclient.exe $(GOTMP)/bin/windows_arm64/mcpclient.exe
 $(TARGETS): mkcert $(GOFILES)
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)); \
@@ -80,11 +80,19 @@ $(TARGETS): mkcert $(GOFILES)
 	else \
 		export CGO_ENABLED="$(CGO_ENABLED)" GORACE="$(GORACE)" BUILDARGS="$(BUILDARGS)" ; \
 	fi; \
-	echo "building $@ from $(SRC_AND_UNDER) GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED BUILDARGS=$$BUILDARGS"; \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
-	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
-	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $$BUILDARGS -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
+	if [[ "$@" == *mcpclient* ]]; then \
+		echo "building $@ from ./testing/mcpclient GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED BUILDARGS=$$BUILDARGS"; \
+		export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
+		mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+		chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+		go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $$BUILDARGS -ldflags " $(LDFLAGS) " ./testing/mcpclient; \
+	else \
+		echo "building $@ from $(SRC_AND_UNDER) GORACE=$$GORACE CGO_ENABLED=$$CGO_ENABLED BUILDARGS=$$BUILDARGS"; \
+		export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache"; \
+		mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+		chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET}; \
+		go build -o $(GOTMP)/bin/$$TARGET -installsuffix static $$BUILDARGS -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER); \
+	fi
 	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi)
 	@echo $(VERSION) >VERSION.txt
 
