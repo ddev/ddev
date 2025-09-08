@@ -22,6 +22,22 @@ type ListProjectsOutput struct {
 	Count    int           `json:"count" jsonschema:"description:Number of projects returned"`
 }
 
+// ProjectLifecycleInput represents the input parameters for project lifecycle tools (start/stop/restart)
+type ProjectLifecycleInput struct {
+	Name      string `json:"name,omitempty" jsonschema:"description:Project name (uses active project if omitted)"`
+	AppRoot   string `json:"approot,omitempty" jsonschema:"description:Absolute path to project root (overrides name if set)"`
+	SkipHooks bool   `json:"skip_hooks,omitempty" jsonschema:"description:Skip hooks during start operations"`
+}
+
+// ProjectLifecycleOutput represents the structured output for project lifecycle operations
+type ProjectLifecycleOutput struct {
+	ProjectName string `json:"project_name" jsonschema:"description:Name of the project"`
+	Operation   string `json:"operation" jsonschema:"description:Operation performed (start/stop/restart)"`
+	Success     bool   `json:"success" jsonschema:"description:Whether the operation was successful"`
+	Message     string `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
+	Status      string `json:"status,omitempty" jsonschema:"description:Current project status after operation"`
+}
+
 // registerDDEVTools registers all DDEV MCP tools with the provided server
 func registerDDEVTools(server *mcp.Server) error {
 	// Register the ddev_list_projects tool using the generic AddTool function
@@ -35,6 +51,22 @@ func registerDDEVTools(server *mcp.Server) error {
 		Name:        "ddev_describe_project",
 		Description: "Describe a DDEV project by name or approot (full details)",
 	}, handleDescribeProject)
+
+	// Register project lifecycle management tools
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_start_project",
+		Description: "Start a DDEV project with optional hooks skipping",
+	}, handleStartProject)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_stop_project",
+		Description: "Stop a running DDEV project",
+	}, handleStopProject)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_restart_project",
+		Description: "Restart a DDEV project (stop then start)",
+	}, handleRestartProject)
 
 	return nil
 }
@@ -171,21 +203,207 @@ func handleDescribeProject(ctx context.Context, _ *mcp.CallToolRequest, input De
 }
 
 // handleStartProject handles the ddev_start_project MCP tool
-func handleStartProject(ctx context.Context, args map[string]any) (any, error) {
-	// TODO: Implement in Task 5
-	return nil, fmt.Errorf("ddev_start_project not yet implemented")
+func handleStartProject(ctx context.Context, _ *mcp.CallToolRequest, input ProjectLifecycleInput) (*mcp.CallToolResult, ProjectLifecycleOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.AppRoot,
+				Operation:   "start",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.Name,
+				Operation:   "start",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: "current directory",
+				Operation:   "start",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	// Start the project (Note: DDEV's Start() doesn't support skip_hooks parameter directly)
+	err = app.Start()
+	if err != nil {
+		status, _ := app.SiteStatus()
+		output := ProjectLifecycleOutput{
+			ProjectName: app.GetName(),
+			Operation:   "start",
+			Success:     false,
+			Message:     fmt.Sprintf("Failed to start project: %v", err),
+			Status:      status,
+		}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	status, _ := app.SiteStatus()
+	output := ProjectLifecycleOutput{
+		ProjectName: app.GetName(),
+		Operation:   "start",
+		Success:     true,
+		Message:     "Project started successfully",
+		Status:      status,
+	}
+
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Started project %s successfully", app.GetName())}}}, output, nil
 }
 
 // handleStopProject handles the ddev_stop_project MCP tool
-func handleStopProject(ctx context.Context, args map[string]any) (any, error) {
-	// TODO: Implement in Task 5
-	return nil, fmt.Errorf("ddev_stop_project not yet implemented")
+func handleStopProject(ctx context.Context, _ *mcp.CallToolRequest, input ProjectLifecycleInput) (*mcp.CallToolResult, ProjectLifecycleOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.AppRoot,
+				Operation:   "stop",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.Name,
+				Operation:   "stop",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: "current directory",
+				Operation:   "stop",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	// Stop the project
+	err = app.Stop(false, false)
+	if err != nil {
+		status, _ := app.SiteStatus()
+		output := ProjectLifecycleOutput{
+			ProjectName: app.GetName(),
+			Operation:   "stop",
+			Success:     false,
+			Message:     fmt.Sprintf("Failed to stop project: %v", err),
+			Status:      status,
+		}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	status, _ := app.SiteStatus()
+	output := ProjectLifecycleOutput{
+		ProjectName: app.GetName(),
+		Operation:   "stop",
+		Success:     true,
+		Message:     "Project stopped successfully",
+		Status:      status,
+	}
+
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Stopped project %s successfully", app.GetName())}}}, output, nil
 }
 
 // handleRestartProject handles the ddev_restart_project MCP tool
-func handleRestartProject(ctx context.Context, args map[string]any) (any, error) {
-	// TODO: Implement in Task 5
-	return nil, fmt.Errorf("ddev_restart_project not yet implemented")
+func handleRestartProject(ctx context.Context, _ *mcp.CallToolRequest, input ProjectLifecycleInput) (*mcp.CallToolResult, ProjectLifecycleOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.AppRoot,
+				Operation:   "restart",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.Name,
+				Operation:   "restart",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: "current directory",
+				Operation:   "restart",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	// Restart the project (stop then start)
+	err = app.Restart()
+	if err != nil {
+		status, _ := app.SiteStatus()
+		output := ProjectLifecycleOutput{
+			ProjectName: app.GetName(),
+			Operation:   "restart",
+			Success:     false,
+			Message:     fmt.Sprintf("Failed to restart project: %v", err),
+			Status:      status,
+		}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	status, _ := app.SiteStatus()
+	output := ProjectLifecycleOutput{
+		ProjectName: app.GetName(),
+		Operation:   "restart",
+		Success:     true,
+		Message:     "Project restarted successfully",
+		Status:      status,
+	}
+
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Restarted project %s successfully", app.GetName())}}}, output, nil
 }
 
 // handleExecCommand handles the ddev_exec_command MCP tool
