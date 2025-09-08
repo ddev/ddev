@@ -32,6 +32,7 @@ type Transport interface {
 type SecurityManager interface {
 	CheckPermission(toolName string, args map[string]any) error
 	RequiresApproval(toolName string, args map[string]any) bool
+	RequestApproval(toolName string, args map[string]any, description string) error
 	LogOperation(toolName string, args map[string]any, result any, err error)
 }
 
