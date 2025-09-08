@@ -261,6 +261,28 @@ func handleDescribeProject(ctx context.Context, _ *mcp.CallToolRequest, input De
 
 // handleStartProject handles the ddev_start_project MCP tool
 func handleStartProject(ctx context.Context, _ *mcp.CallToolRequest, input ProjectLifecycleInput) (*mcp.CallToolResult, ProjectLifecycleOutput, error) {
+	// Security check
+	toolName := "ddev_start_project"
+	args := map[string]any{
+		"name":       input.Name,
+		"approot":    input.AppRoot,
+		"skip_hooks": input.SkipHooks,
+	}
+
+	// Check permissions before proceeding
+	if globalSecurityManager != nil {
+		if permErr := globalSecurityManager.CheckPermission(toolName, args); permErr != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.Name,
+				Operation:   "start",
+				Success:     false,
+				Message:     fmt.Sprintf("Permission denied: %v", permErr),
+			}
+			globalSecurityManager.LogOperation(toolName, args, output, permErr)
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
 	var app *ddevapp.DdevApp
 	var err error
 
@@ -324,11 +346,38 @@ func handleStartProject(ctx context.Context, _ *mcp.CallToolRequest, input Proje
 		Status:      status,
 	}
 
+	// Log successful operation
+	if globalSecurityManager != nil {
+		globalSecurityManager.LogOperation(toolName, args, output, nil)
+	}
+
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Started project %s successfully", app.GetName())}}}, output, nil
 }
 
 // handleStopProject handles the ddev_stop_project MCP tool
 func handleStopProject(ctx context.Context, _ *mcp.CallToolRequest, input ProjectLifecycleInput) (*mcp.CallToolResult, ProjectLifecycleOutput, error) {
+	// Security check
+	toolName := "ddev_stop_project"
+	args := map[string]any{
+		"name":       input.Name,
+		"approot":    input.AppRoot,
+		"skip_hooks": input.SkipHooks,
+	}
+
+	// Check permissions before proceeding
+	if globalSecurityManager != nil {
+		if permErr := globalSecurityManager.CheckPermission(toolName, args); permErr != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.Name,
+				Operation:   "stop",
+				Success:     false,
+				Message:     fmt.Sprintf("Permission denied: %v", permErr),
+			}
+			globalSecurityManager.LogOperation(toolName, args, output, permErr)
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
 	var app *ddevapp.DdevApp
 	var err error
 
@@ -392,11 +441,38 @@ func handleStopProject(ctx context.Context, _ *mcp.CallToolRequest, input Projec
 		Status:      status,
 	}
 
+	// Log successful operation
+	if globalSecurityManager != nil {
+		globalSecurityManager.LogOperation(toolName, args, output, nil)
+	}
+
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Stopped project %s successfully", app.GetName())}}}, output, nil
 }
 
 // handleRestartProject handles the ddev_restart_project MCP tool
 func handleRestartProject(ctx context.Context, _ *mcp.CallToolRequest, input ProjectLifecycleInput) (*mcp.CallToolResult, ProjectLifecycleOutput, error) {
+	// Security check
+	toolName := "ddev_restart_project"
+	args := map[string]any{
+		"name":       input.Name,
+		"approot":    input.AppRoot,
+		"skip_hooks": input.SkipHooks,
+	}
+
+	// Check permissions before proceeding
+	if globalSecurityManager != nil {
+		if permErr := globalSecurityManager.CheckPermission(toolName, args); permErr != nil {
+			output := ProjectLifecycleOutput{
+				ProjectName: input.Name,
+				Operation:   "restart",
+				Success:     false,
+				Message:     fmt.Sprintf("Permission denied: %v", permErr),
+			}
+			globalSecurityManager.LogOperation(toolName, args, output, permErr)
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
 	var app *ddevapp.DdevApp
 	var err error
 
@@ -460,6 +536,11 @@ func handleRestartProject(ctx context.Context, _ *mcp.CallToolRequest, input Pro
 		Status:      status,
 	}
 
+	// Log successful operation
+	if globalSecurityManager != nil {
+		globalSecurityManager.LogOperation(toolName, args, output, nil)
+	}
+
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Restarted project %s successfully", app.GetName())}}}, output, nil
 }
 
@@ -487,6 +568,22 @@ func handleExecCommand(ctx context.Context, _ *mcp.CallToolRequest, input ExecCo
 			}
 			globalSecurityManager.LogOperation(toolName, args, output, permErr)
 			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+
+		// Check if approval is required for this operation
+		if globalSecurityManager.RequiresApproval(toolName, args) {
+			description := fmt.Sprintf("Execute command '%s' in %s service", input.Command, input.Service)
+			if approvalErr := globalSecurityManager.RequestApproval(toolName, args, description); approvalErr != nil {
+				output := ExecCommandOutput{
+					ProjectName: input.Name,
+					Service:     input.Service,
+					Command:     input.Command,
+					Success:     false,
+					Message:     fmt.Sprintf("Approval required: %v", approvalErr),
+				}
+				globalSecurityManager.LogOperation(toolName, args, output, approvalErr)
+				return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+			}
 		}
 	}
 
