@@ -36,7 +36,7 @@ func (s *DDEVMCPServer) Start(ctx context.Context) error {
 	s.transport = transport
 
 	// Start the transport
-	return transport.Start()
+	return transport.Start(ctx)
 }
 
 // Stop gracefully shuts down the MCP server

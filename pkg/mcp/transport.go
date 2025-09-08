@@ -40,7 +40,7 @@ func NewHTTPTransport(server *mcp.Server, port int) *HTTPTransport {
 }
 
 // Start initiates the stdio transport
-func (t *StdioTransport) Start() error {
+func (t *StdioTransport) Start(ctx context.Context) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -51,7 +51,6 @@ func (t *StdioTransport) Start() error {
 	// Start MCP server with stdio transport
 	// This blocks and handles all MCP communication over stdin/stdout
 	t.running = true
-	ctx := context.Background()
 	stdioTransport := &mcp.StdioTransport{}
 	err := t.server.Run(ctx, stdioTransport)
 	t.running = false
@@ -80,7 +79,7 @@ func (t *StdioTransport) IsRunning() bool {
 }
 
 // Start initiates the HTTP transport
-func (t *HTTPTransport) Start() error {
+func (t *HTTPTransport) Start(ctx context.Context) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
