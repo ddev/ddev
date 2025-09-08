@@ -2,6 +2,7 @@ package mcp
 
 import (
 	"context"
+	"sync"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -12,6 +13,7 @@ type DDEVMCPServer struct {
 	transport Transport
 	security  SecurityManager
 	settings  ServerSettings
+	mu        sync.RWMutex // Protects transport field
 }
 
 // ServerSettings contains configuration for the MCP server
