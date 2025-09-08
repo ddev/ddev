@@ -13,16 +13,24 @@ This page documents quick, reproducible ways to manually test the DDEV MCP serve
 A minimal MCP client is included to exercise the server via stdio and call a tool.
 
 - Location: `testing/mcpclient/main.go`
-- Build: `go build -o ./.gotmp/bin/mcpclient ./testing/mcpclient`
+- Build: `make .gotmp/bin/darwin_arm64/mcpclient` (or appropriate platform)
     - Uses vendored modules; no network access required.
-- Run: `./.gotmp/bin/mcpclient`
+    - Also built automatically with `make` as part of TARGETS.
+- Run: `./.gotmp/bin/darwin_arm64/mcpclient`
     - Spawns `ddev mcp start` via stdio and calls the tool `ddev_list_projects` with `{ "active_only": true }`.
     - Prints a JSON response containing the tool result.
 
+**Test Results:**
+
+- ✅ **ddev_list_projects**: Successfully returns list of DDEV projects with status, URLs, and configuration
+- ✅ **ddev_describe_project**: Returns detailed project information equivalent to `ddev describe -j`
+- ✅ **Error handling**: Proper MCP-compatible error responses for invalid projects
+- ✅ **JSON-RPC**: Clean communication over stdio transport
+
 Notes:
 
-- The client is intentionally simple and currently calls only `ddev_list_projects`.
-- For a full project description use MCP Inspector (below) or tweak the client to call `ddev_describe_project`.
+- The client is intentionally simple and currently calls only `ddev_list_projects` by default.
+- To test `ddev_describe_project`, modify the client to call with `{ "name": "project-name", "short": true }`.
 
 ## Option 2: MCP Inspector
 
