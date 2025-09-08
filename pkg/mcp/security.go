@@ -71,6 +71,20 @@ func (sm *BasicSecurityManager) RequiresApproval(toolName string, args map[strin
 	return permLevel == DestructiveOperations
 }
 
+// RequestApproval handles approval requests for high-risk operations
+func (sm *BasicSecurityManager) RequestApproval(toolName string, args map[string]any, description string) error {
+	// Log the approval request
+	sm.logger.WithFields(logrus.Fields{
+		"tool":        toolName,
+		"description": description,
+		"args":        args,
+	}).Warn("Operation requires approval but automatic approval not configured")
+
+	// For MCP server context, we cannot prompt interactively
+	// This would need to be extended with MCP prompt capabilities or pre-configuration
+	return fmt.Errorf("operation %s requires approval: %s. Configure auto-approve or use --allow-writes flag", toolName, description)
+}
+
 // LogOperation records an MCP operation for audit purposes
 func (sm *BasicSecurityManager) LogOperation(toolName string, args map[string]any, result any, err error) {
 	entry := OperationLogEntry{
@@ -110,6 +124,7 @@ func (sm *BasicSecurityManager) getToolPermissionLevel(toolName string) Permissi
 	}
 
 	safeOps := []string{
+		"ddev_list_projects",
 		"ddev_start_project",
 		"ddev_stop_project",
 		"ddev_restart_project",
