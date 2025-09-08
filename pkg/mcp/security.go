@@ -3,6 +3,7 @@ package mcp
 import (
 	"fmt"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ type BasicSecurityManager struct {
 	settings     ServerSettings
 	logger       *logrus.Logger
 	operationLog []OperationLogEntry
+	logMutex     sync.Mutex // Protects operationLog
 }
 
 // OperationLogEntry represents a logged MCP operation
@@ -99,7 +101,10 @@ func (sm *BasicSecurityManager) LogOperation(toolName string, args map[string]an
 		entry.Error = err.Error()
 	}
 
+	// Safely append to operation log
+	sm.logMutex.Lock()
 	sm.operationLog = append(sm.operationLog, entry)
+	sm.logMutex.Unlock()
 
 	// Log to structured logger
 	logEntry := sm.logger.WithFields(logrus.Fields{
@@ -144,5 +149,11 @@ func (sm *BasicSecurityManager) getToolPermissionLevel(toolName string) Permissi
 
 // GetOperationLog returns the current operation log (for debugging/auditing)
 func (sm *BasicSecurityManager) GetOperationLog() []OperationLogEntry {
-	return sm.operationLog
+	sm.logMutex.Lock()
+	defer sm.logMutex.Unlock()
+
+	// Return a copy to prevent external modifications
+	logCopy := make([]OperationLogEntry, len(sm.operationLog))
+	copy(logCopy, sm.operationLog)
+	return logCopy
 }
