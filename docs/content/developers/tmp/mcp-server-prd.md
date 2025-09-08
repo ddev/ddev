@@ -10,7 +10,7 @@ This PRD defines the requirements for implementing a DDEV Model Context Protocol
 
 Currently, AI assistants working with DDEV projects must:
 
-- Execute CLI commands through bash and parse human-readable output
+- Execute CLI commands through Bash and parse human-readable output
 - Manually construct complex command sequences for project management
 - Lack structured access to project status and configuration data
 - Cannot efficiently monitor or respond to project state changes
@@ -510,7 +510,7 @@ All documentation must:
 - Provide troubleshooting sections
 - Use consistent terminology and formatting
 - Include appropriate cross-references
-- Pass all markdown linting requirements
+- Pass all Markdown linting requirements
 
 ## Testing Strategy
 
