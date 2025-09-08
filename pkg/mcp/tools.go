@@ -5,6 +5,7 @@ package mcp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -38,6 +39,46 @@ type ProjectLifecycleOutput struct {
 	Status      string `json:"status,omitempty" jsonschema:"description:Current project status after operation"`
 }
 
+// ExecCommandInput represents the input parameters for the ddev_exec_command tool
+type ExecCommandInput struct {
+	Name    string `json:"name,omitempty" jsonschema:"description:Project name (uses active project if omitted)"`
+	AppRoot string `json:"approot,omitempty" jsonschema:"description:Absolute path to project root (overrides name if set)"`
+	Service string `json:"service,omitempty" jsonschema:"description:Service to execute in (default: web)"`
+	Command string `json:"command" jsonschema:"description:Command to execute"`
+	Dir     string `json:"dir,omitempty" jsonschema:"description:Working directory inside container"`
+}
+
+// ExecCommandOutput represents the structured output for command execution
+type ExecCommandOutput struct {
+	ProjectName string `json:"project_name" jsonschema:"description:Name of the project"`
+	Service     string `json:"service" jsonschema:"description:Service where command was executed"`
+	Command     string `json:"command" jsonschema:"description:Command that was executed"`
+	WorkingDir  string `json:"working_dir,omitempty" jsonschema:"description:Working directory where command was executed"`
+	Stdout      string `json:"stdout,omitempty" jsonschema:"description:Standard output from command"`
+	Stderr      string `json:"stderr,omitempty" jsonschema:"description:Standard error from command"`
+	Success     bool   `json:"success" jsonschema:"description:Whether the command executed successfully"`
+	Message     string `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
+}
+
+// LogsInput represents the input parameters for the ddev_logs tool
+type LogsInput struct {
+	Name       string `json:"name,omitempty" jsonschema:"description:Project name (uses active project if omitted)"`
+	AppRoot    string `json:"approot,omitempty" jsonschema:"description:Absolute path to project root (overrides name if set)"`
+	Service    string `json:"service,omitempty" jsonschema:"description:Service to get logs from (default: web)"`
+	TailLines  string `json:"tail,omitempty" jsonschema:"description:Number of lines to tail (default: all)"`
+	Timestamps bool   `json:"timestamps,omitempty" jsonschema:"description:Show timestamps in log output"`
+}
+
+// LogsOutput represents the structured output for log retrieval
+type LogsOutput struct {
+	ProjectName string `json:"project_name" jsonschema:"description:Name of the project"`
+	Service     string `json:"service" jsonschema:"description:Service from which logs were retrieved"`
+	Lines       int    `json:"lines" jsonschema:"description:Number of log lines returned"`
+	Logs        string `json:"logs" jsonschema:"description:Log content"`
+	Success     bool   `json:"success" jsonschema:"description:Whether log retrieval was successful"`
+	Message     string `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
+}
+
 // registerDDEVTools registers all DDEV MCP tools with the provided server
 func registerDDEVTools(server *mcp.Server) error {
 	// Register the ddev_list_projects tool using the generic AddTool function
@@ -67,6 +108,17 @@ func registerDDEVTools(server *mcp.Server) error {
 		Name:        "ddev_restart_project",
 		Description: "Restart a DDEV project (stop then start)",
 	}, handleRestartProject)
+
+	// Register service operation tools
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_exec_command",
+		Description: "Execute commands in DDEV project containers",
+	}, handleExecCommand)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_logs",
+		Description: "Retrieve logs from DDEV project services",
+	}, handleLogs)
 
 	return nil
 }
@@ -407,15 +459,167 @@ func handleRestartProject(ctx context.Context, _ *mcp.CallToolRequest, input Pro
 }
 
 // handleExecCommand handles the ddev_exec_command MCP tool
-func handleExecCommand(ctx context.Context, args map[string]any) (any, error) {
-	// TODO: Implement in Task 6
-	return nil, fmt.Errorf("ddev_exec_command not yet implemented")
+func handleExecCommand(ctx context.Context, _ *mcp.CallToolRequest, input ExecCommandInput) (*mcp.CallToolResult, ExecCommandOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := ExecCommandOutput{
+				ProjectName: input.AppRoot,
+				Service:     input.Service,
+				Command:     input.Command,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := ExecCommandOutput{
+				ProjectName: input.Name,
+				Service:     input.Service,
+				Command:     input.Command,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := ExecCommandOutput{
+				ProjectName: "current directory",
+				Service:     input.Service,
+				Command:     input.Command,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	// Set default service if not specified
+	service := input.Service
+	if service == "" {
+		service = "web"
+	}
+
+	// Execute command using DDEV's Exec functionality
+	opts := &ddevapp.ExecOpts{
+		Service: service,
+		Dir:     input.Dir,
+		Cmd:     input.Command,
+	}
+
+	stdout, stderr, err := app.Exec(opts)
+	success := err == nil
+
+	output := ExecCommandOutput{
+		ProjectName: app.GetName(),
+		Service:     service,
+		Command:     input.Command,
+		WorkingDir:  input.Dir,
+		Stdout:      stdout,
+		Stderr:      stderr,
+		Success:     success,
+	}
+
+	if err != nil {
+		output.Message = fmt.Sprintf("Command execution failed: %v", err)
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	output.Message = "Command executed successfully"
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Executed '%s' in %s service of project %s", input.Command, service, app.GetName())}}}, output, nil
 }
 
 // handleLogs handles the ddev_logs MCP tool
-func handleLogs(ctx context.Context, args map[string]any) (any, error) {
-	// TODO: Implement in Task 6
-	return nil, fmt.Errorf("ddev_logs not yet implemented")
+func handleLogs(ctx context.Context, _ *mcp.CallToolRequest, input LogsInput) (*mcp.CallToolResult, LogsOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := LogsOutput{
+				ProjectName: input.AppRoot,
+				Service:     input.Service,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := LogsOutput{
+				ProjectName: input.Name,
+				Service:     input.Service,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := LogsOutput{
+				ProjectName: "current directory",
+				Service:     input.Service,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	// Set default service if not specified
+	service := input.Service
+	if service == "" {
+		service = "web"
+	}
+
+	// Set default tail lines if not specified
+	tailLines := input.TailLines
+	if tailLines == "" {
+		tailLines = "all"
+	}
+
+	// Capture logs using DDEV's CaptureLogs functionality
+	logs, err := app.CaptureLogs(service, input.Timestamps, tailLines)
+	if err != nil {
+		output := LogsOutput{
+			ProjectName: app.GetName(),
+			Service:     service,
+			Success:     false,
+			Message:     fmt.Sprintf("Failed to capture logs: %v", err),
+		}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	// Count lines in logs
+	lines := len([]rune(logs))
+	if logs != "" {
+		lines = len(strings.Split(logs, "\n"))
+	}
+
+	output := LogsOutput{
+		ProjectName: app.GetName(),
+		Service:     service,
+		Lines:       lines,
+		Logs:        logs,
+		Success:     true,
+		Message:     "Logs retrieved successfully",
+	}
+
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Retrieved %d lines of logs from %s service of project %s", lines, service, app.GetName())}}}, output, nil
 }
 
 // Helper functions for tool implementations
