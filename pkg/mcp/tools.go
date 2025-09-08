@@ -79,8 +79,13 @@ type LogsOutput struct {
 	Message     string `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
 }
 
+// Global security manager reference for tool handlers
+var globalSecurityManager SecurityManager
+
 // registerDDEVTools registers all DDEV MCP tools with the provided server
-func registerDDEVTools(server *mcp.Server) error {
+func registerDDEVTools(server *mcp.Server, security SecurityManager) error {
+	// Store security manager globally so handlers can access it
+	globalSecurityManager = security
 	// Register the ddev_list_projects tool using the generic AddTool function
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "ddev_list_projects",
@@ -460,6 +465,31 @@ func handleRestartProject(ctx context.Context, _ *mcp.CallToolRequest, input Pro
 
 // handleExecCommand handles the ddev_exec_command MCP tool
 func handleExecCommand(ctx context.Context, _ *mcp.CallToolRequest, input ExecCommandInput) (*mcp.CallToolResult, ExecCommandOutput, error) {
+	// Security check - this is a destructive operation
+	toolName := "ddev_exec_command"
+	args := map[string]any{
+		"name":    input.Name,
+		"approot": input.AppRoot,
+		"service": input.Service,
+		"command": input.Command,
+		"dir":     input.Dir,
+	}
+
+	// Check permissions before proceeding
+	if globalSecurityManager != nil {
+		if permErr := globalSecurityManager.CheckPermission(toolName, args); permErr != nil {
+			output := ExecCommandOutput{
+				ProjectName: input.Name,
+				Service:     input.Service,
+				Command:     input.Command,
+				Success:     false,
+				Message:     fmt.Sprintf("Permission denied: %v", permErr),
+			}
+			globalSecurityManager.LogOperation(toolName, args, output, permErr)
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
 	var app *ddevapp.DdevApp
 	var err error
 
@@ -535,6 +565,12 @@ func handleExecCommand(ctx context.Context, _ *mcp.CallToolRequest, input ExecCo
 	}
 
 	output.Message = "Command executed successfully"
+
+	// Log successful operation
+	if globalSecurityManager != nil {
+		globalSecurityManager.LogOperation(toolName, args, output, nil)
+	}
+
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Executed '%s' in %s service of project %s", input.Command, service, app.GetName())}}}, output, nil
 }
 
@@ -665,4 +701,21 @@ func getInt(args map[string]any, key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// checkPermissionAndLog performs security checks and logging for MCP tool operations
+func checkPermissionAndLog(toolName string, args map[string]any, result any, err error) error {
+	if globalSecurityManager == nil {
+		return fmt.Errorf("security manager not initialized")
+	}
+
+	// Check permission before operation
+	if permErr := globalSecurityManager.CheckPermission(toolName, args); permErr != nil {
+		globalSecurityManager.LogOperation(toolName, args, nil, permErr)
+		return permErr
+	}
+
+	// Log operation after completion
+	globalSecurityManager.LogOperation(toolName, args, result, err)
+	return nil
 }
