@@ -5,7 +5,9 @@ package mcp
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -79,6 +81,43 @@ type LogsOutput struct {
 	Message     string `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
 }
 
+// GetConfigInput represents the input parameters for the ddev_get_config tool
+type GetConfigInput struct {
+	Name    string `json:"name,omitempty" jsonschema:"description:Project name (uses active project if omitted)"`
+	AppRoot string `json:"approot,omitempty" jsonschema:"description:Absolute path to project root (overrides name if set)"`
+}
+
+// GetConfigOutput represents the structured output for configuration retrieval
+type GetConfigOutput struct {
+	ProjectName string         `json:"project_name" jsonschema:"description:Name of the project"`
+	ConfigPath  string         `json:"config_path" jsonschema:"description:Path to the configuration file"`
+	Config      map[string]any `json:"config" jsonschema:"description:Complete project configuration"`
+	Success     bool           `json:"success" jsonschema:"description:Whether configuration retrieval was successful"`
+	Message     string         `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
+}
+
+// UpdateConfigInput represents the input parameters for the ddev_update_config tool
+type UpdateConfigInput struct {
+	Name         string         `json:"name,omitempty" jsonschema:"description:Project name (uses active project if omitted)"`
+	AppRoot      string         `json:"approot,omitempty" jsonschema:"description:Absolute path to project root (overrides name if set)"`
+	Config       map[string]any `json:"config" jsonschema:"description:Configuration changes to apply"`
+	CreateBackup bool           `json:"create_backup,omitempty" jsonschema:"description:Create backup before updating (default: true)"`
+	ValidateOnly bool           `json:"validate_only,omitempty" jsonschema:"description:Only validate changes without applying them"`
+}
+
+// UpdateConfigOutput represents the structured output for configuration updates
+type UpdateConfigOutput struct {
+	ProjectName string   `json:"project_name" jsonschema:"description:Name of the project"`
+	ConfigPath  string   `json:"config_path" jsonschema:"description:Path to the configuration file"`
+	BackupPath  string   `json:"backup_path,omitempty" jsonschema:"description:Path to the configuration backup file"`
+	Applied     bool     `json:"applied" jsonschema:"description:Whether configuration changes were applied"`
+	Validated   bool     `json:"validated" jsonschema:"description:Whether configuration passed validation"`
+	Success     bool     `json:"success" jsonschema:"description:Whether the operation was successful"`
+	Message     string   `json:"message,omitempty" jsonschema:"description:Additional information or error message"`
+	Errors      []string `json:"errors,omitempty" jsonschema:"description:Validation or application errors"`
+	Warnings    []string `json:"warnings,omitempty" jsonschema:"description:Configuration warnings"`
+}
+
 // Global security manager reference for tool handlers
 var globalSecurityManager SecurityManager
 
@@ -124,6 +163,17 @@ func registerDDEVTools(server *mcp.Server, security SecurityManager) error {
 		Name:        "ddev_logs",
 		Description: "Retrieve logs from DDEV project services",
 	}, handleLogs)
+
+	// Register configuration management tools
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_get_config",
+		Description: "Read DDEV project configuration",
+	}, handleGetConfig)
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "ddev_update_config",
+		Description: "Update DDEV project configuration with validation and backup",
+	}, handleUpdateConfig)
 
 	return nil
 }
@@ -755,6 +805,219 @@ func handleLogs(ctx context.Context, _ *mcp.CallToolRequest, input LogsInput) (*
 	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Retrieved %d lines of logs from %s service of project %s", lines, service, app.GetName())}}}, output, nil
 }
 
+// handleGetConfig handles the ddev_get_config MCP tool
+func handleGetConfig(ctx context.Context, _ *mcp.CallToolRequest, input GetConfigInput) (*mcp.CallToolResult, GetConfigOutput, error) {
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := GetConfigOutput{
+				ProjectName: input.AppRoot,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := GetConfigOutput{
+				ProjectName: input.Name,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := GetConfigOutput{
+				ProjectName: "current directory",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	// Get the full configuration by describing the project
+	desc, err := app.Describe(false)
+	if err != nil {
+		output := GetConfigOutput{
+			ProjectName: app.GetName(),
+			ConfigPath:  app.ConfigPath,
+			Success:     false,
+			Message:     fmt.Sprintf("Failed to get project configuration: %v", err),
+		}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	output := GetConfigOutput{
+		ProjectName: app.GetName(),
+		ConfigPath:  app.ConfigPath,
+		Config:      desc,
+		Success:     true,
+		Message:     "Configuration retrieved successfully",
+	}
+
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Retrieved configuration for project %s from %s", app.GetName(), app.ConfigPath)}}}, output, nil
+}
+
+// handleUpdateConfig handles the ddev_update_config MCP tool
+func handleUpdateConfig(ctx context.Context, _ *mcp.CallToolRequest, input UpdateConfigInput) (*mcp.CallToolResult, UpdateConfigOutput, error) {
+	// Security check - this is a destructive operation
+	toolName := "ddev_update_config"
+	args := map[string]any{
+		"name":          input.Name,
+		"approot":       input.AppRoot,
+		"config":        input.Config,
+		"create_backup": input.CreateBackup,
+		"validate_only": input.ValidateOnly,
+	}
+
+	// Check permissions before proceeding
+	if globalSecurityManager != nil {
+		if permErr := globalSecurityManager.CheckPermission(toolName, args); permErr != nil {
+			output := UpdateConfigOutput{
+				ProjectName: input.Name,
+				Success:     false,
+				Message:     fmt.Sprintf("Permission denied: %v", permErr),
+			}
+			globalSecurityManager.LogOperation(toolName, args, output, permErr)
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+
+		// Check if approval is required for this operation
+		if globalSecurityManager.RequiresApproval(toolName, args) {
+			description := "Update project configuration with validation and backup"
+			if approvalErr := globalSecurityManager.RequestApproval(toolName, args, description); approvalErr != nil {
+				output := UpdateConfigOutput{
+					ProjectName: input.Name,
+					Success:     false,
+					Message:     fmt.Sprintf("Approval required: %v", approvalErr),
+				}
+				globalSecurityManager.LogOperation(toolName, args, output, approvalErr)
+				return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+			}
+		}
+	}
+
+	var app *ddevapp.DdevApp
+	var err error
+
+	// Select project by approot > name > current directory
+	switch {
+	case input.AppRoot != "":
+		app, err = ddevapp.NewApp(input.AppRoot, true)
+		if err != nil {
+			output := UpdateConfigOutput{
+				ProjectName: input.AppRoot,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to load app at approot %s: %v", input.AppRoot, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	case input.Name != "":
+		app, err = ddevapp.GetActiveApp(input.Name)
+		if err != nil {
+			output := UpdateConfigOutput{
+				ProjectName: input.Name,
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app %s: %v", input.Name, err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	default:
+		app, err = ddevapp.GetActiveApp("")
+		if err != nil {
+			output := UpdateConfigOutput{
+				ProjectName: "current directory",
+				Success:     false,
+				Message:     fmt.Sprintf("Failed to find active app from current directory: %v", err),
+			}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+	}
+
+	output := UpdateConfigOutput{
+		ProjectName: app.GetName(),
+		ConfigPath:  app.ConfigPath,
+		Applied:     false,
+		Validated:   false,
+		Success:     false,
+	}
+
+	// Create backup by default unless explicitly disabled
+	createBackup := input.CreateBackup
+	if !input.ValidateOnly && createBackup {
+		backupPath, backupErr := createConfigBackup(app.ConfigPath)
+		if backupErr != nil {
+			output.Message = fmt.Sprintf("Failed to create configuration backup: %v", backupErr)
+			output.Errors = []string{backupErr.Error()}
+			return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+		}
+		output.BackupPath = backupPath
+	}
+
+	// Apply configuration changes to a copy for validation
+	appCopy := *app
+	updateErr := applyConfigChanges(&appCopy, input.Config)
+	if updateErr != nil {
+		output.Message = fmt.Sprintf("Failed to apply configuration changes: %v", updateErr)
+		output.Errors = []string{updateErr.Error()}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	// Validate the updated configuration
+	validationErr := appCopy.ValidateConfig()
+	if validationErr != nil {
+		output.Message = fmt.Sprintf("Configuration validation failed: %v", validationErr)
+		output.Errors = []string{validationErr.Error()}
+		output.Validated = false
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	output.Validated = true
+
+	// If validate only, return success without applying
+	if input.ValidateOnly {
+		output.Success = true
+		output.Message = "Configuration validation successful - no changes applied"
+		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	// Apply changes to the actual app and write config
+	updateErr = applyConfigChanges(app, input.Config)
+	if updateErr != nil {
+		output.Message = fmt.Sprintf("Failed to apply configuration changes: %v", updateErr)
+		output.Errors = []string{updateErr.Error()}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	// Write the updated configuration
+	writeErr := app.WriteConfig()
+	if writeErr != nil {
+		output.Message = fmt.Sprintf("Failed to write configuration: %v", writeErr)
+		output.Errors = []string{writeErr.Error()}
+		return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: output.Message}}}, output, nil
+	}
+
+	output.Applied = true
+	output.Success = true
+	output.Message = "Configuration updated successfully"
+
+	// Log successful operation
+	if globalSecurityManager != nil {
+		globalSecurityManager.LogOperation(toolName, args, output, nil)
+	}
+
+	return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Updated configuration for project %s", app.GetName())}}}, output, nil
+}
+
 // Helper functions for tool implementations
 
 // getBool safely extracts a boolean value from args map
@@ -814,5 +1077,150 @@ func checkPermissionAndLog(toolName string, args map[string]any, result any, err
 
 	// Log operation after completion
 	globalSecurityManager.LogOperation(toolName, args, result, err)
+	return nil
+}
+
+// createConfigBackup creates a backup of the configuration file
+func createConfigBackup(configPath string) (string, error) {
+	if configPath == "" {
+		return "", fmt.Errorf("config path is empty")
+	}
+
+	// Create backup with timestamp
+	timestamp := time.Now().Format("20060102-150405")
+	backupPath := fmt.Sprintf("%s.backup.%s", configPath, timestamp)
+
+	// Read original config
+	originalData, err := os.ReadFile(configPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read original config: %v", err)
+	}
+
+	// Write backup
+	err = os.WriteFile(backupPath, originalData, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to write backup: %v", err)
+	}
+
+	return backupPath, nil
+}
+
+// applyConfigChanges applies configuration changes to a DdevApp
+func applyConfigChanges(app *ddevapp.DdevApp, changes map[string]any) error {
+	for key, value := range changes {
+		err := setConfigField(app, key, value)
+		if err != nil {
+			return fmt.Errorf("failed to set field %s: %v", key, err)
+		}
+	}
+	return nil
+}
+
+// setConfigField sets a specific configuration field on the DdevApp
+func setConfigField(app *ddevapp.DdevApp, fieldName string, value any) error {
+	switch fieldName {
+	case "name":
+		if v, ok := value.(string); ok {
+			app.Name = v
+		} else {
+			return fmt.Errorf("name must be a string")
+		}
+	case "type":
+		if v, ok := value.(string); ok {
+			app.Type = v
+		} else {
+			return fmt.Errorf("type must be a string")
+		}
+	case "docroot":
+		if v, ok := value.(string); ok {
+			app.Docroot = v
+		} else {
+			return fmt.Errorf("docroot must be a string")
+		}
+	case "php_version":
+		if v, ok := value.(string); ok {
+			app.PHPVersion = v
+		} else {
+			return fmt.Errorf("php_version must be a string")
+		}
+	case "webserver_type":
+		if v, ok := value.(string); ok {
+			app.WebserverType = v
+		} else {
+			return fmt.Errorf("webserver_type must be a string")
+		}
+	case "nodejs_version":
+		if v, ok := value.(string); ok {
+			app.NodeJSVersion = v
+		} else {
+			return fmt.Errorf("nodejs_version must be a string")
+		}
+	case "composer_version":
+		if v, ok := value.(string); ok {
+			app.ComposerVersion = v
+		} else {
+			return fmt.Errorf("composer_version must be a string")
+		}
+	case "mariadb_version":
+		if v, ok := value.(string); ok {
+			app.MariaDBVersion = v
+		} else {
+			return fmt.Errorf("mariadb_version must be a string")
+		}
+	case "mysql_version":
+		if v, ok := value.(string); ok {
+			app.MySQLVersion = v
+		} else {
+			return fmt.Errorf("mysql_version must be a string")
+		}
+	case "xdebug_enabled":
+		if v, ok := value.(bool); ok {
+			app.XdebugEnabled = v
+		} else {
+			return fmt.Errorf("xdebug_enabled must be a boolean")
+		}
+	case "bind_all_interfaces":
+		if v, ok := value.(bool); ok {
+			app.BindAllInterfaces = v
+		} else {
+			return fmt.Errorf("bind_all_interfaces must be a boolean")
+		}
+	case "additional_hostnames":
+		if v, ok := value.([]string); ok {
+			app.AdditionalHostnames = v
+		} else if v, ok := value.([]interface{}); ok {
+			// Convert []interface{} to []string
+			hostnames := make([]string, len(v))
+			for i, item := range v {
+				if s, ok := item.(string); ok {
+					hostnames[i] = s
+				} else {
+					return fmt.Errorf("additional_hostnames must be an array of strings")
+				}
+			}
+			app.AdditionalHostnames = hostnames
+		} else {
+			return fmt.Errorf("additional_hostnames must be an array of strings")
+		}
+	case "additional_fqdns":
+		if v, ok := value.([]string); ok {
+			app.AdditionalFQDNs = v
+		} else if v, ok := value.([]interface{}); ok {
+			// Convert []interface{} to []string
+			fqdns := make([]string, len(v))
+			for i, item := range v {
+				if s, ok := item.(string); ok {
+					fqdns[i] = s
+				} else {
+					return fmt.Errorf("additional_fqdns must be an array of strings")
+				}
+			}
+			app.AdditionalFQDNs = fqdns
+		} else {
+			return fmt.Errorf("additional_fqdns must be an array of strings")
+		}
+	default:
+		return fmt.Errorf("unsupported configuration field: %s", fieldName)
+	}
 	return nil
 }
