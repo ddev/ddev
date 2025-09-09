@@ -77,54 +77,72 @@ MAIL_PORT=1025`
 
 	// Test 1: Normal Laravel project with database container
 	t.Run("WithDatabaseContainer", func(t *testing.T) {
-		// Create a separate directory for this subtest
-		subtestDir := filepath.Join(testDir, "WithDatabaseContainer")
-		err := os.MkdirAll(subtestDir, 0755)
-		require.NoError(t, err)
+		// Test different database types
+		databases := []struct {
+			name       string
+			dbType     string
+			version    string
+			port       string
+			connection string
+		}{
+			{"MariaDB", nodeps.MariaDB, nodeps.MariaDBDefaultVersion, "3306", "mariadb"},
+			{"MySQL", nodeps.MySQL, nodeps.MySQL80, "3306", "mysql"},
+			{"PostgreSQL", nodeps.Postgres, nodeps.PostgresDefaultVersion, "5432", "pgsql"},
+		}
 
-		// Copy Laravel files to subtest directory
-		err = os.WriteFile(filepath.Join(subtestDir, "artisan"), []byte("#!/usr/bin/env php\n<?php\n// Laravel artisan file"), 0644)
-		require.NoError(t, err)
-		err = os.MkdirAll(filepath.Join(subtestDir, "config"), 0755)
-		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(subtestDir, "config", "database.php"), []byte(databaseConfig), 0644)
-		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(subtestDir, ".env.example"), []byte(envExample), 0644)
-		require.NoError(t, err)
+		for _, db := range databases {
+			t.Run(db.name, func(t *testing.T) {
+				// Create a separate directory for this subtest
+				subtestDir := filepath.Join(testDir, "WithDatabaseContainer", db.name)
+				err := os.MkdirAll(subtestDir, 0755)
+				require.NoError(t, err)
 
-		app, err := ddevapp.NewApp(subtestDir, false)
-		require.NoError(t, err)
-		app.Name = t.Name()
-		app.Type = nodeps.AppTypeLaravel
-		app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
+				// Copy Laravel files to subtest directory
+				err = os.WriteFile(filepath.Join(subtestDir, "artisan"), []byte("#!/usr/bin/env php\n<?php\n// Laravel artisan file"), 0644)
+				require.NoError(t, err)
+				err = os.MkdirAll(filepath.Join(subtestDir, "config"), 0755)
+				require.NoError(t, err)
+				err = os.WriteFile(filepath.Join(subtestDir, "config", "database.php"), []byte(databaseConfig), 0644)
+				require.NoError(t, err)
+				err = os.WriteFile(filepath.Join(subtestDir, ".env.example"), []byte(envExample), 0644)
+				require.NoError(t, err)
 
-		t.Cleanup(func() {
-			_ = app.Stop(true, false)
-			_ = os.Remove(filepath.Join(subtestDir, ".env"))
-		})
+				app, err := ddevapp.NewApp(subtestDir, false)
+				require.NoError(t, err)
+				app.Name = t.Name()
+				app.Type = nodeps.AppTypeLaravel
+				app.Database = ddevapp.DatabaseDesc{Type: db.dbType, Version: db.version}
 
-		// Run the Laravel post-start action
-		err = app.WriteConfig()
-		require.NoError(t, err)
+				t.Cleanup(func() {
+					_ = app.Stop(true, false)
+					_ = os.Remove(filepath.Join(subtestDir, ".env"))
+				})
 
-		// Run the post-start action
-		err = app.PostStartAction()
-		require.NoError(t, err)
+				// Run the Laravel post-start action
+				err = app.WriteConfig()
+				require.NoError(t, err)
 
-		// Check that .env file was created and contains database settings
-		envContent, err := os.ReadFile(filepath.Join(subtestDir, ".env"))
-		require.NoError(t, err)
-		envStr := string(envContent)
+				// Run the post-start action
+				err = app.PostStartAction()
+				require.NoError(t, err)
 
-		assert.Contains(envStr, `DB_HOST="db"`)
-		assert.Contains(envStr, `DB_PORT="3306"`)
-		assert.Contains(envStr, `DB_DATABASE="db"`)
-		assert.Contains(envStr, `DB_USERNAME="db"`)
-		assert.Contains(envStr, `DB_PASSWORD="db"`)
-		assert.Contains(envStr, `DB_CONNECTION="mariadb"`)
-		assert.Contains(envStr, `MAIL_MAILER="smtp"`)
-		assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
-		assert.Contains(envStr, `MAIL_PORT="1025"`)
+				// Check that .env file was created and contains database settings
+				envContent, err := os.ReadFile(filepath.Join(subtestDir, ".env"))
+				require.NoError(t, err)
+				envStr := string(envContent)
+
+				assert.Contains(envStr, `DB_HOST="db"`)
+				assert.Contains(envStr, fmt.Sprintf(`DB_PORT="%s"`, db.port))
+				assert.Contains(envStr, `DB_DATABASE="db"`)
+				assert.Contains(envStr, `DB_USERNAME="db"`)
+				assert.Contains(envStr, `DB_PASSWORD="db"`)
+				assert.Contains(envStr, fmt.Sprintf(`DB_CONNECTION="%s"`, db.connection))
+				assert.Contains(envStr, `MAIL_MAILER="smtp"`)
+				assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
+				assert.Contains(envStr, `MAIL_PORT="1025"`)
+				assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
+			})
+		}
 	})
 
 	// Test 2: Laravel project with omitted database container
@@ -191,6 +209,8 @@ DB_CONNECTION=mysql`
 		assert.Contains(envStr, `MAIL_MAILER="smtp"`)
 		assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
 		assert.Contains(envStr, `MAIL_PORT="1025"`)
+		// APP_URL should be set to the primary URL
+		assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
 
 		// Original external database configuration should be preserved
 		assert.Contains(envStr, "DB_HOST=ddev-external-db")
@@ -199,7 +219,7 @@ DB_CONNECTION=mysql`
 		assert.Contains(envStr, "DB_PASSWORD=external_pass")
 	})
 
-	// Test 3: Laravel project with ddev- prefixed host (should be preserved)
+	// Test 3: Laravel project with ddev- prefixed host (should be overwritten)
 	t.Run("WithDdevPrefixedHost", func(t *testing.T) {
 		// Create a separate directory for this subtest
 		subtestDir := filepath.Join(testDir, "WithDdevPrefixedHost")
@@ -252,21 +272,24 @@ DB_CONNECTION=mysql`
 		require.NoError(t, err)
 		envStr := string(envContent)
 
-		// When ddev- prefixed host is found, ALL database settings should be preserved (not managed by DDEV)
-		assert.Contains(envStr, "DB_HOST=ddev-external-project-db")
-		assert.Contains(envStr, "DB_PORT=3306")
-		assert.Contains(envStr, "DB_DATABASE=external_db")
-		assert.Contains(envStr, "DB_USERNAME=external_user")
-		assert.Contains(envStr, "DB_PASSWORD=external_pass")
-		assert.Contains(envStr, "DB_CONNECTION=mysql")
+		// When ddev- prefixed host is found, ALL database settings should be still be overwritten
+		assert.NotContains(envStr, "DB_HOST=ddev-external-project-db")
+		assert.NotContains(envStr, "DB_PORT=3306")
+		assert.NotContains(envStr, "DB_DATABASE=external_db")
+		assert.NotContains(envStr, "DB_USERNAME=external_user")
+		assert.NotContains(envStr, "DB_PASSWORD=external_pass")
+		assert.NotContains(envStr, "DB_CONNECTION=mysql")
 
-		// Mail settings should be set
+		assert.Contains(envStr, `DB_HOST="db"`)
+		assert.Contains(envStr, `DB_PORT="3306"`)
+		assert.Contains(envStr, `DB_DATABASE="db"`)
+		assert.Contains(envStr, `DB_USERNAME="db"`)
+		assert.Contains(envStr, `DB_PASSWORD="db"`)
+		assert.Contains(envStr, `DB_CONNECTION="mariadb"`)
 		assert.Contains(envStr, `MAIL_MAILER="smtp"`)
 		assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
 		assert.Contains(envStr, `MAIL_PORT="1025"`)
-
-		// APP_URL should be updated
-		assert.Contains(envStr, app.GetPrimaryURL())
+		assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
 	})
 
 	// Test 4: Laravel project with disable_settings_management
@@ -325,11 +348,11 @@ DB_DATABASE=my_custom_db`
 		assert.NotContains(envStr, `MAIL_MAILER="smtp"`)
 	})
 
-	// Test 5: Laravel project with different ddev-prefixed hostnames (our logic)
-	t.Run("WithDifferentDdevPrefixedHosts", func(t *testing.T) {
+	// Test 5: Laravel project with different ddev-prefixed hostnames
+	t.Run("WithDifferentHostsThatWillBeOverwritten", func(t *testing.T) {
 		// Test different ddev- prefixed hostnames to verify our detection logic
 		testHosts := []string{
-			"ddev-external-db",
+			"external-db",
 			"ddev-shared-database",
 			"ddev-another-project-db",
 		}
@@ -361,7 +384,7 @@ DB_DATABASE=my_custom_db`
 				_ = os.Remove(filepath.Join(subtestDir, ".env"))
 			})
 
-			// Create .env with ddev-prefixed host
+			// Create .env file with custom DB_HOST that should be overwritten
 			envContent := fmt.Sprintf(`APP_NAME=Laravel
 APP_ENV=local
 APP_URL=http://localhost
@@ -386,18 +409,23 @@ DB_CONNECTION=mysql`, hostname)
 			require.NoError(t, err)
 			envStr := string(envResult)
 
-			// ALL database settings should be preserved (not managed by DDEV)
-			assert.Contains(envStr, fmt.Sprintf("DB_HOST=%s", hostname), "Original DB_HOST should be preserved")
-			assert.Contains(envStr, "DB_PORT=3306", "DB_PORT should be preserved")
-			assert.Contains(envStr, "DB_DATABASE=external_db", "DB_DATABASE should be preserved")
-			assert.Contains(envStr, "DB_USERNAME=external_user", "DB_USERNAME should be preserved")
-			assert.Contains(envStr, "DB_PASSWORD=external_pass", "DB_PASSWORD should be preserved")
-			assert.Contains(envStr, "DB_CONNECTION=mysql", "DB_CONNECTION should be preserved")
+			// Custom database settings should be overwritten
+			assert.NotContains(envStr, fmt.Sprintf("DB_HOST=%s", hostname), "Original DB_HOST should be overwritten")
+			assert.NotContains(envStr, "DB_DATABASE=external_db", "DB_DATABASE should be overwritten")
+			assert.NotContains(envStr, "DB_USERNAME=external_user", "DB_USERNAME should be overwritten")
+			assert.NotContains(envStr, "DB_PASSWORD=external_pass", "DB_PASSWORD should be overwritten")
 
-			// Mail settings should still be managed (non-DB settings)
+			// All settings should still be managed by DDEV
+			assert.Contains(envStr, `DB_HOST="db"`)
+			assert.Contains(envStr, `DB_PORT="3306"`)
+			assert.Contains(envStr, `DB_DATABASE="db"`)
+			assert.Contains(envStr, `DB_USERNAME="db"`)
+			assert.Contains(envStr, `DB_PASSWORD="db"`)
+			assert.Contains(envStr, `DB_CONNECTION="mariadb"`)
 			assert.Contains(envStr, `MAIL_MAILER="smtp"`)
 			assert.Contains(envStr, `MAIL_HOST="127.0.0.1"`)
 			assert.Contains(envStr, `MAIL_PORT="1025"`)
+			assert.Contains(envStr, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
 		}
 	})
 }

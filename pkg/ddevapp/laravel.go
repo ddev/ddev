@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -52,8 +51,8 @@ func laravelPostStartAction(app *DdevApp) error {
 		"MAIL_PORT":   "1025",
 	}
 
-	// Only set database configuration if db container is not omitted AND no ddev-prefixed host exists
-	shouldManageDB := !slices.Contains(app.OmitContainers, "db") && !hasDdevPrefixedHost(envFilePath)
+	// Only set database configuration if db container is not omitted
+	shouldManageDB := !slices.Contains(app.OmitContainers, "db")
 
 	if shouldManageDB {
 		port := "3306"
@@ -87,11 +86,4 @@ func laravelPostStartAction(app *DdevApp) error {
 	}
 
 	return nil
-}
-
-// hasDdevPrefixedHost checks if the .env file contains a DB_HOST with ddev- prefix
-func hasDdevPrefixedHost(envFilePath string) bool {
-	envMap, _, _ := ReadProjectEnvFile(envFilePath)
-	existingDBHost := envMap["DB_HOST"]
-	return existingDBHost != "" && strings.HasPrefix(existingDBHost, "ddev-")
 }
