@@ -47,7 +47,7 @@ teardown() {
   run mkdir my-laravel-site && cd my-laravel-site
   assert_success
 
-  run ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+  run ddev config --project-type=laravel --docroot=public --omit-containers=db
   assert_success
 
   run ddev start -y
