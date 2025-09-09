@@ -37,7 +37,7 @@ ddev add-on get /path/to/tarball.tar.gz
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := false
 		requestedVersion := ""
-		noDependencies := false
+		skipDeps := false
 
 		if cmd.Flags().Changed("version") {
 			requestedVersion = cmd.Flag("version").Value.String()
@@ -47,8 +47,8 @@ ddev add-on get /path/to/tarball.tar.gz
 			verbose = true
 		}
 
-		if cmd.Flags().Changed("no-dependencies") {
-			noDependencies = true
+		if cmd.Flags().Changed("skip-deps") {
+			skipDeps = true
 		}
 
 		app, err := ddevapp.GetActiveApp(cmd.Flag("project").Value.String())
@@ -135,13 +135,7 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		// Handle dependencies
 		if len(s.Dependencies) > 0 {
-			if noDependencies {
-				// Check that dependencies exist but don't install them
-				err := ddevapp.ValidateDependencies(app, s.Dependencies, extractedDir, s.Name)
-				if err != nil {
-					util.Failed("%v", err)
-				}
-			} else {
+			if !skipDeps {
 				// Install dependencies recursively, resolving relative paths
 				resolvedDeps := ddevapp.ResolveDependencyPaths(s.Dependencies, extractedDir, verbose)
 				err := ddevapp.InstallDependencies(app, resolvedDeps, verbose)
@@ -176,7 +170,7 @@ ddev add-on get /path/to/tarball.tar.gz
 		}
 
 		// Check for runtime dependencies generated during pre-install actions
-		if !noDependencies {
+		if !skipDeps {
 			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, extractedDir, verbose)
 			if err != nil {
 				util.Failed("%v", err)
@@ -343,7 +337,7 @@ func getInjectedEnv(envFile string, verbose bool) string {
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
-	AddonGetCmd.Flags().BoolP("no-dependencies", "D", false, "Skip automatic dependency installation")
+	AddonGetCmd.Flags().Bool("skip-deps", false, "Skip installing add-on dependencies")
 	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 

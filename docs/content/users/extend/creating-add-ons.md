@@ -310,13 +310,13 @@ Dependencies are automatically installed when the add-on is installed. If a depe
 2. **Detect circular dependencies** and prevent infinite loops
 3. **Install recursively** - dependencies of dependencies are also installed
 
-To skip automatic dependency installation, use the `--no-dependencies` flag:
+To skip automatic dependency installation, use the `--skip-deps` flag:
 
 ```bash
-ddev add-on get --no-dependencies my-addon
+ddev add-on get --skip-deps my-addon
 ```
 
-This requires that all dependencies are already installed manually.
+This does not install dependencies. Ensure required dependencies are present if your add-on relies on them.
 
 ### Template Replacements
 

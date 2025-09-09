@@ -79,11 +79,11 @@ ddev add-on list --all
 
 *Alias: `add-on install`.*
 
-Download an add-on (service, provider, etc.). Dependencies declared in the add-on's `install.yaml` will be automatically installed unless `--no-dependencies` is used.
+Download an add-on (service, provider, etc.). Dependencies declared in the add-on's `install.yaml` are installed automatically unless `--skip-deps` is used.
 
 Flags:
 
-* `--no-dependencies`: Skip automatic installation of dependencies (default `false`)
+* `--skip-deps`: Skip installing add-on dependencies (default `false`)
 * `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
 * `--version <version>`: Specify a version to download
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
@@ -112,8 +112,8 @@ ddev add-on get /path/to/tarball.tar.gz
 # Download the official Redis add-on and install it into a project named "my-project"
 ddev add-on get ddev/ddev-redis --project my-project
 
-# Install an add-on without automatically installing its dependencies
-ddev add-on get ddev/ddev-redis-commander --no-dependencies
+# Install an add-on without installing its dependencies
+ddev add-on get ddev/ddev-redis-commander --skip-deps
 ```
 
 **Automatic Dependency Installation:**

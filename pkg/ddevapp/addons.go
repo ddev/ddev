@@ -1294,8 +1294,8 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, reposi
 	return InstallAddonFromDirectory(app, extractedDir, repository, downloadedRelease, verbose)
 }
 
-// ValidateDependencies checks that all declared dependencies exist without installing them
-// Used when the --no-dependencies flag is specified
+// ValidateDependencies checks that all declared dependencies exist without installing them.
+// Useful for callers that want to verify dependencies are present but not install them.
 func ValidateDependencies(app *DdevApp, dependencies []string, extractedDir, addonName string) error {
 	m, err := GatherAllManifests(app)
 	if err != nil {

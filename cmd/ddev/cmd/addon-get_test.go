@@ -442,8 +442,8 @@ func TestAddonGetCircularDependencies(t *testing.T) {
 	require.Contains(t, out, "circular dependency detected", "Should mention circular dependency")
 }
 
-// TestAddonGetNoDependenciesFlag tests the --no-dependencies flag
-func TestAddonGetNoDependenciesFlag(t *testing.T) {
+// TestAddonGetSkipDepsFlag tests the --skip-deps flag
+func TestAddonGetSkipDepsFlag(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
@@ -457,18 +457,18 @@ func TestAddonGetNoDependenciesFlag(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// Test that --no-dependencies flag prevents automatic installation
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--no-dependencies", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
-	require.Error(t, err, "Should fail when --no-dependencies is used without dependency installed, out=%s", out)
-	require.Contains(t, out, "declares a dependency on '../mock_redis'", "Should mention missing dependency")
+	// Test that --skip-deps flag prevents automatic installation but does not fail
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--skip-deps", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	require.NoError(t, err, "Should not fail when --skip-deps is used, out=%s", out)
+	require.NotContains(t, out, "Installing missing dependency", "Should not automatically install dependencies")
 
 	// Install dependency first
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis"))
 	require.NoError(t, err, "Should install dependency successfully, out=%s", out)
 
-	// Now --no-dependencies should work
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "--no-dependencies", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
-	require.NoError(t, err, "Should install with --no-dependencies when dependency exists, out=%s", out)
+	// Now --skip-deps should also work (dependency present, but still skipped)
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "--skip-deps", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	require.NoError(t, err, "Should install with --skip-deps when dependency exists, out=%s", out)
 	require.NotContains(t, out, "Installing missing dependency", "Should not automatically install dependencies")
 }
 
