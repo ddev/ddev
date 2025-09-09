@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -91,7 +92,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			argType = "github"
 			owner = parts[0]
 			repo = parts[1]
-			tarballURL, downloadedRelease, err = ddevapp.GetGitHubRelease(owner, repo, requestedVersion)
+			tarballURL, downloadedRelease, err = github.GetGitHubRelease(owner, repo, requestedVersion)
 			if err != nil {
 				util.Failed("%v", err)
 			}
