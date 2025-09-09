@@ -269,10 +269,10 @@ func TestUseEphemeralPort(t *testing.T) {
 		}, "HTTPS port must be between %d and %d, got %d", expectedEphemeralHTTPSPort, expectedEphemeralHTTPSPort+2, actualHTTPSPort)
 
 		// Make sure that both http and https URLs have proper content
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, 0)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, -1)
 		require.Contains(t, app.GetHTTPURL(), app.GetHostname())
 		if globalconfig.GetCAROOT() != "" {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, 0)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), testString, -1)
 			require.Contains(t, app.GetHTTPSURL(), app.GetHostname())
 		}
 	}

@@ -85,6 +85,14 @@ type TestSite struct {
 	FullSiteArchiveExtPath string
 }
 
+// HTTPRequestOpts contains options for HTTP requests
+type HTTPRequestOpts struct {
+	// TimeoutSeconds is the number of seconds to wait for a response before timing out
+	TimeoutSeconds int
+	// MaxRetries is the number of times to retry the request
+	MaxRetries int
+}
+
 // Prepare downloads and extracts a site codebase to a temporary directory.
 func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
@@ -436,15 +444,16 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 	return extractPath, archiveFullPath, nil
 }
 
-// GetLocalHTTPResponse takes a URL and optional timeout in seconds,
+// GetLocalHTTPResponse takes a URL and optional parameters,
 // hits the local Docker for it, returns result
 // Returns error (with the body) if not 200 status code.
-func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
-	var timeoutSecs = 60
-	if len(timeoutSecsAry) > 0 {
-		timeoutSecs = timeoutSecsAry[0]
-	}
-	timeoutTime := time.Duration(timeoutSecs) * time.Second
+// Parameters can be either:
+// - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
+// - int representing timeout seconds (for backward compatibility)
+func GetLocalHTTPResponse(t *testing.T, rawurl string, params ...interface{}) (string, *http.Response, error) {
+	options := parseHTTPRequestOpts(60, params...)
+
+	timeoutTime := time.Duration(options.TimeoutSeconds) * time.Second
 	assert := asrt.New(t)
 
 	u, err := url.Parse(rawurl)
@@ -479,54 +488,79 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 		Timeout:   timeoutTime,
 	}
 
-	req, err := http.NewRequest("GET", localAddress, nil)
+	var lastErr error
+	var resp *http.Response
+	var bodyString string
 
-	if err != nil {
-		return "", nil, fmt.Errorf("failed to NewRequest GET %s: %v", localAddress, err)
-	}
-	req.Host = fakeHost
+	for attempt := 1; attempt <= options.MaxRetries; attempt++ {
+		req, err := http.NewRequest("GET", localAddress, nil)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to NewRequest GET %s: %v", localAddress, err)
+		}
+		req.Host = fakeHost
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", resp, err
+		resp, err = client.Do(req)
+		if err != nil {
+			lastErr = err
+			if attempt < options.MaxRetries {
+				time.Sleep(time.Second)
+				continue
+			}
+			return "", resp, err
+		}
+
+		bodyBytes, err := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		if err != nil {
+			lastErr = fmt.Errorf("unable to ReadAll resp.body: %v", err)
+			if attempt < options.MaxRetries {
+				time.Sleep(time.Second)
+				continue
+			}
+			return "", resp, lastErr
+		}
+
+		bodyString = string(bodyBytes)
+		if resp.StatusCode != 200 {
+			lastErr = fmt.Errorf("http status code for '%s' was %d, not 200", localAddress, resp.StatusCode)
+			if attempt < options.MaxRetries {
+				time.Sleep(time.Second)
+				continue
+			}
+			return bodyString, resp, lastErr
+		}
+
+		// Success
+		return bodyString, resp, nil
 	}
 
-	//nolint: errcheck
-	defer resp.Body.Close()
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", resp, fmt.Errorf("unable to ReadAll resp.body: %v", err)
-	}
-	bodyString := string(bodyBytes)
-	if resp.StatusCode != 200 {
-		return bodyString, resp, fmt.Errorf("http status code for '%s' was %d, not 200", localAddress, resp.StatusCode)
-	}
-	return bodyString, resp, nil
+	// This should never be reached, but just in case
+	return bodyString, resp, lastErr
 }
 
-// EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
-	var httpTimeout = 40
-	if len(timeoutSeconds) > 0 {
-		httpTimeout = timeoutSeconds[0]
-	}
+// EnsureLocalHTTPContent will verify a URL responds with a 200, expected content string, and optional parameters.
+// Parameters can be either:
+// - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
+// - int representing timeout seconds (for backward compatibility)
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, params ...interface{}) (*http.Response, error) {
+	options := parseHTTPRequestOpts(40, params...)
 	assert := asrt.New(t)
 
-	body, resp, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
+	body, resp, err := GetLocalHTTPResponse(t, rawurl, options)
 	// We see intermittent php-fpm SIGBUS failures, only on macOS.
 	// That results in a 502/503. If we get a 502/503 on macOS, try again.
 	// It seems to be a 502 with nginx-fpm and a 503 with apache-fpm
 	if nodeps.IsMacOS() && resp != nil && (resp.StatusCode >= 500) {
 		t.Logf("Received %d error on macOS, retrying GetLocalHTTPResponse", resp.StatusCode)
 		time.Sleep(time.Second)
-		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
+		body, resp, err = GetLocalHTTPResponse(t, rawurl, options)
 	}
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v, body=%v: %v", rawurl, resp, body, err)
 	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	return resp, err
 }
 
-// CheckgoroutineOutput makes sure that goroutines
+// CheckGoroutineOutput makes sure that goroutines
 // aren't beyond specified level
 func CheckGoroutineOutput(t *testing.T, out string) {
 	goroutineLimit := nodeps.GoroutineLimit
@@ -543,4 +577,35 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 type PortPair struct {
 	HTTPPort  string
 	HTTPSPort string
+}
+
+// parseHTTPRequestOpts extracts HTTPRequestOpts from interface{} parameters with defaults
+func parseHTTPRequestOpts(defaultTimeout int, params ...interface{}) HTTPRequestOpts {
+	var options HTTPRequestOpts
+
+	// Handle different parameter types for backward compatibility
+	if len(params) > 0 {
+		switch param := params[0].(type) {
+		case HTTPRequestOpts:
+			options = param
+		case int:
+			// Backward compatibility: int parameter is timeout in seconds
+			options.TimeoutSeconds = param
+		default:
+			options.TimeoutSeconds = defaultTimeout // Default if invalid type
+		}
+	}
+	// Set defaults if not provided
+	if options.TimeoutSeconds == 0 {
+		options.TimeoutSeconds = defaultTimeout
+	}
+	// Negative timeout means no timeout
+	if options.TimeoutSeconds < 0 {
+		options.TimeoutSeconds = 0
+	}
+	if options.MaxRetries < 1 {
+		options.MaxRetries = 1
+	}
+
+	return options
 }
