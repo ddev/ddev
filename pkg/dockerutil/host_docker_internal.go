@@ -10,7 +10,7 @@ import (
 	ddevexec "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/docker/api/types/network"
 )
 
 // HostDockerInternal contains host.docker.internal configuration
@@ -45,54 +45,60 @@ func GetHostDockerInternal() *HostDockerInternal {
 		switch {
 		case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
 			ipAddress = globalconfig.DdevGlobalConfig.XdebugIDELocation
-			message = fmt.Sprintf("host.docker.internal='%s' because xdebug_ide_location=%s, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", ipAddress, globalconfig.DdevGlobalConfig.XdebugIDELocation)
+			message = fmt.Sprintf("xdebug_ide_location=%s, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 
 		case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
 			// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 			ipAddress = "127.0.0.1"
-			message = fmt.Sprintf("host.docker.internal='%s' because xdebug_ide_location=%s, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", ipAddress, globalconfig.DdevGlobalConfig.XdebugIDELocation)
+			message = fmt.Sprintf("xdebug_ide_location=%s, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 
 		case IsColima():
 			// Lima specifies this as a named explicit IP address at this time
 			// see https://lima-vm.io/docs/config/network/user/#host-ip-19216852
 			ipAddress = "192.168.5.2"
-			message = fmt.Sprintf("host.docker.internal='%s' because IsColima", ipAddress)
+			message = "IsColima"
 
 		case nodeps.IsGitpod():
-			message = fmt.Sprintf("host.docker.internal='%s' because IsGitpod uses 'host-gateway' in extra_hosts", ipAddress)
+			message = "IsGitpod uses 'host-gateway' in extra_hosts"
 
 		case nodeps.IsCodespaces():
-			message = fmt.Sprintf("host.docker.internal='%s' because IsCodespaces uses 'host-gateway' in extra_hosts", ipAddress)
+			message = "IsCodespaces uses 'host-gateway' in extra_hosts"
 
 		case nodeps.IsWSL2() && IsDockerDesktop():
 			// If IDE is on Windows, return; we don't have to do anything.
-			message = fmt.Sprintf("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", ipAddress)
+			message = "IsWSL2 and IsDockerDesktop"
 
 		case nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
 			// If IDE is inside WSL2 then the normal Linux processing should work
-			message = fmt.Sprintf("host.docker.internal='%s' because xdebug_ide_location=%s uses 'host-gateway' in extra_hosts, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", ipAddress, globalconfig.DdevGlobalConfig.XdebugIDELocation)
+			message = fmt.Sprintf("xdebug_ide_location=%s uses 'host-gateway' in extra_hosts, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 
 		case nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
 			// Microsoft instructions for finding Windows IP address at
 			// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 			// If IDE is on Windows, we have to parse /etc/resolv.conf
-			ipAddress = wsl2GetWindowsHostIP()
-			message = fmt.Sprintf("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from 'ip -4 route show default'", ipAddress)
+			wsl2WindowsHostIP, err := getWSL2WindowsHostIP()
+			if err != nil {
+				message = fmt.Sprintf("IsWSL2 and !IsDockerDesktop; unable to get IP from getWSL2WindowsHostIP(): %v", err)
+			} else {
+				ipAddress = wsl2WindowsHostIP
+				message = "IsWSL2 and !IsDockerDesktop; received from 'ip -4 route show default'"
+			}
 
 		case nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
-			if windowsReachableIP, err := getWindowsReachableIP(); err == nil && windowsReachableIP != "" {
-				ipAddress = windowsReachableIP
-				message = fmt.Sprintf("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; received from getWindowsReachableIP()", ipAddress)
+			windowsReachableIP, err := getWindowsReachableIP()
+			if err != nil {
+				message = fmt.Sprintf("IsWSL2MirroredMode and !IsDockerDesktop; unable to get IP from getWindowsReachableIP(): %v", err)
 			} else {
-				message = fmt.Sprintf("host.docker.internal='%s' because IsWSL2MirroredMode and !IsDockerDesktop; getWindowsReachableIP() failed", ipAddress)
+				ipAddress = windowsReachableIP
+				message = "IsWSL2MirroredMode and !IsDockerDesktop; received from getWindowsReachableIP()"
 			}
 
 		case nodeps.IsLinux():
 			// host.docker.internal is already taken care of by extra_hosts in docker-compose
-			message = fmt.Sprintf("host.docker.internal='%s' because IsLinux uses 'host-gateway' in extra_hosts", ipAddress)
+			message = "IsLinux uses 'host-gateway' in extra_hosts"
 
 		default:
-			message = fmt.Sprintf("host.docker.internal='%s' because no other case was discovered", ipAddress)
+			message = "no other case was discovered"
 		}
 
 		if ipAddress != "" {
@@ -101,11 +107,16 @@ func GetHostDockerInternal() *HostDockerInternal {
 			(nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2) {
 			// Use "host-gateway" for Docker on Linux and for WSL2 with IDE in WSL2
 			extraHost = "host-gateway"
+			if dockerBridgeIP, err := getDockerLinuxBridgeIP(); err == nil {
+				ipAddress = dockerBridgeIP
+			} else {
+				message = message + fmt.Sprintf("; unable to get Docker bridge IP address: %v", err)
+			}
 		}
 		hostDockerInternal = &HostDockerInternal{
 			IPAddress: ipAddress,
 			ExtraHost: extraHost,
-			Message:   message,
+			Message:   fmt.Sprintf("host.docker.internal='%s' because %s", ipAddress, message),
 		}
 	})
 
@@ -132,28 +143,44 @@ Get-NetIPAddress -AddressFamily IPv4 |
 	return strings.TrimSpace(string(out)), nil
 }
 
-// wsl2GetWindowsHostIP uses 'ip -4 route show default' to get the Windows IP address
+// getWSL2WindowsHostIP uses 'ip -4 route show default' to get the Windows IP address
 // for use in determining host.docker.internal
-func wsl2GetWindowsHostIP() string {
+func getWSL2WindowsHostIP() (string, error) {
 	// Get default route from WSL2
 	out, err := ddevexec.RunHostCommand("ip", "-4", "route", "show", "default")
 
 	if err != nil {
-		util.Warning("Unable to run 'ip -4 route show default' to get Windows IP address")
-		return ""
+		return "", fmt.Errorf("unable to run 'ip -4 route show default' to get Windows IP address: %v", err)
 	}
 	parts := strings.Split(out, " ")
 	if len(parts) < 3 {
-		util.Warning("Unable to parse output of 'ip -4 route show default', result was %v", parts)
-		return ""
+		return "", fmt.Errorf("unable to parse output of 'ip -4 route show default', result was %v", parts)
 	}
 
 	ip := parts[2]
 
 	if parsedIP := net.ParseIP(ip); parsedIP == nil {
-		util.Warning("Unable to validate IP address '%s' from 'ip -4 route show default'", ip)
-		return ""
+		return "", fmt.Errorf("unable to parse IP address '%s' from 'ip -4 route show default'", ip)
 	}
 
-	return ip
+	return ip, nil
+}
+
+// getDockerLinuxBridgeIP gets the IP address of the Docker bridge on Linux
+func getDockerLinuxBridgeIP() (string, error) {
+	ctx, client, err := GetDockerClient()
+	if err != nil {
+		return "", err
+	}
+	n, err := client.NetworkInspect(ctx, "bridge", network.InspectOptions{})
+	if err != nil {
+		return "", err
+	}
+	if len(n.IPAM.Config) > 0 {
+		if n.IPAM.Config[0].Gateway != "" {
+			bridgeIP := n.IPAM.Config[0].Gateway
+			return bridgeIP, nil
+		}
+	}
+	return "", fmt.Errorf("no gateway found in Docker bridge network")
 }
