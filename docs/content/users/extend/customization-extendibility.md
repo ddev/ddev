@@ -349,6 +349,25 @@ innodb_large_prefix=false
 
 To load the new configuration, run [`ddev restart`](../usage/commands.md#restart).
 
+### MySQL Server ID Override
+
+For MySQL replication setups, you can override the default `server_id=0` by setting the `MYSQL_SERVER_ID` environment variable. This is useful when you need to enable MySQL replication or use applications that depend on MySQL binary log events.
+
+Add to your `.ddev/config.yaml`:
+
+```yaml
+environment:
+  - MYSQL_SERVER_ID=1
+```
+
+Or create a `.ddev/.env.db` file:
+
+```bash
+MYSQL_SERVER_ID=1
+```
+
+**Note:** Command-line arguments take precedence over configuration files, so you cannot override the server ID through custom `.cnf` files in `.ddev/mysql/`. The environment variable approach is required.
+
 ## Custom PostgreSQL Configuration
 
 If you’re using PostgreSQL, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and [`ddev restart`](../usage/commands.md#restart).
