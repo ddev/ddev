@@ -22,11 +22,6 @@ import (
 
 // TestDdevXhprofPrependEnabled tests running with xhprof_enabled = true and xhprof_mode=prepend
 func TestDdevXhprofPrependEnabled(t *testing.T) {
-	if nodeps.IsMacOS() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
-		// TODO: Return to this when working on xhprof xhgui etc.
-		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
-	}
-
 	origDir, _ := os.Getwd()
 
 	testcommon.ClearDockerEnv()
@@ -84,6 +79,12 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
+	// Use more retries as it may fail on macOS at first
+	opts := testcommon.HTTPRequestOpts{
+		TimeoutSeconds: 2,
+		MaxRetries:     5,
+	}
+
 	for _, webserverKey := range webserverKeys {
 		app.WebserverType = webserverKey
 
@@ -115,11 +116,11 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 			require.NoError(t, err)
 			require.Contains(t, stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
 
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
 			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			require.Contains(t, out, "module_xhprof")
 
-			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 2)
+			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", opts)
 			require.NoError(t, err)
 			// Output should contain at least one run
 			require.Contains(t, out, ".ddev.xhprof</a><small>")
@@ -136,11 +137,6 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 
 // TestDdevXhprofXhguiEnabled tests running with xhprof_enabled = true and xhprof_mode=xhgui
 func TestDdevXhprofXhguiEnabled(t *testing.T) {
-	if nodeps.IsMacOS() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
-		// TODO: Return to this when working on xhprof xhgui etc.
-		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
-	}
-
 	assert := assert2.New(t)
 	origDir, _ := os.Getwd()
 
@@ -196,6 +192,12 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
+	// Use more retries as it may fail on macOS at first
+	opts := testcommon.HTTPRequestOpts{
+		TimeoutSeconds: 2,
+		MaxRetries:     5,
+	}
+
 	for _, webserverKey := range webserverKeys {
 		app.WebserverType = webserverKey
 
@@ -233,14 +235,14 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
 
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
 			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			require.Contains(t, out, "module_xhprof")
 
 			// NOW try using xhgui
 
 			xhguiURL := app.GetXHGuiURL()
-			out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, 2)
+			out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, opts)
 			require.NoError(t, err)
 			// Output should contain at least one run
 			require.Contains(t, out, strings.ToLower(t.Name()+"."+nodeps.DdevDefaultTLD))

@@ -37,7 +37,7 @@ func TestCmdXHGui(t *testing.T) {
 
 	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--xhprof-mode=xhgui")
 	require.NoError(t, err)
-	_, err = exec.RunHostCommand(DdevBin, "start")
+	_, err = exec.RunHostCommand(DdevBin, "restart")
 	require.NoError(t, err)
 
 	out, err := exec.RunHostCommand(DdevBin, "xhgui", "status")
@@ -57,9 +57,15 @@ func TestCmdXHGui(t *testing.T) {
 	require.Contains(t, out, "XHProf is enabled and capturing")
 	require.Contains(t, out, fmt.Sprintf("XHGui service is running and you can access it at %s", app.GetXHGuiURL()))
 
+	// Use more retries as it may fail on macOS at first
+	opts := testcommon.HTTPRequestOpts{
+		TimeoutSeconds: 2,
+		MaxRetries:     5,
+	}
+
 	// Test to see if xhgui UI is working
 	// Hit the site
-	_, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 2)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
 	require.NoError(t, err, "failed to get http response from %s", app.GetPrimaryURL())
 	// Give xhprof a moment to write the results; it may be asynchronous sometimes
 	time.Sleep(2 * time.Second)
@@ -71,7 +77,7 @@ func TestCmdXHGui(t *testing.T) {
 	require.NotNil(t, desc["xhgui_https_url"])
 	xhguiURL := desc["xhgui_https_url"].(string)
 
-	out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, 2)
+	out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, opts)
 	require.NoError(t, err)
 	// Output should contain at least one run
 	require.Contains(t, out, strings.ToLower(app.GetHostname()))
