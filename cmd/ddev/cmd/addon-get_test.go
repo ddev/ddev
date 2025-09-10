@@ -481,6 +481,11 @@ func TestAddonGetRuntimeDependencies(t *testing.T) {
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
 
+	// Ensure clean state before testing
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "runtime-deps-addon")
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis-commander")
+
 	t.Cleanup(func() {
 		assert := asrt.New(t)
 		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "runtime-deps-addon")
@@ -504,4 +509,51 @@ func TestAddonGetRuntimeDependencies(t *testing.T) {
 	require.FileExists(t, app.GetConfigPath("docker-compose.redis.yaml"))
 	require.FileExists(t, app.GetConfigPath("docker-compose.redis-commander.yaml"))
 	require.FileExists(t, app.GetConfigPath("config.yaml"))
+
+	// Verify the runtime deps file was cleaned up
+	runtimeDepsFile := app.GetConfigPath(".runtime-deps-runtime-deps-addon")
+	require.NoFileExists(t, runtimeDepsFile, "Runtime dependencies file should be cleaned up after processing")
+}
+
+// TestAddonGetPostInstallRuntimeDependencies tests runtime dependency file parsing when created during post-install actions
+func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	// Ensure clean state before testing
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "post-install-runtime-deps-addon")
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis-commander")
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "post-install-runtime-deps-addon")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis-commander")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that runtime dependencies created during post-install actions are discovered and installed
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--verbose", filepath.Join(origDir, "testdata", "TestAddonWithRuntimeDeps", "post_install_runtime_deps_addon"))
+	require.NoError(t, err, "Should successfully install addon with post-install runtime dependencies, out=%s", out)
+
+	// Verify runtime dependency installation
+	require.Contains(t, out, "Installing runtime dependencies")
+	require.Contains(t, out, "Successfully installed mock-redis from directory")
+	require.Contains(t, out, "Successfully installed mock-redis-commander from directory")
+	require.Contains(t, out, "Post-install runtime dependencies file created")
+
+	// Verify files were created by all addons
+	require.FileExists(t, app.GetConfigPath("docker-compose.redis.yaml"))
+	require.FileExists(t, app.GetConfigPath("docker-compose.redis-commander.yaml"))
+	require.FileExists(t, app.GetConfigPath("config.yaml"))
+
+	// Verify the runtime deps file was cleaned up
+	runtimeDepsFile := app.GetConfigPath(".runtime-deps-post-install-runtime-deps-addon")
+	require.NoFileExists(t, runtimeDepsFile, "Runtime dependencies file should be cleaned up after processing")
 }

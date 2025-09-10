@@ -169,14 +169,6 @@ ddev add-on get /path/to/tarball.tar.gz
 			}
 		}
 
-		// Check for runtime dependencies generated during pre-install actions
-		if !skipDeps {
-			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, extractedDir, verbose)
-			if err != nil {
-				util.Failed("%v", err)
-			}
-		}
-
 		if len(s.ProjectFiles) > 0 {
 			util.Success("\nInstalling project-level components:")
 		}
@@ -248,6 +240,14 @@ ddev add-on get /path/to/tarball.tar.gz
 				} else {
 					util.Failed("Could not process post-install action (%d) '%s': %v", i, desc, err)
 				}
+			}
+		}
+
+		// Check for runtime dependencies generated during installation
+		if !skipDeps {
+			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, extractedDir, verbose)
+			if err != nil {
+				util.Failed("%v", err)
 			}
 		}
 
