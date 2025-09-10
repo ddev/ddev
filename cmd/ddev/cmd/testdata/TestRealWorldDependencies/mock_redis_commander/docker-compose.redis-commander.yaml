@@ -4,7 +4,7 @@ services:
   redis-commander:
     image: rediscommander/redis-commander
     container_name: ddev-${DDEV_SITENAME}-redis-commander
-    ports:
+    expose:
       - "8081"
     environment:
-      - REDIS_HOSTS=redis:redis:6379
+      - REDIS_HOST=redis

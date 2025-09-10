@@ -4,5 +4,5 @@ services:
   redis:
     image: redis:alpine
     container_name: ddev-${DDEV_SITENAME}-redis
-    ports:
+    expose:
       - "6379"
