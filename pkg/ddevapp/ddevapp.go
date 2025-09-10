@@ -1425,10 +1425,21 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
 
+	// On the web container, we can use mutagen to sync
+	// anything that changes in the .ddev folder by
+	// making /mnt/ddev_config a symlink to
+	// /var/www/html/.ddev
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		err = dockerutil.CopyIntoVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots", true)
 		if err != nil {
 			return fmt.Errorf("failed to copy project .ddev directory to volume: %v", err)
+		}
+
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Cmd: `ln -sf /var/www/html/.ddev /mnt/ddev_config`,
+		})
+		if err != nil {
+			util.Warning("Unable to symlink /mnt/ddev_config, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
 	}
 
@@ -2806,7 +2817,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 			return "", err
 		}
 	} else {
-		// But if we are using bind-mounts, we can copy it to where the snapshot is
+		// But if we are using bind-mounts (normal situation), we can copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotFile)
 		uid, _, _ := util.GetContainerUIDGid()

@@ -76,7 +76,11 @@ func TestMain(m *testing.M) {
 			DdevBin = binPath
 		}
 	}
-	output.UserOut.Println("Running DDEV with ddev=", DdevBin)
+
+	bash := util.FindBashPath()
+	ver, _ := exec.RunCommand(bash, []string{"-c", fmt.Sprintf("%s --version -j | jq -r .raw.version", DdevBin)})
+	ver = strings.TrimSpace(ver)
+	output.UserOut.Printf("Running DDEV with ddev=%s (%s)\n", DdevBin, ver)
 
 	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
 	if err != nil {
