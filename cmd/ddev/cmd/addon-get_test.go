@@ -407,7 +407,7 @@ func TestAddonGetWithDependencies(t *testing.T) {
 	})
 
 	// Test that installing an addon with dependencies automatically installs the dependency
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "mock_redis_commander"))
 	require.NoError(t, err, "Should successfully install addon with dependencies, out=%s", out)
 
 	// Verify both addons are installed
@@ -458,16 +458,16 @@ func TestAddonGetSkipDepsFlag(t *testing.T) {
 	})
 
 	// Test that --skip-deps flag prevents automatic installation but does not fail
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--skip-deps", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--skip-deps", filepath.Join(origDir, "testdata", t.Name(), "mock_redis_commander"))
 	require.NoError(t, err, "Should not fail when --skip-deps is used, out=%s", out)
 	require.NotContains(t, out, "Installing missing dependency", "Should not automatically install dependencies")
 
 	// Install dependency first
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis"))
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "mock_redis"))
 	require.NoError(t, err, "Should install dependency successfully, out=%s", out)
 
 	// Now --skip-deps should also work (dependency present, but still skipped)
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "--skip-deps", filepath.Join(origDir, "testdata", "TestRealWorldDependencies", "mock_redis_commander"))
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "--skip-deps", filepath.Join(origDir, "testdata", t.Name(), "mock_redis_commander"))
 	require.NoError(t, err, "Should install with --skip-deps when dependency exists, out=%s", out)
 	require.NotContains(t, out, "Installing missing dependency", "Should not automatically install dependencies")
 }
@@ -496,7 +496,7 @@ func TestAddonGetRuntimeDependencies(t *testing.T) {
 	})
 
 	// Test that runtime dependencies are discovered and installed
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--verbose", filepath.Join(origDir, "testdata", "TestAddonWithRuntimeDeps", "runtime_deps_addon"))
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--verbose", filepath.Join(origDir, "testdata", t.Name(), "runtime_deps_addon"))
 	require.NoError(t, err, "Should successfully install addon with runtime dependencies, out=%s", out)
 
 	// Verify runtime dependency installation
@@ -508,7 +508,7 @@ func TestAddonGetRuntimeDependencies(t *testing.T) {
 	// Verify files were created by all addons
 	require.FileExists(t, app.GetConfigPath("docker-compose.redis.yaml"))
 	require.FileExists(t, app.GetConfigPath("docker-compose.redis-commander.yaml"))
-	require.FileExists(t, app.GetConfigPath("config.yaml"))
+	require.FileExists(t, app.GetConfigPath("config.runtime-deps-addon.yaml"))
 
 	// Verify the runtime deps file was cleaned up
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-runtime-deps-addon")
@@ -539,7 +539,7 @@ func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
 	})
 
 	// Test that runtime dependencies created during post-install actions are discovered and installed
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--verbose", filepath.Join(origDir, "testdata", "TestAddonWithRuntimeDeps", "post_install_runtime_deps_addon"))
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "--verbose", filepath.Join(origDir, "testdata", t.Name(), "post_install_runtime_deps_addon"))
 	require.NoError(t, err, "Should successfully install addon with post-install runtime dependencies, out=%s", out)
 
 	// Verify runtime dependency installation
@@ -551,7 +551,7 @@ func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
 	// Verify files were created by all addons
 	require.FileExists(t, app.GetConfigPath("docker-compose.redis.yaml"))
 	require.FileExists(t, app.GetConfigPath("docker-compose.redis-commander.yaml"))
-	require.FileExists(t, app.GetConfigPath("config.yaml"))
+	require.FileExists(t, app.GetConfigPath("config.post-install-runtime-deps-addon.yaml"))
 
 	// Verify the runtime deps file was cleaned up
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-post-install-runtime-deps-addon")

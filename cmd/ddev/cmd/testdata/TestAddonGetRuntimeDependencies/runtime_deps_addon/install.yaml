@@ -5,13 +5,13 @@ pre_install_actions:
   - |
     #ddev-description:Create runtime dependencies file
     echo "# Runtime dependencies discovered during pre-install" > .ddev/.runtime-deps-runtime-deps-addon
-    echo "../../TestRealWorldDependencies/mock_redis" >> .ddev/.runtime-deps-runtime-deps-addon
+    echo "../../TestAddonGetWithDependencies/mock_redis" >> .ddev/.runtime-deps-runtime-deps-addon
     echo "" >> .ddev/.runtime-deps-runtime-deps-addon
     echo "# This is a comment" >> .ddev/.runtime-deps-runtime-deps-addon
-    echo "../../TestRealWorldDependencies/mock_redis_commander" >> .ddev/.runtime-deps-runtime-deps-addon
+    echo "../../TestAddonGetWithDependencies/mock_redis_commander" >> .ddev/.runtime-deps-runtime-deps-addon
 
 project_files:
-  - config.yaml
+  - config.runtime-deps-addon.yaml
 
 post_install_actions:
   - |
