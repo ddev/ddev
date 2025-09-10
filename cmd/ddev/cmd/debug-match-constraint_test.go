@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"regexp"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
-	"regexp"
-	"testing"
 )
 
 // TestDebugMatchConstraintCmd checks to see match-constraint behaves as expected
@@ -20,7 +21,8 @@ func TestDebugMatchConstraintCmd(t *testing.T) {
 	require.Error(t, err, "Match constraint should have errored for %s, out='%s'", constraint, out)
 	require.Contains(t, out, "constraint is not valid")
 
-	constraint = "!= v0.0.0-overridden-by-make"
+	// Check against NOT nonexistent version
+	constraint = "!= v1.23.9999"
 	out, err = exec.RunHostCommand(DdevBin, "debug", "match-constraint", constraint)
 	require.NoError(t, err, "Match constraint should not have errored for %s, out='%s'", constraint, out)
 

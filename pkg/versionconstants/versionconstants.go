@@ -2,6 +2,7 @@ package versionconstants
 
 import (
 	"os"
+	"os/exec"
 	"runtime/debug"
 	"strings"
 )
@@ -73,10 +74,18 @@ func init() {
 			DdevVersion = v
 			return
 		}
-		// 3) Fall back to build info short hash when git isn't available
+		// 2) Fall back to build info short hash
 		if v := deriveVersionFromBuildInfo(); v != "" {
 			DdevVersion = v
+			return
 		}
+		// 3) Try direct git command as final fallback
+		if v := deriveVersionFromGit(); v != "" {
+			DdevVersion = v
+			return
+		}
+		// 4) Last resort - use build info without VCS or unknown version
+		DdevVersion = "v0.0.0-overridden-by-make"
 	}
 }
 
@@ -95,12 +104,14 @@ func deriveVersionFromBuildInfo() string {
 	}
 	var rev string
 	var dirty bool
+	var hasModifiedInfo bool
 	for _, s := range bi.Settings {
 		switch s.Key {
 		case "vcs.revision":
 			rev = s.Value
 		case "vcs.modified":
-			dirty = (s.Value == "true")
+			hasModifiedInfo = true
+			dirty = s.Value == "true"
 		}
 	}
 	if rev == "" {
@@ -111,8 +122,50 @@ func deriveVersionFromBuildInfo() string {
 		short = short[:7]
 	}
 	v := "g" + short
-	if dirty {
+	// If we don't have modified info from build, assume it might be dirty
+	// since we're in a development context
+	if dirty || !hasModifiedInfo {
 		v += "-dirty"
 	}
 	return v
+}
+
+var gitVersionCache string
+var gitVersionCacheInitialized bool
+
+// deriveVersionFromGit attempts to run git describe directly to get version info.
+// This is used as a fallback when build info doesn't contain VCS information.
+// The result is cached to avoid repeated git command execution.
+func deriveVersionFromGit() string {
+	if gitVersionCacheInitialized {
+		return gitVersionCache
+	}
+
+	gitVersionCacheInitialized = true
+
+	// Try git describe --tags --always --dirty (same as Makefile)
+	cmd := exec.Command("git", "describe", "--tags", "--always", "--dirty")
+	if output, err := cmd.Output(); err == nil {
+		gitVersionCache = strings.TrimSpace(string(output))
+		return gitVersionCache
+	}
+
+	// Fallback to just getting the commit hash
+	cmd = exec.Command("git", "rev-parse", "--short=7", "HEAD")
+	if output, err := cmd.Output(); err == nil {
+		hash := strings.TrimSpace(string(output))
+		if hash != "" {
+			// Check if working directory is dirty
+			cmd = exec.Command("git", "diff-index", "--quiet", "HEAD", "--")
+			if err := cmd.Run(); err != nil {
+				gitVersionCache = "g" + hash + "-dirty"
+			} else {
+				gitVersionCache = "g" + hash
+			}
+			return gitVersionCache
+		}
+	}
+
+	gitVersionCache = ""
+	return gitVersionCache
 }
