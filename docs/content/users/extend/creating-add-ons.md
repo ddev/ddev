@@ -409,9 +409,9 @@ This timing ensures that:
 - Post-install actions can create runtime dependencies based on project configuration
 - Dependencies have access to all project files when they install
 
-#### Real-world Example: Platform.sh/Upsun Integration
+#### Real-world Example: Upsun Integration
 
-The [ddev-upsun](https://github.com/platformsh/ddev-upsun) add-on demonstrates runtime dependencies by:
+The [ddev-upsun](https://github.com/rfay/ddev-upsun) add-on demonstrates runtime dependencies by:
 
 1. **Analyzing** `.upsun/config.yaml` during post-install
 2. **Detecting** services like Redis, Elasticsearch, Memcached
