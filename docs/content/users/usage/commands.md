@@ -121,8 +121,6 @@ ddev add-on get ddev/ddev-redis-commander --skip-deps
 When an add-on declares dependencies in its `install.yaml`, DDEV will automatically install any missing dependencies before installing the add-on itself. Dependencies support the same formats as `ddev add-on get`:
 
 * GitHub repositories: `ddev/ddev-redis`
-* Local directories: `/path/to/addon`
-* Relative paths: `../other-addon`
 * Direct URLs: `https://example.com/addon.tar.gz`
 
 DDEV will detect and prevent circular dependencies with clear error messages.

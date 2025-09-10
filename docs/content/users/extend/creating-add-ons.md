@@ -299,8 +299,6 @@ Declare add-on dependencies that will be automatically installed:
 ```yaml
 dependencies:
   - ddev/ddev-redis        # GitHub repository
-  - /path/to/local/addon   # Local directory path
-  - ../relative/addon      # Relative path
   - https://example.com/addon.tar.gz  # Direct tarball URL
 ```
 
@@ -386,7 +384,6 @@ The `.runtime-deps-<addon-name>` file uses the same dependency formats as static
 # One dependency per line
 ddev/ddev-redis
 ddev/ddev-elasticsearch
-../local/custom-addon
 https://example.com/addon.tar.gz
 
 # Comments and empty lines are ignored
@@ -476,7 +473,7 @@ This will show:
 - Runtime dependencies are not processed when using `--skip-deps`
 - Cannot be used to conditionally install the add-on itself
 
-### Template Replacements
+### Template Replacements (Advanced, Very Unusual)
 
 Use environment variables in filenames and content:
 
